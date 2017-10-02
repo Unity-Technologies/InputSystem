@@ -1,14 +1,13 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
     public class QuaternionControl : InputControl<Quaternion>
     {
         // No component controls as doing individual operations on the xyzw components of a quaternion
         // doesn't really make sense as individual input controls.
 
-        public QuaternionControl(string name)
-            : base(name)
+        public QuaternionControl()
         {
 	        stateBlock.sizeInBits = sizeof(float)*4*8;
         }

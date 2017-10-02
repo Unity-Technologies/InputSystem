@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
     [Serializable]
     public struct Pose

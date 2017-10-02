@@ -1,4 +1,4 @@
-﻿namespace InputSystem
+﻿namespace ISX
 {
     // A processor that conditions values.
     // InputControls can have stacks of processors assigned to them.

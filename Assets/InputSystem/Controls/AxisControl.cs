@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
     // A float axis control.
     // Can optionally be configured to perform normalization.
@@ -22,8 +22,7 @@ namespace InputSystem
 	        return value;
 	    }
  
-		public AxisControl(string name)
-			: base(name)
+		public AxisControl()
 		{
 			stateBlock.sizeInBits = sizeof(float)*8;
 		}

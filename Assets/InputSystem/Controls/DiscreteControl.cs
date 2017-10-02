@@ -1,9 +1,8 @@
-﻿namespace InputSystem
+﻿namespace ISX
 {
 	public class DiscreteControl : InputControl<int>
 	{
-		public DiscreteControl(string name)
-			: base(name)
+		public DiscreteControl()
 		{
 			stateBlock.sizeInBits = sizeof(int)*8;
 		}

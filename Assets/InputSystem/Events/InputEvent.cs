@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace InputSystem.Events
+namespace ISX
 {
     // A chunk of memory signaling a data transfer in the input system.
     // This has to be layout compatible with native events.

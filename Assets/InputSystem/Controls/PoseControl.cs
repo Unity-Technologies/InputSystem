@@ -1,12 +1,11 @@
-﻿namespace InputSystem
+﻿namespace ISX
 {
     public class PoseControl : InputControl<Pose>
     {
         public Vector3Control translation { get; private set; }
         public QuaternionControl rotation { get; private set; }
 
-        public PoseControl(string name)
-            : base(name)
+        public PoseControl()
         {
 	        stateBlock.sizeInBits = sizeof(float)*(3+4)*8;
         }

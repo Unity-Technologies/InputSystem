@@ -1,19 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
+	// The hub of the input system.
+	// Not exposed. Use InputSystem as the public entry point to the system.
+#if UNITY_EDITOR
 	[Serializable]
-    public class InputManager
+#endif
+    internal class InputManager
+#if UNITY_EDITOR
+		: ISerializationCallbackReceiver
+#endif
     {
-        public static InputManager instance
-        {
-            get { return s_Instance; }
-        }
-        
+	    // Add a template constructed from a type.
+	    // If a template with the same name already exists, the new template
+	    // takes its place.
         public void RegisterTemplate(string name, Type type)
         {
+	        if (string.IsNullOrEmpty(name))
+		        throw new ArgumentException(nameof(name));
+	        if (type == null)
+		        throw new ArgumentNullException(nameof(type));
+
+	        var template = InputTemplate.FromType(name, type);
+	        
+	        RegisterTemplate(template);
         }
+
+	    // Add a template. If a template with the same name already exists, the new template
+	    // takes its place.
+	    public void RegisterTemplate(InputTemplate template)
+	    {
+		    if (template == null)
+			    throw new ArgumentNullException(nameof(template));
+
+		    m_Templates[template.name.ToLower()] = template;
+	    }
 
 	    public void RegisterProcessor(string name, Type type)
 	    {
@@ -23,6 +47,18 @@ namespace InputSystem
 	    {
 	    }
 
+	    public InputTemplate TryGetTemplate(string name)
+	    {
+		    if (string.IsNullOrEmpty(name))
+			    throw new ArgumentException(nameof(name));
+
+		    InputTemplate template;
+		    if (m_Templates.TryGetValue(name.ToLower(), out template))
+			    return template;
+		    
+		    return null;
+	    }
+	    
 	    // Processes a path specification that may match more than a single control.
 	    // Adds all controls that match to the given list.
 	    // Returns true if at least one control was matched.
@@ -45,15 +81,11 @@ namespace InputSystem
 
         internal void Initialize()
         {
-            if (s_Instance != null)
-                throw new InvalidOperationException("There already is an InputManager! Can only have one instance.");
-            s_Instance = this;
-	        
 	        m_Usages = new Dictionary<string, InputUsage>();
 	        m_Templates = new Dictionary<string, InputTemplate>();
 	        m_Processors = new Dictionary<string, Type>();
             
-			// Register input types.
+			// Register templates.
 			RegisterTemplate("Button", typeof(ButtonControl)); // Inputs.
 			RegisterTemplate("Axis", typeof(AxisControl));
 			RegisterTemplate("Analog", typeof(AxisControl));
@@ -104,23 +136,77 @@ namespace InputSystem
 			RegisterUsage("LeftHand", "XRController");
 			RegisterUsage("RightHand", "XRController");
 
+	        InitializeStatics();
+        }
+
+	    // In the editor, we need to redo these steps after domain reloads.
+	    internal void InitializeStatics()
+	    {
+		    if (m_Usages == null || m_Templates == null)
+			    throw new InvalidOperationException("InputManager has lost its state");
+		    
 	        InputUsage.s_Usages = m_Usages;
 	        InputTemplate.s_Templates = m_Templates;
-        }
+	    }
         
         internal void Destroy()
         {
-            if (s_Instance == this)
-                s_Instance = null;
-
 	        InputUsage.s_Usages = null;
 	        InputTemplate.s_Templates = null;
         }
 
-        private static InputManager s_Instance;
-
 	    private Dictionary<string, InputUsage> m_Usages;
 	    private Dictionary<string, InputTemplate> m_Templates;
 	    private Dictionary<string, Type> m_Processors;
+	    
+	    // Domain reload survival logic.
+#if UNITY_EDITOR
+	    [Serializable]
+	    internal struct SerializedState
+	    {
+		    public InputUsage[] usages;
+		    public InputTemplate[] templates;
+	    }
+
+	    [SerializeField] private SerializedState m_SerializedState;
+	    
+	    public void OnBeforeSerialize()
+	    {
+		    var usageCount = m_Usages.Count;
+		    var usageArray = new InputUsage[usageCount];
+
+		    var i = 0;
+		    foreach (var usage in m_Usages.Values)
+			    usageArray[i++] = usage;
+
+		    var templateCount = m_Templates.Count;
+		    var templateArray = new InputTemplate[templateCount];
+
+		    i = 0;
+		    foreach (var template in m_Templates.Values)
+			    templateArray[i++] = template;
+
+		    m_SerializedState = new SerializedState
+		    {
+				usages = usageArray,
+			    templates = templateArray
+		    };
+	    }
+
+	    public void OnAfterDeserialize()
+	    {
+		    m_Usages = new Dictionary<string, InputUsage>();
+		    m_Templates = new Dictionary<string, InputTemplate>();
+		    m_Processors = new Dictionary<string, Type>();
+
+		    foreach (var usage in m_SerializedState.usages)
+			    m_Usages[usage.name.ToLower()] = usage;
+
+		    foreach (var template in m_SerializedState.templates)
+			    m_Templates[template.name.ToLower()] = template;
+
+		    m_SerializedState = default(SerializedState);
+	    }
+#endif
     }
 }

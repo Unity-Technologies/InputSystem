@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
-namespace InputSystem
+namespace ISX
 {
     // A typed and named value.
     // Actual value is stored in central state storage managed by InputSystem.
@@ -25,36 +26,51 @@ namespace InputSystem
 			    return m_Path;
 		    }
 	    }
+
+	    // Template the control is based on.
+	    public InputTemplate template
+	    {
+		    get { return m_Template; }
+	    }
 	    
-	    ////REVIEW: store the template the control is based on?
-	    
+	    ////TODO: setting value (will it also go through the processor stack?)
 	    // Current value as boxed object.
 	    // NOTE: Calling this will cause garbage.
-		public abstract object valueAsObject { get; }
-	    ////TODO: setting value (will it also go through the processor stack?)
+	    public virtual object valueAsObject
+	    {
+		    get
+		    {
+			    ////REVIEW: Not sure yet which is better; return null or raw byte data?
+			    ////        Actually, this should probably always return a value of the type given in the template
+			    var statePtr = currentStatePtr;
+			    if (statePtr == IntPtr.Zero)
+				    return Array.Empty<byte>();
+			    else
+			    {
+				    var buffer = new byte[stateBlock.sizeInBits / 8];
+				    Marshal.Copy(currentStatePtr, buffer, 0, buffer.Length);
+				    return buffer;
+			    }
+		    }
+	    }
 	    
-	    ////REVIEW: cache root and expose as property?
+	    // Root of the control hierarchy.
+	    public InputDevice device
+	    {
+		    get { return m_Device; }
+	    }
 	    
 	    // Immediate parent.
 		public InputControl parent
 		{
 			get { return m_Parent; }
 		}
-
+	    
 	    // Immediate children.
-	    public ReadOnlyCollection<InputControl> children
+	    // NOTE: This will only be populated when setup is finished.
+	    public ReadOnlyArray<InputControl> children
 	    {
-		    get
-		    {
-				if (m_ChildrenReadOnly == null)
-				{
-					var children = m_Children;
-					if (children == null)
-						children = Array.Empty<InputControl>();
-					m_ChildrenReadOnly = Array.AsReadOnly(children);
-				}
-				return m_ChildrenReadOnly;
-		    }
+		    get { return m_ChildrenReadOnly; }
 	    }
 	    
 		// List of uses for this control. Gives meaning to the control such that you can, for example,
@@ -62,25 +78,16 @@ namespace InputSystem
 		// button is also an example of why there are multiple possible usages of a button as a use may
 		// be context-dependent; if "back" does not make sense in a context, another use may make sense for
 		// the very same button.
-		public ReadOnlyCollection<InputUsage> usages
+	    // NOTE: This will only be populated when setup is finished.
+		public ReadOnlyArray<InputUsage> usages
 		{
-			get
-			{
-				if (m_UsagesReadOnly == null)
-				{
-                    var usages = m_Usages;
-                    if (usages == null)
-                        usages = Array.Empty<InputUsage>();
-                    m_UsagesReadOnly = Array.AsReadOnly(usages);
-				}
-				return m_UsagesReadOnly;
-			}
+			get { return m_UsagesReadOnly; }
 		}
 
-	    protected InputControl(string name)
+	    // Constructor for devices which are assigned names once plugged
+	    // into the system.
+	    protected InputControl()
 	    {
-		    m_Name = name;
-		    
 		    // Set defaults for state block setup. Subclasses may override.
 		    stateBlock.usage = InputStateBlock.Usage.Input;
 	    }
@@ -104,142 +111,14 @@ namespace InputSystem
 			get { return stateBlock.previousStatePtr; }
 		}
 	    
-	    ////TODO: generalize so that the optimized array storage can also be used for usages
-        // Helper to implement processing.
-	    protected struct ProcessorStack<TValue>
-	    {
-		    // We inline the first processor so if there's only one, there's
-		    // no additional allocation. If more are added, we allocate an array.
-	        private IInputProcessor<TValue> m_FirstProcessor;
-		    private IInputProcessor<TValue>[] m_AdditionalProcessors;
-
-	        public void AddProcessor(IInputProcessor<TValue> processor)
-	        {
-		        if (m_FirstProcessor == null)
-		        {
-			        m_FirstProcessor = processor;
-		        }
-		        else if (m_AdditionalProcessors == null)
-		        {
-			        m_AdditionalProcessors = new IInputProcessor<TValue>[1];
-			        m_AdditionalProcessors[0] = processor;
-		        }
-		        else
-		        {
-			        var numAdditionalProcessors = m_AdditionalProcessors.Length;
-			        Array.Resize(ref m_AdditionalProcessors, numAdditionalProcessors + 1);
-			        m_AdditionalProcessors[numAdditionalProcessors] = processor;
-		        }
-	        }
-
-	        public void RemoveProcessor(IInputProcessor<TValue> processor)
-	        {
-		        if (m_FirstProcessor == processor)
-		        {
-			        if (m_AdditionalProcessors != null)
-			        {
-				        m_FirstProcessor = m_AdditionalProcessors[0];
-				        if (m_AdditionalProcessors.Length == 1)
-					        m_AdditionalProcessors = null;
-				        else
-					        Array.Resize(ref m_AdditionalProcessors, m_AdditionalProcessors.Length - 1);
-			        }
-			        else
-			        {
-				        m_FirstProcessor = null;
-			        }
-		        }
-		        else if (m_AdditionalProcessors != null)
-		        {
-			        var numAdditionalProcessors = m_AdditionalProcessors.Length;
-			        for (var i = 0; i < numAdditionalProcessors; ++i)
-			        {
-				        if (m_AdditionalProcessors[i] == processor)
-				        {
-					        if (i == numAdditionalProcessors - 1)
-					        {
-						        Array.Resize(ref m_AdditionalProcessors, numAdditionalProcessors - 1);
-					        }
-					        else
-					        {
-						        var newAdditionalProcessors = new IInputProcessor<TValue>[numAdditionalProcessors - 1];
-						        if (i > 0)
-							        Array.Copy(m_AdditionalProcessors, 0, newAdditionalProcessors, 0, i);
-						        Array.Copy(m_AdditionalProcessors, i + 1, newAdditionalProcessors, i, numAdditionalProcessors - i);
-					        }
-					        break;
-				        }
-			        }
-		        }
-	        }
-
-	        public TValue Process(TValue value)
-	        {
-		        if (m_FirstProcessor != null)
-			        value = m_FirstProcessor.Process(value);
-		        if (m_AdditionalProcessors != null)
-                    for (var i = 0; i < m_AdditionalProcessors.Length; ++i)
-                        value = m_AdditionalProcessors[i].Process(value);
-	            return value;
-	        }
-	    }
-	    
+	    // This data is initialized by InputControlSetup.
         internal string m_Name;
         internal string m_Path;
+	    internal InputDevice m_Device;
+	    internal InputTemplate m_Template;
 	    internal InputControl m_Parent;
-	    
-		internal InputUsage[] m_Usages;
-	    private ReadOnlyCollection<InputUsage> m_UsagesReadOnly;
-	    
-		internal InputControl[] m_Children;
-		private ReadOnlyCollection<InputControl> m_ChildrenReadOnly;
-
-		internal void AddChild(InputControl control)
-		{
-			if (m_Children == null)
-			{
-				m_Children = new InputControl[1];
-				m_Children[0] = control;
-			}
-			else
-			{
-				var numChildren = m_Usages.Length;
-				Array.Resize(ref m_Children, numChildren + 1);
-				m_Children[numChildren] = control;
-			}
-		}
-
-		internal void RemoveChild(InputControl control)
-		{
-			if (m_Children == null)
-				return;
-			
-			throw new NotImplementedException();
-		}
-	    
-		// Add a new usage. Not publicly exposed as we want this to be done in a controlled
-		// manner through InputControlSetup. Otherwise we can't guarantee that usages are unique.
-		// The mantra is: every control setup change *has* to be done through InputControlSetup.
-		internal void AddUsage(InputUsage usage)
-		{
-			if (m_Usages == null)
-			{
-				m_Usages = new InputUsage[1];
-				m_Usages[0] = usage;
-			}
-			else
-			{
-				var numUsages = m_Usages.Length;
-				Array.Resize(ref m_Usages, numUsages + 1);
-				m_Usages[numUsages] = usage;
-			}
-			m_UsagesReadOnly = null;
-		}
-
-	    internal void RemoveUsage(InputUsage usage)
-	    {
-		    throw new NotImplementedException();
-	    }
+	    internal ReadOnlyArray<InputUsage> m_UsagesReadOnly;
+		internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
 
 	    // This method exists only to not slap the internal modifier on all overrides of
 	    // FinishSetup().
@@ -261,24 +140,28 @@ namespace InputSystem
 		
 	    public void AddProcessor(IInputProcessor<TValue> processor)
 	    {
-	        m_ProcessorStack.AddProcessor(processor);
+	        m_ProcessorStack.Append(processor);
 	    }
 
 	    public void RemoveProcessor(IInputProcessor<TValue> processor)
 	    {
-	        m_ProcessorStack.RemoveProcessor(processor);
+	        m_ProcessorStack.Remove(processor);
 	    }
 
         protected TValue Process(TValue value)
         {
-            return m_ProcessorStack.Process(value);
+            if (m_ProcessorStack.firstValue != null)
+                value = m_ProcessorStack.firstValue.Process(value);
+            if (m_ProcessorStack.additionalValues != null)
+                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
+                    value = m_ProcessorStack.additionalValues[i].Process(value);
+            return value;
         }
 
-        protected InputControl(string name)
-            : base(name)
+        protected InputControl()
         {
         }
 		
-        private ProcessorStack<TValue> m_ProcessorStack;
+        private OptimizedArray<IInputProcessor<TValue>> m_ProcessorStack;
 	}
 }

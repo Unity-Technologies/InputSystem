@@ -1,18 +1,13 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
 	public class Vector2Control : InputControl<Vector2>
     {
         public AxisControl x { get; private set; }
         public AxisControl y { get; private set; }
-	    
-        public Vector2Control(string name)
-            : base(name)
-        {
-        }
-	    
-        public override Vector2 value
+
+	    public override Vector2 value
         {
 			get
 			{

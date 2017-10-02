@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace InputSystem.Events
+namespace ISX
 {
     // Full state update for an input device.
     public unsafe struct StateEvent : IInputEventTypeInfo

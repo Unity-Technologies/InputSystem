@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace InputSystem
+namespace ISX
 {
     // Associates a state representation with an input device.
     [AttributeUsage(AttributeTargets.Class)]

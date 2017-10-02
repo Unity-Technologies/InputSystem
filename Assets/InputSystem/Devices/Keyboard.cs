@@ -2,30 +2,27 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace InputSystem
+namespace ISX
 {
     // Named according to the US keyboard layout which is our reference layout.
     public enum Key
     {
         None,
         
-        // Non-printable keys.
-        LeftShift,
-        RightShift,
-        LeftAlt,
-        RightAlt,
-        Escape,
-        
         // Printable keys.
         Space = ' ',
         Enter = '\r',
+        Tab = '\t',
         Backtick = '`',
         Semicolon = ';',
         Comma = ',',
+        Period = '.',
         Slash = '/',
         Backslash = '\\',
         LeftBracket = '[',
         RightBracket = ']',
+        Minus = '-',
+        Equals = '=',
         A = 'a',
         B = 'b',
         C = 'c',
@@ -52,16 +49,49 @@ namespace InputSystem
         X = 'x',
         Y = 'y',
         Z = 'z',
-        One = '1',
-        Two = '2',
-        Three = '3',
-        Four = '4',
-        Five = '5',
-        Six = '6',
-        Seven = '7',
-        Eight = '8',
-        Nine = '9',
-        Zero = '0',
+        Digit1 = '1',
+        Digit2 = '2',
+        Digit3 = '3',
+        Digit4 = '4',
+        Digit5 = '5',
+        Digit6 = '6',
+        Digit7 = '7',
+        Digit8 = '8',
+        Digit9 = '9',
+        Digit0 = '0',
+        
+        // Non-printable keys.
+        LeftShift = 128, // Make sure we don't conflict with any of the printable keys.
+        RightShift,
+        LeftAlt,
+        RightAlt,
+        LeftCtrl,
+        RightCtrl,
+        Escape,
+        LeftArrow,
+        RightArrow,
+        UpArrow,
+        DownArrow,
+        Backspace,
+        PageDown,
+        PageUp,
+        Home,
+        End,
+        Insert,
+        Erase,
+        
+        // Numpad.
+        NumpadEnter,
+        Numpad0,
+        Numpad1,
+        Numpad2,
+        Numpad3,
+        Numpad4,
+        Numpad5,
+        Numpad6,
+        Numpad7,
+        Numpad8,
+        Numpad9,
         
         Count = 256
     }
@@ -122,8 +152,7 @@ namespace InputSystem
 
         public static Keyboard current { get; protected set; }
 
-        public Keyboard(string name)
-            : base(name)
+        public Keyboard()
         {
         }
         

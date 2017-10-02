@@ -1,24 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 ////REVIEW: rename InputControlUsage?
 
-namespace InputSystem
+namespace ISX
 {
 	// Usages determine the meaning of controls. Naming of controls
 	// may differ between devices but many of the controls between
 	// devices have common patterns of use.
 	// Every usage has a unique name and an associated value type.
+    [Serializable]
     public struct InputUsage
     {
-        public string name { get; private set; }
-        public string template { get; private set; }
+        public string name
+        {
+            get { return m_Name; }
+        }
+
+        public string template
+        {
+            get { return m_Template; }
+        }
 
         public InputUsage(string name, string template)
         {
-            this.name = name;
-            this.template = template;
+            m_Name = name;
+            m_Template = template;
         }
+
+        [SerializeField] private string m_Name;
+        [SerializeField] private string m_Template;
+        
 
         // This dictionary is owned and managed by InputManager.
         internal static Dictionary<string, InputUsage> s_Usages = new Dictionary<string, InputUsage>();

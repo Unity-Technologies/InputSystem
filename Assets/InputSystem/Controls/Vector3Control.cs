@@ -1,17 +1,12 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
     public class Vector3Control : InputControl<Vector3>
     {
         public AxisControl x { get; private set; }
         public AxisControl y { get; private set; }
         public AxisControl z { get; private set; }
-
-        public Vector3Control(string name)
-        	: base(name)
-        {
-        }
 
         public override Vector3 value
         {

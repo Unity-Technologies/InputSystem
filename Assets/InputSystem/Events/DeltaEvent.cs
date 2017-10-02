@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace InputSystem.Events
+namespace ISX
 {
     // Partial state update for an input device.
     // Avoids having to send a full state memory snapshot when only a small

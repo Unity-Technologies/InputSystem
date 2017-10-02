@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
 	// Computes the magnitude of a Vector2.
 	// You can add this as a child control of a 2D vector, for example, so as to get a magnitude
@@ -8,8 +8,7 @@ namespace InputSystem
 	// vector itself.
 	public class Magnitude2Control : InputControl<float>
 	{
-		public Magnitude2Control(string name)
-			: base(name)
+		public Magnitude2Control()
 		{
 			stateBlock.sizeInBits = sizeof(float)*2*8;
 		}

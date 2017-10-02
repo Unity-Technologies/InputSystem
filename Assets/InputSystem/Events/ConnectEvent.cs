@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace InputSystem.Events
+namespace ISX
 {
     // Input device got re-connected after a disconnect.
     public struct ConnectEvent : IInputEventTypeInfo

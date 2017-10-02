@@ -1,4 +1,4 @@
-﻿namespace InputSystem
+﻿namespace ISX
 {
 	// Listener for device state changes.
 	// State can change in one of two ways:

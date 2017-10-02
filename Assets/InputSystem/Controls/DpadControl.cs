@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
 	// A control made up of four discrete, directional buttons. Forms a vector
 	// but can also be addressed as individual buttons.
@@ -22,10 +22,12 @@ namespace InputSystem
 		public ButtonControl left { get; private set; }
 		[InputControl(bit = (int)ButtonBits.Right)]
 		public ButtonControl right { get; private set; }
+		
+		////REVIEW: should have X and Y child controls as well
 
-		public DpadControl(string name)
-			: base(name)
+		public DpadControl()
 		{
+			stateBlock.sizeInBits = 4;
 		}
 
 		public override Vector2 value

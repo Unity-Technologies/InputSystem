@@ -1,4 +1,4 @@
-﻿namespace InputSystem
+﻿namespace ISX
 {
     public class Pointer
     {

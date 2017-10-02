@@ -1,4 +1,4 @@
-﻿namespace InputSystem.Events
+﻿namespace ISX
 {
     // Allows retrieving information about event types from an instance of the type.
     // As structs can always be default instantiated, this allows us to get data on the struct

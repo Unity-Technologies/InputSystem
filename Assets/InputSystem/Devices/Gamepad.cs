@@ -4,7 +4,7 @@ using UnityEngine;
 ////REVIEW: is there still the need to have separate state structs or can the unification of devices
 ////        and controls obsolete that need?
 
-namespace InputSystem
+namespace ISX
 {
     // Xbox-compatible gamepad state layout.
     // Must be kept identical to layout used by native code.
@@ -124,34 +124,23 @@ namespace InputSystem
 		// we expose the controls using Xbox style naming. However, we still look
 		// them up using directions so the underlying controls should be the right
 		// ones.
-		[InputControl(name = "buttonWest")]
 	    public ButtonControl x { get; private set; }
-		[InputControl(name = "buttonNorth")]
 	    public ButtonControl y { get; private set; }
-		[InputControl(name = "buttonSouth")]
 	    public ButtonControl a { get; private set; }
-		[InputControl(name = "buttonEast")]
 	    public ButtonControl b { get; private set; }
 
-		[InputControl]
         public ButtonControl leftShoulder { get; private set; }
-		[InputControl]
         public ButtonControl rightShoulder { get; private set; }
 
-		[InputControl]
         public StickControl leftStick { get; private set; }
-		[InputControl]
         public StickControl rightStick { get; private set; }
 		
-		[InputControl]
 		public AxisControl leftMotor { get; private set; }
-		[InputControl]
 		public AxisControl rightMotor { get; private set; }
 
 		public static Gamepad current { get; protected set; }
 
-		public Gamepad(string name)
-			: base(name)
+		public Gamepad()
 		{
 		}
 
@@ -161,7 +150,6 @@ namespace InputSystem
 			current = this;
 		}
 		
-		////REVIEW: or this??
 		protected override void FinishSetup(InputControlSetup setup)
 		{
 			x = setup.GetControl<ButtonControl>(this, "buttonWest");

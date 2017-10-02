@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace InputSystem
+namespace ISX
 {
     // Input state is kept in raw memory blocks.
     // All state is centrally managed by InputManager; controls cannot keep their own independent state.

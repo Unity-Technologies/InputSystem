@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace InputSystem
+namespace ISX
 {
     // Normalizes input values in the range [min..max] to [0..1].
     public class NormalizeProcessor : IInputProcessor<float>
