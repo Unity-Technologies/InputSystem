@@ -2,7 +2,9 @@
 {
     public class PoseControl : InputControl<Pose>
     {
+	    [InputControl(offset = 0)]
         public Vector3Control translation { get; private set; }
+	    [InputControl(offset = 3*sizeof(float))]
         public QuaternionControl rotation { get; private set; }
 
         public PoseControl()

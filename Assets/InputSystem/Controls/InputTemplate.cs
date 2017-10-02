@@ -191,10 +191,29 @@ namespace ISX
 			    // interface, dive inside and look. This is useful for composing states of one another.
                 if (valueType != null && valueType.IsValueType && typeof(IInputStateTypeInfo).IsAssignableFrom(valueType))
                 {
+	                var controlCountBefore = controlTemplates.Count;
+	                
                     AddControlTemplates(valueType, controlTemplates);
-	                // We still fall back into the default codepath as there may also be attributes on
-	                // the struct which modify the templates inside the struct.
-	                ////TODO: modification isn't implemented ATM
+	                
+	                // If the current member is a field that is embedding the state structure, add
+	                // the field offset to all control templates that were added from the struct.
+	                var memberAsField = member as FieldInfo;
+	                if (memberAsField != null)
+	                {
+		                var fieldOffset = Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
+	                	var countrolCountAfter = controlTemplates.Count;
+		                for (var i = controlCountBefore; i < countrolCountAfter; ++i)
+		                {
+			                var controlTemplate = controlTemplates[i];
+			                if (controlTemplates[i].offset != InputStateBlock.kInvalidOffset)
+			                {
+				                controlTemplate.offset += (uint)fieldOffset;
+				                controlTemplates[i] = controlTemplate;
+			                }
+		                }
+	                }
+
+	                ////TODO: allow attributes on the member to modify control templates inside the struct
                 }
 
 		        // Look for InputControlAttributes. If they aren't there, the member has to be
@@ -257,8 +276,15 @@ namespace ISX
 
 		    // Determine offset.
 		    var offset = InputStateBlock.kInvalidOffset;
-		    if (member is FieldInfo)
+		    if (attribute != null && attribute.offset != InputStateBlock.kInvalidOffset)
+			    offset = attribute.offset;
+		    else if (member is FieldInfo)
 			    offset = (uint)Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
+		    
+		    // Determine bit offset.
+		    var bit = 0u;
+		    if (attribute != null)
+			    bit = (uint)attribute.bit;
 		    
 		    ////TODO: remaining template stuff
 
@@ -266,7 +292,8 @@ namespace ISX
 		    {
 				name = name,
 			    template = template,
-			    offset = offset
+			    offset = offset,
+			    bit = bit
 		    };
 	    }
 

@@ -10,10 +10,10 @@ namespace ISX
 	//       to do the heavy-lifting.
 	public struct InputStateBlock
 	{
-		public enum Usage
+		public enum Semantics
 		{
-			Input,
-			Output
+			Input, // State captures values coming in.
+			Output // State captures values going out.
 		}
 		
 	    public const uint kInvalidOffset = 0xffffffff;
@@ -27,11 +27,10 @@ namespace ISX
 	    public uint bitOffset;
 		public uint sizeInBits;
 		
-		public Usage usage;
+		public Semantics semantics;
 		
 		
 		// These fields are owned and managed by InputManager.
-		internal static int s_StateSize;
 		internal static IntPtr s_CurrentStatePtr;
 		internal static IntPtr s_PreviousStatePtr;
 

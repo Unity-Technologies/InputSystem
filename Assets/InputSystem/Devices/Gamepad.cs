@@ -91,9 +91,9 @@ namespace ISX
         }
 		
 		[InputControl(name = "leftMotor", template = "Motor", usage = "LowFreqMotor")]
-		public float leftMotorSpeed;
+		public float leftMotor;
 		[InputControl(name = "rightMotor", template = "Motor", usage = "HighFreqMotor")]
-		public float rightMotorSpeed;
+		public float rightMotor;
 
 		public FourCC GetTypeStatic()
 		{

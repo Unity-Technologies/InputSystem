@@ -97,7 +97,9 @@ namespace ISX
 	    protected InputControl()
 	    {
 		    // Set defaults for state block setup. Subclasses may override.
-		    m_StateBlock.usage = InputStateBlock.Usage.Input;
+		    m_StateBlock.semantics = InputStateBlock.Semantics.Input;
+		    m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+		    m_StateBlock.bitOffset = 0;
 	    }
 
 	    // Set up of the control has been finalized. This can be used, for example, to look up
@@ -132,6 +134,9 @@ namespace ISX
 	    // FinishSetup().
 	    internal void CallFinishSetup(InputControlSetup setup)
 	    {
+		    for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
+			    m_ChildrenReadOnly[i].CallFinishSetup(setup);
+		    
 		    FinishSetup(setup);
 	    }
 

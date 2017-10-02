@@ -5,7 +5,7 @@
     {
         public MotorControl()
         {
-            m_StateBlock.usage = InputStateBlock.Usage.Output;
+            m_StateBlock.semantics = InputStateBlock.Semantics.Output;
         }
     }
 }

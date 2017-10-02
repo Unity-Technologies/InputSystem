@@ -3,7 +3,7 @@
 namespace ISX
 {
 	// A control made up of four discrete, directional buttons. Forms a vector
-	// but can also be addressed as individual buttons.
+	// but can also be addressed as individual buttons. Is stored as two bits.
 	public class DpadControl : InputControl<Vector2>
 	{
 		public enum ButtonBits

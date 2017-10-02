@@ -28,6 +28,12 @@ namespace ISX
 	    // with its device root.
 	    public InputDevice Finish()
 	    {
+		    ////TODO: allow reusing a previously created device; this way an InputControlSetup
+		    ////      can be used to adjust a device's control setup without also causing it to
+		    ////      become an entirely new device
+		    ////      (probably also want to retain InputControls that are the same in that case
+		    ////      so that if anyone holds on to them, they still work)
+
 		    // Create device.
 		    var device = (InputDevice) Activator.CreateInstance(m_DeviceType);
 		    device.m_Template = m_DeviceTemplate.name;
@@ -35,6 +41,7 @@ namespace ISX
 		    
 		    // Install the control hierarchy.
 		    SetUpControlHierarchy(device);
+		    MakeChildOffsetsRelativeToRootRecursive(device);
 		    device.CallFinishSetup(this);
 		    
 		    // Kill off our state.
@@ -233,6 +240,11 @@ namespace ISX
 		    SetUpControlHierarchyRecursive(device, device, ref childArrayIndex, ref usageArrayIndex);
 	    }
 
+        // Also makes sure offsets and sizes are set. When coming back up out of
+        // SetUpControlHierarchyRecursive, the control will have its state size set correctly
+        // but the offsets between all the children need to be arranged in proper order.
+        // Note that we still end up with offsets that are always relative to the parent. To get
+        // to the final absolute offsets, we need a final traversal down the hierarchy.
 	    private void SetUpControlHierarchyRecursive(InputDevice device, InputControl control, ref int childArrayIndex,
 		    ref int usageArrayIndex)
 	    {
@@ -274,26 +286,16 @@ namespace ISX
 			    usageArrayIndex += usageCount;
 		    }
 		    
-		    // If state size is not set, it means it's computed from the size of the
-		    // children so make sure we actually have children.
-		    if (control.m_StateBlock.sizeInBits == 0 && children == null)
-			    throw new Exception(
-				    $"Control '{control.path}' with template '{control.template}' has no size set but has no children to compute size from");
-		    
 		    // Recurse into children.
 		    if (children != null)
 		    {
 			    foreach (var child in children)
 				    SetUpControlHierarchyRecursive(device, child, ref childArrayIndex, ref usageArrayIndex);
 		    }
-		    //Debug.Assert(control.stateBlock.sizeInBits > 0, "Control should have non-zero size");
-			    
-		    // Make our parent account for our state block.
-		    if (control.parent != null && control != device)
-		    {
-			    var parent = control.parent;
-		    }
 		    
+		    // Lay out our state.
+		    ComputeStateLayout(control, children);
+			    
 		    // Nuke path on control as the final path is only known once we hook
 		    // a device into the system. Do this last so we can still spill good
 		    // diagnostics for as long as possible.
@@ -327,7 +329,15 @@ namespace ISX
 	    {
 		    var controlTemplates = template.m_Controls;
 		    foreach (var controlTemplate in controlTemplates)
-			    AddControlInternal(controlTemplate.template, controlTemplate.name, parent);
+		    {
+			    var control = AddControlInternal(controlTemplate.template, controlTemplate.name, parent);
+			    
+			    // Pass remaining settings of control template on to newly created control.
+			    control.m_StateBlock.byteOffset = controlTemplate.offset;
+			    control.m_StateBlock.bitOffset = controlTemplate.bit;
+			    
+			    ////TODO: process parameters, processors, and usages
+		    }
 	    }
 
 	    private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent)
@@ -422,6 +432,99 @@ namespace ISX
 		    
 		    // Nothing.
 		    throw new Exception($"Cannot find input template called '{name}'");
+	    }
+
+	    private void ComputeStateLayout(InputControl control, List<InputControl> children)
+	    {
+		    // If state size is not set, it means it's computed from the size of the
+		    // children so make sure we actually have children.
+		    if (control.m_StateBlock.sizeInBits == 0 && children == null)
+			    throw new Exception(
+				    $"Control '{control.path}' with template '{control.template}' has no size set but has no children to compute size from");
+		    
+		    // If there's no children, our job is done.
+		    if (children == null)
+			    return;
+		    
+		    // First deal with children that want fixed offsets. All the other ones
+		    // will get appended to the end.
+		    var firstUnfixedByteOffset = 0u;
+		    foreach (var child in children)
+		    {
+			    // Skip children that don't have fixed offsets.
+			    if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+				    continue;
+
+			    if (child.m_StateBlock.byteOffset >= firstUnfixedByteOffset)
+				    firstUnfixedByteOffset =
+					    BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.sizeInBits);
+		    }
+		    
+		    // Now assign an offset to every control that wants an
+		    // automatic offset. For bitfields, we need to delay advancing byte
+		    // offsets until we've seen all bits in the fields.
+		    // NOTE: Bit addressing controls using automatic offsets *must* be consecutive.
+		    var runningByteOffset = firstUnfixedByteOffset;
+			InputControl firstBitAddressingChild = null;
+		    var bitfieldSizeInBits = 0u;
+		    foreach (var child in children)
+		    {
+			    // Skip children with fixed offsets.
+			    if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+				    continue;
+			    
+                // See if it's a bit addressing control.
+			    var isBitAddressingChild = (child.m_StateBlock.bitOffset != 0);
+                if (isBitAddressingChild)
+                {
+	                // Remember start of bitfield group.
+                    if (firstBitAddressingChild == null)
+                        firstBitAddressingChild = child;
+
+	                // Keep a running count of the size of the bitfield.
+	                var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
+	                if (lastBit > bitfieldSizeInBits)
+		                bitfieldSizeInBits = lastBit;
+                }
+                else
+                {
+	                // Terminate bitfield group (if there was one).
+	                if (firstBitAddressingChild != null)
+	                {
+		                runningByteOffset = BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
+	                	firstBitAddressingChild = null;
+	                }
+                }
+			    
+				child.m_StateBlock.byteOffset = runningByteOffset;
+
+			    if (!isBitAddressingChild)
+				    runningByteOffset =
+					    BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, child.m_StateBlock.sizeInBits);
+		    }
+		    
+		    // Compute total size.
+            // If we ended on a bitfield, account for its size.
+            if (firstBitAddressingChild != null)
+                runningByteOffset = BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
+		    var totalSizeInBytes = runningByteOffset;
+		    
+		    // If our size isn't set, set it now from the total size we
+		    // have accumulated.
+		    if (control.m_StateBlock.sizeInBits == 0)
+			    control.m_StateBlock.sizeInBits = totalSizeInBytes * 8;
+	    }
+
+	    // Walk down the hierarchy and add the offset of each control to the offsets of all its
+	    // direct and indirect children.
+	    private void MakeChildOffsetsRelativeToRootRecursive(InputControl control)
+	    {
+		    var ourOffset = control.m_StateBlock.byteOffset;
+		    foreach (var child in control.children)
+		    {
+		    	child.m_StateBlock.byteOffset += ourOffset;
+			    MakeChildOffsetsRelativeToRootRecursive(child);
+		    }
 	    }
     }
 }

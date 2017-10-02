@@ -36,6 +36,11 @@
 		    get { return m_DeviceId; }
 	    }
 
+	    public InputDevice()
+	    {
+		    m_StateBlock.byteOffset = 0;
+	    }
+
 	    // Make this the current device of its type.
         // Use this to set static properties that give fast access to the latest device used of a given
 	    // type (see Gamepad.current).

@@ -4,7 +4,9 @@ namespace ISX
 {
 	public class Vector2Control : InputControl<Vector2>
     {
+	    [InputControl(offset = 0)]
         public AxisControl x { get; private set; }
+	    [InputControl(offset = 4)]
         public AxisControl y { get; private set; }
 
 	    public override Vector2 value

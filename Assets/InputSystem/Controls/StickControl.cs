@@ -4,13 +4,13 @@
     // State-wise this is still just a Vector2.
     public class StickControl : Vector2Control
     {
-	    [InputControl(options="clamp=true,clampMin=0,clampMax=1")]
+	    [InputControl(offset = 4, options="clamp=true,clampMin=0,clampMax=1")]
         public AxisControl up { get; private set; }
-	    [InputControl(options="clamp=true,clampMin=-1,clampMax=0")]
+	    [InputControl(offset = 4, options="clamp=true,clampMin=-1,clampMax=0")]
         public AxisControl down { get; private set; }
-	    [InputControl(options="clamp=true,clampMin=-1,clampMap=0")]
+	    [InputControl(offset = 0, options="clamp=true,clampMin=-1,clampMap=0")]
         public AxisControl left { get; private set; }
-	    [InputControl(options="clamp=true,clampMin=0,clampMax=1")]
+	    [InputControl(offset = 0, options="clamp=true,clampMin=0,clampMax=1")]
         public AxisControl right { get; private set; }
 
 	    protected override void FinishSetup(InputControlSetup setup)

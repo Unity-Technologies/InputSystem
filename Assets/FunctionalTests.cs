@@ -25,7 +25,18 @@ public class FunctionalTests
         InputSystem.Restore();
     }
     
+    // The test categories give the feature area associated with the test:
+    // a) Controls
+    // b) Templates
+    // c) Devices
+    // d) State
+    // e) Events
+    // f) Actions
+    // g) Bindings
+    // h) Other
+    
     [Test]
+    [Category("Templates")]
     public void CanCreatePrimitiveControlsFromTemplate()
     {
         Setup();
@@ -40,6 +51,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Templates")]
     public void CanCreateCompoundControlsFromTemplate()
     {
         Setup();
@@ -56,6 +68,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
     public void CanCreateDeviceFromTemplate()
     {
         Setup();
@@ -70,6 +83,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
     public void CanCreateDeviceWithNestedState()
     {
         Setup();
@@ -85,6 +99,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Controls")]
     public void CanFindControlsInSetupByPath()
     {
         Setup();
@@ -100,6 +115,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Controls")]
     public void DeviceAndControlsRememberTheirTemplates()
     {
         Setup();
@@ -114,6 +130,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Controls")]
     public void ControlsReferToTheirDevices()
     {
         Setup();
@@ -128,6 +145,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
     public void DevicesGetNameFromTemplate()
     {
         Setup();
@@ -141,7 +159,8 @@ public class FunctionalTests
     }
 
     [Test]
-    public void ComputesStateLayoutFromTemplate()
+    [Category("State")]
+    public void CanComputeStateLayoutFromStateStructure()
     {
         Setup();
         
@@ -150,20 +169,88 @@ public class FunctionalTests
         var device = setup.Finish();
 
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>()*8));
-        Assert.That(leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick")));
+        Assert.That(leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick").ToInt32()));
         
         TearDown();
     }
 
     [Test]
+    [Category("State")]
+    public void CanComputeStateLayoutForNestedStateStructures()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var rightMotor = setup.GetControl("rightMotor");
+        var device = setup.Finish();
+
+        var outputOffset = Marshal.OffsetOf<GamepadState>("motors").ToInt32();
+        var rightMotorOffset = outputOffset + Marshal.OffsetOf<GamepadOutputState>("rightMotor").ToInt32();
+
+        Assert.That(rightMotor.stateBlock.byteOffset, Is.EqualTo(rightMotorOffset));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
+    public void OffsetsInStateLayoutsAreRelativeToRoot()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var device = (Gamepad) setup.Finish();
+
+        var leftStickOffset = Marshal.OffsetOf<GamepadState>("leftStick").ToInt32();
+        var leftStickXOffset = leftStickOffset;
+        var leftStickYOffset = leftStickOffset + 4;
+
+        Assert.That(device.leftStick.x.stateBlock.byteOffset, Is.EqualTo(leftStickXOffset));
+        Assert.That(device.leftStick.y.stateBlock.byteOffset, Is.EqualTo(leftStickYOffset));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
+    public void CanSpecifyBitOffsetsOnControlProperties()
+    {
+        Setup();
+        
+        //examine control setup on dpad
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
     public void AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         Setup();
         
         TearDown();
     }
-    
+
     [Test]
+    [Category("State")]
+    public void SupportsBitAddressingControlsWithFixedOffsets()
+    {
+        Setup();
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
+    public void SupportsBitAddressingControlsWithAutomaticOffsets()
+    {
+        Setup();
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void CanAddDeviceFromTemplate()
     {
         Setup();
@@ -177,6 +264,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
     public void AddingDeviceTwiceIsIgnored()
     {
         Setup();
@@ -191,6 +279,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
     public void EnsuresDeviceNamesAreUnique()
     {
         Setup();
@@ -204,6 +293,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
     public void AssignsUniqueNumericIdToDevices()
     {
         Setup();
@@ -217,6 +307,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Controls")]
     public void AssignsFullPathToControlsWhenAddingDevice()
     {
         Setup();
@@ -235,6 +326,7 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Templates")]
     public void ReplacingTemplateAffectsAllDevicesUsingTemplate()
     {
     }

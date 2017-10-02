@@ -17,5 +17,6 @@ namespace ISX
 	    public string[] processors;
 	    public string[] aliases;
         public int bit;
+        public uint offset = InputStateBlock.kInvalidOffset;
     }
 }
