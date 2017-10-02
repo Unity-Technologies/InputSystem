@@ -17,12 +17,18 @@ namespace ISX
 	    }
 
 	    // Full semantic path all the way from the root.
+	    // NOTE: Allocates on first hit. We don't create paths until someone asks for them.
 	    public string path
 	    {
 		    get
 		    {
-			    if (m_Path == null && m_Parent != null)
-				    m_Path = $"{m_Parent.path}/{m_Name}";
+			    if (m_Path == null)
+			    {
+				    if (m_Parent != null)
+					    m_Path = $"{m_Parent.path}/{m_Name}";
+				    else
+					    m_Path = $"/{m_Name}";
+			    }
 			    return m_Path;
 		    }
 	    }

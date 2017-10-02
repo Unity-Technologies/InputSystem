@@ -131,6 +131,21 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
+    public void ControlsReferToTheirParent()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var gamepad = (Gamepad) setup.Finish();
+
+        Assert.That(gamepad.leftStick.parent, Is.SameAs(gamepad));
+        Assert.That(gamepad.leftStick.x.parent, Is.SameAs(gamepad.leftStick));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
     public void ControlsReferToTheirDevices()
     {
         Setup();

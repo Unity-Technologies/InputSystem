@@ -238,6 +238,12 @@ namespace ISX
 		    var usageArrayIndex = 0;
 
 		    SetUpControlHierarchyRecursive(device, device, ref childArrayIndex, ref usageArrayIndex);
+		    
+		    // Hook up parent to device for all toplevel controls. Device doesn't
+		    // exist yet when we do AddControl for all control templates so toplevel
+		    // controls come out with their parent being null.
+		    for (var i = 0; i < device.children.Count; ++i)
+			    device.children[i].m_Parent = device;
 	    }
 
         // Also makes sure offsets and sizes are set. When coming back up out of

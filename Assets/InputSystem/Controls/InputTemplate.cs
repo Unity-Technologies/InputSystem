@@ -137,6 +137,9 @@ namespace ISX
 	    {
 		    throw new NotImplementedException();
 	    }
+	    
+	    ////REVIEW: for device templates, should we always add one ControlTemplate that represents the
+	    ////        device control itself? this would get rid of a number of special cases in InputControlSetup
 
 	    private string m_Name;
 	    private Type m_Type;
