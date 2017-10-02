@@ -26,21 +26,54 @@ namespace ISX
 		public uint byteOffset;
 	    public uint bitOffset;
 		public uint sizeInBits;
+
+		public Semantics semantics
+		{
+			get
+			{
+				if ((m_Flags & Flags.SemanticsOutput) == Flags.SemanticsOutput)
+					return Semantics.Input;
+				return Semantics.Input;
+			}
+			set
+			{
+				if (value == Semantics.Input)
+					m_Flags &= ~Flags.SemanticsOutput;
+				else
+					m_Flags |= Flags.SemanticsOutput;
+			}
+		}
 		
-		public Semantics semantics;
 		
-		
+		[Flags]
+		private enum Flags
+		{
+			Allocated = 1 << 0, // Whether we have allocated space for this block.
+			SemanticsOutput = 1 << 1,
+		}
+
+		private Flags m_Flags;
+
 		// These fields are owned and managed by InputManager.
 		internal static IntPtr s_CurrentStatePtr;
 		internal static IntPtr s_PreviousStatePtr;
 
 		internal IntPtr currentStatePtr
 		{
-			get { throw new NotImplementedException(); }
+			get
+			{
+				throw new NotImplementedException();
+			}
 		}
+		
 		internal IntPtr previousStatePtr
 		{
 			get { throw new NotImplementedException(); }
+		}
+		
+		internal bool isAllocated
+		{
+			get { return (m_Flags & Flags.Allocated) == Flags.Allocated; }
 		}
 	}
 }

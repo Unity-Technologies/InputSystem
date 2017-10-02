@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
 
@@ -155,6 +156,23 @@ public class FunctionalTests
         var device = setup.Finish();
 
         Assert.That(leftStick.device, Is.SameAs(device));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var device = (Gamepad)setup.Finish();
+
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+             var value = device.leftStick.value;
+        });
         
         TearDown();
     }

@@ -119,12 +119,24 @@ namespace ISX
 	    
 		protected IntPtr currentStatePtr
 		{
-			get { return m_StateBlock.currentStatePtr; }
+			get
+			{
+				if (!m_StateBlock.isAllocated)
+					throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
+
+				return m_StateBlock.currentStatePtr;
+			}
 		}
 	    
 		protected IntPtr previousStatePtr
 		{
-			get { return m_StateBlock.previousStatePtr; }
+			get
+			{
+				if (!m_StateBlock.isAllocated)
+					throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
+
+				return m_StateBlock.previousStatePtr;
+			}
 		}
 	    
 	    // This data is initialized by InputControlSetup.
