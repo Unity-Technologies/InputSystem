@@ -81,7 +81,24 @@ public class FunctionalTests : IPrebuildSetup
     }
 
     [Test]
+    public void CanCreateDeviceWithNestedState()
+    {
+        var setup = new InputControlSetup();
+        setup.AddControl("Gamepad");
+        var device = setup.Finish();
+
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftMotor"));
+        
+        InputSystem.Restore();
+    }
+
+    [Test]
     public void CanAddNewDevice()
+    {
+    }
+
+    [Test]
+    public void ReplacingTemplateAffectsAllDevicesUsingTemplate()
     {
     }
 }

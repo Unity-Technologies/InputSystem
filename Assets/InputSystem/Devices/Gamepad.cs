@@ -36,7 +36,7 @@ namespace ISX
         [InputControl(template = "Analog", usage = "PrimaryTrigger")]
         public float rightTrigger;
 
-	    //public GamepadOutputState motors;
+	    public GamepadOutputState motors;
 
         public enum Button
         {
@@ -90,9 +90,9 @@ namespace ISX
             get { return new FourCC('M', 'O', 'T', 'R'); }
         }
 		
-		[InputControl(name = "left", template = "Motor", usage = "LowFreqMotor")]
+		[InputControl(name = "leftMotor", template = "Motor", usage = "LowFreqMotor")]
 		public float leftMotorSpeed;
-		[InputControl(name = "right", template = "Motor", usage = "HighFreqMotor")]
+		[InputControl(name = "rightMotor", template = "Motor", usage = "HighFreqMotor")]
 		public float rightMotorSpeed;
 
 		public FourCC GetTypeStatic()
@@ -181,8 +181,8 @@ namespace ISX
 			leftTrigger = setup.GetControl<AxisControl>(this, "leftTrigger");
 			rightTrigger = setup.GetControl<AxisControl>(this, "rightTrigger");
 
-			//leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
-			//rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");
+			leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
+			rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");
 
 			base.FinishSetup(setup);
 		}

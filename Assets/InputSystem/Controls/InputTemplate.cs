@@ -11,6 +11,19 @@ using UnityEngine;
 namespace ISX
 {
 	// A template lays out the composition of an input control.
+	//
+	// Can be created in one of three ways:
+	//	1) Manually in code through InputTemplateBuilder.
+	// 	2) Loaded from JSON.
+	//  3) Constructed through reflection from InputControls classes.
+	//
+	// Once constructed, templates are immutable (but you can always
+	// replace a registered template in the system and it will affect
+	// everything constructed from the template).
+	//
+	// Templates can be for arbitrary control rigs or for entire
+	// devices. Device templates can use the 'deviceDescriptor' field
+	// to specify regexs that are to match against compatible devices.
 #if UNITY_EDITOR
 	[Serializable]
 #endif
@@ -75,7 +88,6 @@ namespace ISX
 		    get { return m_DeviceDescriptor; }
 	    }
 	    
-	    ////TODO: turn into IEnumerable
         public ReadOnlyCollection<ControlTemplate> controls
         {
 	        get
@@ -111,18 +123,14 @@ namespace ISX
 		        if (stateAttribute != null)
 		        {
 			        isDeviceWithStateAttribute = true;
-			        
-			        AddControlTemplatesFromFields(stateAttribute.type, controlTemplates);
-			        AddControlTemplatesFromProperties(stateAttribute.type, controlTemplates);
+			        AddControlTemplates(stateAttribute.type, controlTemplates);
 		        }
 	        }
 	        if (!isDeviceWithStateAttribute)
 	        {
 		        // Add control templates from type contents.
-		        AddControlTemplatesFromFields(type, controlTemplates);
-		        AddControlTemplatesFromProperties(type, controlTemplates);
+		        AddControlTemplates(type, controlTemplates);
 	        }
-
 	        
 	        // Create template object.
 	        var template = new InputTemplate(name, type);
@@ -145,14 +153,17 @@ namespace ISX
 	    private ReadOnlyCollection<ControlTemplate> m_ControlsReadOnly;
 	    private InputDeviceDescriptor m_DeviceDescriptor;
         
-	       	////TODO: need to look *inside* the types of fields to find controls nested inside the types (really?)
-	        ////TODO: allow referring to a *subcontrol* in the current field by name
-
         private InputTemplate(string name, Type type)
         {
 	        m_Name = name;
 	        m_Type = type;
         }
+
+	    private static void AddControlTemplates(Type type, List<ControlTemplate> controlTemplates)
+	    {
+		    AddControlTemplatesFromFields(type, controlTemplates);
+		    AddControlTemplatesFromProperties(type, controlTemplates);
+	    }
 	    
 	    // Add ControlTemplates for every public property in the given type thas has
     	// InputControlAttribute applied to it or has an InputControl-derived value type.
@@ -176,17 +187,30 @@ namespace ISX
 	    {
 	        foreach (var member in members)
 	        {
+                // Skip anything declared inside InputControl itself.
+                // Filters out m_Device etc.
+                if (member.DeclaringType == typeof(InputControl))
+                    continue;
+		        
+                var valueType = TypeHelpers.GetValueType(member);
+                
+                // If the value type of the member is a struct type and implements the IInputStateTypeInfo
+			    // interface, dive inside and look. This is useful for composing states of one another.
+                if (valueType != null && valueType.IsValueType && typeof(IInputStateTypeInfo).IsAssignableFrom(valueType))
+                {
+                    AddControlTemplates(valueType, controlTemplates);
+	                // We still fall back into the default codepath as there may also be attributes on
+	                // the struct which modify the templates inside the struct.
+	                ////TODO: modification isn't implemented ATM
+                }
+
+		        // Look for InputControlAttributes. If they aren't there, the member has to be
+		        // of an InputControl-derived value type.
 		        var attributes = member.GetCustomAttributes<InputControlAttribute>().ToArray();
 		        if (attributes.Length == 0)
 		        {
-			        var valueType = TypeHelpers.GetValueType(member);
 			        if (valueType == null || !typeof(InputControl).IsAssignableFrom(valueType))
 			        	continue;
-
-			        // Everything declared inside InputControl itself isn't eligible.
-			        // Filters out m_Device etc.
-			        if (member.DeclaringType == typeof(InputControl))
-				        continue;
 		        }
 
 		        AddControlTemplatesFromMember(member, attributes, controlTemplates);
@@ -280,6 +304,7 @@ namespace ISX
                 throw new Exception($"No input template called '{name}' has been registered");
             return template;
         }
+	    
 
 	    // Domain reload survival logic.
 #if UNITY_EDITOR

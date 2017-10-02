@@ -111,6 +111,7 @@ namespace ISX
 			RegisterProcessor("Clamp", typeof(ClampProcessor));
 			RegisterProcessor("Normalize", typeof(NormalizeProcessor));
 			RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
+	        RegisterProcessor("Curve", typeof(CurveProcessor));
 	        
 			// Register usages.
 			RegisterUsage("PrimaryStick", "Stick");
