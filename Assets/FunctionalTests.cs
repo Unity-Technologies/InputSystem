@@ -3,6 +3,8 @@ using ISX;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
+////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
+
 public class FunctionalTests : IPrebuildSetup
 {
     public void Setup()
@@ -47,6 +49,33 @@ public class FunctionalTests : IPrebuildSetup
 
         Assert.That(device.children, Has.Count.EqualTo(1)); // Just stick itself.
         Assert.That(device.children.First(), Is.SameAs(stick));
+        
+        InputSystem.Restore();
+    }
+
+    [Test]
+    public void CanFindControlsInSetupByPath()
+    {
+        var setup = new InputControlSetup();
+        setup.AddControl("Stick", "stick");
+
+        Assert.That(setup.TryGetControl("stick"), Is.TypeOf<StickControl>());
+        Assert.That(setup.TryGetControl("stick/x"), Is.TypeOf<AxisControl>());
+        Assert.That(setup.TryGetControl("stick/y"), Is.TypeOf<AxisControl>());
+        Assert.That(setup.TryGetControl("stick/up"), Is.TypeOf<AxisControl>());
+            
+        InputSystem.Restore();
+    }
+
+    [Test]
+    public void CanCreateComplexDeviceWithState()
+    {
+        var setup = new InputControlSetup();
+        setup.AddControl("Gamepad");
+        var device = setup.Finish();
+        
+        Assert.That(device, Is.TypeOf<Gamepad>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftStick"));
         
         InputSystem.Restore();
     }

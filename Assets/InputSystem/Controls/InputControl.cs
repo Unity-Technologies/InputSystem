@@ -126,6 +126,13 @@ namespace ISX
 	    {
 		    FinishSetup(setup);
 	    }
+
+	    internal string MakeChildPath(string path)
+	    {
+		    if (this is InputDevice)
+			    return path;
+		    return $"{this.path}/{path}";
+	    }
     }
 	
     // Helper to more quickly implement new control types.

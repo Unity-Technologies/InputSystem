@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -89,15 +90,32 @@ namespace ISX
 		        return m_ControlsReadOnly;
 	        }
         }
-        
-        // Uses reflection to construct a template from the given type.
+
+	    public string ToJson()
+	    {
+		    throw new NotImplementedException();
+	    }
+
+	    // Uses reflection to construct a template from the given type.
         // Can be used with both control classes and state structs.
         public static InputTemplate FromType(string name, Type type)
         {
-	        // Create control templates.
 	        var controlTemplates = new List<ControlTemplate>();
+	        
+	        // If it's a device, add control templates from its state (if present).
+	        if (typeof(InputDevice).IsAssignableFrom(type))
+	        {
+		        var stateAttribute = type.GetCustomAttribute<InputStateAttribute>();
+		        if (stateAttribute != null)
+		        {
+			        AddControlTemplatesFromFields(stateAttribute.type, controlTemplates);
+			        AddControlTemplatesFromProperties(stateAttribute.type, controlTemplates);
+		        }
+	        }
+	        // Add control templates from type contents.
 	        AddControlTemplatesFromFields(type, controlTemplates);
 	        AddControlTemplatesFromProperties(type, controlTemplates);
+
 	        
 	        // Create template object.
 	        var template = new InputTemplate(name, type);
@@ -129,7 +147,7 @@ namespace ISX
 	        m_Type = type;
         }
 	    
-	    // Add a ControlTemplate for every public property in the given type thas has
+	    // Add ControlTemplates for every public property in the given type thas has
     	// InputControlAttribute applied to it or has an InputControl-derived value type.
 	    private static void AddControlTemplatesFromFields(Type type, List<ControlTemplate> controlTemplates)
 	    {
@@ -137,7 +155,7 @@ namespace ISX
 		    AddControlTemplatesFromMembers(fields, controlTemplates);
 	    }
 	    
-	    // Add a ControlTemplate for every public property in the given type thas has
+	    // Add ControlTemplates for every public property in the given type thas has
     	// InputControlAttribute applied to it or has an InputControl-derived value type.
 	    private static void AddControlTemplatesFromProperties(Type type, List<ControlTemplate> controlTemplates)
 	    {
@@ -145,14 +163,14 @@ namespace ISX
 		    AddControlTemplatesFromMembers(properties, controlTemplates);
 	    }
 	    
-	    // Add a ControlTemplate for every member in the list thas has InputControlAttribute applied to it
+	    // Add ControlTemplates for every member in the list thas has InputControlAttribute applied to it
 	    // or has an InputControl-derived value type.
 	    private static void AddControlTemplatesFromMembers(MemberInfo[] members, List<ControlTemplate> controlTemplates)
 	    {
 	        foreach (var member in members)
 	        {
-		        var attribute = member.GetCustomAttribute<InputControlAttribute>();
-		        if (attribute == null)
+		        var attributes = member.GetCustomAttributes<InputControlAttribute>().ToArray();
+		        if (attributes.Length == 0)
 		        {
 			        var valueType = TypeHelpers.GetValueType(member);
 			        if (valueType == null || !typeof(InputControl).IsAssignableFrom(valueType))
@@ -164,9 +182,32 @@ namespace ISX
 				        continue;
 		        }
 
-		        var template = CreateControlTemplateFromMember(member, attribute);
-		        controlTemplates.Add(template);
+		        AddControlTemplatesFromMember(member, attributes, controlTemplates);
 	        }
+	    }
+
+	    private static void AddControlTemplatesFromMember(MemberInfo member,
+		    InputControlAttribute[] attributes, List<ControlTemplate> controlTemplates)
+	    {
+		    // InputControlAttribute can be applied multiple times to the same member,
+		    // generating a separate control for each ocurrence. However, it can also
+		    // not be applied at all in which case we still add a control template (the
+		    // logic that called us already made sure the member is eligible for this kind
+		    // of operation).
+
+		    if (attributes.Length == 0)
+		    {
+			    var controlTemplate = CreateControlTemplateFromMember(member, null);
+			    controlTemplates.Add(controlTemplate);
+		    }
+		    else
+		    {
+                foreach (var attribute in attributes)
+                {
+                    var controlTemplate = CreateControlTemplateFromMember(member, attribute);
+                    controlTemplates.Add(controlTemplate);
+                }
+		    }
 	    }
 	    
 	    private static ControlTemplate CreateControlTemplateFromMember(MemberInfo member, InputControlAttribute attribute)

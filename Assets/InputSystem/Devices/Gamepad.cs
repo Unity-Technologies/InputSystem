@@ -1,15 +1,11 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
 
-////REVIEW: is there still the need to have separate state structs or can the unification of devices
-////        and controls obsolete that need?
-
 namespace ISX
 {
     // Xbox-compatible gamepad state layout.
     // Must be kept identical to layout used by native code.
-    // This struct is one example of how to yield InputControlSetups; however, the system doesn't
-    // care how layouts/setups come to be.
+	// Native will send StateEvents with data matching this struct to update gamepads.
     [StructLayout(LayoutKind.Sequential)]
     public struct GamepadState : IInputStateTypeInfo
     {
@@ -23,8 +19,10 @@ namespace ISX
         [InputControl(name = "buttonWest", template = "Button", bit = (int)Button.West, usage = "SecondaryAction")]
         [InputControl(name = "buttonNorth", template = "Button", bit = (int)Button.North)]
         [InputControl(name = "buttonEast", template = "Button", bit = (int)Button.East)]
-        [InputControl(name = "leftStickPress", template = "Button", usage = "primaryStick", bit = (int)Button.LeftStick)]
-        [InputControl(name = "rightStickPress", template = "Button", usage = "secondaryStick", bit = (int)Button.RightStick)]
+        [InputControl(name = "leftStickPress", template = "Button", bit = (int)Button.LeftStick)]
+        [InputControl(name = "rightStickPress", template = "Button", bit = (int)Button.RightStick)]
+	    [InputControl(name = "leftShoulder", template = "Button", bit = (int)Button.LeftShoulder)]
+	    [InputControl(name = "rightShoulder", template = "Button", bit = (int)Button.RightShoulder)]
         public int buttons;
 
         [InputControl(template = "Stick", usage = "PrimaryStick")]
@@ -36,7 +34,7 @@ namespace ISX
         [InputControl(template = "Analog", usage = "PrimaryTrigger")]
         public float rightTrigger;
 
-	    public GamepadOutputState motors;
+	    //public GamepadOutputState motors;
 
         public enum Button
         {
@@ -57,8 +55,8 @@ namespace ISX
 
             LeftStick,
             RightStick,
-            LeftBumper,
-            RightBumper,
+            LeftShoulder,
+            RightShoulder,
 
             Start,
             Select,
@@ -163,8 +161,8 @@ namespace ISX
 			leftStick = setup.GetControl<StickControl>(this, "leftStick");
 			rightStick = setup.GetControl<StickControl>(this, "rightStick");
 
-			leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
-			rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");
+			//leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
+			//rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");
 
 			base.FinishSetup(setup);
 		}

@@ -3,16 +3,14 @@
 namespace ISX
 {
     // Associates a state representation with an input device.
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = true)]
     public class InputStateAttribute : Attribute
     {
-        public Type inputStateType;
-	    public Type outputStateType;
+        public Type type;
 
-        public InputStateAttribute(Type inputStateType, Type outputStateType = null)
+        public InputStateAttribute(Type type)
         {
-            this.inputStateType = inputStateType;
-	        this.outputStateType = outputStateType;
+            this.type = type;
         }
     }
 }

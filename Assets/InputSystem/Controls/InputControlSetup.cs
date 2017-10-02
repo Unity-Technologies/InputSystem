@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace ISX
 {
@@ -15,13 +17,8 @@ namespace ISX
 	    // with its device root.
 	    public InputDevice Finish()
 	    {
-		    // Find out what kind of device we should be creating. Default is to just
-		    // use InputDevice.
-		    var deviceType = typeof(InputDevice);
-		    //figure out device type somehow
-		    
 		    // Create device.
-		    var device = (InputDevice) Activator.CreateInstance(deviceType);
+		    var device = (InputDevice) Activator.CreateInstance(m_DeviceType);
 		    SetUpControlHierarchy(device);
 		    device.CallFinishSetup(this);
 		    
@@ -32,7 +29,9 @@ namespace ISX
 	    }
 
 	    // Add a control constructed from the given template.
-	    // If name is null or empty, the control(s) from the template will be aded 
+	    // If the given template is a device template, returns null as devices are only
+	    // created as the last step of a setup (and there's only a single device). For
+	    // other templates, returns the control that was created.
 	    public InputControl AddControl(string template, string name = null, string parent = null, bool ignoreConflictingUsages = false)
 	    {
 		    Initialize();
@@ -47,9 +46,7 @@ namespace ISX
 		    }
 		    
 		    // Create control.
-		    var control = AddControlInternal(template, name, parentControl, ignoreConflictingUsages);
-
-		    return control;
+		    return AddControlInternal(template, name, parentControl, ignoreConflictingUsages);
 	    }
 
 	    public void AddUsage(string path, string usage)
@@ -73,6 +70,7 @@ namespace ISX
 	    // Remove the control at the given path including all its children.
 	    public void RemoveControl(string path)
 	    {
+		    //if we remove something coming from a device template, should we reset m_DeviceType to InputDevice?
 	    }
 
 	    public void SwapUsages(string firstPath, string secondPath)
@@ -87,21 +85,24 @@ namespace ISX
 	    // Look up a direct or indirect child control.
 	    public InputControl TryGetControl(InputControl parent, string path)
 	    {
-		    ////FIXME: this won't work
 		    // If there's no slash in the path, just do a linear scan through
 		    // the children rather than constructing a full path and doing
 		    // a dictionary lookup.
 		    if (path.IndexOf('/') == -1)
 		    {
-			    ////REVIEW: this makes it work with controls that aren't even part of the setup
 			    var pathLowerCase = path.ToLower();
 			    foreach (var child in parent.children)
 				    if (child.name.ToLower() == pathLowerCase)
 					    return child;
-			    return null;
+			    
+			    // Fall back to full lookup. Important as the code above will
+			    // only work when called from within FinishSetup(). Otherwise
+			    // the hierarchy won't be in place yet. However, during FinishSetup()
+			    // we want things to be fast so that's what the shortcut is for.
 		    }
 
-		    return TryGetControl($"{parent.path}/{path}");
+		    var fullPath = parent.MakeChildPath(path);
+		    return TryGetControl(fullPath);
 	    }
 
 	    // Look up a direct or indirect chid control expected to be of a specific type.
@@ -126,7 +127,7 @@ namespace ISX
 	    {
 		    var control = TryGetControl(parent, path);
 		    if (control == null)
-			    throw new Exception($"Cannot find input control '{parent.path}/{path}'");
+			    throw new Exception($"Cannot find input control '{parent.MakeChildPath(path)}'");
             return control;
 	    }
 
@@ -192,6 +193,7 @@ namespace ISX
 	    }
 
 	    private bool m_Initialized;
+	    private Type m_DeviceType;
 	    private List<InputControl> m_RootControls;
 	    private List<InputUsage> m_RootUsages;
 	    
@@ -210,6 +212,7 @@ namespace ISX
 
 	    private void Reset()
 	    {
+		    m_DeviceType = null;
 		    m_RootControls = null;
 		    m_RootUsages = null;
 		    m_ControlToChildren = null;
@@ -225,7 +228,8 @@ namespace ISX
 	    {
 		    if (m_Initialized)
 			    return;
-		    
+
+		    m_DeviceType = typeof(InputDevice);
 		    m_RootControls = new List<InputControl>();
 		    m_RootUsages = new List<InputUsage>();
 		    m_ControlToChildren = new Dictionary<InputControl, List<InputControl>>();
@@ -304,15 +308,50 @@ namespace ISX
 	    private InputControl AddControlInternal(string template, string name, InputControl parent, bool ignoreConflictingUsages)
 	    {
 		    var templateInstance = InputTemplate.GetTemplate(template);
+
+		    // Device templates are somewhat special. While we allow multiple to be added to the same setup,
+		    // they have to added the root and they will not result in the immediate creation of an InputControl.
+		    // Instead, when the setup is finished, a single InputDevice control will be created and receives
+		    // all InputControls we created as children.
+		    if (typeof(InputDevice).IsAssignableFrom(templateInstance.type))
+		    {
+			    if (parent != null)
+				    throw new Exception($"Cannot instantiate device template '{template}' as child of '{parent.path}'; devices must be added at root");
+			    
+                // The first template we assign to a setup which is a template for a whole device
+                // determines the type of device we are going to created. You can still create
+                // frankendevices that add multiple device type templates to a single setup but
+                // we have to choose *some* type to create so we choose the first one. We could
+                // choose to fall back to just InputDevice if the setup starts to mix but that'd
+                // only make us unnecessarily loose functionality on the created device.
+			    if (m_DeviceType == typeof(InputDevice))
+				    m_DeviceType = templateInstance.type;
+
+			    AddChildControls(templateInstance, null, ignoreConflictingUsages);
+			    return null;
+		    }
+
 		    return AddControlRecursive(templateInstance, name, parent, ignoreConflictingUsages);
 	    }
-	    
+
+	    private void AddChildControls(InputTemplate template, InputControl parent, bool ignoreConflictingUsages)
+	    {
+		    var controlTemplates = template.m_Controls;
+		    foreach (var controlTemplate in controlTemplates)
+			    AddControlInternal(controlTemplate.template, controlTemplate.name, parent, ignoreConflictingUsages);
+	    }
+
 	    private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent, bool ignoreConflictingUsages)
 	    {
 		    // Create control.
 		    var control = (InputControl) Activator.CreateInstance(template.type);
 		    if (name == null)
-			    name = template.name;
+		    {
+			    if (control is InputDevice)
+				    name = "";
+				else
+			    	name = template.name;
+		    }
 		    
 		    control.m_Name = name;
 		    control.m_Template = template;
@@ -322,7 +361,7 @@ namespace ISX
 		    // the system but we will need the path repeatedly during setup so we might just as well cache
 		    // the path for now.
 		    var path = name;
-		    if (parent != null)
+		    if (parent != null && parent.path != "")
 			    path = $"{parent.path}/{name}";
 		    
 		    control.m_Path = path;
@@ -352,9 +391,7 @@ namespace ISX
 		    // template values.
 		    try
 		    {
-			    var controlTemplates = template.m_Controls;
-			    foreach (var controlTemplate in controlTemplates)
-				    AddControlInternal(controlTemplate.template, controlTemplate.name, control, ignoreConflictingUsages);
+			    AddChildControls(template, control, ignoreConflictingUsages);
 		    }
 		    catch
 		    {
