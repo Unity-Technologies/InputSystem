@@ -89,21 +89,21 @@ namespace ISX
             switch (change)
             {
                  case PlayModeStateChange.ExitingEditMode:
-                     TakeSnapshot();
+                     Save();
                      break;
                  
                  case PlayModeStateChange.EnteredEditMode:
-                     RestoreSnapshot();
+                     Restore();
                      break;
             }
         }
 
-        internal static void TakeSnapshot()
+        internal static void Save()
         {
             ////TODO
         }
 
-        internal static void RestoreSnapshot()
+        internal static void Restore()
         {
             ////TODO
         }

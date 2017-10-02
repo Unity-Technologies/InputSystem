@@ -37,8 +37,6 @@ namespace ISX
 	    {
 		    Initialize();
 		    
-		    var templateInstance = InputTemplate.GetTemplate(template);
-
 		    // Determine parent.
 		    InputControl parentControl = null;
 		    if (!string.IsNullOrEmpty(parent))
@@ -49,7 +47,7 @@ namespace ISX
 		    }
 		    
 		    // Create control.
-		    var control = AddControlRecursive(templateInstance, parentControl, name, ignoreConflictingUsages);
+		    var control = AddControlInternal(template, name, parentControl, ignoreConflictingUsages);
 
 		    return control;
 	    }
@@ -303,7 +301,13 @@ namespace ISX
 		    }
 	    }
 
-	    private InputControl AddControlRecursive(InputTemplate template, InputControl parent = null, string name = null, bool ignoreConflictingUsages = false)
+	    private InputControl AddControlInternal(string template, string name, InputControl parent, bool ignoreConflictingUsages)
+	    {
+		    var templateInstance = InputTemplate.GetTemplate(template);
+		    return AddControlRecursive(templateInstance, name, parent, ignoreConflictingUsages);
+	    }
+	    
+	    private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent, bool ignoreConflictingUsages)
 	    {
 		    // Create control.
 		    var control = (InputControl) Activator.CreateInstance(template.type);
@@ -348,7 +352,9 @@ namespace ISX
 		    // template values.
 		    try
 		    {
-
+			    var controlTemplates = template.m_Controls;
+			    foreach (var controlTemplate in controlTemplates)
+				    AddControlInternal(controlTemplate.template, controlTemplate.name, control, ignoreConflictingUsages);
 		    }
 		    catch
 		    {

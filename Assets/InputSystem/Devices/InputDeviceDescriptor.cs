@@ -17,15 +17,5 @@ namespace ISX
         public string product;
         public string serial;
         public string version;
-        
-        ////REVIEW: this doesn't seem very useful anymore in the new system; maybe have a predefined format for these?
-        // A potentially large JSON string fully that may contain a full info dump including
-        // detailed capababilities of every control as well as of the device itself.
-        public string fullDescriptor;
-
-        public static InputDeviceDescriptor Parse(string json)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

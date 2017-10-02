@@ -104,8 +104,8 @@ namespace ISX
             get { return new FourCC('K', 'E', 'Y', 'S'); }
         }
 
-        [InputControl(name = "Escape", type = "Button", usage = "Back", bit = (int) Key.Enter)]
-        [InputControl(name = "Space", type = "Button", bit = (int) Key.Space)]
+        [InputControl(name = "Escape", template = "Button", usage = "Back", bit = (int) Key.Enter)]
+        [InputControl(name = "Space", template = "Button", bit = (int) Key.Space)]
         public fixed byte keys[256 / 8]; // For some reason, the Mono compiler won't accept "(int)Key.Count/8" as a constant expression.
 
         public FourCC GetTypeStatic()

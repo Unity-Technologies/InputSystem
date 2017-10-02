@@ -90,40 +90,19 @@ namespace ISX
 	        }
         }
         
-        private InputTemplate(string name, Type type)
-        {
-	        m_Name = name;
-	        m_Type = type;
-        }
-
-	    // Add all fields of the given type that are marked with InputControlAttribute
-	    // as ControlTemplate children to the given control template.
-	    private void AddControlFieldsAsChildren(Type type, ref ControlTemplate template)
-	    {
-	       	////TODO: need to look *inside* the types of fields to find controls nested inside the types (really?)
-	        ////TODO: allow referring to a *subcontrol* in the current field by name
-	        foreach (var field in type.GetFields(BindingFlags.FlattenHierarchy))
-	        {
-		        var attribute = field.GetCustomAttribute<InputControlAttribute>();
-		        if (attribute == null)
-			        continue;
-		        
-                ////REVIEW: make sure that the value type of the field and the value type of the control match?
-                var offset = Marshal.OffsetOf(type, field.Name);
-                var name = attribute.name;
-                if (string.IsNullOrEmpty(name))
-                    name = field.Name;
-                var typeName = attribute.type;
-                if (string.IsNullOrEmpty(typeName))
-                    typeName = field.FieldType.Name;
-	        }
-	    }
-
         // Uses reflection to construct a template from the given type.
         // Can be used with both control classes and state structs.
         public static InputTemplate FromType(string name, Type type)
         {
+	        // Create control templates.
+	        var controlTemplates = new List<ControlTemplate>();
+	        AddControlTemplatesFromFields(type, controlTemplates);
+	        AddControlTemplatesFromProperties(type, controlTemplates);
+	        
+	        // Create template object.
 	        var template = new InputTemplate(name, type);
+	        template.m_Controls = controlTemplates.ToArray();
+	        
 	        return template;
         }
 
@@ -137,10 +116,103 @@ namespace ISX
 	    private Type m_Type;
 	    private string m_ExtendsTemplate;
 	    private List<string> m_OverridesTemplates;
-	    private ControlTemplate[] m_Controls;
+	    internal ControlTemplate[] m_Controls;
 	    private ReadOnlyCollection<ControlTemplate> m_ControlsReadOnly;
 	    private InputDeviceDescriptor m_DeviceDescriptor;
         
+	       	////TODO: need to look *inside* the types of fields to find controls nested inside the types (really?)
+	        ////TODO: allow referring to a *subcontrol* in the current field by name
+
+        private InputTemplate(string name, Type type)
+        {
+	        m_Name = name;
+	        m_Type = type;
+        }
+	    
+	    // Add a ControlTemplate for every public property in the given type thas has
+    	// InputControlAttribute applied to it or has an InputControl-derived value type.
+	    private static void AddControlTemplatesFromFields(Type type, List<ControlTemplate> controlTemplates)
+	    {
+		    var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+		    AddControlTemplatesFromMembers(fields, controlTemplates);
+	    }
+	    
+	    // Add a ControlTemplate for every public property in the given type thas has
+    	// InputControlAttribute applied to it or has an InputControl-derived value type.
+	    private static void AddControlTemplatesFromProperties(Type type, List<ControlTemplate> controlTemplates)
+	    {
+		    var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+		    AddControlTemplatesFromMembers(properties, controlTemplates);
+	    }
+	    
+	    // Add a ControlTemplate for every member in the list thas has InputControlAttribute applied to it
+	    // or has an InputControl-derived value type.
+	    private static void AddControlTemplatesFromMembers(MemberInfo[] members, List<ControlTemplate> controlTemplates)
+	    {
+	        foreach (var member in members)
+	        {
+		        var attribute = member.GetCustomAttribute<InputControlAttribute>();
+		        if (attribute == null)
+		        {
+			        var valueType = TypeHelpers.GetValueType(member);
+			        if (valueType == null || !typeof(InputControl).IsAssignableFrom(valueType))
+			        	continue;
+
+			        // Everything declared inside InputControl itself isn't eligible.
+			        // Filters out m_Device etc.
+			        if (member.DeclaringType == typeof(InputControl))
+				        continue;
+		        }
+
+		        var template = CreateControlTemplateFromMember(member, attribute);
+		        controlTemplates.Add(template);
+	        }
+	    }
+	    
+	    private static ControlTemplate CreateControlTemplateFromMember(MemberInfo member, InputControlAttribute attribute)
+	    {
+		    ////REVIEW: make sure that the value type of the field and the value type of the control match?
+		    
+		    // Determine name.
+		    var name = attribute?.name;
+		    if (string.IsNullOrEmpty(name))
+		    {
+			    name = member.Name;
+			    if (name.IndexOf('/') != -1)
+				    throw new Exception($"InputControlAttribute annotations cannot have paths as names: " + name);
+		    }
+
+		    // Determine template.
+		    var template = attribute?.template;
+		    if (string.IsNullOrEmpty(template))
+		    {
+			    var valueType = TypeHelpers.GetValueType(member);
+			    template = InferTemplateFromValueType(valueType);
+		    }
+
+		    // Determine offset.
+		    var offset = InputStateBlock.kInvalidOffset;
+		    if (member is FieldInfo)
+			    offset = (uint)Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
+		    
+		    ////TODO: remaining template stuff
+
+		    return new ControlTemplate
+		    {
+				name = name,
+			    template = template,
+			    offset = offset
+		    };
+	    }
+
+	    private static string InferTemplateFromValueType(Type type)
+	    {
+		    var typeName = type.Name;
+		    if (typeName.EndsWith("Control"))
+			    return typeName.Substring(0, typeName.Length - "Control".Length);
+		    return typeName;
+	    }
+
 
         // This dictionary is owned and managed by InputManager.
         internal static Dictionary<string, InputTemplate> s_Templates;

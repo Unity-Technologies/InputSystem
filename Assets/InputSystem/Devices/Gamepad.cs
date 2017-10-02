@@ -18,22 +18,22 @@ namespace ISX
             get { return new FourCC('G', 'P', 'A', 'D'); }
         }
 
-	    [InputControl(name = "dpad", type = "Dpad")]
-        [InputControl(name = "buttonSouth", type = "Button", bit = (int)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
-        [InputControl(name = "buttonWest", type = "Button", bit = (int)Button.West, usage = "SecondaryAction")]
-        [InputControl(name = "buttonNorth", type = "Button", bit = (int)Button.North)]
-        [InputControl(name = "buttonEast", type = "Button", bit = (int)Button.East)]
-        [InputControl(name = "leftStickPress", type = "Button", usage = "primaryStick", bit = (int)Button.LeftStick)]
-        [InputControl(name = "rightStickPress", type = "Button", usage = "secondaryStick", bit = (int)Button.RightStick)]
+	    [InputControl(name = "dpad", template = "Dpad")]
+        [InputControl(name = "buttonSouth", template = "Button", bit = (int)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
+        [InputControl(name = "buttonWest", template = "Button", bit = (int)Button.West, usage = "SecondaryAction")]
+        [InputControl(name = "buttonNorth", template = "Button", bit = (int)Button.North)]
+        [InputControl(name = "buttonEast", template = "Button", bit = (int)Button.East)]
+        [InputControl(name = "leftStickPress", template = "Button", usage = "primaryStick", bit = (int)Button.LeftStick)]
+        [InputControl(name = "rightStickPress", template = "Button", usage = "secondaryStick", bit = (int)Button.RightStick)]
         public int buttons;
 
-        [InputControl(type = "Stick", usage = "PrimaryStick")]
+        [InputControl(template = "Stick", usage = "PrimaryStick")]
         public Vector2 leftStick;
-        [InputControl(type = "Stick", usage = "SecondaryStick")]
+        [InputControl(template = "Stick", usage = "SecondaryStick")]
         public Vector2 rightStick;
-        [InputControl(type = "Analog", usage = "SecondaryTrigger")]
+        [InputControl(template = "Analog", usage = "SecondaryTrigger")]
         public float leftTrigger;
-        [InputControl(type = "Analog", usage = "PrimaryTrigger")]
+        [InputControl(template = "Analog", usage = "PrimaryTrigger")]
         public float rightTrigger;
 
 	    public GamepadOutputState motors;
@@ -90,9 +90,9 @@ namespace ISX
             get { return new FourCC('M', 'O', 'T', 'R'); }
         }
 		
-		[InputControl(name = "left", type = "Motor", usage = "LowFreqMotor")]
+		[InputControl(name = "left", template = "Motor", usage = "LowFreqMotor")]
 		public float leftMotorSpeed;
-		[InputControl(name = "right", type = "Motor", usage = "HighFreqMotor")]
+		[InputControl(name = "right", template = "Motor", usage = "HighFreqMotor")]
 		public float rightMotorSpeed;
 
 		public FourCC GetTypeStatic()

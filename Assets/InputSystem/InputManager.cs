@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//native sends (full/partial) input templates for any new device
+
 namespace ISX
 {
 	// The hub of the input system.

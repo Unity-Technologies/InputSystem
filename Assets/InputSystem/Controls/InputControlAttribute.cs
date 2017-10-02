@@ -10,7 +10,7 @@ namespace ISX
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public class InputControlAttribute : Attribute
     {
-        public string type;
+        public string template;
         public string name;
 	    public string usage;
         public string options;
