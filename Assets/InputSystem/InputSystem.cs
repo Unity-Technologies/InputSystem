@@ -47,9 +47,9 @@ namespace ISX
             throw new NotImplementedException();
         }
 
-        public static InputDevice AddDevice(InputDevice device)
+        public static void AddDevice(InputDevice device)
         {
-            throw new NotImplementedException();
+            m_Manager.AddDevice(device);
         }
         
         private static InputManager m_Manager;

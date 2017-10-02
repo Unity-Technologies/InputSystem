@@ -19,6 +19,8 @@ namespace ISX
             m_StartIndex = 0;
             if (array != null)
                 m_Length = array.Length;
+            else
+                m_Length = 0;
         }
         
         public ReadOnlyArray(TValue[] array, int index, int length)
@@ -53,14 +55,14 @@ namespace ISX
             }
         }
 
-        private class Enumerator<TValue> : IEnumerator<TValue>
+        private class Enumerator<T> : IEnumerator<T>
         {
-            private TValue[] m_Array;
+            private T[] m_Array;
             private int m_Index;
             private int m_IndexStart;
             private int m_IndexEnd;
             
-            public Enumerator(TValue[] array, int index, int length)
+            public Enumerator(T[] array, int index, int length)
             {
                 m_Array = array;
                 m_IndexStart = index - 1; // First call to MoveNext() moves us to first valid index.
@@ -84,7 +86,7 @@ namespace ISX
                 m_Index = m_IndexStart;
             }
 
-            public TValue Current
+            public T Current
             {
                 get
                 {

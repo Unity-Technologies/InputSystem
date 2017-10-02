@@ -18,7 +18,7 @@ namespace ISX
     {
 	    public ReadOnlyArray<InputDevice> devices
 	    {
-		    get { return new ReadOnlyArray<InputDevice>(m_Devices);
+		    get { return new ReadOnlyArray<InputDevice>(m_Devices); }
 	    }
 	    
 	    // Add a template constructed from a type.
@@ -81,7 +81,7 @@ namespace ISX
 		    throw new NotImplementedException();
 	    }
 
-	    public InputControl GetControl(string name)
+	    public InputControl GetControl(string path)
 	    {
 		    throw new NotImplementedException();
 	    }
@@ -92,9 +92,8 @@ namespace ISX
 	    {
 		    if (string.IsNullOrEmpty(template))
 			    throw new ArgumentException(nameof(template));
-		    
-		    var setup = new InputControlSetup();
-		    setup.AddControl(template);
+
+		    var setup = new InputControlSetup(template);
 		    var device = setup.Finish();
 
 		    AddDevice(device);
@@ -106,10 +105,15 @@ namespace ISX
 	    {
 		    if (device == null)
 			    throw new ArgumentNullException(nameof(device));
+		    if (device.template == null)
+			    throw new ArgumentException("Device has no associated template", nameof(device));
+
+		    // Ignore if the same device gets added multiple times.
+		    if (ArrayHelpers.Contains(m_Devices, device))
+			    return;
 		    
-		    ////TODO: make sure it's not already added
-		    ////TODO: assign unique name
-		    
+		    MakeDeviceNameUnique(device);
+		    ArrayHelpers.Append(ref m_Devices, device);
 	    }
 
         internal void Initialize()
@@ -179,6 +183,35 @@ namespace ISX
 	    private Dictionary<string, Type> m_Processors;
 	    
 	    private InputDevice[] m_Devices;
+
+	    private void MakeDeviceNameUnique(InputDevice device)
+	    {
+		    if (m_Devices == null)
+			    return;
+		    
+		    var name = device.name;
+		    var nameLowerCase = name.ToLower();
+		    var nameIsUnique = false;
+		    var namesTried = 0;
+		    
+		    while (!nameIsUnique)
+		    {
+		        nameIsUnique = true;
+		        for (var i = 0; i < m_Devices.Length; ++i)
+		        {
+		            if (m_Devices[i].name.ToLower() == nameLowerCase)
+		            {
+		                ++namesTried;
+			            name = $"{device.name}{namesTried}";
+			            nameLowerCase = name.ToLower();
+		                nameIsUnique = false;
+		                break;
+		            }
+		        }
+		    }
+		    
+		    device.m_Name = name;
+	    }
 	    
 	    // Domain reload survival logic.
 #if UNITY_EDITOR
@@ -216,7 +249,7 @@ namespace ISX
 		    foreach (var template in m_Templates.Values)
 			    templateArray[i++] = template;
 
-		    var deviceCount = m_Devices.Length;
+		    var deviceCount = m_Devices?.Length ?? 0;
 		    var deviceArray = new DeviceState[deviceCount];
 		    for (i = 0; i < deviceCount; ++i)
 		    {
@@ -257,7 +290,12 @@ namespace ISX
 		    var devices = new InputDevice[deviceCount];
 		    for (var i = 0; i < deviceCount; ++i)
 		    {
-			    var setup = new InputControlSetup();
+			    var state = m_SerializedState.devices[i];
+			    var setup = new InputControlSetup(state.template);
+			    var device = setup.Finish();
+			    device.m_Name = state.name;
+			    device.m_DeviceId = state.deviceId;
+			    devices[i] = device;
 		    }
 		    m_Devices = devices;
 

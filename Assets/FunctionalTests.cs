@@ -1,120 +1,168 @@
-﻿using System.Linq;
-using ISX;
+﻿using ISX;
 using NUnit.Framework;
-using UnityEngine.TestTools;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
-public class FunctionalTests : IPrebuildSetup
+public class FunctionalTests
 {
-    public void Setup()
+    // Unity test tools don't seem to have proper setup/teardown support.
+    // Seems like there's nothing for teardown and for setup, we'd either only
+    // get a single setup call for all tests or would have to put an attribute
+    // on every single test. So... we do it manually. Meh.
+    // NUnits SetUp and TearDown attributes don't appear to work with the Unity
+    // test runner either.
+    void Setup()
     {
         // Put the system in a known state but save the current state first
         // so that we can restore it after we're done testing.
         InputSystem.Save();
         InputSystem.Reset();
-        
-        // NOTE: There's no teardown support in the Unity test tools so InputSystem.Restore()
-        //       has to be manually called at the end of each test.
+    }
+
+    void TearDown()
+    {
+        InputSystem.Restore();
     }
     
     [Test]
-    public void CanCreateSimpleDeviceWithPrimitiveControl()
+    public void CanCreatePrimitiveControlsFromTemplate()
     {
-        var setup = new InputControlSetup();
-        var button = setup.AddControl("Button", "simpleButton");
-        var device = setup.Finish();
+        Setup();
         
-        Assert.That(button.name, Is.EqualTo("simpleButton"));
-        Assert.That(button, Is.TypeOf<ButtonControl>());
+        var setup = new InputControlSetup("Gamepad");
+        
+        // The default ButtonControl template has no constrols inside of it.
+        Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
+        Assert.That(setup.GetChildren("start"), Is.Empty);
 
-        Assert.That(device.children, Has.Exactly(1).SameAs(button));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("simpleButton"));
-
-        InputSystem.Restore();
+        TearDown();
     }
 
     [Test]
-    public void CanCreateSimpleDeviceWithCompoundControl()
+    public void CanCreateCompoundControlsFromTemplate()
     {
+        Setup();
+        
         const int kNumControlsInAStick = 6;
-        
-        var setup = new InputControlSetup();
-        var stick = setup.AddControl("Stick", "stick");
-        var device = setup.Finish();
 
-        Assert.That(stick, Is.TypeOf<StickControl>());
-        Assert.That(stick.children, Has.Count.EqualTo(kNumControlsInAStick));
+        var setup = new InputControlSetup("Gamepad");
 
-        Assert.That(device.children, Has.Count.EqualTo(1)); // Just stick itself.
-        Assert.That(device.children.First(), Is.SameAs(stick));
-        
-        InputSystem.Restore();
+        Assert.That(setup.GetControl("leftStick"), Is.TypeOf<StickControl>());
+        Assert.That(setup.GetChildren("leftStick"), Has.Count.EqualTo(kNumControlsInAStick));
+        Assert.That(setup.GetChildren("leftStick"), Has.Exactly(1).With.Property("name").EqualTo("x"));
+
+        TearDown();
     }
 
     [Test]
-    public void CanFindControlsInSetupByPath()
+    public void CanCreateDeviceFromTemplate()
     {
-        var setup = new InputControlSetup();
-        setup.AddControl("Stick", "stick");
-
-        Assert.That(setup.TryGetControl("stick"), Is.TypeOf<StickControl>());
-        Assert.That(setup.TryGetControl("stick/x"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.TryGetControl("stick/y"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.TryGetControl("stick/up"), Is.TypeOf<AxisControl>());
-            
-        InputSystem.Restore();
-    }
-
-    [Test]
-    public void CanCreateComplexDeviceWithState()
-    {
-        var setup = new InputControlSetup();
-        setup.AddControl("Gamepad");
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
         
         Assert.That(device, Is.TypeOf<Gamepad>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftStick"));
         
-        InputSystem.Restore();
+        TearDown();
     }
 
     [Test]
     public void CanCreateDeviceWithNestedState()
     {
-        var setup = new InputControlSetup();
-        setup.AddControl("Gamepad");
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
 
+        // The gamepad's output state is nested inside GamepadState and requires the template
+        // code to crawl inside the field to find the motor controls.
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftMotor"));
         
-        InputSystem.Restore();
+        TearDown();
+    }
+
+    [Test]
+    public void CanFindControlsInSetupByPath()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+
+        Assert.That(setup.TryGetControl("leftStick"), Is.TypeOf<StickControl>());
+        Assert.That(setup.TryGetControl("leftStick/x"), Is.TypeOf<AxisControl>());
+        Assert.That(setup.TryGetControl("leftStick/y"), Is.TypeOf<AxisControl>());
+        Assert.That(setup.TryGetControl("leftStick/up"), Is.TypeOf<AxisControl>());
+            
+        TearDown();
     }
 
     [Test]
     public void DeviceAndControlsRememberTheirTemplates()
     {
-        var setup = new InputControlSetup();
-        setup.AddControl("Gamepad");
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
         var gamepad = (Gamepad) setup.Finish();
             
         Assert.That(gamepad.template.name, Is.EqualTo("Gamepad"));
         Assert.That(gamepad.leftStick.template.name, Is.EqualTo("Stick"));
         
-        InputSystem.Restore();
+        TearDown();
+    }
+
+    [Test]
+    public void DevicesGetNameFromTemplate()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var device = setup.Finish();
+        
+        Assert.That(device.name, Contains.Substring("Gamepad"));
+        
+        TearDown();
     }
     
     [Test]
     public void CanAddDeviceFromTemplate()
     {
+        Setup();
+
         var device = InputSystem.AddDevice("Gamepad");
-        
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Contains.Item(device));
+        
+        TearDown();
+    }
+
+    [Test]
+    public void AddingDeviceTwiceIsIgnored()
+    {
+        Setup();
+        
+        var device = InputSystem.AddDevice("Gamepad");
+        InputSystem.AddDevice(device);
+        
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices, Contains.Item(device));
+        
+        TearDown();
     }
 
     [Test]
     public void EnsuresDeviceNamesAreUnique()
     {
+        Setup();
+
+        var gamepad1 = InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad1.name, Is.Not.EqualTo(gamepad2.name));
+        
+        TearDown();
     }
 
     [Test]

@@ -340,7 +340,4 @@ namespace ISX
     }
 
 	// For constructing templates from code.
-	public class InputTemplateBuilder
-	{
-	}
 }
