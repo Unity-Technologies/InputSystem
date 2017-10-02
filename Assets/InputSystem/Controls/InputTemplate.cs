@@ -102,19 +102,26 @@ namespace ISX
         {
 	        var controlTemplates = new List<ControlTemplate>();
 	        
-	        // If it's a device, add control templates from its state (if present).
+	        // If it's a device with an InputStructAttribute, add control templates
+	        // from its state (if present) instead of from the device.
+	        var isDeviceWithStateAttribute = false;
 	        if (typeof(InputDevice).IsAssignableFrom(type))
 	        {
 		        var stateAttribute = type.GetCustomAttribute<InputStateAttribute>();
 		        if (stateAttribute != null)
 		        {
+			        isDeviceWithStateAttribute = true;
+			        
 			        AddControlTemplatesFromFields(stateAttribute.type, controlTemplates);
 			        AddControlTemplatesFromProperties(stateAttribute.type, controlTemplates);
 		        }
 	        }
-	        // Add control templates from type contents.
-	        AddControlTemplatesFromFields(type, controlTemplates);
-	        AddControlTemplatesFromProperties(type, controlTemplates);
+	        if (!isDeviceWithStateAttribute)
+	        {
+		        // Add control templates from type contents.
+		        AddControlTemplatesFromFields(type, controlTemplates);
+		        AddControlTemplatesFromProperties(type, controlTemplates);
+	        }
 
 	        
 	        // Create template object.

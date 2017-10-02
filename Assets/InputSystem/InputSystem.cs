@@ -97,6 +97,8 @@ namespace ISX
                      break;
             }
         }
+        
+        //have to also update current device statics
 
         internal static void Save()
         {

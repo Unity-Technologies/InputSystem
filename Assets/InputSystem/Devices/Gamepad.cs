@@ -23,6 +23,8 @@ namespace ISX
         [InputControl(name = "rightStickPress", template = "Button", bit = (int)Button.RightStick)]
 	    [InputControl(name = "leftShoulder", template = "Button", bit = (int)Button.LeftShoulder)]
 	    [InputControl(name = "rightShoulder", template = "Button", bit = (int)Button.RightShoulder)]
+	    [InputControl(name = "start", template = "Button", bit = (int)Button.Start, usage = "Menu")]
+	    [InputControl(name = "select", template = "Button", bit = (int)Button.Select)]
         public int buttons;
 
         [InputControl(template = "Stick", usage = "PrimaryStick")]
@@ -99,7 +101,7 @@ namespace ISX
 		}
 	}
 	
-    [InputState(typeof(GamepadState))]
+	[InputState(typeof(GamepadState))]
 	public class Gamepad : InputDevice
 	{
 	    public GamepadState state
@@ -126,6 +128,14 @@ namespace ISX
 	    public ButtonControl y { get; private set; }
 	    public ButtonControl a { get; private set; }
 	    public ButtonControl b { get; private set; }
+		
+		public ButtonControl leftStickPress { get; private set; }
+		public ButtonControl rightStickPress { get; private set; }
+		
+		public ButtonControl start { get; private set; }
+		public ButtonControl select { get; private set; }
+		
+		public DpadControl dpad { get; private set; }
 
         public ButtonControl leftShoulder { get; private set; }
         public ButtonControl rightShoulder { get; private set; }
@@ -133,14 +143,13 @@ namespace ISX
         public StickControl leftStick { get; private set; }
         public StickControl rightStick { get; private set; }
 		
+		public AxisControl leftTrigger { get; private set; }
+		public AxisControl rightTrigger { get; private set; }
+		
 		public AxisControl leftMotor { get; private set; }
 		public AxisControl rightMotor { get; private set; }
 
 		public static Gamepad current { get; protected set; }
-
-		public Gamepad()
-		{
-		}
 
 		public override void MakeCurrent()
 		{
@@ -155,11 +164,22 @@ namespace ISX
 			a = setup.GetControl<ButtonControl>(this, "buttonSouth");
 			b = setup.GetControl<ButtonControl>(this, "buttonEast");
 
+			start = setup.GetControl<ButtonControl>(this, "start");
+			select = setup.GetControl<ButtonControl>(this, "select");
+
+			leftStickPress = setup.GetControl<ButtonControl>(this, "leftStickPress");
+			rightStickPress = setup.GetControl<ButtonControl>(this, "rightStickPress");
+			
+			dpad = setup.GetControl<DpadControl>(this, "dpad");
+
 			leftShoulder = setup.GetControl<ButtonControl>(this, "leftShoulder");
 			rightShoulder = setup.GetControl<ButtonControl>(this, "rightShoulder");
 
 			leftStick = setup.GetControl<StickControl>(this, "leftStick");
 			rightStick = setup.GetControl<StickControl>(this, "rightStick");
+
+			leftTrigger = setup.GetControl<AxisControl>(this, "leftTrigger");
+			rightTrigger = setup.GetControl<AxisControl>(this, "rightTrigger");
 
 			//leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
 			//rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");
