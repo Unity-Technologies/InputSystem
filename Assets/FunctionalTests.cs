@@ -168,6 +168,14 @@ public class FunctionalTests
     [Test]
     public void AssignsUniqueNumericIdToDevices()
     {
+        Setup();
+        
+        var gamepad1 = InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice("Gamepad");
+        
+        Assert.That(gamepad1.deviceId, Is.Not.EqualTo(gamepad2.deviceId));
+        
+        TearDown();
     }
 
     [Test]

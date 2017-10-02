@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngineInternal.Input;
 
 //native sends (full/partial) input templates for any new device
 
@@ -113,6 +114,8 @@ namespace ISX
 			    return;
 		    
 		    MakeDeviceNameUnique(device);
+		    AssignUniqueDeviceId(device);
+		    
 		    ArrayHelpers.Append(ref m_Devices, device);
 	    }
 
@@ -211,6 +214,29 @@ namespace ISX
 		    }
 		    
 		    device.m_Name = name;
+	    }
+
+	    private void AssignUniqueDeviceId(InputDevice device)
+	    {
+		    // If the device already has an ID, make sure
+		    if (device.deviceId != InputDevice.kInvalidDeviceId)
+		    {
+			    if (m_Devices != null)
+			    {
+				    // Safety check to make sure out IDs are really unique.
+				    // Given they are assigned by the native system they should be fine
+				   	// but let's make sure.
+				    var deviceId = device.deviceId;
+				    for (var i = 0; i < m_Devices.Length; ++i)
+					    if (m_Devices[i].deviceId == deviceId)
+						    throw new Exception(
+							    $"Duplicate device ID {deviceId} detected for devices '{device.name}' and '{m_Devices[i].name}'");
+			    }
+		    }
+		    else
+		    {
+			    device.m_DeviceId = NativeInputSystem.AllocateDeviceId();
+		    }
 	    }
 	    
 	    // Domain reload survival logic.
