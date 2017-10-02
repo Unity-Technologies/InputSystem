@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -13,6 +14,11 @@ namespace ISX
 #endif
     public static class InputSystem
     {
+        public static ReadOnlyArray<InputDevice> devices
+        {
+            get { return m_Manager.devices; }
+        }
+        
         public static void RegisterTemplate(Type type, string name = null)
         {
             if (name == null)
@@ -29,6 +35,21 @@ namespace ISX
         public static void RegisterTemplate(InputTemplate template)
         {
             m_Manager.RegisterTemplate(template);
+        }
+
+        public static InputDevice AddDevice(string template)
+        {
+            return m_Manager.AddDevice(template);
+        }
+
+        public static InputDevice AddDevice(InputDeviceDescriptor descriptor)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static InputDevice AddDevice(InputDevice device)
+        {
+            throw new NotImplementedException();
         }
         
         private static InputManager m_Manager;
@@ -56,9 +77,6 @@ namespace ISX
             {
                 m_SystemObject = existingSystemObjects[0];
                 m_Manager = m_SystemObject.manager;
-                
-                // Post-domain-reload steps.
-                m_Manager.InitializeStatics();
             }
             else
             {

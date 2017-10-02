@@ -16,6 +16,11 @@ namespace ISX
 		: ISerializationCallbackReceiver
 #endif
     {
+	    public ReadOnlyArray<InputDevice> devices
+	    {
+		    get { return new ReadOnlyArray<InputDevice>(m_Devices);
+	    }
+	    
 	    // Add a template constructed from a type.
 	    // If a template with the same name already exists, the new template
 	    // takes its place.
@@ -81,6 +86,32 @@ namespace ISX
 		    throw new NotImplementedException();
 	    }
 
+	    // Creates a device from the given template and adds it to the system.
+	    // NOTE: Creates garbage.
+	    public InputDevice AddDevice(string template)
+	    {
+		    if (string.IsNullOrEmpty(template))
+			    throw new ArgumentException(nameof(template));
+		    
+		    var setup = new InputControlSetup();
+		    setup.AddControl(template);
+		    var device = setup.Finish();
+
+		    AddDevice(device);
+
+		    return device;
+	    }
+
+	    public void AddDevice(InputDevice device)
+	    {
+		    if (device == null)
+			    throw new ArgumentNullException(nameof(device));
+		    
+		    ////TODO: make sure it's not already added
+		    ////TODO: assign unique name
+		    
+	    }
+
         internal void Initialize()
         {
 	        m_Usages = new Dictionary<string, InputUsage>();
@@ -139,36 +170,32 @@ namespace ISX
 			RegisterUsage("LeftHand", "XRController");
 			RegisterUsage("RightHand", "XRController");
 
-	        InitializeStatics();
-        }
-
-	    // In the editor, we need to redo these steps after domain reloads.
-	    internal void InitializeStatics()
-	    {
-		    if (m_Usages == null || m_Templates == null)
-			    throw new InvalidOperationException("InputManager has lost its state");
-		    
 	        InputUsage.s_Usages = m_Usages;
 	        InputTemplate.s_Templates = m_Templates;
-	    }
-        
-        internal void Destroy()
-        {
-	        InputUsage.s_Usages = null;
-	        InputTemplate.s_Templates = null;
         }
 
 	    private Dictionary<string, InputUsage> m_Usages;
 	    private Dictionary<string, InputTemplate> m_Templates;
 	    private Dictionary<string, Type> m_Processors;
 	    
+	    private InputDevice[] m_Devices;
+	    
 	    // Domain reload survival logic.
 #if UNITY_EDITOR
+	    [Serializable]
+	    internal struct DeviceState
+	    {
+		    public string name;
+		    public string template;
+		    public int deviceId;
+	    }
+	    
 	    [Serializable]
 	    internal struct SerializedState
 	    {
 		    public InputUsage[] usages;
 		    public InputTemplate[] templates;
+		    public DeviceState[] devices;
 	    }
 
 	    [SerializeField] private SerializedState m_SerializedState;
@@ -189,10 +216,25 @@ namespace ISX
 		    foreach (var template in m_Templates.Values)
 			    templateArray[i++] = template;
 
+		    var deviceCount = m_Devices.Length;
+		    var deviceArray = new DeviceState[deviceCount];
+		    for (i = 0; i < deviceCount; ++i)
+		    {
+			    var device = m_Devices[i];
+			    var deviceState = new DeviceState
+			    {
+					name = device.name,
+				    template = device.template.name,
+				    deviceId = device.deviceId
+			    };
+			    deviceArray[i] = deviceState;
+		    }
+
 		    m_SerializedState = new SerializedState
 		    {
 				usages = usageArray,
-			    templates = templateArray
+			    templates = templateArray,
+			    devices = deviceArray
 		    };
 	    }
 
@@ -204,9 +246,20 @@ namespace ISX
 
 		    foreach (var usage in m_SerializedState.usages)
 			    m_Usages[usage.name.ToLower()] = usage;
+		    InputUsage.s_Usages = m_Usages;
 
 		    foreach (var template in m_SerializedState.templates)
 			    m_Templates[template.name.ToLower()] = template;
+		    InputTemplate.s_Templates = m_Templates;
+
+		    // Re-create devices.
+		    var deviceCount = m_SerializedState.devices.Length;
+		    var devices = new InputDevice[deviceCount];
+		    for (var i = 0; i < deviceCount; ++i)
+		    {
+			    var setup = new InputControlSetup();
+		    }
+		    m_Devices = devices;
 
 		    m_SerializedState = default(SerializedState);
 	    }

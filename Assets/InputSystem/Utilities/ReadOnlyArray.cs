@@ -17,7 +17,8 @@ namespace ISX
         {
             m_Array = array;
             m_StartIndex = 0;
-            m_Length = array.Length;
+            if (array != null)
+                m_Length = array.Length;
         }
         
         public ReadOnlyArray(TValue[] array, int index, int length)
@@ -58,7 +59,7 @@ namespace ISX
             private int m_Index;
             private int m_IndexStart;
             private int m_IndexEnd;
-
+            
             public Enumerator(TValue[] array, int index, int length)
             {
                 m_Array = array;

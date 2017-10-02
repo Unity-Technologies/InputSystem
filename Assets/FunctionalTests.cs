@@ -26,7 +26,6 @@ public class FunctionalTests : IPrebuildSetup
         var device = setup.Finish();
         
         Assert.That(button.name, Is.EqualTo("simpleButton"));
-        Assert.That(button.template.name, Is.EqualTo("Button"));
         Assert.That(button, Is.TypeOf<ButtonControl>());
 
         Assert.That(device.children, Has.Exactly(1).SameAs(button));
@@ -93,7 +92,33 @@ public class FunctionalTests : IPrebuildSetup
     }
 
     [Test]
-    public void CanAddNewDevice()
+    public void DeviceAndControlsRememberTheirTemplates()
+    {
+        var setup = new InputControlSetup();
+        setup.AddControl("Gamepad");
+        var gamepad = (Gamepad) setup.Finish();
+            
+        Assert.That(gamepad.template.name, Is.EqualTo("Gamepad"));
+        Assert.That(gamepad.leftStick.template.name, Is.EqualTo("Stick"));
+        
+        InputSystem.Restore();
+    }
+    
+    [Test]
+    public void CanAddDeviceFromTemplate()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+        
+        Assert.That(InputSystem.devices, Contains.Item(device));
+    }
+
+    [Test]
+    public void EnsuresDeviceNamesAreUnique()
+    {
+    }
+
+    [Test]
+    public void AssignsUniqueNumericIdToDevices()
     {
     }
 
