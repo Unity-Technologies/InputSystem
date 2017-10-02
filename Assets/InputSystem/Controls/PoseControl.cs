@@ -7,7 +7,7 @@
 
         public PoseControl()
         {
-	        stateBlock.sizeInBits = sizeof(float)*(3+4)*8;
+	        m_StateBlock.sizeInBits = sizeof(float)*(3+4)*8;
         }
 
         public override Pose value

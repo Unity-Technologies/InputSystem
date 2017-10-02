@@ -33,6 +33,7 @@ namespace ISX
         [SerializeField] private string m_Template;
         
 
+        #if false
         // This dictionary is owned and managed by InputManager.
         internal static Dictionary<string, InputUsage> s_Usages = new Dictionary<string, InputUsage>();
 
@@ -51,5 +52,6 @@ namespace ISX
                 throw new Exception($"No input usage called '{name}' has been registered");
             return usage;
         }
+        #endif
     }
 }

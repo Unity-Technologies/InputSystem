@@ -8,6 +8,7 @@ using UnityEngineInternal.Input;
 namespace ISX
 {
 	// The hub of the input system.
+	// All state is ultimately gathered here.
 	// Not exposed. Use InputSystem as the public entry point to the system.
 #if UNITY_EDITOR
 	[Serializable]
@@ -31,20 +32,20 @@ namespace ISX
 		        throw new ArgumentException(nameof(name));
 	        if (type == null)
 		        throw new ArgumentNullException(nameof(type));
-
-	        var template = InputTemplate.FromType(name, type);
 	        
-	        RegisterTemplate(template);
+	        // All we do is enter the type into a map. We don't construct an InputTemplate
+	        // from it until we actually need it in an InputControlSetup to create a device.
+	        // This not only avoids us creating a bunch of objects on the managed heap but
+	        // also avoids us laboriously constructing a VRController template, for example,
+	        // in a game that never uses VR.
+	        m_TemplateTypes[name.ToLower()] = type;
+	        
+	        ////TODO: see if we need to reconstruct any input device
         }
 
-	    // Add a template. If a template with the same name already exists, the new template
-	    // takes its place.
-	    public void RegisterTemplate(InputTemplate template)
+	    public void RegisterTemplate(string name, string json)
 	    {
-		    if (template == null)
-			    throw new ArgumentNullException(nameof(template));
-
-		    m_Templates[template.name.ToLower()] = template;
+		    throw new NotImplementedException();
 	    }
 
 	    public void RegisterProcessor(string name, Type type)
@@ -55,18 +56,6 @@ namespace ISX
 	    {
 	    }
 
-	    public InputTemplate TryGetTemplate(string name)
-	    {
-		    if (string.IsNullOrEmpty(name))
-			    throw new ArgumentException(nameof(name));
-
-		    InputTemplate template;
-		    if (m_Templates.TryGetValue(name.ToLower(), out template))
-			    return template;
-		    
-		    return null;
-	    }
-	    
 	    // Processes a path specification that may match more than a single control.
 	    // Adds all controls that match to the given list.
 	    // Returns true if at least one control was matched.
@@ -122,7 +111,8 @@ namespace ISX
         internal void Initialize()
         {
 	        m_Usages = new Dictionary<string, InputUsage>();
-	        m_Templates = new Dictionary<string, InputTemplate>();
+	        m_TemplateTypes = new Dictionary<string, Type>();
+	        m_TemplateStrings = new Dictionary<string, string>();
 	        m_Processors = new Dictionary<string, Type>();
             
 			// Register templates.
@@ -143,6 +133,8 @@ namespace ISX
 
 			RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
 			RegisterTemplate("Keyboard", typeof(Keyboard));
+	        
+	        ////REVIEW: #if templates to the platforms they make sense on?
 	        
 			// Register processors.
 			RegisterProcessor("Invert", typeof(InvertProcessor));
@@ -177,12 +169,14 @@ namespace ISX
 			RegisterUsage("LeftHand", "XRController");
 			RegisterUsage("RightHand", "XRController");
 
-	        InputUsage.s_Usages = m_Usages;
-	        InputTemplate.s_Templates = m_Templates;
+	        //InputUsage.s_Usages = m_Usages;
+	        InputTemplate.s_TemplateTypes = m_TemplateTypes;
+	        InputTemplate.s_TemplateStrings = m_TemplateStrings;
         }
 
-	    private Dictionary<string, InputUsage> m_Usages;
-	    private Dictionary<string, InputTemplate> m_Templates;
+	    private Dictionary<string, InputUsage> m_Usages; ////REVIEW: Array or dictionary?
+	    private Dictionary<string, Type> m_TemplateTypes;
+	    private Dictionary<string, string> m_TemplateStrings;
 	    private Dictionary<string, Type> m_Processors;
 	    
 	    private InputDevice[] m_Devices;
@@ -244,23 +238,41 @@ namespace ISX
 	    [Serializable]
 	    internal struct DeviceState
 	    {
+		    // Preserving InputDevice is somewhat tricky business. Serializing
+		    // them in full would involve pretty nasty work. We have the restriction,
+		    // however, that everything needs to be created from templates (it partly
+		    // exists for the sake of reload survivability), so we should be able to
+		    // just go and recreate the device from the template. This also has the
+		    // advantage that if the template changes between reloads, the change
+		    // automatically takes effect.
 		    public string name;
 		    public string template;
 		    public int deviceId;
+	    }
+
+	    [Serializable]
+	    internal struct TemplateState
+	    {
+		    public string name;
+		    public string typeNameOrJson;
 	    }
 	    
 	    [Serializable]
 	    internal struct SerializedState
 	    {
 		    public InputUsage[] usages;
-		    public InputTemplate[] templates;
+		    public TemplateState[] templateTypes;
+		    public TemplateState[] templateStrings;
 		    public DeviceState[] devices;
 	    }
 
 	    [SerializeField] private SerializedState m_SerializedState;
 	    
+	    // Stuff everything that we want to survive a domain reload into
+	    // a m_SerializedState.
 	    public void OnBeforeSerialize()
 	    {
+		    // Usages.
 		    var usageCount = m_Usages.Count;
 		    var usageArray = new InputUsage[usageCount];
 
@@ -268,13 +280,31 @@ namespace ISX
 		    foreach (var usage in m_Usages.Values)
 			    usageArray[i++] = usage;
 
-		    var templateCount = m_Templates.Count;
-		    var templateArray = new InputTemplate[templateCount];
+		    // Template types.
+		    var templateTypeCount = m_TemplateTypes.Count;
+		    var templateTypeArray = new TemplateState[templateTypeCount];
 
 		    i = 0;
-		    foreach (var template in m_Templates.Values)
-			    templateArray[i++] = template;
+		    foreach (var entry in m_TemplateTypes)
+			    templateTypeArray[i++] = new TemplateState
+			    {
+				    name = entry.Key,
+				    typeNameOrJson = entry.Value.AssemblyQualifiedName
+			    };
 
+		    // Template strings.
+		    var templateStringCount = m_TemplateStrings.Count;
+		    var templateStringArray = new TemplateState[templateStringCount];
+
+		    i = 0;
+		    foreach (var entry in m_TemplateStrings)
+			    templateTypeArray[i++] = new TemplateState
+			    {
+				    name = entry.Key,
+				    typeNameOrJson = entry.Value
+			    };
+		    
+		    // Devices.
 		    var deviceCount = m_Devices?.Length ?? 0;
 		    var deviceArray = new DeviceState[deviceCount];
 		    for (i = 0; i < deviceCount; ++i)
@@ -283,7 +313,7 @@ namespace ISX
 			    var deviceState = new DeviceState
 			    {
 					name = device.name,
-				    template = device.template.name,
+				    template = device.template,
 				    deviceId = device.deviceId
 			    };
 			    deviceArray[i] = deviceState;
@@ -292,7 +322,8 @@ namespace ISX
 		    m_SerializedState = new SerializedState
 		    {
 				usages = usageArray,
-			    templates = templateArray,
+			    templateTypes = templateTypeArray,
+			    templateStrings = templateStringArray,
 			    devices = deviceArray
 		    };
 	    }
@@ -300,17 +331,25 @@ namespace ISX
 	    public void OnAfterDeserialize()
 	    {
 		    m_Usages = new Dictionary<string, InputUsage>();
-		    m_Templates = new Dictionary<string, InputTemplate>();
+		    m_TemplateTypes = new Dictionary<string, Type>();
+		    m_TemplateStrings = new Dictionary<string, string>();
 		    m_Processors = new Dictionary<string, Type>();
 
+		    // Usages.
 		    foreach (var usage in m_SerializedState.usages)
 			    m_Usages[usage.name.ToLower()] = usage;
-		    InputUsage.s_Usages = m_Usages;
+		    //InputUsage.s_Usages = m_Usages;
 
-		    foreach (var template in m_SerializedState.templates)
-			    m_Templates[template.name.ToLower()] = template;
-		    InputTemplate.s_Templates = m_Templates;
+		    // Template types.
+		    foreach (var template in m_SerializedState.templateTypes)
+			    m_TemplateTypes[template.name.ToLower()] = Type.GetType(template.typeNameOrJson, true);
+		    InputTemplate.s_TemplateTypes = m_TemplateTypes;
 
+		    // Template strings.
+		    foreach (var template in m_SerializedState.templateStrings)
+			    m_TemplateStrings[template.name.ToLower()] = template.typeNameOrJson;
+		    InputTemplate.s_TemplateStrings = m_TemplateStrings;
+		    
 		    // Re-create devices.
 		    var deviceCount = m_SerializedState.devices.Length;
 		    var devices = new InputDevice[deviceCount];

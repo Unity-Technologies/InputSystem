@@ -9,7 +9,7 @@ namespace ISX
 
         public QuaternionControl()
         {
-	        stateBlock.sizeInBits = sizeof(float)*4*8;
+	        m_StateBlock.sizeInBits = sizeof(float)*4*8;
         }
 
         public override Quaternion value
@@ -19,10 +19,10 @@ namespace ISX
 				unsafe
 				{
 					var buffer = (byte*) currentStatePtr;
-					var x = *((float*) &buffer[stateBlock.byteOffset]);
-					var y = *((float*) &buffer[stateBlock.byteOffset+4]);
-					var z = *((float*) &buffer[stateBlock.byteOffset+8]);
-				    var w = *((float*) &buffer[stateBlock.byteOffset+12]);
+					var x = *((float*) &buffer[m_StateBlock.byteOffset]);
+					var y = *((float*) &buffer[m_StateBlock.byteOffset+4]);
+					var z = *((float*) &buffer[m_StateBlock.byteOffset+8]);
+				    var w = *((float*) &buffer[m_StateBlock.byteOffset+12]);
 				    return Process(new Quaternion(x, y, z, w));
 				}
 			}

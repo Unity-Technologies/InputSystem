@@ -4,7 +4,7 @@
 	{
 		public DiscreteControl()
 		{
-			stateBlock.sizeInBits = sizeof(int)*8;
+			m_StateBlock.sizeInBits = sizeof(int)*8;
 		}
 
 		public override int value
@@ -14,7 +14,7 @@
 				unsafe
 				{
 					var buffer = (byte*) currentStatePtr;
-					return Process(*((int*) &buffer[stateBlock.byteOffset]));
+					return Process(*((int*) &buffer[m_StateBlock.byteOffset]));
 				}
 			}
 		}

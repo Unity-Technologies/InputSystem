@@ -24,7 +24,7 @@ namespace ISX
  
 		public AxisControl()
 		{
-			stateBlock.sizeInBits = sizeof(float)*8;
+			m_StateBlock.sizeInBits = sizeof(float)*8;
 		}
 
 		public override float value
@@ -34,7 +34,7 @@ namespace ISX
 				unsafe
 				{
 					var buffer = (byte*) currentStatePtr;
-				    return Process(Preprocess(*((float*) &buffer[stateBlock.byteOffset])));
+				    return Process(Preprocess(*((float*) &buffer[m_StateBlock.byteOffset])));
 				}
 			}
 		}

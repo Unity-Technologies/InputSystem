@@ -27,7 +27,7 @@ namespace ISX
 
 		public DpadControl()
 		{
-			stateBlock.sizeInBits = 4;
+			m_StateBlock.sizeInBits = 4;
 		}
 
 		public override Vector2 value

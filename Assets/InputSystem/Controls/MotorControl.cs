@@ -5,7 +5,7 @@
     {
         public MotorControl()
         {
-            stateBlock.usage = InputStateBlock.Usage.Output;
+            m_StateBlock.usage = InputStateBlock.Usage.Output;
         }
     }
 }

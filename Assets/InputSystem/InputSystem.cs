@@ -32,9 +32,9 @@ namespace ISX
             RegisterTemplate(typeof(T), name);
         }
 
-        public static void RegisterTemplate(InputTemplate template)
+        public static void RegisterTemplate(string name, string json)
         {
-            m_Manager.RegisterTemplate(template);
+            m_Manager.RegisterTemplate(name, json);
         }
 
         public static InputDevice AddDevice(string template)

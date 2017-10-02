@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace ISX
 {
@@ -9,6 +10,7 @@ namespace ISX
 	// by a template.
 	// Can be used to create setups as well as to adjust them later.
 	// InputControlSetup is the *only* way to create control hierarchies.
+	// Also computes a final state layout when setup is finished.
 	// Once a setup has been established, it yields a list of controls and the setup itself is abandoned.
 	// NOTE: InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
 	//       use them during normal gameplay.
@@ -28,7 +30,7 @@ namespace ISX
 	    {
 		    // Create device.
 		    var device = (InputDevice) Activator.CreateInstance(m_DeviceType);
-		    device.m_Template = m_DeviceTemplate;
+		    device.m_Template = m_DeviceTemplate.name;
 		    device.m_Name = m_DeviceTemplate.name;
 		    
 		    // Install the control hierarchy.
@@ -178,6 +180,11 @@ namespace ISX
 	    private Dictionary<string, InputControl> m_PathToControl;
 	    private Dictionary<string, InputControl> m_UsageToControl;
 
+	    // We construct templates lazily as we go but keep them cached while we
+	    // set up hierarchies so that we don't re-construt the same Button template
+	    // 256 times for a keyboard.
+	    private Dictionary<string, InputTemplate> m_Templates;
+
 	    private void Reset()
 	    {
 		    m_DeviceTemplate = null;
@@ -190,6 +197,7 @@ namespace ISX
 		    m_UsageToControl = null;
 		    m_ChildRelationsCount = 0;
 		    m_UsageRelationsCount = 0;
+		    m_Templates = null;
 		    m_Initialized = false;
 	    }
 
@@ -206,6 +214,7 @@ namespace ISX
 		    m_ControlToUsages = new Dictionary<InputControl, List<InputUsage>>();
 		    m_PathToControl = new Dictionary<string, InputControl>();
 		    m_UsageToControl = new Dictionary<string, InputControl>();
+		    m_Templates = new Dictionary<string, InputTemplate>();
 
 		    m_Initialized = true;
 	    }
@@ -227,9 +236,7 @@ namespace ISX
 	    private void SetUpControlHierarchyRecursive(InputDevice device, InputControl control, ref int childArrayIndex,
 		    ref int usageArrayIndex)
 	    {
-		    // Nuke path on control as the final path is only known once we hook
-		    // a device into the system.
-		    control.m_Path = null;
+		    control.m_Device = device;
 		    
 		    // Get list of children.
 		    List<InputControl> children;
@@ -267,17 +274,35 @@ namespace ISX
 			    usageArrayIndex += usageCount;
 		    }
 		    
+		    // If state size is not set, it means it's computed from the size of the
+		    // children so make sure we actually have children.
+		    if (control.m_StateBlock.sizeInBits == 0 && children == null)
+			    throw new Exception(
+				    $"Control '{control.path}' with template '{control.template}' has no size set but has no children to compute size from");
+		    
 		    // Recurse into children.
 		    if (children != null)
 		    {
 			    foreach (var child in children)
 				    SetUpControlHierarchyRecursive(device, child, ref childArrayIndex, ref usageArrayIndex);
 		    }
+		    //Debug.Assert(control.stateBlock.sizeInBits > 0, "Control should have non-zero size");
+			    
+		    // Make our parent account for our state block.
+		    if (control.parent != null && control != device)
+		    {
+			    var parent = control.parent;
+		    }
+		    
+		    // Nuke path on control as the final path is only known once we hook
+		    // a device into the system. Do this last so we can still spill good
+		    // diagnostics for as long as possible.
+		    control.m_Path = null;
 	    }
 
 	    private InputControl AddControlInternal(string template, string name, InputControl parent)
 	    {
-		    var templateInstance = InputTemplate.GetTemplate(template);
+		    var templateInstance = FindOrLoadTemplate(template);
 
 		    // Device templates are somewhat special. We do not allow multiple to be added to the same control
 		    // setup, they have to added the root and they will not result in the immediate creation of an
@@ -318,7 +343,7 @@ namespace ISX
 		    }
 		    
 		    control.m_Name = name;
-		    control.m_Template = template;
+		    control.m_Template = template.name;
 		    control.m_Parent = parent;
 		    
 		    // Assign path. The full path will change again later when the control is actually jacked into
@@ -364,6 +389,39 @@ namespace ISX
 		    }
 		    
 		    return control;
+	    }
+
+	    private InputTemplate FindOrLoadTemplate(string name)
+	    {
+		    var nameLowerCase = name.ToLower();
+		    
+		    // See if we have it cached.
+		    InputTemplate template;
+		    if (m_Templates.TryGetValue(nameLowerCase, out template))
+			    return template;
+		    
+		    // No, so see if we have a string template for it. These
+		    // always take precedence over ones from type so that we can
+		    // override what's in the code using data.
+		    string json;
+		    if (InputTemplate.s_TemplateStrings.TryGetValue(nameLowerCase, out json))
+		    {
+			    template = InputTemplate.FromJson(name, json);
+			    m_Templates[nameLowerCase] = template;
+			    return template;
+		    }
+		    
+		    // No, but maybe we have a type template for it.
+		    Type type;
+		    if (InputTemplate.s_TemplateTypes.TryGetValue(nameLowerCase, out type))
+		    {
+			    template = InputTemplate.FromType(name, type);
+			    m_Templates[nameLowerCase] = template;
+			    return template;
+		    }
+		    
+		    // Nothing.
+		    throw new Exception($"Cannot find input template called '{name}'");
 	    }
     }
 }

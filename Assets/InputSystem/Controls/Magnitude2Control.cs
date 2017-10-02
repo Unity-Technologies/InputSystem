@@ -10,7 +10,7 @@ namespace ISX
 	{
 		public Magnitude2Control()
 		{
-			stateBlock.sizeInBits = sizeof(float)*2*8;
+			m_StateBlock.sizeInBits = sizeof(float)*2*8;
 		}
 
 		public override unsafe float value
@@ -18,8 +18,8 @@ namespace ISX
 			get
 			{
                 var buffer = (byte*) currentStatePtr;
-                var x = *((float*) &buffer[stateBlock.byteOffset]);
-                var y = *((float*) &buffer[stateBlock.byteOffset+4]);
+                var x = *((float*) &buffer[m_StateBlock.byteOffset]);
+                var y = *((float*) &buffer[m_StateBlock.byteOffset+4]);
 				return new Vector2(x, y).magnitude;
 			}
 		}

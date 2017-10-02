@@ -28,7 +28,9 @@ namespace ISX
 	    }
 
 	    // Template the control is based on.
-	    public InputTemplate template
+	    // We store the name rather than reference the InputTemplate as we want
+	    // to avoid allocating those objects except where necessary.
+	    public string template
 	    {
 		    get { return m_Template; }
 	    }
@@ -47,7 +49,7 @@ namespace ISX
 				    return Array.Empty<byte>();
 			    else
 			    {
-				    var buffer = new byte[stateBlock.sizeInBits / 8];
+				    var buffer = new byte[m_StateBlock.sizeInBits / 8];
 				    Marshal.Copy(currentStatePtr, buffer, 0, buffer.Length);
 				    return buffer;
 			    }
@@ -84,12 +86,18 @@ namespace ISX
 			get { return m_UsagesReadOnly; }
 		}
 
+	    // Information about where the control stores its state.
+	    public InputStateBlock stateBlock
+	    {
+		    get { return m_StateBlock; }
+	    }
+
 	    // Constructor for devices which are assigned names once plugged
 	    // into the system.
 	    protected InputControl()
 	    {
 		    // Set defaults for state block setup. Subclasses may override.
-		    stateBlock.usage = InputStateBlock.Usage.Input;
+		    m_StateBlock.usage = InputStateBlock.Usage.Input;
 	    }
 
 	    // Set up of the control has been finalized. This can be used, for example, to look up
@@ -99,23 +107,23 @@ namespace ISX
 	    {
 	    }
 	    
-		protected InputStateBlock stateBlock;
+		protected internal InputStateBlock m_StateBlock;
 	    
 		protected IntPtr currentStatePtr
 		{
-			get { return stateBlock.currentStatePtr; }
+			get { return m_StateBlock.currentStatePtr; }
 		}
 	    
 		protected IntPtr previousStatePtr
 		{
-			get { return stateBlock.previousStatePtr; }
+			get { return m_StateBlock.previousStatePtr; }
 		}
 	    
 	    // This data is initialized by InputControlSetup.
         internal string m_Name;
         internal string m_Path;
+	    internal string m_Template;
 	    internal InputDevice m_Device;
-	    internal InputTemplate m_Template;
 	    internal InputControl m_Parent;
 	    internal ReadOnlyArray<InputUsage> m_UsagesReadOnly;
 		internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;

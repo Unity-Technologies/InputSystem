@@ -7,7 +7,7 @@ namespace ISX
 	{
 		public ButtonControl()
 		{
-			stateBlock.sizeInBits = 1;
+			m_StateBlock.sizeInBits = 1;
 		}
 		
 		public override bool value
@@ -23,7 +23,7 @@ namespace ISX
 		protected unsafe bool GetValue(IntPtr statePtr)
 	    {
 			var buffer = (byte*) statePtr;
-	        return Process((buffer[stateBlock.byteOffset] & (1 << (int)stateBlock.bitOffset)) == (byte) (1 << (int)stateBlock.bitOffset));
+	        return Process((buffer[m_StateBlock.byteOffset] & (1 << (int)m_StateBlock.bitOffset)) == (byte) (1 << (int)m_StateBlock.bitOffset));
 	    }
 	}
 }

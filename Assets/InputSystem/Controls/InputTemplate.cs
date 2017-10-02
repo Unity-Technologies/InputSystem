@@ -4,9 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using UnityEngine;
-
-////REVIEW: rename InputControlTemplate?
 
 namespace ISX
 {
@@ -24,21 +21,20 @@ namespace ISX
 	// Templates can be for arbitrary control rigs or for entire
 	// devices. Device templates can use the 'deviceDescriptor' field
 	// to specify regexs that are to match against compatible devices.
-#if UNITY_EDITOR
-	[Serializable]
-#endif
-    public class InputTemplate
-#if UNITY_EDITOR
-		: ISerializationCallbackReceiver
-#endif
+	//
+	// NOTE: The class is internal as we consider its objects temporaries
+	//       that we keep around only during control hierarchy construction
+	//       and let be reclaimed by the garbage collector. This way we're
+	//       not paying the cost for these objects while the game is running.
+	//       Especially for templates that are constructed through reflecton,
+	//       we can always get them back easily and since templates are
+	//       immutable, there's no modifications we have to preserve.
+    internal class InputTemplate
     {
 	    // Both controls and processors can have public fields that can be set
 	    // directly from templates. The values are usually specified in strings
 	    // (like "clampMin=-1") but we parse them ahead of time into instances
 	    // of this structure that tell us where to store the value in the control.
-#if UNITY_EDITOR
-		[Serializable]
-#endif
 	    public unsafe struct ParameterValue
 	    {
 		    public const int kMaxValueSize = 8;
@@ -49,9 +45,6 @@ namespace ISX
 	    }
 	    
         // Specifies the composition of an input control.
-#if UNITY_EDITOR
-		[Serializable]
-#endif
         public struct ControlTemplate
         {
             public string name; // Can be null/empty for "root" control but only one such control may exist.
@@ -140,7 +133,7 @@ namespace ISX
         }
 
 	    // Constructs a template from the given JSON source.
-	    public static InputTemplate Parse(string json)
+	    public static InputTemplate FromJson(string name, string json)
 	    {
 		    throw new NotImplementedException();
 	    }
@@ -286,58 +279,8 @@ namespace ISX
 	    }
 
 
-        // This dictionary is owned and managed by InputManager.
-        internal static Dictionary<string, InputTemplate> s_Templates;
-
-        internal static InputTemplate TryGetTemplate(string name)
-        {
-            InputTemplate template;
-            if (s_Templates.TryGetValue(name.ToLower(), out template))
-                return template;
-            return null;
-        }
-
-        internal static InputTemplate GetTemplate(string name)
-        {
-            InputTemplate template;
-            if (!s_Templates.TryGetValue(name.ToLower(), out template))
-                throw new Exception($"No input template called '{name}' has been registered");
-            return template;
-        }
-	    
-
-	    // Domain reload survival logic.
-#if UNITY_EDITOR
-	    [Serializable]
-	    private struct SerializedState
-	    {
-		    public string name;
-		    public string type;
-		    public ControlTemplate[] controls;
-	    }
-
-	    [SerializeField] private SerializedState m_SerializedState;
-	    
-	    public void OnBeforeSerialize()
-	    {
-		    m_SerializedState = new SerializedState
-		    {
-			    name = m_Name,
-			    type = m_Type.AssemblyQualifiedName,
-			    controls = m_Controls
-		    };
-	    }
-
-	    public void OnAfterDeserialize()
-	    {
-		    m_Name = m_SerializedState.name;
-		    m_Type = Type.GetType(m_SerializedState.type, true);
-		    m_Controls = m_SerializedState.controls;
-		    
-		    m_SerializedState = default(SerializedState);
-	    }
-#endif
+        // These dictionaries are owned and managed by InputManager.
+	    internal static Dictionary<string, Type> s_TemplateTypes;
+	    internal static Dictionary<string, string> s_TemplateStrings;
     }
-
-	// For constructing templates from code.
 }

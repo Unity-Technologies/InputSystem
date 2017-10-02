@@ -1,4 +1,5 @@
-﻿using ISX;
+﻿using System.Runtime.InteropServices;
+using ISX;
 using NUnit.Framework;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
@@ -106,8 +107,22 @@ public class FunctionalTests
         var setup = new InputControlSetup("Gamepad");
         var gamepad = (Gamepad) setup.Finish();
             
-        Assert.That(gamepad.template.name, Is.EqualTo("Gamepad"));
-        Assert.That(gamepad.leftStick.template.name, Is.EqualTo("Stick"));
+        Assert.That(gamepad.template, Is.EqualTo("Gamepad"));
+        Assert.That(gamepad.leftStick.template, Is.EqualTo("Stick"));
+        
+        TearDown();
+    }
+
+    [Test]
+    public void ControlsReferToTheirDevices()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var leftStick = setup.GetControl("leftStick");
+        var device = setup.Finish();
+
+        Assert.That(leftStick.device, Is.SameAs(device));
         
         TearDown();
     }
@@ -121,6 +136,29 @@ public class FunctionalTests
         var device = setup.Finish();
         
         Assert.That(device.name, Contains.Substring("Gamepad"));
+        
+        TearDown();
+    }
+
+    [Test]
+    public void ComputesStateLayoutFromTemplate()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var leftStick = setup.GetControl("leftStick");
+        var device = setup.Finish();
+
+        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>()*8));
+        Assert.That(leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick")));
+        
+        TearDown();
+    }
+
+    [Test]
+    public void AppendsControlsWithoutForcedOffsetToEndOfState()
+    {
+        Setup();
         
         TearDown();
     }
@@ -179,7 +217,30 @@ public class FunctionalTests
     }
 
     [Test]
+    public void AssignsFullPathToControlsWhenAddingDevice()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var leftStick = setup.GetControl("leftStick");
+        
+        Assert.That(leftStick.path, Is.EqualTo("leftStick"));
+        
+        var device = setup.Finish();
+        InputSystem.AddDevice(device);
+
+        Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
+        
+        TearDown();
+    }
+
+    [Test]
     public void ReplacingTemplateAffectsAllDevicesUsingTemplate()
+    {
+    }
+
+    [Test]
+    public void CanFindTemplateFromDeviceDescriptor()
     {
     }
 }
