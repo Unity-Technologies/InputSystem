@@ -334,6 +334,9 @@ namespace ISX
 	    private void AddChildControls(InputTemplate template, InputControl parent)
 	    {
 		    var controlTemplates = template.m_Controls;
+		    if (controlTemplates == null)
+			    return;
+		    
 		    foreach (var controlTemplate in controlTemplates)
 		    {
 			    var control = AddControlInternal(controlTemplate.template, controlTemplate.name, parent);
@@ -424,6 +427,15 @@ namespace ISX
 		    {
 			    template = InputTemplate.FromJson(name, json);
 			    m_Templates[nameLowerCase] = template;
+
+			    // If the template extends another template, we need to merge the
+			    // base template into the final template.
+			    if (!string.IsNullOrEmpty(template.extendsTemplate))
+			    {
+				    var superTemplate = FindOrLoadTemplate(template.extendsTemplate);
+				    template.MergeTemplate(superTemplate);
+			    }
+			    
 			    return template;
 		    }
 		    

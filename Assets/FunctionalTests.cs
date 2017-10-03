@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngineInternal.Input;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
@@ -66,6 +67,45 @@ public class FunctionalTests
         Assert.That(setup.GetChildren("leftStick"), Has.Count.EqualTo(kNumControlsInAStick));
         Assert.That(setup.GetChildren("leftStick"), Has.Exactly(1).With.Property("name").EqualTo("x"));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanSetUpDeviceFromJsonTemplate()
+    {
+        Setup();
+
+        const string controlJson = @"
+            {
+                ""name"" : ""MyControl"",
+                ""extend"" : ""Vector2""
+            }
+        ";
+        const string deviceJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""myThing"",
+                        ""template"" : ""MyControl"",
+                        ""usage"" : ""LeftStick""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(deviceJson);
+        InputSystem.RegisterTemplate(controlJson);
+        
+        var setup = new InputControlSetup("MyDevice");
+
+        Assert.That(setup.GetControl("myThing/x"), Is.TypeOf<AxisControl>());
+        Assert.That(setup.GetControl("myThing"), Has.Property("template").EqualTo("MyControl"));
+        
+        var device = setup.Finish();
+        Assert.That(device, Is.TypeOf<InputDevice>());
+        
         TearDown();
     }
 
@@ -246,44 +286,6 @@ public class FunctionalTests
     }
 
     [Test]
-    [Category("State")]
-    public void State_CanSpecifyBitOffsetsOnControlProperties()
-    {
-        Setup();
-        
-        //examine control setup on dpad
-        
-        TearDown();
-    }
-
-    [Test]
-    [Category("State")]
-    public void State_AppendsControlsWithoutForcedOffsetToEndOfState()
-    {
-        Setup();
-        
-        TearDown();
-    }
-
-    [Test]
-    [Category("State")]
-    public void State_SupportsBitAddressingControlsWithFixedOffsets()
-    {
-        Setup();
-        
-        TearDown();
-    }
-
-    [Test]
-    [Category("State")]
-    public void State_SupportsBitAddressingControlsWithAutomaticOffsets()
-    {
-        Setup();
-        
-        TearDown();
-    }
-
-    [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromTemplate()
     {
@@ -375,34 +377,109 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Events")]
+    public void Events_CanUpdateStateOfDeviceWithEvent()
+    {
+        Setup();
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
+        var inputEvent = StateEvent.Create(gamepad.deviceId, 0, newState);
+
+        InputSystem.QueueEvent(inputEvent);
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123f));
+        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456f));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_SendingStateEventToDeviceMakesItCurrent()
+    {
+        Setup();
+        
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        var newState = new GamepadState();
+        var inputEvent = StateEvent.Create(gamepad.deviceId, 0, newState);
+
+        InputSystem.QueueEvent(inputEvent);
+        InputSystem.Update();
+        
+        Assert.That(Gamepad.current, Is.SameAs(gamepad));
+        
+        TearDown();
+    }
+
+    ////TODO:-----------------------------------------------------------------
+    [Test]
+    [Category("State")]
+    public void TODO_State_CanSpecifyBitOffsetsOnControlProperties()
+    {
+        Setup();
+        
+        //examine control setup on dpad
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
+    public void TODO_State_AppendsControlsWithoutForcedOffsetToEndOfState()
+    {
+        Setup();
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
+    public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()
+    {
+        Setup();
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("State")]
+    public void TODO_State_SupportsBitAddressingControlsWithAutomaticOffsets()
+    {
+        Setup();
+        
+        TearDown();
+    }
+    [Test]
     [Category("Devices")]
-    public void Devices_AddingANewDeviceDoesNotCauseExistingDevicesToForgetTheirState()
+    public void TODO_Devices_AddingANewDeviceDoesNotCauseExistingDevicesToForgetTheirState()
     {
     }
 
     [Test]
     [Category("State")]
-    public void State_WithSingleStateAndSingleUpdate_XXXXX()
+    public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption
     }
 
     [Test]
     [Category("State")]
-    public void State_CanDisableFixedUpdates()
+    public void TODO_State_CanDisableFixedUpdates()
     {
         //make sure it reduces memory usage
     }
 
     [Test]
     [Category("Templates")]
-    public void Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
+    public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
     {
     }
 
     [Test]
     [Category("Templates")]
-    public void Templates_CanFindTemplateFromDeviceDescriptor()
+    public void TODO_Templates_CanFindTemplateFromDeviceDescriptor()
     {
     }
 }

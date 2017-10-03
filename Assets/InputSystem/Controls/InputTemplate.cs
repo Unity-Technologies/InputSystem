@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace ISX
 {
@@ -135,16 +136,17 @@ namespace ISX
 	    // Constructs a template from the given JSON source.
 	    public static InputTemplate FromJson(string name, string json)
 	    {
-		    throw new NotImplementedException();
+		    var templateJson = JsonUtility.FromJson<TemplateJson>(json);
+		    return templateJson.ToTemplate();
 	    }
 	    
 	    ////REVIEW: for device templates, should we always add one ControlTemplate that represents the
 	    ////        device control itself? this would get rid of a number of special cases in InputControlSetup
 
 	    private string m_Name;
-	    private Type m_Type;
+	    internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
 	    private string m_ExtendsTemplate;
-	    private List<string> m_OverridesTemplates;
+	    private string[] m_OverridesTemplates;
 	    internal ControlTemplate[] m_Controls;
 	    private ReadOnlyCollection<ControlTemplate> m_ControlsReadOnly;
 	    private InputDeviceDescriptor m_DeviceDescriptor;
@@ -306,6 +308,117 @@ namespace ISX
 		    if (typeName.EndsWith("Control"))
 			    return typeName.Substring(0, typeName.Length - "Control".Length);
 		    return typeName;
+	    }
+
+	    internal void MergeTemplate(InputTemplate other)
+	    {
+		    if (m_Type == null)
+			    m_Type = other.m_Type;
+
+		    if (m_Controls == null)
+			    m_Controls = other.m_Controls;
+		    else
+			    throw new NotImplementedException("merge control templates");
+	    }
+
+	    internal static string ParseNameFromJson(string json)
+	    {
+		    var templateJson = JsonUtility.FromJson<TemplateJsonNameOnly>(json);
+		    return templateJson.name;
+	    }
+
+	    [Serializable]
+	    private struct TemplateJsonNameOnly
+	    {
+		    public string name;
+	    }
+
+	    [Serializable]
+	    private struct TemplateJson
+	    {
+		    public string name;
+		    public string extend;
+		    public string @override; // Convenience to not have to create array for single override.
+		    public string[] overrides;
+		    public InputDeviceDescriptor deviceDescriptor;
+		    public ControlTemplateJson[] controls;
+
+		    public InputTemplate ToTemplate()
+		    {
+                // By default, the type of the template is determine from the first template
+                // in its 'extend' property chain that has a type set. However, if the template
+                // extends nothing, we can't know what type to use for it so we default to
+                // InputDevice.
+                Type type = null;
+                if (string.IsNullOrEmpty(extend))
+                    type = typeof(InputDevice);
+
+                // Create template.
+			    var template = new InputTemplate(name, type);
+			    template.m_ExtendsTemplate = extend;
+			    template.m_DeviceDescriptor = deviceDescriptor;
+
+			    // Add overrides.
+			    if (!string.IsNullOrEmpty(@override) || overrides != null)
+			    {
+				    var names = new List<string>();
+				    if (!string.IsNullOrEmpty(@override))
+					    names.Add(@override);
+				    if (overrides != null)
+					    names.AddRange(overrides);
+				    template.m_OverridesTemplates = names.ToArray();
+			    }
+			    
+			    // Add controls.
+			    if (controls != null)
+			    {
+				    var controlTemplates = new List<ControlTemplate>();
+				    foreach (var control in controls)
+					    controlTemplates.Add(control.ToTemplate());
+			    	template.m_Controls = controlTemplates.ToArray();
+			    }
+			    
+			    return template;
+		    }
+	    }
+
+	    [Serializable]
+	    private struct ControlTemplateJson
+	    {
+		    public string name;
+		    public string template;
+		    public string usage; // Convenince to not have to create array for single usage.
+		    public string[] usages;
+		    public ParameterValueJson[] parameters;
+
+		    public ControlTemplate ToTemplate()
+		    {
+			    var template = new ControlTemplate
+			    {
+				    name = name,
+				    template = this.template
+			    };
+
+			    if (!string.IsNullOrEmpty(usage) || usages != null)
+			    {
+				    var usagesList = new List<string>();
+				    if (!string.IsNullOrEmpty(usage))
+					    usagesList.Add(usage);
+				    if (usages != null)
+					    usagesList.AddRange(usages);
+				    template.usages = usagesList.ToArray();
+			    }
+			    
+			    ////TODO: parameters
+
+			    return template;
+		    }
+	    }
+
+	    [Serializable]
+	    private struct ParameterValueJson
+	    {
+		    public string name;
 	    }
 
 

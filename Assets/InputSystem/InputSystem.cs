@@ -32,9 +32,9 @@ namespace ISX
             RegisterTemplate(typeof(T), name);
         }
 
-        public static void RegisterTemplate(string name, string json)
+        public static void RegisterTemplate(string json, string name = null)
         {
-            m_Manager.RegisterTemplate(name, json);
+            m_Manager.RegisterTemplate(json, name);
         }
 
         public static InputDevice AddDevice(string template)
@@ -51,7 +51,24 @@ namespace ISX
         {
             m_Manager.AddDevice(device);
         }
+
+        public static void QueueEvent<TEvent>(TEvent inputEvent)
+            where TEvent : struct, IInputEventTypeInfo
+        {
+            m_Manager.QueueEvent(inputEvent);
+        }
+
+        ////REVIEW: should we actually expose the Update() methods or should these be internal?
+        public static void Update()
+        {
+            m_Manager.Update();
+        }
         
+        public static void Update(InputUpdateType updateType)
+        {
+            m_Manager.Update(updateType);
+        }
+
         private static InputManager m_Manager;
         
 #if UNITY_EDITOR

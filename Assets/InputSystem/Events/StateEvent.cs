@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using UnityEngine;
 
 namespace ISX
 {
@@ -17,7 +18,24 @@ namespace ISX
         }
         public int GetSizeStatic()
         {
-            return Marshal.SizeOf<StateEvent>();
+            return UnsafeUtility.SizeOf<StateEvent>();
+        }
+
+        // Pack the given state structure into a StateEvent.
+        public static StateEvent Create<TState>(int deviceId, double time, TState state)
+            where TState : struct, IInputStateTypeInfo
+        {
+            var inputEvent = new StateEvent
+            {
+                baseEvent = new InputEvent(Type, UnsafeUtility.SizeOf<StateEvent>(), deviceId, time),
+                stateType = state.GetTypeStatic()
+            };
+            var src = UnsafeUtility.AddressOf(ref state);
+            fixed (byte* dst = inputEvent.stateData)
+            {
+                UnsafeUtility.MemCpy(new IntPtr(dst), src, UnsafeUtility.SizeOf<TState>());
+            }
+            return inputEvent;
         }
     }
 }

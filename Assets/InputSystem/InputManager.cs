@@ -43,9 +43,20 @@ namespace ISX
 	        ////TODO: see if we need to reconstruct any input device
         }
 
-	    public void RegisterTemplate(string name, string json)
+	    // Add a template constructed from a JSON string.
+	    public void RegisterTemplate(string json, string name = null)
 	    {
-		    throw new NotImplementedException();
+		    if (string.IsNullOrEmpty(json))
+			    throw new ArgumentException(nameof(json));
+
+		    if (string.IsNullOrEmpty(name))
+		    {
+			    name = InputTemplate.ParseNameFromJson(json);
+			    if (string.IsNullOrEmpty(name))
+				    throw new ArgumentException($"Template name has not been given and is not set in JSON template", nameof(name));
+		    }
+
+		    m_TemplateStrings[name.ToLower()] = json;
 	    }
 
 	    public void RegisterProcessor(string name, Type type)
@@ -110,6 +121,45 @@ namespace ISX
 		    ReallocateStateBuffers();
 	    }
 
+	    public void QueueEvent<TEvent>(TEvent inputEvent)
+            where TEvent : struct, IInputEventTypeInfo
+	    {
+            // Don't bother keeping the data on the managed side. Just stuff the raw data directly
+            // into the native buffers. This also means this method is thread-safe.
+	        NativeInputSystem.SendInput(inputEvent);
+	    }
+
+	    public void Update()
+	    {
+		    Update(m_CurrentUpdate);
+	    }
+
+	    public void Update(InputUpdateType updateType)
+	    {
+		    ////TODO: kill the Begin/End variations for native update types
+		    ////TODO: collapse NativeInputSystem.SendEvents and .Update into one single method
+
+		    if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
+		    {
+			    NativeInputSystem.Update(NativeInputUpdateType.BeginDynamic);
+		    }
+		    if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
+		    {
+			    NativeInputSystem.Update(NativeInputUpdateType.BeginFixed);
+		    }
+		    if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
+		    {
+			    NativeInputSystem.Update(NativeInputUpdateType.BeginBeforeRender);
+		    }
+#if UNITY_EDITOR
+		    if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
+		    {
+			    NativeInputSystem.Update(NativeInputUpdateType.BeginEditor);
+		    }
+#endif
+	    }
+	    
+	    
         internal void Initialize()
         {
 	        m_Usages = new Dictionary<string, InputUsage>();

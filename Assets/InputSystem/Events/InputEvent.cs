@@ -35,5 +35,13 @@ namespace ISX
         {
             return 0;
         }
+        
+        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time)
+        {
+            m_Type = type;
+            m_SizeInBytes = sizeInBytes;
+            m_DeviceId = deviceId;
+            m_Time = time;
+        }
     }
 }
