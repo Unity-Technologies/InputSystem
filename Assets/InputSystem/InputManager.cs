@@ -106,6 +106,8 @@ namespace ISX
 		    AssignUniqueDeviceId(device);
 		    
 		    ArrayHelpers.Append(ref m_Devices, device);
+		    
+		    ReallocateStateBuffers();
 	    }
 
         internal void Initialize()
@@ -114,6 +116,16 @@ namespace ISX
 	        m_TemplateTypes = new Dictionary<string, Type>();
 	        m_TemplateStrings = new Dictionary<string, string>();
 	        m_Processors = new Dictionary<string, Type>();
+
+	        // Determine our default set of enabled update types. By
+	        // default we enable both fixed and dynamic update because
+	        // we don't know which one the user is going to use. The user
+	        // can manually turn off one of them to optimize operation.
+	        m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
+#if UNITY_EDITOR
+	        m_UpdateMask |= InputUpdateType.Editor;
+#endif
+	        m_CurrentUpdate = InputUpdateType.Dynamic;
             
 			// Register templates.
 			RegisterTemplate("Button", typeof(ButtonControl)); // Inputs.
@@ -174,12 +186,18 @@ namespace ISX
 	        InputTemplate.s_TemplateStrings = m_TemplateStrings;
         }
 
+	    
 	    private Dictionary<string, InputUsage> m_Usages; ////REVIEW: Array or dictionary?
 	    private Dictionary<string, Type> m_TemplateTypes;
 	    private Dictionary<string, string> m_TemplateStrings;
 	    private Dictionary<string, Type> m_Processors;
 	    
 	    private InputDevice[] m_Devices;
+
+	    private InputUpdateType m_CurrentUpdate;
+	    private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
+	    private InputStateBuffers m_StateBuffers;
+	    
 
 	    private void MakeDeviceNameUnique(InputDevice device)
 	    {
@@ -232,7 +250,27 @@ namespace ISX
 			    device.m_DeviceId = NativeInputSystem.AllocateDeviceId();
 		    }
 	    }
-	    
+
+	    // (Re)allocates state buffers and assigns each device that's been added
+	    // a segment of the buffer. Preserves the current state of devices.
+	    private void ReallocateStateBuffers()
+	    {
+		    var devices = m_Devices;
+		    var oldBuffers = m_StateBuffers;
+		    
+		    // Allocate new buffers.
+		    var newBuffers = new InputStateBuffers();
+		    var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, devices);
+		    
+		    // Migrate state.
+		    newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers);
+		    
+		    // Install the new buffers.
+		    oldBuffers.FreeAll();
+		    m_StateBuffers = newBuffers;
+		    m_StateBuffers.SwitchTo(m_CurrentUpdate);
+	    }
+
 	    // Domain reload survival logic.
 #if UNITY_EDITOR
 	    [Serializable]
@@ -264,6 +302,7 @@ namespace ISX
 		    public TemplateState[] templateTypes;
 		    public TemplateState[] templateStrings;
 		    public DeviceState[] devices;
+		    public InputStateBuffers buffers;
 	    }
 
 	    [SerializeField] private SerializedState m_SerializedState;
@@ -324,7 +363,8 @@ namespace ISX
 				usages = usageArray,
 			    templateTypes = templateTypeArray,
 			    templateStrings = templateStringArray,
-			    devices = deviceArray
+			    devices = deviceArray,
+			    buffers = m_StateBuffers
 		    };
 	    }
 
@@ -334,6 +374,8 @@ namespace ISX
 		    m_TemplateTypes = new Dictionary<string, Type>();
 		    m_TemplateStrings = new Dictionary<string, string>();
 		    m_Processors = new Dictionary<string, Type>();
+		    m_StateBuffers = m_SerializedState.buffers;
+		    m_CurrentUpdate = InputUpdateType.Dynamic;
 
 		    // Usages.
 		    foreach (var usage in m_SerializedState.usages)
@@ -363,6 +405,7 @@ namespace ISX
 			    devices[i] = device;
 		    }
 		    m_Devices = devices;
+		    ReallocateStateBuffers();
 
 		    m_SerializedState = default(SerializedState);
 	    }

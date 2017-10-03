@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
+using UnityEngine;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
@@ -38,7 +39,7 @@ public class FunctionalTests
     
     [Test]
     [Category("Templates")]
-    public void CanCreatePrimitiveControlsFromTemplate()
+    public void Templates_CanCreatePrimitiveControlsFromTemplate()
     {
         Setup();
         
@@ -53,7 +54,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void CanCreateCompoundControlsFromTemplate()
+    public void Templates_CanCreateCompoundControlsFromTemplate()
     {
         Setup();
         
@@ -70,7 +71,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void CanCreateDeviceFromTemplate()
+    public void Devices_CanCreateDeviceFromTemplate()
     {
         Setup();
         
@@ -85,7 +86,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void CanCreateDeviceWithNestedState()
+    public void Devices_CanCreateDeviceWithNestedState()
     {
         Setup();
         
@@ -101,7 +102,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void CanFindControlsInSetupByPath()
+    public void Controls_CanFindControlsInSetupByPath()
     {
         Setup();
         
@@ -117,7 +118,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void DeviceAndControlsRememberTheirTemplates()
+    public void Controls_DeviceAndControlsRememberTheirTemplates()
     {
         Setup();
         
@@ -132,7 +133,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void ControlsReferToTheirParent()
+    public void Controls_ControlsReferToTheirParent()
     {
         Setup();
         
@@ -147,7 +148,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void ControlsReferToTheirDevices()
+    public void Controls_ControlsReferToTheirDevices()
     {
         Setup();
         
@@ -162,7 +163,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
+    public void Controls_AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
     {
         Setup();
         
@@ -179,7 +180,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void DevicesGetNameFromTemplate()
+    public void Devices_DevicesGetNameFromTemplate()
     {
         Setup();
         
@@ -193,7 +194,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void CanComputeStateLayoutFromStateStructure()
+    public void State_CanComputeStateLayoutFromStateStructure()
     {
         Setup();
         
@@ -209,7 +210,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void CanComputeStateLayoutForNestedStateStructures()
+    public void State_CanComputeStateLayoutForNestedStateStructures()
     {
         Setup();
         
@@ -227,7 +228,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void OffsetsInStateLayoutsAreRelativeToRoot()
+    public void State_OffsetsInStateLayoutsAreRelativeToRoot()
     {
         Setup();
         
@@ -246,7 +247,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void CanSpecifyBitOffsetsOnControlProperties()
+    public void State_CanSpecifyBitOffsetsOnControlProperties()
     {
         Setup();
         
@@ -257,7 +258,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void AppendsControlsWithoutForcedOffsetToEndOfState()
+    public void State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         Setup();
         
@@ -266,7 +267,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void SupportsBitAddressingControlsWithFixedOffsets()
+    public void State_SupportsBitAddressingControlsWithFixedOffsets()
     {
         Setup();
         
@@ -275,7 +276,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void SupportsBitAddressingControlsWithAutomaticOffsets()
+    public void State_SupportsBitAddressingControlsWithAutomaticOffsets()
     {
         Setup();
         
@@ -284,7 +285,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void CanAddDeviceFromTemplate()
+    public void Devices_CanAddDeviceFromTemplate()
     {
         Setup();
 
@@ -298,7 +299,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void AddingDeviceTwiceIsIgnored()
+    public void Devices_AddingDeviceTwiceIsIgnored()
     {
         Setup();
         
@@ -313,7 +314,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void EnsuresDeviceNamesAreUnique()
+    public void Devices_EnsuresDeviceNamesAreUnique()
     {
         Setup();
 
@@ -327,7 +328,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void AssignsUniqueNumericIdToDevices()
+    public void Devices_AssignsUniqueNumericIdToDevices()
     {
         Setup();
         
@@ -341,7 +342,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void AssignsFullPathToControlsWhenAddingDevice()
+    public void Controls_AssignsFullPathToControlsWhenAddingDevice()
     {
         Setup();
         
@@ -359,13 +360,49 @@ public class FunctionalTests
     }
 
     [Test]
-    [Category("Templates")]
-    public void ReplacingTemplateAffectsAllDevicesUsingTemplate()
+    [Category("Controls")]
+    public void Controls_AfterAddingDeviceCanQueryValueOfControls()
+    {
+        Setup();
+        
+        var setup = new InputControlSetup("Gamepad");
+        var device = (Gamepad) setup.Finish();
+        InputSystem.AddDevice(device);
+
+        Assert.That(device.leftStick.value, Is.EqualTo(default(Vector2)));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingANewDeviceDoesNotCauseExistingDevicesToForgetTheirState()
     {
     }
 
     [Test]
-    public void CanFindTemplateFromDeviceDescriptor()
+    [Category("State")]
+    public void State_WithSingleStateAndSingleUpdate_XXXXX()
+    {
+        //test memory consumption
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanDisableFixedUpdates()
+    {
+        //make sure it reduces memory usage
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanFindTemplateFromDeviceDescriptor()
     {
     }
 }

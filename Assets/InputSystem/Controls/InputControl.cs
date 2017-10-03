@@ -164,6 +164,15 @@ namespace ISX
 			    return path;
 		    return $"{this.path}/{path}";
 	    }
+
+	    internal void BakeOffsetIntoStateBlockRecursive(uint offset)
+	    {
+		    m_StateBlock.byteOffset += offset;
+		    m_StateBlock.isAllocated = true;
+		    
+		    for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
+			    m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
+	    }
     }
 	
     // Helper to more quickly implement new control types.

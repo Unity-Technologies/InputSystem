@@ -60,20 +60,29 @@ namespace ISX
 
 		internal IntPtr currentStatePtr
 		{
-			get
-			{
-				throw new NotImplementedException();
-			}
+			get { return s_CurrentStatePtr + (int)byteOffset; }
 		}
-		
+
 		internal IntPtr previousStatePtr
 		{
-			get { throw new NotImplementedException(); }
+			get { return s_PreviousStatePtr + (int) byteOffset; }
 		}
-		
+
 		internal bool isAllocated
 		{
 			get { return (m_Flags & Flags.Allocated) == Flags.Allocated; }
+			set
+			{
+				if (value)
+					m_Flags |= Flags.Allocated;
+				else
+					m_Flags &= ~Flags.Allocated;
+			}
+		}
+
+		internal int alignedSizeInBytes
+		{
+			get { return (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0); }
 		}
 	}
 }

@@ -54,6 +54,11 @@
 	    internal int m_PlayerIndex;
 	    internal int m_DeviceId;
 	    internal InputDeviceDescriptor m_Descriptor;
+	    
+	    // Where our state data starts in the global state buffers.
+	    // NOTE: This is baked into the InputStateBlock of each control of the device. We remember
+	    //       it here for when we need to re-allocate state buffers.
+	    internal uint m_StateBufferOffset;
 
 	    // List of usages for all controls. Each control gets a slice of this array.
 	    // See 'InputControl.usages'.
