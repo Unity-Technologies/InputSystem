@@ -406,7 +406,7 @@ public class FunctionalTests
             };
 
         var gamepad = InputSystem.AddDevice("Gamepad");
-        
+
         Assert.That(receivedCallCount, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
         Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));

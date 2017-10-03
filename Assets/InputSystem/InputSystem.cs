@@ -18,7 +18,7 @@ namespace ISX
         {
             get { return m_Manager.devices; }
         }
-        
+
         public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
         {
             add { m_Manager.onDeviceChange += value; }

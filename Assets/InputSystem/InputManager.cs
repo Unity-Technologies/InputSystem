@@ -143,7 +143,7 @@ namespace ISX
             m_DevicesById[device.id] = device;
 
             ReallocateStateBuffers();
-            
+
             // Notify listeners.
             if (m_DeviceChangeEvent != null)
                 m_DeviceChangeEvent.Invoke(device, InputDeviceChange.Added);
@@ -462,7 +462,7 @@ namespace ISX
         [Serializable]
         internal struct DeviceState
         {
-            // Preserving InputDevice is somewhat tricky business. Serializing
+            // Preserving InputDevices is somewhat tricky business. Serializing
             // them in full would involve pretty nasty work. We have the restriction,
             // however, that everything needs to be created from templates (it partly
             // exists for the sake of reload survivability), so we should be able to
@@ -472,6 +472,7 @@ namespace ISX
             public string name;
             public string template;
             public int deviceId;
+            public uint stateOffset;
         }
 
         [Serializable]
@@ -540,7 +541,8 @@ namespace ISX
                 {
                     name = device.name,
                     template = device.template,
-                    deviceId = device.id
+                    deviceId = device.id,
+                    stateOffset = device.m_StateBufferOffset
                 };
                 deviceArray[i] = deviceState;
             }
@@ -591,6 +593,8 @@ namespace ISX
                 var device = setup.Finish();
                 device.m_Name = state.name;
                 device.m_Id = state.deviceId;
+                device.m_StateBufferOffset = state.stateOffset;
+                device.BakeOffsetIntoStateBlockRecursive(device.m_StateBufferOffset);
                 devices[i] = device;
             }
             m_Devices = devices;
