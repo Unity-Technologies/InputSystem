@@ -422,6 +422,9 @@ namespace ISX
                         */
                 }
 
+                // Device received event so make it current.
+                device.MakeCurrent();
+
                 // Mark as processed by setting time to negative.
                 oldestEventPtr->time = -1;
             }
