@@ -18,11 +18,11 @@ namespace ISX
             {
                 unsafe
                 {
-                    var buffer = (byte*)currentStatePtr;
-                    var x = *((float*)&buffer[m_StateBlock.byteOffset]);
-                    var y = *((float*)&buffer[m_StateBlock.byteOffset + 4]);
-                    var z = *((float*)&buffer[m_StateBlock.byteOffset + 8]);
-                    var w = *((float*)&buffer[m_StateBlock.byteOffset + 12]);
+                    var values = (float*)currentValuePtr;
+                    var x = values[0];
+                    var y = values[1];
+                    var z = values[2];
+                    var w = values[3];
                     return Process(new Quaternion(x, y, z, w));
                 }
             }

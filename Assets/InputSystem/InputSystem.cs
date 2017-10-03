@@ -44,12 +44,17 @@ namespace ISX
 
         public static InputDevice AddDevice(InputDeviceDescriptor descriptor)
         {
-            throw new NotImplementedException();
+            return m_Manager.AddDevice(descriptor);
         }
 
         public static void AddDevice(InputDevice device)
         {
             m_Manager.AddDevice(device);
+        }
+
+        public static InputDevice TryGetDeviceById(int deviceId)
+        {
+            return m_Manager.TryGetDeviceById(deviceId);
         }
 
         public static void QueueEvent<TEvent>(TEvent inputEvent)

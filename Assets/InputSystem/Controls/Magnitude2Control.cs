@@ -17,9 +17,9 @@ namespace ISX
         {
             get
             {
-                var buffer = (byte*)currentStatePtr;
-                var x = *((float*)&buffer[m_StateBlock.byteOffset]);
-                var y = *((float*)&buffer[m_StateBlock.byteOffset + 4]);
+                var values = (float*)currentValuePtr;
+                var x = values[0];
+                var y = values[1];
                 return new Vector2(x, y).magnitude;
             }
         }

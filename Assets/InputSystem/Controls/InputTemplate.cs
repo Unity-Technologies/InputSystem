@@ -323,14 +323,15 @@ namespace ISX
 
         internal static string ParseNameFromJson(string json)
         {
-            var templateJson = JsonUtility.FromJson<TemplateJsonNameOnly>(json);
+            var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
             return templateJson.name;
         }
 
         [Serializable]
-        private struct TemplateJsonNameOnly
+        private struct TemplateJsonNameAndDescriptorOnly
         {
             public string name;
+            public DeviceDescriptorJson device;
         }
 
         [Serializable]
@@ -340,7 +341,7 @@ namespace ISX
             public string extend;
             public string @override; // Convenience to not have to create array for single override.
             public string[] overrides;
-            public InputDeviceDescriptor deviceDescriptor;
+            public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
 
             public InputTemplate ToTemplate()
@@ -356,7 +357,7 @@ namespace ISX
                 // Create template.
                 var template = new InputTemplate(name, type);
                 template.m_ExtendsTemplate = extend;
-                template.m_DeviceDescriptor = deviceDescriptor;
+                template.m_DeviceDescriptor = device.ToDescriptor();
 
                 // Add overrides.
                 if (!string.IsNullOrEmpty(@override) || overrides != null)
@@ -419,6 +420,55 @@ namespace ISX
         private struct ParameterValueJson
         {
             public string name;
+        }
+
+        [Serializable]
+        private struct DeviceDescriptorJson
+        {
+            public string @interface;
+            public string[] interfaces;
+            public string deviceClass;
+            public string[] deviceClasses;
+            public string manufacturer;
+            public string[] manufacturers;
+            public string product;
+            public string[] products;
+            public string version;
+            public string[] versions;
+
+            public InputDeviceDescriptor ToDescriptor()
+            {
+                return new InputDeviceDescriptor
+                {
+                    interfaceName = JoinRegexStrings(@interface, interfaces),
+                    deviceClass = JoinRegexStrings(deviceClass, deviceClasses),
+                    manufacturer = JoinRegexStrings(manufacturer, manufacturers),
+                    product = JoinRegexStrings(product, products),
+                    version = JoinRegexStrings(version, versions)
+                };
+            }
+
+            private static string JoinRegexStrings(string first, string[] subsequent)
+            {
+                var result = AppendRegexString(null, first);
+                if (subsequent != null)
+                    foreach (var str in subsequent)
+                        result = AppendRegexString(result, str);
+                return result;
+            }
+
+            private static string AppendRegexString(string regex, string part)
+            {
+                if (string.IsNullOrEmpty(regex))
+                {
+                    if (string.IsNullOrEmpty(part))
+                        return null;
+
+                    return $"({part})";
+                }
+
+                return "$regex|({part})";
+            }
         }
 
 

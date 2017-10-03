@@ -5,7 +5,6 @@ namespace ISX
 {
     // A hidden object we put in the editor to bundle input system state
     // and help us survive domain relods.
-    [ExecuteInEditMode]
     internal class InputSystemObject : ScriptableObject
     {
         public InputManager manager;
@@ -15,6 +14,11 @@ namespace ISX
             hideFlags = HideFlags.HideAndDontSave;
             manager = new InputManager();
             manager.Initialize();
+        }
+
+        public void OnDestroy()
+        {
+            manager.Destroy();
         }
     }
 }

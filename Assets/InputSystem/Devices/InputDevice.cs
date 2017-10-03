@@ -31,9 +31,9 @@ namespace ISX
         ////REVIEW: this sort of becomes the index of the root node
         // Every registered device in the system gets a unique numeric ID.
         // For native devices, this is assigned by the underlying runtime.
-        public int deviceId
+        public int id
         {
-            get { return m_DeviceId; }
+            get { return m_Id; }
         }
 
         public InputDevice()
@@ -52,7 +52,7 @@ namespace ISX
 
         internal bool m_Connected;
         internal int m_PlayerIndex;
-        internal int m_DeviceId;
+        internal int m_Id;
         internal InputDeviceDescriptor m_Descriptor;
 
         // Where our state data starts in the global state buffers.

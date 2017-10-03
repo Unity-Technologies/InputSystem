@@ -123,7 +123,7 @@ namespace ISX
             {
                 unsafe
                 {
-                    return *((KeyboardState*)currentStatePtr);
+                    return *((KeyboardState*)currentValuePtr);
                 }
             }
         }

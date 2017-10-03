@@ -190,7 +190,7 @@ namespace ISX
         // We construct templates lazily as we go but keep them cached while we
         // set up hierarchies so that we don't re-construt the same Button template
         // 256 times for a keyboard.
-        private Dictionary<string, InputTemplate> m_Templates;
+        private Dictionary<string, InputTemplate> m_CachedTemplates;
 
         private void Reset()
         {
@@ -204,7 +204,7 @@ namespace ISX
             m_UsageToControl = null;
             m_ChildRelationsCount = 0;
             m_UsageRelationsCount = 0;
-            m_Templates = null;
+            m_CachedTemplates = null;
             m_Initialized = false;
         }
 
@@ -221,7 +221,7 @@ namespace ISX
             m_ControlToUsages = new Dictionary<InputControl, List<InputUsage>>();
             m_PathToControl = new Dictionary<string, InputControl>();
             m_UsageToControl = new Dictionary<string, InputControl>();
-            m_Templates = new Dictionary<string, InputTemplate>();
+            m_CachedTemplates = new Dictionary<string, InputTemplate>();
 
             m_Initialized = true;
         }
@@ -416,7 +416,7 @@ namespace ISX
 
             // See if we have it cached.
             InputTemplate template;
-            if (m_Templates.TryGetValue(nameLowerCase, out template))
+            if (m_CachedTemplates.TryGetValue(nameLowerCase, out template))
                 return template;
 
             // No, so see if we have a string template for it. These
@@ -426,7 +426,7 @@ namespace ISX
             if (InputTemplate.s_TemplateStrings.TryGetValue(nameLowerCase, out json))
             {
                 template = InputTemplate.FromJson(name, json);
-                m_Templates[nameLowerCase] = template;
+                m_CachedTemplates[nameLowerCase] = template;
 
                 // If the template extends another template, we need to merge the
                 // base template into the final template.
@@ -444,7 +444,7 @@ namespace ISX
             if (InputTemplate.s_TemplateTypes.TryGetValue(nameLowerCase, out type))
             {
                 template = InputTemplate.FromType(name, type);
-                m_Templates[nameLowerCase] = template;
+                m_CachedTemplates[nameLowerCase] = template;
                 return template;
             }
 

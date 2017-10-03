@@ -13,8 +13,8 @@ namespace ISX
             {
                 unsafe
                 {
-                    var buffer = (byte*)currentStatePtr;
-                    return Process(*((int*)&buffer[m_StateBlock.byteOffset]));
+                    var value = *(int*)currentValuePtr;
+                    return Process(value);
                 }
             }
         }

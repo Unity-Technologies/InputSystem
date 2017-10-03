@@ -33,8 +33,8 @@ namespace ISX
             {
                 unsafe
                 {
-                    var buffer = (byte*)currentStatePtr;
-                    return Process(Preprocess(*((float*)&buffer[m_StateBlock.byteOffset])));
+                    var value = *(float*)currentValuePtr;
+                    return Process(Preprocess(value));
                 }
             }
         }

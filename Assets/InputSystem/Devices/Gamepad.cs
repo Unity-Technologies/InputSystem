@@ -23,6 +23,7 @@ namespace ISX
         [InputControl(name = "rightStickPress", template = "Button", bit = (int)Button.RightStick)]
         [InputControl(name = "leftShoulder", template = "Button", bit = (int)Button.LeftShoulder)]
         [InputControl(name = "rightShoulder", template = "Button", bit = (int)Button.RightShoulder)]
+        ////REVIEW: seems like these two should get less ambiguous names as well
         [InputControl(name = "start", template = "Button", bit = (int)Button.Start, usage = "Menu")]
         [InputControl(name = "select", template = "Button", bit = (int)Button.Select)]
         public int buttons;
@@ -110,7 +111,7 @@ namespace ISX
             {
                 unsafe
                 {
-                    return *((GamepadState*)currentStatePtr);
+                    return *((GamepadState*)currentValuePtr);
                 }
             }
         }
@@ -150,6 +151,11 @@ namespace ISX
         public AxisControl rightMotor { get; private set; }
 
         public static Gamepad current { get; protected set; }
+
+        public Gamepad()
+        {
+            m_StateBlock.typeCode = GamepadState.kStateTypeCode;
+        }
 
         public override void MakeCurrent()
         {

@@ -118,7 +118,28 @@ namespace ISX
 
             ArrayHelpers.Append(ref m_Devices, device);
 
+            ////REVIEW: Not sure a full-blown dictionary is the right way here. Alternatives are to keep
+            ////        a sparse array that directly indices using the linearly increasing IDs (though that
+            ////        may get large over time). Or to just do a linear search through m_Devices (but
+            ////        that may end up tapping a bunch of memory locations in the heap to find the right
+            ////        device; could be improved by sorting m_Devices by ID and picking a good starting
+            ////        point based on the ID we have instead of searching from [0] always).
+            m_DevicesById[device.id] = device;
+
             ReallocateStateBuffers();
+        }
+
+        public InputDevice AddDevice(InputDeviceDescriptor descriptor)
+        {
+            throw new NotImplementedException();
+        }
+
+        public InputDevice TryGetDeviceById(int id)
+        {
+            InputDevice result;
+            if (m_DevicesById.TryGetValue(id, out result))
+                return result;
+            return null;
         }
 
         public void QueueEvent<TEvent>(TEvent inputEvent)
@@ -136,25 +157,22 @@ namespace ISX
 
         public void Update(InputUpdateType updateType)
         {
-            ////TODO: kill the Begin/End variations for native update types
-            ////TODO: collapse NativeInputSystem.SendEvents and .Update into one single method
-
             if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
             {
-                NativeInputSystem.Update(NativeInputUpdateType.BeginDynamic);
+                NativeInputSystem.Update(NativeInputUpdateType.Dynamic);
             }
             if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
             {
-                NativeInputSystem.Update(NativeInputUpdateType.BeginFixed);
+                NativeInputSystem.Update(NativeInputUpdateType.Fixed);
             }
             if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
             {
-                NativeInputSystem.Update(NativeInputUpdateType.BeginBeforeRender);
+                NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
             }
 #if UNITY_EDITOR
             if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
             {
-                NativeInputSystem.Update(NativeInputUpdateType.BeginEditor);
+                NativeInputSystem.Update(NativeInputUpdateType.Editor);
             }
 #endif
         }
@@ -165,6 +183,7 @@ namespace ISX
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
             m_Processors = new Dictionary<string, Type>();
+            m_DevicesById = new Dictionary<int, InputDevice>();
 
             // Determine our default set of enabled update types. By
             // default we enable both fixed and dynamic update because
@@ -233,6 +252,16 @@ namespace ISX
             //InputUsage.s_Usages = m_Usages;
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
+
+            NativeInputSystem.onUpdate += OnNativeUpdate;
+        }
+
+        internal void Destroy()
+        {
+            InputTemplate.s_TemplateTypes = null;
+            InputTemplate.s_TemplateStrings = null;
+
+            NativeInputSystem.onUpdate -= OnNativeUpdate;
         }
 
         private Dictionary<string, InputUsage> m_Usages; ////REVIEW: Array or dictionary?
@@ -241,6 +270,7 @@ namespace ISX
         private Dictionary<string, Type> m_Processors;
 
         private InputDevice[] m_Devices;
+        private Dictionary<int, InputDevice> m_DevicesById;
 
         private InputUpdateType m_CurrentUpdate;
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
@@ -278,24 +308,24 @@ namespace ISX
 
         private void AssignUniqueDeviceId(InputDevice device)
         {
-            // If the device already has an ID, make sure
-            if (device.deviceId != InputDevice.kInvalidDeviceId)
+            // If the device already has an ID, make sure it's unique.
+            if (device.id != InputDevice.kInvalidDeviceId)
             {
                 if (m_Devices != null)
                 {
                     // Safety check to make sure out IDs are really unique.
                     // Given they are assigned by the native system they should be fine
                     // but let's make sure.
-                    var deviceId = device.deviceId;
+                    var deviceId = device.id;
                     for (var i = 0; i < m_Devices.Length; ++i)
-                        if (m_Devices[i].deviceId == deviceId)
+                        if (m_Devices[i].id == deviceId)
                             throw new Exception(
                                 $"Duplicate device ID {deviceId} detected for devices '{device.name}' and '{m_Devices[i].name}'");
                 }
             }
             else
             {
-                device.m_DeviceId = NativeInputSystem.AllocateDeviceId();
+                device.m_Id = NativeInputSystem.AllocateDeviceId();
             }
         }
 
@@ -317,6 +347,84 @@ namespace ISX
             oldBuffers.FreeAll();
             m_StateBuffers = newBuffers;
             m_StateBuffers.SwitchTo(m_CurrentUpdate);
+        }
+
+        private unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
+        {
+            // We *always* have to process events into the current state even if the given update isn't enabled.
+            // This is because the current state is for all updates and reflects the most up-to-date device states.
+            // Where enabled-or-not comes is in terms of previous state allocation and processing.
+
+            m_StateBuffers.SwapAndSwitchTo((InputUpdateType)updateType);
+
+            if (eventCount <= 0)
+                return;
+
+            for (var i = 0; i < eventCount; ++i)
+            {
+                // Find next oldest event.
+                var currentEventPtr = (InputEvent*)eventData;
+                var oldestEventPtr = currentEventPtr;
+                var oldestEventTime = oldestEventPtr->time;
+                for (var n = 1; n < eventCount; ++n)
+                {
+                    var nextEventPtr = (InputEvent*)((byte*)currentEventPtr + currentEventPtr->sizeInBytes);
+
+                    if (oldestEventTime < 0 || nextEventPtr->time < oldestEventTime)
+                    {
+                        oldestEventPtr = nextEventPtr;
+                        oldestEventTime = oldestEventPtr->time;
+                    }
+
+                    currentEventPtr = nextEventPtr;
+                }
+
+                // Notify listeners.
+                //for (var n = 0; n < m_EventListeners.Count; ++n)
+                //m_EventListeners[n](new InputEventPtr(oldestEventPtr));
+
+                if (oldestEventPtr->type == new FourCC())
+                    continue;
+
+                // Grab device for event.
+                var device = TryGetDeviceById(oldestEventPtr->deviceId);
+                if (device == null)
+                    continue;
+
+                // Process.
+                switch (oldestEventPtr->type)
+                {
+                    case StateEvent.Type:
+                        var stateEventPtr = (StateEvent*)oldestEventPtr;
+                        var stateType = stateEventPtr->stateType;
+                        var stateBlock = device.m_StateBlock;
+                        var stateSize = stateEventPtr->stateSizeInBytes;
+                        if (stateBlock.typeCode == stateType &&
+                            stateBlock.alignedSizeInBytes == stateSize)
+                        {
+                            GamepadState gpad = new GamepadState();
+                            IntPtr gpadPtr = UnsafeUtility.AddressOf(ref gpad);
+                            UnsafeUtility.MemCpy(gpadPtr, stateEventPtr->state, stateSize);
+
+                            UnsafeUtility.MemCpy(stateBlock.currentStatePtr, stateEventPtr->state, stateSize);
+                        }
+                        ////TODO: queue up state change notification (only if anyone is listening)
+                        break;
+
+                        /*
+                    case ConnectEvent.Type:
+                        if (device.connected)
+                        {
+                            device.connected = true;
+                            NotifyListenersOfDeviceChange(device, InputDeviceChange.Connected);
+                        }
+                        break;
+                        */
+                }
+
+                // Mark as processed by setting time to negative.
+                oldestEventPtr->time = -1;
+            }
         }
 
         // Domain reload survival logic.
@@ -401,7 +509,7 @@ namespace ISX
                 {
                     name = device.name,
                     template = device.template,
-                    deviceId = device.deviceId
+                    deviceId = device.id
                 };
                 deviceArray[i] = deviceState;
             }
@@ -449,7 +557,7 @@ namespace ISX
                 var setup = new InputControlSetup(state.template);
                 var device = setup.Finish();
                 device.m_Name = state.name;
-                device.m_DeviceId = state.deviceId;
+                device.m_Id = state.deviceId;
                 devices[i] = device;
             }
             m_Devices = devices;

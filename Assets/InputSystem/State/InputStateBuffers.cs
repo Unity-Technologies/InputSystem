@@ -76,6 +76,8 @@ namespace ISX
         // and switch to its buffers.
         public void SwapAndSwitchTo(InputUpdateType update)
         {
+            ////TODO: implement swapping
+            SwitchTo(update);
         }
 
         // Allocates all buffers to serve the given updates and comes up with a spot

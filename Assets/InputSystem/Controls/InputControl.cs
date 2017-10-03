@@ -50,13 +50,13 @@ namespace ISX
             {
                 ////REVIEW: Not sure yet which is better; return null or raw byte data?
                 ////        Actually, this should probably always return a value of the type given in the template
-                var statePtr = currentStatePtr;
+                var statePtr = currentValuePtr;
                 if (statePtr == IntPtr.Zero)
                     return Array.Empty<byte>();
                 else
                 {
                     var buffer = new byte[m_StateBlock.sizeInBits / 8];
-                    Marshal.Copy(currentStatePtr, buffer, 0, buffer.Length);
+                    Marshal.Copy(currentValuePtr, buffer, 0, buffer.Length);
                     return buffer;
                 }
             }
@@ -117,7 +117,7 @@ namespace ISX
 
         protected internal InputStateBlock m_StateBlock;
 
-        protected IntPtr currentStatePtr
+        protected IntPtr currentValuePtr
         {
             get
             {
@@ -128,7 +128,7 @@ namespace ISX
             }
         }
 
-        protected IntPtr previousStatePtr
+        protected IntPtr previousValuePtr
         {
             get
             {
