@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ISX
@@ -16,6 +16,7 @@ namespace ISX
 
             return false;
         }
+
         public static void Append<TValue>(ref TValue[] array, TValue value)
         {
             if (array == null)

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace ISX
 {
@@ -9,23 +9,23 @@ namespace ISX
 
         public QuaternionControl()
         {
-	        m_StateBlock.sizeInBits = sizeof(float)*4*8;
+            m_StateBlock.sizeInBits = sizeof(float) * 4 * 8;
         }
 
         public override Quaternion value
         {
-			get
-			{
-				unsafe
-				{
-					var buffer = (byte*) currentStatePtr;
-					var x = *((float*) &buffer[m_StateBlock.byteOffset]);
-					var y = *((float*) &buffer[m_StateBlock.byteOffset+4]);
-					var z = *((float*) &buffer[m_StateBlock.byteOffset+8]);
-				    var w = *((float*) &buffer[m_StateBlock.byteOffset+12]);
-				    return Process(new Quaternion(x, y, z, w));
-				}
-			}
+            get
+            {
+                unsafe
+                {
+                    var buffer = (byte*)currentStatePtr;
+                    var x = *((float*)&buffer[m_StateBlock.byteOffset]);
+                    var y = *((float*)&buffer[m_StateBlock.byteOffset + 4]);
+                    var z = *((float*)&buffer[m_StateBlock.byteOffset + 8]);
+                    var w = *((float*)&buffer[m_StateBlock.byteOffset + 12]);
+                    return Process(new Quaternion(x, y, z, w));
+                }
+            }
         }
     }
 }

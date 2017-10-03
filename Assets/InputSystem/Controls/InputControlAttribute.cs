@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ISX
 {
@@ -12,10 +12,10 @@ namespace ISX
     {
         public string template;
         public string name;
-	    public string usage;
+        public string usage;
         public string options;
-	    public string[] processors;
-	    public string[] aliases;
+        public string[] processors;
+        public string[] aliases;
         public int bit;
         public uint offset = InputStateBlock.kInvalidOffset;
     }

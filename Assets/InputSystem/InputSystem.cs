@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -18,7 +18,7 @@ namespace ISX
         {
             get { return m_Manager.devices; }
         }
-        
+
         public static void RegisterTemplate(Type type, string name = null)
         {
             if (name == null)
@@ -63,18 +63,18 @@ namespace ISX
         {
             m_Manager.Update();
         }
-        
+
         public static void Update(InputUpdateType updateType)
         {
             m_Manager.Update(updateType);
         }
 
         private static InputManager m_Manager;
-        
+
 #if UNITY_EDITOR
         private static bool s_Initialized;
         private static InputSystemObject m_SystemObject;
-        
+
         static InputSystem()
         {
             // Unity's InitializeOnLoad force-executes static class constructors without
@@ -86,9 +86,9 @@ namespace ISX
 
             if (s_Initialized)
                 return;
-            
+
             // We may get InitializeOnLoad-related calls to the static class constructor
-            // *after* 
+            // *after*
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
@@ -123,16 +123,16 @@ namespace ISX
         {
             switch (change)
             {
-                 case PlayModeStateChange.ExitingEditMode:
-                     Save();
-                     break;
-                 
-                 case PlayModeStateChange.EnteredEditMode:
-                     Restore();
-                     break;
+                case PlayModeStateChange.ExitingEditMode:
+                    Save();
+                    break;
+
+                case PlayModeStateChange.EnteredEditMode:
+                    Restore();
+                    break;
             }
         }
-        
+
         //have to also update current device statics
 
         internal static void Save()
@@ -144,6 +144,7 @@ namespace ISX
         {
             ////TODO
         }
+
 #else
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void InitializeInPlayer()
@@ -152,6 +153,7 @@ namespace ISX
             // instances.
             m_Manager = new InputManager();
         }
+
 #endif
     }
 }

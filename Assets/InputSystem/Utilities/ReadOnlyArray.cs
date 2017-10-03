@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -22,7 +22,7 @@ namespace ISX
             else
                 m_Length = 0;
         }
-        
+
         public ReadOnlyArray(TValue[] array, int index, int length)
         {
             m_Array = array;
@@ -61,7 +61,7 @@ namespace ISX
             private int m_Index;
             private int m_IndexStart;
             private int m_IndexEnd;
-            
+
             public Enumerator(T[] array, int index, int length)
             {
                 m_Array = array;

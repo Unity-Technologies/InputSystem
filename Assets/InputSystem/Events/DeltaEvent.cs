@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace ISX
 {
@@ -18,6 +18,7 @@ namespace ISX
         {
             return Type;
         }
+
         public int GetSizeStatic()
         {
             return Marshal.SizeOf<DeltaEvent>();

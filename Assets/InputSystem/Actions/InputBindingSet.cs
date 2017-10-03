@@ -1,7 +1,6 @@
-﻿namespace ISX
+namespace ISX
 {
     public class InputBindingSet
     {
-        
     }
 }

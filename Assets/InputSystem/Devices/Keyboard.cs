@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -8,7 +8,7 @@ namespace ISX
     public enum Key
     {
         None,
-        
+
         // Printable keys.
         Space = ' ',
         Enter = '\r',
@@ -59,7 +59,7 @@ namespace ISX
         Digit8 = '8',
         Digit9 = '9',
         Digit0 = '0',
-        
+
         // Non-printable keys.
         LeftShift = 128, // Make sure we don't conflict with any of the printable keys.
         RightShift,
@@ -79,7 +79,7 @@ namespace ISX
         End,
         Insert,
         Erase,
-        
+
         // Numpad.
         NumpadEnter,
         Numpad0,
@@ -92,10 +92,10 @@ namespace ISX
         Numpad7,
         Numpad8,
         Numpad9,
-        
+
         Count = 256
     }
-    
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
@@ -104,8 +104,8 @@ namespace ISX
             get { return new FourCC('K', 'E', 'Y', 'S'); }
         }
 
-        [InputControl(name = "Escape", template = "Button", usage = "Back", bit = (int) Key.Enter)]
-        [InputControl(name = "Space", template = "Button", bit = (int) Key.Space)]
+        [InputControl(name = "Escape", template = "Button", usage = "Back", bit = (int)Key.Enter)]
+        [InputControl(name = "Space", template = "Button", bit = (int)Key.Space)]
         public fixed byte keys[256 / 8]; // For some reason, the Mono compiler won't accept "(int)Key.Count/8" as a constant expression.
 
         public FourCC GetTypeStatic()
@@ -113,20 +113,20 @@ namespace ISX
             return kStateTypeCode;
         }
     }
-    
+
     [InputState(typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
-	    public KeyboardState state
-	    {
-	        get
-	        {
-	            unsafe
-	            {
-	                return *((KeyboardState*) currentStatePtr);
-	            }
-	        }
-	    }
+        public KeyboardState state
+        {
+            get
+            {
+                unsafe
+                {
+                    return *((KeyboardState*)currentStatePtr);
+                }
+            }
+        }
 
         public override object valueAsObject
         {
@@ -155,7 +155,7 @@ namespace ISX
         public Keyboard()
         {
         }
-        
+
         public override void MakeCurrent()
         {
             base.MakeCurrent();

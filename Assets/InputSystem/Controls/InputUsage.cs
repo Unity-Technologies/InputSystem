@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,10 +6,10 @@ using UnityEngine;
 
 namespace ISX
 {
-	// Usages determine the meaning of controls. Naming of controls
-	// may differ between devices but many of the controls between
-	// devices have common patterns of use.
-	// Every usage has a unique name and an associated value type.
+    // Usages determine the meaning of controls. Naming of controls
+    // may differ between devices but many of the controls between
+    // devices have common patterns of use.
+    // Every usage has a unique name and an associated value type.
     [Serializable]
     public struct InputUsage
     {
@@ -31,7 +31,7 @@ namespace ISX
 
         [SerializeField] private string m_Name;
         [SerializeField] private string m_Template;
-        
+
 
         #if false
         // This dictionary is owned and managed by InputManager.
@@ -52,6 +52,7 @@ namespace ISX
                 throw new Exception($"No input usage called '{name}' has been registered");
             return usage;
         }
+
         #endif
     }
 }

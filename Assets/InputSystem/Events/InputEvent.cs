@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace ISX
 {
@@ -31,11 +31,12 @@ namespace ISX
         {
             return new FourCC(); // No valid type code; InputEvent is considered abstract.
         }
+
         public int GetSizeStatic()
         {
             return 0;
         }
-        
+
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time)
         {
             m_Type = type;

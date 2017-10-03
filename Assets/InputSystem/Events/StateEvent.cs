@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace ISX
@@ -16,6 +16,7 @@ namespace ISX
         {
             return Type;
         }
+
         public int GetSizeStatic()
         {
             return UnsafeUtility.SizeOf<StateEvent>();
@@ -31,7 +32,7 @@ namespace ISX
                 stateType = state.GetTypeStatic()
             };
             var src = UnsafeUtility.AddressOf(ref state);
-            fixed (byte* dst = inputEvent.stateData)
+            fixed(byte* dst = inputEvent.stateData)
             {
                 UnsafeUtility.MemCpy(new IntPtr(dst), src, UnsafeUtility.SizeOf<TState>());
             }

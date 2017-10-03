@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
@@ -27,7 +27,7 @@ public class FunctionalTests
     {
         InputSystem.Restore();
     }
-    
+
     // The test categories give the feature area associated with the test:
     // a) Controls
     // b) Templates
@@ -37,15 +37,15 @@ public class FunctionalTests
     // f) Actions
     // g) Bindings
     // h) Other
-    
+
     [Test]
     [Category("Templates")]
     public void Templates_CanCreatePrimitiveControlsFromTemplate()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
-        
+
         // The default ButtonControl template has no constrols inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
         Assert.That(setup.GetChildren("start"), Is.Empty);
@@ -58,7 +58,7 @@ public class FunctionalTests
     public void Templates_CanCreateCompoundControlsFromTemplate()
     {
         Setup();
-        
+
         const int kNumControlsInAStick = 6;
 
         var setup = new InputControlSetup("Gamepad");
@@ -97,15 +97,15 @@ public class FunctionalTests
 
         InputSystem.RegisterTemplate(deviceJson);
         InputSystem.RegisterTemplate(controlJson);
-        
+
         var setup = new InputControlSetup("MyDevice");
 
         Assert.That(setup.GetControl("myThing/x"), Is.TypeOf<AxisControl>());
         Assert.That(setup.GetControl("myThing"), Has.Property("template").EqualTo("MyControl"));
-        
+
         var device = setup.Finish();
         Assert.That(device, Is.TypeOf<InputDevice>());
-        
+
         TearDown();
     }
 
@@ -114,13 +114,13 @@ public class FunctionalTests
     public void Devices_CanCreateDeviceFromTemplate()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
-        
+
         Assert.That(device, Is.TypeOf<Gamepad>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftStick"));
-        
+
         TearDown();
     }
 
@@ -129,14 +129,14 @@ public class FunctionalTests
     public void Devices_CanCreateDeviceWithNestedState()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
 
         // The gamepad's output state is nested inside GamepadState and requires the template
         // code to crawl inside the field to find the motor controls.
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftMotor"));
-        
+
         TearDown();
     }
 
@@ -145,14 +145,14 @@ public class FunctionalTests
     public void Controls_CanFindControlsInSetupByPath()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
 
         Assert.That(setup.TryGetControl("leftStick"), Is.TypeOf<StickControl>());
         Assert.That(setup.TryGetControl("leftStick/x"), Is.TypeOf<AxisControl>());
         Assert.That(setup.TryGetControl("leftStick/y"), Is.TypeOf<AxisControl>());
         Assert.That(setup.TryGetControl("leftStick/up"), Is.TypeOf<AxisControl>());
-            
+
         TearDown();
     }
 
@@ -161,13 +161,13 @@ public class FunctionalTests
     public void Controls_DeviceAndControlsRememberTheirTemplates()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
-        var gamepad = (Gamepad) setup.Finish();
-            
+        var gamepad = (Gamepad)setup.Finish();
+
         Assert.That(gamepad.template, Is.EqualTo("Gamepad"));
         Assert.That(gamepad.leftStick.template, Is.EqualTo("Stick"));
-        
+
         TearDown();
     }
 
@@ -176,13 +176,13 @@ public class FunctionalTests
     public void Controls_ControlsReferToTheirParent()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
-        var gamepad = (Gamepad) setup.Finish();
+        var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.leftStick.parent, Is.SameAs(gamepad));
         Assert.That(gamepad.leftStick.x.parent, Is.SameAs(gamepad.leftStick));
-        
+
         TearDown();
     }
 
@@ -191,13 +191,13 @@ public class FunctionalTests
     public void Controls_ControlsReferToTheirDevices()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
         var device = setup.Finish();
 
         Assert.That(leftStick.device, Is.SameAs(device));
-        
+
         TearDown();
     }
 
@@ -206,15 +206,15 @@ public class FunctionalTests
     public void Controls_AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
 
         Assert.Throws<InvalidOperationException>(() =>
-        {
-             var value = device.leftStick.value;
-        });
-        
+            {
+                var value = device.leftStick.value;
+            });
+
         TearDown();
     }
 
@@ -223,12 +223,12 @@ public class FunctionalTests
     public void Devices_DevicesGetNameFromTemplate()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
-        
+
         Assert.That(device.name, Contains.Substring("Gamepad"));
-        
+
         TearDown();
     }
 
@@ -237,14 +237,14 @@ public class FunctionalTests
     public void State_CanComputeStateLayoutFromStateStructure()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
         var device = setup.Finish();
 
-        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>()*8));
+        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>() * 8));
         Assert.That(leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick").ToInt32()));
-        
+
         TearDown();
     }
 
@@ -253,7 +253,7 @@ public class FunctionalTests
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var rightMotor = setup.GetControl("rightMotor");
         var device = setup.Finish();
@@ -262,7 +262,7 @@ public class FunctionalTests
         var rightMotorOffset = outputOffset + Marshal.OffsetOf<GamepadOutputState>("rightMotor").ToInt32();
 
         Assert.That(rightMotor.stateBlock.byteOffset, Is.EqualTo(rightMotorOffset));
-        
+
         TearDown();
     }
 
@@ -271,9 +271,9 @@ public class FunctionalTests
     public void State_OffsetsInStateLayoutsAreRelativeToRoot()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
-        var device = (Gamepad) setup.Finish();
+        var device = (Gamepad)setup.Finish();
 
         var leftStickOffset = Marshal.OffsetOf<GamepadState>("leftStick").ToInt32();
         var leftStickXOffset = leftStickOffset;
@@ -281,7 +281,7 @@ public class FunctionalTests
 
         Assert.That(device.leftStick.x.stateBlock.byteOffset, Is.EqualTo(leftStickXOffset));
         Assert.That(device.leftStick.y.stateBlock.byteOffset, Is.EqualTo(leftStickYOffset));
-        
+
         TearDown();
     }
 
@@ -295,7 +295,7 @@ public class FunctionalTests
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Contains.Item(device));
-        
+
         TearDown();
     }
 
@@ -304,13 +304,13 @@ public class FunctionalTests
     public void Devices_AddingDeviceTwiceIsIgnored()
     {
         Setup();
-        
+
         var device = InputSystem.AddDevice("Gamepad");
         InputSystem.AddDevice(device);
-        
+
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Contains.Item(device));
-        
+
         TearDown();
     }
 
@@ -324,7 +324,7 @@ public class FunctionalTests
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad1.name, Is.Not.EqualTo(gamepad2.name));
-        
+
         TearDown();
     }
 
@@ -333,12 +333,12 @@ public class FunctionalTests
     public void Devices_AssignsUniqueNumericIdToDevices()
     {
         Setup();
-        
+
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
-        
+
         Assert.That(gamepad1.deviceId, Is.Not.EqualTo(gamepad2.deviceId));
-        
+
         TearDown();
     }
 
@@ -347,17 +347,17 @@ public class FunctionalTests
     public void Controls_AssignsFullPathToControlsWhenAddingDevice()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
-        
+
         Assert.That(leftStick.path, Is.EqualTo("leftStick"));
-        
+
         var device = setup.Finish();
         InputSystem.AddDevice(device);
 
         Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
-        
+
         TearDown();
     }
 
@@ -366,13 +366,13 @@ public class FunctionalTests
     public void Controls_AfterAddingDeviceCanQueryValueOfControls()
     {
         Setup();
-        
+
         var setup = new InputControlSetup("Gamepad");
-        var device = (Gamepad) setup.Finish();
+        var device = (Gamepad)setup.Finish();
         InputSystem.AddDevice(device);
 
         Assert.That(device.leftStick.value, Is.EqualTo(default(Vector2)));
-        
+
         TearDown();
     }
 
@@ -391,7 +391,7 @@ public class FunctionalTests
 
         Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123f));
         Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456f));
-        
+
         TearDown();
     }
 
@@ -400,16 +400,16 @@ public class FunctionalTests
     public void Events_SendingStateEventToDeviceMakesItCurrent()
     {
         Setup();
-        
+
         var gamepad = InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState();
         var inputEvent = StateEvent.Create(gamepad.deviceId, 0, newState);
 
         InputSystem.QueueEvent(inputEvent);
         InputSystem.Update();
-        
+
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
-        
+
         TearDown();
     }
 
@@ -419,9 +419,9 @@ public class FunctionalTests
     public void TODO_State_CanSpecifyBitOffsetsOnControlProperties()
     {
         Setup();
-        
+
         //examine control setup on dpad
-        
+
         TearDown();
     }
 
@@ -430,7 +430,7 @@ public class FunctionalTests
     public void TODO_State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         Setup();
-        
+
         TearDown();
     }
 
@@ -439,7 +439,7 @@ public class FunctionalTests
     public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()
     {
         Setup();
-        
+
         TearDown();
     }
 
@@ -448,9 +448,10 @@ public class FunctionalTests
     public void TODO_State_SupportsBitAddressingControlsWithAutomaticOffsets()
     {
         Setup();
-        
+
         TearDown();
     }
+
     [Test]
     [Category("Devices")]
     public void TODO_Devices_AddingANewDeviceDoesNotCauseExistingDevicesToForgetTheirState()
@@ -483,4 +484,3 @@ public class FunctionalTests
     {
     }
 }
-

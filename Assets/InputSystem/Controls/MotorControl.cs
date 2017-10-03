@@ -1,4 +1,4 @@
-﻿namespace ISX
+namespace ISX
 {
     // Same as an axis but for output instead of input.
     public class MotorControl : AxisControl

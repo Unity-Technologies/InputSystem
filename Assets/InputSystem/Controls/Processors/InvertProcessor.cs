@@ -1,4 +1,4 @@
-﻿namespace ISX
+namespace ISX
 {
     public class InvertProcessor : IInputProcessor<float>
     {
