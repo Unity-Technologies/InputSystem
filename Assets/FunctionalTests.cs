@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngineInternal.Input;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
@@ -390,11 +389,27 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_AddingDeviceTriggersNotification()
+    public void Devices_AddingDeviceTriggersNotification()
     {
         Setup();
 
-        ////TODO
+        var receivedCallCount = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receiveDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+            {
+                ++receivedCallCount;
+                receivedDevice = device;
+                receiveDeviceChange = change;
+            };
+
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        
+        Assert.That(receivedCallCount, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));
 
         TearDown();
     }

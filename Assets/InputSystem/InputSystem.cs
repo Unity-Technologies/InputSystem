@@ -1,6 +1,6 @@
 using System;
-using System.Collections.ObjectModel;
 using UnityEngine;
+using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -17,6 +17,12 @@ namespace ISX
         public static ReadOnlyArray<InputDevice> devices
         {
             get { return m_Manager.devices; }
+        }
+        
+        public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
+        {
+            add { m_Manager.onDeviceChange += value; }
+            remove { m_Manager.onDeviceChange -= value; }
         }
 
         public static void RegisterTemplate(Type type, string name = null)

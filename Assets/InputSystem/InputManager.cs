@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngineInternal.Input;
 
 //native sends (full/partial) input templates for any new device
@@ -21,6 +22,21 @@ namespace ISX
         public ReadOnlyArray<InputDevice> devices
         {
             get { return new ReadOnlyArray<InputDevice>(m_Devices); }
+        }
+
+        public event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
+        {
+            add
+            {
+                if (m_DeviceChangeEvent == null)
+                    m_DeviceChangeEvent = new DeviceChangeEvent();
+                m_DeviceChangeEvent.AddListener(value);
+            }
+            remove
+            {
+                if (m_DeviceChangeEvent != null)
+                    m_DeviceChangeEvent.RemoveListener(value);
+            }
         }
 
         // Add a template constructed from a type.
@@ -127,6 +143,10 @@ namespace ISX
             m_DevicesById[device.id] = device;
 
             ReallocateStateBuffers();
+            
+            // Notify listeners.
+            if (m_DeviceChangeEvent != null)
+                m_DeviceChangeEvent.Invoke(device, InputDeviceChange.Added);
         }
 
         public InputDevice AddDevice(InputDeviceDescriptor descriptor)
@@ -275,6 +295,8 @@ namespace ISX
         private InputUpdateType m_CurrentUpdate;
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputStateBuffers m_StateBuffers;
+
+        private DeviceChangeEvent m_DeviceChangeEvent;
 
 
         private void MakeDeviceNameUnique(InputDevice device)
@@ -430,6 +452,11 @@ namespace ISX
             }
         }
 
+        [Serializable]
+        internal class DeviceChangeEvent : UnityEvent<InputDevice, InputDeviceChange>
+        {
+        }
+
         // Domain reload survival logic.
 #if UNITY_EDITOR
         [Serializable]
@@ -462,6 +489,7 @@ namespace ISX
             public TemplateState[] templateStrings;
             public DeviceState[] devices;
             public InputStateBuffers buffers;
+            public DeviceChangeEvent deviceChangeEvent;
         }
 
         [SerializeField] private SerializedState m_SerializedState;
@@ -523,7 +551,8 @@ namespace ISX
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
                 devices = deviceArray,
-                buffers = m_StateBuffers
+                buffers = m_StateBuffers,
+                deviceChangeEvent = m_DeviceChangeEvent
             };
         }
 
@@ -535,6 +564,7 @@ namespace ISX
             m_Processors = new Dictionary<string, Type>();
             m_StateBuffers = m_SerializedState.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
+            m_DeviceChangeEvent = m_SerializedState.deviceChangeEvent;
 
             // Usages.
             foreach (var usage in m_SerializedState.usages)
