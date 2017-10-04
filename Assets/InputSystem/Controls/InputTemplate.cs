@@ -290,6 +290,11 @@ namespace ISX
             var bit = 0u;
             if (attribute != null)
                 bit = (uint)attribute.bit;
+            
+            // Determine parameters.
+            ParameterValue[] parameters = null;
+            if (attribute != null && !string.IsNullOrEmpty(attribute.parameters))
+                parameters = ParseParameters(attribute.parameters);
 
             ////TODO: remaining template stuff
 
@@ -298,8 +303,42 @@ namespace ISX
                 name = name,
                 template = template,
                 offset = offset,
-                bit = bit
+                bit = bit,
+                parameters = parameters
             };
+        }
+
+        private static ParameterValue[] ParseParameters(string parameterString)
+        {
+            parameterString = parameterString.Trim();
+            if (string.IsNullOrEmpty(parameterString))
+                return null;
+            
+            var parameterCount = parameterString.CountOccurrences(',') + 1;
+            var parameters = new ParameterValue[parameterCount];
+            var parameterStringLength = parameterString.Length;
+
+            var index = 0;
+            for (var i = 0; i < parameterCount; ++i)
+            {
+                var parameter = ParseParameter(parameterString, ref index);
+                parameters[i] = parameter;
+            }
+
+            return parameters;
+        }
+
+        private static ParameterValue ParseParameter(string parameterString, ref int index)
+        {
+            //can't look up name in type as all we have is a template name
+            //for the from-type path it probably works but not for json templates
+            
+            // Parse name.
+            
+            // Parse value.
+            
+            return new ParameterValue();
+            //throw new NotImplementedException();
         }
 
         private static string InferTemplateFromValueType(Type type)

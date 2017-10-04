@@ -179,11 +179,11 @@ namespace ISX
         {
             var numBytes = m_StateBlock.alignedSizeInBytes;
             var ptr = (byte*)currentValuePtr;
-            
+
             for (var i = 0; i < numBytes; ++i, ++ptr)
                 if (*ptr != 0)
                     return false;
-            
+
             return true;
         }
     }

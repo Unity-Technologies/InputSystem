@@ -23,23 +23,30 @@ namespace ISX
                 if (path[indexInPath] == '/')
                     return 0;
 
-                if (char.ToLower(name[indexInName]) == char.ToLower(path[indexInPath]))
+                // If we've reached a '*' in the path, skip character in name.
+                if (path[indexInPath] == '*')
+                {
+                    // But first let's see if the following character is a match.
+                    if (indexInPath < (pathLength - 1) &&
+                        char.ToLower(path[indexInPath+1]) == char.ToLower(name[indexInName]))
+                    {
+                        ++indexInName;
+                        indexInPath += 2; // Match '*' and following character.
+                    }
+                    else
+                    {
+                        ++indexInName;
+                    }
+                }
+                else if (char.ToLower(name[indexInName]) == char.ToLower(path[indexInPath]))
                 {
                     ++indexInName;
                     ++indexInPath;
                 }
                 else
                 {
-                    // If we've reached a '*' in the path, skip character in name.
-                    if (path[indexInPath] == '*')
-                    {
-                        ++indexInName;
-                    }
-                    else
-                    {
-                        // Name isn't a match.
-                        return 0;
-                    }
+                    // Name isn't a match.
+                    return 0;
                 }
             }
 
@@ -47,6 +54,10 @@ namespace ISX
             {
                 // We matched the control name in full.
 
+                // If we ended up on a wildcard, we've successfully matched it.
+                if (indexInPath < pathLength && path[indexInPath] == '*')
+                    ++indexInPath;
+                
                 // If we've reached the end of the path, we have a match.
                 if (indexInPath == pathLength)
                 {
@@ -58,14 +69,24 @@ namespace ISX
                 if (path[indexInPath] == '/')
                 {
                     var childCount = control.m_ChildrenReadOnly.Count;
+                    var matchCount = 0;
+                    
                     for (var i = 0; i < childCount; ++i)
                     {
                         var child = control.m_ChildrenReadOnly[i];
                         var childMatchCount = MatchControlsRecursive(child, path, indexInPath + 1, matches);
 
-                        if (childMatchCount != 0)
+                        // If the child matched something an there's no wildcards in the child
+                        // portion of the path, we can stop searching.
+                        if (childMatchCount != 0 && path.IndexOf('*', indexInPath + 1) == -1)
                             return childMatchCount;
+                        
+                        // Otherwise we have to go hunting through the hierarchy in case there are
+                        // more matches.
+                        matchCount += childMatchCount;
                     }
+
+                    return matchCount;
                 }
             }
 

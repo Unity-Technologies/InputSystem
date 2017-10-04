@@ -36,7 +36,7 @@ namespace ISX
         {
             get { return m_CurrentPhase; }
         }
-        
+
         public InputActionSet actionSet
         {
             get
@@ -130,7 +130,7 @@ namespace ISX
         {
             if (m_Enabled)
                 return;
-            
+
             var controls = sourceControls;
             var manager = InputSystem.s_Manager;
 
@@ -183,12 +183,12 @@ namespace ISX
                     if (m_OnStarted != null)
                         m_OnStarted.Invoke(this, triggerControl);
                     break;
-                
+
                 case Phase.Performed:
                     if (m_OnPerformed != null)
                         m_OnPerformed.Invoke(this, triggerControl);
                     break;
-                    
+
                 case Phase.Cancelled:
                     if (m_OnCancelled != null)
                         m_OnCancelled.Invoke(this, triggerControl);
@@ -206,21 +206,25 @@ namespace ISX
         {
             ////TODO: if it's a bit-addressed control, make sure the value has *actually* changed
             ////      (change monitors work at the byte level only)
-           
+
             ////TODO: we probably should be able to specify the various trigger values
             ////      on a per control basis; maybe that's best left to modifiers, though
-            
+
             ////TODO: this is where modifiers should be able to hijack phase progression
             ////      the path below should be the fallback path when there aren't any modifiers
 
+            ////REVIEW: the current state change logic does not take processors into account
+            
             var isAtDefault = control.CheckStateIsAllZeroes();
 
             switch (phase)
             {
                 case Phase.Waiting:
                     if (!isAtDefault)
+                    {
                         GoToPhase(Phase.Performed, control);
-                    m_CurrentPhase = Phase.Waiting;
+                        m_CurrentPhase = Phase.Waiting;
+                    }
                     break;
             }
         }

@@ -13,7 +13,7 @@ namespace ISX
         public string template;
         public string name;
         public string usage;
-        public string options;
+        public string parameters;
         public string[] processors;
         public string[] aliases;
         public int bit;

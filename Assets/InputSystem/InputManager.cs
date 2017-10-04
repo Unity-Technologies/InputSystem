@@ -366,9 +366,9 @@ namespace ISX
         {
             var device = control.device;
             Debug.Assert(device != null);
-            
+
             var deviceIndex = device.m_DeviceIndex;
-            
+
             // Allocate/reallocate monitor arrays, if necessary.
             if (m_StateChangeMonitorListeners == null)
             {
@@ -382,7 +382,7 @@ namespace ISX
                 Array.Resize(ref m_StateChangeMonitorListeners, deviceCount);
                 Array.Resize(ref m_StateChangeMonitorsMemoryRegions, deviceCount);
             }
-            
+
             // Allocate lists, if necessary.
             var listeners = m_StateChangeMonitorListeners[deviceIndex];
             var memoryRegions = m_StateChangeMonitorsMemoryRegions[deviceIndex];
@@ -394,7 +394,7 @@ namespace ISX
                 m_StateChangeMonitorListeners[deviceIndex] = listeners;
                 m_StateChangeMonitorsMemoryRegions[deviceIndex] = memoryRegions;
             }
-            
+
             // Add monitor.
             listeners.Add(new StateChangeMonitorListener {action = action, control = control});
             memoryRegions.Add(new StateChangeMonitorMemoryRegion
@@ -407,7 +407,6 @@ namespace ISX
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
         {
         }
-
 
         private void MakeDeviceNameUnique(InputDevice device)
         {
@@ -443,17 +442,13 @@ namespace ISX
             // If the device already has an ID, make sure it's unique.
             if (device.id != InputDevice.kInvalidDeviceId)
             {
-                if (m_Devices != null)
-                {
-                    // Safety check to make sure out IDs are really unique.
-                    // Given they are assigned by the native system they should be fine
-                    // but let's make sure.
-                    var deviceId = device.id;
-                    for (var i = 0; i < m_Devices.Length; ++i)
-                        if (m_Devices[i].id == deviceId)
-                            throw new Exception(
-                                $"Duplicate device ID {deviceId} detected for devices '{device.name}' and '{m_Devices[i].name}'");
-                }
+                // Safety check to make sure out IDs are really unique.
+                // Given they are assigned by the native system they should be fine
+                // but let's make sure.
+                var existingDeviceWithId = TryGetDeviceById(device.id);
+                if (existingDeviceWithId != null)
+                    throw new Exception(
+                        $"Duplicate device ID {device.id} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
             }
             else
             {
@@ -715,7 +710,10 @@ namespace ISX
                 deviceChangeEvent = m_DeviceChangeEvent
             };
 
-            ////TODO: monitors (how to handle actions?)
+            // We don't bring monitors along. InputActions and related classes are equipped
+            // with their own domain reload survival logic that will plug actions back into
+            // the system after reloads -- *if* the user is serializing them as part of
+            // MonoBehaviours/ScriptableObjects.
         }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()

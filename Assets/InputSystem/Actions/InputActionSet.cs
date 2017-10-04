@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+//allow multiple action sets in a JSON file
+
 namespace ISX
 {
     // A set of input actions that can be enabled/disabled in bulk.
@@ -43,6 +45,11 @@ namespace ISX
         }
 
         public void Disable()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static InputActionSet FromJson(string json)
         {
             throw new NotImplementedException();
         }

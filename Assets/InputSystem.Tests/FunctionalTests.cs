@@ -6,6 +6,8 @@ using UnityEngine;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
+// These tests rely on the default template setup present in the code
+// of the system (e.g. they make assumptions about Gamepad is set up).
 public class FunctionalTests
 {
     // Unity test tools don't seem to have proper setup/teardown support.
@@ -106,6 +108,24 @@ public class FunctionalTests
         var device = setup.Finish();
         Assert.That(device, Is.TypeOf<InputDevice>());
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanSetControlParametersThroughControlAttribute()
+    {
+        Setup();
+        
+        // StickControl sets parameters on its axis controls. Check that they are
+        // there.
+
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad.leftStick.up.clamp, Is.True);
+        Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
+        Assert.That(gamepad.leftStick.up.clampMax, Is.EqualTo(1));
+        
         TearDown();
     }
 
@@ -495,12 +515,11 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindControlByExactPath()
+    public void Controls_CanFindControlsByExactPath()
     {
         Setup();
 
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-
         var matches = InputSystem.GetControls("/Gamepad/leftStick");
 
         Assert.That(matches, Has.Count.EqualTo(1));
@@ -511,12 +530,11 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindControlByExactPathCaseInsensitive()
+    public void Controls_CanFindControlsByExactPathCaseInsensitive()
     {
         Setup();
 
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-
         var matches = InputSystem.GetControls("/gamePAD/LeftSTICK");
 
         Assert.That(matches, Has.Count.EqualTo(1));
@@ -525,6 +543,91 @@ public class FunctionalTests
         TearDown();
     }
 
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsByUsage()
+    {
+        Setup();
+
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var matches = InputSystem.GetControls("/gamepad/primaryStick");
+        
+        Assert.That(matches, Has.Count.EqualTo(1));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsFromMultipleDevices()
+    {
+        Setup();
+
+        var gamepad1 = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad2 = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var matches = InputSystem.GetControls("/*/*Stick");
+
+        Assert.That(matches, Has.Count.EqualTo(4));
+        
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.leftStick));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.rightStick));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.leftStick));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.rightStick));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanOmitLeadingSlashWhenFindingControls()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var matches = InputSystem.GetControls("gamepad/leftStick");
+        
+        Assert.That(matches, Has.Count.EqualTo(1));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsByTheirAliases()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var matchByName = InputSystem.GetControls("/gamepad/buttonSouth");
+        var matchByAlias1 = InputSystem.GetControls("/gamepad/x");
+        var matchByAlias2 = InputSystem.GetControls("/gamepad/cross");
+        
+        Assert.That(matchByName, Has.Count.EqualTo(1));
+        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.x));
+        Assert.That(matchByAlias1, Is.EqualTo(matchByName));
+        Assert.That(matchByAlias2, Is.EqualTo(matchByName));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsUsingWildcardsInMiddleOfNames()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var matches = InputSystem.GetControls("/g*pad/leftStick");
+        
+        Assert.That(matches, Has.Count.EqualTo(1));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        
+        TearDown();
+    }
+    
     [Test]
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
@@ -588,11 +691,12 @@ public class FunctionalTests
 
         var action = new InputAction(sourcePath: "/gamepad/leftStick");
         action.Enable();
-        
+
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
 
         TearDown();
     }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanCreateActionsWithoutAnActionSet()
@@ -639,7 +743,7 @@ public class FunctionalTests
                 ++receivedCalls;
                 receivedAction = a;
                 receivedControl = c;
-                
+
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
             };
         action.Enable();
@@ -654,7 +758,7 @@ public class FunctionalTests
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedAction, Is.SameAs(action));
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
-        
+
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
 
@@ -666,11 +770,11 @@ public class FunctionalTests
     public void Actions_StartOutInDisabledPhase()
     {
         Setup();
-        
+
         var action = new InputAction();
-        
+
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
-        
+
         TearDown();
     }
 
@@ -749,5 +853,20 @@ public class FunctionalTests
     [Category("Devices")]
     public void TODO_Devices_CanSwitchTemplateOfExistingDevice()
     {
+    }
+    
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanLoadActionSetFromJson()
+    {
+        Setup();
+
+        var json = @"
+            {
+                """"////TODO
+            }
+        ";
+        
+        TearDown();
     }
 }
