@@ -129,7 +129,7 @@ namespace ISX
 
             return numMatches;
         }
-        
+
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
 
         // Creates a device from the given template and adds it to the system.
@@ -331,7 +331,7 @@ namespace ISX
 
         private InputDevice[] m_Devices;
         private Dictionary<int, InputDevice> m_DevicesById;
-        
+
         private InputUpdateType m_CurrentUpdate;
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputStateBuffers m_StateBuffers;
@@ -358,7 +358,7 @@ namespace ISX
             public InputControl control;
             public InputAction action;
         }
-        
+
         // Indices correspond with those in m_Devices.
         private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorsMemoryRegions;
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
@@ -434,7 +434,7 @@ namespace ISX
             oldBuffers.FreeAll();
             m_StateBuffers = newBuffers;
             m_StateBuffers.SwitchTo(m_CurrentUpdate);
-            
+
             ////TODO: need to update state change monitors
         }
 
@@ -489,7 +489,7 @@ namespace ISX
                 switch (oldestEventPtr->type)
                 {
                     case StateEvent.Type:
-                        
+
                         // Update state on device.
                         var stateEventPtr = (StateEvent*)oldestEventPtr;
                         var stateType = stateEventPtr->stateType;
@@ -500,11 +500,11 @@ namespace ISX
                         {
                             UnsafeUtility.MemCpy(stateBlock.currentStatePtr, stateEventPtr->state, stateSize);
                         }
-                        
+
                         // See if any actions are listening.
                         // This could be spun off into a job.
                         ProcessStateChangeMonitors(device.m_DeviceIndex);
-                        
+
                         break;
 
                         /*
@@ -520,20 +520,20 @@ namespace ISX
 
                 // Mark as processed by setting time to negative.
                 oldestEventPtr->time = -1;
-                
+
                 // Device received event so make it current.
                 device.MakeCurrent();
             }
 
             ////TODO: fire event that allows code to update state *from* state we just updated
         }
-        
+
         // This could easily be spun off into jobs.
         private void ProcessStateChangeMonitors(int deviceIndex)
         {
             if (m_StateChangeMonitorListeners == null)
                 return;
-            
+
             var changeMonitors = m_StateChangeMonitorsMemoryRegions[deviceIndex];
             if (changeMonitors == null)
                 return; // No action cares about state changes on this device.
@@ -542,7 +542,7 @@ namespace ISX
 
             var current = InputStateBlock.s_CurrentStatePtr;
             var previous = InputStateBlock.s_PreviousStatePtr;
-            
+
             var numMonitors = changeMonitors.Count;
             for (var i = 0; i < numMonitors; ++i)
             {
@@ -664,7 +664,7 @@ namespace ISX
                 buffers = m_StateBuffers,
                 deviceChangeEvent = m_DeviceChangeEvent
             };
-            
+
             ////TODO: monitors
         }
 

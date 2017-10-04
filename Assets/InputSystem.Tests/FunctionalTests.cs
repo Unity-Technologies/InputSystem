@@ -291,7 +291,7 @@ public class FunctionalTests
 
         var setup = new InputControlSetup("Gamepad");
         var rightMotor = setup.GetControl("rightMotor");
-        var device = setup.Finish();
+        setup.Finish();
 
         var outputOffset = Marshal.OffsetOf<GamepadState>("motors").ToInt32();
         var rightMotorOffset = outputOffset + Marshal.OffsetOf<GamepadOutputState>("rightMotor").ToInt32();
@@ -499,32 +499,32 @@ public class FunctionalTests
     {
         Setup();
 
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var matches = InputSystem.GetControls("/Gamepad/leftStick");
-        
+
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-        
+
         TearDown();
     }
-    
+
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlByExactPathCaseInsensitive()
     {
         Setup();
 
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var matches = InputSystem.GetControls("/gamePAD/LeftSTICK");
-        
+
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-        
+
         TearDown();
     }
-    
+
     [Test]
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
@@ -572,8 +572,8 @@ public class FunctionalTests
 
         var action = new InputAction(sourcePath: "/gamepad/leftStick");
 
-        Assert.That(action, Has.Property("sourceControls").With.Count.EqualTo(1)
-            .And.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action.sourceControls, Has.Count.EqualTo(1));
+        Assert.That(action.sourceControls, Has.Exactly(1).SameAs(gamepad.leftStick));
 
         TearDown();
     }
@@ -583,10 +583,24 @@ public class FunctionalTests
     public void Actions_CanCreateActionsWithoutAnActionSet()
     {
         Setup();
-        
+
         var action = new InputAction();
-        
+
         Assert.That(action.actionSet, Is.Null);
+
+        TearDown();
+    }
+
+    ////REVIEW: not sure whether this is the best behavior
+    [Test]
+    [Category("Actions")]
+    public void Actions_SourcePathsLeadingNowhereAreIgnored()
+    {
+        Setup();
+        
+        var action = new InputAction(sourcePath: "nothing");
+        
+        Assert.DoesNotThrow(() => action.Enable());
         
         TearDown();
     }
@@ -612,7 +626,7 @@ public class FunctionalTests
                 receivedControl = c;
             };
         action.Enable();
-        
+
         var state = new GamepadState
         {
             leftStick = new Vector2(0.5f, 0.5f)
@@ -626,6 +640,7 @@ public class FunctionalTests
 
         TearDown();
     }
+
     ////TODO:-----------------------------------------------------------------
     [Test]
     [Category("State")]

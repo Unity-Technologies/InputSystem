@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ISX
@@ -12,7 +12,7 @@ namespace ISX
             var name = control.name;
             var startIndex = indexInPath;
             var pathLength = path.Length;
-            
+
             // Try to walk the name as far as we can.
             var nameLength = name.Length;
             var indexInName = 0;
@@ -22,7 +22,7 @@ namespace ISX
                 // doesn't match the current path component.
                 if (path[indexInPath] == '/')
                     return 0;
-                
+
                 if (char.ToLower(name[indexInName]) == char.ToLower(path[indexInPath]))
                 {
                     ++indexInName;
@@ -41,9 +41,8 @@ namespace ISX
                         return 0;
                     }
                 }
-                
             }
-            
+
             if (indexInName == nameLength)
             {
                 // We matched the control name in full.
@@ -54,7 +53,7 @@ namespace ISX
                     matches.Add(control);
                     return 1;
                 }
-                
+
                 // If we've reached a separator, dive into our children.
                 if (path[indexInPath] == '/')
                 {
