@@ -21,7 +21,7 @@ namespace ISX
         public enum Phase
         {
             Disabled,
-            Listening,
+            Waiting,
             Started,
             Performed,
             Cancelled
@@ -32,6 +32,11 @@ namespace ISX
             get { return m_Name; }
         }
 
+        public Phase phase
+        {
+            get { return m_CurrentPhase; }
+        }
+        
         public InputActionSet actionSet
         {
             get
@@ -62,7 +67,7 @@ namespace ISX
 
         public bool enabled
         {
-            get { throw new NotImplementedException(); }
+            get { return m_Enabled; }
         }
 
         public event ActionListener onStarted
@@ -118,14 +123,22 @@ namespace ISX
         {
             m_Name = name;
             m_SourcePath = sourcePath;
+            m_CurrentPhase = Phase.Disabled;
         }
 
         public void Enable()
         {
-            if (m_ActionSet == null)
-                CreatePrivateActionSet();
+            if (m_Enabled)
+                return;
+            
+            var controls = sourceControls;
+            var manager = InputSystem.s_Manager;
 
-            m_ActionSet.EnableSingle(this);
+            for (var i = 0; i < controls.Count; ++i)
+                manager.AddStateChangeMonitor(controls[i], this);
+
+            m_Enabled = true;
+            m_CurrentPhase = Phase.Waiting;
         }
 
         public void Disable()
@@ -152,6 +165,7 @@ namespace ISX
 
         // State we keep for enabling/disabling. This is volatile and not put on disk.
         private bool m_Enabled;
+        private Phase m_CurrentPhase;
         internal ReadOnlyArray<InputControl> m_Controls;
 
         private void CreatePrivateActionSet()
@@ -160,14 +174,55 @@ namespace ISX
             m_PrivateActionSet.AddAction(this);
         }
 
+        private void GoToPhase(Phase newPhase, InputControl triggerControl)
+        {
+            m_CurrentPhase = newPhase;
+            switch (newPhase)
+            {
+                case Phase.Started:
+                    if (m_OnStarted != null)
+                        m_OnStarted.Invoke(this, triggerControl);
+                    break;
+                
+                case Phase.Performed:
+                    if (m_OnPerformed != null)
+                        m_OnPerformed.Invoke(this, triggerControl);
+                    break;
+                    
+                case Phase.Cancelled:
+                    if (m_OnCancelled != null)
+                        m_OnCancelled.Invoke(this, triggerControl);
+                    break;
+            }
+        }
+
         private class ActionEvent : UnityEvent<InputAction, InputControl>
         {
         }
 
         // Called from InputManager when one of our state change monitors
         // has fired.
-        internal void NotifyControlValueChanged(InputControl control)
+        internal void NotifyControlValueChanged(InputControl control, double time)
         {
+            ////TODO: if it's a bit-addressed control, make sure the value has *actually* changed
+            ////      (change monitors work at the byte level only)
+           
+            ////TODO: we probably should be able to specify the various trigger values
+            ////      on a per control basis; maybe that's best left to modifiers, though
+            
+            ////TODO: this is where modifiers should be able to hijack phase progression
+            ////      the path below should be the fallback path when there aren't any modifiers
+
+            var isAtDefault = control.CheckStateIsAllZeroes();
+
+            switch (phase)
+            {
+                case Phase.Waiting:
+                    if (!isAtDefault)
+                        GoToPhase(Phase.Performed, control);
+                    m_CurrentPhase = Phase.Waiting;
+                    break;
+            }
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

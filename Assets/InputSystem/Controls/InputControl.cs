@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 
@@ -172,6 +173,18 @@ namespace ISX
 
             for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
+        }
+
+        internal unsafe bool CheckStateIsAllZeroes()
+        {
+            var numBytes = m_StateBlock.alignedSizeInBytes;
+            var ptr = (byte*)currentValuePtr;
+            
+            for (var i = 0; i < numBytes; ++i, ++ptr)
+                if (*ptr != 0)
+                    return false;
+            
+            return true;
         }
     }
 

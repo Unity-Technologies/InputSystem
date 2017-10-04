@@ -580,6 +580,21 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WhenEnabled_GoesIntoWaitingPhase()
+    {
+        Setup();
+
+        InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(sourcePath: "/gamepad/leftStick");
+        action.Enable();
+        
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+
+        TearDown();
+    }
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateActionsWithoutAnActionSet()
     {
         Setup();
@@ -597,11 +612,11 @@ public class FunctionalTests
     public void Actions_SourcePathsLeadingNowhereAreIgnored()
     {
         Setup();
-        
+
         var action = new InputAction(sourcePath: "nothing");
-        
+
         Assert.DoesNotThrow(() => action.Enable());
-        
+
         TearDown();
     }
 
@@ -624,6 +639,8 @@ public class FunctionalTests
                 ++receivedCalls;
                 receivedAction = a;
                 receivedControl = c;
+                
+                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
             };
         action.Enable();
 
@@ -637,7 +654,23 @@ public class FunctionalTests
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedAction, Is.SameAs(action));
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+        
+        // Action should be waiting again.
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_StartOutInDisabledPhase()
+    {
+        Setup();
+        
+        var action = new InputAction();
+        
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
+        
         TearDown();
     }
 

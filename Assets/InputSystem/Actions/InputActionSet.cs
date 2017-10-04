@@ -55,15 +55,11 @@ namespace ISX
         internal InputControl[] m_Controls;
         internal InputActionModifier[] m_Modifiers;
 
-        internal void EnableSingle(InputAction action)
-        {
-        }
-
         internal void ResolveSources()
         {
             if (m_Actions == null)
                 return;
-            
+
             var controls = new List<InputControl>(); ////REVIEW: cache and reuse this?
 
             // Resolve all source paths.

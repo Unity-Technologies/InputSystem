@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngineInternal.Input;
@@ -184,6 +185,12 @@ namespace ISX
             throw new NotImplementedException();
         }
 
+        public void RemoveDevice(InputDevice device)
+        {
+            //need to make sure that all actions rescan their source paths
+            throw new NotImplementedException();
+        }
+
         public InputDevice TryGetDeviceById(int id)
         {
             InputDevice result;
@@ -316,14 +323,6 @@ namespace ISX
             NativeInputSystem.onUpdate -= OnNativeUpdate;
         }
 
-        internal void AddStateChangeMonitor(InputControl control, InputAction action)
-        {
-        }
-
-        internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
-        {
-        }
-
         private Dictionary<string, InputUsage> m_Usages; ////REVIEW: Array or dictionary?
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
@@ -362,6 +361,52 @@ namespace ISX
         // Indices correspond with those in m_Devices.
         private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorsMemoryRegions;
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
+
+        internal void AddStateChangeMonitor(InputControl control, InputAction action)
+        {
+            var device = control.device;
+            Debug.Assert(device != null);
+            
+            var deviceIndex = device.m_DeviceIndex;
+            
+            // Allocate/reallocate monitor arrays, if necessary.
+            if (m_StateChangeMonitorListeners == null)
+            {
+                var deviceCount = m_Devices.Length;
+                m_StateChangeMonitorListeners = new List<StateChangeMonitorListener>[deviceCount];
+                m_StateChangeMonitorsMemoryRegions = new List<StateChangeMonitorMemoryRegion>[deviceCount];
+            }
+            else if (m_StateChangeMonitorListeners.Length <= deviceIndex)
+            {
+                var deviceCount = m_Devices.Length;
+                Array.Resize(ref m_StateChangeMonitorListeners, deviceCount);
+                Array.Resize(ref m_StateChangeMonitorsMemoryRegions, deviceCount);
+            }
+            
+            // Allocate lists, if necessary.
+            var listeners = m_StateChangeMonitorListeners[deviceIndex];
+            var memoryRegions = m_StateChangeMonitorsMemoryRegions[deviceIndex];
+            if (listeners == null)
+            {
+                listeners = new List<StateChangeMonitorListener>();
+                memoryRegions = new List<StateChangeMonitorMemoryRegion>();
+
+                m_StateChangeMonitorListeners[deviceIndex] = listeners;
+                m_StateChangeMonitorsMemoryRegions[deviceIndex] = memoryRegions;
+            }
+            
+            // Add monitor.
+            listeners.Add(new StateChangeMonitorListener {action = action, control = control});
+            memoryRegions.Add(new StateChangeMonitorMemoryRegion
+            {
+                offset = control.stateBlock.byteOffset,
+                sizeInBytes = (uint)control.stateBlock.alignedSizeInBytes
+            });
+        }
+
+        internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
+        {
+        }
 
 
         private void MakeDeviceNameUnique(InputDevice device)
@@ -503,7 +548,7 @@ namespace ISX
 
                         // See if any actions are listening.
                         // This could be spun off into a job.
-                        ProcessStateChangeMonitors(device.m_DeviceIndex);
+                        ProcessStateChangeMonitors(device.m_DeviceIndex, oldestEventTime);
 
                         break;
 
@@ -529,9 +574,14 @@ namespace ISX
         }
 
         // This could easily be spun off into jobs.
-        private void ProcessStateChangeMonitors(int deviceIndex)
+        private void ProcessStateChangeMonitors(int deviceIndex, double time)
         {
             if (m_StateChangeMonitorListeners == null)
+                return;
+
+            // We resize the monitor arrays only when someone adds to them so they
+            // may be out of sync with the size of m_Devices.
+            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
                 return;
 
             var changeMonitors = m_StateChangeMonitorsMemoryRegions[deviceIndex];
@@ -555,7 +605,7 @@ namespace ISX
                     // If this method ends up in a job, you do NOT want to call this right
                     // here in the job. Should be queued up and called later.
                     var listener = listeners[i];
-                    listener.action.NotifyControlValueChanged(listener.control);
+                    listener.action.NotifyControlValueChanged(listener.control, time);
                 }
             }
         }
@@ -665,7 +715,7 @@ namespace ISX
                 deviceChangeEvent = m_DeviceChangeEvent
             };
 
-            ////TODO: monitors
+            ////TODO: monitors (how to handle actions?)
         }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
