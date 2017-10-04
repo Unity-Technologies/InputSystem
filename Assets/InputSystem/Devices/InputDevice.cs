@@ -61,10 +61,16 @@ namespace ISX
         //       it here for when we need to re-allocate state buffers.
         internal uint m_StateBufferOffset;
 
+        // List of aliases for all controls. Each control gets a slice of this array.
+        // See 'InputControl.aliases'.
+        // NOTE: The device's own aliases are part of this array as well.
+        internal string[] m_AliasesForEachControl;
+
         // List of usages for all controls. Each control gets a slice of this array.
         // See 'InputControl.usages'.
         // NOTE: The device's own usages are part of this array as well.
-        internal InputUsage[] m_UsagesForEachControl;
+        internal string[] m_UsagesForEachControl;
+        internal InputControl[] m_UsageToControl;
 
         // List of children for all controls. Each control gets a slice of this array.
         // See 'InputControl.children'.

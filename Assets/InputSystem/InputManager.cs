@@ -80,10 +80,6 @@ namespace ISX
         {
         }
 
-        public void RegisterUsage(string name, string type, params string[] processors)
-        {
-        }
-
         // Processes a path specification that may match more than a single control.
         // Adds all controls that match to the given list.
         // Returns true if at least one control was matched.
@@ -93,6 +89,7 @@ namespace ISX
             throw new NotImplementedException();
         }
 
+        // Return the first match for the given path or null if no control matches.
         // Must not generate garbage!
         public InputControl TryGetControl(string path)
         {
@@ -125,7 +122,7 @@ namespace ISX
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                numMatches += PathHelpers.MatchControlsRecursive(device, path, indexInPath, controls);
+                numMatches += PathHelpers.FindControls(device, path, indexInPath, controls);
             }
 
             return numMatches;
@@ -236,7 +233,6 @@ namespace ISX
 
         internal void Initialize()
         {
-            m_Usages = new Dictionary<string, InputUsage>();
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
             m_Processors = new Dictionary<string, Type>();
@@ -280,35 +276,6 @@ namespace ISX
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
-            ////REVIEW: should usages just be strings and not have an associated template type?
-            ////        (if so, might make sense to not even register them)
-            // Register usages.
-            RegisterUsage("PrimaryStick", "Stick");
-            RegisterUsage("SecondaryStick", "Stick");
-            RegisterUsage("PrimaryAction", "Button");
-            RegisterUsage("SecondaryAction", "Button");
-            RegisterUsage("PrimaryTrigger", "Axis", "Normalized(0,1)");
-            RegisterUsage("SecondaryTrigger", "Axis", "Normalized(0,1)");
-            RegisterUsage("Back", "Button");
-            RegisterUsage("Forward", "Button");
-            RegisterUsage("Menu", "Button");
-            RegisterUsage("Enter", "Button"); // Commit/confirm.
-            RegisterUsage("Previous", "Button");
-            RegisterUsage("Next", "Button");
-            RegisterUsage("ScrollHorizontal", "Axis");
-            RegisterUsage("ScrollVertical", "Axis");
-            RegisterUsage("Pressure", "Axis", "Normalized(0,1)");
-            RegisterUsage("Position", "Vector3");
-            RegisterUsage("Orientation", "Quaternion");
-            RegisterUsage("Point", "Vector2");
-
-            RegisterUsage("LowFreqMotor", "Axis", "Normalized(0,1)");
-            RegisterUsage("HighFreqMotor", "Axis", "Normalized(0,1)");
-
-            RegisterUsage("LeftHand", "XRController");
-            RegisterUsage("RightHand", "XRController");
-
-            //InputUsage.s_Usages = m_Usages;
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
 
@@ -323,7 +290,6 @@ namespace ISX
             NativeInputSystem.onUpdate -= OnNativeUpdate;
         }
 
-        private Dictionary<string, InputUsage> m_Usages; ////REVIEW: Array or dictionary?
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
         private Dictionary<string, Type> m_Processors;
@@ -638,7 +604,6 @@ namespace ISX
         [Serializable]
         internal struct SerializedState
         {
-            public InputUsage[] usages;
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
             public DeviceState[] devices;
@@ -652,19 +617,11 @@ namespace ISX
         // a m_SerializedState.
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            // Usages.
-            var usageCount = m_Usages.Count;
-            var usageArray = new InputUsage[usageCount];
-
-            var i = 0;
-            foreach (var usage in m_Usages.Values)
-                usageArray[i++] = usage;
-
             // Template types.
             var templateTypeCount = m_TemplateTypes.Count;
             var templateTypeArray = new TemplateState[templateTypeCount];
 
-            i = 0;
+            var i = 0;
             foreach (var entry in m_TemplateTypes)
                 templateTypeArray[i++] = new TemplateState
                 {
@@ -702,7 +659,6 @@ namespace ISX
 
             m_SerializedState = new SerializedState
             {
-                usages = usageArray,
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
                 devices = deviceArray,
@@ -718,18 +674,12 @@ namespace ISX
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            m_Usages = new Dictionary<string, InputUsage>();
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
             m_Processors = new Dictionary<string, Type>();
             m_StateBuffers = m_SerializedState.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_DeviceChangeEvent = m_SerializedState.deviceChangeEvent;
-
-            // Usages.
-            foreach (var usage in m_SerializedState.usages)
-                m_Usages[usage.name.ToLower()] = usage;
-            //InputUsage.s_Usages = m_Usages;
 
             // Template types.
             foreach (var template in m_SerializedState.templateTypes)

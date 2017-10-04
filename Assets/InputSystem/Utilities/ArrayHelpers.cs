@@ -33,5 +33,30 @@ namespace ISX
                 return length;
             }
         }
+
+        public static TValue[] Join<TValue>(TValue value, params TValue[] values)
+        {
+            // Determine length.
+            var length = 0;
+            if (value != null)
+                ++length;
+            if (values != null)
+                length += values.Length;
+
+            if (length == 0)
+                return null;
+
+            var array = new TValue[length];
+
+            // Populate.
+            var index = 0;
+            if (value != null)
+                array[index++] = value;
+
+            if (values != null)
+                Array.Copy(values, 0, array, index, length);
+
+            return array;
+        }
     }
 }

@@ -88,9 +88,15 @@ namespace ISX
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
         // NOTE: This will only be populated when setup is finished.
-        public ReadOnlyArray<InputUsage> usages
+        public ReadOnlyArray<string> usages
         {
             get { return m_UsagesReadOnly; }
+        }
+
+        // List of alternate names for the control.
+        public ReadOnlyArray<string> aliases
+        {
+            get { return m_AliasesReadOnly; }
         }
 
         // Information about where the control stores its state.
@@ -146,7 +152,8 @@ namespace ISX
         internal string m_Template;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
-        internal ReadOnlyArray<InputUsage> m_UsagesReadOnly;
+        internal ReadOnlyArray<string> m_UsagesReadOnly;
+        internal ReadOnlyArray<string> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
 
         // This method exists only to not slap the internal modifier on all overrides of

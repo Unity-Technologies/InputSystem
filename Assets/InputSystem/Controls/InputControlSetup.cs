@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+
+////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
+////        device discoveries from native and keep the template cache around instead of throwing
+////        it away after the creation of every single device; best approach may be to just
+////        reuse the same InputControlSetup instance over and over
 
 namespace ISX
 {
@@ -19,15 +22,16 @@ namespace ISX
         public InputControlSetup(string template)
         {
             Initialize();
+            Setup(template);
+        }
+
+        internal void Setup(string template)
+        {
+            ////REVIEW: how do we get usages and aliases on the root?
 
             // Populate.
             AddControlInternal(template, null, null);
-        }
-
-        // Complete the setup and return the full control hierarchy setup
-        // with its device root.
-        public InputDevice Finish()
-        {
+            
             ////TODO: allow reusing a previously created device; this way an InputControlSetup
             ////      can be used to adjust a device's control setup without also causing it to
             ////      become an entirely new device
@@ -35,15 +39,22 @@ namespace ISX
             ////      so that if anyone holds on to them, they still work)
 
             // Create device.
-            var device = (InputDevice)Activator.CreateInstance(m_DeviceType);
-            device.m_Template = m_DeviceTemplate.name;
-            device.m_Name = m_DeviceTemplate.name;
+            m_Device = (InputDevice)Activator.CreateInstance(m_DeviceType);
+            m_Device.m_Template = template;
+            m_Device.m_Name = template;
 
             // Install the control hierarchy.
-            SetUpControlHierarchy(device);
-            MakeChildOffsetsRelativeToRootRecursive(device);
-            device.CallFinishSetup(this);
+            SetUpControlHierarchy(m_Device);
+            MakeChildOffsetsRelativeToRootRecursive(m_Device);
+            m_Device.CallFinishSetup(this);
+        }
 
+        // Complete the setup and return the full control hierarchy setup
+        // with its device root.
+        public InputDevice Finish()
+        {
+            var device = m_Device;
+            
             // Kill off our state.
             Reset();
 
@@ -53,24 +64,25 @@ namespace ISX
         // Look up a direct or indirect child control.
         public InputControl TryGetControl(InputControl parent, string path)
         {
-            // If there's no slash in the path, just do a linear scan through
-            // the children rather than constructing a full path and doing
-            // a dictionary lookup.
-            if (path.IndexOf('/') == -1)
-            {
-                var pathLowerCase = path.ToLower();
-                foreach (var child in parent.children)
-                    if (child.name.ToLower() == pathLowerCase)
-                        return child;
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException(nameof(path));
+            
+            if (m_Device == null)
+                return null;
 
-                // Fall back to full lookup. Important as the code above will
-                // only work when called from within FinishSetup(). Otherwise
-                // the hierarchy won't be in place yet. However, during FinishSetup()
-                // we want things to be fast so that's what the shortcut is for.
+            if (parent == null)
+                parent = m_Device;
+
+            var childCount = parent.m_ChildrenReadOnly.Count;
+            for (var i = 0; i < childCount; ++i)
+            {
+                var child = parent.m_ChildrenReadOnly[i];
+                var match = PathHelpers.FindControl(child, path);
+                if (match != null)
+                    return match;
             }
 
-            var fullPath = parent.MakeChildPath(path);
-            return TryGetControl(fullPath);
+            return null;
         }
 
         // Look up a direct or indirect chid control expected to be of a specific type.
@@ -121,14 +133,7 @@ namespace ISX
 
         public InputControl TryGetControl(string path)
         {
-            if (m_PathToControl == null)
-                return null;
-
-            var nameLowerCase = path.ToLower();
-
-            InputControl control;
-            m_PathToControl.TryGetValue(nameLowerCase, out control);
-            return control;
+            return TryGetControl(m_Device, path);
         }
 
         public TControl GetControl<TControl>(string path)
@@ -154,74 +159,55 @@ namespace ISX
             return controlOfType;
         }
 
-        public IEnumerable<InputControl> GetChildren(string path)
-        {
-            if (m_ControlToChildren != null)
-            {
-                var control = GetControl(path);
-
-                List<InputControl> children;
-                if (m_ControlToChildren.TryGetValue(control, out children))
-                    return children;
-            }
-
-            return Enumerable.Empty<InputControl>();
-        }
-
         private bool m_Initialized;
-        private InputTemplate m_DeviceTemplate;
         private Type m_DeviceType;
+        private InputDevice m_Device;
+        
         private List<InputControl> m_RootControls;
-        private List<InputUsage> m_RootUsages;
-
+        private List<string> m_Usages;
+        private List<string> m_Aliases;
+        
         // Child lists.
         private int m_ChildRelationsCount;
         private Dictionary<InputControl, List<InputControl>> m_ControlToChildren;
 
-        // Usage lists.
-        private int m_UsageRelationsCount;
-        private Dictionary<InputControl, List<InputUsage>> m_ControlToUsages;
-
-        // Paths and usages have to be unique so we keep dictionaries
-        // that quickly map them to controls.
-        private Dictionary<string, InputControl> m_PathToControl;
-        private Dictionary<string, InputControl> m_UsageToControl;
-
         // We construct templates lazily as we go but keep them cached while we
         // set up hierarchies so that we don't re-construt the same Button template
         // 256 times for a keyboard.
-        private Dictionary<string, InputTemplate> m_CachedTemplates;
+        private InputTemplate.Cache m_TemplateCache;
 
+        // Reset the setup in a way where it can be reused for another setup.
+        // Should retain allocations that can be reused.
         private void Reset()
         {
-            m_DeviceTemplate = null;
             m_DeviceType = null;
-            m_RootControls = null;
-            m_RootUsages = null;
-            m_ControlToChildren = null;
-            m_ControlToUsages = null;
-            m_PathToControl = null;
-            m_UsageToControl = null;
+            m_Device = null;
             m_ChildRelationsCount = 0;
-            m_UsageRelationsCount = 0;
-            m_CachedTemplates = null;
+            
+            m_RootControls?.Clear();
+            m_Aliases?.Clear();
+            m_Usages?.Clear();
+            m_ControlToChildren?.Clear();
+            
             m_Initialized = false;
         }
 
+        // Prepare for a setup.
         private void Initialize()
         {
             if (m_Initialized)
                 return;
 
-            m_DeviceTemplate = null;
             m_DeviceType = typeof(InputDevice);
-            m_RootControls = new List<InputControl>();
-            m_RootUsages = new List<InputUsage>();
-            m_ControlToChildren = new Dictionary<InputControl, List<InputControl>>();
-            m_ControlToUsages = new Dictionary<InputControl, List<InputUsage>>();
-            m_PathToControl = new Dictionary<string, InputControl>();
-            m_UsageToControl = new Dictionary<string, InputControl>();
-            m_CachedTemplates = new Dictionary<string, InputTemplate>();
+            
+            if (m_RootControls == null)
+                m_RootControls = new List<InputControl>();
+            if (m_ControlToChildren == null)
+                m_ControlToChildren = new Dictionary<InputControl, List<InputControl>>();
+            if (m_Usages == null)
+                m_Usages = new List<string>();
+            if (m_Aliases == null)
+                m_Aliases = new List<string>();
 
             m_Initialized = true;
         }
@@ -231,13 +217,16 @@ namespace ISX
         private void SetUpControlHierarchy(InputDevice device)
         {
             device.m_ChildrenForEachControl = new InputControl[m_ChildRelationsCount];
-            device.m_UsagesForEachControl = new InputUsage[m_UsageRelationsCount];
-
+            device.m_UsagesForEachControl = m_Usages.ToArray();
+            device.m_AliasesForEachControl = m_Aliases.ToArray();
+            
             // Running indices.
             var childArrayIndex = 0;
             var usageArrayIndex = 0;
+            var aliasArrayIndex = 0;
 
-            SetUpControlHierarchyRecursive(device, device, ref childArrayIndex, ref usageArrayIndex);
+            SetUpControlHierarchyRecursive(device, device, ref childArrayIndex, ref usageArrayIndex,
+                ref aliasArrayIndex);
 
             // Hook up parent to device for all toplevel controls. Device doesn't
             // exist yet when we do AddControl for all control templates so toplevel
@@ -252,7 +241,7 @@ namespace ISX
         // Note that we still end up with offsets that are always relative to the parent. To get
         // to the final absolute offsets, we need a final traversal down the hierarchy.
         private void SetUpControlHierarchyRecursive(InputDevice device, InputControl control, ref int childArrayIndex,
-            ref int usageArrayIndex)
+            ref int usageArrayIndex, ref int aliasArrayIndex)
         {
             control.m_Device = device;
 
@@ -262,13 +251,6 @@ namespace ISX
                 children = m_RootControls;
             else
                 m_ControlToChildren.TryGetValue(control, out children);
-
-            // Get list of usages.
-            List<InputUsage> usages;
-            if (object.ReferenceEquals(device, control))
-                usages = m_RootUsages;
-            else
-                m_ControlToUsages.TryGetValue(control, out usages);
 
             // Set up children on control.
             if (children != null)
@@ -282,21 +264,31 @@ namespace ISX
             }
 
             // Set up usages on control.
-            if (usages != null)
+            var usageCount = control.m_UsagesReadOnly.Count;
+            if (usageCount > 0)
             {
                 var usageArray = device.m_UsagesForEachControl;
-                var usageCount = usages.Count;
                 control.m_UsagesReadOnly =
-                    new ReadOnlyArray<InputUsage>(usageArray, usageArrayIndex, usageCount);
-                usages.CopyTo(usageArray, usageArrayIndex);
+                    new ReadOnlyArray<string>(usageArray, usageArrayIndex, usageCount);
                 usageArrayIndex += usageCount;
+            }
+            
+            // Set up aliases on control.
+            var aliasCount = control.m_AliasesReadOnly.Count;
+            if (aliasCount > 0)
+            {
+                var aliasArray = device.m_AliasesForEachControl;
+                control.m_AliasesReadOnly =
+                    new ReadOnlyArray<string>(aliasArray, aliasArrayIndex, aliasCount);
+                aliasArrayIndex += aliasCount;
             }
 
             // Recurse into children.
             if (children != null)
             {
                 foreach (var child in children)
-                    SetUpControlHierarchyRecursive(device, child, ref childArrayIndex, ref usageArrayIndex);
+                    SetUpControlHierarchyRecursive(device, child, ref childArrayIndex, ref usageArrayIndex,
+                        ref aliasArrayIndex);
             }
 
             // Lay out our state.
@@ -321,10 +313,10 @@ namespace ISX
                 if (parent != null)
                     throw new Exception($"Cannot instantiate device template '{template}' as child of '{parent.path}'; devices must be added at root");
 
-                m_DeviceTemplate = templateInstance;
                 m_DeviceType = templateInstance.type;
 
                 AddChildControls(templateInstance, null);
+                
                 return null;
             }
 
@@ -344,8 +336,26 @@ namespace ISX
                 // Pass remaining settings of control template on to newly created control.
                 control.m_StateBlock.byteOffset = controlTemplate.offset;
                 control.m_StateBlock.bitOffset = controlTemplate.bit;
+                
+                // Add usages.
+                if (controlTemplate.usages != null)
+                {
+                    var usageIndex = m_Usages.Count;
+                    var usageCount = controlTemplate.usages.Length;
+                    m_Usages.AddRange(controlTemplate.usages);
+                    control.m_UsagesReadOnly = new ReadOnlyArray<string>(null, usageIndex, usageCount);
+                }
+                
+                // Add aliases.
+                if (controlTemplate.aliases != null)
+                {
+                    var aliasIndex = m_Aliases.Count;
+                    var aliasCount = controlTemplate.aliases.Length;
+                    m_Aliases.AddRange(controlTemplate.aliases);
+                    control.m_AliasesReadOnly = new ReadOnlyArray<string>(null, aliasIndex, aliasCount);
+                }
 
-                ////TODO: process parameters, processors, and usages
+                ////TODO: process parameters and processors
             }
         }
 
@@ -378,8 +388,6 @@ namespace ISX
             if (TryGetControl(path) != null)
                 throw new InvalidOperationException($"A control with path '{path}' is already present in the setup.");
 
-            m_PathToControl[path.ToLower()] = control;
-
             // Insert into hierarchy.
             if (parent == null)
                 m_RootControls.Add(control);
@@ -394,7 +402,7 @@ namespace ISX
                 children.Add(control);
             }
             ++m_ChildRelationsCount;
-
+            
             // Create children and configure their settings from our
             // template values.
             try
@@ -403,8 +411,10 @@ namespace ISX
             }
             catch
             {
-                ////TODO: remove control from collection
-                throw;
+                ////TODO: remove control from collection and rethrow
+                //throw;
+                
+                throw new NotImplementedException();
             }
 
             return control;
@@ -412,44 +422,7 @@ namespace ISX
 
         private InputTemplate FindOrLoadTemplate(string name)
         {
-            var nameLowerCase = name.ToLower();
-
-            // See if we have it cached.
-            InputTemplate template;
-            if (m_CachedTemplates.TryGetValue(nameLowerCase, out template))
-                return template;
-
-            // No, so see if we have a string template for it. These
-            // always take precedence over ones from type so that we can
-            // override what's in the code using data.
-            string json;
-            if (InputTemplate.s_TemplateStrings.TryGetValue(nameLowerCase, out json))
-            {
-                template = InputTemplate.FromJson(name, json);
-                m_CachedTemplates[nameLowerCase] = template;
-
-                // If the template extends another template, we need to merge the
-                // base template into the final template.
-                if (!string.IsNullOrEmpty(template.extendsTemplate))
-                {
-                    var superTemplate = FindOrLoadTemplate(template.extendsTemplate);
-                    template.MergeTemplate(superTemplate);
-                }
-
-                return template;
-            }
-
-            // No, but maybe we have a type template for it.
-            Type type;
-            if (InputTemplate.s_TemplateTypes.TryGetValue(nameLowerCase, out type))
-            {
-                template = InputTemplate.FromType(name, type);
-                m_CachedTemplates[nameLowerCase] = template;
-                return template;
-            }
-
-            // Nothing.
-            throw new Exception($"Cannot find input template called '{name}'");
+            return m_TemplateCache.FindOrLoadTemplate(name);
         }
 
         private void ComputeStateLayout(InputControl control, List<InputControl> children)

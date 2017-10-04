@@ -51,6 +51,10 @@ namespace ISX
             {
                 if (index < 0 || index >= m_Length)
                     throw new IndexOutOfRangeException();
+                // We allow array to be null as we are patching up ReadOnlyArrays in a separate
+                // path in several places.
+                if (m_Array == null)
+                    throw new InvalidOperationException();
                 return m_Array[m_StartIndex + index];
             }
         }

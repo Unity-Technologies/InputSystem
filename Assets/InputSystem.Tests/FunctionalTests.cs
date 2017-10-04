@@ -50,7 +50,7 @@ public class FunctionalTests
 
         // The default ButtonControl template has no constrols inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
-        Assert.That(setup.GetChildren("start"), Is.Empty);
+        Assert.That(setup.GetControl("start").children, Is.Empty);
 
         TearDown();
     }
@@ -66,8 +66,8 @@ public class FunctionalTests
         var setup = new InputControlSetup("Gamepad");
 
         Assert.That(setup.GetControl("leftStick"), Is.TypeOf<StickControl>());
-        Assert.That(setup.GetChildren("leftStick"), Has.Count.EqualTo(kNumControlsInAStick));
-        Assert.That(setup.GetChildren("leftStick"), Has.Exactly(1).With.Property("name").EqualTo("x"));
+        Assert.That(setup.GetControl("leftStick").children, Has.Count.EqualTo(kNumControlsInAStick));
+        Assert.That(setup.GetControl("leftStick").children, Has.Exactly(1).With.Property("name").EqualTo("x"));
 
         TearDown();
     }
@@ -116,15 +116,42 @@ public class FunctionalTests
     public void Templates_CanSetControlParametersThroughControlAttribute()
     {
         Setup();
-        
+
         // StickControl sets parameters on its axis controls. Check that they are
         // there.
 
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad.leftStick.up.clamp, Is.True);
         Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
         Assert.That(gamepad.leftStick.up.clampMax, Is.EqualTo(1));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Temlates_CanSetUsagesThroughControlAttribute()
+    {
+        Setup();
+
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(CommonUsages.PrimaryStick));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanSetAliasesThroughControlAttribute()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo("square"));
+        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo("x"));
         
         TearDown();
     }
@@ -481,14 +508,14 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_AssignsFullPathToControlsWhenAddingDevice()
+    public void Controls_AssignsFullPathToControls()
     {
         Setup();
 
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
 
-        Assert.That(leftStick.path, Is.EqualTo("leftStick"));
+        Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
 
         var device = setup.Finish();
         InputSystem.AddDevice(device);
@@ -549,11 +576,27 @@ public class FunctionalTests
     {
         Setup();
 
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
-        var matches = InputSystem.GetControls("/gamepad/primaryStick");
-        
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var matches = InputSystem.GetControls("/gamepad/{primaryStick}");
+
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlsByTemplate()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var matches = InputSystem.GetControls("/gamepad/<stick>");
+
+        Assert.That(matches, Has.Count.EqualTo(2));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightStick));
         
         TearDown();
     }
@@ -564,18 +607,18 @@ public class FunctionalTests
     {
         Setup();
 
-        var gamepad1 = (Gamepad) InputSystem.AddDevice("Gamepad");
-        var gamepad2 = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var matches = InputSystem.GetControls("/*/*Stick");
 
         Assert.That(matches, Has.Count.EqualTo(4));
-        
+
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.leftStick));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.rightStick));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.leftStick));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.rightStick));
-        
+
         TearDown();
     }
 
@@ -584,13 +627,13 @@ public class FunctionalTests
     public void Controls_CanOmitLeadingSlashWhenFindingControls()
     {
         Setup();
-        
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("gamepad/leftStick");
-        
+
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-        
+
         TearDown();
     }
 
@@ -599,17 +642,17 @@ public class FunctionalTests
     public void Controls_CanFindControlsByTheirAliases()
     {
         Setup();
-        
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matchByName = InputSystem.GetControls("/gamepad/buttonSouth");
         var matchByAlias1 = InputSystem.GetControls("/gamepad/x");
         var matchByAlias2 = InputSystem.GetControls("/gamepad/cross");
-        
+
         Assert.That(matchByName, Has.Count.EqualTo(1));
-        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.x));
+        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.xButton));
         Assert.That(matchByAlias1, Is.EqualTo(matchByName));
         Assert.That(matchByAlias2, Is.EqualTo(matchByName));
-        
+
         TearDown();
     }
 
@@ -618,16 +661,16 @@ public class FunctionalTests
     public void Controls_CanFindControlsUsingWildcardsInMiddleOfNames()
     {
         Setup();
-        
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/g*pad/leftStick");
-        
+
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-        
+
         TearDown();
     }
-    
+
     [Test]
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
@@ -854,7 +897,7 @@ public class FunctionalTests
     public void TODO_Devices_CanSwitchTemplateOfExistingDevice()
     {
     }
-    
+
     [Test]
     [Category("Actions")]
     public void TODO_Actions_CanLoadActionSetFromJson()
@@ -866,7 +909,7 @@ public class FunctionalTests
                 """"////TODO
             }
         ";
-        
+
         TearDown();
     }
 }

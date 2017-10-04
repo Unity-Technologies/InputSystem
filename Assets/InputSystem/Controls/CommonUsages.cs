@@ -1,0 +1,29 @@
+﻿namespace ISX
+{
+    public static class CommonUsages
+    {
+        public const string PrimaryStick = "PrimaryStick";
+        public const string SecondaryStick = "SecondaryStick";
+        public const string PrimaryAction = "PrimaryAction";
+        public const string SecondaryAction = "SecondaryAction";
+        public const string PrimaryTrigger = "PrimaryTrigger";
+        public const string SecondaryTrigger = "SecondaryTrigger";
+        public const string Back = "Back";
+        public const string Forward = "Forward";
+        public const string Menu = "Menu";
+        public const string Enter = "Enter";
+        public const string Previous = "Previous";
+        public const string Next = "Next";
+        public const string ScrollHorizontal = "ScrollHorizontal";
+        public const string Pressure = "Pressure";
+        public const string Position = "Position";
+        public const string Orientation = "Orientation";
+        public const string Point = "Point";
+
+        public const string LowFreqMotor = "LowFreqMotor";
+        public const string HighFreqMotor = "HighFreqMotor";
+
+        public const string LeftHand = "LeftHand";
+        public const string RightHand = "RightHand";
+    }
+}

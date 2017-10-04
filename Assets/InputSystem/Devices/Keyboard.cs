@@ -106,6 +106,11 @@ namespace ISX
 
         [InputControl(name = "Escape", template = "Button", usage = "Back", bit = (int)Key.Enter)]
         [InputControl(name = "Space", template = "Button", bit = (int)Key.Space)]
+        [InputControl(name = "Enter", template = "Button", bit = (int)Key.Enter)]
+        [InputControl(name = "UpArrow", template = "Button", bit = (int)Key.UpArrow)]
+        [InputControl(name = "DownArrow", template = "Button", bit = (int)Key.DownArrow)]
+        [InputControl(name = "LeftArrow", template = "Button", bit = (int)Key.LeftArrow)]
+        [InputControl(name = "RigthArrow", template = "Button", bit = (int)Key.RightArrow)]
         public fixed byte keys[256 / 8]; // For some reason, the Mono compiler won't accept "(int)Key.Count/8" as a constant expression.
 
         public FourCC GetTypeStatic()
@@ -149,6 +154,15 @@ namespace ISX
                         m_TextInputListeners.Remove(value);
             }
         }
+        
+        // Some common keys.
+        public ButtonControl escape { get; private set; }
+        public ButtonControl space { get; private set; }
+        public ButtonControl enter { get; private set; }
+        public ButtonControl up { get; private set; }
+        public ButtonControl down { get; private set; }
+        public ButtonControl left { get; private set; }
+        public ButtonControl right { get; private set; }
 
         public static Keyboard current { get; protected set; }
 
@@ -160,6 +174,19 @@ namespace ISX
         {
             base.MakeCurrent();
             current = this;
+        }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            escape = setup.GetControl<ButtonControl>("Escape");
+            space = setup.GetControl<ButtonControl>("Space");
+            enter = setup.GetControl<ButtonControl>("Enter");
+            up = setup.GetControl<ButtonControl>("UpArrow");
+            down = setup.GetControl<ButtonControl>("DownArrow");
+            left = setup.GetControl<ButtonControl>("LeftArrow");
+            right = setup.GetControl<ButtonControl>("RightArrow");
+            
+            base.FinishSetup(setup);
         }
 
         internal List<Action<char>> m_TextInputListeners;

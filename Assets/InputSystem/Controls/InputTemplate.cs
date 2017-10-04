@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using UnityEditor;
 using UnityEngine;
 
 namespace ISX
@@ -52,6 +53,7 @@ namespace ISX
             public string template;
             public ParameterValue[] parameters;
             public string[] usages;
+            public string[] aliases;
             public KeyValuePair<string, ParameterValue[]>[] processors;
             public uint offset;
             public uint bit;
@@ -125,6 +127,9 @@ namespace ISX
                 // Add control templates from type contents.
                 AddControlTemplates(type, controlTemplates);
             }
+            
+            ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json templates as well)
+            ////TODO: make sure all paths are unique (only relevant for JSON templates?)
 
             // Create template object.
             var template = new InputTemplate(name, type);
@@ -291,6 +296,16 @@ namespace ISX
             if (attribute != null)
                 bit = (uint)attribute.bit;
             
+            // Determine aliases.
+            string[] aliases = null;
+            if (attribute != null)
+                aliases = ArrayHelpers.Join(attribute.alias, attribute.aliases);
+            
+            // Determine usages.
+            string[] usages = null;
+            if (attribute != null)
+                usages = ArrayHelpers.Join(attribute.usage, attribute.usages);
+
             // Determine parameters.
             ParameterValue[] parameters = null;
             if (attribute != null && !string.IsNullOrEmpty(attribute.parameters))
@@ -304,7 +319,9 @@ namespace ISX
                 template = template,
                 offset = offset,
                 bit = bit,
-                parameters = parameters
+                parameters = parameters,
+                usages = usages,
+                aliases = aliases
             };
         }
 
@@ -313,7 +330,7 @@ namespace ISX
             parameterString = parameterString.Trim();
             if (string.IsNullOrEmpty(parameterString))
                 return null;
-            
+
             var parameterCount = parameterString.CountOccurrences(',') + 1;
             var parameters = new ParameterValue[parameterCount];
             var parameterStringLength = parameterString.Length;
@@ -332,11 +349,11 @@ namespace ISX
         {
             //can't look up name in type as all we have is a template name
             //for the from-type path it probably works but not for json templates
-            
+
             // Parse name.
-            
+
             // Parse value.
-            
+
             return new ParameterValue();
             //throw new NotImplementedException();
         }
@@ -514,5 +531,59 @@ namespace ISX
         // These dictionaries are owned and managed by InputManager.
         internal static Dictionary<string, Type> s_TemplateTypes;
         internal static Dictionary<string, string> s_TemplateStrings;
+
+        // Constructs InputTemlate instances and caches them.
+        internal struct Cache
+        {
+            private Dictionary<string, InputTemplate> m_CachedTemplates;
+
+            public InputTemplate FindOrLoadTemplate(string name)
+            {
+                Debug.Assert(s_TemplateTypes != null);
+                Debug.Assert(s_TemplateStrings != null);
+                
+                var nameLowerCase = name.ToLower();
+
+                // See if we have it cached.
+                InputTemplate template;
+                if (m_CachedTemplates != null && m_CachedTemplates.TryGetValue(nameLowerCase, out template))
+                    return template;
+                
+                if (m_CachedTemplates == null)
+                    m_CachedTemplates = new Dictionary<string, InputTemplate>();
+
+                // No, so see if we have a string template for it. These
+                // always take precedence over ones from type so that we can
+                // override what's in the code using data.
+                string json;
+                if (s_TemplateStrings.TryGetValue(nameLowerCase, out json))
+                {
+                    template = InputTemplate.FromJson(name, json);
+                    m_CachedTemplates[nameLowerCase] = template;
+
+                    // If the template extends another template, we need to merge the
+                    // base template into the final template.
+                    if (!string.IsNullOrEmpty(template.extendsTemplate))
+                    {
+                        var superTemplate = FindOrLoadTemplate(template.extendsTemplate);
+                        template.MergeTemplate(superTemplate);
+                    }
+
+                    return template;
+                }
+
+                // No, but maybe we have a type template for it.
+                Type type;
+                if (s_TemplateTypes.TryGetValue(nameLowerCase, out type))
+                {
+                    template = InputTemplate.FromType(name, type);
+                    m_CachedTemplates[nameLowerCase] = template;
+                    return template;
+                }
+
+                // Nothing.
+                throw new Exception($"Cannot find input template called '{name}'");
+            }
+        }
     }
 }

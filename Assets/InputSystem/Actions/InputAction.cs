@@ -214,7 +214,7 @@ namespace ISX
             ////      the path below should be the fallback path when there aren't any modifiers
 
             ////REVIEW: the current state change logic does not take processors into account
-            
+
             var isAtDefault = control.CheckStateIsAllZeroes();
 
             switch (phase)

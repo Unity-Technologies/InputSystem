@@ -1,4 +1,4 @@
-﻿namespace ISX
+namespace ISX
 {
     internal static class StringHelpers
     {
