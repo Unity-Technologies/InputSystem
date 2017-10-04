@@ -17,18 +17,20 @@ namespace ISX
             return false;
         }
 
-        public static void Append<TValue>(ref TValue[] array, TValue value)
+        public static int Append<TValue>(ref TValue[] array, TValue value)
         {
             if (array == null)
             {
                 array = new TValue[1];
                 array[0] = value;
+                return 0;
             }
             else
             {
                 var length = array.Length;
                 Array.Resize(ref array, length + 1);
                 array[length] = value;
+                return length;
             }
         }
     }

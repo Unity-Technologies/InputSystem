@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-////REVIEW: rename InputControlUsage?
+////TODO: kill this and just use plain strings
 
 namespace ISX
 {

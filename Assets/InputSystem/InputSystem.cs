@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Events;
@@ -13,6 +14,11 @@ using UnityEditor;
 // At least, while it compiles, I get missing references errors looking at the
 // .asmdef files in the inspector and the test runner doesn't seem to be able
 // to run.
+//
+// Unfortunately, we need the attribute for the test rig to be able to access
+// InputSystem.Save(), InputSystem.Restore(), and InputSystem.Reset(). Don't
+// feel comfortable exposing those even though I'd prefer for the tests to not
+// be able to rely on internals.
 [assembly: InternalsVisibleTo("InputSystemTests")]
 
 namespace ISX
@@ -26,13 +32,13 @@ namespace ISX
     {
         public static ReadOnlyArray<InputDevice> devices
         {
-            get { return m_Manager.devices; }
+            get { return s_Manager.devices; }
         }
 
         public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
         {
-            add { m_Manager.onDeviceChange += value; }
-            remove { m_Manager.onDeviceChange -= value; }
+            add { s_Manager.onDeviceChange += value; }
+            remove { s_Manager.onDeviceChange -= value; }
         }
 
         public static void RegisterTemplate(Type type, string name = null)
@@ -40,7 +46,7 @@ namespace ISX
             if (name == null)
                 name = type.Name;
 
-            m_Manager.RegisterTemplate(name, type);
+            s_Manager.RegisterTemplate(name, type);
         }
 
         public static void RegisterTemplate<T>(string name = null)
@@ -50,47 +56,66 @@ namespace ISX
 
         public static void RegisterTemplate(string json, string name = null)
         {
-            m_Manager.RegisterTemplate(json, name);
+            s_Manager.RegisterTemplate(json, name);
         }
 
         public static InputDevice AddDevice(string template)
         {
-            return m_Manager.AddDevice(template);
+            return s_Manager.AddDevice(template);
         }
 
         public static InputDevice AddDevice(InputDeviceDescriptor descriptor)
         {
-            return m_Manager.AddDevice(descriptor);
+            return s_Manager.AddDevice(descriptor);
         }
 
         public static void AddDevice(InputDevice device)
         {
-            m_Manager.AddDevice(device);
+            s_Manager.AddDevice(device);
         }
 
         public static InputDevice TryGetDeviceById(int deviceId)
         {
-            return m_Manager.TryGetDeviceById(deviceId);
+            return s_Manager.TryGetDeviceById(deviceId);
+        }
+
+        public static List<InputControl> GetControls(string path)
+        {
+            var list = new List<InputControl>();
+            GetControls(path, list);
+            return list;
+        }
+
+        public static int GetControls(string path, List<InputControl> controls)
+        {
+            return s_Manager.GetControls(path, controls);
         }
 
         public static void QueueEvent<TEvent>(TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
-            m_Manager.QueueEvent(inputEvent);
+            s_Manager.QueueEvent(inputEvent);
+        }
+
+        public static void QueueStateEvent<TState>(InputDevice device, TState state)
+            where TState : struct, IInputStateTypeInfo
+        {
+            var stateEvent = StateEvent.Create(device.id, Time.time, state);
+            s_Manager.QueueEvent(stateEvent);
         }
 
         ////REVIEW: should we actually expose the Update() methods or should these be internal?
         public static void Update()
         {
-            m_Manager.Update();
+            s_Manager.Update();
         }
 
         public static void Update(InputUpdateType updateType)
         {
-            m_Manager.Update(updateType);
+            s_Manager.Update(updateType);
         }
 
-        private static InputManager m_Manager;
+        internal static InputManager s_Manager;
 
 #if UNITY_EDITOR
         private static bool s_Initialized;
@@ -114,7 +139,7 @@ namespace ISX
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
                 m_SystemObject = existingSystemObjects[0];
-                m_Manager = m_SystemObject.manager;
+                s_Manager = m_SystemObject.manager;
             }
             else
             {
@@ -131,7 +156,7 @@ namespace ISX
             if (m_SystemObject != null)
                 UnityEngine.Object.DestroyImmediate(m_SystemObject);
             m_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
-            m_Manager = m_SystemObject.manager;
+            s_Manager = m_SystemObject.manager;
         }
 
         // We don't want play mode modifications to templates and controls to seep

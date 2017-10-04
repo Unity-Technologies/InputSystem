@@ -103,6 +103,35 @@ namespace ISX
             throw new NotImplementedException();
         }
 
+        // Adds all controls that match the given path spec to the given list.
+        // Returns number of controls added to the list.
+        // NOTE: Does not create garbage.
+        public int GetControls(string path, List<InputControl> controls)
+        {
+            if (string.IsNullOrEmpty(path))
+                return 0;
+            if (controls == null)
+                throw new ArgumentNullException(nameof(controls));
+            if (m_Devices == null)
+                return 0;
+
+            var indexInPath = 0;
+            if (path[0] == '/')
+                ++indexInPath;
+
+            var deviceCount = m_Devices.Length;
+            var numMatches = 0;
+            for (var i = 0; i < deviceCount; ++i)
+            {
+                var device = m_Devices[i];
+                numMatches += PathHelpers.MatchControlsRecursive(device, path, indexInPath, controls);
+            }
+
+            return numMatches;
+        }
+        
+        ////TODO: make sure that no device or control with a '/' in the name can creep into the system
+
         // Creates a device from the given template and adds it to the system.
         // NOTE: Creates garbage.
         public InputDevice AddDevice(string template)
@@ -132,7 +161,8 @@ namespace ISX
             MakeDeviceNameUnique(device);
             AssignUniqueDeviceId(device);
 
-            ArrayHelpers.Append(ref m_Devices, device);
+            // Add to list.
+            device.m_DeviceIndex = ArrayHelpers.Append(ref m_Devices, device);
 
             ////REVIEW: Not sure a full-blown dictionary is the right way here. Alternatives are to keep
             ////        a sparse array that directly indexes using the linearly increasing IDs (though that
@@ -286,6 +316,14 @@ namespace ISX
             NativeInputSystem.onUpdate -= OnNativeUpdate;
         }
 
+        internal void AddStateChangeMonitor(InputControl control, InputAction action)
+        {
+        }
+
+        internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
+        {
+        }
+
         private Dictionary<string, InputUsage> m_Usages; ////REVIEW: Array or dictionary?
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
@@ -293,12 +331,37 @@ namespace ISX
 
         private InputDevice[] m_Devices;
         private Dictionary<int, InputDevice> m_DevicesById;
-
+        
         private InputUpdateType m_CurrentUpdate;
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputStateBuffers m_StateBuffers;
 
         private DeviceChangeEvent m_DeviceChangeEvent;
+
+        // Maps a single control to an action interested in the control. If
+        // multiple actions are interested in the same control, we will end up
+        // processing the control repeatedly but we assume this is the exception
+        // and so optimize for the case where there's only one action going to
+        // a control.
+        //
+        // Split into two structures to keep data needed only when there is an
+        // actual value change out of the data we need for doing the scanning.
+        private struct StateChangeMonitorMemoryRegion
+        {
+            public uint offset;
+            public uint sizeInBytes; // Size of memory region to compare. We don't care about bitfields and
+                                     // may trigger false positives for them. Actions have to sort that out
+                                     // on their own.
+        }
+        private struct StateChangeMonitorListener
+        {
+            public InputControl control;
+            public InputAction action;
+        }
+        
+        // Indices correspond with those in m_Devices.
+        private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorsMemoryRegions;
+        private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
 
 
         private void MakeDeviceNameUnique(InputDevice device)
@@ -371,8 +434,15 @@ namespace ISX
             oldBuffers.FreeAll();
             m_StateBuffers = newBuffers;
             m_StateBuffers.SwitchTo(m_CurrentUpdate);
+            
+            ////TODO: need to update state change monitors
         }
 
+        // When we have the C# job system, this should be a job and NativeInputSystem should double
+        // buffer input between frames. On top, the state change detection in here can be further
+        // split off and put in its own job(s) (might not yield a gain; might be enough to just have
+        // this thing in a job). The system can easily sync on a fence when some control goes
+        // to the global state buffers so the user won't ever know that updates happen in the background.
         private unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
         {
             // We *always* have to process events into the current state even if the given update isn't enabled.
@@ -419,6 +489,8 @@ namespace ISX
                 switch (oldestEventPtr->type)
                 {
                     case StateEvent.Type:
+                        
+                        // Update state on device.
                         var stateEventPtr = (StateEvent*)oldestEventPtr;
                         var stateType = stateEventPtr->stateType;
                         var stateBlock = device.m_StateBlock;
@@ -426,13 +498,13 @@ namespace ISX
                         if (stateBlock.typeCode == stateType &&
                             stateBlock.alignedSizeInBytes == stateSize)
                         {
-                            GamepadState gpad = new GamepadState();
-                            IntPtr gpadPtr = UnsafeUtility.AddressOf(ref gpad);
-                            UnsafeUtility.MemCpy(gpadPtr, stateEventPtr->state, stateSize);
-
                             UnsafeUtility.MemCpy(stateBlock.currentStatePtr, stateEventPtr->state, stateSize);
                         }
-                        ////TODO: queue up state change notification (only if anyone is listening)
+                        
+                        // See if any actions are listening.
+                        // This could be spun off into a job.
+                        ProcessStateChangeMonitors(device.m_DeviceIndex);
+                        
                         break;
 
                         /*
@@ -446,14 +518,46 @@ namespace ISX
                         */
                 }
 
-                // Device received event so make it current.
-                device.MakeCurrent();
-
                 // Mark as processed by setting time to negative.
                 oldestEventPtr->time = -1;
+                
+                // Device received event so make it current.
+                device.MakeCurrent();
             }
-            
+
             ////TODO: fire event that allows code to update state *from* state we just updated
+        }
+        
+        // This could easily be spun off into jobs.
+        private void ProcessStateChangeMonitors(int deviceIndex)
+        {
+            if (m_StateChangeMonitorListeners == null)
+                return;
+            
+            var changeMonitors = m_StateChangeMonitorsMemoryRegions[deviceIndex];
+            if (changeMonitors == null)
+                return; // No action cares about state changes on this device.
+
+            var listeners = m_StateChangeMonitorListeners[deviceIndex];
+
+            var current = InputStateBlock.s_CurrentStatePtr;
+            var previous = InputStateBlock.s_PreviousStatePtr;
+            
+            var numMonitors = changeMonitors.Count;
+            for (var i = 0; i < numMonitors; ++i)
+            {
+                var memoryRegion = changeMonitors[i];
+                var offset = (int)memoryRegion.offset;
+                var sizeInBytes = memoryRegion.sizeInBytes;
+
+                if (UnsafeUtility.MemCmp(current + offset, previous + offset, (int)sizeInBytes) != 0)
+                {
+                    // If this method ends up in a job, you do NOT want to call this right
+                    // here in the job. Should be queued up and called later.
+                    var listener = listeners[i];
+                    listener.action.NotifyControlValueChanged(listener.control);
+                }
+            }
         }
 
         [Serializable]
@@ -501,7 +605,7 @@ namespace ISX
 
         // Stuff everything that we want to survive a domain reload into
         // a m_SerializedState.
-        public void OnBeforeSerialize()
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             // Usages.
             var usageCount = m_Usages.Count;
@@ -560,9 +664,11 @@ namespace ISX
                 buffers = m_StateBuffers,
                 deviceChangeEvent = m_DeviceChangeEvent
             };
+            
+            ////TODO: monitors
         }
 
-        public void OnAfterDeserialize()
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             m_Usages = new Dictionary<string, InputUsage>();
             m_TemplateTypes = new Dictionary<string, Type>();

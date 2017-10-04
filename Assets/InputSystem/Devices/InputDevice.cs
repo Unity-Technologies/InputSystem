@@ -51,8 +51,9 @@ namespace ISX
         }
 
         internal bool m_Connected;
-        internal int m_PlayerIndex;
         internal int m_Id;
+        internal int m_PlayerIndex;
+        internal int m_DeviceIndex;
         internal InputDeviceDescriptor m_Descriptor;
 
         // Where our state data starts in the global state buffers.

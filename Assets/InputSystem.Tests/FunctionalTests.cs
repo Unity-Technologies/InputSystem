@@ -377,7 +377,7 @@ public class FunctionalTests
     public void Devices_AddingDeviceTwiceIsIgnored()
     {
         Setup();
-        
+
         var device = InputSystem.AddDevice("Gamepad");
 
         InputSystem.onDeviceChange +=
@@ -494,6 +494,38 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlByExactPath()
+    {
+        Setup();
+
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var matches = InputSystem.GetControls("/Gamepad/leftStick");
+        
+        Assert.That(matches, Has.Count.EqualTo(1));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        
+        TearDown();
+    }
+    
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindControlByExactPathCaseInsensitive()
+    {
+        Setup();
+
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var matches = InputSystem.GetControls("/gamePAD/LeftSTICK");
+        
+        Assert.That(matches, Has.Count.EqualTo(1));
+        Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        
+        TearDown();
+    }
+    
+    [Test]
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
     {
@@ -532,15 +564,68 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddSingleActionThatTargetsSingleControl()
+    public void Actions_CanAddActionThatTargetsSingleControl()
     {
         Setup();
 
-        var gamepad = InputSystem.AddDevice("Gamepad");
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(sourcePath: "/gamepad/leftStick");
+
+        Assert.That(action, Has.Property("sourceControls").With.Count.EqualTo(1)
+            .And.Exactly(1).SameAs(gamepad.leftStick));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateActionsWithoutAnActionSet()
+    {
+        Setup();
+        
+        var action = new InputAction();
+        
+        Assert.That(action.actionSet, Is.Null);
         
         TearDown();
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionIsPerformedWhenSourceControlChangesValue()
+    {
+        Setup();
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var receivedCalls = 0;
+        InputAction receivedAction = null;
+        InputControl receivedControl = null;
+
+        var action = new InputAction(sourcePath: "/gamepad/leftStick");
+        action.onPerformed +=
+            (a, c) =>
+            {
+                ++receivedCalls;
+                receivedAction = a;
+                receivedControl = c;
+            };
+        action.Enable();
+        
+        var state = new GamepadState
+        {
+            leftStick = new Vector2(0.5f, 0.5f)
+        };
+        InputSystem.QueueStateEvent(gamepad, state);
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedAction, Is.SameAs(action));
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+
+        TearDown();
+    }
     ////TODO:-----------------------------------------------------------------
     [Test]
     [Category("State")]
