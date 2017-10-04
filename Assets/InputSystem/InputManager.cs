@@ -122,7 +122,7 @@ namespace ISX
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.template == null)
+            if (string.IsNullOrEmpty(device.template))
                 throw new ArgumentException("Device has no associated template", nameof(device));
 
             // Ignore if the same device gets added multiple times.
@@ -135,7 +135,7 @@ namespace ISX
             ArrayHelpers.Append(ref m_Devices, device);
 
             ////REVIEW: Not sure a full-blown dictionary is the right way here. Alternatives are to keep
-            ////        a sparse array that directly indices using the linearly increasing IDs (though that
+            ////        a sparse array that directly indexes using the linearly increasing IDs (though that
             ////        may get large over time). Or to just do a linear search through m_Devices (but
             ////        that may end up tapping a bunch of memory locations in the heap to find the right
             ////        device; could be improved by sorting m_Devices by ID and picking a good starting
@@ -243,6 +243,8 @@ namespace ISX
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
+            ////REVIEW: should usages just be strings and not have an associated template type?
+            ////        (if so, might make sense to not even register them)
             // Register usages.
             RegisterUsage("PrimaryStick", "Stick");
             RegisterUsage("SecondaryStick", "Stick");
@@ -450,6 +452,8 @@ namespace ISX
                 // Mark as processed by setting time to negative.
                 oldestEventPtr->time = -1;
             }
+            
+            ////TODO: fire event that allows code to update state *from* state we just updated
         }
 
         [Serializable]

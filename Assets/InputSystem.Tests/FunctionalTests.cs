@@ -377,8 +377,12 @@ public class FunctionalTests
     public void Devices_AddingDeviceTwiceIsIgnored()
     {
         Setup();
-
+        
         var device = InputSystem.AddDevice("Gamepad");
+
+        InputSystem.onDeviceChange +=
+            (d, c) => Assert.Fail("Shouldn't send notification for duplicate adding of device.");
+
         InputSystem.AddDevice(device);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
@@ -523,6 +527,17 @@ public class FunctionalTests
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddSingleActionThatTargetsSingleControl()
+    {
+        Setup();
+
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        
         TearDown();
     }
 

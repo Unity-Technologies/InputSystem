@@ -1,9 +1,19 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+// I'd like to call the DLLs UnityEngine.Input and UnityEngine.Input.Tests
+// but the .asmdef mechanism doesn't seem to work properly when there's periods
+// in the name of the .asmdef file and it also doesn't seem to work correctly
+// when the name of the .asmdef file and the name of the assembly don't match.
+// At least, while it compiles, I get missing references errors looking at the
+// .asmdef files in the inspector and the test runner doesn't seem to be able
+// to run.
+[assembly: InternalsVisibleTo("InputSystemTests")]
 
 namespace ISX
 {

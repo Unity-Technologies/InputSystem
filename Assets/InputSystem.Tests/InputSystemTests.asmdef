@@ -1,0 +1,8 @@
+{
+    "name": "InputSystemTests",
+    "references": [
+        "InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

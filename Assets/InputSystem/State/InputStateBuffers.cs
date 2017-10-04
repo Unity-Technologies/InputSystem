@@ -7,7 +7,7 @@ namespace ISX
 {
     // The raw memory blocks which are indexed by InputStateBlocks.
     //
-    // Internally, we perform only a single combined allocated for all state buffers
+    // Internally, we perform only a single combined allocation for all state buffers
     // needed by the system. Externally, we expose them as if they are each separate
     // buffers.
 #if UNITY_EDITOR
