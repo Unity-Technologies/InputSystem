@@ -467,6 +467,19 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_AddingDeviceMakesItCurrent()
+    {
+        Setup();
+
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        
+        Assert.That(Gamepad.current, Is.SameAs(gamepad));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
         Setup();
@@ -475,6 +488,20 @@ public class FunctionalTests
 
         Assert.That(InputSystem.TryGetDeviceById(device.id), Is.SameAs(device));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanLookUpDeviceByTemplate()
+    {
+        Setup();
+
+        var device = InputSystem.AddDevice("Gamepad");
+        var result = InputSystem.GetDevice("Gamepad");
+
+        Assert.That(result, Is.SameAs(device));
+        
         TearDown();
     }
 
@@ -599,7 +626,7 @@ public class FunctionalTests
 
         TearDown();
     }
-    
+
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsByTemplate()
@@ -631,7 +658,7 @@ public class FunctionalTests
         Assert.That(matches, Has.Count.EqualTo(2));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
-        
+
         TearDown();
     }
 
@@ -760,6 +787,23 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanAddActionThatTargetsMultipleControls()
+    {
+        Setup();
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(sourcePath: "/gamepad/*stick");
+
+        Assert.That(action.sourceControls, Has.Count.EqualTo(2));
+        Assert.That(action.sourceControls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action.sourceControls, Has.Exactly(1).SameAs(gamepad.rightStick));
+
+        TearDown();
+    }
+    
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenEnabled_GoesIntoWaitingPhase()
     {
         Setup();
@@ -797,6 +841,19 @@ public class FunctionalTests
         var action = new InputAction(sourcePath: "nothing");
 
         Assert.DoesNotThrow(() => action.Enable());
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_StartOutInDisabledPhase()
+    {
+        Setup();
+
+        var action = new InputAction();
+
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
 
         TearDown();
     }
@@ -842,18 +899,76 @@ public class FunctionalTests
         TearDown();
     }
 
+    /*
     [Test]
     [Category("Actions")]
-    public void Actions_StartOutInDisabledPhase()
+    public void Actions_CanPerformHoldAction()
     {
         Setup();
+        
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var action = new InputAction();
+        var onPerformedReceivedCalls = 0;
+        InputAction onPerformedAction = null;
+        InputControl onPerfomedControl = null;
 
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
+        var onStartedReceivedCalls = 0;
+        InputAction onStartedAction = null;
+        InputControl onStartedControl = null;
+        
+        var action = new InputAction(sourcePath: "/gamepad/{primaryAction}", modifiers: "hold(0.4)");
+        action.onPerformed +=
+            (a, c) =>
+            {
+                ++onPerformedReceivedCalls;
+                onPerformedAction = a;
+                onPerfomedControl = c;
 
+                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
+            };
+        action.onStarted +=
+            (a, c) =>
+            {
+                ++onStartedReceivedCalls;
+                onStartedAction = a;
+                onStartedControl = c;
+
+                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
+            };
+        action.Enable();
+
+        var stateEvent = StateEvent.Create(
+            gamepad.id,
+            0.0, // First point in time.
+            new GamepadState
+            {
+                buttons = 1 << (int) GamepadState.Button.South
+            });
+        
+        InputSystem.QueueEvent(stateEvent);
+
+        stateEvent.baseEvent.time = 0.5; // Second point in time.
+        stateEvent.state.buttons = 0;
+        
+        InputSystem.QueueEvent(stateEvent);
+        InputSystem.Update();
+
+        Assert.That(onPerformedReceivedCalls, Is.EqualTo(1));
+        Assert.That(receivedOnPerformedCalls, Is.Zero);
+        Assert.That(receivedAction, Is.SameAs(action));
+        Assert.That(receivedControl, Is.SameAs(gamepad.aButton));
+
+        Assert.That(receivedOnStartedCalls, Is.EqualTo(0));
+        Assert.That(receivedOnPerformedCalls, Is.EqualTo(1));
+        Assert.That(receivedAction, Is.SameAs(action));
+        Assert.That(receivedControl, Is.SameAs(gamepad.aButton));
+        
+        // Action should be waiting again.
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+        
         TearDown();
     }
+    */
 
     ////TODO:-----------------------------------------------------------------
     [Test]

@@ -11,7 +11,8 @@ namespace ISX
         public const string Back = "Back";
         public const string Forward = "Forward";
         public const string Menu = "Menu";
-        public const string Enter = "Enter";
+        public const string Submit = "Submit";
+        public const string Cancel = "Cancel";
         public const string Previous = "Previous";
         public const string Next = "Next";
         public const string ScrollHorizontal = "ScrollHorizontal";

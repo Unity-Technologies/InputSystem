@@ -118,6 +118,7 @@ namespace ISX
             }
         }
 
+        ////REVIEW: single modifier?
         // Construct a disabled action targeting the given sources.
         public InputAction(string name = null, string sourcePath = null, string modifiers = null)
         {
@@ -214,6 +215,8 @@ namespace ISX
             ////      the path below should be the fallback path when there aren't any modifiers
 
             ////REVIEW: the current state change logic does not take processors into account
+
+            ////REVIEW: how should we handle update types here? always trigger in first that detects change?
 
             var isAtDefault = control.CheckStateIsAllZeroes();
 

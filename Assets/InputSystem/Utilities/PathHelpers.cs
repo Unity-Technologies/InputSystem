@@ -31,7 +31,7 @@ namespace ISX
             MatchControlsRecursive(control, path, indexInPath, matches);
             return matches.Count - countBefore;
         }
-        
+
         ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
         ////TODO: allow stuff like "/gamepad/**/<button>"
 
@@ -53,7 +53,7 @@ namespace ISX
                 // Normal name match.
                 controlIsMatch = MatchPathComponent(control.name, path, ref indexInPath, PathComponentType.Name);
             }
-            
+
             // If we have a match, return it or, if there's children, recurse into them.
             if (controlIsMatch)
             {
@@ -81,7 +81,7 @@ namespace ISX
                             matches.Add(control);
                         return control;
                     }
-                    
+
                     // See if we want to match children by usage or by name.
                     InputControl lastMatch = null;
                     if (path[indexInPath] == '{')
@@ -90,7 +90,7 @@ namespace ISX
                         if (!ReferenceEquals(control.device, control))
                             throw new NotImplementedException(
                                 "Matching usages inside subcontrols instead of at device root");
-                        
+
                         // Usages are kind of like entry points that can route to anywhere else
                         // on a device's control hierarchy and then we keep going from that re-routed
                         // point.
@@ -101,7 +101,7 @@ namespace ISX
                         // Go through children and see what we can match.
                         lastMatch = MatchChildrenRecursive(control, path, indexInPath, matches);
                     }
-                    
+
                     return lastMatch;
                 }
             }
@@ -110,7 +110,7 @@ namespace ISX
         }
 
         private static InputControl MatchByUsageAtDeviceRootRecursive(InputDevice device, string path, int indexInPath,
-                List<InputControl> matches)
+            List<InputControl> matches)
         {
             var usages = device.m_UsagesForEachControl;
             var usageCount = usages.Length;
@@ -124,11 +124,11 @@ namespace ISX
                 throw new Exception($"Invalid path spec '{path}'; trailing '{{'");
 
             InputControl lastMatch = null;
-            
+
             for (var i = 0; i < usageCount; ++i)
             {
                 var usage = usages[i];
-                
+
                 // Match usage agaist path.
                 var usageIsMatch = MatchPathComponent(usage, path, ref indexInPath, PathComponentType.Usage);
 
@@ -138,20 +138,20 @@ namespace ISX
                     indexInPath = startIndex;
                     continue;
                 }
-                
+
                 var controlMatchedByUsage = device.m_UsageToControl[i];
-                
+
                 // If there's more to go in the path, dive into the children of the control.
                 if (indexInPath < pathLength && path[indexInPath] == '/')
                 {
                     lastMatch = MatchChildrenRecursive(controlMatchedByUsage, path, indexInPath + 1,
-                        matches);
+                            matches);
 
                     // We can stop going through usages if we matched something and the
                     // path component covering usage does not contain wildcards.
                     if (lastMatch != null && !pathCanMatchMultiple)
                         break;
-                    
+
                     // We can stop going through usages if we have a match and are only
                     // looking for a single one.
                     if (lastMatch != null && matches == null)
@@ -245,7 +245,7 @@ namespace ISX
                         ++indexInName;
                         indexInPath += 2; // Match '*' and following character.
                     }
-                    else if(indexInName < nameLength)
+                    else if (indexInName < nameLength)
                     {
                         ++indexInName;
                     }
@@ -255,12 +255,12 @@ namespace ISX
                     }
                     continue;
                 }
-                
+
                 // If we've reached the end of the component name, we did so before
                 // we've reached a terminator
                 if (indexInName == nameLength)
                     return false;
-                
+
                 if (char.ToLower(component[indexInName]) == char.ToLower(nextCharInPath))
                 {
                     ++indexInName;

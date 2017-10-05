@@ -1,4 +1,13 @@
 InitTestScene*
 *.preformat.bak*
 /Assets/Editor/Plugins/Editor/JetBrains*
+Library/
+Temp/
+*.sln
+*.sln*user
+*.csproj
+.idea/
+Packages/
+obj/
+
 

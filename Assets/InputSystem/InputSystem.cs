@@ -74,6 +74,16 @@ namespace ISX
             s_Manager.AddDevice(device);
         }
 
+        public static InputDevice TryGetDevice(string nameOrTemplate)
+        {
+            return s_Manager.TryGetDevice(nameOrTemplate);
+        }
+
+        public static InputDevice GetDevice(string nameOrTemplate)
+        {
+            return s_Manager.GetDevice(nameOrTemplate);
+        }
+
         public static InputDevice TryGetDeviceById(int deviceId)
         {
             return s_Manager.TryGetDeviceById(deviceId);

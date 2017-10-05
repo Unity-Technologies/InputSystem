@@ -270,11 +270,11 @@ namespace ISX
             {
                 var usageArray = device.m_UsagesForEachControl;
                 control.m_UsagesReadOnly = new ReadOnlyArray<string>(usageArray, usageArrayIndex, usageCount);
-                
+
                 // Fill in our portion of m_UsageToControl.
                 for (var i = 0; i < usageCount; ++i)
                     device.m_UsageToControl[usageArrayIndex + i] = control;
-                    
+
                 usageArrayIndex += usageCount;
             }
 

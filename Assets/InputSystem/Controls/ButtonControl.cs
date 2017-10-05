@@ -17,7 +17,22 @@ namespace ISX
 
         public bool wasPressedThisFrame
         {
-            get { return value != GetValue(previousValuePtr); }
+            get
+            {
+                var currentValue = GetValue(currentValuePtr);
+                var previousValue = GetValue(previousValuePtr);
+                return (currentValue && currentValue != previousValue);
+            }
+        }
+
+        public bool wasReleasedThisFrame
+        {
+            get
+            {
+                var currentValue = GetValue(currentValuePtr);
+                var previousValue = GetValue(previousValuePtr);
+                return (!currentValue && currentValue != previousValue);
+            }
         }
 
         protected unsafe bool GetValue(IntPtr valuePtr)

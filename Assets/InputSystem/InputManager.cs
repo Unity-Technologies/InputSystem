@@ -171,6 +171,9 @@ namespace ISX
             m_DevicesById[device.id] = device;
 
             ReallocateStateBuffers();
+            
+            // Make it current.
+            device.MakeCurrent();
 
             // Notify listeners.
             if (m_DeviceChangeEvent != null)
@@ -186,6 +189,35 @@ namespace ISX
         {
             //need to make sure that all actions rescan their source paths
             throw new NotImplementedException();
+        }
+
+        public InputDevice TryGetDevice(string nameOrTemplate)
+        {
+            if (string.IsNullOrEmpty(nameOrTemplate))
+                throw new ArgumentException(nameof(nameOrTemplate));
+            
+            if (m_Devices == null)
+                return null;
+
+            var nameOrTemplateLowerCase = nameOrTemplate.ToLower();
+
+            for (var i = 0; i < m_Devices.Length; ++i)
+            {
+                var device = m_Devices[i];
+                if (device.name.ToLower() == nameOrTemplateLowerCase || device.template.ToLower() == nameOrTemplateLowerCase)
+                    return device;
+            }
+
+            return null;
+        }
+        
+        public InputDevice GetDevice(string nameOrTemplate)
+        {
+            var device = TryGetDevice(nameOrTemplate);
+            if (device == null)
+                throw new Exception($"Cannot find device with name or template '{nameOrTemplate}'");
+
+            return device;
         }
 
         public InputDevice TryGetDeviceById(int id)
@@ -275,6 +307,9 @@ namespace ISX
             RegisterProcessor("Normalize", typeof(NormalizeProcessor));
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
+            
+            // Register action modifiers.
+            //RegisterModifier("Hold", typeof(HoldModifier));
 
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
@@ -539,6 +574,8 @@ namespace ISX
         {
             if (m_StateChangeMonitorListeners == null)
                 return;
+           
+            ////REVIEW: multiple state events in the same update pose a problem to this logic
 
             // We resize the monitor arrays only when someone adds to them so they
             // may be out of sync with the size of m_Devices.
