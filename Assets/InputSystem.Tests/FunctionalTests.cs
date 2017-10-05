@@ -534,6 +534,25 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
+    [TestCase("Gamepad")]
+    [TestCase("Keyboard")]
+    [TestCase("Mouse")]
+    [TestCase("HMD")]
+    [TestCase("XRController")]
+    public void Devices_CanCreateDevice(string template)
+    {
+        Setup();
+
+        var device = InputSystem.AddDevice(template);
+        
+        Assert.That(device, Is.InstanceOf<InputDevice>());
+        Assert.That(device.template, Is.EqualTo(template));
+        
+        TearDown();
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
     {

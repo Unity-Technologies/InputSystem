@@ -15,6 +15,7 @@ namespace ISX
         public const string Cancel = "Cancel";
         public const string Previous = "Previous";
         public const string Next = "Next";
+        public const string Modifier = "Modifier"; // Stuff like CTRL
         public const string ScrollHorizontal = "ScrollHorizontal";
         public const string Pressure = "Pressure";
         public const string Position = "Position";

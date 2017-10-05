@@ -143,6 +143,7 @@ namespace ISX
         public AxisControl rightMotor { get; private set; }
 
         ////TODO: we need to split gamepad input and output state such that events can send state without including output
+   
         public static Gamepad current { get; protected set; }
 
         public Gamepad()

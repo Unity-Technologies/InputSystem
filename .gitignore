@@ -1,6 +1,7 @@
 InitTestScene*
 *.preformat.bak*
-/Assets/Plugins/Editor/JetBrains*
+Assets/Plugins/
+Assets/Plugins.meta
 Library/
 Temp/
 *.sln

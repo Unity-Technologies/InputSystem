@@ -367,7 +367,13 @@ namespace ISX
         private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent)
         {
             // Create control.
-            var control = (InputControl)Activator.CreateInstance(template.type);
+            var controlObject = Activator.CreateInstance(template.type);
+            var control = controlObject as InputControl;
+            if (control == null)
+            {
+                throw new Exception($"Type '{template.type.Name}' referenced by template '{template.name}' is not an InputControl");
+            }
+            
             if (name == null)
             {
                 if (control is InputDevice)

@@ -298,6 +298,9 @@ namespace ISX
 
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
             RegisterTemplate("Keyboard", typeof(Keyboard));
+            RegisterTemplate("Mouse", typeof(Pointer));////TODO: give it a class of its own
+            RegisterTemplate("HMD", typeof(HMD));
+            RegisterTemplate("XRController", typeof(XRController));
 
             ////REVIEW: #if templates to the platforms they make sense on?
 
@@ -360,7 +363,7 @@ namespace ISX
         }
 
         // Indices correspond with those in m_Devices.
-        private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorsMemoryRegions;
+        private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
 
         internal void AddStateChangeMonitor(InputControl control, InputAction action)
@@ -375,25 +378,25 @@ namespace ISX
             {
                 var deviceCount = m_Devices.Length;
                 m_StateChangeMonitorListeners = new List<StateChangeMonitorListener>[deviceCount];
-                m_StateChangeMonitorsMemoryRegions = new List<StateChangeMonitorMemoryRegion>[deviceCount];
+                m_StateChangeMonitorMemoryRegions = new List<StateChangeMonitorMemoryRegion>[deviceCount];
             }
             else if (m_StateChangeMonitorListeners.Length <= deviceIndex)
             {
                 var deviceCount = m_Devices.Length;
                 Array.Resize(ref m_StateChangeMonitorListeners, deviceCount);
-                Array.Resize(ref m_StateChangeMonitorsMemoryRegions, deviceCount);
+                Array.Resize(ref m_StateChangeMonitorMemoryRegions, deviceCount);
             }
 
             // Allocate lists, if necessary.
             var listeners = m_StateChangeMonitorListeners[deviceIndex];
-            var memoryRegions = m_StateChangeMonitorsMemoryRegions[deviceIndex];
+            var memoryRegions = m_StateChangeMonitorMemoryRegions[deviceIndex];
             if (listeners == null)
             {
                 listeners = new List<StateChangeMonitorListener>();
                 memoryRegions = new List<StateChangeMonitorMemoryRegion>();
 
                 m_StateChangeMonitorListeners[deviceIndex] = listeners;
-                m_StateChangeMonitorsMemoryRegions[deviceIndex] = memoryRegions;
+                m_StateChangeMonitorMemoryRegions[deviceIndex] = memoryRegions;
             }
 
             // Add monitor.
@@ -582,7 +585,7 @@ namespace ISX
             if (deviceIndex >= m_StateChangeMonitorListeners.Length)
                 return;
 
-            var changeMonitors = m_StateChangeMonitorsMemoryRegions[deviceIndex];
+            var changeMonitors = m_StateChangeMonitorMemoryRegions[deviceIndex];
             if (changeMonitors == null)
                 return; // No action cares about state changes on this device.
 
