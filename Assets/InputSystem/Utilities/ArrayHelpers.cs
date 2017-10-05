@@ -58,5 +58,27 @@ namespace ISX
 
             return array;
         }
+
+        public static TValue[] Merge<TValue>(TValue[] first, TValue[] second, IEqualityComparer<TValue> comparer)
+        {
+            if (first == null)
+                return second;
+            if (second == null)
+                return null;
+            
+            var merged = new List<TValue>();
+            merged.AddRange(first);
+
+            for (var i = 0; i < second.Length; ++i)
+            {
+                var secondValue = second[i];
+                if (!merged.Exists(x => comparer.Equals(secondValue)))
+                {
+                    merged.Add(secondValue);
+                }
+            }
+
+            return merged.ToArray();
+        }
     }
 }

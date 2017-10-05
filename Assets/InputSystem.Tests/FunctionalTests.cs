@@ -114,7 +114,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void Templates_CanSetControlParametersThroughControlAttribute()
+    public void TODO_Templates_CanSetControlParametersThroughControlAttribute()
     {
         Setup();
 
@@ -145,7 +145,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void Templates_CanSetAliasesThroughControlAttribute()
+    public void TODO_Templates_CanSetAliasesThroughControlAttribute()
     {
         Setup();
 
@@ -190,7 +190,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescriptor()
+    public void TODO_Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescriptor()
     {
         Setup();
 
@@ -403,6 +403,56 @@ public class FunctionalTests
         Assert.That(gamepad1.stateBlock.byteOffset, Is.EqualTo(0));
         Assert.That(gamepad2.stateBlock.byteOffset, Is.EqualTo(gamepad1.stateBlock.byteOffset + sizeofGamepadState));
 
+        TearDown();
+    }
+
+    // The state layout for a given device is not fixed. Even though Gamepad, for example, specifies
+    // GamepadState as its state struct, this does not necessarily mean that an actual Gamepad instance
+    // will actually end up with that specific state layout. This is why Gamepad should not assume
+    // that 'currentValuePtr' is a pointer to a GamepadState.
+    //
+    // Templates can be used to re-arrange the state layout of their base template. One case where
+    // this is useful are HIDs. On OSX, for example, gamepad state data does not arrive in its own
+    // distinct format but rather comes in as the same generic state data as any other HID device.
+    // Yet we still want a gamepad to come out as a Gamepad and not as a generic InputDevice. If we
+    // weren't able to customize the state layout of a gamepad, we'd have to have code somewhere
+    // along the way that takes the incoming HID data, interprets it, and re-arranges it into a
+    // GamepadState-compatible format. By having flexibly state layouts we can do this entirely
+    // data-driven using just templates.
+    //
+    // A template that customizes state layout can "park" unused controls outside the block of
+    // data that will actually be sent in via state events. Space for the unused controls will still
+    // be allocated in the state buffers (since InputControls still refer to it) but InputManager
+    // is okay with sending StateEvents that are shorter than the full state block of a device.
+    ////REVIEW: we might want to equip InputControls with the ability to be disabled (in which case the return default values)
+    [Test]
+    [Category("State")]
+    public void State_CanCustomizeStateLayoutOfDevice()
+    {
+        Setup();
+        
+        // Create a custom template that moves the offsets of some controls around.
+        var jsonTemplate = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""stateTypeCode"" : ""CUST"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""buttonSouth"",
+                        ""offset"" : 800
+                    }
+                ]
+            }
+        ";
+        
+        InputSystem.RegisterTemplate(jsonTemplate);
+        
+        var setup = new InputControlSetup("CustomGamepad");
+        var device = setup.Finish();
+
+        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
+        
         TearDown();
     }
 
@@ -720,7 +770,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindControlsByTheirAliases()
+    public void TODO_Controls_CanFindControlsByTheirAliases()
     {
         Setup();
 
@@ -797,10 +847,10 @@ public class FunctionalTests
 
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var action = new InputAction(sourcePath: "/gamepad/leftStick");
+        var action = new InputAction(binding: "/gamepad/leftStick");
 
-        Assert.That(action.sourceControls, Has.Count.EqualTo(1));
-        Assert.That(action.sourceControls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
 
         TearDown();
     }
@@ -813,11 +863,11 @@ public class FunctionalTests
 
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var action = new InputAction(sourcePath: "/gamepad/*stick");
+        var action = new InputAction(binding: "/gamepad/*stick");
 
-        Assert.That(action.sourceControls, Has.Count.EqualTo(2));
-        Assert.That(action.sourceControls, Has.Exactly(1).SameAs(gamepad.leftStick));
-        Assert.That(action.sourceControls, Has.Exactly(1).SameAs(gamepad.rightStick));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
 
         TearDown();
     }
@@ -830,7 +880,7 @@ public class FunctionalTests
 
         InputSystem.AddDevice("Gamepad");
 
-        var action = new InputAction(sourcePath: "/gamepad/leftStick");
+        var action = new InputAction(binding: "/gamepad/leftStick");
         action.Enable();
 
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
@@ -858,7 +908,7 @@ public class FunctionalTests
     {
         Setup();
 
-        var action = new InputAction(sourcePath: "nothing");
+        var action = new InputAction(binding: "nothing");
 
         Assert.DoesNotThrow(() => action.Enable());
 
@@ -890,7 +940,7 @@ public class FunctionalTests
         InputAction receivedAction = null;
         InputControl receivedControl = null;
 
-        var action = new InputAction(sourcePath: "/gamepad/leftStick");
+        var action = new InputAction(binding: "/gamepad/leftStick");
         action.onPerformed +=
             (a, c) =>
             {
@@ -1017,7 +1067,7 @@ public class FunctionalTests
         Assert.That(sets[0], Has.Property("name").EqualTo("default"));
         Assert.That(sets[0].actions, Has.Count.EqualTo(1));
         Assert.That(sets[0].actions, Has.Exactly(1).With.Property("name").EqualTo("jump"));
-        
+
         TearDown();
     }
 

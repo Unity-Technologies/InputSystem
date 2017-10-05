@@ -541,7 +541,7 @@ namespace ISX
                         var stateBlock = device.m_StateBlock;
                         var stateSize = stateEventPtr->stateSizeInBytes;
                         if (stateBlock.typeCode == stateType &&
-                            stateBlock.alignedSizeInBytes == stateSize)
+                            stateBlock.alignedSizeInBytes >= stateSize) // Allow device state to have unused control at end.
                         {
                             UnsafeUtility.MemCpy(stateBlock.currentStatePtr, stateEventPtr->state, stateSize);
                         }
@@ -676,7 +676,7 @@ namespace ISX
 
             i = 0;
             foreach (var entry in m_TemplateStrings)
-                templateTypeArray[i++] = new TemplateState
+                templateStringArray[i++] = new TemplateState
                 {
                     name = entry.Key,
                     typeNameOrJson = entry.Value

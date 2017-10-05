@@ -100,19 +100,6 @@ namespace ISX
     [InputState(typeof(GamepadState))]
     public class Gamepad : InputDevice
     {
-        public GamepadState state
-        {
-            get
-            {
-                unsafe
-                {
-                    return *((GamepadState*)currentValuePtr);
-                }
-            }
-        }
-
-        public override object valueAsObject => state;
-
         // Given that the north/east/south/west directions are awkward to use,
         // we expose the controls using Xbox style naming. However, we still look
         // them up using directions so the underlying controls should be the right
@@ -145,11 +132,6 @@ namespace ISX
         ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
         public static Gamepad current { get; protected set; }
-
-        public Gamepad()
-        {
-            m_StateBlock.typeCode = GamepadState.kStateTypeCode;
-        }
 
         public override void MakeCurrent()
         {

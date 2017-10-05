@@ -46,17 +46,6 @@ namespace ISX
     [InputState(typeof(PointerState))]
     public class Pointer : InputDevice
     {
-        public PointerState state
-        {
-            get
-            {
-                unsafe
-                {
-                    return *((PointerState*)currentValuePtr);
-                }
-            }
-        }
-
         public static Pointer current { get; protected set; }
 
         public override void MakeCurrent()

@@ -39,9 +39,11 @@ namespace ISX
             ////      so that if anyone holds on to them, they still work)
 
             // Create device.
-            m_Device = (InputDevice)Activator.CreateInstance(m_DeviceType);
-            m_Device.m_Template = template;
-            m_Device.m_Name = template;
+            var deviceType = m_DeviceTemplate.type ?? typeof(InputDevice);
+            m_Device = (InputDevice)Activator.CreateInstance(deviceType);
+            m_Device.m_Template = m_DeviceTemplate.name;
+            m_Device.m_Name = m_DeviceTemplate.name;
+            m_Device.m_StateBlock.typeCode = m_DeviceTemplate.m_StateTypeCode;
 
             // Install the control hierarchy.
             SetUpControlHierarchy(m_Device);
@@ -160,7 +162,7 @@ namespace ISX
         }
 
         private bool m_Initialized;
-        private Type m_DeviceType;
+        private InputTemplate m_DeviceTemplate;
         private InputDevice m_Device;
 
         private List<InputControl> m_RootControls;
@@ -180,7 +182,7 @@ namespace ISX
         // Should retain allocations that can be reused.
         private void Reset()
         {
-            m_DeviceType = null;
+            m_DeviceTemplate = null;
             m_Device = null;
             m_ChildRelationsCount = 0;
 
@@ -197,8 +199,6 @@ namespace ISX
         {
             if (m_Initialized)
                 return;
-
-            m_DeviceType = typeof(InputDevice);
 
             if (m_RootControls == null)
                 m_RootControls = new List<InputControl>();
@@ -318,7 +318,7 @@ namespace ISX
                 if (parent != null)
                     throw new Exception($"Cannot instantiate device template '{template}' as child of '{parent.path}'; devices must be added at root");
 
-                m_DeviceType = templateInstance.type;
+                m_DeviceTemplate = templateInstance;
 
                 AddChildControls(templateInstance, null);
 

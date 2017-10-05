@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-//allow multiple action sets in a JSON file
-
 namespace ISX
 {
     // A set of input actions that can be enabled/disabled in bulk.
@@ -80,7 +78,7 @@ namespace ISX
 
                 var actionCount = parsedSet.actions.Length;
                 var actions = new InputAction[actionCount];
-                
+
                 for (var n = 0; n < parsedSet.actions.Length; ++n)
                 {
                     var parsedAction = parsedSet.actions[n];
@@ -118,10 +116,10 @@ namespace ISX
                 var controlsStartIndex = controls.Count;
 
                 // Skip actions that don't have a path set on them.
-                if (string.IsNullOrEmpty(action.sourcePath))
+                if (string.IsNullOrEmpty(action.binding))
                     continue;
 
-                var numMatches = InputSystem.GetControls(action.sourcePath, controls);
+                var numMatches = InputSystem.GetControls(action.binding, controls);
                 if (numMatches > 0)
                 {
                     action.m_Controls = new ReadOnlyArray<InputControl>(null, controlsStartIndex, numMatches);
@@ -172,7 +170,7 @@ namespace ISX
             public string name;
             public ActionJson[] actions;
         }
-        
+
         // JsonUtility can't deal with having an array or dictionary at the top so
         // we have to wrap this in a struct.
         [Serializable]

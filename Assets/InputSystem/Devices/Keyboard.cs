@@ -154,21 +154,7 @@ namespace ISX
     [InputState(typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
-        public KeyboardState state
-        {
-            get
-            {
-                unsafe
-                {
-                    return *((KeyboardState*)currentValuePtr);
-                }
-            }
-        }
-
-        public override object valueAsObject
-        {
-            get { return state; }
-        }
+        ////TODO: add anyKeyPressed which simply does a MemCmp of th state against default(KeyboardState)
 
         public event Action<char> onTextInput
         {

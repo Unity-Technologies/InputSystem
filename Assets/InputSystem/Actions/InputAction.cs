@@ -47,14 +47,13 @@ namespace ISX
             }
         }
 
-        ////REVIEW: rename to binding? expose as InputBinding?
-        public string sourcePath
+        public string binding
         {
-            get { return m_SourcePath; }
+            get { return m_Binding; }
             ////TODO: allow setting
         }
 
-        public ReadOnlyArray<InputControl> sourceControls
+        public ReadOnlyArray<InputControl> controls
         {
             get
             {
@@ -121,10 +120,10 @@ namespace ISX
 
         ////REVIEW: single modifier?
         // Construct a disabled action targeting the given sources.
-        public InputAction(string name = null, string sourcePath = null, string modifiers = null)
+        public InputAction(string name = null, string binding = null, string modifiers = null)
         {
             m_Name = name;
-            m_SourcePath = sourcePath;
+            m_Binding = binding;
             m_CurrentPhase = Phase.Disabled;
         }
 
@@ -133,7 +132,7 @@ namespace ISX
             if (m_Enabled)
                 return;
 
-            var controls = sourceControls;
+            var controls = this.controls;
             var manager = InputSystem.s_Manager;
 
             for (var i = 0; i < controls.Count; ++i)
@@ -152,7 +151,7 @@ namespace ISX
         internal InputActionSet m_ActionSet;
 
         [SerializeField] private string m_Name;
-        [SerializeField] private string m_SourcePath;
+        [SerializeField] private string m_Binding;
 
         // For actions that are kept outside of any action set, we still a set to hold
         // our data. We create a hidden set private to the action. Unlike the case where

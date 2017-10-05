@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Channels;
+using System.Security;
 using UnityEditor;
 using UnityEngine;
 
@@ -113,6 +115,7 @@ namespace ISX
             // If it's a device with an InputStructAttribute, add control templates
             // from its state (if present) instead of from the device.
             var isDeviceWithStateAttribute = false;
+            var stateTypeCode = new FourCC();
             if (typeof(InputDevice).IsAssignableFrom(type))
             {
                 var stateAttribute = type.GetCustomAttribute<InputStateAttribute>();
@@ -120,6 +123,13 @@ namespace ISX
                 {
                     isDeviceWithStateAttribute = true;
                     AddControlTemplates(stateAttribute.type, controlTemplates);
+
+                    // Get state type code from state struct.
+                    if (typeof(IInputStateTypeInfo).IsAssignableFrom(stateAttribute.type))
+                    {
+                        stateTypeCode = ((IInputStateTypeInfo) Activator.CreateInstance(stateAttribute.type))
+                            .GetTypeStatic();
+                    }
                 }
             }
             if (!isDeviceWithStateAttribute)
@@ -134,6 +144,7 @@ namespace ISX
             // Create template object.
             var template = new InputTemplate(name, type);
             template.m_Controls = controlTemplates.ToArray();
+            template.m_StateTypeCode = stateTypeCode;
 
             return template;
         }
@@ -150,6 +161,7 @@ namespace ISX
 
         private string m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
+        internal FourCC m_StateTypeCode;
         private string m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
         internal ControlTemplate[] m_Controls;
@@ -374,9 +386,79 @@ namespace ISX
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
             else
-                throw new NotImplementedException("merge control templates");
+            {
+                var baseControls = other.m_Controls;
+                var baseControlCount = baseControls.Length;
+
+                // Even if the counts match we don't know how many controls are in the
+                // set until we actually gone through both control lists and looked at
+                // the names.
+
+                var controls = new List<ControlTemplate>();
+
+                var baseControlTable = CreateLookupTableForControls(baseControls);
+                var thisControlTable = CreateLookupTableForControls(m_Controls);
+
+                // First go through every control we have in this template.
+                foreach (var pair in thisControlTable)
+                {
+                    ControlTemplate baseControlTemplate;
+                    if (baseControlTable.TryGetValue(pair.Key, out baseControlTemplate))
+                    {
+                        ControlTemplate mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
+                        controls.Add(mergedTemplate);
+                        
+                        // Remove the entry so we don't hit it again in the pass through
+                        // baseControlTable below.
+                        baseControlTable.Remove(pair.Key);
+                    }
+                    else
+                    {
+                        controls.Add(pair.Value);
+                    }
+                }
+                
+                // And then go through all the controls in the base and take the
+                // ones we're missing. We've already removed all the ones that intersect
+                // and had to be merged so the rest we can just slurp into the list as is.
+                controls.AddRange(baseControlTable.Values);
+
+                m_Controls = controls.ToArray();
+            }
         }
 
+        private static Dictionary<string, ControlTemplate> CreateLookupTableForControls(
+            ControlTemplate[] controlTemplates)
+        {
+            var table = new Dictionary<string, ControlTemplate>();
+            for (var i = 0; i < controlTemplates.Length; ++i)
+                table[controlTemplates[i].name.ToLower()] = controlTemplates[i];
+            return table;
+        }
+
+        private static ControlTemplate MergeControlTemplate(ControlTemplate derivedTemplate, ControlTemplate baseTemplate)
+        {
+            var result = new ControlTemplate();
+
+            result.name = derivedTemplate.name;
+            Debug.Assert(derivedTemplate.name != null);
+            
+            result.template = derivedTemplate.template ?? baseTemplate.template;
+            if (derivedTemplate.offset != InputStateBlock.kInvalidOffset)
+                result.offset = derivedTemplate.offset;
+            else
+                result.offset = baseTemplate.offset;
+
+            result.aliases = ArrayHelpers.Merge(derivedTemplate.aliases, baseTemplate.aliases,
+                StringComparer.OrdinalIgnoreCase);
+            result.usages = ArrayHelpers.Merge(derivedTemplate.usages, baseTemplate.usages,
+                StringComparer.OrdinalIgnoreCase);
+            
+            ////TODO: merge rest
+
+            return result;
+        }
+        
         internal static string ParseNameFromJson(string json)
         {
             var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
@@ -397,6 +479,7 @@ namespace ISX
             public string extend;
             public string @override; // Convenience to not have to create array for single override.
             public string[] overrides;
+            public string stateTypeCode;
             public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
 
@@ -414,6 +497,8 @@ namespace ISX
                 var template = new InputTemplate(name, type);
                 template.m_ExtendsTemplate = extend;
                 template.m_DeviceDescriptor = device.ToDescriptor();
+                if (!string.IsNullOrEmpty(stateTypeCode))
+                    template.m_StateTypeCode = new FourCC(stateTypeCode);
 
                 // Add overrides.
                 if (!string.IsNullOrEmpty(@override) || overrides != null)
@@ -431,7 +516,11 @@ namespace ISX
                 {
                     var controlTemplates = new List<ControlTemplate>();
                     foreach (var control in controls)
+                    {
+                        if (string.IsNullOrEmpty(control.name))
+                            throw new Exception($"Control with no name in template '{name}");
                         controlTemplates.Add(control.ToTemplate());
+                    }
                     template.m_Controls = controlTemplates.ToArray();
                 }
 
@@ -439,21 +528,32 @@ namespace ISX
             }
         }
 
+        // This is a class instead of a struct so that we can assign 'offset' a custom
+        // default value. Otherwise we can't tell whether the user has actually set it
+        // or not (0 is a valid offset). Sucks, though, as we now get lots of allocations
+        // from the control array.
         [Serializable]
-        private struct ControlTemplateJson
+        private class ControlTemplateJson
         {
             public string name;
             public string template;
             public string usage; // Convenince to not have to create array for single usage.
+            public uint offset;
             public string[] usages;
             public ParameterValueJson[] parameters;
+
+            public ControlTemplateJson()
+            {
+                offset = InputStateBlock.kInvalidOffset;
+            }
 
             public ControlTemplate ToTemplate()
             {
                 var template = new ControlTemplate
                 {
                     name = name,
-                    template = this.template
+                    template = this.template,
+                    offset = offset
                 };
 
                 if (!string.IsNullOrEmpty(usage) || usages != null)
@@ -565,6 +665,7 @@ namespace ISX
                     // base template into the final template.
                     if (!string.IsNullOrEmpty(template.extendsTemplate))
                     {
+                        ////TODO: catch cycles
                         var superTemplate = FindOrLoadTemplate(template.extendsTemplate);
                         template.MergeTemplate(superTemplate);
                     }

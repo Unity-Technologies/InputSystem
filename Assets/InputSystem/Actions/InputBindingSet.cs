@@ -10,7 +10,7 @@ namespace ISX
         {
             throw new NotImplementedException();
         }
-        
+
         [Serializable]
         private struct BindingJson
         {
