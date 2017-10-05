@@ -31,7 +31,7 @@ namespace ISX
 
             // Populate.
             AddControlInternal(template, null, null);
-            
+
             ////TODO: allow reusing a previously created device; this way an InputControlSetup
             ////      can be used to adjust a device's control setup without also causing it to
             ////      become an entirely new device
@@ -54,7 +54,7 @@ namespace ISX
         public InputDevice Finish()
         {
             var device = m_Device;
-            
+
             // Kill off our state.
             Reset();
 
@@ -66,7 +66,7 @@ namespace ISX
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException(nameof(path));
-            
+
             if (m_Device == null)
                 return null;
 
@@ -162,11 +162,11 @@ namespace ISX
         private bool m_Initialized;
         private Type m_DeviceType;
         private InputDevice m_Device;
-        
+
         private List<InputControl> m_RootControls;
         private List<string> m_Usages;
         private List<string> m_Aliases;
-        
+
         // Child lists.
         private int m_ChildRelationsCount;
         private Dictionary<InputControl, List<InputControl>> m_ControlToChildren;
@@ -183,12 +183,12 @@ namespace ISX
             m_DeviceType = null;
             m_Device = null;
             m_ChildRelationsCount = 0;
-            
+
             m_RootControls?.Clear();
             m_Aliases?.Clear();
             m_Usages?.Clear();
             m_ControlToChildren?.Clear();
-            
+
             m_Initialized = false;
         }
 
@@ -199,7 +199,7 @@ namespace ISX
                 return;
 
             m_DeviceType = typeof(InputDevice);
-            
+
             if (m_RootControls == null)
                 m_RootControls = new List<InputControl>();
             if (m_ControlToChildren == null)
@@ -218,8 +218,9 @@ namespace ISX
         {
             device.m_ChildrenForEachControl = new InputControl[m_ChildRelationsCount];
             device.m_UsagesForEachControl = m_Usages.ToArray();
+            device.m_UsageToControl = new InputControl[device.m_UsagesForEachControl.Length];
             device.m_AliasesForEachControl = m_Aliases.ToArray();
-            
+
             // Running indices.
             var childArrayIndex = 0;
             var usageArrayIndex = 0;
@@ -268,11 +269,15 @@ namespace ISX
             if (usageCount > 0)
             {
                 var usageArray = device.m_UsagesForEachControl;
-                control.m_UsagesReadOnly =
-                    new ReadOnlyArray<string>(usageArray, usageArrayIndex, usageCount);
+                control.m_UsagesReadOnly = new ReadOnlyArray<string>(usageArray, usageArrayIndex, usageCount);
+                
+                // Fill in our portion of m_UsageToControl.
+                for (var i = 0; i < usageCount; ++i)
+                    device.m_UsageToControl[usageArrayIndex + i] = control;
+                    
                 usageArrayIndex += usageCount;
             }
-            
+
             // Set up aliases on control.
             var aliasCount = control.m_AliasesReadOnly.Count;
             if (aliasCount > 0)
@@ -316,7 +321,7 @@ namespace ISX
                 m_DeviceType = templateInstance.type;
 
                 AddChildControls(templateInstance, null);
-                
+
                 return null;
             }
 
@@ -336,7 +341,7 @@ namespace ISX
                 // Pass remaining settings of control template on to newly created control.
                 control.m_StateBlock.byteOffset = controlTemplate.offset;
                 control.m_StateBlock.bitOffset = controlTemplate.bit;
-                
+
                 // Add usages.
                 if (controlTemplate.usages != null)
                 {
@@ -345,7 +350,7 @@ namespace ISX
                     m_Usages.AddRange(controlTemplate.usages);
                     control.m_UsagesReadOnly = new ReadOnlyArray<string>(null, usageIndex, usageCount);
                 }
-                
+
                 // Add aliases.
                 if (controlTemplate.aliases != null)
                 {
@@ -402,7 +407,7 @@ namespace ISX
                 children.Add(control);
             }
             ++m_ChildRelationsCount;
-            
+
             // Create children and configure their settings from our
             // template values.
             try
@@ -413,7 +418,7 @@ namespace ISX
             {
                 ////TODO: remove control from collection and rethrow
                 //throw;
-                
+
                 throw new NotImplementedException();
             }
 

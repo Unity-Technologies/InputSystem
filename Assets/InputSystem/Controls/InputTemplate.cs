@@ -127,7 +127,7 @@ namespace ISX
                 // Add control templates from type contents.
                 AddControlTemplates(type, controlTemplates);
             }
-            
+
             ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json templates as well)
             ////TODO: make sure all paths are unique (only relevant for JSON templates?)
 
@@ -295,12 +295,12 @@ namespace ISX
             var bit = 0u;
             if (attribute != null)
                 bit = (uint)attribute.bit;
-            
+
             // Determine aliases.
             string[] aliases = null;
             if (attribute != null)
                 aliases = ArrayHelpers.Join(attribute.alias, attribute.aliases);
-            
+
             // Determine usages.
             string[] usages = null;
             if (attribute != null)
@@ -541,14 +541,14 @@ namespace ISX
             {
                 Debug.Assert(s_TemplateTypes != null);
                 Debug.Assert(s_TemplateStrings != null);
-                
+
                 var nameLowerCase = name.ToLower();
 
                 // See if we have it cached.
                 InputTemplate template;
                 if (m_CachedTemplates != null && m_CachedTemplates.TryGetValue(nameLowerCase, out template))
                     return template;
-                
+
                 if (m_CachedTemplates == null)
                     m_CachedTemplates = new Dictionary<string, InputTemplate>();
 

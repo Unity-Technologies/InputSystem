@@ -110,7 +110,7 @@ namespace ISX
         [InputControl(name = "UpArrow", template = "Button", bit = (int)Key.UpArrow)]
         [InputControl(name = "DownArrow", template = "Button", bit = (int)Key.DownArrow)]
         [InputControl(name = "LeftArrow", template = "Button", bit = (int)Key.LeftArrow)]
-        [InputControl(name = "RigthArrow", template = "Button", bit = (int)Key.RightArrow)]
+        [InputControl(name = "RightArrow", template = "Button", bit = (int)Key.RightArrow)]
         public fixed byte keys[256 / 8]; // For some reason, the Mono compiler won't accept "(int)Key.Count/8" as a constant expression.
 
         public FourCC GetTypeStatic()
@@ -154,7 +154,7 @@ namespace ISX
                         m_TextInputListeners.Remove(value);
             }
         }
-        
+
         // Some common keys.
         public ButtonControl escape { get; private set; }
         public ButtonControl space { get; private set; }
@@ -185,7 +185,7 @@ namespace ISX
             down = setup.GetControl<ButtonControl>("DownArrow");
             left = setup.GetControl<ButtonControl>("LeftArrow");
             right = setup.GetControl<ButtonControl>("RightArrow");
-            
+
             base.FinishSetup(setup);
         }
 

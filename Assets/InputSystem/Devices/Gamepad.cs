@@ -11,6 +11,7 @@ namespace ISX
     {
         public static FourCC kStateTypeCode => new FourCC('G', 'P', 'A', 'D');
 
+        ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", template = "Dpad")]
         [InputControl(name = "buttonSouth", template = "Button", bit = (int)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
         [InputControl(name = "buttonWest", template = "Button", bit = (int)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]

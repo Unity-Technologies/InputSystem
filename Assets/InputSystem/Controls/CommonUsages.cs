@@ -1,4 +1,4 @@
-﻿namespace ISX
+namespace ISX
 {
     public static class CommonUsages
     {
