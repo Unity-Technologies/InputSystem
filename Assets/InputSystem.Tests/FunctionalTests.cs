@@ -472,9 +472,9 @@ public class FunctionalTests
         Setup();
 
         var gamepad = InputSystem.AddDevice("Gamepad");
-        
+
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
-        
+
         TearDown();
     }
 
@@ -501,7 +501,7 @@ public class FunctionalTests
         var result = InputSystem.GetDevice("Gamepad");
 
         Assert.That(result, Is.SameAs(device));
-        
+
         TearDown();
     }
 
@@ -801,7 +801,7 @@ public class FunctionalTests
 
         TearDown();
     }
-    
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenEnabled_GoesIntoWaitingPhase()
@@ -905,7 +905,7 @@ public class FunctionalTests
     public void Actions_CanPerformHoldAction()
     {
         Setup();
-        
+
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var onPerformedReceivedCalls = 0;
@@ -915,7 +915,7 @@ public class FunctionalTests
         var onStartedReceivedCalls = 0;
         InputAction onStartedAction = null;
         InputControl onStartedControl = null;
-        
+
         var action = new InputAction(sourcePath: "/gamepad/{primaryAction}", modifiers: "hold(0.4)");
         action.onPerformed +=
             (a, c) =>
@@ -944,12 +944,12 @@ public class FunctionalTests
             {
                 buttons = 1 << (int) GamepadState.Button.South
             });
-        
+
         InputSystem.QueueEvent(stateEvent);
 
         stateEvent.baseEvent.time = 0.5; // Second point in time.
         stateEvent.state.buttons = 0;
-        
+
         InputSystem.QueueEvent(stateEvent);
         InputSystem.Update();
 
@@ -962,10 +962,10 @@ public class FunctionalTests
         Assert.That(receivedOnPerformedCalls, Is.EqualTo(1));
         Assert.That(receivedAction, Is.SameAs(action));
         Assert.That(receivedControl, Is.SameAs(gamepad.aButton));
-        
+
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
-        
+
         TearDown();
     }
     */

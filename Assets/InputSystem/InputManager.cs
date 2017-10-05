@@ -171,7 +171,7 @@ namespace ISX
             m_DevicesById[device.id] = device;
 
             ReallocateStateBuffers();
-            
+
             // Make it current.
             device.MakeCurrent();
 
@@ -195,7 +195,7 @@ namespace ISX
         {
             if (string.IsNullOrEmpty(nameOrTemplate))
                 throw new ArgumentException(nameof(nameOrTemplate));
-            
+
             if (m_Devices == null)
                 return null;
 
@@ -210,7 +210,7 @@ namespace ISX
 
             return null;
         }
-        
+
         public InputDevice GetDevice(string nameOrTemplate)
         {
             var device = TryGetDevice(nameOrTemplate);
@@ -307,7 +307,7 @@ namespace ISX
             RegisterProcessor("Normalize", typeof(NormalizeProcessor));
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
-            
+
             // Register action modifiers.
             //RegisterModifier("Hold", typeof(HoldModifier));
 
@@ -574,7 +574,7 @@ namespace ISX
         {
             if (m_StateChangeMonitorListeners == null)
                 return;
-           
+
             ////REVIEW: multiple state events in the same update pose a problem to this logic
 
             // We resize the monitor arrays only when someone adds to them so they

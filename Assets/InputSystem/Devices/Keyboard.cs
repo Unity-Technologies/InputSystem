@@ -104,7 +104,7 @@ namespace ISX
             get { return new FourCC('K', 'E', 'Y', 'S'); }
         }
 
-        [InputControl(name = "Escape", template = "Button", usages = new [] {"Back", "Cancel"}, bit = (int)Key.Enter)]
+        [InputControl(name = "Escape", template = "Button", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Enter)]
         [InputControl(name = "Space", template = "Button", bit = (int)Key.Space)]
         [InputControl(name = "Enter", template = "Button", usage = "Submit", bit = (int)Key.Enter)]
         [InputControl(name = "UpArrow", template = "Button", bit = (int)Key.UpArrow)]
