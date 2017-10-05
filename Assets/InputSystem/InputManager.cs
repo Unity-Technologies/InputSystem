@@ -298,7 +298,8 @@ namespace ISX
 
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
             RegisterTemplate("Keyboard", typeof(Keyboard));
-            RegisterTemplate("Mouse", typeof(Pointer));////TODO: give it a class of its own
+            RegisterTemplate("Mouse", typeof(Pointer));
+            RegisterTemplate("Touchscreen", typeof(Touchscreen));
             RegisterTemplate("HMD", typeof(HMD));
             RegisterTemplate("XRController", typeof(XRController));
 

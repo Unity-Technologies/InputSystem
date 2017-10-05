@@ -49,9 +49,51 @@ namespace ISX
             throw new NotImplementedException();
         }
 
-        public static InputActionSet FromJson(string json)
+        public static InputActionSet[] FromJson(string json)
         {
-            throw new NotImplementedException();
+            ActionSetJson[] parsedSets;
+
+            // Allow JSON with either multiple sets or with just a single set.
+            try
+            {
+                var parsed = JsonUtility.FromJson<ActionFileJson>(json);
+                parsedSets = parsed.sets;
+            }
+            catch (Exception originalException)
+            {
+                try
+                {
+                    var alternate = JsonUtility.FromJson<ActionSetJson>(json);
+                    parsedSets = new[] {alternate};
+                }
+                catch (Exception)
+                {
+                    throw originalException;
+                }
+            }
+
+            var sets = new InputActionSet[parsedSets.Length];
+            for (var i = 0; i < parsedSets.Length; ++i)
+            {
+                var parsedSet = parsedSets[i];
+                var set = new InputActionSet(parsedSet.name);
+
+                var actionCount = parsedSet.actions.Length;
+                var actions = new InputAction[actionCount];
+                
+                for (var n = 0; n < parsedSet.actions.Length; ++n)
+                {
+                    var parsedAction = parsedSet.actions[n];
+                    var action = new InputAction(parsedAction.name, parsedAction.defaultBinding, parsedAction.modifier);
+                    action.m_ActionSet = set;
+                    actions[n] = action;
+                }
+
+                set.m_Actions = actions;
+                sets[i] = set;
+            }
+
+            return sets;
         }
 
         [SerializeField] private string m_Name;
@@ -114,6 +156,29 @@ namespace ISX
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
+        }
+
+        [Serializable]
+        private struct ActionJson
+        {
+            public string name;
+            public string defaultBinding;
+            public string modifier;
+        }
+
+        [Serializable]
+        private struct ActionSetJson
+        {
+            public string name;
+            public ActionJson[] actions;
+        }
+        
+        // JsonUtility can't deal with having an array or dictionary at the top so
+        // we have to wrap this in a struct.
+        [Serializable]
+        private struct ActionFileJson
+        {
+            public ActionSetJson[] sets;
         }
     }
 }

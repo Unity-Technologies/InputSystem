@@ -47,6 +47,7 @@ namespace ISX
             }
         }
 
+        ////REVIEW: rename to binding? expose as InputBinding?
         public string sourcePath
         {
             get { return m_SourcePath; }

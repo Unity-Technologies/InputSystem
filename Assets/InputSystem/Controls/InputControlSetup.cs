@@ -373,7 +373,7 @@ namespace ISX
             {
                 throw new Exception($"Type '{template.type.Name}' referenced by template '{template.name}' is not an InputControl");
             }
-            
+
             if (name == null)
             {
                 if (control is InputDevice)

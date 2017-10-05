@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
@@ -545,10 +546,10 @@ public class FunctionalTests
         Setup();
 
         var device = InputSystem.AddDevice(template);
-        
+
         Assert.That(device, Is.InstanceOf<InputDevice>());
         Assert.That(device.template, Is.EqualTo(template));
-        
+
         TearDown();
     }
 
@@ -989,6 +990,37 @@ public class FunctionalTests
     }
     */
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateActionSetFromJson()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""sets"" : [
+                    {
+                        ""name"" : ""default"",
+                        ""actions"" : [
+                            {
+                                ""name"" : ""jump""
+                            }
+                        ]
+                    }
+                ]
+            }
+        ";
+
+        var sets = InputActionSet.FromJson(json);
+
+        Assert.That(sets, Has.Length.EqualTo(1));
+        Assert.That(sets[0], Has.Property("name").EqualTo("default"));
+        Assert.That(sets[0].actions, Has.Count.EqualTo(1));
+        Assert.That(sets[0].actions, Has.Exactly(1).With.Property("name").EqualTo("jump"));
+        
+        TearDown();
+    }
+
     ////TODO:-----------------------------------------------------------------
     [Test]
     [Category("State")]
@@ -1064,20 +1096,5 @@ public class FunctionalTests
     [Category("Devices")]
     public void TODO_Devices_CanSwitchTemplateOfExistingDevice()
     {
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void TODO_Actions_CanLoadActionSetFromJson()
-    {
-        Setup();
-
-        var json = @"
-            {
-                """"////TODO
-            }
-        ";
-
-        TearDown();
     }
 }
