@@ -30,11 +30,11 @@ namespace ISX
         public bool Matches(InputDeviceDescription other)
         {
             return MatchPair(interfaceName, other.interfaceName)
-                   && MatchPair(deviceClass, other.deviceClass)
-                   && MatchPair(manufacturer, other.manufacturer)
-                   && MatchPair(product, other.product)
-                   // We don't match serials; seems nonsense to do that.
-                   && MatchPair(version, other.version);
+                && MatchPair(deviceClass, other.deviceClass)
+                && MatchPair(manufacturer, other.manufacturer)
+                && MatchPair(product, other.product)
+                // We don't match serials; seems nonsense to do that.
+                && MatchPair(version, other.version);
         }
 
         private static bool MatchPair(string left, string right)

@@ -82,7 +82,7 @@ namespace ISX
             if (string.IsNullOrEmpty(name))
             {
                 name = nameFromJson;
-                
+
                 // Make sure we have a name.
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentException($"Template name has not been given and is not set in JSON template",
@@ -109,7 +109,7 @@ namespace ISX
                 if (m_DeviceDescriptions[i].description.Matches(deviceDescription))
                     return m_DeviceDescriptions[i].template;
             }
-            
+
             // No, so try to match by device class. If we have a "Gamepad" template,
             // for example, a device that classifies itself as a "Gamepad" will match
             // that template.
@@ -220,6 +220,9 @@ namespace ISX
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
             device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+
+            // Mark as connected.
+            device.m_Flags |= InputDevice.Flags.Connected;
 
             // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
@@ -411,7 +414,7 @@ namespace ISX
         private int m_CurrentFixedUpdateCount;
 
         private DeviceChangeEvent m_DeviceChangeEvent;
-        
+
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
         // processing the control repeatedly but we assume this is the exception

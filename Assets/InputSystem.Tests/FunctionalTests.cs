@@ -572,7 +572,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_AddingDeviceMakesItConnected()
+    public void Devices_AddingDeviceMakesItConnected()
     {
         Setup();
 
