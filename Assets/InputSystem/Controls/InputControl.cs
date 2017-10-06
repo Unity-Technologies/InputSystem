@@ -194,6 +194,7 @@ namespace ISX
             get { return value; }
         }
 
+        ////TODO: make AddProcessor and RemoveProcessor internal and allow usage through templates only
         public void AddProcessor(IInputProcessor<TValue> processor)
         {
             m_ProcessorStack.Append(processor);

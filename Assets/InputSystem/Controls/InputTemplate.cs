@@ -551,6 +551,7 @@ namespace ISX
                 // Add controls.
                 if (controls != null)
                 {
+                    ////TODO: make sure that all control names are unique
                     var controlTemplates = new List<ControlTemplate>();
                     foreach (var control in controls)
                     {

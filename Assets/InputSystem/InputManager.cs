@@ -843,7 +843,7 @@ namespace ISX
                 var offset = (int)memoryRegion.offsetRelativeToDevice;
                 var sizeInBytes = memoryRegion.sizeInBytes;
 
-                if ((offset + sizeInBytes) >= stateSize)
+                if ((offset + sizeInBytes) > stateSize)
                     continue;
 
                 if (UnsafeUtility.MemCmp(newState + offset, oldState + offset, (int)sizeInBytes) == 0)

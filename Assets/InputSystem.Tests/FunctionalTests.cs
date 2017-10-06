@@ -299,6 +299,8 @@ public class FunctionalTests
         TearDown();
     }
 
+    ////REVIEW: I think this is actually bad functionality; it means there is configuration on the device that
+    ////        is not present in the template; the device will end up looking different when recreated
     [Test]
     [Category("Controls")]
     public void Controls_CanAddProcessorsToControlsManually()
@@ -1143,6 +1145,35 @@ public class FunctionalTests
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Action")]
+    public void Actions_CanListenForStateChangeOnEntireDevice()
+    {
+        Setup();
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var receivedCalls = 0;
+        var action = new InputAction(binding: "/gamepad");
+        action.onPerformed +=
+            (a, c) =>
+            {
+                ++receivedCalls;
+            };
+        action.Enable();
+
+        var state = new GamepadState
+        {
+            rightTrigger = 0.5f
+        };
+        InputSystem.QueueStateEvent(gamepad, state);
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
 
         TearDown();
     }
