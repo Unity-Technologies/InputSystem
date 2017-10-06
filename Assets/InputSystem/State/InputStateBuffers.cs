@@ -61,8 +61,8 @@ namespace ISX
         // updates is a bad setup -- a game should decide where it wants to process input
         // and then disable the update type that it does not need. This will put the
         // game in a simple double buffering configuration.
-        
-        
+
+
         ////TODO: need to clear the current buffers when switching between edit and play mode
         ////      (i.e. if you click an editor window while in play mode, the play mode
         ////      device states will all go back to default)
@@ -77,7 +77,7 @@ namespace ISX
         [SerializeField]
 #endif
         private IntPtr m_AllBuffers;
-        
+
         // Contains information about a double buffer setup.
         [Serializable]
         internal unsafe struct DoubleBuffers
@@ -97,17 +97,17 @@ namespace ISX
 
             public void SetBackBuffer(int deviceIndex, void* ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2+1] = ptr;
+                deviceToBufferMapping[deviceIndex * 2 + 1] = ptr;
             }
-            
+
             public void* GetFrontBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex*2];
+                return deviceToBufferMapping[deviceIndex * 2];
             }
 
             public void* GetBackBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex*2+1];
+                return deviceToBufferMapping[deviceIndex * 2 + 1];
             }
 
             public void SwapBuffers(int deviceIndex)
@@ -116,10 +116,10 @@ namespace ISX
                 // Means the respective update type is disabled.
                 if (!valid)
                     return;
-                
+
                 var front = GetFrontBuffer(deviceIndex);
                 var back = GetBackBuffer(deviceIndex);
-                
+
                 SetFrontBuffer(deviceIndex, back);
                 SetBackBuffer(deviceIndex, front);
             }
@@ -127,7 +127,7 @@ namespace ISX
 
         internal DoubleBuffers m_DynamicUpdateBuffers;
         internal DoubleBuffers m_FixedUpdateBuffers;
-        
+
 #if UNITY_EDITOR
         internal DoubleBuffers m_EditorUpdateBuffers;
 #endif
@@ -143,7 +143,7 @@ namespace ISX
         {
             return new IntPtr(s_CurrentBuffers.GetBackBuffer(deviceIndex));
         }
-        
+
         // Switch the current set of buffers used by the system.
         public void SwitchTo(InputUpdateType update)
         {
@@ -181,7 +181,7 @@ namespace ISX
 
             var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) == InputUpdateType.Dynamic;
             var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) == InputUpdateType.Fixed;
-            
+
             var deviceCount = devices.Length;
             var mappingTableSizePerBuffer = deviceCount * sizeof(void*) * 2;
 
@@ -201,11 +201,11 @@ namespace ISX
             totalSize += sizePerBuffer * 2;
             totalSize += mappingTableSizePerBuffer;
 #endif
-            
+
             // Allocate.
             m_AllBuffers = UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
             UnsafeUtility.MemClear(m_AllBuffers, totalSize);
-            
+
             // Set up device to buffer mappings.
             var ptr = m_AllBuffers;
             if (isDynamicUpdateEnabled)
@@ -218,12 +218,12 @@ namespace ISX
                 m_FixedUpdateBuffers =
                     SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
             }
-            
+
             if (!isFixedUpdateEnabled)
                 m_FixedUpdateBuffers = m_DynamicUpdateBuffers;
             if (!isDynamicUpdateEnabled)
                 m_DynamicUpdateBuffers = m_FixedUpdateBuffers;
-            
+
 #if UNITY_EDITOR
             m_EditorUpdateBuffers =
                 SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
@@ -236,15 +236,15 @@ namespace ISX
         {
             var front = bufferPtr.ToPointer();
             var back = (bufferPtr + sizePerBuffer).ToPointer();
-            var mappings = (void**) (bufferPtr + sizePerBuffer * 2).ToPointer(); // Put mapping table at end.
+            var mappings = (void**)(bufferPtr + sizePerBuffer * 2).ToPointer();  // Put mapping table at end.
             bufferPtr += sizePerBuffer * 2 + mappingTableSizePerBuffer;
-            
+
             var buffers = new DoubleBuffers {deviceToBufferMapping = mappings};
 
             for (var i = 0; i < devices.Length; ++i)
             {
                 var deviceIndex = devices[i].m_DeviceIndex;
-                
+
                 buffers.SetFrontBuffer(deviceIndex, front);
                 buffers.SetBackBuffer(deviceIndex, back);
             }
@@ -259,7 +259,7 @@ namespace ISX
                 UnsafeUtility.Free(m_AllBuffers, Allocator.Persistent);
                 m_AllBuffers = IntPtr.Zero;
             }
-            
+
             m_DynamicUpdateBuffers = new DoubleBuffers();
             m_FixedUpdateBuffers = new DoubleBuffers();
 
@@ -324,18 +324,18 @@ namespace ISX
 
                 // Skip if this is a device that got added after we allocated the
                 // previous buffers.
-                var oldDeviceIndex = oldDeviceIndices?[i] ?? i;
+                var oldDeviceIndex = oldDeviceIndices ? [i] ?? i;
                 if (oldDeviceIndex == -1)
                     continue;
 
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
-                
+
                 var oldFrontPtr = new IntPtr(oldBuffer.GetFrontBuffer(oldDeviceIndex)) + (int)device.m_StateBlock.byteOffset;
                 var oldBackPtr = new IntPtr(oldBuffer.GetBackBuffer(oldDeviceIndex)) + (int)device.m_StateBlock.byteOffset;
 
-                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(i)) + (int) newStateBlockOffsets[i];
-                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(i)) + (int) newStateBlockOffsets[i];
-                
+                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(i)) + (int)newStateBlockOffsets[i];
+                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(i)) + (int)newStateBlockOffsets[i];
+
                 // Copy state.
                 UnsafeUtility.MemCpy(oldFrontPtr, newFrontPtr, numBytes);
                 UnsafeUtility.MemCpy(oldBackPtr, newBackPtr, numBytes);

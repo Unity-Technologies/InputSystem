@@ -463,9 +463,10 @@ namespace ISX
             return result;
         }
 
-        internal static string ParseNameFromJson(string json)
+        internal static string ParseNameAndDeviceDescriptionFromJson(string json, out InputDeviceDescription deviceDescription)
         {
             var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
+            deviceDescription = templateJson.device.ToDescriptor();
             return templateJson.name;
         }
 
@@ -490,7 +491,7 @@ namespace ISX
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
             #pragma warning disable CS0649
-            
+
             public string name;
             public string extend;
             public string @override; // Convenience to not have to create array for single override.
@@ -501,7 +502,7 @@ namespace ISX
             public ControlTemplateJson[] controls;
 
             #pragma warning restore CS0649
-            
+
             public InputTemplate ToTemplate()
             {
                 // By default, the type of the template is determine from the first template
@@ -529,7 +530,7 @@ namespace ISX
                     else
                         throw new Exception($"Invalid beforeRender setting '{beforeRender}'");
                 }
-                
+
                 // Add overrides.
                 if (!string.IsNullOrEmpty(@override) || overrides != null)
                 {
@@ -568,14 +569,14 @@ namespace ISX
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
             #pragma warning disable CS0649
-            
+
             public string name;
             public string template;
             public string usage; // Convenince to not have to create array for single usage.
             public uint offset;
             public string[] usages;
             public ParameterValueJson[] parameters;
-            
+
             #pragma warning restore CS0649
 
             public ControlTemplateJson()
@@ -620,7 +621,7 @@ namespace ISX
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
             #pragma warning disable CS0649
-            
+
             public string @interface;
             public string[] interfaces;
             public string deviceClass;
@@ -633,7 +634,7 @@ namespace ISX
             public string[] versions;
 
             #pragma warning restore CS0649
-            
+
             public InputDeviceDescription ToDescriptor()
             {
                 return new InputDeviceDescription

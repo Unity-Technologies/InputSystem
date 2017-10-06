@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngineInternal.Input;
@@ -73,14 +74,54 @@ namespace ISX
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException(nameof(json));
 
+            // Parse out name and device description.
+            InputDeviceDescription deviceDescription;
+            var nameFromJson = InputTemplate.ParseNameAndDeviceDescriptionFromJson(json, out deviceDescription);
+
+            // Decide whether to take name from JSON or from code.
             if (string.IsNullOrEmpty(name))
             {
-                name = InputTemplate.ParseNameFromJson(json);
+                name = nameFromJson;
+                
+                // Make sure we have a name.
                 if (string.IsNullOrEmpty(name))
-                    throw new ArgumentException($"Template name has not been given and is not set in JSON template", nameof(name));
+                    throw new ArgumentException($"Template name has not been given and is not set in JSON template",
+                        nameof(name));
             }
 
+            // Add it to our records.
             m_TemplateStrings[name.ToLower()] = json;
+            if (!deviceDescription.empty)
+                m_DeviceDescriptions.Add(new DeviceDescription
+                {
+                    description = deviceDescription,
+                    template = name
+                });
+        }
+
+        public string TryFindTemplate(InputDeviceDescription deviceDescription)
+        {
+            ////TODO: this will want to take overrides into account
+
+            // See if we can match by description.
+            for (var i = 0; i < m_DeviceDescriptions.Count; ++i)
+            {
+                if (m_DeviceDescriptions[i].description.Matches(deviceDescription))
+                    return m_DeviceDescriptions[i].template;
+            }
+            
+            // No, so try to match by device class. If we have a "Gamepad" template,
+            // for example, a device that classifies itself as a "Gamepad" will match
+            // that template.
+            if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
+            {
+                var deviceClassLowerCase = deviceDescription.deviceClass.ToLower();
+                if (m_TemplateStrings.ContainsKey(deviceClassLowerCase) ||
+                    m_TemplateTypes.ContainsKey(deviceClassLowerCase))
+                    return deviceDescription.deviceClass;
+            }
+
+            return null;
         }
 
         public void RegisterProcessor(string name, Type type)
@@ -193,7 +234,11 @@ namespace ISX
 
         public InputDevice AddDevice(InputDeviceDescription description)
         {
-            throw new NotImplementedException();
+            var template = TryFindTemplate(description);
+            if (template == null)
+                throw new ArgumentException("Cannot find template matching device description", nameof(description));
+
+            return AddDevice(template);
         }
 
         public void RemoveDevice(InputDevice device)
@@ -215,7 +260,8 @@ namespace ISX
             for (var i = 0; i < m_Devices.Length; ++i)
             {
                 var device = m_Devices[i];
-                if (device.name.ToLower() == nameOrTemplateLowerCase || device.template.ToLower() == nameOrTemplateLowerCase)
+                if (device.name.ToLower() == nameOrTemplateLowerCase ||
+                    device.template.ToLower() == nameOrTemplateLowerCase)
                     return device;
             }
 
@@ -278,6 +324,7 @@ namespace ISX
         {
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
+            m_DeviceDescriptions = new List<DeviceDescription>();
             m_Processors = new Dictionary<string, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
 
@@ -340,9 +387,18 @@ namespace ISX
             NativeInputSystem.onUpdate -= OnNativeUpdate;
         }
 
+        // Bundles a template name and a device description.
+        [Serializable]
+        private struct DeviceDescription
+        {
+            public InputDeviceDescription description;
+            public string template;
+        }
+
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
         private Dictionary<string, Type> m_Processors;
+        private List<DeviceDescription> m_DeviceDescriptions;
 
         private InputDevice[] m_Devices;
         private Dictionary<int, InputDevice> m_DevicesById;
@@ -355,7 +411,7 @@ namespace ISX
         private int m_CurrentFixedUpdateCount;
 
         private DeviceChangeEvent m_DeviceChangeEvent;
-
+        
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
         // processing the control repeatedly but we assume this is the exception
@@ -524,7 +580,7 @@ namespace ISX
                 ++m_CurrentDynamicUpdateCount;
             else if (updateType == NativeInputUpdateType.Fixed)
                 ++m_CurrentFixedUpdateCount;
-            
+
             // Before render updates work in a special way. For them, we only want specific devices (and
             // sometimes even just specific controls on those devices) to be updated. What native will do is
             // it will *not* clear the event buffer after showing it to us. This means that in the next
@@ -536,7 +592,7 @@ namespace ISX
             // should not get updated in berfore render).
 
             // Handle events.
-            var firstEvent = (InputEvent*) eventData;
+            var firstEvent = (InputEvent*)eventData;
             for (var i = 0; i < eventCount; ++i)
             {
                 // Bump firstEvent up to the next unhandled event.
@@ -576,27 +632,27 @@ namespace ISX
                 switch (currentEventPtr->type)
                 {
                     case StateEvent.Type:
-                        
+
                         // In before render updates, only devices that explicitly enable
                         // before render updates will see their state updated. Events shown
-                        // to use in before render updates will re-surface again on the next
+                        // to us in before render updates will re-surface again on the next
                         // normal update so we can safely skip those events.
                         if (updateType == NativeInputUpdateType.BeforeRender && !device.updateBeforeRender)
                             continue;
-                        
+
                         var stateEventPtr = (StateEvent*)currentEventPtr;
                         var stateType = stateEventPtr->stateType;
                         var stateBlock = device.m_StateBlock;
                         var stateSize = stateEventPtr->stateSizeInBytes;
                         var statePtr = stateEventPtr->state;
-                        
+
                         // Update state on device.
                         if (stateBlock.typeCode == stateType &&
                             stateBlock.alignedSizeInBytes >= stateSize) // Allow device state to have unused control at end.
                         {
                             var deviceIndex = device.m_DeviceIndex;
                             var stateOffset = device.m_StateBlock.byteOffset;
-                            
+
                             // Before we update state, let change monitors compare the old and the new state.
                             // We do this instead of first updating the front buffer and then comparing to the
                             // back buffer as that would require a buffer flip for each state change in order
@@ -606,25 +662,25 @@ namespace ISX
                             var haveSignalledMonitors =
                                 ProcessStateChangeMonitors(device.m_DeviceIndex, currentEventTime, statePtr,
                                     InputStateBuffers.GetFrontBuffer(deviceIndex), stateSize);
-                            
+
                             // Buffer flip.
                             FlipBuffersForDeviceIfNecessary(device, updateType);
-                            
+
                             // Now write the state.
                             switch (updateType)
                             {
 #if UNITY_EDITOR
                                 case NativeInputUpdateType.Editor:
-                                    {
-                                        var buffer =
-                                            new IntPtr(
-                                                m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex));
-                                        Debug.Assert(buffer != IntPtr.Zero);
-                                        UnsafeUtility.MemCpy(buffer + (int) stateOffset, statePtr, stateSize);
-                                    }
-                                    break;
+                                {
+                                    var buffer =
+                                        new IntPtr(
+                                            m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                    Debug.Assert(buffer != IntPtr.Zero);
+                                    UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
+                                }
+                                break;
 #endif
-                                    
+
                                 // For dynamic and fixed updates, we have to write into the front buffer
                                 // of both updates as a state change event comes in only once and we have
                                 // to reflect the most current state in both update types.
@@ -652,7 +708,7 @@ namespace ISX
                                     }
                                     break;
                             }
-                            
+
                             // Now that we've committed the new state to memory, if any of the change
                             // monitors fired, let the associated actions know.
                             if (haveSignalledMonitors)
@@ -664,7 +720,7 @@ namespace ISX
                         /*
                     case ConnectEvent.Type:
                         if (device.connected)
-                        
+
                             device.connected = true;
                             NotifyListenersOfDeviceChange(device, InputDeviceChange.Connected);
                         }
@@ -708,7 +764,7 @@ namespace ISX
 
             var numMonitors = changeMonitors.Count;
             var signalled = false;
-            
+
             for (var i = 0; i < numMonitors; ++i)
             {
                 var memoryRegion = changeMonitors[i];
@@ -729,7 +785,7 @@ namespace ISX
         {
             var signals = m_StateChangeSignalled[deviceIndex];
             var listeners = m_StateChangeMonitorListeners[deviceIndex];
-            
+
             for (var i = 0; i < signals.Count; ++i)
             {
                 if (signals[i])
@@ -748,7 +804,7 @@ namespace ISX
                 // We never flip buffers for before render. Instead, we already write
                 // into the front buffer.
             }
-            
+
 #if UNITY_EDITOR
             else if (updateType == NativeInputUpdateType.Editor)
             {
@@ -758,12 +814,12 @@ namespace ISX
                 m_StateBuffers.m_EditorUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
             }
 #endif
-            
+
             // See if this is the first fixed update this frame. If so, we flip both
             // dynamic and fixed buffers if we haven't already for the device.
             else if (updateType == NativeInputUpdateType.Fixed &&
-                m_CurrentFixedUpdateCount == m_CurrentDynamicUpdateCount - 1 &&
-                device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
+                     m_CurrentFixedUpdateCount == m_CurrentDynamicUpdateCount - 1 &&
+                     device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
@@ -771,16 +827,14 @@ namespace ISX
                 device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
                 device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
             }
-            
             // If it's a dynamic update, flip only if we haven't already in a fixed
             // update. And only if dynamic updates are enabled. Flip only dynamic buffers.
             else if (updateType == NativeInputUpdateType.Dynamic &&
-                device.m_LastDynamicUpdate != m_CurrentDynamicUpdateCount)
+                     device.m_LastDynamicUpdate != m_CurrentDynamicUpdateCount)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
             }
-            
             // Same for fixed updates.
             else if (updateType == NativeInputUpdateType.Fixed &&
                      device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
@@ -788,10 +842,10 @@ namespace ISX
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
             }
-            
+
             // Don't flip.
         }
-        
+
         [Serializable]
         internal class DeviceChangeEvent : UnityEvent<InputDevice, InputDeviceChange>
         {
@@ -800,7 +854,7 @@ namespace ISX
         // Domain reload survival logic.
 #if UNITY_EDITOR
         [Serializable]
-        internal struct DeviceState
+        private struct DeviceState
         {
             // Preserving InputDevices is somewhat tricky business. Serializing
             // them in full would involve pretty nasty work. We have the restriction,
@@ -816,17 +870,18 @@ namespace ISX
         }
 
         [Serializable]
-        internal struct TemplateState
+        private struct TemplateState
         {
             public string name;
             public string typeNameOrJson;
         }
 
         [Serializable]
-        internal struct SerializedState
+        private struct SerializedState
         {
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
+            public DeviceDescription[] deviceDescriptions;
             public DeviceState[] devices;
             public InputStateBuffers buffers;
             public DeviceChangeEvent deviceChangeEvent;
@@ -882,6 +937,7 @@ namespace ISX
             {
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
+                deviceDescriptions = m_DeviceDescriptions.ToArray(),
                 devices = deviceArray,
                 buffers = m_StateBuffers,
                 deviceChangeEvent = m_DeviceChangeEvent
@@ -897,6 +953,7 @@ namespace ISX
         {
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
+            m_DeviceDescriptions = m_SerializedState.deviceDescriptions.ToList();
             m_Processors = new Dictionary<string, Type>();
             m_StateBuffers = m_SerializedState.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;

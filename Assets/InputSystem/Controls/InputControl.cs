@@ -123,9 +123,9 @@ namespace ISX
         protected internal InputStateBlock m_StateBlock;
 
         protected IntPtr currentValuePtr =>
-            InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
+        InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
         protected IntPtr previousValuePtr =>
-            InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
+        InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
 
         // This data is initialized by InputControlSetup.
         internal string m_Name;

@@ -34,7 +34,7 @@ namespace ISX
             m_DeviceId = deviceId;
             m_Time = time;
         }
-        
+
         public FourCC GetTypeStatic()
         {
             return new FourCC(); // No valid type code; InputEvent is considered abstract.

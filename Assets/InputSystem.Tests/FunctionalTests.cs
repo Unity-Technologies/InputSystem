@@ -190,7 +190,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescriptor()
+    public void Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescriptor()
     {
         Setup();
 
@@ -198,12 +198,10 @@ public class FunctionalTests
             {
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""Gamepad"",
-                ""device"" : [
-                    {
-                        ""interface"" : ""AA|BB"",
-                        ""manufacturer"" : ""Shtabble""
-                    }
-                ]
+                ""device"" : {
+                    ""interface"" : ""AA|BB"",
+                    ""manufacturer"" : ""Shtabble""
+                }
             }
         ";
 
@@ -412,7 +410,7 @@ public class FunctionalTests
     {
         Setup();
 
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var oldState = new GamepadState
         {
@@ -422,16 +420,16 @@ public class FunctionalTests
         {
             leftStick = new Vector2(0.75f, 0.75f)
         };
-        
+
         InputSystem.QueueStateEvent(gamepad, oldState);
         InputSystem.Update();
-        
+
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
-        
+
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.75f, 0.75f)));
         Assert.That(gamepad.leftStick.previous, Is.EqualTo(new Vector2(0.25f, 0.25f)));
-        
+
         TearDown();
     }
 
@@ -444,20 +442,20 @@ public class FunctionalTests
     public void State_UpdateWithoutStateEventDoesNotAlterStateOfDevice()
     {
         Setup();
-        
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var state = new GamepadState
         {
             leftStick = new Vector2(0.25f, 0.25f)
         };
-        
+
         InputSystem.QueueStateEvent(gamepad, state);
         InputSystem.Update();
 
         InputSystem.Update();
-        
+
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.25f, 0.25f)));
-        
+
         TearDown();
     }
 
@@ -580,13 +578,13 @@ public class FunctionalTests
 
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
-        
+
         Assert.That(device.connected, Is.False);
 
         InputSystem.AddDevice(device);
-        
+
         Assert.That(device.connected, Is.True);
-        
+
         TearDown();
     }
 
@@ -672,10 +670,10 @@ public class FunctionalTests
     public void TODO_Devices_CanBeReconnected()
     {
         Setup();
-        
+
         ////TODO
         Assert.Fail();
-        
+
         TearDown();
     }
 
@@ -835,10 +833,10 @@ public class FunctionalTests
 
         ////TODO: derive a custom gamepad template, then find a device created from it by "/<gamepad>"
         Assert.Fail();
-        
+
         TearDown();
     }
-    
+
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsFromMultipleDevices()
@@ -951,15 +949,15 @@ public class FunctionalTests
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
         Setup();
-        
+
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update(InputUpdateType.BeforeRender);
-        
+
         Assert.That(gamepad.leftStick.value, Is.EqualTo(default(Vector2)));
-        
+
         TearDown();
     }
 
@@ -968,7 +966,7 @@ public class FunctionalTests
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
         Setup();
-        
+
         // Could use one of the tracking templates but let's do it with a
         // custom template that enables before render updates on a gamepad.
         const string deviceJson = @"
@@ -978,17 +976,17 @@ public class FunctionalTests
                 ""beforeRender"" : ""Update""
             }
         ";
-        
+
         InputSystem.RegisterTemplate(deviceJson);
-        
+
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update(InputUpdateType.BeforeRender);
-        
+
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.123f, 0.456f)));
-        
+
         TearDown();
     }
 
@@ -1243,7 +1241,7 @@ public class FunctionalTests
     public void TODO_State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         Setup();
-        
+
         ////TODO
         Assert.Fail();
 
@@ -1255,7 +1253,7 @@ public class FunctionalTests
     public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()
     {
         Setup();
-        
+
         ////TODO
         Assert.Fail();
 
@@ -1270,7 +1268,7 @@ public class FunctionalTests
 
         ////TODO
         Assert.Fail();
-        
+
         TearDown();
     }
 
