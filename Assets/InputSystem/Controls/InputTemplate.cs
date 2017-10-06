@@ -448,10 +448,16 @@ namespace ISX
             Debug.Assert(derivedTemplate.name != null);
 
             result.template = derivedTemplate.template ?? baseTemplate.template;
+
             if (derivedTemplate.offset != InputStateBlock.kInvalidOffset)
                 result.offset = derivedTemplate.offset;
             else
                 result.offset = baseTemplate.offset;
+
+            if (derivedTemplate.bit != InputStateBlock.kInvalidOffset)
+                result.bit = derivedTemplate.bit;
+            else
+                result.bit = baseTemplate.bit;
 
             result.aliases = ArrayHelpers.Merge(derivedTemplate.aliases, baseTemplate.aliases,
                     StringComparer.OrdinalIgnoreCase);
@@ -574,6 +580,7 @@ namespace ISX
             public string template;
             public string usage; // Convenince to not have to create array for single usage.
             public uint offset;
+            public uint bit;
             public string[] usages;
             public ParameterValueJson[] parameters;
 
@@ -582,6 +589,7 @@ namespace ISX
             public ControlTemplateJson()
             {
                 offset = InputStateBlock.kInvalidOffset;
+                bit = InputStateBlock.kInvalidOffset;
             }
 
             public ControlTemplate ToTemplate()
@@ -590,7 +598,8 @@ namespace ISX
                 {
                     name = name,
                     template = this.template,
-                    offset = offset
+                    offset = offset,
+                    bit = bit
                 };
 
                 if (!string.IsNullOrEmpty(usage) || usages != null)

@@ -4,7 +4,7 @@ namespace ISX
 {
     // A chunk of memory signaling a data transfer in the input system.
     // This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit)]
+    [StructLayout(LayoutKind.Explicit, Size = 20)]
     public struct InputEvent : IInputEventTypeInfo
     {
         [FieldOffset(0)]

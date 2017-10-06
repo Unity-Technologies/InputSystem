@@ -293,10 +293,22 @@ namespace ISX
             // Assign state blocks.
             for (var i = 0; i < devices.Length; ++i)
             {
-                var offset = newStateBlockOffsets[i];
+                var newOffset = newStateBlockOffsets[i];
                 var device = devices[i];
-                device.m_StateBlock.byteOffset = 0;
-                devices[i].BakeOffsetIntoStateBlockRecursive(offset);
+                var oldOffset = device.m_StateBlock.byteOffset;
+
+                if (oldOffset == InputStateBlock.kInvalidOffset)
+                {
+                    device.m_StateBlock.byteOffset = 0;
+                    if (newOffset != 0)
+                        device.BakeOffsetIntoStateBlockRecursive(newOffset);
+                }
+                else
+                {
+                    var delta = newOffset - oldOffset;
+                    if (delta != 0)
+                        device.BakeOffsetIntoStateBlockRecursive(delta);
+                }
             }
         }
 

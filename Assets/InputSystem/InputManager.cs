@@ -317,12 +317,12 @@ namespace ISX
             return null;
         }
 
-        public void QueueEvent<TEvent>(TEvent inputEvent)
+        public void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            NativeInputSystem.SendInput(inputEvent);
+            NativeInputSystem.SendInput(ref inputEvent);
         }
 
         public void Update()
@@ -700,7 +700,8 @@ namespace ISX
                     continue;
 
                 // Process.
-                switch (currentEventPtr->type)
+                var currentEventType = currentEventPtr->type;
+                switch (currentEventType)
                 {
                     case StateEvent.Type:
 
@@ -843,6 +844,9 @@ namespace ISX
                 var sizeInBytes = memoryRegion.sizeInBytes;
 
                 if ((offset + sizeInBytes) >= stateSize)
+                    continue;
+
+                if (UnsafeUtility.MemCmp(newState + offset, oldState + offset, (int)sizeInBytes) == 0)
                     continue;
 
                 signals[i] = true;
@@ -1054,6 +1058,7 @@ namespace ISX
                 var device = setup.Finish();
                 device.m_Name = state.name;
                 device.m_Id = state.deviceId;
+                device.m_DeviceIndex = i;
                 device.BakeOffsetIntoStateBlockRecursive(state.stateOffset);
                 devices[i] = device;
                 m_DevicesById[device.m_Id] = device;

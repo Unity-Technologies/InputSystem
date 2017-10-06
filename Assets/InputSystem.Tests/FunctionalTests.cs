@@ -915,9 +915,8 @@ public class FunctionalTests
 
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
-        var inputEvent = StateEvent.Create(gamepad.id, 0, newState);
 
-        InputSystem.QueueEvent(inputEvent);
+        InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123f));
@@ -934,9 +933,8 @@ public class FunctionalTests
 
         var gamepad = InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState();
-        var inputEvent = StateEvent.Create(gamepad.id, 0, newState);
 
-        InputSystem.QueueEvent(inputEvent);
+        InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));

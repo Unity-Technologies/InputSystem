@@ -101,17 +101,47 @@ namespace ISX
             return s_Manager.GetControls(path, controls);
         }
 
-        public static void QueueEvent<TEvent>(TEvent inputEvent)
+        public static void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
-            s_Manager.QueueEvent(inputEvent);
+            s_Manager.QueueEvent(ref inputEvent);
         }
 
-        public static void QueueStateEvent<TState>(InputDevice device, TState state)
+        ////TODO: find a more elegant solution for this
+        // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
+        // structs. So we can't just stuff a generic TState into a StateEvent<TState> and enforce
+        // proper layout. Thus the jumping through lots of ugly hoops here.
+        private unsafe struct StateEventBuffer
+        {
+            public StateEvent stateEvent;
+            public const int kMaxSize = 512;
+            public fixed byte data[kMaxSize - 1]; // StateEvent already adds one.
+        }
+        public static unsafe void QueueStateEvent<TState>(InputDevice device, TState state, double time = -1)
             where TState : struct, IInputStateTypeInfo
         {
-            var stateEvent = StateEvent.Create(device.id, Time.time, state);
-            s_Manager.QueueEvent(stateEvent);
+            var stateSize = UnsafeUtility.SizeOf<TState>();
+            if (stateSize > StateEventBuffer.kMaxSize)
+                throw new ArgumentException(
+                    $"Size of '{typeof(TState).Name}' exceeds maximum supported state size of {StateEventBuffer.kMaxSize}",
+                    nameof(state));
+            var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
+
+            if (time < 0)
+                time = Time.time;
+
+            StateEventBuffer eventBuffer;
+            eventBuffer.stateEvent = new StateEvent();
+
+            eventBuffer.stateEvent.baseEvent = new InputEvent(StateEvent.Type, eventSize, device.id, time);
+            eventBuffer.stateEvent.stateType = state.GetTypeStatic();
+
+            fixed(byte* ptr = eventBuffer.stateEvent.stateData)
+            {
+                UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref state), stateSize);
+            }
+
+            s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
 
         ////REVIEW: should we actually expose the Update() methods or should these be internal?

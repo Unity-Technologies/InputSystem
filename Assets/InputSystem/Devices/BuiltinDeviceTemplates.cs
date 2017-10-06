@@ -18,6 +18,9 @@ namespace ISX
             //     short rightY;
             // }
             // Report size is 14 bytes with some stuff at the end we can ignore.
+            ////TODO: to be able to talk to the axes and triggers, we need to have AxisControls that are able
+            ////      to read out non-float values
+            ////      (this could be done with state type codes that communicate the format to AxisControl)
             manager.RegisterTemplate(@"
 {
     ""name"" : ""XboxGamepadOSX"",
@@ -26,7 +29,14 @@ namespace ISX
     ""device"" : {
         ""interface"" : ""HID"",
         ""product"" : ""Xbox One Wired Controller""
-    }
+    },
+    ""controls"" : [
+        {
+            ""name"" : ""buttonSouth"",
+            ""offset"" : 0,
+            ""bit"" : 8
+        }
+    ]
 }
             ");
 #endif
