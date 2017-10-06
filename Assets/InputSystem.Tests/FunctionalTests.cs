@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
@@ -308,13 +307,14 @@ public class FunctionalTests
         Setup();
 
         var device = (Gamepad)InputSystem.AddDevice("Gamepad");
-
-        device.leftStick.AddProcessor(new DeadzoneProcessor
+        var processor = new DeadzoneProcessor
         {
-            deadzone = 0.25f,
-        });
+            min = 0.1f,
+            max = 0.9f,
+        };
+        device.leftStick.AddProcessor(processor);
 
-        var firstState = new GamepadState {leftStick = new Vector2(0.1f, 0.1f)};
+        var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
 
         InputSystem.QueueStateEvent(device, firstState);
@@ -325,7 +325,7 @@ public class FunctionalTests
         InputSystem.QueueStateEvent(device, secondState);
         InputSystem.Update();
 
-        Assert.That(device.leftStick.value, Is.EqualTo(new Vector2(0.5f, 0.5f)));
+        Assert.That(device.leftStick.value, Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f))));
 
         TearDown();
     }
@@ -1158,11 +1158,14 @@ public class FunctionalTests
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var receivedCalls = 0;
+        InputControl receivedControl = null;
+
         var action = new InputAction(binding: "/gamepad");
         action.onPerformed +=
             (a, c) =>
             {
                 ++receivedCalls;
+                receivedControl = c;
             };
         action.Enable();
 
@@ -1174,6 +1177,7 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedControl, Is.SameAs(gamepad)); // We do not drill down to find the actual control that changed.
 
         TearDown();
     }
