@@ -300,6 +300,35 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Controls")]
+    public void Controls_CanAddProcessorsToControlsManually()
+    {
+        Setup();
+
+        var device = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        device.leftStick.AddProcessor(new DeadzoneProcessor
+        {
+            deadzone = 0.25f,
+        });
+
+        var firstState = new GamepadState {leftStick = new Vector2(0.1f, 0.1f)};
+        var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
+
+        InputSystem.QueueStateEvent(device, firstState);
+        InputSystem.Update();
+
+        Assert.That(device.leftStick.value, Is.EqualTo(default(Vector2)));
+
+        InputSystem.QueueStateEvent(device, secondState);
+        InputSystem.Update();
+
+        Assert.That(device.leftStick.value, Is.EqualTo(new Vector2(0.5f, 0.5f)));
+
+        TearDown();
+    }
+
+    [Test]
     [Category("Devices")]
     public void Devices_DevicesGetNameFromTemplate()
     {
