@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 
 namespace ISX
@@ -124,27 +122,10 @@ namespace ISX
 
         protected internal InputStateBlock m_StateBlock;
 
-        protected IntPtr currentValuePtr
-        {
-            get
-            {
-                if (!m_StateBlock.isAllocated)
-                    throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
-
-                return m_StateBlock.currentStatePtr;
-            }
-        }
-
-        protected IntPtr previousValuePtr
-        {
-            get
-            {
-                if (!m_StateBlock.isAllocated)
-                    throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
-
-                return m_StateBlock.previousStatePtr;
-            }
-        }
+        protected IntPtr currentValuePtr =>
+            InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
+        protected IntPtr previousValuePtr =>
+            InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
 
         // This data is initialized by InputControlSetup.
         internal string m_Name;
@@ -176,7 +157,6 @@ namespace ISX
         internal void BakeOffsetIntoStateBlockRecursive(uint offset)
         {
             m_StateBlock.byteOffset += offset;
-            m_StateBlock.isAllocated = true;
 
             for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
@@ -193,12 +173,21 @@ namespace ISX
 
             return true;
         }
+
+        internal int ResolveDeviceIndex()
+        {
+            var deviceIndex = m_Device.m_DeviceIndex;
+            if (deviceIndex == InputDevice.kInvalidDeviceIndex)
+                throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
+            return deviceIndex;
+        }
     }
 
     // Helper to more quickly implement new control types.
     public abstract class InputControl<TValue> : InputControl
     {
         public abstract TValue value { get; }
+        public abstract TValue previous { get; }
 
         public override object valueAsObject
         {
@@ -223,10 +212,6 @@ namespace ISX
                 for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
                     value = m_ProcessorStack.additionalValues[i].Process(value);
             return value;
-        }
-
-        protected InputControl()
-        {
         }
 
         private OptimizedArray<IInputProcessor<TValue>> m_ProcessorStack;

@@ -1,6 +1,6 @@
 namespace ISX
 {
-	// Correlates an input action with one or more source controls.
+    // Correlates an input action with one or more source controls.
     public struct InputBinding
     {
         public string action;

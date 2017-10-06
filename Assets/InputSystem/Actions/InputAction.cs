@@ -47,9 +47,16 @@ namespace ISX
             }
         }
 
-        public string binding
+        public InputBinding binding
         {
-            get { return m_Binding; }
+            get
+            {
+                return new InputBinding
+                {
+                    action = name,
+                    sources = m_Binding
+                };
+            }
             ////TODO: allow setting
         }
 
@@ -151,7 +158,7 @@ namespace ISX
         internal InputActionSet m_ActionSet;
 
         [SerializeField] private string m_Name;
-        [SerializeField] private string m_Binding;
+        [SerializeField] internal string m_Binding;
 
         // For actions that are kept outside of any action set, we still a set to hold
         // our data. We create a hidden set private to the action. Unlike the case where

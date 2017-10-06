@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     public class DiscreteControl : InputControl<int>
@@ -7,16 +9,13 @@ namespace ISX
             m_StateBlock.sizeInBits = sizeof(int) * 8;
         }
 
-        public override int value
+        private unsafe int GetValue(IntPtr valuePtr)
         {
-            get
-            {
-                unsafe
-                {
-                    var value = *(int*)currentValuePtr;
-                    return Process(value);
-                }
-            }
+            var value = *(int*)currentValuePtr;
+            return Process(value);
         }
+
+        public override int value => GetValue(currentValuePtr);
+        public override int previous => GetValue(previousValuePtr);
     }
 }

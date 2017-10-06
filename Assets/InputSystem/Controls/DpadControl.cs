@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ISX
@@ -34,15 +35,25 @@ namespace ISX
         {
             get
             {
-                unsafe
-                {
-                    var upValue = up.value ? 1.0f : 0.0f;
-                    var downValue = down.value ? -1.0f : 0.0f;
-                    var leftValue = left.value ? -1.0f : 0.0f;
-                    var rightValue = right.value ? 1.0f : 0.0f;
+                var upValue = up.value ? 1.0f : 0.0f;
+                var downValue = down.value ? -1.0f : 0.0f;
+                var leftValue = left.value ? -1.0f : 0.0f;
+                var rightValue = right.value ? 1.0f : 0.0f;
 
-                    return Process(new Vector2(leftValue + rightValue, upValue + downValue));
-                }
+                return Process(new Vector2(leftValue + rightValue, upValue + downValue));
+            }
+        }
+
+        public override Vector2 previous
+        {
+            get
+            {
+                var upValue = up.previous ? 1.0f : 0.0f;
+                var downValue = down.previous ? -1.0f : 0.0f;
+                var leftValue = left.previous ? -1.0f : 0.0f;
+                var rightValue = right.previous ? 1.0f : 0.0f;
+
+                return Process(new Vector2(leftValue + rightValue, upValue + downValue));
             }
         }
 

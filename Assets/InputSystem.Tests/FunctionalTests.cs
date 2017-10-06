@@ -145,7 +145,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanSetAliasesThroughControlAttribute()
+    public void Templates_CanSetAliasesThroughControlAttribute()
     {
         Setup();
 
@@ -209,7 +209,7 @@ public class FunctionalTests
 
         InputSystem.RegisterTemplate(deviceJson);
 
-        var descriptor = new InputDeviceDescriptor
+        var descriptor = new InputDeviceDescription
         {
             interfaceName = "BB",
             manufacturer = "Shtabble"
@@ -406,6 +406,61 @@ public class FunctionalTests
         TearDown();
     }
 
+    [Test]
+    [Category("State")]
+    public void State_RunningUpdateSwapsCurrentAndPrevious()
+    {
+        Setup();
+
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var oldState = new GamepadState
+        {
+            leftStick = new Vector2(0.25f, 0.25f)
+        };
+        var newState = new GamepadState
+        {
+            leftStick = new Vector2(0.75f, 0.75f)
+        };
+        
+        InputSystem.QueueStateEvent(gamepad, oldState);
+        InputSystem.Update();
+        
+        InputSystem.QueueStateEvent(gamepad, newState);
+        InputSystem.Update();
+        
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.75f, 0.75f)));
+        Assert.That(gamepad.leftStick.previous, Is.EqualTo(new Vector2(0.25f, 0.25f)));
+        
+        TearDown();
+    }
+
+    // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
+    // this only works if either the entire state is refreshed each step -- which for us is not guaranteed
+    // as we don't know if a state event for a device will happen on a frame -- or if state is copied forward
+    // between the buffers.
+    [Test]
+    [Category("State")]
+    public void State_UpdateWithoutStateEventDoesNotAlterStateOfDevice()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var state = new GamepadState
+        {
+            leftStick = new Vector2(0.25f, 0.25f)
+        };
+        
+        InputSystem.QueueStateEvent(gamepad, state);
+        InputSystem.Update();
+
+        InputSystem.Update();
+        
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.25f, 0.25f)));
+        
+        TearDown();
+    }
+
     // The state layout for a given device is not fixed. Even though Gamepad, for example, specifies
     // GamepadState as its state struct, this does not necessarily mean that an actual Gamepad instance
     // will actually end up with that specific state layout. This is why Gamepad should not assume
@@ -416,11 +471,12 @@ public class FunctionalTests
     // distinct format but rather comes in as the same generic state data as any other HID device.
     // Yet we still want a gamepad to come out as a Gamepad and not as a generic InputDevice. If we
     // weren't able to customize the state layout of a gamepad, we'd have to have code somewhere
-    // along the way that takes the incoming HID data, interprets it, and re-arranges it into a
-    // GamepadState-compatible format. By having flexibly state layouts we can do this entirely
-    // data-driven using just templates.
+    // along the way that takes the incoming HID data, interprets it to determine that it is in
+    // fact coming from a gamepad HID, and re-arranges it into a GamepadState-compatible format
+    // (which requires knowledge of the specific layout used by the HID). By having flexibly state
+    // layouts we can do this entirely through data using just templates.
     //
-    // A template that customizes state layout can "park" unused controls outside the block of
+    // A template that customizes state layout can also "park" unused controls outside the block of
     // data that will actually be sent in via state events. Space for the unused controls will still
     // be allocated in the state buffers (since InputControls still refer to it) but InputManager
     // is okay with sending StateEvents that are shorter than the full state block of a device.
@@ -430,7 +486,7 @@ public class FunctionalTests
     public void State_CanCustomizeStateLayoutOfDevice()
     {
         Setup();
-        
+
         // Create a custom template that moves the offsets of some controls around.
         var jsonTemplate = @"
             {
@@ -445,14 +501,14 @@ public class FunctionalTests
                 ]
             }
         ";
-        
+
         InputSystem.RegisterTemplate(jsonTemplate);
-        
+
         var setup = new InputControlSetup("CustomGamepad");
         var device = setup.Finish();
 
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
-        
+
         TearDown();
     }
 
@@ -513,6 +569,24 @@ public class FunctionalTests
         Assert.That(receivedDevice, Is.SameAs(gamepad));
         Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_AddingDeviceMakesItConnected()
+    {
+        Setup();
+
+        var setup = new InputControlSetup("Gamepad");
+        var device = setup.Finish();
+        
+        Assert.That(device.connected, Is.False);
+
+        InputSystem.AddDevice(device);
+        
+        Assert.That(device.connected, Is.True);
+        
         TearDown();
     }
 
@@ -581,6 +655,27 @@ public class FunctionalTests
 
         Assert.That(gamepad1.id, Is.Not.EqualTo(gamepad2.id));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanBeDisconnected()
+    {
+        //make sure we get a notification
+        ////TODO
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanBeReconnected()
+    {
+        Setup();
+        
+        ////TODO
+        Assert.Fail();
+        
         TearDown();
     }
 
@@ -734,6 +829,18 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
+    public void TODO_Controls_CanFindControlsByBaseTemplate()
+    {
+        Setup();
+
+        ////TODO: derive a custom gamepad template, then find a device created from it by "/<gamepad>"
+        Assert.Fail();
+        
+        TearDown();
+    }
+    
+    [Test]
+    [Category("Controls")]
     public void Controls_CanFindControlsFromMultipleDevices()
     {
         Setup();
@@ -836,6 +943,52 @@ public class FunctionalTests
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
 
+        TearDown();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
+    {
+        Setup();
+        
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
+
+        InputSystem.QueueStateEvent(gamepad, newState);
+        InputSystem.Update(InputUpdateType.BeforeRender);
+        
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(default(Vector2)));
+        
+        TearDown();
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
+    {
+        Setup();
+        
+        // Could use one of the tracking templates but let's do it with a
+        // custom template that enables before render updates on a gamepad.
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+        
+        InputSystem.RegisterTemplate(deviceJson);
+        
+        var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
+        var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
+
+        InputSystem.QueueStateEvent(gamepad, newState);
+        InputSystem.Update(InputUpdateType.BeforeRender);
+        
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.123f, 0.456f)));
+        
         TearDown();
     }
 
@@ -1079,6 +1232,8 @@ public class FunctionalTests
         Setup();
 
         //examine control setup on dpad
+        ////TODO
+        Assert.Fail();
 
         TearDown();
     }
@@ -1088,6 +1243,9 @@ public class FunctionalTests
     public void TODO_State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         Setup();
+        
+        ////TODO
+        Assert.Fail();
 
         TearDown();
     }
@@ -1097,6 +1255,9 @@ public class FunctionalTests
     public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()
     {
         Setup();
+        
+        ////TODO
+        Assert.Fail();
 
         TearDown();
     }
@@ -1107,6 +1268,9 @@ public class FunctionalTests
     {
         Setup();
 
+        ////TODO
+        Assert.Fail();
+        
         TearDown();
     }
 
@@ -1114,6 +1278,8 @@ public class FunctionalTests
     [Category("Devices")]
     public void TODO_Devices_AddingANewDeviceDoesNotCauseExistingDevicesToForgetTheirState()
     {
+        ////TODO
+        Assert.Fail();
     }
 
     [Test]
@@ -1121,6 +1287,8 @@ public class FunctionalTests
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption
+        ////TODO
+        Assert.Fail();
     }
 
     [Test]
@@ -1128,23 +1296,39 @@ public class FunctionalTests
     public void TODO_State_CanDisableFixedUpdates()
     {
         //make sure it reduces memory usage
+        ////TODO
+        Assert.Fail();
     }
 
     [Test]
     [Category("Templates")]
     public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
     {
+        ////TODO
+        Assert.Fail();
     }
 
     [Test]
     [Category("Templates")]
     public void TODO_Templates_CanFindTemplateFromDeviceDescriptor()
     {
+        ////TODO
+        Assert.Fail();
     }
 
     [Test]
     [Category("Devices")]
     public void TODO_Devices_CanSwitchTemplateOfExistingDevice()
     {
+        ////TODO
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanBeRemoved()
+    {
+        ////TODO
+        Assert.Fail();
     }
 }

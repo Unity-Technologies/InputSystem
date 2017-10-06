@@ -64,9 +64,9 @@ namespace ISX
             return s_Manager.AddDevice(template);
         }
 
-        public static InputDevice AddDevice(InputDeviceDescriptor descriptor)
+        public static InputDevice AddDevice(InputDeviceDescription description)
         {
-            return s_Manager.AddDevice(descriptor);
+            return s_Manager.AddDevice(description);
         }
 
         public static void AddDevice(InputDevice device)

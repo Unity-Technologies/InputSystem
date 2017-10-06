@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngineInternal.Input;
@@ -20,9 +19,17 @@ namespace ISX
         : ISerializationCallbackReceiver
 #endif
     {
-        public ReadOnlyArray<InputDevice> devices
+        public ReadOnlyArray<InputDevice> devices => new ReadOnlyArray<InputDevice>(m_Devices);
+
+        public InputUpdateType updateMask
         {
-            get { return new ReadOnlyArray<InputDevice>(m_Devices); }
+            get { return m_UpdateMask; }
+            set
+            {
+                ////TODO: also actually turn off unnecessary updates on the native side (e.g. if fixed
+                ////      updates are disabled, don't even have native fire onUpdate for fixed updates)
+                throw new NotImplementedException();
+            }
         }
 
         public event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
@@ -170,9 +177,13 @@ namespace ISX
             ////        point based on the ID we have instead of searching from [0] always).
             m_DevicesById[device.id] = device;
 
+            // Let InputStateBuffers know this device doesn't have any associated state yet.
+            device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+
+            // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
 
-            // Make it current.
+            // Make the device current.
             device.MakeCurrent();
 
             // Notify listeners.
@@ -180,7 +191,7 @@ namespace ISX
                 m_DeviceChangeEvent.Invoke(device, InputDeviceChange.Added);
         }
 
-        public InputDevice AddDevice(InputDeviceDescriptor descriptor)
+        public InputDevice AddDevice(InputDeviceDescription description)
         {
             throw new NotImplementedException();
         }
@@ -340,6 +351,9 @@ namespace ISX
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         private InputStateBuffers m_StateBuffers;
 
+        private int m_CurrentDynamicUpdateCount;
+        private int m_CurrentFixedUpdateCount;
+
         private DeviceChangeEvent m_DeviceChangeEvent;
 
         // Maps a single control to an action interested in the control. If
@@ -352,7 +366,7 @@ namespace ISX
         // actual value change out of the data we need for doing the scanning.
         private struct StateChangeMonitorMemoryRegion
         {
-            public uint offset;
+            public uint offsetRelativeToDevice;
             public uint sizeInBytes; // Size of memory region to compare. We don't care about bitfields and
                                      // may trigger false positives for them. Actions have to sort that out
                                      // on their own.
@@ -366,6 +380,7 @@ namespace ISX
         // Indices correspond with those in m_Devices.
         private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
+        private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
 
         internal void AddStateChangeMonitor(InputControl control, InputAction action)
         {
@@ -380,33 +395,39 @@ namespace ISX
                 var deviceCount = m_Devices.Length;
                 m_StateChangeMonitorListeners = new List<StateChangeMonitorListener>[deviceCount];
                 m_StateChangeMonitorMemoryRegions = new List<StateChangeMonitorMemoryRegion>[deviceCount];
+                m_StateChangeSignalled = new List<bool>[deviceCount];
             }
             else if (m_StateChangeMonitorListeners.Length <= deviceIndex)
             {
                 var deviceCount = m_Devices.Length;
                 Array.Resize(ref m_StateChangeMonitorListeners, deviceCount);
                 Array.Resize(ref m_StateChangeMonitorMemoryRegions, deviceCount);
+                Array.Resize(ref m_StateChangeSignalled, deviceCount);
             }
 
             // Allocate lists, if necessary.
             var listeners = m_StateChangeMonitorListeners[deviceIndex];
             var memoryRegions = m_StateChangeMonitorMemoryRegions[deviceIndex];
+            var signals = m_StateChangeSignalled[deviceIndex];
             if (listeners == null)
             {
                 listeners = new List<StateChangeMonitorListener>();
                 memoryRegions = new List<StateChangeMonitorMemoryRegion>();
+                signals = new List<bool>();
 
                 m_StateChangeMonitorListeners[deviceIndex] = listeners;
                 m_StateChangeMonitorMemoryRegions[deviceIndex] = memoryRegions;
+                m_StateChangeSignalled[deviceIndex] = signals;
             }
 
             // Add monitor.
             listeners.Add(new StateChangeMonitorListener {action = action, control = control});
             memoryRegions.Add(new StateChangeMonitorMemoryRegion
             {
-                offset = control.stateBlock.byteOffset,
+                offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
                 sizeInBytes = (uint)control.stateBlock.alignedSizeInBytes
             });
+            signals.Add(false);
         }
 
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
@@ -472,8 +493,9 @@ namespace ISX
             var newBuffers = new InputStateBuffers();
             var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, devices);
 
+            ////TODO: this code will have to be extended when we allow device removals
             // Migrate state.
-            newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers);
+            newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers, null);
 
             // Install the new buffers.
             oldBuffers.FreeAll();
@@ -492,24 +514,49 @@ namespace ISX
         {
             // We *always* have to process events into the current state even if the given update isn't enabled.
             // This is because the current state is for all updates and reflects the most up-to-date device states.
-            // Where enabled-or-not comes is in terms of previous state allocation and processing.
 
-            m_StateBuffers.SwapAndSwitchTo((InputUpdateType)updateType);
+            m_StateBuffers.SwitchTo((InputUpdateType)updateType);
 
             if (eventCount <= 0)
                 return;
 
+            if (updateType == NativeInputUpdateType.Dynamic)
+                ++m_CurrentDynamicUpdateCount;
+            else if (updateType == NativeInputUpdateType.Fixed)
+                ++m_CurrentFixedUpdateCount;
+            
+            // Before render updates work in a special way. For them, we only want specific devices (and
+            // sometimes even just specific controls on those devices) to be updated. What native will do is
+            // it will *not* clear the event buffer after showing it to us. This means that in the next
+            // normal update, we will see the same events again. This gives us a chance to only fish out
+            // what we want.
+            //
+            // In before render updates, we will only access StateEvents and DeltaEvents (the latter should
+            // be used to, for example, *only* update tracking on a device that also contains buttons -- which
+            // should not get updated in berfore render).
+
+            // Handle events.
+            var firstEvent = (InputEvent*) eventData;
             for (var i = 0; i < eventCount; ++i)
             {
-                // Find next oldest event.
-                var currentEventPtr = (InputEvent*)eventData;
+                // Bump firstEvent up to the next unhandled event.
+                while (eventCount > 0 && firstEvent->handled)
+                {
+                    firstEvent = (InputEvent*)((byte*)firstEvent + firstEvent->sizeInBytes);
+                    --eventCount;
+                }
+                if (eventCount == 0)
+                    break;
+
+                // Find next oldest unhandled event.
+                var currentEventPtr = firstEvent;
                 var oldestEventPtr = currentEventPtr;
                 var oldestEventTime = oldestEventPtr->time;
                 for (var n = 1; n < eventCount; ++n)
                 {
                     var nextEventPtr = (InputEvent*)((byte*)currentEventPtr + currentEventPtr->sizeInBytes);
 
-                    if (oldestEventTime < 0 || nextEventPtr->time < oldestEventTime)
+                    if (!nextEventPtr->handled && nextEventPtr->time < oldestEventTime)
                     {
                         oldestEventPtr = nextEventPtr;
                         oldestEventTime = oldestEventPtr->time;
@@ -517,45 +564,107 @@ namespace ISX
 
                     currentEventPtr = nextEventPtr;
                 }
-
-                // Notify listeners.
-                //for (var n = 0; n < m_EventListeners.Count; ++n)
-                //m_EventListeners[n](new InputEventPtr(oldestEventPtr));
-
-                if (oldestEventPtr->type == new FourCC())
-                    continue;
+                currentEventPtr = oldestEventPtr;
+                var currentEventTime = oldestEventTime;
 
                 // Grab device for event.
-                var device = TryGetDeviceById(oldestEventPtr->deviceId);
+                var device = TryGetDeviceById(currentEventPtr->deviceId);
                 if (device == null)
                     continue;
 
                 // Process.
-                switch (oldestEventPtr->type)
+                switch (currentEventPtr->type)
                 {
                     case StateEvent.Type:
-
-                        // Update state on device.
-                        var stateEventPtr = (StateEvent*)oldestEventPtr;
+                        
+                        // In before render updates, only devices that explicitly enable
+                        // before render updates will see their state updated. Events shown
+                        // to use in before render updates will re-surface again on the next
+                        // normal update so we can safely skip those events.
+                        if (updateType == NativeInputUpdateType.BeforeRender && !device.updateBeforeRender)
+                            continue;
+                        
+                        var stateEventPtr = (StateEvent*)currentEventPtr;
                         var stateType = stateEventPtr->stateType;
                         var stateBlock = device.m_StateBlock;
                         var stateSize = stateEventPtr->stateSizeInBytes;
+                        var statePtr = stateEventPtr->state;
+                        
+                        // Update state on device.
                         if (stateBlock.typeCode == stateType &&
                             stateBlock.alignedSizeInBytes >= stateSize) // Allow device state to have unused control at end.
                         {
-                            UnsafeUtility.MemCpy(stateBlock.currentStatePtr, stateEventPtr->state, stateSize);
+                            var deviceIndex = device.m_DeviceIndex;
+                            var stateOffset = device.m_StateBlock.byteOffset;
+                            
+                            // Before we update state, let change monitors compare the old and the new state.
+                            // We do this instead of first updating the front buffer and then comparing to the
+                            // back buffer as that would require a buffer flip for each state change in order
+                            // for the monitors to work reliably. By comparing the *event* data to the current
+                            // state, we can have multiple state events in the same frame yet still get reliable
+                            // change notifications.
+                            var haveSignalledMonitors =
+                                ProcessStateChangeMonitors(device.m_DeviceIndex, currentEventTime, statePtr,
+                                    InputStateBuffers.GetFrontBuffer(deviceIndex), stateSize);
+                            
+                            // Buffer flip.
+                            FlipBuffersForDeviceIfNecessary(device, updateType);
+                            
+                            // Now write the state.
+                            switch (updateType)
+                            {
+#if UNITY_EDITOR
+                                case NativeInputUpdateType.Editor:
+                                    {
+                                        var buffer =
+                                            new IntPtr(
+                                                m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                        Debug.Assert(buffer != IntPtr.Zero);
+                                        UnsafeUtility.MemCpy(buffer + (int) stateOffset, statePtr, stateSize);
+                                    }
+                                    break;
+#endif
+                                    
+                                // For dynamic and fixed updates, we have to write into the front buffer
+                                // of both updates as a state change event comes in only once and we have
+                                // to reflect the most current state in both update types.
+                                //
+                                // If one or the other update is disabled, however, we will perform a single
+                                // memcpy here.
+                                case NativeInputUpdateType.BeforeRender:
+                                case NativeInputUpdateType.Dynamic:
+                                case NativeInputUpdateType.Fixed:
+                                    if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+                                    {
+                                        var buffer =
+                                            new IntPtr(
+                                                m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                        Debug.Assert(buffer != IntPtr.Zero);
+                                        UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
+                                    }
+                                    if (m_StateBuffers.m_FixedUpdateBuffers.valid)
+                                    {
+                                        var buffer =
+                                            new IntPtr(
+                                                m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                        Debug.Assert(buffer != IntPtr.Zero);
+                                        UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
+                                    }
+                                    break;
+                            }
+                            
+                            // Now that we've committed the new state to memory, if any of the change
+                            // monitors fired, let the associated actions know.
+                            if (haveSignalledMonitors)
+                                FireActionStateChangeNotifications(deviceIndex, currentEventTime);
                         }
-
-                        // See if any actions are listening.
-                        // This could be spun off into a job.
-                        ProcessStateChangeMonitors(device.m_DeviceIndex, oldestEventTime);
 
                         break;
 
                         /*
                     case ConnectEvent.Type:
                         if (device.connected)
-                        {
+                        
                             device.connected = true;
                             NotifyListenersOfDeviceChange(device, InputDeviceChange.Connected);
                         }
@@ -564,7 +673,7 @@ namespace ISX
                 }
 
                 // Mark as processed by setting time to negative.
-                oldestEventPtr->time = -1;
+                oldestEventPtr->handled = true;
 
                 // Device received event so make it current.
                 device.MakeCurrent();
@@ -573,45 +682,116 @@ namespace ISX
             ////TODO: fire event that allows code to update state *from* state we just updated
         }
 
+        // If anyone is listening for state changes on the given device, run state change detections
+        // for the two given state blocks of the device. If a value that is covered by a monitor
+        // has changed in 'newState' compared to 'oldState', set m_StateChangeSignalled for the
+        // monitor to true.
+        //
+        // Returns true if any monitors got signalled, false otherwise.
+        //
         // This could easily be spun off into jobs.
-        private void ProcessStateChangeMonitors(int deviceIndex, double time)
+        private bool ProcessStateChangeMonitors(int deviceIndex, double time, IntPtr newState, IntPtr oldState, int stateSize)
         {
             if (m_StateChangeMonitorListeners == null)
-                return;
-
-            ////REVIEW: multiple state events in the same update pose a problem to this logic
+                return false;
 
             // We resize the monitor arrays only when someone adds to them so they
             // may be out of sync with the size of m_Devices.
             if (deviceIndex >= m_StateChangeMonitorListeners.Length)
-                return;
+                return false;
 
             var changeMonitors = m_StateChangeMonitorMemoryRegions[deviceIndex];
             if (changeMonitors == null)
-                return; // No action cares about state changes on this device.
+                return false; // No action cares about state changes on this device.
 
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
-
-            var current = InputStateBlock.s_CurrentStatePtr;
-            var previous = InputStateBlock.s_PreviousStatePtr;
+            var signals = m_StateChangeSignalled[deviceIndex];
 
             var numMonitors = changeMonitors.Count;
+            var signalled = false;
+            
             for (var i = 0; i < numMonitors; ++i)
             {
                 var memoryRegion = changeMonitors[i];
-                var offset = (int)memoryRegion.offset;
+                var offset = (int)memoryRegion.offsetRelativeToDevice;
                 var sizeInBytes = memoryRegion.sizeInBytes;
 
-                if (UnsafeUtility.MemCmp(current + offset, previous + offset, (int)sizeInBytes) != 0)
+                if ((offset + sizeInBytes) >= stateSize)
+                    continue;
+
+                signals[i] = true;
+                signalled = true;
+            }
+
+            return signalled;
+        }
+
+        private void FireActionStateChangeNotifications(int deviceIndex, double time)
+        {
+            var signals = m_StateChangeSignalled[deviceIndex];
+            var listeners = m_StateChangeMonitorListeners[deviceIndex];
+            
+            for (var i = 0; i < signals.Count; ++i)
+            {
+                if (signals[i])
                 {
-                    // If this method ends up in a job, you do NOT want to call this right
-                    // here in the job. Should be queued up and called later.
                     var listener = listeners[i];
                     listener.action.NotifyControlValueChanged(listener.control, time);
+                    signals[i] = false;
                 }
             }
         }
 
+        private void FlipBuffersForDeviceIfNecessary(InputDevice device, NativeInputUpdateType updateType)
+        {
+            if (updateType == NativeInputUpdateType.BeforeRender)
+            {
+                // We never flip buffers for before render. Instead, we already write
+                // into the front buffer.
+            }
+            
+#if UNITY_EDITOR
+            else if (updateType == NativeInputUpdateType.Editor)
+            {
+                // The editor doesn't really have a concept of frame-to-frame operation the
+                // same way the player does. So we simply flip buffers on a device whenever
+                // a new state event for it comes in.
+                m_StateBuffers.m_EditorUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+            }
+#endif
+            
+            // See if this is the first fixed update this frame. If so, we flip both
+            // dynamic and fixed buffers if we haven't already for the device.
+            else if (updateType == NativeInputUpdateType.Fixed &&
+                m_CurrentFixedUpdateCount == m_CurrentDynamicUpdateCount - 1 &&
+                device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
+            {
+                m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+                m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+
+                device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
+                device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
+            }
+            
+            // If it's a dynamic update, flip only if we haven't already in a fixed
+            // update. And only if dynamic updates are enabled. Flip only dynamic buffers.
+            else if (updateType == NativeInputUpdateType.Dynamic &&
+                device.m_LastDynamicUpdate != m_CurrentDynamicUpdateCount)
+            {
+                m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+                device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
+            }
+            
+            // Same for fixed updates.
+            else if (updateType == NativeInputUpdateType.Fixed &&
+                     device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
+            {
+                m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+                device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
+            }
+            
+            // Don't flip.
+        }
+        
         [Serializable]
         internal class DeviceChangeEvent : UnityEvent<InputDevice, InputDeviceChange>
         {
@@ -693,7 +873,7 @@ namespace ISX
                     name = device.name,
                     template = device.template,
                     deviceId = device.id,
-                    stateOffset = device.m_StateBufferOffset
+                    stateOffset = device.m_StateBlock.byteOffset
                 };
                 deviceArray[i] = deviceState;
             }
@@ -742,8 +922,7 @@ namespace ISX
                 var device = setup.Finish();
                 device.m_Name = state.name;
                 device.m_Id = state.deviceId;
-                device.m_StateBufferOffset = state.stateOffset;
-                device.BakeOffsetIntoStateBlockRecursive(device.m_StateBufferOffset);
+                device.BakeOffsetIntoStateBlockRecursive(state.stateOffset);
                 devices[i] = device;
             }
             m_Devices = devices;

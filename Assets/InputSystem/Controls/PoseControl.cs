@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     public class PoseControl : InputControl<Pose>
@@ -12,10 +14,8 @@ namespace ISX
             m_StateBlock.sizeInBits = sizeof(float) * (3 + 4) * 8;
         }
 
-        public override Pose value
-        {
-            get { return Process(new Pose(translation.value, rotation.value)); }
-        }
+        public override Pose value => Process(new Pose(translation.value, rotation.value));
+        public override Pose previous => Process(new Pose(translation.previous, rotation.previous));
 
         protected override void FinishSetup(InputControlSetup setup)
         {

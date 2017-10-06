@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ISX
@@ -27,16 +28,13 @@ namespace ISX
             m_StateBlock.sizeInBits = sizeof(float) * 8;
         }
 
-        public override float value
+        private unsafe float GetValue(IntPtr valuePtr)
         {
-            get
-            {
-                unsafe
-                {
-                    var value = *(float*)currentValuePtr;
-                    return Process(Preprocess(value));
-                }
-            }
+            var value = *(float*)valuePtr;
+            return Process(Preprocess(value));
         }
+
+        public override float value => GetValue(currentValuePtr);
+        public override float previous => GetValue(previousValuePtr);
     }
 }

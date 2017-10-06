@@ -65,7 +65,7 @@ namespace ISX
                 return second;
             if (second == null)
                 return null;
-            
+
             var merged = new List<TValue>();
             merged.AddRange(first);
 

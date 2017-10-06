@@ -44,6 +44,10 @@ namespace ISX
             m_Device.m_Template = m_DeviceTemplate.name;
             m_Device.m_Name = m_DeviceTemplate.name;
             m_Device.m_StateBlock.typeCode = m_DeviceTemplate.m_StateTypeCode;
+            m_Device.m_StateBlock.byteOffset = 0;
+
+            if (m_DeviceTemplate.m_UpdateBeforeRender == true)
+                m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
 
             // Install the control hierarchy.
             SetUpControlHierarchy(m_Device);

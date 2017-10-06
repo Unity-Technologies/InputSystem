@@ -9,13 +9,8 @@ namespace ISX
         [InputControl(offset = 4)]
         public AxisControl y { get; private set; }
 
-        public override Vector2 value
-        {
-            get
-            {
-                return Process(new Vector2(x.value, y.value));
-            }
-        }
+        public override Vector2 value => Process(new Vector2(x.value, y.value));
+        public override Vector2 previous => Process(new Vector2(x.previous, y.previous));
 
         protected override void FinishSetup(InputControlSetup setup)
         {

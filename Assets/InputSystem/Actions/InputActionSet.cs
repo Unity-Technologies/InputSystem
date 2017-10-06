@@ -116,10 +116,10 @@ namespace ISX
                 var controlsStartIndex = controls.Count;
 
                 // Skip actions that don't have a path set on them.
-                if (string.IsNullOrEmpty(action.binding))
+                if (string.IsNullOrEmpty(action.m_Binding))
                     continue;
 
-                var numMatches = InputSystem.GetControls(action.binding, controls);
+                var numMatches = InputSystem.GetControls(action.m_Binding, controls);
                 if (numMatches > 0)
                 {
                     action.m_Controls = new ReadOnlyArray<InputControl>(null, controlsStartIndex, numMatches);

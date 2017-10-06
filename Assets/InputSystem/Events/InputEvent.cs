@@ -27,6 +27,14 @@ namespace ISX
             set { m_Time = value; }
         }
 
+        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time)
+        {
+            m_Type = type;
+            m_SizeInBytes = sizeInBytes;
+            m_DeviceId = deviceId;
+            m_Time = time;
+        }
+        
         public FourCC GetTypeStatic()
         {
             return new FourCC(); // No valid type code; InputEvent is considered abstract.
@@ -37,12 +45,13 @@ namespace ISX
             return 0;
         }
 
-        public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time)
+        // We internally use bits inside m_DeviceId as flags. Device IDs are
+        // linearly counted up by the native input system starting at 1 so we
+        // have plenty room in m_DeviceId.
+        internal bool handled
         {
-            m_Type = type;
-            m_SizeInBytes = sizeInBytes;
-            m_DeviceId = deviceId;
-            m_Time = time;
+            get { return (m_DeviceId & 0x8000000) != 0; }
+            set { m_DeviceId |= 0x8000000; }
         }
     }
 }

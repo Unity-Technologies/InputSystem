@@ -5,7 +5,7 @@ namespace ISX
     // Metadata for a device. Primarily used to find a matching template
     // which we can then use to create a control setup for the device.
     [Serializable]
-    public struct InputDeviceDescriptor
+    public struct InputDeviceDescription
     {
         // How we talk to the device; usually name of the underlying backend that feeds
         // state for the device.

@@ -10,10 +10,8 @@ namespace ISX
             m_StateBlock.sizeInBits = 1;
         }
 
-        public override bool value
-        {
-            get { return GetValue(currentValuePtr); }
-        }
+        public override bool value => GetValue(currentValuePtr);
+        public override bool previous => GetValue(previousValuePtr);
 
         public bool wasPressedThisFrame
         {

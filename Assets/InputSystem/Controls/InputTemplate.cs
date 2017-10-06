@@ -81,9 +81,9 @@ namespace ISX
         // Unlike in a normal device descriptor, the strings in this descriptor are
         // regular expressions which can be used to match against the strings of an
         // actual device descriptor.
-        public InputDeviceDescriptor deviceDescriptor
+        public InputDeviceDescription deviceDescription
         {
-            get { return m_DeviceDescriptor; }
+            get { return m_DeviceDescription; }
         }
 
         public ReadOnlyCollection<ControlTemplate> controls
@@ -127,7 +127,7 @@ namespace ISX
                     // Get state type code from state struct.
                     if (typeof(IInputStateTypeInfo).IsAssignableFrom(stateAttribute.type))
                     {
-                        stateTypeCode = ((IInputStateTypeInfo) Activator.CreateInstance(stateAttribute.type))
+                        stateTypeCode = ((IInputStateTypeInfo)Activator.CreateInstance(stateAttribute.type))
                             .GetTypeStatic();
                     }
                 }
@@ -162,11 +162,12 @@ namespace ISX
         private string m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
         internal FourCC m_StateTypeCode;
+        internal bool? m_UpdateBeforeRender;
         private string m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
         internal ControlTemplate[] m_Controls;
         private ReadOnlyCollection<ControlTemplate> m_ControlsReadOnly;
-        private InputDeviceDescriptor m_DeviceDescriptor;
+        private InputDeviceDescription m_DeviceDescription;
 
         private InputTemplate(string name, Type type)
         {
@@ -380,8 +381,11 @@ namespace ISX
 
         internal void MergeTemplate(InputTemplate other)
         {
-            if (m_Type == null)
-                m_Type = other.m_Type;
+            m_Type = m_Type ?? other.m_Type;
+            m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
+
+            if (m_StateTypeCode == new FourCC())
+                m_StateTypeCode = other.m_StateTypeCode;
 
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
@@ -407,7 +411,7 @@ namespace ISX
                     {
                         ControlTemplate mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
                         controls.Add(mergedTemplate);
-                        
+
                         // Remove the entry so we don't hit it again in the pass through
                         // baseControlTable below.
                         baseControlTable.Remove(pair.Key);
@@ -417,7 +421,7 @@ namespace ISX
                         controls.Add(pair.Value);
                     }
                 }
-                
+
                 // And then go through all the controls in the base and take the
                 // ones we're missing. We've already removed all the ones that intersect
                 // and had to be merged so the rest we can just slurp into the list as is.
@@ -442,7 +446,7 @@ namespace ISX
 
             result.name = derivedTemplate.name;
             Debug.Assert(derivedTemplate.name != null);
-            
+
             result.template = derivedTemplate.template ?? baseTemplate.template;
             if (derivedTemplate.offset != InputStateBlock.kInvalidOffset)
                 result.offset = derivedTemplate.offset;
@@ -450,15 +454,15 @@ namespace ISX
                 result.offset = baseTemplate.offset;
 
             result.aliases = ArrayHelpers.Merge(derivedTemplate.aliases, baseTemplate.aliases,
-                StringComparer.OrdinalIgnoreCase);
+                    StringComparer.OrdinalIgnoreCase);
             result.usages = ArrayHelpers.Merge(derivedTemplate.usages, baseTemplate.usages,
-                StringComparer.OrdinalIgnoreCase);
-            
+                    StringComparer.OrdinalIgnoreCase);
+
             ////TODO: merge rest
 
             return result;
         }
-        
+
         internal static string ParseNameFromJson(string json)
         {
             var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
@@ -473,16 +477,31 @@ namespace ISX
         }
 
         [Serializable]
+        private enum BeforeRender
+        {
+            Unknown,
+            Ignore,
+            Update,
+        }
+
+        [Serializable]
         private struct TemplateJson
         {
+            // Disable warnings that these fields are never assigned to. They are set
+            // by JsonUtility.
+            #pragma warning disable CS0649
+            
             public string name;
             public string extend;
             public string @override; // Convenience to not have to create array for single override.
             public string[] overrides;
             public string stateTypeCode;
+            public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
 
+            #pragma warning restore CS0649
+            
             public InputTemplate ToTemplate()
             {
                 // By default, the type of the template is determine from the first template
@@ -496,10 +515,21 @@ namespace ISX
                 // Create template.
                 var template = new InputTemplate(name, type);
                 template.m_ExtendsTemplate = extend;
-                template.m_DeviceDescriptor = device.ToDescriptor();
+                template.m_DeviceDescription = device.ToDescriptor();
                 if (!string.IsNullOrEmpty(stateTypeCode))
                     template.m_StateTypeCode = new FourCC(stateTypeCode);
 
+                if (!string.IsNullOrEmpty(beforeRender))
+                {
+                    var beforeRenderLowerCase = beforeRender.ToLower();
+                    if (beforeRenderLowerCase == "ignore")
+                        template.m_UpdateBeforeRender = false;
+                    else if (beforeRenderLowerCase == "update")
+                        template.m_UpdateBeforeRender = true;
+                    else
+                        throw new Exception($"Invalid beforeRender setting '{beforeRender}'");
+                }
+                
                 // Add overrides.
                 if (!string.IsNullOrEmpty(@override) || overrides != null)
                 {
@@ -535,12 +565,18 @@ namespace ISX
         [Serializable]
         private class ControlTemplateJson
         {
+            // Disable warnings that these fields are never assigned to. They are set
+            // by JsonUtility.
+            #pragma warning disable CS0649
+            
             public string name;
             public string template;
             public string usage; // Convenince to not have to create array for single usage.
             public uint offset;
             public string[] usages;
             public ParameterValueJson[] parameters;
+            
+            #pragma warning restore CS0649
 
             public ControlTemplateJson()
             {
@@ -581,6 +617,10 @@ namespace ISX
         [Serializable]
         private struct DeviceDescriptorJson
         {
+            // Disable warnings that these fields are never assigned to. They are set
+            // by JsonUtility.
+            #pragma warning disable CS0649
+            
             public string @interface;
             public string[] interfaces;
             public string deviceClass;
@@ -592,9 +632,11 @@ namespace ISX
             public string version;
             public string[] versions;
 
-            public InputDeviceDescriptor ToDescriptor()
+            #pragma warning restore CS0649
+            
+            public InputDeviceDescription ToDescriptor()
             {
-                return new InputDeviceDescriptor
+                return new InputDeviceDescription
                 {
                     interfaceName = JoinRegexStrings(@interface, interfaces),
                     deviceClass = JoinRegexStrings(deviceClass, deviceClasses),

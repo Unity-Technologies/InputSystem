@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     // Input devices bundle complex state and usually correlate to ...
@@ -5,41 +7,27 @@ namespace ISX
     {
         public const int kInvalidDeviceId = 0;
         public const int kMaxDeviceId = 256;
+        internal const int kInvalidDeviceIndex = -1;
 
-        public InputDeviceDescriptor descriptor
-        {
-            get { return m_Descriptor; }
-        }
+        public InputDeviceDescription description => m_Description;
 
         ////REVIEW: move to descriptor?
         // Systems that support multiple concurrent player inputs on the same system, the available
         // player inputs are usually numbered. For example, on a console the gamepads slots on the system
         // will be numbered and associated with gamepads. This number corresponds to the system assigned
         // player index for the device.
-        public int playerIndex
-        {
-            get { return m_PlayerIndex; }
-        }
+        public int playerIndex => m_PlayerIndex;
 
         // Whether the device is currently connected.
         // If you want to listen for state changes, hook into InputManager.onDeviceChange.
-        public bool connected
-        {
-            get { return m_Connected; }
-        }
+        public bool connected => (m_Flags & Flags.Connected) == Flags.Connected;
+
+        public bool updateBeforeRender => (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender;
 
         ////REVIEW: this sort of becomes the index of the root node
         // Every registered device in the system gets a unique numeric ID.
         // For native devices, this is assigned by the underlying runtime.
-        public int id
-        {
-            get { return m_Id; }
-        }
-
-        public InputDevice()
-        {
-            m_StateBlock.byteOffset = 0;
-        }
+        public int id => m_Id;
 
         // Make this the current device of its type.
         // Use this to set static properties that give fast access to the latest device used of a given
@@ -50,16 +38,29 @@ namespace ISX
         {
         }
 
-        internal bool m_Connected;
+        // This has to be public for Activator.CreateInstance() to be happy.
+        public InputDevice()
+        {
+            m_DeviceIndex = kInvalidDeviceIndex;
+            m_LastDynamicUpdate = -1;
+            m_LastFixedUpdate = -1;
+        }
+
+        [Flags]
+        internal enum Flags
+        {
+            Connected = 1 << 0,
+            UpdateBeforeRender = 1 << 1,
+        }
+
+        internal Flags m_Flags;
         internal int m_Id;
         internal int m_PlayerIndex;
-        internal int m_DeviceIndex;
-        internal InputDeviceDescriptor m_Descriptor;
+        internal int m_DeviceIndex; // Index in InputManager.m_Devices.
+        internal InputDeviceDescription m_Description;
 
-        // Where our state data starts in the global state buffers.
-        // NOTE: This is baked into the InputStateBlock of each control of the device. We remember
-        //       it here for when we need to re-allocate state buffers.
-        internal uint m_StateBufferOffset;
+        internal int m_LastDynamicUpdate;
+        internal int m_LastFixedUpdate;
 
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.

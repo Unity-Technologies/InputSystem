@@ -48,7 +48,6 @@ namespace ISX
         [Flags]
         private enum Flags
         {
-            Allocated = 1 << 0, // Whether we have allocated space for this block.
             SemanticsOutput = 1 << 1,
         }
 
@@ -58,31 +57,6 @@ namespace ISX
         internal static IntPtr s_CurrentStatePtr;
         internal static IntPtr s_PreviousStatePtr;
 
-        internal IntPtr currentStatePtr
-        {
-            get { return s_CurrentStatePtr + (int)byteOffset; }
-        }
-
-        internal IntPtr previousStatePtr
-        {
-            get { return s_PreviousStatePtr + (int)byteOffset; }
-        }
-
-        internal bool isAllocated
-        {
-            get { return (m_Flags & Flags.Allocated) == Flags.Allocated; }
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.Allocated;
-                else
-                    m_Flags &= ~Flags.Allocated;
-            }
-        }
-
-        internal int alignedSizeInBytes
-        {
-            get { return (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0); }
-        }
+        internal int alignedSizeInBytes => (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0);
     }
 }

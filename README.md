@@ -4,5 +4,7 @@ A new new input system.
 
 Requires [input/new/isx branch](https://ono.unity3d.com/unity/unity/changelog?branch=input%2Fnew%2Fisx) in unity/unity.
 
+More info in the [wiki](https://github.com/Unity-Technologies/InputSystemX/wiki).
+
 Disclaimer: This is *_a_* new new input system. Whether it turns into *_the_* new new input system remains to be seen.
 

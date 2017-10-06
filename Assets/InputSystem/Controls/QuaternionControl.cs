@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ISX
@@ -12,20 +13,17 @@ namespace ISX
             m_StateBlock.sizeInBits = sizeof(float) * 4 * 8;
         }
 
-        public override Quaternion value
+        private unsafe Quaternion GetValue(IntPtr valuePtr)
         {
-            get
-            {
-                unsafe
-                {
-                    var values = (float*)currentValuePtr;
-                    var x = values[0];
-                    var y = values[1];
-                    var z = values[2];
-                    var w = values[3];
-                    return Process(new Quaternion(x, y, z, w));
-                }
-            }
+            var values = (float*)currentValuePtr;
+            var x = values[0];
+            var y = values[1];
+            var z = values[2];
+            var w = values[3];
+            return Process(new Quaternion(x, y, z, w));
         }
+
+        public override Quaternion value => GetValue(currentValuePtr);
+        public override Quaternion previous => GetValue(previousValuePtr);
     }
 }
