@@ -5,13 +5,16 @@ using UnityEngine;
 namespace ISX
 {
     // Full state update for an input device.
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
-        public const int Type = 0x42554C4B;
+        public const int Type = 0x53544154;
 
+        [FieldOffset(0)]
         public InputEvent baseEvent;
+        [FieldOffset(20)]
         public FourCC stateType;
+        [FieldOffset(24)]
         public fixed byte stateData[1]; // Variable-sized.
 
         public int stateSizeInBytes

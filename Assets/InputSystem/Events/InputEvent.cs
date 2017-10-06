@@ -4,12 +4,16 @@ namespace ISX
 {
     // A chunk of memory signaling a data transfer in the input system.
     // This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public struct InputEvent : IInputEventTypeInfo
     {
+        [FieldOffset(0)]
         private FourCC m_Type;
+        [FieldOffset(4)]
         private int m_SizeInBytes;
+        [FieldOffset(8)]
         private int m_DeviceId;
+        [FieldOffset(12)]
         private double m_Time;
 
         public FourCC type { get { return m_Type; } }

@@ -91,12 +91,30 @@ namespace ISX
 
             // Add it to our records.
             m_TemplateStrings[name.ToLower()] = json;
+
             if (!deviceDescription.empty)
+            {
                 m_DeviceDescriptions.Add(new DeviceDescription
                 {
                     description = deviceDescription,
                     template = name
                 });
+
+                // The template has a device description, so if there's any native
+                // devices we couldn't make sense of, see if the template helps
+                // with that.
+                for (var i = 0; i < m_NativeDevices.Count; ++i)
+                {
+                    var deviceId = m_NativeDevices[i].deviceId;
+                    if (TryGetDeviceById(deviceId) != null)
+                        continue;
+
+                    if (deviceDescription.Matches(m_NativeDevices[i].description))
+                    {
+                        AddNativeDevice(deviceId, name);
+                    }
+                }
+            }
         }
 
         public string TryFindTemplate(InputDeviceDescription deviceDescription)
@@ -244,6 +262,17 @@ namespace ISX
             return AddDevice(template);
         }
 
+        internal InputDevice AddNativeDevice(int deviceId, string template)
+        {
+            var setup = new InputControlSetup(template);
+            var device = setup.Finish();
+            device.m_Id = deviceId;
+
+            AddDevice(device);
+
+            return device;
+        }
+
         public void RemoveDevice(InputDevice device)
         {
             //need to make sure that all actions rescan their source paths
@@ -330,6 +359,7 @@ namespace ISX
             m_DeviceDescriptions = new List<DeviceDescription>();
             m_Processors = new Dictionary<string, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
+            m_NativeDevices = new List<NativeDevice>();
 
             // Determine our default set of enabled update types. By
             // default we enable both fixed and dynamic update because
@@ -376,10 +406,9 @@ namespace ISX
             // Register action modifiers.
             //RegisterModifier("Hold", typeof(HoldModifier));
 
-            InputTemplate.s_TemplateTypes = m_TemplateTypes;
-            InputTemplate.s_TemplateStrings = m_TemplateStrings;
+            BuiltinDeviceTemplates.RegisterTemplates(this);
 
-            NativeInputSystem.onUpdate += OnNativeUpdate;
+            InstallGlobals();
         }
 
         internal void Destroy()
@@ -388,6 +417,16 @@ namespace ISX
             InputTemplate.s_TemplateStrings = null;
 
             NativeInputSystem.onUpdate -= OnNativeUpdate;
+            NativeInputSystem.onDeviceDiscovered -= OnNativeDeviceDiscovered;
+        }
+
+        // Revive after domain reload.
+        internal void InstallGlobals()
+        {
+            InputTemplate.s_TemplateTypes = m_TemplateTypes;
+            InputTemplate.s_TemplateStrings = m_TemplateStrings;
+            NativeInputSystem.onUpdate += OnNativeUpdate;
+            NativeInputSystem.onDeviceDiscovered += OnNativeDeviceDiscovered;
         }
 
         // Bundles a template name and a device description.
@@ -398,10 +437,19 @@ namespace ISX
             public string template;
         }
 
+        [Serializable]
+        private struct NativeDevice
+        {
+            public InputDeviceDescription description;
+            public int deviceId;
+        }
+
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
         private Dictionary<string, Type> m_Processors;
+
         private List<DeviceDescription> m_DeviceDescriptions;
+        private List<NativeDevice> m_NativeDevices;
 
         private InputDevice[] m_Devices;
         private Dictionary<int, InputDevice> m_DevicesById;
@@ -562,6 +610,26 @@ namespace ISX
             m_StateBuffers.SwitchTo(m_CurrentUpdate);
 
             ////TODO: need to update state change monitors
+        }
+
+        private void OnNativeDeviceDiscovered(NativeInputDeviceInfo deviceInfo)
+        {
+            // Parse description.
+            var description = InputDeviceDescription.FromJson(deviceInfo.deviceDescriptor);
+
+            // Remember device.
+            m_NativeDevices.Add(new NativeDevice
+            {
+                description = description,
+                deviceId = deviceInfo.deviceId
+            });
+
+            // Try to turn it into a device instance.
+            var template = TryFindTemplate(description);
+            if (template != null)
+            {
+                AddNativeDevice(deviceInfo.deviceId, template);
+            }
         }
 
         // When we have the C# job system, this should be a job and NativeInputSystem should double
@@ -886,6 +954,7 @@ namespace ISX
             public TemplateState[] templateStrings;
             public DeviceDescription[] deviceDescriptions;
             public DeviceState[] devices;
+            public NativeDevice[] nativeDevices;
             public InputStateBuffers buffers;
             public DeviceChangeEvent deviceChangeEvent;
         }
@@ -942,6 +1011,7 @@ namespace ISX
                 templateStrings = templateStringArray,
                 deviceDescriptions = m_DeviceDescriptions.ToArray(),
                 devices = deviceArray,
+                nativeDevices = m_NativeDevices.ToArray(),
                 buffers = m_StateBuffers,
                 deviceChangeEvent = m_DeviceChangeEvent
             };
@@ -961,6 +1031,8 @@ namespace ISX
             m_StateBuffers = m_SerializedState.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_DeviceChangeEvent = m_SerializedState.deviceChangeEvent;
+            m_DevicesById = new Dictionary<int, InputDevice>();
+            m_NativeDevices = m_SerializedState.nativeDevices.ToList();
 
             // Template types.
             foreach (var template in m_SerializedState.templateTypes)
@@ -984,6 +1056,7 @@ namespace ISX
                 device.m_Id = state.deviceId;
                 device.BakeOffsetIntoStateBlockRecursive(state.stateOffset);
                 devices[i] = device;
+                m_DevicesById[device.m_Id] = device;
             }
             m_Devices = devices;
             ReallocateStateBuffers();

@@ -143,13 +143,12 @@ namespace ISX
             if (s_Initialized)
                 return;
 
-            // We may get InitializeOnLoad-related calls to the static class constructor
-            // *after*
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
                 m_SystemObject = existingSystemObjects[0];
                 s_Manager = m_SystemObject.manager;
+                s_Manager.InstallGlobals();
             }
             else
             {

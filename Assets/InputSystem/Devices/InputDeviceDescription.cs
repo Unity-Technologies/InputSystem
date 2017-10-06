@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace ISX
 {
@@ -43,9 +44,34 @@ namespace ISX
                 return true;
             if (string.IsNullOrEmpty(right))
                 return false;
-            if (!Regex.IsMatch(right, left))
+            if (!Regex.IsMatch(right, left, RegexOptions.IgnoreCase))
                 return false;
             return true;
+        }
+
+        public static InputDeviceDescription FromJson(string json)
+        {
+            var data = JsonUtility.FromJson<DeviceDescriptionJson>(json);
+
+            return new InputDeviceDescription
+            {
+                interfaceName = data.@interface,
+                deviceClass = data.type,
+                product = data.product,
+                manufacturer = data.manufacturer,
+                serial = data.serial,
+                version = data.version
+            };
+        }
+
+        private struct DeviceDescriptionJson
+        {
+            public string @interface;
+            public string type;
+            public string product;
+            public string serial;
+            public string version;
+            public string manufacturer;
         }
     }
 }
