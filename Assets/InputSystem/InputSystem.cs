@@ -134,7 +134,7 @@ namespace ISX
             eventBuffer.stateEvent = new StateEvent();
 
             eventBuffer.stateEvent.baseEvent = new InputEvent(StateEvent.Type, eventSize, device.id, time);
-            eventBuffer.stateEvent.stateType = state.GetTypeStatic();
+            eventBuffer.stateEvent.stateFormat = state.GetFormat();
 
             fixed(byte* ptr = eventBuffer.stateEvent.stateData)
             {

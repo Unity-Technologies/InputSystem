@@ -9,7 +9,7 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC kStateTypeCode => new FourCC('G', 'P', 'A', 'D');
+        public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
 
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", template = "Dpad")]
@@ -75,25 +75,25 @@ namespace ISX
             Circle = East,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC GetFormat()
         {
-            return kStateTypeCode;
+            return kFormat;
         }
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct GamepadOutputState : IInputStateTypeInfo
     {
-        public static FourCC kStateTypeCode => new FourCC('M', 'O', 'T', 'R');
+        public static FourCC kFormat => new FourCC('M', 'O', 'T', 'R');
 
         [InputControl(name = "leftMotor", template = "Motor", usage = "LowFreqMotor")]
         public float leftMotor;
         [InputControl(name = "rightMotor", template = "Motor", usage = "HighFreqMotor")]
         public float rightMotor;
 
-        public FourCC GetTypeStatic()
+        public FourCC GetFormat()
         {
-            return kStateTypeCode;
+            return kFormat;
         }
     }
 

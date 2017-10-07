@@ -18,10 +18,18 @@ namespace ISX
 
         public const uint kInvalidOffset = 0xffffffff;
 
+        // Primitive state type codes.
+        public static FourCC kTypeBit = new FourCC('B', 'I', 'T');
+        public static FourCC kTypeInt = new FourCC('I', 'N', 'T');
+        public static FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
+        public static FourCC kTypeByte = new FourCC('B', 'Y', 'T', 'E');
+        public static FourCC kTypeFloat = new FourCC('F', 'L', 'T');
+        public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
+
         // Type identifier for the memory layout used by the state. Used for safety checks to
         // make sure that when we do memory copies of entire state blocks, we copy between
         // identical layouts.
-        public FourCC typeCode;
+        public FourCC format;
 
         public uint byteOffset;
         public uint bitOffset;

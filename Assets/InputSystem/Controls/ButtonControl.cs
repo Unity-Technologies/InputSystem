@@ -8,6 +8,7 @@ namespace ISX
         public ButtonControl()
         {
             m_StateBlock.sizeInBits = 1;
+            m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
         public override bool value => GetValue(currentValuePtr);

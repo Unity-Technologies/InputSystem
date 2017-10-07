@@ -5,6 +5,8 @@ namespace ISX
     {
         public string action;
         public string sources;
+
+
         public string modifier;////REVIEW: allow this?
     }
 }

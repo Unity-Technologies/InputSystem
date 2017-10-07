@@ -521,7 +521,7 @@ public class FunctionalTests
             {
                 ""name"" : ""CustomGamepad"",
                 ""extend"" : ""Gamepad"",
-                ""stateTypeCode"" : ""CUST"",
+                ""format"" : ""CUST"",
                 ""controls"" : [
                     {
                         ""name"" : ""buttonSouth"",
@@ -537,6 +537,44 @@ public class FunctionalTests
         var device = setup.Finish();
 
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
+
+        TearDown();
+    }
+
+    struct CustomGamepadState
+    {
+        public short rightTrigger;
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanChangeRepresentationOfAxisControl()
+    {
+        Setup();
+
+        // Make right trigger be represented as just a short and force it to different offset.
+        var jsonTemplate = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""rightTrigger"",
+                        ""format"" : ""SHRT"",
+                        ""offset"" : 0
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(jsonTemplate);
+
+        var setup = new InputControlSetup("CustomGamepad");
+        var device = (Gamepad)setup.Finish();
+
+        Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
+
+        ////TODO: add to system, send state event, and make sure AxisControl can read the short value
 
         TearDown();
     }

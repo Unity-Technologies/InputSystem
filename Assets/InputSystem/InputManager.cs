@@ -713,13 +713,13 @@ namespace ISX
                             continue;
 
                         var stateEventPtr = (StateEvent*)currentEventPtr;
-                        var stateType = stateEventPtr->stateType;
+                        var stateType = stateEventPtr->stateFormat;
                         var stateBlock = device.m_StateBlock;
                         var stateSize = stateEventPtr->stateSizeInBytes;
                         var statePtr = stateEventPtr->state;
 
                         // Update state on device.
-                        if (stateBlock.typeCode == stateType &&
+                        if (stateBlock.format == stateType &&
                             stateBlock.alignedSizeInBytes >= stateSize) // Allow device state to have unused control at end.
                         {
                             var deviceIndex = device.m_DeviceIndex;

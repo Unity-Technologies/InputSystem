@@ -43,7 +43,7 @@ namespace ISX
             m_Device = (InputDevice)Activator.CreateInstance(deviceType);
             m_Device.m_Template = m_DeviceTemplate.name;
             m_Device.m_Name = m_DeviceTemplate.name;
-            m_Device.m_StateBlock.typeCode = m_DeviceTemplate.m_StateTypeCode;
+            m_Device.m_StateBlock.format = m_DeviceTemplate.m_Format;
             m_Device.m_StateBlock.byteOffset = 0;
 
             if (m_DeviceTemplate.m_UpdateBeforeRender == true)
@@ -363,6 +363,10 @@ namespace ISX
                     m_Aliases.AddRange(controlTemplate.aliases);
                     control.m_AliasesReadOnly = new ReadOnlyArray<string>(null, aliasIndex, aliasCount);
                 }
+
+                // Set format.
+                if (controlTemplate.format != 0)
+                    control.m_StateBlock.format = controlTemplate.format;
 
                 ////TODO: process parameters and processors
             }

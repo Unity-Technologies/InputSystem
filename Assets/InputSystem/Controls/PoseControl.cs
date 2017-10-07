@@ -1,5 +1,3 @@
-using System;
-
 namespace ISX
 {
     public class PoseControl : InputControl<Pose>
@@ -12,6 +10,7 @@ namespace ISX
         public PoseControl()
         {
             m_StateBlock.sizeInBits = sizeof(float) * (3 + 4) * 8;
+            m_StateBlock.format = new FourCC('P', 'O', 'S', 'E');
         }
 
         public override Pose value => Process(new Pose(translation.value, rotation.value));

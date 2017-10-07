@@ -5,23 +5,23 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct TrackingState : IInputStateTypeInfo
     {
-        public static FourCC kStateTypeCode
+        public static FourCC kFormat
         {
             get { return new FourCC('T', 'R', 'A', 'K'); }
         }
 
         [InputControl] public Pose pose;
 
-        public FourCC GetTypeStatic()
+        public FourCC GetFormat()
         {
-            return kStateTypeCode;
+            return kFormat;
         }
     }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct HMDState : IInputStateTypeInfo
     {
-        public static FourCC kStateTypeCode
+        public static FourCC kFormat
         {
             get { return new FourCC('H', 'E', 'A', 'D'); }
         }
@@ -32,9 +32,9 @@ namespace ISX
         [InputControl] public Pose rightEye;
         [InputControl] public Pose centerEye;
 
-        public FourCC GetTypeStatic()
+        public FourCC GetFormat()
         {
-            return kStateTypeCode;
+            return kFormat;
         }
     }
 
@@ -52,7 +52,7 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct XRControllerState
     {
-        public static FourCC kStateTypeCode
+        public static FourCC kFormat
         {
             get { return new FourCC('C', 'T', 'R', 'L'); }
         }

@@ -25,7 +25,7 @@ namespace ISX
 {
     ""name"" : ""XboxGamepadOSX"",
     ""extend"" : ""Gamepad"",
-    ""stateTypeCode"" : ""HID"",
+    ""format"" : ""HID"",
     ""device"" : {
         ""interface"" : ""HID"",
         ""product"" : ""Xbox One Wired Controller""

@@ -13,7 +13,7 @@ namespace ISX
         [FieldOffset(0)]
         public InputEvent baseEvent;
         [FieldOffset(20)]
-        public FourCC stateType;
+        public FourCC stateFormat;
         [FieldOffset(24)]
         public fixed byte stateData[1]; // Variable-sized.
 

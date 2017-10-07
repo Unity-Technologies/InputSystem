@@ -99,7 +99,7 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kStateTypeCode
+        public static FourCC kFormat
         {
             get { return new FourCC('K', 'E', 'Y', 'S'); }
         }
@@ -145,9 +145,9 @@ namespace ISX
         [InputControl(name = "RightCtrl", template = "Button", usage = "Modifier", bit = (int)Key.RightCtrl)]
         public fixed byte keys[256 / 8]; // For some reason, the Mono compiler won't accept "(int)Key.Count/8" as a constant expression.
 
-        public FourCC GetTypeStatic()
+        public FourCC GetFormat()
         {
-            return kStateTypeCode;
+            return kFormat;
         }
     }
 

@@ -12,6 +12,11 @@ namespace ISX
         public override Vector2 value => Process(new Vector2(x.value, y.value));
         public override Vector2 previous => Process(new Vector2(x.previous, y.previous));
 
+        public Vector2Control()
+        {
+            m_StateBlock.format = new FourCC('V', 'E', 'C', '2');
+        }
+
         protected override void FinishSetup(InputControlSetup setup)
         {
             x = setup.GetControl<AxisControl>(this, "x");

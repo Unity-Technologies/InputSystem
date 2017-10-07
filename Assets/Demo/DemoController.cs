@@ -9,8 +9,7 @@ public class DemoController : MonoBehaviour
     public GameObject projectile;
     public float timeBetweenShots = 0.5f;
 
-    ////FIXME: seems like the recursion prevention code doesn't work properly
-    [NonSerialized]
+    [NonSerialized]////FIXME: seems like the recursion prevention code doesn't work properly
     private InputAction m_FireAction;
 
     public void Awake()
@@ -29,7 +28,7 @@ public class DemoController : MonoBehaviour
         var newProjectile = Instantiate(projectile);
         newProjectile.transform.position = head.position + head.forward * 0.6f;
         newProjectile.transform.rotation = head.rotation;
-        float size = 1;
+        var size = 1;
         newProjectile.transform.localScale *= size;
         newProjectile.GetComponent<Rigidbody>().mass = Mathf.Pow(size, 3);
         newProjectile.GetComponent<Rigidbody>().AddForce(head.forward * 20f, ForceMode.Impulse);

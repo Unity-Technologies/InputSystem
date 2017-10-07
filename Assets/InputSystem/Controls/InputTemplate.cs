@@ -4,9 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Channels;
-using System.Security;
-using UnityEditor;
 using UnityEngine;
 
 namespace ISX
@@ -14,6 +11,7 @@ namespace ISX
     // A template lays out the composition of an input control.
     //
     // Can be created in one of three ways:
+    //
     //  1) Manually in code through InputTemplateBuilder.
     //  2) Loaded from JSON.
     //  3) Constructed through reflection from InputControls classes.
@@ -59,6 +57,7 @@ namespace ISX
             public KeyValuePair<string, ParameterValue[]>[] processors;
             public uint offset;
             public uint bit;
+            public FourCC format;
         }
 
         // Unique name of the template.
@@ -112,10 +111,11 @@ namespace ISX
         {
             var controlTemplates = new List<ControlTemplate>();
 
+            ////TODO: allow InputControl-derived classes to communicate their state type code
             // If it's a device with an InputStructAttribute, add control templates
             // from its state (if present) instead of from the device.
             var isDeviceWithStateAttribute = false;
-            var stateTypeCode = new FourCC();
+            var format = new FourCC();
             if (typeof(InputDevice).IsAssignableFrom(type))
             {
                 var stateAttribute = type.GetCustomAttribute<InputStateAttribute>();
@@ -127,8 +127,8 @@ namespace ISX
                     // Get state type code from state struct.
                     if (typeof(IInputStateTypeInfo).IsAssignableFrom(stateAttribute.type))
                     {
-                        stateTypeCode = ((IInputStateTypeInfo)Activator.CreateInstance(stateAttribute.type))
-                            .GetTypeStatic();
+                        format = ((IInputStateTypeInfo)Activator.CreateInstance(stateAttribute.type))
+                            .GetFormat();
                     }
                 }
             }
@@ -144,7 +144,7 @@ namespace ISX
             // Create template object.
             var template = new InputTemplate(name, type);
             template.m_Controls = controlTemplates.ToArray();
-            template.m_StateTypeCode = stateTypeCode;
+            template.m_Format = format;
 
             return template;
         }
@@ -161,7 +161,7 @@ namespace ISX
 
         private string m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
-        internal FourCC m_StateTypeCode;
+        internal FourCC m_Format;
         internal bool? m_UpdateBeforeRender;
         private string m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
@@ -384,8 +384,8 @@ namespace ISX
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
-            if (m_StateTypeCode == new FourCC())
-                m_StateTypeCode = other.m_StateTypeCode;
+            if (m_Format == new FourCC())
+                m_Format = other.m_Format;
 
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
@@ -459,6 +459,11 @@ namespace ISX
             else
                 result.bit = baseTemplate.bit;
 
+            if (derivedTemplate.format != 0)
+                result.format = derivedTemplate.format;
+            else
+                result.format = baseTemplate.format;
+
             result.aliases = ArrayHelpers.Merge(derivedTemplate.aliases, baseTemplate.aliases,
                     StringComparer.OrdinalIgnoreCase);
             result.usages = ArrayHelpers.Merge(derivedTemplate.usages, baseTemplate.usages,
@@ -484,14 +489,6 @@ namespace ISX
         }
 
         [Serializable]
-        private enum BeforeRender
-        {
-            Unknown,
-            Ignore,
-            Update,
-        }
-
-        [Serializable]
         private struct TemplateJson
         {
             // Disable warnings that these fields are never assigned to. They are set
@@ -502,7 +499,7 @@ namespace ISX
             public string extend;
             public string @override; // Convenience to not have to create array for single override.
             public string[] overrides;
-            public string stateTypeCode;
+            public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
@@ -523,8 +520,8 @@ namespace ISX
                 var template = new InputTemplate(name, type);
                 template.m_ExtendsTemplate = extend;
                 template.m_DeviceDescription = device.ToDescriptor();
-                if (!string.IsNullOrEmpty(stateTypeCode))
-                    template.m_StateTypeCode = new FourCC(stateTypeCode);
+                if (!string.IsNullOrEmpty(format))
+                    template.m_Format = new FourCC(format);
 
                 if (!string.IsNullOrEmpty(beforeRender))
                 {
@@ -582,6 +579,7 @@ namespace ISX
             public string usage; // Convenince to not have to create array for single usage.
             public uint offset;
             public uint bit;
+            public string format;
             public string[] usages;
             public ParameterValueJson[] parameters;
 
@@ -602,6 +600,9 @@ namespace ISX
                     offset = offset,
                     bit = bit
                 };
+
+                if (!string.IsNullOrEmpty(format))
+                    template.format = new FourCC(format);
 
                 if (!string.IsNullOrEmpty(usage) || usages != null)
                 {
