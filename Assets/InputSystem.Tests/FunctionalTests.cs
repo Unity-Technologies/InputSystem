@@ -265,7 +265,7 @@ public class FunctionalTests
 
         InputSystem.RegisterTemplate(json);
 
-        var template = InputSystem.TryFindTemplate(new InputDeviceDescription
+        var template = InputSystem.TryFindMatchingTemplate(new InputDeviceDescription
         {
             product = "MyThingy"
         });

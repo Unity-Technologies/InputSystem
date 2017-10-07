@@ -59,9 +59,9 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
-        public static string TryFindTemplate(InputDeviceDescription deviceDescription)
+        public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
         {
-            return s_Manager.TryFindTemplate(deviceDescription);
+            return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
         public static void RegisterProcessor(string name, Type type)

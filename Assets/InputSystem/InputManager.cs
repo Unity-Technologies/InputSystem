@@ -72,6 +72,9 @@ namespace ISX
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException(nameof(json));
 
+            ////TODO: need to parse out the "extend" field as well and store that (so we can
+            ////      search by base template in paths)
+
             // Parse out name and device description.
             InputDeviceDescription deviceDescription;
             var nameFromJson = InputTemplate.ParseNameAndDeviceDescriptionFromJson(json, out deviceDescription);
@@ -115,7 +118,7 @@ namespace ISX
             }
         }
 
-        public string TryFindTemplate(InputDeviceDescription deviceDescription)
+        public string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
         {
             ////TODO: this will want to take overrides into account
 
@@ -272,7 +275,7 @@ namespace ISX
 
         public InputDevice AddDevice(InputDeviceDescription description)
         {
-            var template = TryFindTemplate(description);
+            var template = TryFindMatchingTemplate(description);
             if (template == null)
                 throw new ArgumentException("Cannot find template matching device description", nameof(description));
 
@@ -645,7 +648,7 @@ namespace ISX
             });
 
             // Try to turn it into a device instance.
-            var template = TryFindTemplate(description);
+            var template = TryFindMatchingTemplate(description);
             if (template != null)
             {
                 AddNativeDevice(deviceInfo.deviceId, template);

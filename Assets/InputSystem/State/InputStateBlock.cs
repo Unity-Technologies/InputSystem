@@ -61,10 +61,6 @@ namespace ISX
 
         private Flags m_Flags;
 
-        // These fields are owned and managed by InputManager.
-        internal static IntPtr s_CurrentStatePtr;
-        internal static IntPtr s_PreviousStatePtr;
-
         internal int alignedSizeInBytes => (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0);
     }
 }

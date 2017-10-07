@@ -454,6 +454,8 @@ namespace ISX
             while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
                 ++index;
 
+            ////TODO: allow to have only name and take it as meaning "name=true"
+
             if (index == parameterStringLength || parameterString[index] != '=')
                 throw new Exception($"Missing value for parameter '{parameter.name}' in \"{parameterString}\"");
             ++index; // Skip over '='.
