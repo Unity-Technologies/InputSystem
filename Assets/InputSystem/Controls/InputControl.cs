@@ -10,10 +10,7 @@ namespace ISX
     public abstract class InputControl
     {
         // Final name part of the path.
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
         // Full semantic path all the way from the root.
         // NOTE: Allocates on first hit. We don't create paths until someone asks for them.
@@ -35,10 +32,7 @@ namespace ISX
         // Template the control is based on.
         // We store the name rather than reference the InputTemplate as we want
         // to avoid allocating those objects except where necessary.
-        public string template
-        {
-            get { return m_Template; }
-        }
+        public string template => m_Template;
 
         ////TODO: setting value (will it also go through the processor stack?)
         // Current value as boxed object.
@@ -52,33 +46,22 @@ namespace ISX
                 var statePtr = currentValuePtr;
                 if (statePtr == IntPtr.Zero)
                     return Array.Empty<byte>();
-                else
-                {
-                    var buffer = new byte[m_StateBlock.sizeInBits / 8];
-                    Marshal.Copy(currentValuePtr, buffer, 0, buffer.Length);
-                    return buffer;
-                }
+
+                var buffer = new byte[m_StateBlock.sizeInBits / 8];
+                Marshal.Copy(currentValuePtr, buffer, 0, buffer.Length);
+                return buffer;
             }
         }
 
         // Root of the control hierarchy.
-        public InputDevice device
-        {
-            get { return m_Device; }
-        }
+        public InputDevice device => m_Device;
 
         // Immediate parent.
-        public InputControl parent
-        {
-            get { return m_Parent; }
-        }
+        public InputControl parent => m_Parent;
 
         // Immediate children.
         // NOTE: This will only be populated when setup is finished.
-        public ReadOnlyArray<InputControl> children
-        {
-            get { return m_ChildrenReadOnly; }
-        }
+        public ReadOnlyArray<InputControl> children => m_ChildrenReadOnly;
 
         // List of uses for this control. Gives meaning to the control such that you can, for example,
         // find a button on a device to use as the "back" button regardless of what it is named. The "back"
@@ -86,22 +69,13 @@ namespace ISX
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
         // NOTE: This will only be populated when setup is finished.
-        public ReadOnlyArray<string> usages
-        {
-            get { return m_UsagesReadOnly; }
-        }
+        public ReadOnlyArray<string> usages => m_UsagesReadOnly;
 
         // List of alternate names for the control.
-        public ReadOnlyArray<string> aliases
-        {
-            get { return m_AliasesReadOnly; }
-        }
+        public ReadOnlyArray<string> aliases => m_AliasesReadOnly;
 
         // Information about where the control stores its state.
-        public InputStateBlock stateBlock
-        {
-            get { return m_StateBlock; }
-        }
+        public InputStateBlock stateBlock => m_StateBlock;
 
         // Constructor for devices which are assigned names once plugged
         // into the system.
@@ -181,6 +155,10 @@ namespace ISX
                 throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
             return deviceIndex;
         }
+
+        internal virtual void AddProcessor(object first)
+        {
+        }
     }
 
     // Helper to more quickly implement new control types.
@@ -189,21 +167,7 @@ namespace ISX
         public abstract TValue value { get; }
         public abstract TValue previous { get; }
 
-        public override object valueAsObject
-        {
-            get { return value; }
-        }
-
-        ////TODO: make AddProcessor and RemoveProcessor internal and allow usage through templates only
-        public void AddProcessor(IInputProcessor<TValue> processor)
-        {
-            m_ProcessorStack.Append(processor);
-        }
-
-        public void RemoveProcessor(IInputProcessor<TValue> processor)
-        {
-            m_ProcessorStack.Remove(processor);
-        }
+        public override object valueAsObject => value;
 
         protected TValue Process(TValue value)
         {
@@ -215,6 +179,37 @@ namespace ISX
             return value;
         }
 
-        private OptimizedArray<IInputProcessor<TValue>> m_ProcessorStack;
+        internal OptimizedArray<IInputProcessor<TValue>> m_ProcessorStack;
+
+        // Only templates are allowed to modify the processor stack.
+        internal void AddProcessor(IInputProcessor<TValue> processor)
+        {
+            m_ProcessorStack.Append(processor);
+        }
+
+        internal void RemoveProcessor(IInputProcessor<TValue> processor)
+        {
+            m_ProcessorStack.Remove(processor);
+        }
+
+        internal TProcessor TryGetProcessor<TProcessor>()
+            where TProcessor : IInputProcessor<TValue>
+        {
+            if (m_ProcessorStack.firstValue is TProcessor)
+                return (TProcessor)m_ProcessorStack.firstValue;
+            if (m_ProcessorStack.additionalValues != null)
+                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
+                    if (m_ProcessorStack.additionalValues[i] is TProcessor)
+                        return (TProcessor)m_ProcessorStack.additionalValues[i];
+            return default(TProcessor);
+        }
+
+        internal override void AddProcessor(object processor)
+        {
+            var processorOfType = processor as IInputProcessor<TValue>;
+            if (processorOfType == null)
+                throw new Exception($"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
+            m_ProcessorStack.Append(processorOfType);
+        }
     }
 }

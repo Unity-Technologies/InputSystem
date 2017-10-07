@@ -64,6 +64,16 @@ namespace ISX
             return s_Manager.TryFindTemplate(deviceDescription);
         }
 
+        public static void RegisterProcessor(string name, Type type)
+        {
+            s_Manager.RegisterProcessor(name, type);
+        }
+
+        public static Type TryGetProcessor(string name)
+        {
+            return s_Manager.TryGetProcessor(name);
+        }
+
         public static InputDevice AddDevice(string template)
         {
             return s_Manager.AddDevice(template);

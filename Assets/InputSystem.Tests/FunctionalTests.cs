@@ -187,6 +187,68 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanSetParametersOnControlInJson()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""rightTrigger"",
+                        ""parameters"" : ""clamp=true,clampMin=0.123,clampMax=0.456""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        Assert.That(device.rightTrigger.clamp, Is.True);
+        Assert.That(device.rightTrigger.clampMin, Is.EqualTo(0.123).Within(0.00001f));
+        Assert.That(device.rightTrigger.clampMax, Is.EqualTo(0.456).Within(0.00001f));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Template")]
+    public void Templates_CanAddProcessorsToControlInJson()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick"",
+                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        // NOTE: Unfortunately, this currently relies on an internal method (TryGetProcessor).
+
+        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>(), Is.Not.Null);
+        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
+        Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
     public void Templates_CanFindTemplateFromDeviceDescriptor()
     {
         Setup();
@@ -196,7 +258,7 @@ public class FunctionalTests
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""Gamepad"",
                 ""device"" : {
-                        ""product"" : ""mything.*""
+                    ""product"" : ""mything.*""
                 }
             }
         ";
@@ -367,21 +429,30 @@ public class FunctionalTests
         TearDown();
     }
 
-    ////REVIEW: I think this is actually bad functionality; it means there is configuration on the device that
-    ////        is not present in the template; the device will end up looking different when recreated
     [Test]
     [Category("Controls")]
-    public void Controls_CanAddProcessorsToControlsManually()
+    public void Controls_CanProcessDeadzones()
     {
         Setup();
 
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick"",
+                        ""processors"" : ""deadzone(min=0.1,max=0.9)""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
         var device = (Gamepad)InputSystem.AddDevice("Gamepad");
-        var processor = new DeadzoneProcessor
-        {
-            min = 0.1f,
-            max = 0.9f,
-        };
-        device.leftStick.AddProcessor(processor);
+
+        ////NOTE: Unfortunately, this relies on an internal method ATM.
+        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
 
         var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};

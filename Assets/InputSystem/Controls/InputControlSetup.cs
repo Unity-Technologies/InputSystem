@@ -374,40 +374,63 @@ namespace ISX
 
                 // Set parameters.
                 if (controlTemplate.parameters != null)
+                    SetParameters(control, controlTemplate.parameters);
+
+                // Add processors.
+                if (controlTemplate.processors != null)
                 {
-                    var controlType = control.GetType();
-                    for (var i = 0; i < controlTemplate.parameters.Length; ++i)
+                    var processorCount = controlTemplate.processors.Length;
+                    for (var i = 0; i < processorCount; ++i)
                     {
-                        var parameter = controlTemplate.parameters[i];
+                        var name = controlTemplate.processors[i].Key;
+                        var type = InputProcessor.TryGet(name);
+                        if (type == null)
+                            throw new Exception(
+                                $"Cannot find processor '{name}' referenced by control '{controlTemplate.name}' in template '{template.name}'");
 
-                        var field = controlType.GetField(parameter.name);
-                        if (field == null)
-                            throw new Exception($"Cannot find public field {parameter.name} in control {controlType.Name} (referenced by parameter)");
+                        var processor = Activator.CreateInstance(type);
 
-                        ////REVIEW: can we do this without boxing?
+                        var parameters = controlTemplate.processors[i].Value;
+                        if (parameters != null)
+                            SetParameters(processor, parameters);
 
-                        object value = null;
-                        unsafe
-                        {
-                            switch (parameter.type)
-                            {
-                                case InputTemplate.ParameterType.Boolean:
-                                    value = *((bool*)parameter.value);
-                                    break;
-                                case InputTemplate.ParameterType.Integer:
-                                    value = *((int*)parameter.value);
-                                    break;
-                                case InputTemplate.ParameterType.Float:
-                                    value = *((float*)parameter.value);
-                                    break;
-                            }
-                        }
+                        control.AddProcessor(processor);
+                    }
+                }
+            }
+        }
 
-                        field.SetValue(control, value);
+        private static void SetParameters(object onObject, InputTemplate.ParameterValue[] parameters)
+        {
+            var objectType = onObject.GetType();
+            for (var i = 0; i < parameters.Length; ++i)
+            {
+                var parameter = parameters[i];
+
+                var field = objectType.GetField(parameter.name);
+                if (field == null)
+                    throw new Exception($"Cannot find public field {parameter.name} in {objectType.Name} (referenced by parameter)");
+
+                ////REVIEW: can we do this without boxing?
+
+                object value = null;
+                unsafe
+                {
+                    switch (parameter.type)
+                    {
+                        case InputTemplate.ParameterType.Boolean:
+                            value = *((bool*)parameter.value);
+                            break;
+                        case InputTemplate.ParameterType.Integer:
+                            value = *((int*)parameter.value);
+                            break;
+                        case InputTemplate.ParameterType.Float:
+                            value = *((float*)parameter.value);
+                            break;
                     }
                 }
 
-                ////TODO: processors
+                field.SetValue(onObject, value);
             }
         }
 

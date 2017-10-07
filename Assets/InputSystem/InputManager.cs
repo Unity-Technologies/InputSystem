@@ -5,8 +5,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngineInternal.Input;
 
-//native sends (full/partial) input templates for any new device
-
 namespace ISX
 {
     // The hub of the input system.
@@ -144,6 +142,25 @@ namespace ISX
 
         public void RegisterProcessor(string name, Type type)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name));
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            ////REVIEW: probably good to typecheck here but it would require dealing with generic type stuff
+
+            m_Processors[name.ToLower()] = type;
+        }
+
+        public Type TryGetProcessor(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name));
+
+            Type type;
+            if (m_Processors.TryGetValue(name, out type))
+                return type;
+            return null;
         }
 
         // Processes a path specification that may match more than a single control.
@@ -415,6 +432,7 @@ namespace ISX
         {
             InputTemplate.s_TemplateTypes = null;
             InputTemplate.s_TemplateStrings = null;
+            InputProcessor.s_Processors = null;
 
             NativeInputSystem.onUpdate -= OnNativeUpdate;
             NativeInputSystem.onDeviceDiscovered -= OnNativeDeviceDiscovered;
@@ -425,6 +443,8 @@ namespace ISX
         {
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
+            InputProcessor.s_Processors = m_Processors;
+
             NativeInputSystem.onUpdate += OnNativeUpdate;
             NativeInputSystem.onDeviceDiscovered += OnNativeDeviceDiscovered;
         }
@@ -952,10 +972,18 @@ namespace ISX
         }
 
         [Serializable]
+        private struct ProcessorState
+        {
+            public string name;
+            public string typeName;
+        }
+
+        [Serializable]
         private struct SerializedState
         {
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
+            public ProcessorState[] processors;
             public DeviceDescription[] deviceDescriptions;
             public DeviceState[] devices;
             public NativeDevice[] nativeDevices;
@@ -993,6 +1021,18 @@ namespace ISX
                     typeNameOrJson = entry.Value
                 };
 
+            // Processors
+            var processorCount = m_Processors.Count;
+            var processorArray = new ProcessorState[processorCount];
+
+            i = 0;
+            foreach (var entry in m_Processors)
+                processorArray[i++] = new ProcessorState
+                {
+                    name = entry.Key,
+                    typeName = entry.Value.AssemblyQualifiedName
+                };
+
             // Devices.
             var deviceCount = m_Devices?.Length ?? 0;
             var deviceArray = new DeviceState[deviceCount];
@@ -1013,6 +1053,7 @@ namespace ISX
             {
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
+                processors = processorArray,
                 deviceDescriptions = m_DeviceDescriptions.ToArray(),
                 devices = deviceArray,
                 nativeDevices = m_NativeDevices.ToArray(),
@@ -1040,13 +1081,18 @@ namespace ISX
 
             // Template types.
             foreach (var template in m_SerializedState.templateTypes)
-                m_TemplateTypes[template.name.ToLower()] = Type.GetType(template.typeNameOrJson, true);
+                m_TemplateTypes[template.name] = Type.GetType(template.typeNameOrJson, true);
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
 
             // Template strings.
             foreach (var template in m_SerializedState.templateStrings)
-                m_TemplateStrings[template.name.ToLower()] = template.typeNameOrJson;
+                m_TemplateStrings[template.name] = template.typeNameOrJson;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
+
+            // Processors.
+            foreach (var processor in m_SerializedState.processors)
+                m_Processors[processor.name] = Type.GetType(processor.typeName, true);
+            InputProcessor.s_Processors = m_Processors;
 
             // Re-create devices.
             var deviceCount = m_SerializedState.devices.Length;

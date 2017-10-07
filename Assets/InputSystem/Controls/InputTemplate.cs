@@ -51,6 +51,20 @@ namespace ISX
             public string name;
             public ParameterType type;
             public fixed byte value[kMaxValueSize];
+
+            public int sizeInBytes
+            {
+                get
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean: return sizeof(bool);
+                        case ParameterType.Float: return sizeof(float);
+                        case ParameterType.Integer: return sizeof(int);
+                    }
+                    return 0;
+                }
+            }
         }
 
         // Specifies the composition of an input control.
@@ -345,6 +359,63 @@ namespace ISX
             };
         }
 
+        private static KeyValuePair<string, ParameterValue[]>[] ParseProcessors(string processorString)
+        {
+            processorString = processorString.Trim();
+            if (string.IsNullOrEmpty(processorString))
+                return null;
+
+            var list = new List<KeyValuePair<string, ParameterValue[]>>();
+
+            var index = 0;
+            var processorStringLength = processorString.Length;
+
+            while (index < processorStringLength)
+            {
+                // Skip whitespace.
+                while (index < processorStringLength && char.IsWhiteSpace(processorString[index]))
+                    ++index;
+
+                // Parse name.
+                var nameStart = index;
+                while (index < processorStringLength)
+                {
+                    var nextChar = processorString[index];
+                    if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
+                        break;
+                    ++index;
+                }
+                if (index - nameStart == 0)
+                    throw new Exception($"Expecting name at position {nameStart} in '{processorString}'");
+                var name = processorString.Substring(nameStart, index - nameStart);
+
+                // Skip whitespace.
+                while (index < processorStringLength && char.IsWhiteSpace(processorString[index]))
+                    ++index;
+
+                // Parse parameters.
+                ParameterValue[] parameters = null;
+                if (index < processorStringLength && processorString[index] == '(')
+                {
+                    ++index;
+                    var closeParenIndex = processorString.IndexOf(')', index);
+                    if (closeParenIndex == -1)
+                        throw new Exception($"Expecting ')' after '(' at position {index} in '{processorString}'");
+
+                    var parameterString = processorString.Substring(index, closeParenIndex - index);
+                    parameters = ParseParameters(parameterString);
+                    index = closeParenIndex + 1;
+                }
+
+                if (index < processorStringLength && processorString[index] == ',')
+                    ++index;
+
+                list.Add(new KeyValuePair<string, ParameterValue[]>(name, parameters));
+            }
+
+            return list.ToArray();
+        }
+
         private static ParameterValue[] ParseParameters(string parameterString)
         {
             parameterString = parameterString.Trim();
@@ -524,7 +595,19 @@ namespace ISX
             result.usages = ArrayHelpers.Merge(derivedTemplate.usages, baseTemplate.usages,
                     StringComparer.OrdinalIgnoreCase);
 
-            ////TODO: merge rest
+            if (derivedTemplate.parameters == null)
+                result.parameters = baseTemplate.parameters;
+            else if (baseTemplate.parameters == null)
+                result.parameters = derivedTemplate.parameters;
+            else
+                throw new NotImplementedException("merging parameters");
+
+            if (derivedTemplate.processors == null)
+                result.processors = baseTemplate.processors;
+            else if (baseTemplate.parameters == null)
+                result.processors = derivedTemplate.processors;
+            else
+                throw new NotImplementedException("merging processors");
 
             return result;
         }
@@ -636,7 +719,8 @@ namespace ISX
             public uint bit;
             public string format;
             public string[] usages;
-            public ParameterValueJson[] parameters;
+            public string parameters;
+            public string processors;
 
             #pragma warning restore CS0649
 
@@ -653,7 +737,7 @@ namespace ISX
                     name = name,
                     template = this.template,
                     offset = offset,
-                    bit = bit
+                    bit = bit,
                 };
 
                 if (!string.IsNullOrEmpty(format))
@@ -669,16 +753,14 @@ namespace ISX
                     template.usages = usagesList.ToArray();
                 }
 
-                ////TODO: parameters
+                if (!string.IsNullOrEmpty(parameters))
+                    template.parameters = ParseParameters(parameters);
+
+                if (!string.IsNullOrEmpty(processors))
+                    template.processors = ParseProcessors(processors);
 
                 return template;
             }
-        }
-
-        [Serializable]
-        private struct ParameterValueJson
-        {
-            public string name;
         }
 
         [Serializable]

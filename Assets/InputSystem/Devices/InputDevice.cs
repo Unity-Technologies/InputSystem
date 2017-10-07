@@ -24,7 +24,6 @@ namespace ISX
 
         public bool updateBeforeRender => (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender;
 
-        ////REVIEW: this sort of becomes the index of the root node
         // Every registered device in the system gets a unique numeric ID.
         // For native devices, this is assigned by the underlying runtime.
         public int id => m_Id;
@@ -80,7 +79,5 @@ namespace ISX
 
         // NOTE: We don't store processors in an combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
-
-        ////REVIEW: should this have dictionaries for paths and usages?
     }
 }
