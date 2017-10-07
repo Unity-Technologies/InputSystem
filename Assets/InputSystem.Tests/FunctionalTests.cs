@@ -449,7 +449,7 @@ public class FunctionalTests
         ";
 
         InputSystem.RegisterTemplate(json);
-        var device = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         ////NOTE: Unfortunately, this relies on an internal method ATM.
         var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
