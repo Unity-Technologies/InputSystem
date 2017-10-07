@@ -59,6 +59,11 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
+        public static string TryFindTemplate(InputDeviceDescription deviceDescription)
+        {
+            return s_Manager.TryFindTemplate(deviceDescription);
+        }
+
         public static InputDevice AddDevice(string template)
         {
             return s_Manager.AddDevice(template);

@@ -157,6 +157,34 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Templates")]
+    public void Templates_CanFindTemplateFromDeviceDescriptor()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                        ""product"" : ""mything.*""
+                }
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var template = InputSystem.TryFindTemplate(new InputDeviceDescription
+        {
+            product = "MyThingy"
+        });
+
+        Assert.That(template, Is.EqualTo("MyDevice"));
+
+        TearDown();
+    }
+
+    [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromTemplate()
     {
@@ -573,8 +601,6 @@ public class FunctionalTests
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
-
-        ////TODO: add to system, send state event, and make sure AxisControl can read the short value
 
         TearDown();
     }
@@ -1401,14 +1427,6 @@ public class FunctionalTests
     [Test]
     [Category("Templates")]
     public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
-    {
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanFindTemplateFromDeviceDescriptor()
     {
         ////TODO
         Assert.Fail();

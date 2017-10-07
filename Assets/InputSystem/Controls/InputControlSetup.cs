@@ -9,12 +9,13 @@ using System.Collections.Generic;
 namespace ISX
 {
     // Turns a template into a control hiearchy.
-    // Ultimately produces a devices but can also be used to query the control setup described
+    // Ultimately produces a device but can also be used to query the control setup described
     // by a template.
     // Can be used to create setups as well as to adjust them later.
     // InputControlSetup is the *only* way to create control hierarchies.
     // Also computes a final state layout when setup is finished.
     // Once a setup has been established, it yields a list of controls and the setup itself is abandoned.
+    //
     // NOTE: InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
     //       use them during normal gameplay.
     public class InputControlSetup
