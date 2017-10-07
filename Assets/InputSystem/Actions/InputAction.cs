@@ -13,8 +13,6 @@ namespace ISX
     // NOTE: Unlike InputControls, InputActions are not passive! They will actively perform
     //       processing each frame they are active whereas InputControls just sit there as
     //       long as no one is asking them directly for a value.
-    // NOTE: InputActions will automatically hook themselves into the input update in which
-    //       they are enabled in.
     [Serializable]
     public class InputAction : ISerializationCallbackReceiver
     {
@@ -27,15 +25,9 @@ namespace ISX
             Cancelled
         }
 
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
-        public Phase phase
-        {
-            get { return m_CurrentPhase; }
-        }
+        public Phase phase => m_CurrentPhase;
 
         public InputActionSet actionSet
         {
@@ -47,18 +39,11 @@ namespace ISX
             }
         }
 
-        public InputBinding binding
+        public InputBinding binding => new InputBinding
         {
-            get
-            {
-                return new InputBinding
-                {
-                    action = name,
-                    sources = m_Binding
-                };
-            }
-            ////TODO: allow setting
-        }
+            action = name,
+            sources = m_Binding
+        };
 
         public ReadOnlyArray<InputControl> controls
         {
@@ -72,10 +57,7 @@ namespace ISX
             }
         }
 
-        public bool enabled
-        {
-            get { return m_Enabled; }
-        }
+        public bool enabled => m_Enabled;
 
         public event ActionListener onStarted
         {

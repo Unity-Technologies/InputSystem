@@ -11,15 +11,9 @@ namespace ISX
     [Serializable]
     public class InputActionSet : ISerializationCallbackReceiver
     {
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
-        public ReadOnlyArray<InputAction> actions
-        {
-            get { return new ReadOnlyArray<InputAction>(m_Actions); }
-        }
+        public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
         public InputActionSet(string name = null)
         {

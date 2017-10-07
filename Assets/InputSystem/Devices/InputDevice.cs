@@ -2,7 +2,7 @@ using System;
 
 namespace ISX
 {
-    // Input devices bundle complex state and usually correlate to ...
+    // Input devices are the roots of control hierarchies.
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;

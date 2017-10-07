@@ -10,11 +10,10 @@ namespace ISX
 {
     // A template lays out the composition of an input control.
     //
-    // Can be created in one of three ways:
+    // Can be created in two ways:
     //
-    //  1) Manually in code through InputTemplateBuilder.
-    //  2) Loaded from JSON.
-    //  3) Constructed through reflection from InputControls classes.
+    //  1) Loaded from JSON.
+    //  2) Constructed through reflection from InputControls classes.
     //
     // Once constructed, templates are immutable (but you can always
     // replace a registered template in the system and it will affect
