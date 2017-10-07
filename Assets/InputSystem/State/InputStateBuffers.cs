@@ -51,10 +51,8 @@ namespace ISX
         // some additional rules apply.
         //
         // Before render updates never get their own state buffers. If enabled, they will
-        // process into the state buffers of the "primary" update type. If only one of
-        // fixed or dynamic updates are enabled, it uses the state buffers of the single
-        // enabled update type. If both fixed *and* dynamic updates are enabled, it uses
-        // the state buffers of dynamic updates.
+        // process into the state buffers of the fixed and/or dynamic updates (depending
+        // on whether only one or both are enabled).
         //
         // Fixed and dynamic each get their own buffers. We specifically want to *NOT*
         // optimize for this case as doing input processing from game scripts in both
@@ -321,6 +319,10 @@ namespace ISX
             // We do the same if we don't had a corresponding buffer before.
             if (!oldBuffer.valid)
                 return;
+
+            ////TOOD: if we assume linear layouts of devices in 'devices' and assume that new devices are only added
+            ////      at the end and only single devices can be removed, we can copy state buffers much more efficiently
+            ////      in bulk rather than device-by-device
 
             // Migrate every device that has allocated state blocks.
             var newDeviceCount = devices.Length;

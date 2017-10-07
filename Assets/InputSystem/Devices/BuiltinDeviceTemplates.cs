@@ -33,8 +33,53 @@ namespace ISX
     ""controls"" : [
         {
             ""name"" : ""buttonSouth"",
-            ""offset"" : 0,
+            ""offset"" : 2,
             ""bit"" : 8
+        },
+        {
+            ""name"" : ""buttonEast"",
+            ""offset"" : 2,
+            ""bit"" : 9
+        },
+        {
+            ""name"" : ""buttonWest"",
+            ""offset"" : 2,
+            ""bit"" : 10
+        },
+        {
+            ""name"" : ""buttonNorth"",
+            ""offset"" : 2,
+            ""bit"" : 11
+        },
+        {
+            ""name"" : ""leftTrigger"",
+            ""offset"" : 4,
+            ""format"" : ""BYTE""
+        },
+        {
+            ""name"" : ""rightTrigger"",
+            ""offset"" : 5,
+            ""format"" : ""BYTE""
+        },
+        {
+            ""name"" : ""leftStick/x"",
+            ""offset"" : 6,
+            ""format"" : ""SHRT""
+        },
+        {
+            ""name"" : ""leftStick/y"",
+            ""offset"" : 8,
+            ""format"" : ""SHRT""
+        },
+        {
+            ""name"" : ""rightStick/x"",
+            ""offset"" : 10,
+            ""format"" : ""SHRT""
+        },
+        {
+            ""name"" : ""rightStick/y"",
+            ""offset"" : 12,
+            ""format"" : ""SHRT""
         }
     ]
 }

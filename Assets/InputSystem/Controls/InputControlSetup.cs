@@ -53,7 +53,7 @@ namespace ISX
             // Install the control hierarchy.
             SetUpControlHierarchy(m_Device);
             MakeChildOffsetsRelativeToRootRecursive(m_Device);
-            m_Device.CallFinishSetup(this);
+            m_Device.CallFinishSetupRecursive(this);
         }
 
         // Complete the setup and return the full control hierarchy setup
@@ -341,6 +341,9 @@ namespace ISX
 
             foreach (var controlTemplate in controlTemplates)
             {
+                if (string.IsNullOrEmpty(controlTemplate.template))
+                    throw new Exception($"Template has not been set on control '{controlTemplate.name}' in '{template.name}'");
+
                 var control = AddControlInternal(controlTemplate.template, controlTemplate.name, parent);
 
                 // Pass remaining settings of control template on to newly created control.
@@ -369,7 +372,42 @@ namespace ISX
                 if (controlTemplate.format != 0)
                     control.m_StateBlock.format = controlTemplate.format;
 
-                ////TODO: process parameters and processors
+                // Set parameters.
+                if (controlTemplate.parameters != null)
+                {
+                    var controlType = control.GetType();
+                    for (var i = 0; i < controlTemplate.parameters.Length; ++i)
+                    {
+                        var parameter = controlTemplate.parameters[i];
+
+                        var field = controlType.GetField(parameter.name);
+                        if (field == null)
+                            throw new Exception($"Cannot find public field {parameter.name} in control {controlType.Name} (referenced by parameter)");
+
+                        ////REVIEW: can we do this without boxing?
+
+                        object value = null;
+                        unsafe
+                        {
+                            switch (parameter.type)
+                            {
+                                case InputTemplate.ParameterType.Boolean:
+                                    value = *((bool*)parameter.value);
+                                    break;
+                                case InputTemplate.ParameterType.Integer:
+                                    value = *((int*)parameter.value);
+                                    break;
+                                case InputTemplate.ParameterType.Float:
+                                    value = *((float*)parameter.value);
+                                    break;
+                            }
+                        }
+
+                        field.SetValue(control, value);
+                    }
+                }
+
+                ////TODO: processors
             }
         }
 
@@ -432,9 +470,7 @@ namespace ISX
             catch
             {
                 ////TODO: remove control from collection and rethrow
-                //throw;
-
-                throw new NotImplementedException();
+                throw;
             }
 
             return control;

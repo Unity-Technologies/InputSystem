@@ -17,6 +17,7 @@ namespace ISX
                 if (nextIndex == -1)
                     break;
 
+                ++count;
                 index = nextIndex + 1;
             }
 

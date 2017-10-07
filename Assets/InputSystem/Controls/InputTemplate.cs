@@ -33,16 +33,23 @@ namespace ISX
     //       immutable, there's no modifications we have to preserve.
     internal class InputTemplate
     {
+        public enum ParameterType
+        {
+            Boolean,
+            Integer,
+            Float
+        }
+
         // Both controls and processors can have public fields that can be set
         // directly from templates. The values are usually specified in strings
         // (like "clampMin=-1") but we parse them ahead of time into instances
         // of this structure that tell us where to store the value in the control.
         public unsafe struct ParameterValue
         {
-            public const int kMaxValueSize = 8;
+            public const int kMaxValueSize = 4;
 
-            public uint offset;
-            public uint sizeInBytes;
+            public string name;
+            public ParameterType type;
             public fixed byte value[kMaxValueSize];
         }
 
@@ -346,7 +353,6 @@ namespace ISX
 
             var parameterCount = parameterString.CountOccurrences(',') + 1;
             var parameters = new ParameterValue[parameterCount];
-            var parameterStringLength = parameterString.Length;
 
             var index = 0;
             for (var i = 0; i < parameterCount; ++i)
@@ -358,17 +364,66 @@ namespace ISX
             return parameters;
         }
 
-        private static ParameterValue ParseParameter(string parameterString, ref int index)
+        private unsafe static ParameterValue ParseParameter(string parameterString, ref int index)
         {
-            //can't look up name in type as all we have is a template name
-            //for the from-type path it probably works but not for json templates
+            var parameter = new ParameterValue();
+            var parameterStringLength = parameterString.Length;
+
+            // Skip whitespace.
+            while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
+                ++index;
 
             // Parse name.
+            var nameStart = index;
+            while (index < parameterStringLength &&
+                   !(parameterString[index] == '=' || char.IsWhiteSpace(parameterString[index])))
+                ++index;
+            parameter.name = parameterString.Substring(nameStart, index - nameStart);
+
+            // Skip whitespace.
+            while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
+                ++index;
+
+            if (index == parameterStringLength || parameterString[index] != '=')
+                throw new Exception($"Missing value for parameter '{parameter.name}' in \"{parameterString}\"");
+            ++index; // Skip over '='.
+
+            // Skip whitespace.
+            while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
+                ++index;
 
             // Parse value.
+            var valueStart = index;
+            while (index < parameterStringLength &&
+                   !(parameterString[index] == ',' || char.IsWhiteSpace(parameterString[index])))
+                ++index;
 
-            return new ParameterValue();
-            //throw new NotImplementedException();
+            var value = parameterString.Substring(valueStart, index - valueStart);
+            if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                parameter.type = ParameterType.Boolean;
+                *((bool*)parameter.value) = true;
+            }
+            else if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                parameter.type = ParameterType.Boolean;
+                *((bool*)parameter.value) = false;
+            }
+            else if (value.IndexOf('.') != -1)
+            {
+                parameter.type = ParameterType.Float;
+                *((float*)parameter.value) = float.Parse(value);
+            }
+            else
+            {
+                parameter.type = ParameterType.Integer;
+                *((int*)parameter.value) = int.Parse(value);
+            }
+
+            if (index < parameterStringLength && parameterString[index] == ',')
+                ++index;
+
+            return parameter;
         }
 
         private static string InferTemplateFromValueType(Type type)

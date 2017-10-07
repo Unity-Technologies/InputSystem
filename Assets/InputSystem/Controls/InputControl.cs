@@ -139,10 +139,10 @@ namespace ISX
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().
-        internal void CallFinishSetup(InputControlSetup setup)
+        internal void CallFinishSetupRecursive(InputControlSetup setup)
         {
             for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
-                m_ChildrenReadOnly[i].CallFinishSetup(setup);
+                m_ChildrenReadOnly[i].CallFinishSetupRecursive(setup);
 
             FinishSetup(setup);
         }

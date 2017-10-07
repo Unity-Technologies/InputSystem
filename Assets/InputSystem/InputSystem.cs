@@ -170,8 +170,8 @@ namespace ISX
         {
             // Unity's InitializeOnLoad force-executes static class constructors without
             // checking if they have already been executed (violating C# semantics). So
-            // if someone class into InputSystem before Unity has gone through its InitializeOnLoad
-            // sequence, we will see two execution of the class constructor for a single
+            // if someone calls into InputSystem before Unity has gone through its InitializeOnLoad
+            // sequence, we will see two executions of the class constructor for a single
             // domain load. We catch this with s_Initialized (which will reset on domain
             // reloads).
 

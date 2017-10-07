@@ -8,7 +8,7 @@ namespace ISX
         public AxisControl up { get; private set; }
         [InputControl(offset = 4, parameters = "clamp=true,clampMin=-1,clampMax=0")]
         public AxisControl down { get; private set; }
-        [InputControl(offset = 0, parameters = "clamp=true,clampMin=-1,clampMap=0")]
+        [InputControl(offset = 0, parameters = "clamp=true,clampMin=-1,clampMax=0")]
         public AxisControl left { get; private set; }
         [InputControl(offset = 0, parameters = "clamp=true,clampMin=0,clampMax=1")]
         public AxisControl right { get; private set; }

@@ -113,7 +113,36 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanSetControlParametersThroughControlAttribute()
+    public void TODO_Templates_CanExtendControlInBaseTemplateUsingPath()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick/x"",
+                        ""format"" : ""BYTE""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("MyDevice");
+        var device = (Gamepad)setup.Finish();
+
+        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanSetControlParametersThroughControlAttribute()
     {
         Setup();
 
@@ -180,6 +209,18 @@ public class FunctionalTests
         });
 
         Assert.That(template, Is.EqualTo("MyDevice"));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
+    {
+        Setup();
+
+        ////TODO
+        Assert.Fail();
 
         TearDown();
     }
@@ -1420,14 +1461,6 @@ public class FunctionalTests
     public void TODO_State_CanDisableFixedUpdates()
     {
         //make sure it reduces memory usage
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
-    {
         ////TODO
         Assert.Fail();
     }
