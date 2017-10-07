@@ -51,7 +51,7 @@ namespace ISX
             }
             else
             {
-                throw new Exception($"State type '{m_StateBlock.format}' is not supported as state for AxisControls");
+                throw new Exception($"State format '{m_StateBlock.format}' is not supported as state for AxisControls");
             }
 
             return Process(Preprocess(value));
