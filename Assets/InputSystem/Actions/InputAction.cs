@@ -59,7 +59,7 @@ namespace ISX
 
         public bool enabled => m_Enabled;
 
-        public event ActionListener onStarted
+        public event ActionListener started
         {
             add
             {
@@ -74,7 +74,7 @@ namespace ISX
             }
         }
 
-        public event ActionListener onCancelled
+        public event ActionListener cancelled
         {
             add
             {
@@ -92,7 +92,7 @@ namespace ISX
         // Listeners that are called when the action has been fully performed.
         // Passes along the control that triggered the state change and the action
         // object iself as well.
-        public event ActionListener onPerformed
+        public event ActionListener performed
         {
             add
             {

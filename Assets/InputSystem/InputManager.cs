@@ -733,6 +733,8 @@ namespace ISX
                         // to us in before render updates will re-surface again on the next
                         // normal update so we can safely skip those events.
                         if (updateType == NativeInputUpdateType.BeforeRender && !device.updateBeforeRender)
+                            ////FIXME: have to make sure next iteration doesn't come up with the same
+                            ////       event again; current code produces an infinite loop
                             continue;
 
                         var stateEventPtr = (StateEvent*)currentEventPtr;

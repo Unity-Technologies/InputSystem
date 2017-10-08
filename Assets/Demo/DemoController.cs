@@ -15,7 +15,7 @@ public class DemoController : MonoBehaviour
     public void Awake()
     {
         m_FireAction = new InputAction("Fire", binding: "/*/{primaryAction}");
-        m_FireAction.onPerformed += (action, control) => Fire();
+        m_FireAction.performed += (action, control) => Fire();
     }
 
     public void Start()

@@ -11,21 +11,15 @@ using UnityEngine;
 // of the system (e.g. they make assumptions about Gamepad is set up).
 public class FunctionalTests
 {
-    // Unity test tools don't seem to have proper setup/teardown support.
-    // Seems like there's nothing for teardown and for setup, we'd either only
-    // get a single setup call for all tests or would have to put an attribute
-    // on every single test. So... we do it manually. Meh.
-    // NUnits SetUp and TearDown attributes don't appear to work with the Unity
-    // test runner either.
-    void Setup()
+    [SetUp]
+    public void Setup()
     {
-        // Put the system in a known state but save the current state first
-        // so that we can restore it after we're done testing.
         InputSystem.Save();
         InputSystem.Reset();
     }
 
-    void TearDown()
+    [TearDown]
+    public void TearDown()
     {
         InputSystem.Restore();
     }
@@ -45,23 +39,17 @@ public class FunctionalTests
     [Category("Templates")]
     public void Templates_CanCreatePrimitiveControlsFromTemplate()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
 
         // The default ButtonControl template has no constrols inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
         Assert.That(setup.GetControl("start").children, Is.Empty);
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanCreateCompoundControlsFromTemplate()
     {
-        Setup();
-
         const int kNumControlsInAStick = 6;
 
         var setup = new InputControlSetup("Gamepad");
@@ -69,16 +57,12 @@ public class FunctionalTests
         Assert.That(setup.GetControl("leftStick"), Is.TypeOf<StickControl>());
         Assert.That(setup.GetControl("leftStick").children, Has.Count.EqualTo(kNumControlsInAStick));
         Assert.That(setup.GetControl("leftStick").children, Has.Exactly(1).With.Property("name").EqualTo("x"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanSetUpDeviceFromJsonTemplate()
     {
-        Setup();
-
         const string controlJson = @"
             {
                 ""name"" : ""MyControl"",
@@ -108,16 +92,12 @@ public class FunctionalTests
 
         var device = setup.Finish();
         Assert.That(device, Is.TypeOf<InputDevice>());
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanExtendControlInBaseTemplateUsingPath()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -137,16 +117,12 @@ public class FunctionalTests
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanSetControlParametersThroughControlAttribute()
     {
-        Setup();
-
         // StickControl sets parameters on its axis controls. Check that they are
         // there.
 
@@ -155,43 +131,31 @@ public class FunctionalTests
         Assert.That(gamepad.leftStick.up.clamp, Is.True);
         Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
         Assert.That(gamepad.leftStick.up.clampMax, Is.EqualTo(1));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanSetUsagesThroughControlAttribute()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(CommonUsages.PrimaryStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanSetAliasesThroughControlAttribute()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo("square"));
         Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo("x"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanSetParametersOnControlInJson()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -212,16 +176,12 @@ public class FunctionalTests
         Assert.That(device.rightTrigger.clamp, Is.True);
         Assert.That(device.rightTrigger.clampMin, Is.EqualTo(0.123).Within(0.00001f));
         Assert.That(device.rightTrigger.clampMax, Is.EqualTo(0.456).Within(0.00001f));
-
-        TearDown();
     }
 
     [Test]
     [Category("Template")]
     public void Templates_CanAddProcessorsToControlInJson()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -244,16 +204,12 @@ public class FunctionalTests
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>(), Is.Not.Null);
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_CanFindTemplateFromDeviceDescriptor()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -272,16 +228,12 @@ public class FunctionalTests
         });
 
         Assert.That(template, Is.EqualTo("MyDevice"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void Templates_AddingTwoControlsWithSameName_WillCauseException()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -305,59 +257,43 @@ public class FunctionalTests
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
             Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Templates")]
     public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
     {
-        Setup();
-
         ////TODO
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromTemplate()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
 
         Assert.That(device, Is.TypeOf<Gamepad>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftStick"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceWithNestedState()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
 
         // The gamepad's output state is nested inside GamepadState and requires the template
         // code to crawl inside the field to find the motor controls.
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftMotor"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescriptor()
     {
-        Setup();
-
         const string deviceJson = @"
             {
                 ""name"" : ""MyDevice"",
@@ -381,77 +317,57 @@ public class FunctionalTests
 
         Assert.That(device.template, Is.EqualTo("MyDevice"));
         Assert.That(device, Is.TypeOf<Gamepad>());
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsInSetupByPath()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
 
         Assert.That(setup.TryGetControl("leftStick"), Is.TypeOf<StickControl>());
         Assert.That(setup.TryGetControl("leftStick/x"), Is.TypeOf<AxisControl>());
         Assert.That(setup.TryGetControl("leftStick/y"), Is.TypeOf<AxisControl>());
         Assert.That(setup.TryGetControl("leftStick/up"), Is.TypeOf<AxisControl>());
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_DeviceAndControlsRememberTheirTemplates()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.template, Is.EqualTo("Gamepad"));
         Assert.That(gamepad.leftStick.template, Is.EqualTo("Stick"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_ControlsReferToTheirParent()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.leftStick.parent, Is.SameAs(gamepad));
         Assert.That(gamepad.leftStick.x.parent, Is.SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_ControlsReferToTheirDevices()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
         var device = setup.Finish();
 
         Assert.That(leftStick.device, Is.SameAs(device));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
 
@@ -459,16 +375,12 @@ public class FunctionalTests
             {
                 var value = device.leftStick.value;
             });
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanProcessDeadzones()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -500,46 +412,34 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(device.leftStick.value, Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f))));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_DevicesGetNameFromTemplate()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
 
         Assert.That(device.name, Contains.Substring("Gamepad"));
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
         var device = setup.Finish();
 
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>() * 8));
         Assert.That(leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick").ToInt32()));
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var rightMotor = setup.GetControl("rightMotor");
         setup.Finish();
@@ -548,16 +448,12 @@ public class FunctionalTests
         var rightMotorOffset = outputOffset + Marshal.OffsetOf<GamepadOutputState>("rightMotor").ToInt32();
 
         Assert.That(rightMotor.stateBlock.byteOffset, Is.EqualTo(rightMotorOffset));
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void State_BeforeAddingDevice_OffsetsInStateLayoutsAreRelativeToRoot()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
 
@@ -567,16 +463,12 @@ public class FunctionalTests
 
         Assert.That(device.leftStick.x.stateBlock.byteOffset, Is.EqualTo(leftStickXOffset));
         Assert.That(device.leftStick.y.stateBlock.byteOffset, Is.EqualTo(leftStickYOffset));
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void State_AfterAddingDevice_AllControlOffsetsAreRelativeToGlobalStateBuffer()
     {
-        Setup();
-
         InputSystem.AddDevice("Gamepad");
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
@@ -588,16 +480,12 @@ public class FunctionalTests
 
         Assert.That(gamepad2.leftStick.x.stateBlock.byteOffset, Is.EqualTo(gamepad2StartOffset + leftStickXOffset));
         Assert.That(gamepad2.leftStick.y.stateBlock.byteOffset, Is.EqualTo(gamepad2StartOffset + leftStickYOffset));
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void State_StateOfMultipleDevicesIsLaidOutSequentially()
     {
-        Setup();
-
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
@@ -605,16 +493,12 @@ public class FunctionalTests
 
         Assert.That(gamepad1.stateBlock.byteOffset, Is.EqualTo(0));
         Assert.That(gamepad2.stateBlock.byteOffset, Is.EqualTo(gamepad1.stateBlock.byteOffset + sizeofGamepadState));
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void State_RunningUpdateSwapsCurrentAndPrevious()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var oldState = new GamepadState
@@ -634,8 +518,6 @@ public class FunctionalTests
 
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.75f, 0.75f)));
         Assert.That(gamepad.leftStick.previous, Is.EqualTo(new Vector2(0.25f, 0.25f)));
-
-        TearDown();
     }
 
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
@@ -646,8 +528,6 @@ public class FunctionalTests
     [Category("State")]
     public void State_UpdateWithoutStateEventDoesNotAlterStateOfDevice()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var state = new GamepadState
         {
@@ -660,8 +540,6 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.25f, 0.25f)));
-
-        TearDown();
     }
 
     // The state layout for a given device is not fixed. Even though Gamepad, for example, specifies
@@ -688,8 +566,6 @@ public class FunctionalTests
     [Category("State")]
     public void State_CanCustomizeStateLayoutOfDevice()
     {
-        Setup();
-
         // Create a custom template that moves the offsets of some controls around.
         var jsonTemplate = @"
             {
@@ -711,8 +587,6 @@ public class FunctionalTests
         var device = setup.Finish();
 
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
-
-        TearDown();
     }
 
     struct CustomGamepadState
@@ -724,8 +598,6 @@ public class FunctionalTests
     [Category("State")]
     public void State_CanChangeRepresentationOfAxisControl()
     {
-        Setup();
-
         // Make right trigger be represented as just a short and force it to different offset.
         var jsonTemplate = @"
             {
@@ -747,30 +619,22 @@ public class FunctionalTests
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromTemplate()
     {
-        Setup();
-
         var device = InputSystem.AddDevice("Gamepad");
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Contains.Item(device));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_AddingDeviceTwiceIsIgnored()
     {
-        Setup();
-
         var device = InputSystem.AddDevice("Gamepad");
 
         InputSystem.onDeviceChange +=
@@ -780,16 +644,12 @@ public class FunctionalTests
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices, Contains.Item(device));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_AddingDeviceTriggersNotification()
     {
-        Setup();
-
         var receivedCallCount = 0;
         InputDevice receivedDevice = null;
         InputDeviceChange? receiveDeviceChange = null;
@@ -807,16 +667,12 @@ public class FunctionalTests
         Assert.That(receivedCallCount, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
         Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Added));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_AddingDeviceMakesItConnected()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
 
@@ -825,76 +681,54 @@ public class FunctionalTests
         InputSystem.AddDevice(device);
 
         Assert.That(device.connected, Is.True);
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_AddingDeviceMakesItCurrent()
     {
-        Setup();
-
         var gamepad = InputSystem.AddDevice("Gamepad");
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
-        Setup();
-
         var device = InputSystem.AddDevice("Gamepad");
 
         Assert.That(InputSystem.TryGetDeviceById(device.id), Is.SameAs(device));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanLookUpDeviceByTemplate()
     {
-        Setup();
-
         var device = InputSystem.AddDevice("Gamepad");
         var result = InputSystem.GetDevice("Gamepad");
 
         Assert.That(result, Is.SameAs(device));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_EnsuresDeviceNamesAreUnique()
     {
-        Setup();
-
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad1.name, Is.Not.EqualTo(gamepad2.name));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_AssignsUniqueNumericIdToDevices()
     {
-        Setup();
-
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad1.id, Is.Not.EqualTo(gamepad2.id));
-
-        TearDown();
     }
 
     [Test]
@@ -910,12 +744,8 @@ public class FunctionalTests
     [Category("Devices")]
     public void TODO_Devices_CanBeReconnected()
     {
-        Setup();
-
         ////TODO
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
@@ -927,22 +757,16 @@ public class FunctionalTests
     [TestCase("XRController")]
     public void Devices_CanCreateDevice(string template)
     {
-        Setup();
-
         var device = InputSystem.AddDevice(template);
 
         Assert.That(device, Is.InstanceOf<InputDevice>());
         Assert.That(device.template, Is.EqualTo(template));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var leftStick = setup.GetControl("leftStick");
 
@@ -952,107 +776,79 @@ public class FunctionalTests
         InputSystem.AddDevice(device);
 
         Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_AfterAddingDeviceCanQueryValueOfControls()
     {
-        Setup();
-
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
         InputSystem.AddDevice(device);
 
         Assert.That(device.leftStick.value, Is.EqualTo(default(Vector2)));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsByExactPath()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/Gamepad/leftStick");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsByExactPathCaseInsensitive()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/gamePAD/LeftSTICK");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsByUsage()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/gamepad/{primaryStick}");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindChildControlsOfControlsFoundByUsage()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/gamepad/{primaryStick}/x");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick.x));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsByTemplate()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/gamepad/<stick>");
 
         Assert.That(matches, Has.Count.EqualTo(2));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.rightStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanFindDevicesByTemplates()
     {
-        Setup();
-
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
         InputSystem.AddDevice("Keyboard");
@@ -1062,28 +858,20 @@ public class FunctionalTests
         Assert.That(matches, Has.Count.EqualTo(2));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad2));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void TODO_Controls_CanFindControlsByBaseTemplate()
     {
-        Setup();
-
         ////TODO: derive a custom gamepad template, then find a device created from it by "/<gamepad>"
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsFromMultipleDevices()
     {
-        Setup();
-
         var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
@@ -1095,31 +883,23 @@ public class FunctionalTests
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad1.rightStick));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.leftStick));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad2.rightStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanOmitLeadingSlashWhenFindingControls()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("gamepad/leftStick");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void TODO_Controls_CanFindControlsByTheirAliases()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matchByName = InputSystem.GetControls("/gamepad/buttonSouth");
         var matchByAlias1 = InputSystem.GetControls("/gamepad/x");
@@ -1129,23 +909,17 @@ public class FunctionalTests
         Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.xButton));
         Assert.That(matchByAlias1, Is.EqualTo(matchByName));
         Assert.That(matchByAlias2, Is.EqualTo(matchByName));
-
-        TearDown();
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsUsingWildcardsInMiddleOfNames()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/g*pad/leftStick");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     // This is one of the most central tests. If this one breaks, it most often
@@ -1154,8 +928,6 @@ public class FunctionalTests
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
 
@@ -1164,16 +936,12 @@ public class FunctionalTests
 
         Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123f));
         Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456f));
-
-        TearDown();
     }
 
     [Test]
     [Category("Events")]
     public void Events_SendingStateEventToDeviceMakesItCurrent()
     {
-        Setup();
-
         var gamepad = InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState();
 
@@ -1181,16 +949,12 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
-
-        TearDown();
     }
 
     [Test]
     [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
 
@@ -1198,16 +962,12 @@ public class FunctionalTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(gamepad.leftStick.value, Is.EqualTo(default(Vector2)));
-
-        TearDown();
     }
 
     [Test]
     [Category("Events")]
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
-        Setup();
-
         // Could use one of the tracking templates but let's do it with a
         // custom template that enables before render updates on a gamepad.
         const string deviceJson = @"
@@ -1227,32 +987,24 @@ public class FunctionalTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.123f, 0.456f)));
-
-        TearDown();
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_CanAddActionThatTargetsSingleControl()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(binding: "/gamepad/leftStick");
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_CanAddActionThatTargetsMultipleControls()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(binding: "/gamepad/*stick");
@@ -1260,37 +1012,27 @@ public class FunctionalTests
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
-
-        TearDown();
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_WhenEnabled_GoesIntoWaitingPhase()
     {
-        Setup();
-
         InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(binding: "/gamepad/leftStick");
         action.Enable();
 
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
-
-        TearDown();
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_CanCreateActionsWithoutAnActionSet()
     {
-        Setup();
-
         var action = new InputAction();
 
         Assert.That(action.actionSet, Is.Null);
-
-        TearDown();
     }
 
     ////REVIEW: not sure whether this is the best behavior
@@ -1298,34 +1040,24 @@ public class FunctionalTests
     [Category("Actions")]
     public void Actions_SourcePathsLeadingNowhereAreIgnored()
     {
-        Setup();
-
         var action = new InputAction(binding: "nothing");
 
         Assert.DoesNotThrow(() => action.Enable());
-
-        TearDown();
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_StartOutInDisabledPhase()
     {
-        Setup();
-
         var action = new InputAction();
 
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
-
-        TearDown();
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_ActionIsPerformedWhenSourceControlChangesValue()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var receivedCalls = 0;
@@ -1333,7 +1065,7 @@ public class FunctionalTests
         InputControl receivedControl = null;
 
         var action = new InputAction(binding: "/gamepad/leftStick");
-        action.onPerformed +=
+        action.performed +=
             (a, c) =>
             {
                 ++receivedCalls;
@@ -1357,23 +1089,19 @@ public class FunctionalTests
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
-
-        TearDown();
     }
 
     [Test]
     [Category("Action")]
     public void Actions_CanListenForStateChangeOnEntireDevice()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var receivedCalls = 0;
         InputControl receivedControl = null;
 
         var action = new InputAction(binding: "/gamepad");
-        action.onPerformed +=
+        action.performed +=
             (a, c) =>
             {
                 ++receivedCalls;
@@ -1390,8 +1118,6 @@ public class FunctionalTests
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedControl, Is.SameAs(gamepad)); // We do not drill down to find the actual control that changed.
-
-        TearDown();
     }
 
     /*
@@ -1399,8 +1125,6 @@ public class FunctionalTests
     [Category("Actions")]
     public void Actions_CanPerformHoldAction()
     {
-        Setup();
-
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var onPerformedReceivedCalls = 0;
@@ -1460,8 +1184,6 @@ public class FunctionalTests
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
-
-        TearDown();
     }
     */
 
@@ -1469,8 +1191,6 @@ public class FunctionalTests
     [Category("Actions")]
     public void Actions_CanCreateActionSetFromJson()
     {
-        Setup();
-
         const string json = @"
             {
                 ""sets"" : [
@@ -1492,8 +1212,6 @@ public class FunctionalTests
         Assert.That(sets[0], Has.Property("name").EqualTo("default"));
         Assert.That(sets[0].actions, Has.Count.EqualTo(1));
         Assert.That(sets[0].actions, Has.Exactly(1).With.Property("name").EqualTo("jump"));
-
-        TearDown();
     }
 
 #if UNITY_EDITOR
@@ -1501,8 +1219,6 @@ public class FunctionalTests
     [Category("Misc")]
     public void Misc_CanSaveAndRestoreStateInEditor()
     {
-        Setup();
-
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
@@ -1528,49 +1244,33 @@ public class FunctionalTests
     [Category("State")]
     public void TODO_State_CanSpecifyBitOffsetsOnControlProperties()
     {
-        Setup();
-
         //examine control setup on dpad
         ////TODO
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void TODO_State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
-        Setup();
-
         ////TODO
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()
     {
-        Setup();
-
         ////TODO
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
     [Category("State")]
     public void TODO_State_SupportsBitAddressingControlsWithAutomaticOffsets()
     {
-        Setup();
-
         ////TODO
         Assert.Fail();
-
-        TearDown();
     }
 
     [Test]
