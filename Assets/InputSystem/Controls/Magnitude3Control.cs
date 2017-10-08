@@ -12,7 +12,7 @@ namespace ISX
         public Magnitude3Control()
         {
             m_StateBlock.sizeInBits = sizeof(float) * 3 * 8;
-            m_StateBlock.format = new FourCC('V', 'E', 'C', '3');
+            m_StateBlock.format = InputStateBlock.kTypeVector3;
         }
 
         private unsafe float GetValue(IntPtr valuePtr)

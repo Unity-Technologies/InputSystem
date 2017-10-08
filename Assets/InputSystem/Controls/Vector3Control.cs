@@ -16,7 +16,7 @@ namespace ISX
 
         public Vector3Control()
         {
-            m_StateBlock.format = new FourCC('V', 'E', 'C', '3');
+            m_StateBlock.format = InputStateBlock.kTypeVector3;
         }
 
         protected override void FinishSetup(InputControlSetup setup)

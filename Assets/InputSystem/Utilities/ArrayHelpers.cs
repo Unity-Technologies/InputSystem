@@ -25,13 +25,48 @@ namespace ISX
                 array[0] = value;
                 return 0;
             }
-            else
+
+            var length = array.Length;
+            Array.Resize(ref array, length + 1);
+            array[length] = value;
+            return length;
+        }
+
+        // Append to an array that is considered immutable. This allows using 'values' as is
+        // if 'array' is null.
+        // Returns the index of the first newly added element in the resulting array.
+        public static int AppendToImmutable<TValue>(ref TValue[] array, TValue[] values)
+        {
+            if (array == null)
             {
-                var length = array.Length;
-                Array.Resize(ref array, length + 1);
-                array[length] = value;
-                return length;
+                array = values;
+                return 0;
             }
+
+            if (values != null && values.Length > 0)
+            {
+                var oldCount = array.Length;
+                var valueCount = values.Length;
+                Array.Resize(ref array, oldCount + valueCount);
+                Array.Copy(values, 0, array, oldCount, valueCount);
+                return oldCount;
+            }
+
+            return array.Length;
+        }
+
+        // Adds 'count' entries to the array. Returns first index of newly added entries.
+        public static int GrowBy<TValue>(ref TValue[] array, int count)
+        {
+            if (array == null)
+            {
+                array = new TValue[count];
+                return 0;
+            }
+
+            var oldLength = array.Length;
+            Array.Resize(ref array, oldLength + count);
+            return oldLength;
         }
 
         public static TValue[] Join<TValue>(TValue value, params TValue[] values)

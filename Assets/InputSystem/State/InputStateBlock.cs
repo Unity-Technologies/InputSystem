@@ -25,6 +25,32 @@ namespace ISX
         public static FourCC kTypeByte = new FourCC('B', 'Y', 'T', 'E');
         public static FourCC kTypeFloat = new FourCC('F', 'L', 'T');
         public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
+        public static FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
+        public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '2');
+        public static FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
+
+        public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
+        {
+            if (type == kTypeBit)
+                return 1;
+            if (type == kTypeInt)
+                return 4 * 8;
+            if (type == kTypeShort)
+                return 2 * 8;
+            if (type == kTypeByte)
+                return 1 * 8;
+            if (type == kTypeFloat)
+                return 4 * 4;
+            if (type == kTypeDouble)
+                return 8 * 4;
+            if (type == kTypeVector2)
+                return 2 * 4 * 8;
+            if (type == kTypeVector3)
+                return 3 * 4 * 8;
+            if (type == kTypeQuaternion)
+                return 4 * 4 * 8;
+            return -1;
+        }
 
         // Type identifier for the memory layout used by the state. Used for safety checks to
         // make sure that when we do memory copies of entire state blocks, we copy between

@@ -454,14 +454,14 @@ namespace ISX
 
         // Bundles a template name and a device description.
         [Serializable]
-        private struct DeviceDescription
+        internal struct DeviceDescription
         {
             public InputDeviceDescription description;
             public string template;
         }
 
         [Serializable]
-        private struct NativeDevice
+        internal struct NativeDevice
         {
             public InputDeviceDescription description;
             public int deviceId;
@@ -952,7 +952,7 @@ namespace ISX
         // Domain reload survival logic.
 #if UNITY_EDITOR
         [Serializable]
-        private struct DeviceState
+        internal struct DeviceState
         {
             // Preserving InputDevices is somewhat tricky business. Serializing
             // them in full would involve pretty nasty work. We have the restriction,
@@ -968,21 +968,21 @@ namespace ISX
         }
 
         [Serializable]
-        private struct TemplateState
+        internal struct TemplateState
         {
             public string name;
             public string typeNameOrJson;
         }
 
         [Serializable]
-        private struct ProcessorState
+        internal struct ProcessorState
         {
             public string name;
             public string typeName;
         }
 
         [Serializable]
-        private struct SerializedState
+        internal struct SerializedState
         {
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
@@ -994,11 +994,7 @@ namespace ISX
             public DeviceChangeEvent deviceChangeEvent;
         }
 
-        [SerializeField] private SerializedState m_SerializedState;
-
-        // Stuff everything that we want to survive a domain reload into
-        // a m_SerializedState.
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        internal SerializedState SaveState()
         {
             // Template types.
             var templateTypeCount = m_TemplateTypes.Count;
@@ -1052,7 +1048,7 @@ namespace ISX
                 deviceArray[i] = deviceState;
             }
 
-            m_SerializedState = new SerializedState
+            return new SerializedState
             {
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
@@ -1070,51 +1066,66 @@ namespace ISX
             // MonoBehaviours/ScriptableObjects.
         }
 
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        internal void RestoreState(SerializedState state)
         {
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
-            m_DeviceDescriptions = m_SerializedState.deviceDescriptions.ToList();
+            m_DeviceDescriptions = state.deviceDescriptions.ToList();
             m_Processors = new Dictionary<string, Type>();
-            m_StateBuffers = m_SerializedState.buffers;
+            m_StateBuffers = state.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
-            m_DeviceChangeEvent = m_SerializedState.deviceChangeEvent;
+            m_DeviceChangeEvent = state.deviceChangeEvent;
             m_DevicesById = new Dictionary<int, InputDevice>();
-            m_NativeDevices = m_SerializedState.nativeDevices.ToList();
+            m_NativeDevices = state.nativeDevices.ToList();
 
             // Template types.
-            foreach (var template in m_SerializedState.templateTypes)
+            foreach (var template in state.templateTypes)
                 m_TemplateTypes[template.name] = Type.GetType(template.typeNameOrJson, true);
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
 
             // Template strings.
-            foreach (var template in m_SerializedState.templateStrings)
+            foreach (var template in state.templateStrings)
                 m_TemplateStrings[template.name] = template.typeNameOrJson;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
 
             // Processors.
-            foreach (var processor in m_SerializedState.processors)
+            foreach (var processor in state.processors)
                 m_Processors[processor.name] = Type.GetType(processor.typeName, true);
             InputProcessor.s_Processors = m_Processors;
 
             // Re-create devices.
-            var deviceCount = m_SerializedState.devices.Length;
+            var deviceCount = state.devices.Length;
             var devices = new InputDevice[deviceCount];
             for (var i = 0; i < deviceCount; ++i)
             {
-                var state = m_SerializedState.devices[i];
-                var setup = new InputControlSetup(state.template);
+                var deviceState = state.devices[i];
+                var setup = new InputControlSetup(deviceState.template);
                 var device = setup.Finish();
-                device.m_Name = state.name;
-                device.m_Id = state.deviceId;
+                device.m_Name = deviceState.name;
+                device.m_Id = deviceState.deviceId;
                 device.m_DeviceIndex = i;
-                device.BakeOffsetIntoStateBlockRecursive(state.stateOffset);
+                device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
                 devices[i] = device;
                 m_DevicesById[device.m_Id] = device;
             }
             m_Devices = devices;
-            ReallocateStateBuffers();
 
+            m_StateBuffers.FreeAll();
+            ReallocateStateBuffers();
+        }
+
+        [SerializeField] private SerializedState m_SerializedState;
+
+        // Stuff everything that we want to survive a domain reload into
+        // a m_SerializedState.
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        {
+            m_SerializedState = SaveState();
+        }
+
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            RestoreState(m_SerializedState);
             m_SerializedState = default(SerializedState);
         }
 

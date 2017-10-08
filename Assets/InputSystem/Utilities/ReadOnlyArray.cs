@@ -40,10 +40,7 @@ namespace ISX
             return GetEnumerator();
         }
 
-        public int Count
-        {
-            get { return m_Length; }
-        }
+        public int Count => m_Length;
 
         public TValue this[int index]
         {
@@ -100,10 +97,7 @@ namespace ISX
                 }
             }
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 }

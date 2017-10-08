@@ -66,6 +66,11 @@ namespace ISX
             }
         }
 
+        ////TODO: need to figure out how to handle the root control; ATM the ControlTemplates always represent children
+        ////      and you can't really set any properties on the root control
+        ////      (the existing way works fine normal control templates but doesn't allow devices to make use of
+        ////      what's offered to any other type control)
+
         // Specifies the composition of an input control.
         public struct ControlTemplate
         {
@@ -78,32 +83,30 @@ namespace ISX
             public uint offset;
             public uint bit;
             public FourCC format;
+
+            // If true, the template will not add a control but rather a modify a control
+            // inside the hierarchy added by 'template'. This allows, for example, to modify
+            // just the X axis control of the left stick directly from within a gamepad
+            // template instead of having to have a custom stick template for the left stick
+            // than in turn would have to make use of a custom axis template for the X axis.
+            // Insted, you can just have a control template with the name "leftStick/x".
+            public bool isModifyingChildControlByPath;
         }
 
         // Unique name of the template.
         // NOTE: Case-insensitive.
-        public string name
-        {
-            get { return m_Name; }
-        }
+        public string name => m_Name;
 
-        public Type type
-        {
-            get { return m_Type; }
-        }
+        public Type type => m_Type;
 
-        public string extendsTemplate
-        {
-            get { return m_ExtendsTemplate; }
-        }
+        public FourCC format => m_Format;
+
+        public string extendsTemplate => m_ExtendsTemplate;
 
         // Unlike in a normal device descriptor, the strings in this descriptor are
         // regular expressions which can be used to match against the strings of an
         // actual device descriptor.
-        public InputDeviceDescription deviceDescription
-        {
-            get { return m_DeviceDescription; }
-        }
+        public InputDeviceDescription deviceDescription => m_DeviceDescription;
 
         public ReadOnlyCollection<ControlTemplate> controls
         {
@@ -142,7 +145,7 @@ namespace ISX
                 if (stateAttribute != null)
                 {
                     isDeviceWithStateAttribute = true;
-                    AddControlTemplates(stateAttribute.type, controlTemplates);
+                    AddControlTemplates(stateAttribute.type, controlTemplates, name);
 
                     // Get state type code from state struct.
                     if (typeof(IInputStateTypeInfo).IsAssignableFrom(stateAttribute.type))
@@ -155,7 +158,7 @@ namespace ISX
             if (!isDeviceWithStateAttribute)
             {
                 // Add control templates from type contents.
-                AddControlTemplates(type, controlTemplates);
+                AddControlTemplates(type, controlTemplates, name);
             }
 
             ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json templates as well)
@@ -195,31 +198,31 @@ namespace ISX
             m_Type = type;
         }
 
-        private static void AddControlTemplates(Type type, List<ControlTemplate> controlTemplates)
+        private static void AddControlTemplates(Type type, List<ControlTemplate> controlTemplates, string templateName)
         {
-            AddControlTemplatesFromFields(type, controlTemplates);
-            AddControlTemplatesFromProperties(type, controlTemplates);
+            AddControlTemplatesFromFields(type, controlTemplates, templateName);
+            AddControlTemplatesFromProperties(type, controlTemplates, templateName);
         }
 
         // Add ControlTemplates for every public property in the given type thas has
         // InputControlAttribute applied to it or has an InputControl-derived value type.
-        private static void AddControlTemplatesFromFields(Type type, List<ControlTemplate> controlTemplates)
+        private static void AddControlTemplatesFromFields(Type type, List<ControlTemplate> controlTemplates, string templateName)
         {
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            AddControlTemplatesFromMembers(fields, controlTemplates);
+            AddControlTemplatesFromMembers(fields, controlTemplates, templateName);
         }
 
         // Add ControlTemplates for every public property in the given type thas has
         // InputControlAttribute applied to it or has an InputControl-derived value type.
-        private static void AddControlTemplatesFromProperties(Type type, List<ControlTemplate> controlTemplates)
+        private static void AddControlTemplatesFromProperties(Type type, List<ControlTemplate> controlTemplates, string templateName)
         {
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            AddControlTemplatesFromMembers(properties, controlTemplates);
+            AddControlTemplatesFromMembers(properties, controlTemplates, templateName);
         }
 
         // Add ControlTemplates for every member in the list thas has InputControlAttribute applied to it
         // or has an InputControl-derived value type.
-        private static void AddControlTemplatesFromMembers(MemberInfo[] members, List<ControlTemplate> controlTemplates)
+        private static void AddControlTemplatesFromMembers(MemberInfo[] members, List<ControlTemplate> controlTemplates, string templateName)
         {
             foreach (var member in members)
             {
@@ -236,7 +239,7 @@ namespace ISX
                 {
                     var controlCountBefore = controlTemplates.Count;
 
-                    AddControlTemplates(valueType, controlTemplates);
+                    AddControlTemplates(valueType, controlTemplates, templateName);
 
                     // If the current member is a field that is embedding the state structure, add
                     // the field offset to all control templates that were added from the struct.
@@ -268,12 +271,12 @@ namespace ISX
                         continue;
                 }
 
-                AddControlTemplatesFromMember(member, attributes, controlTemplates);
+                AddControlTemplatesFromMember(member, attributes, controlTemplates, templateName);
             }
         }
 
         private static void AddControlTemplatesFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlTemplate> controlTemplates)
+            InputControlAttribute[] attributes, List<ControlTemplate> controlTemplates, string templateName)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each ocurrence. However, it can also
@@ -283,20 +286,22 @@ namespace ISX
 
             if (attributes.Length == 0)
             {
-                var controlTemplate = CreateControlTemplateFromMember(member, null);
+                var controlTemplate = CreateControlTemplateFromMember(member, null, templateName);
+                ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, templateName);
                 controlTemplates.Add(controlTemplate);
             }
             else
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlTemplate = CreateControlTemplateFromMember(member, attribute);
+                    var controlTemplate = CreateControlTemplateFromMember(member, attribute, templateName);
+                    ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, templateName);
                     controlTemplates.Add(controlTemplate);
                 }
             }
         }
 
-        private static ControlTemplate CreateControlTemplateFromMember(MemberInfo member, InputControlAttribute attribute)
+        private static ControlTemplate CreateControlTemplateFromMember(MemberInfo member, InputControlAttribute attribute, string templateName)
         {
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
@@ -434,7 +439,7 @@ namespace ISX
             return parameters;
         }
 
-        private unsafe static ParameterValue ParseParameter(string parameterString, ref int index)
+        private static unsafe ParameterValue ParseParameter(string parameterString, ref int index)
         {
             var parameter = new ParameterValue();
             var parameterStringLength = parameterString.Length;
@@ -613,6 +618,15 @@ namespace ISX
             return result;
         }
 
+        private static void ThrowIfControlTemplateIsDuplicate(ref ControlTemplate controlTemplate,
+            IEnumerable<ControlTemplate> controlTemplates, string templateName)
+        {
+            var name = controlTemplate.name;
+            foreach (var existing in controlTemplates)
+                if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0)
+                    throw new Exception($"Duplicate control '{name}' in template '{templateName}'");
+        }
+
         internal static string ParseNameAndDeviceDescriptionFromJson(string json, out InputDeviceDescription deviceDescription)
         {
             var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
@@ -687,13 +701,14 @@ namespace ISX
                 // Add controls.
                 if (controls != null)
                 {
-                    ////TODO: make sure that all control names are unique
                     var controlTemplates = new List<ControlTemplate>();
                     foreach (var control in controls)
                     {
                         if (string.IsNullOrEmpty(control.name))
                             throw new Exception($"Control with no name in template '{name}");
-                        controlTemplates.Add(control.ToTemplate());
+                        var controlTemplate = control.ToTemplate();
+                        ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, template.name);
+                        controlTemplates.Add(controlTemplate);
                     }
                     template.m_Controls = controlTemplates.ToArray();
                 }
@@ -739,6 +754,7 @@ namespace ISX
                     template = this.template,
                     offset = offset,
                     bit = bit,
+                    isModifyingChildControlByPath = name.IndexOf('/') != -1
                 };
 
                 if (!string.IsNullOrEmpty(format))

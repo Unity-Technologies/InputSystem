@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
@@ -113,7 +114,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanExtendControlInBaseTemplateUsingPath()
+    public void Templates_CanExtendControlInBaseTemplateUsingPath()
     {
         Setup();
 
@@ -271,6 +272,39 @@ public class FunctionalTests
         });
 
         Assert.That(template, Is.EqualTo("MyDevice"));
+
+        TearDown();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_AddingTwoControlsWithSameName_WillCauseException()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""MyControl"",
+                        ""template"" : ""Button""
+                    },
+                    {
+                        ""name"" : ""MyControl"",
+                        ""template"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        // We do minimal processing when adding a template so verification
+        // only happens when we actually try to instantiate the template.
+        InputSystem.RegisterTemplate(json);
+
+        Assert.That(() => InputSystem.AddDevice("MyDevice"),
+            Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
 
         TearDown();
     }
@@ -1114,6 +1148,8 @@ public class FunctionalTests
         TearDown();
     }
 
+    // This is one of the most central tests. If this one breaks, it most often
+    // hints at the state layouting or state updating machinery being borked.
     [Test]
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
@@ -1459,6 +1495,33 @@ public class FunctionalTests
 
         TearDown();
     }
+
+#if UNITY_EDITOR
+    [Test]
+    [Category("Misc")]
+    public void Misc_CanSaveAndRestoreStateInEditor()
+    {
+        Setup();
+
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        InputSystem.AddDevice("MyDevice");
+
+        InputSystem.Save();
+        InputSystem.Reset();
+        InputSystem.Restore();
+
+        Assert.That(InputSystem.devices,
+            Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
+    }
+
+#endif
 
     ////TODO:-----------------------------------------------------------------
     [Test]

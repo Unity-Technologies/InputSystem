@@ -233,16 +233,24 @@ namespace ISX
             }
         }
 
-        //have to also update current device statics
+        private static List<InputManager.SerializedState> s_SerializedStateStack;
 
         internal static void Save()
         {
-            ////TODO
+            if (s_SerializedStateStack == null)
+                s_SerializedStateStack = new List<InputManager.SerializedState>();
+            s_SerializedStateStack.Add(s_Manager.SaveState());
         }
 
         internal static void Restore()
         {
-            ////TODO
+            if (s_SerializedStateStack != null && s_SerializedStateStack.Count > 0)
+            {
+                var index = s_SerializedStateStack.Count - 1;
+                s_Manager.RestoreState(s_SerializedStateStack[index]);
+                s_Manager.InstallGlobals();
+                s_SerializedStateStack.RemoveAt(index);
+            }
         }
 
 #else

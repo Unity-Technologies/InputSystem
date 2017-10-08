@@ -11,7 +11,7 @@ namespace ISX
         public QuaternionControl()
         {
             m_StateBlock.sizeInBits = sizeof(float) * 4 * 8;
-            m_StateBlock.format = new FourCC('Q', 'U', 'A', 'T');
+            m_StateBlock.format = InputStateBlock.kTypeQuaternion;
         }
 
         private unsafe Quaternion GetValue(IntPtr valuePtr)
