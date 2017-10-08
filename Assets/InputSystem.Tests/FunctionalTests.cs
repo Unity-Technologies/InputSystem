@@ -429,11 +429,11 @@ public class FunctionalTests
     public void State_CanComputeStateLayoutFromStateStructure()
     {
         var setup = new InputControlSetup("Gamepad");
-        var leftStick = setup.GetControl("leftStick");
-        var device = setup.Finish();
+        var gamepad = (Gamepad)setup.Finish();
 
-        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>() * 8));
-        Assert.That(leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick").ToInt32()));
+        Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>() * 8));
+        Assert.That(gamepad.leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick").ToInt32()));
+        Assert.That(gamepad.dpad.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("buttons").ToInt32()));
     }
 
     [Test]
@@ -651,6 +651,16 @@ public class FunctionalTests
 
         var device = setup.Finish();
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(15 * 8));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanSpecifyBitOffsetsOnControlProperties()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad.dpad.right.stateBlock.bitOffset, Is.EqualTo((int)DpadControl.ButtonBits.Right));
+        Assert.That(gamepad.dpad.right.stateBlock.byteOffset, Is.EqualTo(gamepad.dpad.stateBlock.byteOffset));
     }
 
     [Test]
@@ -1306,15 +1316,6 @@ public class FunctionalTests
 #endif
 
     ////TODO:-----------------------------------------------------------------
-    [Test]
-    [Category("State")]
-    public void TODO_State_CanSpecifyBitOffsetsOnControlProperties()
-    {
-        //examine control setup on dpad
-        ////TODO
-        Assert.Fail();
-    }
-
     [Test]
     [Category("State")]
     public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()

@@ -356,6 +356,8 @@ namespace ISX
                     // Apply modifications.
                     if (controlTemplate.format != 0)
                         child.m_StateBlock.format = controlTemplate.format;
+                    if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
+                        child.m_StateBlock.bitOffset = controlTemplate.bit;
 
                     ////TODO: other modifications
                 }
@@ -440,6 +442,9 @@ namespace ISX
                         BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.sizeInBits);
             }
 
+            ////TODO: this doesn't support mixed automatic and fixed layouting *within* bitfields;
+            ////      I think it's okay not to support that but we should at least detect it
+
             // Now assign an offset to every control that wants an
             // automatic offset. For bitfields, we need to delay advancing byte
             // offsets until we've seen all bits in the fields.
@@ -454,7 +459,7 @@ namespace ISX
                     continue;
 
                 // See if it's a bit addressing control.
-                var isBitAddressingChild = (child.m_StateBlock.bitOffset != 0);
+                var isBitAddressingChild = (child.m_StateBlock.sizeInBits % 8) != 0;
                 if (isBitAddressingChild)
                 {
                     // Remember start of bitfield group.
@@ -462,9 +467,14 @@ namespace ISX
                         firstBitAddressingChild = child;
 
                     // Keep a running count of the size of the bitfield.
-                    var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
-                    if (lastBit + 1 > bitfieldSizeInBits)
-                        bitfieldSizeInBits = lastBit + 1;
+                    if (child.m_StateBlock.bitOffset == InputStateBlock.kInvalidOffset)
+                        bitfieldSizeInBits += child.m_StateBlock.sizeInBits;
+                    else
+                    {
+                        var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
+                        if (lastBit > bitfieldSizeInBits)
+                            bitfieldSizeInBits = lastBit;
+                    }
                 }
                 else
                 {

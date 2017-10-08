@@ -30,10 +30,7 @@ namespace ISX
 #endif
     public static class InputSystem
     {
-        public static ReadOnlyArray<InputDevice> devices
-        {
-            get { return s_Manager.devices; }
-        }
+        public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
 
         public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
         {

@@ -330,7 +330,7 @@ namespace ISX
                 offset = (uint)Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
 
             // Determine bit offset.
-            var bit = 0u;
+            var bit = InputStateBlock.kInvalidOffset;
             if (attribute != null)
                 bit = (uint)attribute.bit;
 
