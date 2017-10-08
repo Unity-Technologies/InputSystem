@@ -159,6 +159,34 @@ namespace ISX
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
 
+        public static void QueueDisconnectEvent(InputDevice device, double time = -1)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (device.id == InputDevice.kInvalidDeviceId)
+                throw new InvalidOperationException("Device has not been added");
+
+            if (time < 0)
+                time = Time.time;
+
+            var inputEvent = DisconnectEvent.Create(device.id, time);
+            s_Manager.QueueEvent(ref inputEvent);
+        }
+
+        public static void QueueConnectEvent(InputDevice device, double time = -1)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (device.id == InputDevice.kInvalidDeviceId)
+                throw new InvalidOperationException("Device has not been added");
+
+            if (time < 0)
+                time = Time.time;
+
+            var inputEvent = ConnectEvent.Create(device.id, time);
+            s_Manager.QueueEvent(ref inputEvent);
+        }
+
         ////REVIEW: should we actually expose the Update() methods or should these be internal?
         public static void Update()
         {

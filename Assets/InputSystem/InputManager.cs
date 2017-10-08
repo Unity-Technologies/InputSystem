@@ -269,8 +269,7 @@ namespace ISX
             device.MakeCurrent();
 
             // Notify listeners.
-            if (m_DeviceChangeEvent != null)
-                m_DeviceChangeEvent.Invoke(device, InputDeviceChange.Added);
+            m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Added);
         }
 
         public InputDevice AddDevice(InputDeviceDescription description)
@@ -814,15 +813,21 @@ namespace ISX
 
                         break;
 
-                        /*
                     case ConnectEvent.Type:
-                        if (device.connected)
-
-                            device.connected = true;
-                            NotifyListenersOfDeviceChange(device, InputDeviceChange.Connected);
+                        if (!device.connected)
+                        {
+                            device.m_Flags |= InputDevice.Flags.Connected;
+                            m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Connected);
                         }
                         break;
-                        */
+
+                    case DisconnectEvent.Type:
+                        if (device.connected)
+                        {
+                            device.m_Flags &= ~InputDevice.Flags.Connected;
+                            m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Disconnected);
+                        }
+                        break;
                 }
 
                 // Mark as processed by setting time to negative.

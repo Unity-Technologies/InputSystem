@@ -584,8 +584,9 @@ public class FunctionalTests
         InputSystem.RegisterTemplate(jsonTemplate);
 
         var setup = new InputControlSetup("CustomGamepad");
-        var device = setup.Finish();
+        Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
 
+        var device = (Gamepad)setup.Finish();
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
     }
 
@@ -733,19 +734,41 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanBeDisconnected()
+    public void Devices_CanBeDisconnectedAndReconnected()
     {
-        //make sure we get a notification
-        ////TODO
-        Assert.Fail();
-    }
+        var device = InputSystem.AddDevice("Gamepad");
 
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_CanBeReconnected()
-    {
-        ////TODO
-        Assert.Fail();
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receiveDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                ++receivedCalls;
+                receivedDevice = d;
+                receiveDeviceChange = c;
+            };
+
+        InputSystem.QueueDisconnectEvent(device);
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Disconnected));
+        Assert.That(device.connected, Is.False);
+
+        receivedCalls = 0;
+        receivedDevice = null;
+        receiveDeviceChange = null;
+
+        InputSystem.QueueConnectEvent(device);
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Connected));
+        Assert.That(device.connected, Is.True);
     }
 
     [Test]
