@@ -463,8 +463,8 @@ namespace ISX
 
                     // Keep a running count of the size of the bitfield.
                     var lastBit = child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits;
-                    if (lastBit > bitfieldSizeInBits)
-                        bitfieldSizeInBits = lastBit;
+                    if (lastBit + 1 > bitfieldSizeInBits)
+                        bitfieldSizeInBits = lastBit + 1;
                 }
                 else
                 {

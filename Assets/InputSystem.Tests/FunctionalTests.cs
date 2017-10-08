@@ -179,7 +179,7 @@ public class FunctionalTests
     }
 
     [Test]
-    [Category("Template")]
+    [Category("Templates")]
     public void Templates_CanAddProcessorsToControlInJson()
     {
         const string json = @"
@@ -620,6 +620,37 @@ public class FunctionalTests
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_AppendsControlsWithoutForcedOffsetToEndOfState()
+    {
+        var json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""controlWithFixedOffset"",
+                        ""template"" : ""Analog"",
+                        ""offset"" : ""10"",
+                        ""format"" : ""FLT""
+                    },
+                    {
+                        ""name"" : ""controlWithAutomaticOffset"",
+                        ""template"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var setup = new InputControlSetup("MyDevice");
+
+        Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
+
+        var device = setup.Finish();
+        Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(15 * 8));
     }
 
     [Test]
@@ -1127,7 +1158,7 @@ public class FunctionalTests
     }
 
     [Test]
-    [Category("Action")]
+    [Category("Actions")]
     public void Actions_CanListenForStateChangeOnEntireDevice()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
@@ -1280,14 +1311,6 @@ public class FunctionalTests
     public void TODO_State_CanSpecifyBitOffsetsOnControlProperties()
     {
         //examine control setup on dpad
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("State")]
-    public void TODO_State_AppendsControlsWithoutForcedOffsetToEndOfState()
-    {
         ////TODO
         Assert.Fail();
     }

@@ -94,8 +94,6 @@ namespace ISX
             if (!string.IsNullOrEmpty(baseTemplate))
                 m_BaseTemplateTable[nameLowerCase] = baseTemplate.ToLower();
 
-            ////TODO: base template
-
             if (!deviceDescription.empty)
             {
                 m_DeviceDescriptions.Add(new DeviceDescription
@@ -436,10 +434,14 @@ namespace ISX
 
         internal void Destroy()
         {
-            InputTemplate.s_TemplateTypes = null;
-            InputTemplate.s_TemplateStrings = null;
-            InputTemplate.s_BaseTemplateTable = null;
-            InputProcessor.s_Processors = null;
+            if (ReferenceEquals(InputTemplate.s_TemplateTypes, m_TemplateTypes))
+                InputTemplate.s_TemplateTypes = null;
+            if (ReferenceEquals(InputTemplate.s_TemplateStrings, m_TemplateStrings))
+                InputTemplate.s_TemplateStrings = null;
+            if (ReferenceEquals(InputTemplate.s_BaseTemplateTable, m_BaseTemplateTable))
+                InputTemplate.s_BaseTemplateTable = null;
+            if (ReferenceEquals(InputProcessor.s_Processors, m_Processors))
+                InputProcessor.s_Processors = null;
 
             NativeInputSystem.onUpdate -= OnNativeUpdate;
             NativeInputSystem.onDeviceDiscovered -= OnNativeDeviceDiscovered;
