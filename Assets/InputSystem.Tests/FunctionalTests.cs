@@ -885,10 +885,22 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void TODO_Controls_CanFindControlsByBaseTemplate()
+    public void Controls_CanFindControlsByBaseTemplate()
     {
-        ////TODO: derive a custom gamepad template, then find a device created from it by "/<gamepad>"
-        Assert.Fail();
+        const string json = @"
+            {
+                ""name"" : ""MyGamepad"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = InputSystem.AddDevice("MyGamepad");
+
+        var matches = InputSystem.GetControls("/<gamepad>");
+
+        Assert.That(matches, Has.Count.EqualTo(1));
+        Assert.That(matches, Has.Exactly(1).SameAs(device));
     }
 
     [Test]

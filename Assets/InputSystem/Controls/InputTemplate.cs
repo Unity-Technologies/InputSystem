@@ -627,10 +627,11 @@ namespace ISX
                     throw new Exception($"Duplicate control '{name}' in template '{templateName}'");
         }
 
-        internal static string ParseNameAndDeviceDescriptionFromJson(string json, out InputDeviceDescription deviceDescription)
+        internal static string ParseHeaderFromJson(string json, out InputDeviceDescription deviceDescription, out string baseTemplate)
         {
             var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
             deviceDescription = templateJson.device.ToDescriptor();
+            baseTemplate = templateJson.extend;
             return templateJson.name;
         }
 
@@ -638,6 +639,7 @@ namespace ISX
         private struct TemplateJsonNameAndDescriptorOnly
         {
             public string name;
+            public string extend;
             public DeviceDescriptorJson device;
         }
 
@@ -839,6 +841,7 @@ namespace ISX
         // These dictionaries are owned and managed by InputManager.
         internal static Dictionary<string, Type> s_TemplateTypes;
         internal static Dictionary<string, string> s_TemplateStrings;
+        internal static Dictionary<string, string> s_BaseTemplateTable;
 
         // Constructs InputTemlate instances and caches them.
         internal struct Cache

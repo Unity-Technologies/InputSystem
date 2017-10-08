@@ -72,12 +72,10 @@ namespace ISX
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException(nameof(json));
 
-            ////TODO: need to parse out the "extend" field as well and store that (so we can
-            ////      search by base template in paths)
-
-            // Parse out name and device description.
+            // Parse out name, device description, and base template.
             InputDeviceDescription deviceDescription;
-            var nameFromJson = InputTemplate.ParseNameAndDeviceDescriptionFromJson(json, out deviceDescription);
+            string baseTemplate;
+            var nameFromJson = InputTemplate.ParseHeaderFromJson(json, out deviceDescription, out baseTemplate);
 
             // Decide whether to take name from JSON or from code.
             if (string.IsNullOrEmpty(name))
@@ -91,7 +89,12 @@ namespace ISX
             }
 
             // Add it to our records.
-            m_TemplateStrings[name.ToLower()] = json;
+            var nameLowerCase = name.ToLower();
+            m_TemplateStrings[nameLowerCase] = json;
+            if (!string.IsNullOrEmpty(baseTemplate))
+                m_BaseTemplateTable[nameLowerCase] = baseTemplate.ToLower();
+
+            ////TODO: base template
 
             if (!deviceDescription.empty)
             {
@@ -375,6 +378,7 @@ namespace ISX
         {
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
+            m_BaseTemplateTable = new Dictionary<string, string>();
             m_DeviceDescriptions = new List<DeviceDescription>();
             m_Processors = new Dictionary<string, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
@@ -434,6 +438,7 @@ namespace ISX
         {
             InputTemplate.s_TemplateTypes = null;
             InputTemplate.s_TemplateStrings = null;
+            InputTemplate.s_BaseTemplateTable = null;
             InputProcessor.s_Processors = null;
 
             NativeInputSystem.onUpdate -= OnNativeUpdate;
@@ -445,6 +450,7 @@ namespace ISX
         {
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
+            InputTemplate.s_BaseTemplateTable = m_BaseTemplateTable;
             InputProcessor.s_Processors = m_Processors;
 
             NativeInputSystem.onUpdate += OnNativeUpdate;
@@ -468,6 +474,7 @@ namespace ISX
 
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
+        private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to a linearized of all its base templates.
         private Dictionary<string, Type> m_Processors;
 
         private List<DeviceDescription> m_DeviceDescriptions;
@@ -993,6 +1000,7 @@ namespace ISX
         {
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
+            public KeyValuePair<string, string>[] baseTemplates;
             public ProcessorState[] processors;
             public DeviceDescription[] deviceDescriptions;
             public DeviceState[] devices;
@@ -1059,6 +1067,7 @@ namespace ISX
             {
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
+                baseTemplates = m_BaseTemplateTable.ToArray(),
                 processors = processorArray,
                 deviceDescriptions = m_DeviceDescriptions.ToArray(),
                 devices = deviceArray,
@@ -1077,6 +1086,7 @@ namespace ISX
         {
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
+            m_BaseTemplateTable = new Dictionary<string, string>();
             m_DeviceDescriptions = state.deviceDescriptions.ToList();
             m_Processors = new Dictionary<string, Type>();
             m_StateBuffers = state.buffers;
@@ -1094,6 +1104,12 @@ namespace ISX
             foreach (var template in state.templateStrings)
                 m_TemplateStrings[template.name] = template.typeNameOrJson;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
+
+            // Base templates.
+            if (state.baseTemplates != null)
+                foreach (var entry in state.baseTemplates)
+                    m_BaseTemplateTable[entry.Key] = entry.Value;
+            InputTemplate.s_BaseTemplateTable = m_BaseTemplateTable;
 
             // Processors.
             foreach (var processor in state.processors)

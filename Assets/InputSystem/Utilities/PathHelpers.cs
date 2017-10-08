@@ -46,6 +46,24 @@ namespace ISX
                 ++indexInPath;
                 controlIsMatch =
                     MatchPathComponent(control.template, path, ref indexInPath, PathComponentType.Template);
+
+                // If the temlate isn't a match, walk up the base template
+                // chain and match each base template.
+                if (!controlIsMatch)
+                {
+                    var baseTemplate = control.template;
+
+                    ////FIXME: get rid of garbage from ToLower() (I think the best solution is to just always lowercase
+                    ////       all template names; so, control.template would already be lowercased; downside is that this
+                    ////       makes the whole thing visible to the user)
+                    while (InputTemplate.s_BaseTemplateTable.TryGetValue(baseTemplate.ToLower(), out baseTemplate))
+                    {
+                        controlIsMatch = MatchPathComponent(baseTemplate, path, ref indexInPath,
+                                PathComponentType.Template);
+                        if (controlIsMatch)
+                            break;
+                    }
+                }
             }
             else
             {
@@ -216,6 +234,7 @@ namespace ISX
         {
             var nameLength = component.Length;
             var pathLength = path.Length;
+            var startIndex = indexInPath;
 
             // Try to walk the name as far as we can.
             var indexInName = 0;
@@ -258,7 +277,10 @@ namespace ISX
                 // If we've reached the end of the component name, we did so before
                 // we've reached a terminator
                 if (indexInName == nameLength)
+                {
+                    indexInPath = startIndex;
                     return false;
+                }
 
                 if (char.ToLower(component[indexInName]) == char.ToLower(nextCharInPath))
                 {
@@ -268,11 +290,16 @@ namespace ISX
                 else
                 {
                     // Name isn't a match.
+                    indexInPath = startIndex;
                     return false;
                 }
             }
 
-            return (indexInName == nameLength);
+            if (indexInName == nameLength)
+                return true;
+
+            indexInPath = startIndex;
+            return false;
         }
 
         private static bool PathComponentCanYieldMultipleMatches(string path, int indexInPath)
