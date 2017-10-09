@@ -2,6 +2,7 @@ namespace ISX
 {
     public static class CommonUsages
     {
+        ////REVIEW: may want to rename to PrimaryMotion and SecondaryMotion or something like that
         public const string PrimaryStick = "PrimaryStick";
         public const string SecondaryStick = "SecondaryStick";
         public const string PrimaryAction = "PrimaryAction";

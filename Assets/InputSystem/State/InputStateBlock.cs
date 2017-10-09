@@ -95,23 +95,10 @@ namespace ISX
         private enum Flags
         {
             SemanticsOutput = 1 << 0,
-            LayoutComputed = 1 << 1,
         }
 
         private Flags m_Flags;
 
         internal int alignedSizeInBytes => (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0);
-
-        internal bool layoutComputed
-        {
-            get { return (m_Flags & Flags.LayoutComputed) == Flags.LayoutComputed; }
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.LayoutComputed;
-                else
-                    m_Flags &= ~Flags.LayoutComputed;
-            }
-        }
     }
 }

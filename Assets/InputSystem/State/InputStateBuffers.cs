@@ -6,8 +6,8 @@ namespace ISX
 {
     // The raw memory blocks which are indexed by InputStateBlocks.
     //
-    // Internally, we perform only a single combined allocation for all state buffers
-    // needed by the system. Externally, we expose them as if they are each separate
+    // Internally, we perform only a single combined unmanaged allocation for all state
+    // buffers needed by the system. Externally, we expose them as if they are each separate
     // buffers.
 #if UNITY_EDITOR
     [Serializable]
@@ -64,6 +64,7 @@ namespace ISX
         ////TODO: need to clear the current buffers when switching between edit and play mode
         ////      (i.e. if you click an editor window while in play mode, the play mode
         ////      device states will all go back to default)
+        ////      actually, if we really reset on mode change, can't we just keep a single set buffers?
 
 
         public int sizePerBuffer;

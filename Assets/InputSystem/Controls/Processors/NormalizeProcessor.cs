@@ -12,8 +12,7 @@ namespace ISX
 
         public float Process(float value)
         {
-            var minAbsolute = Mathf.Abs(min);
-            return (value + minAbsolute) / (max + minAbsolute) - minAbsolute;
+            return Normalize(value, min, max);
         }
 
         public static float Normalize(float value, float min, float max)

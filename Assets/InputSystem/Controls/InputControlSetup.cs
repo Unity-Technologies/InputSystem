@@ -345,7 +345,6 @@ namespace ISX
                     if (controlTemplate.sizeInBits != 0 && child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
                     {
                         child.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
-                        child.m_StateBlock.layoutComputed = false;
                     }
                     if (controlTemplate.format != 0 && child.m_StateBlock.format != controlTemplate.format)
                     {
@@ -441,7 +440,6 @@ namespace ISX
         private static void SetFormat(InputControl control, InputTemplate.ControlTemplate controlTemplate)
         {
             control.m_StateBlock.format = controlTemplate.format;
-            control.m_StateBlock.layoutComputed = false;
             if (controlTemplate.sizeInBits == 0)
             {
                 var primitiveFormatSize = InputStateBlock.GetSizeOfPrimitiveFormatInBits(controlTemplate.format);
