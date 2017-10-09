@@ -33,7 +33,7 @@ namespace ISX
         // IMPORTANT: Accumulation and *resetting* (i.e. going back to zero in-between frames)
         //            has to be done by the code that generates state events. The system will *not*
         //            automatically maintain deltas.
-        [InputControl]
+        [InputControl(usage = "secondaryStick")]
         public Vector2 delta;
 
         [InputControl(usage = "Scroll")]

@@ -219,13 +219,16 @@ namespace ISX
 
         // Creates a device from the given template and adds it to the system.
         // NOTE: Creates garbage.
-        public InputDevice AddDevice(string template)
+        public InputDevice AddDevice(string template, string name = null)
         {
             if (string.IsNullOrEmpty(template))
                 throw new ArgumentException(nameof(template));
 
             var setup = new InputControlSetup(template);
             var device = setup.Finish();
+
+            if (!string.IsNullOrEmpty(name))
+                device.m_Name = name;
 
             AddDevice(device);
 
@@ -279,7 +282,7 @@ namespace ISX
             if (template == null)
                 throw new ArgumentException("Cannot find template matching device description", nameof(description));
 
-            return AddDevice(template);
+            return AddDevice(template, description.product);
         }
 
         internal InputDevice AddNativeDevice(int deviceId, string template)
@@ -520,6 +523,7 @@ namespace ISX
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
         private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
 
+        ////TODO: support combining monitors for bitfields
         internal void AddStateChangeMonitor(InputControl control, InputAction action)
         {
             var device = control.device;
@@ -1009,6 +1013,7 @@ namespace ISX
             public NativeDevice[] nativeDevices;
             public InputStateBuffers buffers;
             public DeviceChangeEvent deviceChangeEvent;
+            public InputConfiguration.SerializedState configuration;
         }
 
         internal SerializedState SaveState()
@@ -1075,7 +1080,8 @@ namespace ISX
                 devices = deviceArray,
                 nativeDevices = m_NativeDevices.ToArray(),
                 buffers = m_StateBuffers,
-                deviceChangeEvent = m_DeviceChangeEvent
+                deviceChangeEvent = m_DeviceChangeEvent,
+                configuration = InputConfiguration.Save()
             };
 
             // We don't bring monitors along. InputActions and related classes are equipped
@@ -1096,6 +1102,9 @@ namespace ISX
             m_DeviceChangeEvent = state.deviceChangeEvent;
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_NativeDevices = state.nativeDevices.ToList();
+
+            // Configuration.
+            InputConfiguration.Restore(state.configuration);
 
             // Template types.
             foreach (var template in state.templateTypes)
@@ -1118,6 +1127,9 @@ namespace ISX
                 m_Processors[processor.name] = Type.GetType(processor.typeName, true);
             InputProcessor.s_Processors = m_Processors;
 
+            // Refresh builtin templates.
+            BuiltinDeviceTemplates.RegisterTemplates(this);
+
             // Re-create devices.
             var deviceCount = state.devices.Length;
             var devices = new InputDevice[deviceCount];
@@ -1130,6 +1142,7 @@ namespace ISX
                 device.m_Id = deviceState.deviceId;
                 device.m_DeviceIndex = i;
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
+                device.MakeCurrent();
                 devices[i] = device;
                 m_DevicesById[device.m_Id] = device;
             }

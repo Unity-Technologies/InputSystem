@@ -6,13 +6,12 @@ namespace ISX
     {
         public DiscreteControl()
         {
-            m_StateBlock.sizeInBits = sizeof(int) * 8;
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
         private unsafe int GetValue(IntPtr valuePtr)
         {
-            var value = *(int*)currentValuePtr;
+            var value = *(int*)valuePtr;
             return Process(value);
         }
 

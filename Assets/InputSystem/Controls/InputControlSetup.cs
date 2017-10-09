@@ -271,9 +271,14 @@ namespace ISX
                 m_Device.m_ChildrenForEachControl[childIndex] = control;
                 ++childIndex;
 
-                // Pass remaining settings of control template on to newly created control.
+                // Pass state block config on to control.
                 control.m_StateBlock.byteOffset = controlTemplate.offset;
-                control.m_StateBlock.bitOffset = controlTemplate.bit;
+                if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
+                    control.m_StateBlock.bitOffset = controlTemplate.bit;
+                if (controlTemplate.sizeInBits != 0)
+                    control.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
+                if (controlTemplate.format != 0)
+                    SetFormat(control, controlTemplate);
 
                 ////REVIEW: the constant appending to m_UsagesForEachControl and m_AliasesForEachControl may lead to a lot
                 ////        of successive re-allocations
@@ -298,35 +303,13 @@ namespace ISX
                     control.m_AliasesReadOnly = new ReadOnlyArray<string>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
                 }
 
-                // Set format.
-                if (controlTemplate.format != 0)
-                    control.m_StateBlock.format = controlTemplate.format;
-
                 // Set parameters.
                 if (controlTemplate.parameters != null)
                     SetParameters(control, controlTemplate.parameters);
 
                 // Add processors.
                 if (controlTemplate.processors != null)
-                {
-                    var processorCount = controlTemplate.processors.Length;
-                    for (var n = 0; n < processorCount; ++n)
-                    {
-                        var name = controlTemplate.processors[n].Key;
-                        var type = InputProcessor.TryGet(name);
-                        if (type == null)
-                            throw new Exception(
-                                $"Cannot find processor '{name}' referenced by control '{controlTemplate.name}' in template '{template.name}'");
-
-                        var processor = Activator.CreateInstance(type);
-
-                        var parameters = controlTemplate.processors[n].Value;
-                        if (parameters != null)
-                            SetParameters(processor, parameters);
-
-                        control.AddProcessor(processor);
-                    }
-                }
+                    AddProcessors(control, controlTemplate, template.name);
             }
 
             // Install child array on parent. We will later patch up the array
@@ -353,14 +336,71 @@ namespace ISX
                         throw new Exception(
                             $"Cannot find control '{controlTemplate.name}' in template '{template.name}'");
 
+                    // Controls layout themselves as we come back up the hierarchy. However, when we
+                    // apply layout modifications reaching *into* the hierarchy, we need to retrigger
+                    // layouting on their parents.
+                    var haveChangedLayoutOfChild = false;
+
                     // Apply modifications.
-                    if (controlTemplate.format != 0)
-                        child.m_StateBlock.format = controlTemplate.format;
+                    if (controlTemplate.sizeInBits != 0 && child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
+                    {
+                        child.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
+                        child.m_StateBlock.layoutComputed = false;
+                    }
+                    if (controlTemplate.format != 0 && child.m_StateBlock.format != controlTemplate.format)
+                    {
+                        SetFormat(child, controlTemplate);
+                        haveChangedLayoutOfChild = true;
+                    }
+                    ////REVIEW: ATM, when you move a child with a fixed offset, we only move the child
+                    ////        and don't move the parent or siblings. What this means is that if you move
+                    ////        leftStick/x, for example, leftStick stays put. ATM you have to move *all*
+                    ////        controls that are part of a chain manually. Not sure what the best behavior
+                    ////        is. If we opt to move parents along with children, we have to make sure we
+                    ////        are not colliding with any other relocations of children (e.g. if you move
+                    ////        both leftStick/x and leftStick/y, leftStick itself should move only once and
+                    ////        not at all if there indeed is a leftStick control template with an offset;
+                    ////        so, it'd get quite complicated)
+                    if (controlTemplate.offset != InputStateBlock.kInvalidOffset)
+                        child.m_StateBlock.byteOffset = controlTemplate.offset;
                     if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
                         child.m_StateBlock.bitOffset = controlTemplate.bit;
+                    if (controlTemplate.processors != null)
+                        AddProcessors(child, controlTemplate, template.name);
+                    if (controlTemplate.parameters != null)
+                        SetParameters(child, controlTemplate.parameters);
 
                     ////TODO: other modifications
+
+                    // Apply layout change.
+                    ////REVIEW: not sure what's better here; trigger this immediately means we may trigger
+                    ////        it a number of times on the same parent but doing it as a final pass would
+                    ////        require either collecting the necessary parents or doing another pass through
+                    ////        the list of control templates
+                    if (haveChangedLayoutOfChild && !ReferenceEquals(child.parent, parent))
+                        ComputeStateLayout(child.parent);
                 }
+            }
+        }
+
+        private static void AddProcessors(InputControl control, InputTemplate.ControlTemplate controlTemplate, string templateName)
+        {
+            var processorCount = controlTemplate.processors.Length;
+            for (var n = 0; n < processorCount; ++n)
+            {
+                var name = controlTemplate.processors[n].Key;
+                var type = InputProcessor.TryGet(name);
+                if (type == null)
+                    throw new Exception(
+                        $"Cannot find processor '{name}' referenced by control '{controlTemplate.name}' in template '{templateName}'");
+
+                var processor = Activator.CreateInstance(type);
+
+                var parameters = controlTemplate.processors[n].Value;
+                if (parameters != null)
+                    SetParameters(processor, parameters);
+
+                control.AddProcessor(processor);
             }
         }
 
@@ -395,6 +435,18 @@ namespace ISX
                 }
 
                 field.SetValue(onObject, value);
+            }
+        }
+
+        private static void SetFormat(InputControl control, InputTemplate.ControlTemplate controlTemplate)
+        {
+            control.m_StateBlock.format = controlTemplate.format;
+            control.m_StateBlock.layoutComputed = false;
+            if (controlTemplate.sizeInBits == 0)
+            {
+                var primitiveFormatSize = InputStateBlock.GetSizeOfPrimitiveFormatInBits(controlTemplate.format);
+                if (primitiveFormatSize != -1)
+                    control.m_StateBlock.sizeInBits = (uint)primitiveFormatSize;
             }
         }
 
@@ -499,10 +551,8 @@ namespace ISX
                 runningByteOffset = BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
             var totalSizeInBytes = runningByteOffset;
 
-            // If our size isn't set, set it now from the total size we
-            // have accumulated.
-            if (control.m_StateBlock.sizeInBits == 0)
-                control.m_StateBlock.sizeInBits = totalSizeInBytes * 8;
+            // Set size. We force all parents to the combined size of their children.
+            control.m_StateBlock.sizeInBits = totalSizeInBytes * 8;
         }
 
         // Finalize array references in the control hierarchy and make all state offets relative to the

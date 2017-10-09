@@ -13,22 +13,22 @@ namespace ISX
 
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", template = "Dpad")]
-        [InputControl(name = "buttonSouth", template = "Button", bit = (int)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
-        [InputControl(name = "buttonWest", template = "Button", bit = (int)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
-        [InputControl(name = "buttonNorth", template = "Button", bit = (int)Button.North, aliases = new[] { "y", "triangle" })]
-        [InputControl(name = "buttonEast", template = "Button", bit = (int)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
-        [InputControl(name = "leftStickPress", template = "Button", bit = (int)Button.LeftStick)]
-        [InputControl(name = "rightStickPress", template = "Button", bit = (int)Button.RightStick)]
-        [InputControl(name = "leftShoulder", template = "Button", bit = (int)Button.LeftShoulder)]
-        [InputControl(name = "rightShoulder", template = "Button", bit = (int)Button.RightShoulder)]
+        [InputControl(name = "buttonSouth", template = "Button", bit = (uint)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
+        [InputControl(name = "buttonWest", template = "Button", bit = (uint)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
+        [InputControl(name = "buttonNorth", template = "Button", bit = (uint)Button.North, aliases = new[] { "y", "triangle" })]
+        [InputControl(name = "buttonEast", template = "Button", bit = (uint)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
+        [InputControl(name = "leftStickPress", template = "Button", bit = (uint)Button.LeftStick)]
+        [InputControl(name = "rightStickPress", template = "Button", bit = (uint)Button.RightStick)]
+        [InputControl(name = "leftShoulder", template = "Button", bit = (uint)Button.LeftShoulder)]
+        [InputControl(name = "rightShoulder", template = "Button", bit = (uint)Button.RightShoulder)]
         ////REVIEW: seems like these two should get less ambiguous names as well
-        [InputControl(name = "start", template = "Button", bit = (int)Button.Start, usage = "Menu")]
-        [InputControl(name = "select", template = "Button", bit = (int)Button.Select)]
+        [InputControl(name = "start", template = "Button", bit = (uint)Button.Start, usage = "Menu")]
+        [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
         public int buttons;
 
-        [InputControl(template = "Stick", usage = "PrimaryStick")]
+        [InputControl(template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
         public Vector2 leftStick;
-        [InputControl(template = "Stick", usage = "SecondaryStick")]
+        [InputControl(template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
         public Vector2 rightStick;
         [InputControl(template = "Analog", usage = "SecondaryTrigger")]
         public float leftTrigger;

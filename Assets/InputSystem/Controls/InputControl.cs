@@ -211,5 +211,7 @@ namespace ISX
                 throw new Exception($"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
             m_ProcessorStack.Append(processorOfType);
         }
+
+        internal IInputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
     }
 }

@@ -15,6 +15,9 @@ public class FunctionalTests
     public void Setup()
     {
         InputSystem.Save();
+
+        // Put system in a blank state where it has all the templates but has
+        // none of the native devices.
         InputSystem.Reset();
     }
 
@@ -208,7 +211,30 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void Templates_CanFindTemplateFromDeviceDescriptor()
+    public void Templates_BooleanParameterDefaultsToTrueIfValueOmitted()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick/x"",
+                        ""parameters"" : ""clamp""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = (Gamepad) new InputControlSetup("MyDevice").Finish();
+
+        Assert.That(device.leftStick.x.clamp, Is.True);
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanFindTemplateFromDeviceDescription()
     {
         const string json = @"
             {
@@ -300,7 +326,7 @@ public class FunctionalTests
                 ""extend"" : ""Gamepad"",
                 ""device"" : {
                     ""interface"" : ""AA|BB"",
-                    ""manufacturer"" : ""Shtabble""
+                    ""product"" : ""Shtabble""
                 }
             }
         ";
@@ -310,13 +336,14 @@ public class FunctionalTests
         var descriptor = new InputDeviceDescription
         {
             interfaceName = "BB",
-            manufacturer = "Shtabble"
+            product = "Shtabble"
         };
 
         var device = InputSystem.AddDevice(descriptor);
 
         Assert.That(device.template, Is.EqualTo("MyDevice"));
         Assert.That(device, Is.TypeOf<Gamepad>());
+        Assert.That(device.name, Is.EqualTo("Shtabble")); // Product name becomes device name.
     }
 
     [Test]
@@ -412,6 +439,40 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(device.leftStick.value, Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f))));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanChangeDefaultDeadzoneValuesOnTheFly()
+    {
+        // Deadzone processor with no specified min/max should take default values
+        // from InputConfiguration.
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick"",
+                        ""processors"" : ""deadzone""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
+
+        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMin));
+        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMax));
+
+        InputConfiguration.DefaultDeadzoneMin = InputConfiguration.DefaultDeadzoneMin + 0.1f;
+        InputConfiguration.DefaultDeadzoneMax = InputConfiguration.DefaultDeadzoneMin - 0.1f;
+
+        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMin));
+        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMax));
     }
 
     [Test]
@@ -588,6 +649,48 @@ public class FunctionalTests
 
         var device = (Gamepad)setup.Finish();
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanReformatAndResizeControlHierarchy()
+    {
+        // Turn left stick into a 2D vector of shorts. Need to reformat the up/down/left/right
+        // axes along with X and Y.
+        // NOTE: Child offsets are not absolute! They are relative to their parent.
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""leftStick"", ""format"" : ""VC2S"", ""offset"" : 6 },
+                    { ""name"" : ""leftStick/x"", ""format"" : ""SHRT"", ""offset"" : 0 },
+                    { ""name"" : ""leftStick/y"", ""format"" : ""SHRT"", ""offset"" : 2 },
+                    { ""name"" : ""leftStick/up"", ""format"" : ""SHRT"", ""offset"" : 2 },
+                    { ""name"" : ""leftStick/down"", ""format"" : ""SHRT"", ""offset"" : 2 },
+                    { ""name"" : ""leftStick/left"", ""format"" : ""SHRT"", ""offset"" : 0 },
+                    { ""name"" : ""leftStick/right"", ""format"" : ""SHRT"", ""offset"" : 0 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = (Gamepad) new InputControlSetup("MyDevice").Finish();
+
+        Assert.That(device.leftStick.stateBlock.byteOffset, Is.EqualTo(6));
+        Assert.That(device.leftStick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
+        Assert.That(device.leftStick.x.stateBlock.byteOffset, Is.EqualTo(6));
+        Assert.That(device.leftStick.y.stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device.leftStick.x.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
+        Assert.That(device.leftStick.x.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
+        Assert.That(device.leftStick.up.stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device.leftStick.up.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
+        Assert.That(device.leftStick.down.stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device.leftStick.down.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
+        Assert.That(device.leftStick.left.stateBlock.byteOffset, Is.EqualTo(6));
+        Assert.That(device.leftStick.left.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
+        Assert.That(device.leftStick.right.stateBlock.byteOffset, Is.EqualTo(6));
+        Assert.That(device.leftStick.right.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
     }
 
     struct CustomGamepadState
@@ -825,6 +928,26 @@ public class FunctionalTests
 
         Assert.That(device, Is.InstanceOf<InputDevice>());
         Assert.That(device.template, Is.EqualTo(template));
+    }
+
+    [Test]
+    [Category("Devices")]
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "Gamepad")]
+#endif
+    public void Devices_SupportsPlatformsNativeDevice(string product, string manufacturer, string interfaceName, string baseTemplate)
+    {
+        var description = new InputDeviceDescription
+        {
+            interfaceName = interfaceName,
+            product = product,
+            manufacturer = manufacturer
+        };
+
+        InputDevice device = null;
+        Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
+        Assert.That(InputSystem.GetControls($"/<{baseTemplate}>"), Has.Exactly(1).SameAs(device));
+        Assert.That(device.name, Is.EqualTo(product));
     }
 
     [Test]
@@ -1371,6 +1494,58 @@ public class FunctionalTests
     public void TODO_Devices_CanBeRemoved()
     {
         ////TODO
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanLoadTemplateFromCSV()
+    {
+        //take device info from name and the csv data is just a flat list of controls
+        Assert.Fail();
+    }
+
+    ////TODO: This test doesn't yet make sense. The thought of how the feature should work is
+    ////      correct, but the setup makes no sense and doesn't work. Gamepad adds deadzones
+    ////      on the *sticks* so modifying that requires a Vector2 type processor which invert
+    ////      isn't.
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanMoveProcessorFromBaseTemplateInProcessorStack()
+    {
+        // The base gamepad template is adding deadzone processors to sticks. However, a
+        // template based on that one may want to add processors *before* deadzoning is
+        // applied. It can do so very simply by listing where the deadzone processor should
+        // occur.
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick/x"",
+                        ""processors"" : ""invert,deadzone""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("MyDevice");
+        var leftStickX = setup.GetControl<AxisControl>("leftStick/x");
+
+        Assert.That(leftStickX.processors, Has.Length.EqualTo(2));
+        Assert.That(leftStickX.processors[0], Is.TypeOf<InvertProcessor>());
+        Assert.That(leftStickX.processors[1], Is.TypeOf<DeadzoneProcessor>());
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Template_CustomizedStateLayoutWillNotUseFormatCodeFromBaseTemplate()
+    {
+        //make sure that if you customize a gamepad layout, you don't end up with the "GPAD" format on the device
+        //in fact, the system should require a format code to be specified in that case
         Assert.Fail();
     }
 }

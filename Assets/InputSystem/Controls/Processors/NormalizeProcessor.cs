@@ -2,7 +2,9 @@ using UnityEngine;
 
 namespace ISX
 {
-    // Normalizes input values in the range [min..max] to [0..1].
+    // Normalizes input values in the range [min..max] to unsigned normalized
+    // form [0..1] if min is >= 0 and to signed normalized form [-1..1] if
+    // min < 0.
     public class NormalizeProcessor : IInputProcessor<float>
     {
         public float min;
@@ -10,7 +12,17 @@ namespace ISX
 
         public float Process(float value)
         {
-            return (Mathf.Clamp(value, min, max) - Mathf.Abs(min)) / (max - Mathf.Abs(min));
+            var minAbsolute = Mathf.Abs(min);
+            return (value + minAbsolute) / (max + minAbsolute) - minAbsolute;
+        }
+
+        public static float Normalize(float value, float min, float max)
+        {
+            var minAbsolute = Mathf.Abs(min);
+            var percentage = (value + minAbsolute) / (max + minAbsolute);
+            if (min < 0.0f)
+                return 2 * percentage - 1;
+            return percentage;
         }
     }
 }

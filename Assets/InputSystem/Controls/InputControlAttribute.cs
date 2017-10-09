@@ -12,13 +12,15 @@ namespace ISX
     {
         public string template;
         public string name;
+        public FourCC format;
         public string usage;
         public string[] usages;
         public string parameters;
-        public string[] processors;
+        public string processors;
         public string alias;
         public string[] aliases;
-        public int bit;
+        public uint bit = InputStateBlock.kInvalidOffset;
         public uint offset = InputStateBlock.kInvalidOffset;
+        public uint sizeInBits;
     }
 }

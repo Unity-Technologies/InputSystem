@@ -57,6 +57,8 @@ namespace ISX
             }
         }
 
+        public InputControl lastSource => m_LastSource;
+
         public bool enabled => m_Enabled;
 
         public event ActionListener started
@@ -156,6 +158,7 @@ namespace ISX
         // State we keep for enabling/disabling. This is volatile and not put on disk.
         private bool m_Enabled;
         private Phase m_CurrentPhase;
+        private InputControl m_LastSource;
         internal ReadOnlyArray<InputControl> m_Controls;
 
         private void CreatePrivateActionSet()
@@ -170,18 +173,18 @@ namespace ISX
             switch (newPhase)
             {
                 case Phase.Started:
-                    if (m_OnStarted != null)
-                        m_OnStarted.Invoke(this, triggerControl);
+                    m_OnStarted?.Invoke(this, triggerControl);
+                    m_LastSource = triggerControl;
                     break;
 
                 case Phase.Performed:
-                    if (m_OnPerformed != null)
-                        m_OnPerformed.Invoke(this, triggerControl);
+                    m_OnPerformed?.Invoke(this, triggerControl);
+                    m_LastSource = triggerControl;
                     break;
 
                 case Phase.Cancelled:
-                    if (m_OnCancelled != null)
-                        m_OnCancelled.Invoke(this, triggerControl);
+                    m_OnCancelled?.Invoke(this, triggerControl);
+                    m_LastSource = triggerControl;
                     break;
             }
         }

@@ -4,6 +4,7 @@ namespace ISX
     // State-wise this is still just a Vector2.
     public class StickControl : Vector2Control
     {
+        ////TODO: come up with a way in which we can make the offset and format of these controls dependent on X and Y
         [InputControl(offset = 4, parameters = "clamp=true,clampMin=0,clampMax=1")]
         public AxisControl up { get; private set; }
         [InputControl(offset = 4, parameters = "clamp=true,clampMin=-1,clampMax=0")]

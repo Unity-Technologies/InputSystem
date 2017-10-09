@@ -27,6 +27,10 @@ namespace ISX
         public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
         public static FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
         public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '2');
+        public static FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
+        public static FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
+        public static FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');
+        public static FourCC kTypeVector3Byte = new FourCC('V', 'C', '3', 'B');
         public static FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
@@ -40,15 +44,23 @@ namespace ISX
             if (type == kTypeByte)
                 return 1 * 8;
             if (type == kTypeFloat)
-                return 4 * 4;
+                return 4 * 8;
             if (type == kTypeDouble)
-                return 8 * 4;
+                return 8 * 8;
             if (type == kTypeVector2)
                 return 2 * 4 * 8;
             if (type == kTypeVector3)
                 return 3 * 4 * 8;
             if (type == kTypeQuaternion)
                 return 4 * 4 * 8;
+            if (type == kTypeVector2Short)
+                return 2 * 2 * 8;
+            if (type == kTypeVector3Short)
+                return 3 * 2 * 8;
+            if (type == kTypeVector2Byte)
+                return 2 * 1 * 8;
+            if (type == kTypeVector3Byte)
+                return 3 * 1 * 8;
             return -1;
         }
 
@@ -82,11 +94,24 @@ namespace ISX
         [Flags]
         private enum Flags
         {
-            SemanticsOutput = 1 << 1,
+            SemanticsOutput = 1 << 0,
+            LayoutComputed = 1 << 1,
         }
 
         private Flags m_Flags;
 
         internal int alignedSizeInBytes => (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0);
+
+        internal bool layoutComputed
+        {
+            get { return (m_Flags & Flags.LayoutComputed) == Flags.LayoutComputed; }
+            set
+            {
+                if (value)
+                    m_Flags |= Flags.LayoutComputed;
+                else
+                    m_Flags &= ~Flags.LayoutComputed;
+            }
+        }
     }
 }

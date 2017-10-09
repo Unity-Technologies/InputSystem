@@ -82,6 +82,7 @@ namespace ISX
             public KeyValuePair<string, ParameterValue[]>[] processors;
             public uint offset;
             public uint bit;
+            public uint sizeInBits;
             public FourCC format;
 
             // If true, the template will not add a control but rather a modify a control
@@ -332,7 +333,12 @@ namespace ISX
             // Determine bit offset.
             var bit = InputStateBlock.kInvalidOffset;
             if (attribute != null)
-                bit = (uint)attribute.bit;
+                bit = attribute.bit;
+
+            // Determine size.
+            var sizeInBits = InputStateBlock.kInvalidOffset;
+            if (attribute != null)
+                sizeInBits = attribute.sizeInBits;
 
             // Determine aliases.
             string[] aliases = null;
@@ -357,6 +363,7 @@ namespace ISX
                 template = template,
                 offset = offset,
                 bit = bit,
+                sizeInBits = sizeInBits,
                 parameters = parameters,
                 usages = usages,
                 aliases = aliases
@@ -450,51 +457,60 @@ namespace ISX
 
             // Parse name.
             var nameStart = index;
-            while (index < parameterStringLength &&
-                   !(parameterString[index] == '=' || char.IsWhiteSpace(parameterString[index])))
+            while (index < parameterStringLength)
+            {
+                var nextChar = parameterString[index];
+                if (nextChar == '=' || nextChar == ',' || char.IsWhiteSpace(nextChar))
+                    break;
                 ++index;
+            }
             parameter.name = parameterString.Substring(nameStart, index - nameStart);
 
             // Skip whitespace.
             while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
                 ++index;
 
-            ////TODO: allow to have only name and take it as meaning "name=true"
-
             if (index == parameterStringLength || parameterString[index] != '=')
-                throw new Exception($"Missing value for parameter '{parameter.name}' in \"{parameterString}\"");
-            ++index; // Skip over '='.
-
-            // Skip whitespace.
-            while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
-                ++index;
-
-            // Parse value.
-            var valueStart = index;
-            while (index < parameterStringLength &&
-                   !(parameterString[index] == ',' || char.IsWhiteSpace(parameterString[index])))
-                ++index;
-
-            var value = parameterString.Substring(valueStart, index - valueStart);
-            if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
             {
+                // No value given so take "=true" as implied.
                 parameter.type = ParameterType.Boolean;
                 *((bool*)parameter.value) = true;
             }
-            else if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                parameter.type = ParameterType.Boolean;
-                *((bool*)parameter.value) = false;
-            }
-            else if (value.IndexOf('.') != -1)
-            {
-                parameter.type = ParameterType.Float;
-                *((float*)parameter.value) = float.Parse(value);
-            }
             else
             {
-                parameter.type = ParameterType.Integer;
-                *((int*)parameter.value) = int.Parse(value);
+                ++index; // Skip over '='.
+
+                // Skip whitespace.
+                while (index < parameterStringLength && char.IsWhiteSpace(parameterString[index]))
+                    ++index;
+
+                // Parse value.
+                var valueStart = index;
+                while (index < parameterStringLength &&
+                       !(parameterString[index] == ',' || char.IsWhiteSpace(parameterString[index])))
+                    ++index;
+
+                var value = parameterString.Substring(valueStart, index - valueStart);
+                if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    parameter.type = ParameterType.Boolean;
+                    *((bool*)parameter.value) = true;
+                }
+                else if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    parameter.type = ParameterType.Boolean;
+                    *((bool*)parameter.value) = false;
+                }
+                else if (value.IndexOf('.') != -1)
+                {
+                    parameter.type = ParameterType.Float;
+                    *((float*)parameter.value) = float.Parse(value);
+                }
+                else
+                {
+                    parameter.type = ParameterType.Integer;
+                    *((int*)parameter.value) = int.Parse(value);
+                }
             }
 
             if (index < parameterStringLength && parameterString[index] == ',')
@@ -595,6 +611,11 @@ namespace ISX
                 result.format = derivedTemplate.format;
             else
                 result.format = baseTemplate.format;
+
+            if (derivedTemplate.sizeInBits != 0)
+                result.sizeInBits = derivedTemplate.sizeInBits;
+            else
+                result.sizeInBits = baseTemplate.sizeInBits;
 
             result.aliases = ArrayHelpers.Merge(derivedTemplate.aliases, baseTemplate.aliases,
                     StringComparer.OrdinalIgnoreCase);
@@ -735,6 +756,7 @@ namespace ISX
             public string usage; // Convenince to not have to create array for single usage.
             public uint offset;
             public uint bit;
+            public uint sizeInBits;
             public string format;
             public string[] usages;
             public string parameters;
@@ -756,6 +778,7 @@ namespace ISX
                     template = this.template,
                     offset = offset,
                     bit = bit,
+                    sizeInBits = sizeInBits,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1
                 };
 

@@ -12,6 +12,11 @@ namespace ISX
         public TValue firstValue;
         public TValue[] additionalValues;
 
+        public TValue[] ToArray()
+        {
+            return ArrayHelpers.Join(firstValue, additionalValues);
+        }
+
         public void Append(TValue value)
         {
             if (firstValue == null)

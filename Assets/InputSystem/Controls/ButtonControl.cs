@@ -7,7 +7,6 @@ namespace ISX
     {
         public ButtonControl()
         {
-            m_StateBlock.sizeInBits = 1;
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 

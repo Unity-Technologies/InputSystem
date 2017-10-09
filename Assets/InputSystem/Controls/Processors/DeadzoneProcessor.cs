@@ -7,8 +7,11 @@ namespace ISX
     // Normalizes to the min/max range.
     public class DeadzoneProcessor : IInputProcessor<Vector2>
     {
-        public float min = 0.225f;
-        public float max = 0.925f;
+        public float min;
+        public float max;
+
+        public float minOrDefault => min == 0.0f ? InputConfiguration.DefaultDeadzoneMin : min;
+        public float maxOrDefault => max == 0.0f ? InputConfiguration.DefaultDeadzoneMax : max;
 
         public Vector2 Process(Vector2 vector)
         {
@@ -23,11 +26,15 @@ namespace ISX
 
         private float GetDeadZoneAdjustedValue(float value)
         {
+            var min = minOrDefault;
+            var max = maxOrDefault;
+
             var absValue = Mathf.Abs(value);
             if (absValue < min)
                 return 0;
             if (absValue > max)
                 return Mathf.Sign(value);
+
             return Mathf.Sign(value) * ((absValue - min) / (max - min));
         }
     }
