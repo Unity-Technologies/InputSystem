@@ -30,9 +30,9 @@ namespace ISX
         public Vector2 leftStick;
         [InputControl(template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
         public Vector2 rightStick;
-        [InputControl(template = "Analog", usage = "SecondaryTrigger")]
+        [InputControl(template = "Button", format = "FLT", usage = "SecondaryTrigger")]
         public float leftTrigger;
-        [InputControl(template = "Analog", usage = "PrimaryTrigger")]
+        [InputControl(template = "Button", format = "FLT", usage = "PrimaryTrigger")]
         public float rightTrigger;
 
         public GamepadOutputState motors;

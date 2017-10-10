@@ -13,6 +13,8 @@ namespace ISX
     {
         public string name => m_Name;
 
+        ////TODO: allow actions in a set to leave their device root open and then allow devices to be assigned at the action set level
+
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
         public InputActionSet(string name = null)

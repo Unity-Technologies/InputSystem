@@ -12,7 +12,7 @@ namespace ISX
     {
         public string template;
         public string name;
-        public FourCC format;
+        public string format;
         public string usage;
         public string[] usages;
         public string parameters;

@@ -15,7 +15,7 @@ public class DemoController : MonoBehaviour
     private Vector2 m_Rotation;
     private Rigidbody m_RigidBody;
 
-    ////TODO: put action in set (actually, load them from actions.json and their bindings from bindings.json)
+    ////TODO: put actions in set (actually, load them from actions.json and their bindings from bindings.json)
 
     [NonSerialized]////FIXME: seems like the recursion prevention code doesn't work properly
     private InputAction m_FireAction;
@@ -26,8 +26,8 @@ public class DemoController : MonoBehaviour
     public void Awake()
     {
         m_FireAction = new InputAction("Fire", binding: "/*/{primaryAction}");
-        m_LookAction = new InputAction("Walk", binding: "/*/{primaryStick}");
-        m_WalkAction = new InputAction("Look", binding: "/*/{secondaryStick}");
+        m_WalkAction = new InputAction("Walk", binding: "/*/{primaryStick}");
+        m_LookAction = new InputAction("Look", binding: "/*/{secondaryStick}");
 
         ////TODO: ideally should have a way to get values from controls without having to make assumptions about
         ////      what kind of control sits behind the binding

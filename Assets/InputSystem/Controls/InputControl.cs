@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 
 namespace ISX
 {
@@ -35,23 +34,10 @@ namespace ISX
         public string template => m_Template;
 
         ////TODO: setting value (will it also go through the processor stack?)
+
         // Current value as boxed object.
         // NOTE: Calling this will cause garbage.
-        public virtual object valueAsObject
-        {
-            get
-            {
-                ////REVIEW: Not sure yet which is better; return null or raw byte data?
-                ////        Actually, this should probably always return a value of the type given in the template
-                var statePtr = currentValuePtr;
-                if (statePtr == IntPtr.Zero)
-                    return Array.Empty<byte>();
-
-                var buffer = new byte[m_StateBlock.sizeInBits / 8];
-                Marshal.Copy(currentValuePtr, buffer, 0, buffer.Length);
-                return buffer;
-            }
-        }
+        public virtual object valueAsObject => null;
 
         // Root of the control hierarchy.
         public InputDevice device => m_Device;
@@ -100,6 +86,7 @@ namespace ISX
         InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
         protected IntPtr previousValuePtr =>
         InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
+
 
         // This data is initialized by InputControlSetup.
         internal string m_Name;

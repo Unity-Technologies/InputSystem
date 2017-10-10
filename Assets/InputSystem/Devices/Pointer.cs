@@ -12,10 +12,11 @@ namespace ISX
         Canceled
     }
 
-
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState
     {
+        public static FourCC kFormat => new FourCC('P', 'T', 'R');
+
         public const uint kInvalidPointerId = 0xffffffff;
 
         [InputControl(template = "Digital")]
@@ -36,10 +37,9 @@ namespace ISX
         [InputControl(usage = "secondaryStick")]
         public Vector2 delta;
 
-        [InputControl(usage = "Scroll")]
-        ////TODO: modifying subcontrols like this doesn't work yet
-        //[InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal")]
-        //[InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical")]
+        [InputControl(template = "Vector2")]
+        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal")]
+        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical")]
         public Vector2 scroll;
     }
 

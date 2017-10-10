@@ -36,10 +36,10 @@ namespace ISX
         {
             get
             {
-                var upValue = up.value ? 1.0f : 0.0f;
-                var downValue = down.value ? -1.0f : 0.0f;
-                var leftValue = left.value ? -1.0f : 0.0f;
-                var rightValue = right.value ? 1.0f : 0.0f;
+                var upValue = up.isPressed ? 1.0f : 0.0f;
+                var downValue = down.isPressed ? -1.0f : 0.0f;
+                var leftValue = left.isPressed ? -1.0f : 0.0f;
+                var rightValue = right.isPressed ? 1.0f : 0.0f;
 
                 return Process(new Vector2(leftValue + rightValue, upValue + downValue));
             }
@@ -49,10 +49,10 @@ namespace ISX
         {
             get
             {
-                var upValue = up.previous ? 1.0f : 0.0f;
-                var downValue = down.previous ? -1.0f : 0.0f;
-                var leftValue = left.previous ? -1.0f : 0.0f;
-                var rightValue = right.previous ? 1.0f : 0.0f;
+                var upValue = up.isPressed ? 1.0f : 0.0f;
+                var downValue = down.isPressed ? -1.0f : 0.0f;
+                var leftValue = left.isPressed ? -1.0f : 0.0f;
+                var rightValue = right.isPressed ? 1.0f : 0.0f;
 
                 return Process(new Vector2(leftValue + rightValue, upValue + downValue));
             }

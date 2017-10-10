@@ -323,6 +323,11 @@ namespace ISX
                 template = InferTemplateFromValueType(valueType);
             }
 
+            // Determine format.
+            var format = new FourCC();
+            if (attribute != null && !string.IsNullOrEmpty(attribute.format))
+                format = new FourCC(attribute.format);
+
             // Determine offset.
             var offset = InputStateBlock.kInvalidOffset;
             if (attribute != null && attribute.offset != InputStateBlock.kInvalidOffset)
@@ -361,6 +366,7 @@ namespace ISX
             {
                 name = name,
                 template = template,
+                format = format,
                 offset = offset,
                 bit = bit,
                 sizeInBits = sizeInBits,

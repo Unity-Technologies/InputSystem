@@ -4,9 +4,15 @@ namespace ISX
     // These are not const and can be changed by the user.
     public static class InputConfiguration
     {
+        // Default value used when nothing is set explicitly on DeadzoneProcessor.min.
         public static float DefaultDeadzoneMin = 0.125f;
 
+        // Default value used when nothing is set explicitly on DeadzoneProcessor.max.
         public static float DefaultDeadzoneMax = 0.925f;
+
+        // If a button is stored as anything but a bit, this is the threshold the value
+        // of the button has to cross in order for the button to be considered pressed.
+        public static float ButtonPressPoint = 0.5f;
 
         // Before how long does a button have to be released for it to be considered a click?
         public static float ClickTime = 0.2f;
@@ -24,6 +30,7 @@ namespace ISX
         {
             public float defaultDeadzoneMin;
             public float defaultDeadzoneMax;
+            public float buttonPressPoint;
             public float clickTime;
             public float slowClickTime;
             public float multiClickMaximumDelay;
@@ -36,6 +43,7 @@ namespace ISX
             {
                 defaultDeadzoneMin = DefaultDeadzoneMin,
                 defaultDeadzoneMax = DefaultDeadzoneMax,
+                buttonPressPoint = ButtonPressPoint,
                 clickTime = ClickTime,
                 slowClickTime = SlowClickTime,
                 multiClickMaximumDelay = MultiClickMaximumDelay,

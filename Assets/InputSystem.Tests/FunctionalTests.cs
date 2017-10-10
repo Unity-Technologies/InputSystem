@@ -700,7 +700,7 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
-    public void State_CanChangeRepresentationOfAxisControl()
+    public void State_CanStoreAxisAsShort()
     {
         // Make right trigger be represented as just a short and force it to different offset.
         var jsonTemplate = @"
@@ -764,6 +764,97 @@ public class FunctionalTests
 
         Assert.That(gamepad.dpad.right.stateBlock.bitOffset, Is.EqualTo((int)DpadControl.ButtonBits.Right));
         Assert.That(gamepad.dpad.right.stateBlock.byteOffset, Is.EqualTo(gamepad.dpad.stateBlock.byteOffset));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanUpdateButtonState()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad.bButton.isPressed, Is.False);
+
+        var newState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        InputSystem.QueueStateEvent(gamepad, newState);
+        InputSystem.Update();
+
+        Assert.That(gamepad.bButton.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanDetectWhetherButtonStateHasChangedThisFrame()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.False);
+
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.Update();
+
+        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.True);
+        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.False);
+
+        var secondState = new GamepadState {buttons = 0};
+        InputSystem.QueueStateEvent(gamepad, secondState);
+        InputSystem.Update();
+
+        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.True);
+    }
+
+    // The way we keep state does not allow observing the state change on the final
+    // state of the button. However, actions will still see the change.
+    [Test]
+    [Category("State")]
+    public void State_PressingAndReleasingButtonInSameFrame_DoesNotShowStateChange()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        var secondState = new GamepadState {buttons = 0};
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.bButton.isPressed, Is.False);
+        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.False);
+        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.False);
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanStoreButtonAsFloat()
+    {
+        // Turn buttonSouth into float and move to left/x offset (so we can use
+        // GamepadState to set it).
+        var json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""buttonSouth"",
+                        ""format"" : ""FLT"",
+                        ""offset"" : 4
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
+        var state = new GamepadState {leftStick = new Vector2(0.5f, 0.0f)};
+
+        InputSystem.QueueStateEvent(gamepad, state);
+        InputSystem.Update();
+
+        Assert.That(gamepad.aButton.value, Is.EqualTo(0.5f));
     }
 
     [Test]
@@ -1317,6 +1408,34 @@ public class FunctionalTests
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedControl, Is.SameAs(gamepad)); // We do not drill down to find the actual control that changed.
+    }
+
+    // Actions are able to observe every state change, even if the changes occur within
+    // the same frame.
+    [Test]
+    [Category("Actions")]
+    public void Actions_PressingAndReleasingButtonInSameFrame_StillTriggersAction()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/<gamepad>/<button>");
+
+        var receivedCalls = 0;
+        action.performed +=
+            (a, c) =>
+            {
+                ++receivedCalls;
+            };
+        action.Enable();
+
+        var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
+        var secondState = new GamepadState {buttons = 0};
+
+        InputSystem.QueueStateEvent(gamepad, firstState);
+        InputSystem.QueueStateEvent(gamepad, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
     }
 
     /*

@@ -10,9 +10,14 @@ namespace ISX
     // Unlike controls, actions signal value *changes* rather than the values themselves.
     // They sit on top of controls (and each single action may reference several controls
     // collectively) and monitor the system for change.
+    //
     // NOTE: Unlike InputControls, InputActions are not passive! They will actively perform
     //       processing each frame they are active whereas InputControls just sit there as
     //       long as no one is asking them directly for a value.
+    //
+    // NOTE: Processors on controls are *NOT* taken into account by actions. A state is
+    //       considered change if its underlying memory changes not if the final processed
+    //       value changes.
     [Serializable]
     public class InputAction : ISerializationCallbackReceiver
     {
@@ -197,16 +202,11 @@ namespace ISX
         // has fired.
         internal void NotifyControlValueChanged(InputControl control, double time)
         {
-            ////TODO: if it's a bit-addressed control, make sure the value has *actually* changed
-            ////      (change monitors work at the byte level only)
-
             ////TODO: we probably should be able to specify the various trigger values
             ////      on a per control basis; maybe that's best left to modifiers, though
 
             ////TODO: this is where modifiers should be able to hijack phase progression
             ////      the path below should be the fallback path when there aren't any modifiers
-
-            ////REVIEW: the current state change logic does not take processors into account
 
             ////REVIEW: how should we handle update types here? always trigger in first that detects change?
 

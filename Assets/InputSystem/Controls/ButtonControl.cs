@@ -1,73 +1,31 @@
-using System;
-
 namespace ISX
 {
-    ////REVIEW: shouldn't this still have a float value type?
-    public class ButtonControl : InputControl<bool>
+    // An axis that has a trigger point beyond which it is considered to be pressed.
+    // By default stored as a single bit. In that format, buttons will only yield 0
+    // and 1 as values.
+    //
+    // NOTE: While it may seem unnatural to derive ButtonControl from AxisControl, doing
+    //       so brings many benefits through allowing code to flexibly target buttons
+    //       and axes the same way.
+    public class ButtonControl : AxisControl
     {
+        public float pressPoint;
+
         public ButtonControl()
         {
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        public override bool value => GetValue(currentValuePtr);
-        public override bool previous => GetValue(previousValuePtr);
-
-        public bool wasPressedThisFrame
+        protected bool IsValueConsideredPresses(float value)
         {
-            get
-            {
-                var currentValue = GetValue(currentValuePtr);
-                var previousValue = GetValue(previousValuePtr);
-                return (currentValue && currentValue != previousValue);
-            }
+            var point = pressPoint;
+            if (pressPoint <= 0.0f)
+                point = InputConfiguration.ButtonPressPoint;
+            return value >= point;
         }
 
-        public bool wasReleasedThisFrame
-        {
-            get
-            {
-                var currentValue = GetValue(currentValuePtr);
-                var previousValue = GetValue(previousValuePtr);
-                return (!currentValue && currentValue != previousValue);
-            }
-        }
-
-        protected unsafe bool GetValue(IntPtr valuePtr)
-        {
-            ////TODO: currently this is not actually enforced...
-            // The layout code makes sure that bitfields are either 8bit or multiples
-            // of 32bits. So we always safely read either a byte or int. Handling
-            // the 8bit and 32bit case directly will lead to nicely aligned memory
-            // accesses if the state has been laid out that way.
-
-            int bits;
-            var bitOffset = m_StateBlock.bitOffset;
-
-            if (bitOffset < 8)
-            {
-                bits = *((byte*)valuePtr);
-            }
-            else if (bitOffset < 32)
-            {
-                bits = *((int*)valuePtr);
-            }
-            else
-            {
-                // Long bitfield. Compute an offset to the byte we need and fetch
-                // only that byte. Adjust the bit offset to be for that byte.
-                // On this path, we may end up doing memory accesses that the CPU
-                // doesn't like much.
-
-                var byteOffset = bitOffset / 8;
-                bitOffset = bitOffset % 8;
-
-                bits = *((byte*)valuePtr + byteOffset);
-            }
-
-            var value = (bits & bitOffset) == bitOffset;
-
-            return Process(value);
-        }
+        public bool isPressed => IsValueConsideredPresses(value);
+        public bool wasPressedThisFrame => IsValueConsideredPresses(value) && !IsValueConsideredPresses(previous);
+        public bool wasReleasedThisFrame => !IsValueConsideredPresses(value) && IsValueConsideredPresses(previous);
     }
 }

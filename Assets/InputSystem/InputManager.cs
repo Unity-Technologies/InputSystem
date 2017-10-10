@@ -413,7 +413,7 @@ namespace ISX
 
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
             RegisterTemplate("Keyboard", typeof(Keyboard));
-            RegisterTemplate("Mouse", typeof(Pointer));
+            RegisterTemplate("Mouse", typeof(Mouse));
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
             RegisterTemplate("HMD", typeof(HMD));
             RegisterTemplate("XRController", typeof(XRController));
@@ -479,7 +479,7 @@ namespace ISX
 
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
-        private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to a linearized of all its base templates.
+        private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to its base template name.
         private Dictionary<string, Type> m_Processors;
 
         private List<DeviceDescription> m_DeviceDescriptions;
@@ -508,9 +508,8 @@ namespace ISX
         private struct StateChangeMonitorMemoryRegion
         {
             public uint offsetRelativeToDevice;
-            public uint sizeInBytes; // Size of memory region to compare. We don't care about bitfields and
-                                     // may trigger false positives for them. Actions have to sort that out
-                                     // on their own.
+            public uint sizeInBits; // Size of memory region to compare.
+            public uint bitOffset;
         }
         private struct StateChangeMonitorListener
         {
@@ -567,7 +566,8 @@ namespace ISX
             memoryRegions.Add(new StateChangeMonitorMemoryRegion
             {
                 offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
-                sizeInBytes = (uint)control.stateBlock.alignedSizeInBytes
+                sizeInBits = control.stateBlock.sizeInBits,
+                bitOffset = control.stateBlock.bitOffset
             });
             signals.Add(false);
         }
@@ -884,13 +884,35 @@ namespace ISX
             {
                 var memoryRegion = changeMonitors[i];
                 var offset = (int)memoryRegion.offsetRelativeToDevice;
-                var sizeInBytes = memoryRegion.sizeInBytes;
+                var sizeInBits = memoryRegion.sizeInBits;
+                var bitOffset = memoryRegion.bitOffset;
 
-                if ((offset + sizeInBytes) > stateSize)
-                    continue;
+                // See if we are comparing bits or bytes.
+                if (sizeInBits % 8 != 0 || bitOffset != 0)
+                {
+                    // Not-so-simple path: compare bits.
 
-                if (UnsafeUtility.MemCmp(newState + offset, oldState + offset, (int)sizeInBytes) == 0)
-                    continue;
+                    if (sizeInBits > 1)
+                        throw new NotImplementedException("state change detection on multi-bit fields");
+
+                    if (BitfieldHelpers.ComputeFollowingByteOffset((uint)offset, bitOffset) > stateSize)
+                        continue;
+
+                    if (BitfieldHelpers.ReadSingleBit(newState + offset, bitOffset) ==
+                        BitfieldHelpers.ReadSingleBit(oldState + offset, bitOffset))
+                        continue;
+                }
+                else
+                {
+                    // Simple path: compare whole bytes.
+
+                    var sizeInBytes = sizeInBits / 8;
+                    if (offset + sizeInBytes > stateSize)
+                        continue;
+
+                    if (UnsafeUtility.MemCmp(newState + offset, oldState + offset, (int)sizeInBytes) == 0)
+                        continue;
+                }
 
                 signals[i] = true;
                 signalled = true;

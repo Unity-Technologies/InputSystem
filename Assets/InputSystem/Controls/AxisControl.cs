@@ -5,7 +5,7 @@ namespace ISX
 {
     // A float axis control.
     // Can optionally be configured to perform normalization.
-    // Stored as either a float, a short, or a byte.
+    // Stored as either a float, a short, a byte, or a single bit.
     public class AxisControl : InputControl<float>
     {
         // These can be added as processors but they are so common that we
@@ -19,7 +19,7 @@ namespace ISX
         public float normalizeMin;
         public float normalizeMax;
 
-        private float Preprocess(float value)
+        private new float Process(float value)
         {
             if (invert)
                 value *= -1.0f;
@@ -27,7 +27,7 @@ namespace ISX
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax);
-            return value;
+            return base.Process(value);
         }
 
         public AxisControl()
@@ -35,34 +35,46 @@ namespace ISX
             m_StateBlock.format = InputStateBlock.kTypeFloat;
         }
 
-        private unsafe float GetValue(IntPtr valuePtr)
+        public override float value => Process(ReadFloatValueFrom(currentValuePtr));
+        public override float previous => Process(ReadFloatValueFrom(previousValuePtr));
+
+        // Helper to read a floating-point value from the given state. Automatically checks
+        // the state format of the control and performs conversions.
+        // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
+        //       or bitfield type.
+        protected unsafe float ReadFloatValueFrom(IntPtr valuePtr)
         {
             float value;
 
-            if (m_StateBlock.format == InputStateBlock.kTypeFloat)
+            var format = m_StateBlock.format;
+            if (format == InputStateBlock.kTypeFloat)
             {
                 value = *(float*)valuePtr;
+            }
+            else if (format == InputStateBlock.kTypeBit)
+            {
+                if (m_StateBlock.sizeInBits != 1)
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
+
+                value = BitfieldHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ? 1.0f : 0.0f;
             }
             // If a control with an integer-based representation does not use the full range
             // of its integer size (e.g. only goes from [0..128]), processors or the parameters
             // above have to be used to re-process the resulting float values.
-            else if (m_StateBlock.format == InputStateBlock.kTypeShort)
+            else if (format == InputStateBlock.kTypeShort)
             {
                 value = *((short*)valuePtr) / 65535.0f;
             }
-            else if (m_StateBlock.format == InputStateBlock.kTypeByte)
+            else if (format == InputStateBlock.kTypeByte)
             {
                 value = *((byte*)valuePtr) / 255.0f;
             }
             else
             {
-                throw new Exception($"State format '{m_StateBlock.format}' is not supported as state for AxisControls");
+                throw new Exception($"State format '{m_StateBlock.format}' is not supported as state for {GetType().Name}");
             }
 
-            return Process(Preprocess(value));
+            return value;
         }
-
-        public override float value => GetValue(currentValuePtr);
-        public override float previous => GetValue(previousValuePtr);
     }
 }

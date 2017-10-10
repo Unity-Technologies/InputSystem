@@ -2,9 +2,14 @@ using System.Runtime.InteropServices;
 
 namespace ISX
 {
+    // Combine multiple pointers each corresponding to a finger.
+    // All fingers combine to quite a bit of state; ideally send delta events that update
+    // only specific fingers.
     [StructLayout(LayoutKind.Sequential)]
     public struct TouchscreenState
     {
+        public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
+
         public const int kMaxFingers = 10;
 
         public PointerState finger1;
@@ -33,5 +38,12 @@ namespace ISX
     [InputState(typeof(TouchscreenState))]
     public class Touchscreen : Pointer
     {
+        public new static Touchscreen current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
     }
 }

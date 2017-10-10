@@ -90,6 +90,8 @@ namespace ISX
             }
         }
 
+        public bool isBitfield => sizeInBits % 8 != 0;
+
 
         [Flags]
         private enum Flags
