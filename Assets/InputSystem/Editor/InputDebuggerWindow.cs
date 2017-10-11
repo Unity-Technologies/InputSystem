@@ -168,9 +168,6 @@ namespace ISX
                 // back to life.
                 s_Instance.Repaint();
             }
-
-            // Revive individual device windows.
-            InputDeviceDebuggerWindow.ReviveAfterDomainReload();
         }
 
         private static class Styles

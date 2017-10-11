@@ -58,5 +58,10 @@ namespace ISX
             get { return (m_DeviceId & kHandledMask) == kHandledMask; }
             set { m_DeviceId |= kHandledMask; }
         }
+
+        public override string ToString()
+        {
+            return $"type = {type}, device = {deviceId}, size = {sizeInBytes}, time = {time}";
+        }
     }
 }

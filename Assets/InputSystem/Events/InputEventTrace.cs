@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Collections;
+using UnityEngine.Events;
 
 namespace ISX
 {
     // Helper to simplify recording events. Can record events for a specific device
     // or all events coming in.
     [Serializable]
-    public class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>, ISerializationCallbackReceiver
+    public class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {
         public const int kDefaultBufferSize = 1024 * 1024;
 
@@ -22,6 +23,20 @@ namespace ISX
         }
 
         public bool enabled => m_Enabled;
+
+        public event UnityAction<InputEventPtr> onEvent
+        {
+            add
+            {
+                if (m_ReceiveEvent == null)
+                    m_ReceiveEvent = new InputManager.EventReceivedEvent();
+                m_ReceiveEvent.AddListener(value);
+            }
+            remove
+            {
+                m_ReceiveEvent?.RemoveListener(value);
+            }
+        }
 
         // Create a disabled event trace that does not perform any allocation
         // yet. An event trace only starts consuming resources the first time
@@ -53,6 +68,7 @@ namespace ISX
                 return;
 
             InputSystem.onEvent -= OnInputEvent;
+            m_Enabled = false;
         }
 
         public unsafe bool GetNextEvent(ref InputEventPtr current)
@@ -124,9 +140,10 @@ namespace ISX
         // a trace that is being changed so we bump this counter every time we modify the
         // buffer and check in the enumerator that the counts match.
         [NonSerialized] private int m_ChangeCounter;
+        [NonSerialized] private bool m_Enabled;
 
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
-        [SerializeField] private bool m_Enabled;
+        [SerializeField] private InputManager.EventReceivedEvent m_ReceiveEvent;
 
         // Buffer for storing event trace. Allocated in native so that we can survive a
         // domain reload without losing event traces.
@@ -142,6 +159,8 @@ namespace ISX
 
         private void Release()
         {
+            Disable();
+
             if (m_EventBuffer != IntPtr.Zero)
                 UnsafeUtility.Free(m_EventBuffer, Allocator.Persistent);
 
@@ -215,6 +234,9 @@ namespace ISX
             // Copy data to buffer.
             UnsafeUtility.MemCpy(buffer, eventData, eventSize);
             ++m_ChangeCounter;
+
+            // Notify listeners.
+            m_ReceiveEvent?.Invoke(new InputEventPtr((InputEvent*)buffer));
         }
 
         private class Enumerator : IEnumerator<InputEventPtr>
@@ -252,16 +274,6 @@ namespace ISX
 
             public InputEventPtr Current => m_Current;
             object IEnumerator.Current => Current;
-        }
-
-        public void OnBeforeSerialize()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnAfterDeserialize()
-        {
-            throw new NotImplementedException();
         }
     }
 }

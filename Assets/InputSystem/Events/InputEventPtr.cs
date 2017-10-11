@@ -116,5 +116,12 @@ namespace ISX
             var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
             return m_EventPtr->type == otherEventTypeCode;
         }
+
+        public override string ToString()
+        {
+            if (!valid)
+                return "null";
+            return m_EventPtr->ToString();
+        }
     }
 }

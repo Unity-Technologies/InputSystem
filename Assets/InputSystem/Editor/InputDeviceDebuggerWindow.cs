@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEditorInternal; // For PreviewResizer.
 using UnityEngine;
 
 namespace ISX
@@ -20,7 +21,7 @@ namespace ISX
                 for (var i = 0; i < s_OpenDebuggerWindows.Count; ++i)
                 {
                     var existingWindow = s_OpenDebuggerWindows[i];
-                    if (existingWindow.m_Device == device)
+                    if (existingWindow.m_DeviceId == device.id)
                     {
                         existingWindow.Show();
                         existingWindow.Focus();
@@ -41,6 +42,15 @@ namespace ISX
         public void OnDestroy()
         {
             RemoveFromList();
+
+            m_EventTrace?.Dispose();
+        }
+
+        public void OnEnable()
+        {
+            if (m_EventListResizer == null)
+                m_EventListResizer = new PreviewResizer();
+            m_EventListResizer.Init("InputDeviceDebugger");
         }
 
         public void OnGUI()
@@ -55,6 +65,8 @@ namespace ISX
                     EditorGUILayout.HelpBox(Styles.notFoundHelpText, MessageType.Warning);
                     return;
                 }
+
+                InitializeWith(m_Device);
             }
 
             ////FIXME: editor still expands height for some reason....
@@ -83,14 +95,44 @@ namespace ISX
 
         private void DrawEventList()
         {
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label("Events", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+
+            var toolbarRect = GUILayoutUtility.GetLastRect();
+
+            GUILayout.EndHorizontal();
+
+            var listHeight = m_EventListResizer.ResizeHandle(new Rect(toolbarRect.x, position.y, toolbarRect.width, position.height), 100, 250, 17);
+            if (listHeight > 0)
+            {
+                ////TODO: make this a multi-column tree view with a single level
+                ////      when a row with a state event is clicked, pop up a StateWindow looking into the state
+
+                m_EventListScrollPosition = EditorGUILayout.BeginScrollView(m_EventListScrollPosition);
+
+                var currentPtr = new InputEventPtr();
+                while (m_EventTrace.GetNextEvent(ref currentPtr))
+                {
+                    EditorGUILayout.LabelField(currentPtr.ToString());
+                }
+
+                EditorGUILayout.EndScrollView();
+            }
         }
 
         private void InitializeWith(InputDevice device)
         {
-            ////TODO: leave m_Device uninitialized until we render for the first time
             m_Device = device;
             m_DeviceId = device.id;
             m_DeviceIdString = device.id.ToString();
+
+            // Set up event trace. The default trace size of 1mb fits a ton of events and will
+            // likely bog down the UI if we try to display that many events. Instead, come up
+            // with a more reasonable sized based on the state size of the device.
+            if (m_EventTrace == null)
+                m_EventTrace = new InputEventTrace(device.stateBlock.alignedSizeInBytes * 64) {deviceId = device.id};
+            m_EventTrace.onEvent += _ => Repaint();
+            m_EventTrace.Enable();
 
             // Set up control tree.
             if (m_ControlTreeState == null)
@@ -139,6 +181,9 @@ namespace ISX
             m_ControlTree.ExpandAll();
         }
 
+        // We will lose our device on domain reload and then look it back up the first
+        // time we hit a repaint after a reload. By that time, the input system should have
+        // fully come back to life as well.
         [NonSerialized] private InputDevice m_Device;
         [NonSerialized] private string m_DeviceIdString;
         [NonSerialized] private ControlTreeView m_ControlTree;
@@ -146,6 +191,8 @@ namespace ISX
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
+        [SerializeField] private PreviewResizer m_EventListResizer;
+        [SerializeField] private bool m_EventListExpanded;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
         [SerializeField] private Vector2 m_EventListScrollPosition;
         [SerializeField] private InputEventTrace m_EventTrace;
@@ -177,23 +224,6 @@ namespace ISX
         private static class Styles
         {
             public static string notFoundHelpText = "Device could not be found.";
-        }
-
-        // We can look up devices only after we're guaranteed that the input system itself has come
-        // back from the reload. During deserialization we don't know whether the input system data
-        // comes before or after us. So, we reconnect devices to their debug windows in a separate
-        // step here.
-        internal static void ReviveAfterDomainReload()
-        {
-            if (s_OpenDebuggerWindows == null)
-                return;
-
-            foreach (var window in s_OpenDebuggerWindows)
-            {
-                var device = InputSystem.TryGetDeviceById(window.m_DeviceId);
-                if (device != null)
-                    window.InitializeWith(device);
-            }
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
