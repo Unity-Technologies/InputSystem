@@ -11,11 +11,6 @@ namespace ISX
     // Can also be used to alter the state of a device by making up state events.
     internal class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
-        // Size of the raw memory buffer used for event recording in number of state
-        // events. E.g. if a device has a state size of 32 bytes, we allocate a buffer
-        // of 64 * 32 bytes.
-        public const int kEventBufferSize = 64;
-
         public static void CreateOrShowExisting(InputDevice device)
         {
             // See if we have an existing window for the device and if so pop it
@@ -92,6 +87,7 @@ namespace ISX
 
         private void InitializeWith(InputDevice device)
         {
+            ////TODO: leave m_Device uninitialized until we render for the first time
             m_Device = device;
             m_DeviceId = device.id;
             m_DeviceIdString = device.id.ToString();
@@ -148,11 +144,11 @@ namespace ISX
         [NonSerialized] private ControlTreeView m_ControlTree;
 
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
-        [SerializeField] private IntPtr m_EventBuffer;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
         [SerializeField] private Vector2 m_EventListScrollPosition;
+        [SerializeField] private InputEventTrace m_EventTrace;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;
 
@@ -167,6 +163,15 @@ namespace ISX
         private void RemoveFromList()
         {
             s_OpenDebuggerWindows?.Remove(this);
+        }
+
+        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (device.id != m_DeviceId)
+                return;
+
+            m_Device = null;
+            Repaint();
         }
 
         private static class Styles
@@ -343,6 +348,12 @@ namespace ISX
             public InputEvent eventInfo;
             public IntPtr state;
             public InputStateBlock block;
+
+            public enum VisualizerMode
+            {
+                AsControlTree,
+                AsHexDump
+            }
         }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     // Pointer to an InputEvent. Makes it easier to work with InputEvents and hides
@@ -17,6 +19,22 @@ namespace ISX
 
         public bool valid => m_EventPtr != null;
 
+        public bool handled
+        {
+            get
+            {
+                if (!valid)
+                    return false;
+                return m_EventPtr->handled;
+            }
+            set
+            {
+                if (!valid)
+                    throw new NullReferenceException();
+                m_EventPtr->handled = value;
+            }
+        }
+
         public FourCC type
         {
             get
@@ -24,6 +42,32 @@ namespace ISX
                 if (!valid)
                     return new FourCC();
                 return m_EventPtr->type;
+            }
+        }
+
+        public int sizeInBytes
+        {
+            get
+            {
+                if (!valid)
+                    return 0;
+                return m_EventPtr->sizeInBytes;
+            }
+        }
+
+        public int deviceId
+        {
+            get
+            {
+                if (!valid)
+                    return InputDevice.kInvalidDeviceId;
+                return m_EventPtr->deviceId;
+            }
+            set
+            {
+                if (!valid)
+                    throw new NullReferenceException();
+                m_EventPtr->deviceId = value;
             }
         }
 
@@ -35,6 +79,12 @@ namespace ISX
                     return null;
                 return InputSystem.TryGetDeviceById(m_EventPtr->deviceId);
             }
+            set
+            {
+                if (!valid)
+                    throw new NullReferenceException();
+                m_EventPtr->deviceId = device.id;
+            }
         }
 
         public double time
@@ -44,6 +94,16 @@ namespace ISX
                 if (!valid)
                     return 0.0;
                 return m_EventPtr->time;
+            }
+        }
+
+        public IntPtr data
+        {
+            get
+            {
+                if (!valid)
+                    return IntPtr.Zero;
+                return new IntPtr(m_EventPtr);
             }
         }
 

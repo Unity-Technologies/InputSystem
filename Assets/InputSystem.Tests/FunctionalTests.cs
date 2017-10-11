@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
@@ -292,9 +293,50 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_ReplacingTemplateAffectsAllDevicesUsingTemplate()
+    public void TODO_Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
     {
-        ////TODO
+        // Create a device hiearchy and then replace the base template. We can't easily use
+        // the gamepad (or something similar) as a base template as it will use the Gamepad
+        // class which will expect a number of controls to be present on the device.
+        const string baseDeviceJson = @"
+            {
+                ""name"" : ""MyBase"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""template"" : ""Button"" },
+                    { ""name"" : ""second"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+        const string derivedDeviceJson = @"
+            {
+                ""name"" : ""MyDerived"",
+                ""extend"" : ""MyBase""
+            }
+        ";
+        const string newBaseDeviceJson = @"
+            {
+                ""name"" : ""MyBase"",
+                ""controls"" : [
+                    { ""name"" : ""yeah"", ""template"" : ""Stick"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(derivedDeviceJson);
+        InputSystem.RegisterTemplate(baseDeviceJson);
+
+        var device = InputSystem.AddDevice("MyDerived");
+
+        InputSystem.RegisterTemplate(newBaseDeviceJson);
+
+        Assert.That(device.children, Has.Count.EqualTo(1));
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("yeah").And.Property("template").EqualTo("Stick"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
+    {
         Assert.Fail();
     }
 
@@ -1466,6 +1508,72 @@ public class FunctionalTests
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedTime, Is.EqualTo(1.0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanPreventEventsFromBeingProcessed()
+    {
+        InputSystem.onEvent +=
+            inputEvent =>
+            {
+                // If we mark the event handled, the system should skip it and not
+                // let it go to the device.
+                inputEvent.handled = true;
+            };
+
+        var device = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(device, new GamepadState { rightTrigger = 0.45f });
+        InputSystem.Update();
+
+        Assert.That(device.rightTrigger.value, Is.EqualTo(0.0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanTraceEventsOfDevice()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+        var noise = InputSystem.AddDevice("Gamepad");
+        var trace = new InputEventTrace {deviceId = device.id};
+        trace.Enable();
+
+        try
+        {
+            var firstState = new GamepadState {rightTrigger = 0.35f};
+            var secondState = new GamepadState {leftTrigger = 0.75f};
+
+            InputSystem.QueueStateEvent(device, firstState, 0.5);
+            InputSystem.QueueStateEvent(device, secondState, 1.5);
+            InputSystem.QueueStateEvent(noise, new GamepadOutputState()); // This one just to make sure we don't get it.
+
+            InputSystem.Update();
+
+            trace.Disable();
+
+            var events = trace.ToList();
+
+            Assert.That(events, Has.Count.EqualTo(2));
+
+            Assert.That(events[0].type, Is.EqualTo((FourCC)StateEvent.Type));
+            Assert.That(events[0].deviceId, Is.EqualTo(device.id));
+            Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
+            Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
+            Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState), StateEvent.From(events[0])->state,
+                    UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+
+            Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
+            Assert.That(events[1].deviceId, Is.EqualTo(device.id));
+            Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
+            Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
+            Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState), StateEvent.From(events[1])->state,
+                    UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+        }
+        finally
+        {
+            trace.Dispose();
+        }
     }
 
     [Test]

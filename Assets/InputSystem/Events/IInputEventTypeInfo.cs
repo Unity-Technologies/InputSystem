@@ -6,6 +6,5 @@ namespace ISX
     public interface IInputEventTypeInfo
     {
         FourCC GetTypeStatic();
-        int GetSizeStatic();
     }
 }

@@ -18,10 +18,5 @@ namespace ISX
         {
             return Type;
         }
-
-        public int GetSizeStatic()
-        {
-            return Marshal.SizeOf<DeltaEvent>();
-        }
     }
 }

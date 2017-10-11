@@ -1,0 +1,10 @@
+using NUnit.Framework;
+
+public class StressTests
+{
+    [Test]
+    public void TODO_Create512GamepadsAndSend1024Events()
+    {
+        Assert.Fail();
+    }
+}

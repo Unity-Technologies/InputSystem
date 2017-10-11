@@ -69,14 +69,23 @@ namespace ISX
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
+            var isDeviceTemplate = typeof(InputDevice).IsAssignableFrom(type);
+            var isControlTemplate = typeof(InputControl).IsAssignableFrom(type);
+
+            if (!isDeviceTemplate && !isControlTemplate)
+                throw new ArgumentException("Types used as templates have to be InputControls are InputDevices",
+                    nameof(type));
+
             // All we do is enter the type into a map. We don't construct an InputTemplate
             // from it until we actually need it in an InputControlSetup to create a device.
             // This not only avoids us creating a bunch of objects on the managed heap but
             // also avoids us laboriously constructing a VRController template, for example,
             // in a game that never uses VR.
-            m_TemplateTypes[name.ToLower()] = type;
+            var nameLowerCase = name.ToLower();
+            m_TemplateTypes[nameLowerCase] = type;
 
-            ////TODO: see if we need to reconstruct any input device
+            // Re-create any devices using the template.
+            RecreateDevicesUsingTemplate(nameLowerCase, isDeviceTemplate);
         }
 
         // Add a template constructed from a JSON string.
@@ -109,6 +118,11 @@ namespace ISX
             if (!string.IsNullOrEmpty(baseTemplate))
                 m_BaseTemplateTable[nameLowerCase] = baseTemplate.ToLower();
 
+            // Re-create any devices using the template.
+            RecreateDevicesUsingTemplate(nameLowerCase);
+
+            // If the template has a device description, see if it allows us
+            // to make sense of any device we couldn't make sense of so far.
             if (!deviceDescription.empty)
             {
                 m_SupportedDevices.Add(new SupportedDevice
@@ -117,9 +131,6 @@ namespace ISX
                     template = name
                 });
 
-                // The template has a device description, so if there's any native
-                // devices we couldn't make sense of, see if the template helps
-                // with that.
                 for (var i = 0; i < m_AvailableDevices.Count; ++i)
                 {
                     var deviceId = m_AvailableDevices[i].deviceId;
@@ -133,6 +144,55 @@ namespace ISX
                     }
                 }
             }
+        }
+
+        private void RecreateDevicesUsingTemplate(string templateLowerCase, bool isKnownToBeDeviceTemplate = false)
+        {
+            if (m_Devices == null)
+                return;
+
+            for (var i = 0; i < m_Devices.Length; ++i)
+            {
+                var device = m_Devices[i];
+
+                var usesTemplate = false;
+                if (isKnownToBeDeviceTemplate)
+                    usesTemplate = IsControlUsingTemplate(device, templateLowerCase);
+                else
+                    usesTemplate = IsControlOrChildUsingTemplateRecursive(device, templateLowerCase);
+
+                if (usesTemplate)
+                    throw new NotImplementedException();
+            }
+        }
+
+        private bool IsControlOrChildUsingTemplateRecursive(InputControl control, string templateLowerCase)
+        {
+            // Check control itself.
+            if (IsControlUsingTemplate(control, templateLowerCase))
+                return true;
+
+            // Check children.
+            var children = control.children;
+            for (var i = 0; i < children.Count; ++i)
+                if (IsControlOrChildUsingTemplateRecursive(children[i], templateLowerCase))
+                    return true;
+
+            return false;
+        }
+
+        private bool IsControlUsingTemplate(InputControl control, string templateLowerCase)
+        {
+            // Check direct match.
+            if (control.template.ToLower() == templateLowerCase)
+                return true;
+
+            // Check base template chain.
+            string baseTemplate;
+            if (m_BaseTemplateTable.TryGetValue(templateLowerCase, out baseTemplate))
+                return IsControlUsingTemplate(control, baseTemplate);
+
+            return false;
         }
 
         public string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
@@ -1210,6 +1270,7 @@ namespace ISX
             m_EventReceivedEvent = state.eventReceivedEvent;
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = state.availableDevices.ToList();
+            m_Devices = null;
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);

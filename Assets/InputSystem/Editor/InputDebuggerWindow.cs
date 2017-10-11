@@ -15,7 +15,7 @@ namespace ISX
         [MenuItem("Window/Input Debugger", false, 2100)]
         public static void Init()
         {
-            if (s_Instance != null)
+            if (s_Instance == null)
             {
                 s_Instance = GetWindow<InputDebuggerWindow>();
                 s_Instance.Show();

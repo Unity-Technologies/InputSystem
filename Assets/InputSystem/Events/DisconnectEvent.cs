@@ -16,11 +16,6 @@ namespace ISX
             return Type;
         }
 
-        public int GetSizeStatic()
-        {
-            return Marshal.SizeOf<DisconnectEvent>();
-        }
-
         public static DisconnectEvent Create(int deviceId, double time)
         {
             var inputEvent = new DisconnectEvent();

@@ -4,11 +4,13 @@ namespace ISX
 {
     // A chunk of memory signaling a data transfer in the input system.
     // This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = 20)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct InputEvent : IInputEventTypeInfo
     {
         private const uint kHandledMask = 0x80000000;
         private const uint kDeviceIdMask = 0x7FFFFFFF;
+
+        public const int kBaseEventSize = 20;
 
         [FieldOffset(0)]
         private FourCC m_Type;
@@ -46,11 +48,6 @@ namespace ISX
         public FourCC GetTypeStatic()
         {
             return new FourCC(); // No valid type code; InputEvent is considered abstract.
-        }
-
-        public int GetSizeStatic()
-        {
-            return 0;
         }
 
         // We internally use bits inside m_DeviceId as flags. Device IDs are

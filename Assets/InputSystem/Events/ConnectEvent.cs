@@ -16,11 +16,6 @@ namespace ISX
             return Type;
         }
 
-        public int GetSizeStatic()
-        {
-            return Marshal.SizeOf<ConnectEvent>();
-        }
-
         public static ConnectEvent Create(int deviceId, double time)
         {
             var inputEvent = new ConnectEvent();

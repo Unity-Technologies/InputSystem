@@ -35,9 +35,20 @@ namespace ISX
             return Type;
         }
 
-        public int GetSizeStatic()
+        public static int GetEventSizeWithPayload<TState>()
+            where TState : struct
         {
-            return UnsafeUtility.SizeOf<StateEvent>();
+            return UnsafeUtility.SizeOf<TState>() + 24;
+        }
+
+        public static StateEvent* From(InputEventPtr ptr)
+        {
+            if (!ptr.valid)
+                throw new ArgumentNullException(nameof(ptr));
+            if (!ptr.IsA<StateEvent>())
+                throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into StateEvent");
+
+            return (StateEvent*)ptr.data;
         }
     }
 }
