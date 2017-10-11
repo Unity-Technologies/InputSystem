@@ -15,9 +15,12 @@ namespace ISX
         [MenuItem("Window/Input Debugger", false, 2100)]
         public static void Init()
         {
-            var window = GetWindow<InputDebuggerWindow>();
-            window.Show();
-            window.titleContent = new GUIContent("Input Debugger");
+            if (s_Instance != null)
+            {
+                s_Instance = GetWindow<InputDebuggerWindow>();
+                s_Instance.Show();
+                s_Instance.titleContent = new GUIContent("Input Debugger");
+            }
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)

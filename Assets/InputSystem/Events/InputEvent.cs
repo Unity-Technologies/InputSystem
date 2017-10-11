@@ -7,22 +7,26 @@ namespace ISX
     [StructLayout(LayoutKind.Explicit, Size = 20)]
     public struct InputEvent : IInputEventTypeInfo
     {
+        private const uint kHandledMask = 0x80000000;
+        private const uint kDeviceIdMask = 0x7FFFFFFF;
+
         [FieldOffset(0)]
         private FourCC m_Type;
         [FieldOffset(4)]
         private int m_SizeInBytes;
         [FieldOffset(8)]
-        private int m_DeviceId;
+        private uint m_DeviceId;
         [FieldOffset(12)]
         private double m_Time;
 
-        public FourCC type { get { return m_Type; } }
-        public int sizeInBytes { get { return m_SizeInBytes; } }
+        public FourCC type => m_Type;
+        public int sizeInBytes => m_SizeInBytes;
 
         public int deviceId
         {
-            get { return m_DeviceId; }
-            set { m_DeviceId = value; }
+            // Need to mask out handled bit.
+            get { return (int)(m_DeviceId & kDeviceIdMask); }
+            set { m_DeviceId = (m_DeviceId & kHandledMask) | (uint)value; }
         }
 
         public double time
@@ -35,7 +39,7 @@ namespace ISX
         {
             m_Type = type;
             m_SizeInBytes = sizeInBytes;
-            m_DeviceId = deviceId;
+            m_DeviceId = (uint)deviceId;
             m_Time = time;
         }
 
@@ -52,10 +56,10 @@ namespace ISX
         // We internally use bits inside m_DeviceId as flags. Device IDs are
         // linearly counted up by the native input system starting at 1 so we
         // have plenty room in m_DeviceId.
-        internal bool handled
+        public bool handled
         {
-            get { return (m_DeviceId & 0x8000000) != 0; }
-            set { m_DeviceId |= 0x8000000; }
+            get { return (m_DeviceId & kHandledMask) == kHandledMask; }
+            set { m_DeviceId |= kHandledMask; }
         }
     }
 }

@@ -38,6 +38,12 @@ namespace ISX
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        public static event UnityAction<InputEventPtr> onEvent
+        {
+            add { s_Manager.onEvent += value; }
+            remove { s_Manager.onEvent -= value; }
+        }
+
         public static void RegisterTemplate(Type type, string name = null)
         {
             if (name == null)

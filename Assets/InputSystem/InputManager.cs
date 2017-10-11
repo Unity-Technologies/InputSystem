@@ -41,8 +41,21 @@ namespace ISX
             }
             remove
             {
-                if (m_DeviceChangeEvent != null)
-                    m_DeviceChangeEvent.RemoveListener(value);
+                m_DeviceChangeEvent?.RemoveListener(value);
+            }
+        }
+
+        public event UnityAction<InputEventPtr> onEvent
+        {
+            add
+            {
+                if (m_EventReceivedEvent == null)
+                    m_EventReceivedEvent = new EventReceivedEvent();
+                m_EventReceivedEvent.AddListener(value);
+            }
+            remove
+            {
+                m_EventReceivedEvent?.RemoveListener(value);
             }
         }
 
@@ -556,6 +569,7 @@ namespace ISX
         private int m_CurrentFixedUpdateCount;
 
         private DeviceChangeEvent m_DeviceChangeEvent;
+        private EventReceivedEvent m_EventReceivedEvent;
 
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
@@ -777,6 +791,14 @@ namespace ISX
                 }
                 currentEventPtr = oldestEventPtr;
                 var currentEventTime = oldestEventTime;
+
+                // Give listeners a shot at the event.
+                if (m_EventReceivedEvent != null)
+                {
+                    m_EventReceivedEvent.Invoke(new InputEventPtr(currentEventPtr));
+                    if (currentEventPtr->handled)
+                        continue;
+                }
 
                 // Grab device for event.
                 var device = TryGetDeviceById(currentEventPtr->deviceId);
@@ -1042,6 +1064,11 @@ namespace ISX
         {
         }
 
+        [Serializable]
+        internal class EventReceivedEvent : UnityEvent<InputEventPtr>
+        {
+        }
+
         // Domain reload survival logic.
 #if UNITY_EDITOR
         [Serializable]
@@ -1088,6 +1115,7 @@ namespace ISX
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
             public DeviceChangeEvent deviceChangeEvent;
+            public EventReceivedEvent eventReceivedEvent;
             public InputConfiguration.SerializedState configuration;
         }
 
@@ -1159,6 +1187,7 @@ namespace ISX
                 buffers = m_StateBuffers,
                 ////FIXME: this does not actually seem to survive reloads properly
                 deviceChangeEvent = m_DeviceChangeEvent,
+                eventReceivedEvent = m_EventReceivedEvent,
                 configuration = InputConfiguration.Save()
             };
 
@@ -1178,6 +1207,7 @@ namespace ISX
             m_StateBuffers = state.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_DeviceChangeEvent = state.deviceChangeEvent;
+            m_EventReceivedEvent = state.eventReceivedEvent;
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = state.availableDevices.ToList();
 

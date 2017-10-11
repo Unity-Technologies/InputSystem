@@ -16,6 +16,11 @@ public class FunctionalTests
     {
         InputSystem.Save();
 
+        ////REVIEW: We probably need to prevent device discoveries and events
+        ////        that could happen on the native side from mucking with our
+        ////        test. We can't completely disconnect from native, though,
+        ////        as we need the event queue.
+
         // Put system in a blank state where it has all the templates but has
         // none of the native devices.
         InputSystem.Reset();
@@ -1353,6 +1358,114 @@ public class FunctionalTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.123f, 0.456f)));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanListenToEventStream()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+
+        var receivedCalls = 0;
+        InputSystem.onEvent += inputEvent =>
+            {
+                ++receivedCalls;
+                Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
+                Assert.That(inputEvent.device, Is.SameAs(device));
+            };
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_DeviceIdIsUnaffectedByHandledFlag()
+    {
+        // We internally use a bit in m_DeviceId to mark events as handled.
+        // Make sure we don't leak that fiddlery through the API.
+        var inputEvent = new InputEvent {deviceId = 5};
+
+        inputEvent.handled = true;
+
+        Assert.That(inputEvent.deviceId, Is.EqualTo(5));
+
+        inputEvent.deviceId = 6;
+
+        Assert.That(inputEvent.handled, Is.True);
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_AreHandledInOrderOfIncreasingTime()
+    {
+        const double kFirstTime = 0.5;
+        const double kSecondTime = 1.5;
+        const double kThirdTime = 2.5;
+
+        var receivedCalls = 0;
+        var receivedFirstTime = 0.0;
+        var receivedSecondTime = 0.0;
+        var receivedThirdTime = 0.0;
+
+        InputSystem.onEvent +=
+            inputEvent =>
+            {
+                ++receivedCalls;
+                if (receivedCalls == 1)
+                    receivedFirstTime = inputEvent.time;
+                else if (receivedCalls == 2)
+                    receivedSecondTime = inputEvent.time;
+                else
+                    receivedThirdTime = inputEvent.time;
+            };
+
+        var device = InputSystem.AddDevice("Gamepad");
+
+        // Queue events such that no matter whether the system goes through the front
+        // to back or back to front, we only end up with the correct ordering if the
+        // times are ordered.
+        InputSystem.QueueStateEvent(device, new GamepadState(), kSecondTime);
+        InputSystem.QueueStateEvent(device, new GamepadState(), kFirstTime);
+        InputSystem.QueueStateEvent(device, new GamepadState(), kThirdTime);
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(3));
+        Assert.That(receivedFirstTime, Is.EqualTo(kFirstTime).Within(0.00001));
+        Assert.That(receivedSecondTime, Is.EqualTo(kSecondTime).Within(0.00001));
+        Assert.That(receivedThirdTime, Is.EqualTo(kThirdTime).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_AlreadyHandledEventsAreIgnoredWhenProcessingEvents()
+    {
+        var receivedCalls = 0;
+        var receivedTime = 0.0;
+
+        InputSystem.onEvent +=
+            inputEvent =>
+            {
+                ++receivedCalls;
+                receivedTime = inputEvent.time;
+            };
+
+        var device = InputSystem.AddDevice("Gamepad");
+
+        var unhandledEvent = ConnectEvent.Create(device.id, 1.0);
+        var handledEvent = ConnectEvent.Create(device.id, 2.0);
+        handledEvent.baseEvent.handled = true;
+
+        InputSystem.QueueEvent(ref unhandledEvent);
+        InputSystem.QueueEvent(ref handledEvent);
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedTime, Is.EqualTo(1.0).Within(0.00001));
     }
 
     [Test]
