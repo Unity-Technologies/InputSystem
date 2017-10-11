@@ -33,16 +33,19 @@ namespace ISX
             action.m_ActionSet = this;
         }
 
-        public void Enable()
+        public void EnableAll()
         {
             throw new NotImplementedException();
         }
 
-        public void Disable()
+        public void DisableAll()
         {
             throw new NotImplementedException();
         }
 
+        // Load one or more action sets from JSON. The given JSON string may
+        // either be a single set or may be an object with a property "sets"
+        // that contains an array of action sets.
         public static InputActionSet[] FromJson(string json)
         {
             ActionSetJson[] parsedSets;
@@ -90,8 +93,75 @@ namespace ISX
             return sets;
         }
 
+        public string ToJson()
+        {
+            throw new NotImplementedException();
+        }
+
         [SerializeField] private string m_Name;
         [SerializeField] internal InputAction[] m_Actions;
+
+        // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
+        // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
+        // instead we just link all the action sets in the system together in a list that has its link embedded
+        // right here in an action set.
+        // NOTE: Only sets with enabled actions will put themselves on this list.
+        private static int m_EnabledActionsCount;
+        private static InputActionSet s_FirstSetInGlobalList;
+        [NonSerialized] internal InputActionSet m_NextInGlobalList;
+        [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
+
+        internal static void ResetGlobals()
+        {
+            for (var set = s_FirstSetInGlobalList; set != null;)
+            {
+                var next = set.m_NextInGlobalList;
+                set.m_NextInGlobalList = null;
+                set.m_PreviousInGlobalList = null;
+                for (var i = 0; i < set.m_Actions.Length; ++i)
+                    set.m_Actions[i].m_Enabled = false;
+                set = next;
+            }
+            s_FirstSetInGlobalList = null;
+        }
+
+        // Walk all sets with enabled actions and add all enabled actions to the given list.
+        internal static int FindEnabledActions(List<InputAction> actions)
+        {
+            var numFound = 0;
+            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+            {
+                for (var i = 0; i < set.m_Actions.Length; ++i)
+                {
+                    var action = set.m_Actions[i];
+                    if (!action.enabled)
+                        continue;
+
+                    actions.Add(action);
+                    ++numFound;
+                }
+            }
+            return numFound;
+        }
+
+        internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
+        {
+            if (enable)
+            {
+                ++m_EnabledActionsCount;
+                if (m_NextInGlobalList == null)
+                {
+                    if (s_FirstSetInGlobalList != null)
+                        s_FirstSetInGlobalList.m_PreviousInGlobalList = this;
+                    m_NextInGlobalList = s_FirstSetInGlobalList;
+                    s_FirstSetInGlobalList = this;
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
 
         // These arrays hold data for all actions in the set. Each action will
         // refer to a slice of the arrays.

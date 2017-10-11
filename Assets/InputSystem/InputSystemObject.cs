@@ -18,6 +18,7 @@ namespace ISX
 
         public void OnDestroy()
         {
+            InputActionSet.ResetGlobals();
             manager.Destroy();
         }
     }

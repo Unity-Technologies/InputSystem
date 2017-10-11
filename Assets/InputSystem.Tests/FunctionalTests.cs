@@ -318,9 +318,9 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescriptor()
+    public void Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescription()
     {
-        const string deviceJson = @"
+        const string json = @"
             {
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""Gamepad"",
@@ -331,19 +331,50 @@ public class FunctionalTests
             }
         ";
 
-        InputSystem.RegisterTemplate(deviceJson);
+        InputSystem.RegisterTemplate(json);
 
-        var descriptor = new InputDeviceDescription
+        var description = new InputDeviceDescription
         {
             interfaceName = "BB",
             product = "Shtabble"
         };
 
-        var device = InputSystem.AddDevice(descriptor);
+        var device = InputSystem.AddDevice(description);
 
         Assert.That(device.template, Is.EqualTo("MyDevice"));
         Assert.That(device, Is.TypeOf<Gamepad>());
         Assert.That(device.name, Is.EqualTo("Shtabble")); // Product name becomes device name.
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DeviceCreatedFromDeviceDescriptionStoresDescriptionOnDevice()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""product"" : ""Product""
+                }
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "Interface",
+            product = "Product",
+            manufacturer = "Manufacturer",
+            deviceClass = "DeviceClass",
+            version = "Version",
+            serial = "Serial"
+        };
+
+        var device = InputSystem.AddDevice(description);
+
+        Assert.That(device.description, Is.EqualTo(description));
     }
 
     [Test]
@@ -1008,6 +1039,28 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
+    {
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "MyController"});
+
+        var json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""product"" : ""MyController""
+                }
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        Assert.That(InputSystem.devices,
+            Has.Exactly(1).With.Property("template").EqualTo("CustomGamepad").And.TypeOf<Gamepad>());
+    }
+
+    [Test]
+    [Category("Devices")]
     [TestCase("Gamepad")]
     [TestCase("Keyboard")]
     [TestCase("Mouse")]
@@ -1210,6 +1263,29 @@ public class FunctionalTests
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanCustomizePressPointOfGamepadTriggers()
+    {
+        var json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""rightTrigger"",
+                        ""parameters"" : ""pressPoint=0.2""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var gamepad = (Gamepad) new InputControlSetup("CustomGamepad").Finish();
+
+        Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
     }
 
     // This is one of the most central tests. If this one breaks, it most often
@@ -1530,6 +1606,19 @@ public class FunctionalTests
         Assert.That(sets[0], Has.Property("name").EqualTo("default"));
         Assert.That(sets[0].actions, Has.Count.EqualTo(1));
         Assert.That(sets[0].actions, Has.Exactly(1).With.Property("name").EqualTo("jump"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryAllEnabledActions()
+    {
+        var action = new InputAction(binding: "/gamepad/leftStick");
+        action.Enable();
+
+        var enabledActions = InputSystem.FindAllEnabledActions();
+
+        Assert.That(enabledActions, Has.Count.EqualTo(1));
+        Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
     }
 
 #if UNITY_EDITOR

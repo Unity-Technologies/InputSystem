@@ -28,6 +28,22 @@ namespace ISX
                               string.IsNullOrEmpty(serial) &&
                               string.IsNullOrEmpty(version));
 
+        public override string ToString()
+        {
+            var haveProduct = !string.IsNullOrEmpty(product);
+            var haveManufacturer = !string.IsNullOrEmpty(manufacturer);
+
+            if (haveProduct && haveManufacturer)
+                return $"{manufacturer} {product}";
+            if (haveProduct)
+                return product;
+
+            if (!string.IsNullOrEmpty(deviceClass))
+                return deviceClass;
+
+            return string.Empty;
+        }
+
         public bool Matches(InputDeviceDescription other)
         {
             return MatchPair(interfaceName, other.interfaceName)

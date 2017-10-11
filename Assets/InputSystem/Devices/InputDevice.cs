@@ -58,6 +58,7 @@ namespace ISX
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
+        internal int m_StateChangeCount;
         internal int m_LastDynamicUpdate;
         internal int m_LastFixedUpdate;
 

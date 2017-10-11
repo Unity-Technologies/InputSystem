@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace ISX
 {
+    ////REVIEW: I think it makes sense to switch this to a more compact format that doesn't store floats; after all in almost all
+    ////        cases our source data on platforms is *not* floats. And users won't generally deal with GamepadState directly.
+
     // Xbox-compatible gamepad state layout.
     // Must be kept identical to layout used by native code.
     // Native will send StateEvents with data matching this struct to update gamepads.
@@ -123,8 +126,8 @@ namespace ISX
         public StickControl leftStick { get; private set; }
         public StickControl rightStick { get; private set; }
 
-        public AxisControl leftTrigger { get; private set; }
-        public AxisControl rightTrigger { get; private set; }
+        public ButtonControl leftTrigger { get; private set; }
+        public ButtonControl rightTrigger { get; private set; }
 
         public AxisControl leftMotor { get; private set; }
         public AxisControl rightMotor { get; private set; }
@@ -160,8 +163,8 @@ namespace ISX
             leftStick = setup.GetControl<StickControl>(this, "leftStick");
             rightStick = setup.GetControl<StickControl>(this, "rightStick");
 
-            leftTrigger = setup.GetControl<AxisControl>(this, "leftTrigger");
-            rightTrigger = setup.GetControl<AxisControl>(this, "rightTrigger");
+            leftTrigger = setup.GetControl<ButtonControl>(this, "leftTrigger");
+            rightTrigger = setup.GetControl<ButtonControl>(this, "rightTrigger");
 
             leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
             rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");

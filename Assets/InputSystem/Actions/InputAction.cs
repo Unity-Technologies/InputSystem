@@ -16,7 +16,7 @@ namespace ISX
     //       long as no one is asking them directly for a value.
     //
     // NOTE: Processors on controls are *NOT* taken into account by actions. A state is
-    //       considered change if its underlying memory changes not if the final processed
+    //       considered changed if its underlying memory changes not if the final processed
     //       value changes.
     [Serializable]
     public class InputAction : ISerializationCallbackReceiver
@@ -131,9 +131,14 @@ namespace ISX
             var controls = this.controls;
             var manager = InputSystem.s_Manager;
 
+            // Let set know we're changing state.
+            m_ActionSet.TellAboutActionChangingEnabledStatus(this, true);
+
+            // Hook up state monitors for all our controls.
             for (var i = 0; i < controls.Count; ++i)
                 manager.AddStateChangeMonitor(controls[i], this);
 
+            // Done.
             m_Enabled = true;
             m_CurrentPhase = Phase.Waiting;
         }
@@ -161,7 +166,7 @@ namespace ISX
         [SerializeField] private ActionEvent m_OnPerformed;
 
         // State we keep for enabling/disabling. This is volatile and not put on disk.
-        private bool m_Enabled;
+        internal bool m_Enabled;
         private Phase m_CurrentPhase;
         private InputControl m_LastSource;
         internal ReadOnlyArray<InputControl> m_Controls;

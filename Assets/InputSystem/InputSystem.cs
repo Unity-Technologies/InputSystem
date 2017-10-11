@@ -101,6 +101,16 @@ namespace ISX
             return s_Manager.TryGetDeviceById(deviceId);
         }
 
+        public static void ReportAvailableDevice(InputDeviceDescription description)
+        {
+            s_Manager.ReportAvailableDevice(description);
+        }
+
+        public static int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
+        {
+            return s_Manager.GetUnrecognizedDevices(descriptions);
+        }
+
         public static List<InputControl> GetControls(string path)
         {
             var list = new List<InputControl>();
@@ -195,6 +205,23 @@ namespace ISX
             s_Manager.Update(updateType);
         }
 
+        // Return a list of all the actions that are currently enabled in the system.
+        public static List<InputAction> FindAllEnabledActions()
+        {
+            var result = new List<InputAction>();
+            FindAllEnabledActions(result);
+            return result;
+        }
+
+        // Add all actions that are currently enabled in the system to the given list
+        // and return the number of such actions that have been found.
+        public static int FindAllEnabledActions(List<InputAction> actions)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+            return InputActionSet.FindEnabledActions(actions);
+        }
+
         internal static InputManager s_Manager;
 
 #if UNITY_EDITOR
@@ -219,6 +246,7 @@ namespace ISX
                 m_SystemObject = existingSystemObjects[0];
                 s_Manager = m_SystemObject.manager;
                 s_Manager.InstallGlobals();
+                InputDebuggerWindow.ReviveAfterDomainReload();
             }
             else
             {

@@ -72,6 +72,8 @@ namespace ISX
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException(nameof(json));
 
+            ////REVIEW: as long as no one has instantiated the template, the base template information is kinda pointless
+
             // Parse out name, device description, and base template.
             InputDeviceDescription deviceDescription;
             string baseTemplate;
@@ -96,7 +98,7 @@ namespace ISX
 
             if (!deviceDescription.empty)
             {
-                m_DeviceDescriptions.Add(new DeviceDescription
+                m_SupportedDevices.Add(new SupportedDevice
                 {
                     description = deviceDescription,
                     template = name
@@ -105,15 +107,16 @@ namespace ISX
                 // The template has a device description, so if there's any native
                 // devices we couldn't make sense of, see if the template helps
                 // with that.
-                for (var i = 0; i < m_NativeDevices.Count; ++i)
+                for (var i = 0; i < m_AvailableDevices.Count; ++i)
                 {
-                    var deviceId = m_NativeDevices[i].deviceId;
+                    var deviceId = m_AvailableDevices[i].deviceId;
                     if (TryGetDeviceById(deviceId) != null)
                         continue;
 
-                    if (deviceDescription.Matches(m_NativeDevices[i].description))
+                    if (deviceDescription.Matches(m_AvailableDevices[i].description))
                     {
-                        AddNativeDevice(deviceId, name);
+                        var device = AddDevice(name, deviceId);
+                        device.m_Description = deviceDescription;
                     }
                 }
             }
@@ -124,10 +127,10 @@ namespace ISX
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
-            for (var i = 0; i < m_DeviceDescriptions.Count; ++i)
+            for (var i = 0; i < m_SupportedDevices.Count; ++i)
             {
-                if (m_DeviceDescriptions[i].description.Matches(deviceDescription))
-                    return m_DeviceDescriptions[i].template;
+                if (m_SupportedDevices[i].description.Matches(deviceDescription))
+                    return m_SupportedDevices[i].template;
             }
 
             // No, so try to match by device class. If we have a "Gamepad" template,
@@ -235,6 +238,18 @@ namespace ISX
             return device;
         }
 
+        // Add device with a forced ID. Used when creating devices reported to us by native.
+        private InputDevice AddDevice(string template, int deviceId)
+        {
+            var setup = new InputControlSetup(template);
+            var device = setup.Finish();
+            device.m_Id = deviceId;
+
+            AddDevice(device);
+
+            return device;
+        }
+
         public void AddDevice(InputDevice device)
         {
             if (device == null)
@@ -282,16 +297,8 @@ namespace ISX
             if (template == null)
                 throw new ArgumentException("Cannot find template matching device description", nameof(description));
 
-            return AddDevice(template, description.product);
-        }
-
-        internal InputDevice AddNativeDevice(int deviceId, string template)
-        {
-            var setup = new InputControlSetup(template);
-            var device = setup.Finish();
-            device.m_Id = deviceId;
-
-            AddDevice(device);
+            var device = AddDevice(template, description.product);
+            device.m_Description = description;
 
             return device;
         }
@@ -340,6 +347,59 @@ namespace ISX
             return null;
         }
 
+        // Adds any device that's been reported to the system but could not be matched to
+        // a template to the given list.
+        public int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
+        {
+            if (descriptions == null)
+                throw new ArgumentNullException(nameof(descriptions));
+
+            var numFound = 0;
+            for (var i = 0; i < m_AvailableDevices.Count; ++i)
+            {
+                if (TryGetDeviceById(m_AvailableDevices[i].deviceId) != null)
+                    continue;
+
+                descriptions.Add(m_AvailableDevices[i].description);
+                ++numFound;
+            }
+
+            return numFound;
+        }
+
+        // Report the availability of a device. The system will try to find a template that matches
+        // the device and instantiate it. If no template matches but a template is added some time
+        // in the future, the device will be created when the template becomes available.
+        public void ReportAvailableDevice(InputDeviceDescription description)
+        {
+            if (string.IsNullOrEmpty(description.product) && string.IsNullOrEmpty(description.manufacturer) &&
+                string.IsNullOrEmpty(description.deviceClass))
+                throw new ArgumentException(
+                    "Description must have at least one of 'product', 'manufacturer', or 'deviceClass'",
+                    nameof(description));
+
+            var deviceId = NativeInputSystem.AllocateDeviceId();
+            ReportAvailableDevice(description, deviceId);
+        }
+
+        private void ReportAvailableDevice(InputDeviceDescription description, int deviceId)
+        {
+            // Remember it.
+            m_AvailableDevices.Add(new AvailableDevice
+            {
+                description = description,
+                deviceId = deviceId
+            });
+
+            // Try to turn it into a device instance.
+            var template = TryFindMatchingTemplate(description);
+            if (template != null)
+            {
+                var device = AddDevice(template, deviceId);
+                device.m_Description = description;
+            }
+        }
+
         public void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
@@ -380,10 +440,10 @@ namespace ISX
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
             m_BaseTemplateTable = new Dictionary<string, string>();
-            m_DeviceDescriptions = new List<DeviceDescription>();
+            m_SupportedDevices = new List<SupportedDevice>();
             m_Processors = new Dictionary<string, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
-            m_NativeDevices = new List<NativeDevice>();
+            m_AvailableDevices = new List<AvailableDevice>();
 
             // Determine our default set of enabled update types. By
             // default we enable both fixed and dynamic update because
@@ -464,14 +524,14 @@ namespace ISX
 
         // Bundles a template name and a device description.
         [Serializable]
-        internal struct DeviceDescription
+        internal struct SupportedDevice
         {
             public InputDeviceDescription description;
             public string template;
         }
 
         [Serializable]
-        internal struct NativeDevice
+        internal struct AvailableDevice
         {
             public InputDeviceDescription description;
             public int deviceId;
@@ -482,8 +542,8 @@ namespace ISX
         private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to its base template name.
         private Dictionary<string, Type> m_Processors;
 
-        private List<DeviceDescription> m_DeviceDescriptions;
-        private List<NativeDevice> m_NativeDevices;
+        private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
+        private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
         private InputDevice[] m_Devices;
         private Dictionary<int, InputDevice> m_DevicesById;
@@ -652,19 +712,8 @@ namespace ISX
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceInfo.deviceDescriptor);
 
-            // Remember device.
-            m_NativeDevices.Add(new NativeDevice
-            {
-                description = description,
-                deviceId = deviceInfo.deviceId
-            });
-
-            // Try to turn it into a device instance.
-            var template = TryFindMatchingTemplate(description);
-            if (template != null)
-            {
-                AddNativeDevice(deviceInfo.deviceId, template);
-            }
+            // Report it.
+            ReportAvailableDevice(description, deviceInfo.deviceId);
         }
 
         // When we have the C# job system, this should be a job and NativeInputSystem should double
@@ -817,6 +866,8 @@ namespace ISX
                                     }
                                     break;
                             }
+
+                            ++device.m_StateChangeCount;
 
                             // Now that we've committed the new state to memory, if any of the change
                             // monitors fired, let the associated actions know.
@@ -1007,6 +1058,8 @@ namespace ISX
             public string template;
             public int deviceId;
             public uint stateOffset;
+            public InputDevice.Flags flags;
+            public InputDeviceDescription description;
         }
 
         [Serializable]
@@ -1030,9 +1083,9 @@ namespace ISX
             public TemplateState[] templateStrings;
             public KeyValuePair<string, string>[] baseTemplates;
             public ProcessorState[] processors;
-            public DeviceDescription[] deviceDescriptions;
+            public SupportedDevice[] supportedDevices;
             public DeviceState[] devices;
-            public NativeDevice[] nativeDevices;
+            public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
             public DeviceChangeEvent deviceChangeEvent;
             public InputConfiguration.SerializedState configuration;
@@ -1087,7 +1140,9 @@ namespace ISX
                     name = device.name,
                     template = device.template,
                     deviceId = device.id,
-                    stateOffset = device.m_StateBlock.byteOffset
+                    stateOffset = device.m_StateBlock.byteOffset,
+                    description = device.m_Description,
+                    flags = device.m_Flags
                 };
                 deviceArray[i] = deviceState;
             }
@@ -1098,10 +1153,11 @@ namespace ISX
                 templateStrings = templateStringArray,
                 baseTemplates = m_BaseTemplateTable.ToArray(),
                 processors = processorArray,
-                deviceDescriptions = m_DeviceDescriptions.ToArray(),
+                supportedDevices = m_SupportedDevices.ToArray(),
                 devices = deviceArray,
-                nativeDevices = m_NativeDevices.ToArray(),
+                availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
+                ////FIXME: this does not actually seem to survive reloads properly
                 deviceChangeEvent = m_DeviceChangeEvent,
                 configuration = InputConfiguration.Save()
             };
@@ -1117,13 +1173,13 @@ namespace ISX
             m_TemplateTypes = new Dictionary<string, Type>();
             m_TemplateStrings = new Dictionary<string, string>();
             m_BaseTemplateTable = new Dictionary<string, string>();
-            m_DeviceDescriptions = state.deviceDescriptions.ToList();
+            m_SupportedDevices = state.supportedDevices.ToList();
             m_Processors = new Dictionary<string, Type>();
             m_StateBuffers = state.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_DeviceChangeEvent = state.deviceChangeEvent;
             m_DevicesById = new Dictionary<int, InputDevice>();
-            m_NativeDevices = state.nativeDevices.ToList();
+            m_AvailableDevices = state.availableDevices.ToList();
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);
@@ -1163,6 +1219,8 @@ namespace ISX
                 device.m_Name = deviceState.name;
                 device.m_Id = deviceState.deviceId;
                 device.m_DeviceIndex = i;
+                device.m_Description = deviceState.description;
+                device.m_Flags = deviceState.flags;
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
                 device.MakeCurrent();
                 devices[i] = device;

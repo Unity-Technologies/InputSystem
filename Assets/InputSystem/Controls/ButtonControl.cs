@@ -16,7 +16,7 @@ namespace ISX
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        protected bool IsValueConsideredPresses(float value)
+        protected bool IsValueConsideredPressed(float value)
         {
             var point = pressPoint;
             if (pressPoint <= 0.0f)
@@ -24,8 +24,8 @@ namespace ISX
             return value >= point;
         }
 
-        public bool isPressed => IsValueConsideredPresses(value);
-        public bool wasPressedThisFrame => IsValueConsideredPresses(value) && !IsValueConsideredPresses(previous);
-        public bool wasReleasedThisFrame => !IsValueConsideredPresses(value) && IsValueConsideredPresses(previous);
+        public bool isPressed => IsValueConsideredPressed(value);
+        public bool wasPressedThisFrame => IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous);
+        public bool wasReleasedThisFrame => !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous);
     }
 }
