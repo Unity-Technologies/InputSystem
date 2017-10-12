@@ -23,14 +23,9 @@ namespace ISX
     // devices. Device templates can use the 'deviceDescriptor' field
     // to specify regexs that are to match against compatible devices.
     //
-    // NOTE: The class is internal as we consider its objects temporaries
-    //       that we keep around only during control hierarchy construction
-    //       and let be reclaimed by the garbage collector. This way we're
-    //       not paying the cost for these objects while the game is running.
-    //       Especially for templates that are constructed through reflecton,
-    //       we can always get them back easily and since templates are
-    //       immutable, there's no modifications we have to preserve.
-    internal class InputTemplate
+    // InputTemplate objects are considered temporaries. Except in the
+    // editor, we don't keep them around beyond device creation.
+    public class InputTemplate
     {
         public enum ParameterType
         {
@@ -66,6 +61,12 @@ namespace ISX
             }
         }
 
+        public struct Processor
+        {
+            public string name;
+            public ReadOnlyArray<ParameterValue> parameters;
+        }
+
         ////TODO: need to figure out how to handle the root control; ATM the ControlTemplates always represent children
         ////      and you can't really set any properties on the root control
         ////      (the existing way works fine normal control templates but doesn't allow devices to make use of
@@ -74,12 +75,15 @@ namespace ISX
         // Specifies the composition of an input control.
         public struct ControlTemplate
         {
+            ////REVIEW: if we expose InputTemplate, the arrays in here should turn into ReadOnlyArrays
             public string name; // Can be null/empty for "root" control but only one such control may exist.
             public string template;
-            public ParameterValue[] parameters;
-            public string[] usages;
-            public string[] aliases;
-            public KeyValuePair<string, ParameterValue[]>[] processors;
+            ////REVIEW: maybe make this more flexible to include name + image; maybe combined string
+            public string icon; ////TODO: fill this (also have InputControlSetup put it on the control)
+            public ReadOnlyArray<ParameterValue> parameters;
+            public ReadOnlyArray<string> usages;
+            public ReadOnlyArray<string> aliases;
+            public ReadOnlyArray<Processor> processors;
             public uint offset;
             public uint bit;
             public uint sizeInBits;
@@ -370,19 +374,19 @@ namespace ISX
                 offset = offset,
                 bit = bit,
                 sizeInBits = sizeInBits,
-                parameters = parameters,
-                usages = usages,
-                aliases = aliases
+                parameters = new ReadOnlyArray<ParameterValue>(parameters),
+                usages = new ReadOnlyArray<string>(usages),
+                aliases = new ReadOnlyArray<string>(aliases)
             };
         }
 
-        private static KeyValuePair<string, ParameterValue[]>[] ParseProcessors(string processorString)
+        private static Processor[] ParseProcessors(string processorString)
         {
             processorString = processorString.Trim();
             if (string.IsNullOrEmpty(processorString))
                 return null;
 
-            var list = new List<KeyValuePair<string, ParameterValue[]>>();
+            var list = new List<Processor>();
 
             var index = 0;
             var processorStringLength = processorString.Length;
@@ -427,7 +431,7 @@ namespace ISX
                 if (index < processorStringLength && processorString[index] == ',')
                     ++index;
 
-                list.Add(new KeyValuePair<string, ParameterValue[]>(name, parameters));
+                list.Add(new Processor { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
             }
 
             return list.ToArray();
@@ -623,21 +627,26 @@ namespace ISX
             else
                 result.sizeInBits = baseTemplate.sizeInBits;
 
-            result.aliases = ArrayHelpers.Merge(derivedTemplate.aliases, baseTemplate.aliases,
-                    StringComparer.OrdinalIgnoreCase);
-            result.usages = ArrayHelpers.Merge(derivedTemplate.usages, baseTemplate.usages,
-                    StringComparer.OrdinalIgnoreCase);
+            result.aliases = new ReadOnlyArray<string>(
+                    ArrayHelpers.Merge(derivedTemplate.aliases.m_Array,
+                        baseTemplate.aliases.m_Array,
+                        StringComparer.OrdinalIgnoreCase));
 
-            if (derivedTemplate.parameters == null)
+            result.usages = new ReadOnlyArray<string>(
+                    ArrayHelpers.Merge(derivedTemplate.usages.m_Array,
+                        baseTemplate.usages.m_Array,
+                        StringComparer.OrdinalIgnoreCase));
+
+            if (derivedTemplate.parameters.Count == 0)
                 result.parameters = baseTemplate.parameters;
-            else if (baseTemplate.parameters == null)
+            else if (baseTemplate.parameters.Count == 0)
                 result.parameters = derivedTemplate.parameters;
             else
                 throw new NotImplementedException("merging parameters");
 
-            if (derivedTemplate.processors == null)
+            if (derivedTemplate.processors.Count == 0)
                 result.processors = baseTemplate.processors;
-            else if (baseTemplate.parameters == null)
+            else if (baseTemplate.parameters.Count == 0)
                 result.processors = derivedTemplate.processors;
             else
                 throw new NotImplementedException("merging processors");
@@ -798,14 +807,14 @@ namespace ISX
                         usagesList.Add(usage);
                     if (usages != null)
                         usagesList.AddRange(usages);
-                    template.usages = usagesList.ToArray();
+                    template.usages = new ReadOnlyArray<string>(usagesList.ToArray());
                 }
 
                 if (!string.IsNullOrEmpty(parameters))
-                    template.parameters = ParseParameters(parameters);
+                    template.parameters = new ReadOnlyArray<ParameterValue>(ParseParameters(parameters));
 
                 if (!string.IsNullOrEmpty(processors))
-                    template.processors = ParseProcessors(processors);
+                    template.processors = new ReadOnlyArray<Processor>(ParseProcessors(processors));
 
                 return template;
             }
@@ -872,15 +881,15 @@ namespace ISX
         internal static Dictionary<string, string> s_TemplateStrings;
         internal static Dictionary<string, string> s_BaseTemplateTable;
 
-        // Constructs InputTemlate instances and caches them.
+        // Constructs InputTemplate instances and caches them.
         internal struct Cache
         {
             private Dictionary<string, InputTemplate> m_CachedTemplates;
 
             public InputTemplate FindOrLoadTemplate(string name)
             {
-                Debug.Assert(s_TemplateTypes != null);
-                Debug.Assert(s_TemplateStrings != null);
+                Debug.Assert(InputTemplate.s_TemplateTypes != null);
+                Debug.Assert(InputTemplate.s_TemplateStrings != null);
 
                 var nameLowerCase = name.ToLower();
 
@@ -896,14 +905,14 @@ namespace ISX
                 // always take precedence over ones from type so that we can
                 // override what's in the code using data.
                 string json;
-                if (s_TemplateStrings.TryGetValue(nameLowerCase, out json))
+                if (InputTemplate.s_TemplateStrings.TryGetValue(nameLowerCase, out json))
                 {
                     template = InputTemplate.FromJson(name, json);
                     m_CachedTemplates[nameLowerCase] = template;
 
                     // If the template extends another template, we need to merge the
                     // base template into the final template.
-                    if (!string.IsNullOrEmpty(template.extendsTemplate))
+                    if (!String.IsNullOrEmpty(template.extendsTemplate))
                     {
                         ////TODO: catch cycles
                         var superTemplate = FindOrLoadTemplate(template.extendsTemplate);
@@ -915,7 +924,7 @@ namespace ISX
 
                 // No, but maybe we have a type template for it.
                 Type type;
-                if (s_TemplateTypes.TryGetValue(nameLowerCase, out type))
+                if (InputTemplate.s_TemplateTypes.TryGetValue(nameLowerCase, out type))
                 {
                     template = InputTemplate.FromType(name, type);
                     m_CachedTemplates[nameLowerCase] = template;

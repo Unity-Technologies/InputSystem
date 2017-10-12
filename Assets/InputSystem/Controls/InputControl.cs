@@ -11,6 +11,8 @@ namespace ISX
         // Final name part of the path.
         public string name => m_Name;
 
+        ////TODO: include icon-related info from control template
+
         // Full semantic path all the way from the root.
         // NOTE: Allocates on first hit. We don't create paths until someone asks for them.
         public string path

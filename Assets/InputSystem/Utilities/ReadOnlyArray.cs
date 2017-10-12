@@ -9,9 +9,9 @@ namespace ISX
     // NOTE: Use indexer instead of enumerator if you want to avoid garbage.
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
-        private TValue[] m_Array;
-        private int m_StartIndex;
-        private int m_Length;
+        internal TValue[] m_Array;
+        internal int m_StartIndex;
+        internal int m_Length;
 
         public ReadOnlyArray(TValue[] array)
         {

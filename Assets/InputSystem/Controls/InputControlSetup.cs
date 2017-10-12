@@ -284,10 +284,10 @@ namespace ISX
                 ////        of successive re-allocations
 
                 // Add usages.
-                if (controlTemplate.usages != null)
+                if (controlTemplate.usages.Count > 0)
                 {
-                    var usageCount = controlTemplate.usages.Length;
-                    var usageIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlTemplate.usages);
+                    var usageCount = controlTemplate.usages.Count;
+                    var usageIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlTemplate.usages.m_Array);
                     control.m_UsagesReadOnly = new ReadOnlyArray<string>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
 
                     ArrayHelpers.GrowBy(ref m_Device.m_UsageToControl, usageCount);
@@ -296,19 +296,19 @@ namespace ISX
                 }
 
                 // Add aliases.
-                if (controlTemplate.aliases != null)
+                if (controlTemplate.aliases.Count > 0)
                 {
-                    var aliasCount = controlTemplate.aliases.Length;
-                    var aliasIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlTemplate.aliases);
+                    var aliasCount = controlTemplate.aliases.Count;
+                    var aliasIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlTemplate.aliases.m_Array);
                     control.m_AliasesReadOnly = new ReadOnlyArray<string>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
                 }
 
                 // Set parameters.
-                if (controlTemplate.parameters != null)
+                if (controlTemplate.parameters.Count > 0)
                     SetParameters(control, controlTemplate.parameters);
 
                 // Add processors.
-                if (controlTemplate.processors != null)
+                if (controlTemplate.processors.Count > 0)
                     AddProcessors(control, controlTemplate, template.name);
             }
 
@@ -364,9 +364,9 @@ namespace ISX
                         child.m_StateBlock.byteOffset = controlTemplate.offset;
                     if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
                         child.m_StateBlock.bitOffset = controlTemplate.bit;
-                    if (controlTemplate.processors != null)
+                    if (controlTemplate.processors.Count > 0)
                         AddProcessors(child, controlTemplate, template.name);
-                    if (controlTemplate.parameters != null)
+                    if (controlTemplate.parameters.Count > 0)
                         SetParameters(child, controlTemplate.parameters);
 
                     ////TODO: other modifications
@@ -384,10 +384,10 @@ namespace ISX
 
         private static void AddProcessors(InputControl control, InputTemplate.ControlTemplate controlTemplate, string templateName)
         {
-            var processorCount = controlTemplate.processors.Length;
+            var processorCount = controlTemplate.processors.Count;
             for (var n = 0; n < processorCount; ++n)
             {
-                var name = controlTemplate.processors[n].Key;
+                var name = controlTemplate.processors[n].name;
                 var type = InputProcessor.TryGet(name);
                 if (type == null)
                     throw new Exception(
@@ -395,18 +395,18 @@ namespace ISX
 
                 var processor = Activator.CreateInstance(type);
 
-                var parameters = controlTemplate.processors[n].Value;
-                if (parameters != null)
+                var parameters = controlTemplate.processors[n].parameters;
+                if (parameters.Count > 0)
                     SetParameters(processor, parameters);
 
                 control.AddProcessor(processor);
             }
         }
 
-        private static void SetParameters(object onObject, InputTemplate.ParameterValue[] parameters)
+        private static void SetParameters(object onObject, ReadOnlyArray<InputTemplate.ParameterValue> parameters)
         {
             var objectType = onObject.GetType();
-            for (var i = 0; i < parameters.Length; ++i)
+            for (var i = 0; i < parameters.Count; ++i)
             {
                 var parameter = parameters[i];
 

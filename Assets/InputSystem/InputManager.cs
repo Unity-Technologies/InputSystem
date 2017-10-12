@@ -361,6 +361,9 @@ namespace ISX
             // Make the device current.
             device.MakeCurrent();
 
+            // Let actions re-resolve their paths.
+            InputActionSet.RefreshEnabledActions();
+
             // Notify listeners.
             m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Added);
         }
@@ -831,27 +834,13 @@ namespace ISX
             // be used to, for example, *only* update tracking on a device that also contains buttons -- which
             // should not get updated in berfore render).
 
-            var firstEventPtr = (InputEvent*)eventData;
+            var currentEventPtr = (InputEvent*)eventData;
             var remainingEventCount = eventCount;
 
             // Handle events.
             while (remainingEventCount > 0)
             {
                 InputDevice device = null;
-                InputEvent* currentEventPtr;
-                double currentEventTime;
-
-                ////REVIEW: The whole event sorting/filtering logic here is too convoluted. Unfortunately,
-                ////        neither the sorting by time nor the filtering of before-render events is
-                ////        super trivial. Hope there is a much simpler and also more performant way to do
-                ////        this. I'm pretty sure that the cost of the sorting especially can easily
-                ////        overshadow the cost of event handling itself.
-
-#if ENABLE_PROFILER
-                Profiler.BeginSample("SortInputEvents");
-                try
-                {
-#endif
 
                 // Bump firstEvent up to the next unhandled event (in before-render updates
                 // the event needs to be *both* unhandled *and* for a device with before
@@ -860,62 +849,21 @@ namespace ISX
                 {
                     if (isBeforeRenderUpdate)
                     {
-                        if (!firstEventPtr->handled)
+                        if (!currentEventPtr->handled)
                         {
-                            device = TryGetDeviceById(firstEventPtr->deviceId);
+                            device = TryGetDeviceById(currentEventPtr->deviceId);
                             if (device != null && device.updateBeforeRender)
                                 break;
                         }
                     }
-                    else if (!firstEventPtr->handled)
+                    else if (!currentEventPtr->handled)
                         break;
 
-                    firstEventPtr = (InputEvent*)((byte*)firstEventPtr + firstEventPtr->sizeInBytes);
+                    currentEventPtr = InputEvent.GetNextInMemory(currentEventPtr);
                     --remainingEventCount;
                 }
                 if (remainingEventCount == 0)
                     break;
-
-                ////REVIEW: can we do this faster?
-                // Find next oldest unhandled event.
-                currentEventPtr = firstEventPtr;
-                var oldestEventPtr = currentEventPtr;
-                var oldestEventTime = oldestEventPtr->time;
-                for (var n = 1; n < remainingEventCount; ++n)
-                {
-                    var nextEventPtr = (InputEvent*)((byte*)currentEventPtr + currentEventPtr->sizeInBytes);
-
-                    if (isBeforeRenderUpdate)
-                    {
-                        if (!nextEventPtr->handled && nextEventPtr->time < oldestEventTime)
-                        {
-                            var nextEventDevice = TryGetDeviceById(nextEventPtr->deviceId);
-                            if (nextEventDevice != null && nextEventDevice.updateBeforeRender)
-                            {
-                                oldestEventPtr = nextEventPtr;
-                                oldestEventTime = nextEventPtr->time;
-                                device = nextEventDevice;
-                            }
-                        }
-                    }
-                    else if (!nextEventPtr->handled && nextEventPtr->time < oldestEventTime)
-                    {
-                        oldestEventPtr = nextEventPtr;
-                        oldestEventTime = nextEventPtr->time;
-                    }
-
-                    currentEventPtr = nextEventPtr;
-                }
-                currentEventPtr = oldestEventPtr;
-                currentEventTime = oldestEventTime;
-
-#if ENABLE_PROFILER
-            }
-            finally
-            {
-                Profiler.EndSample();
-            }
-#endif
 
                 // Give listeners a shot at the event.
                 if (m_EventReceivedEvent != null)
@@ -938,9 +886,16 @@ namespace ISX
 
                 // Process.
                 var currentEventType = currentEventPtr->type;
+                var currentEventTime = currentEventPtr->time;
                 switch (currentEventType)
                 {
                     case StateEvent.Type:
+
+                        // Ignore the event if the last state update we received for the device was
+                        // newer than this state event is.
+                        if (currentEventTime < device.m_LastUpdateTime)
+                            break;
+
                         var stateEventPtr = (StateEvent*)currentEventPtr;
                         var stateType = stateEventPtr->stateFormat;
                         var stateBlock = device.m_StateBlock;
@@ -1010,7 +965,8 @@ namespace ISX
                                     break;
                             }
 
-                            ++device.m_StateChangeCount;
+                            ++device.m_StateChangeCount; ////REVIEW: is this really useful?
+                            device.m_LastUpdateTime = currentEventTime;
 
                             // Now that we've committed the new state to memory, if any of the change
                             // monitors fired, let the associated actions know.
@@ -1037,14 +993,14 @@ namespace ISX
                         break;
                 }
 
-                // Mark as processed by setting time to negative.
+                // Mark as processed.
                 currentEventPtr->handled = true;
 
                 // If the event we handled was the first one at our current buffer position and
                 // have still more events to go, bump our buffer position by one.
-                if (currentEventPtr == firstEventPtr && remainingEventCount >= 1)
+                if (remainingEventCount >= 1)
                 {
-                    firstEventPtr = (InputEvent*)((byte*)currentEventPtr + currentEventPtr->sizeInBytes);
+                    currentEventPtr = InputEvent.GetNextInMemory(currentEventPtr);
                     --remainingEventCount;
                 }
 

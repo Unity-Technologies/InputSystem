@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -135,6 +136,11 @@ namespace ISX
         ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
         public static Gamepad current { get; protected set; }
+
+        public static ReadOnlyArray<Gamepad> all
+        {
+            get { throw new NotImplementedException(); }
+        }
 
         public override void MakeCurrent()
         {

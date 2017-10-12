@@ -4,6 +4,7 @@ using System;
 
 namespace ISX
 {
+    ////TODO: modify so that this actually contains a map from action names to InputBindings (maybe also rename to InputBindingMap)
     public class InputBindingSet
     {
         public static InputBindingSet[] FromJson()

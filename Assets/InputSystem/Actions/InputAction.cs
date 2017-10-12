@@ -4,6 +4,7 @@ using UnityEngine.Events;
 
 namespace ISX
 {
+    ////REVIEW: omit InputControl fro the callback and have users use InputAction.lastSource?
     using ActionListener = UnityAction<InputAction, InputControl>;
 
     // A named input signal that can flexibly decide which input data to tap.
@@ -19,7 +20,8 @@ namespace ISX
     //       considered changed if its underlying memory changes not if the final processed
     //       value changes.
     [Serializable]
-    public class InputAction : ISerializationCallbackReceiver
+    public class InputAction
+        ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
     {
         public enum Phase
         {
@@ -44,20 +46,18 @@ namespace ISX
             }
         }
 
-        public InputBinding binding => new InputBinding
-        {
-            action = name,
-            sources = m_Binding
-        };
+        ////TODO: add support for turning binding array into displayable info
+        ////      (allow to constrain by sets of devics set on action set)
 
+        public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings);
+
+        // The set of controls to which the bindings resolve. May change over time.
         public ReadOnlyArray<InputControl> controls
         {
             get
             {
-                if (m_ActionSet == null)
-                    CreatePrivateActionSet();
-                if (m_ActionSet.m_Controls == null)
-                    m_ActionSet.ResolveSources();
+                if (!m_Enabled)
+                    throw new InvalidOperationException("Cannot list controls of action when not enabled.");
                 return m_Controls;
             }
         }
@@ -66,6 +66,8 @@ namespace ISX
         public InputControl lastSource => m_LastSource;
 
         public bool enabled => m_Enabled;
+
+        ////REVIEW: have single delegate that just gives you an InputAction and you get the control and phase from the action?
 
         public event ActionListener started
         {
@@ -115,12 +117,16 @@ namespace ISX
             }
         }
 
+        internal InputAction()
+        {
+        }
+
         ////REVIEW: single modifier?
         // Construct a disabled action targeting the given sources.
         public InputAction(string name = null, string binding = null, string modifiers = null)
         {
             m_Name = name;
-            m_Binding = binding;
+            m_Bindings = new[] {new InputBinding {path = binding}};
             m_CurrentPhase = Phase.Disabled;
         }
 
@@ -129,15 +135,19 @@ namespace ISX
             if (m_Enabled)
                 return;
 
-            var controls = this.controls;
+            if (m_ActionSet == null)
+                CreatePrivateActionSet();
+            if (m_ActionSet.m_Controls == null)
+                m_ActionSet.ResolveBindingsOfAllActions();
+
             var manager = InputSystem.s_Manager;
 
             // Let set know we're changing state.
             m_ActionSet.TellAboutActionChangingEnabledStatus(this, true);
 
             // Hook up state monitors for all our controls.
-            for (var i = 0; i < controls.Count; ++i)
-                manager.AddStateChangeMonitor(controls[i], this);
+            for (var i = 0; i < m_Controls.Count; ++i)
+                manager.AddStateChangeMonitor(m_Controls[i], this);
 
             // Done.
             m_Enabled = true;
@@ -149,18 +159,22 @@ namespace ISX
             throw new NotImplementedException();
         }
 
-        // The action set that owns us.
-        internal InputActionSet m_ActionSet;
+        public AddBindingSyntax AddBinding(string path, string modifiers = null)
+        {
+            var index = ArrayHelpers.Append(ref m_Bindings, new InputBinding {path = path, modifiers = modifiers});
+            return new AddBindingSyntax(this, index);
+        }
 
-        [SerializeField] private string m_Name;
-        [SerializeField] internal string m_Binding;
+        // The action set that owns us.
+        [NonSerialized] internal InputActionSet m_ActionSet;
 
         // For actions that are kept outside of any action set, we still a set to hold
-        // our data. We create a hidden set private to the action. Unlike the case where
-        // the action is part of a public set of actions, we need to serialize the set
-        // as *part* of the action.
+        // our data. We create a hidden set private to the action.
         // NOTE: If this is set, it will be the same as m_ActionSet.
-        [SerializeField] internal InputActionSet m_PrivateActionSet;
+        [NonSerialized] internal InputActionSet m_PrivateActionSet;
+
+        [SerializeField] private string m_Name;
+        [SerializeField] private InputBinding[] m_Bindings;
 
         [SerializeField] private ActionEvent m_OnStarted;
         [SerializeField] private ActionEvent m_OnCancelled;
@@ -230,18 +244,20 @@ namespace ISX
             }
         }
 
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        public struct AddBindingSyntax
         {
-        }
+            public InputAction action;
+            private int m_BindingIndex;
 
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            // To not create a cycle during serialization, m_PrivateActionSet will
-            // remove us from serialization so add ourselves back.
-            if (m_PrivateActionSet != null)
+            internal AddBindingSyntax(InputAction action, int bindingIndex)
             {
-                m_PrivateActionSet.m_Actions = new InputAction[1];
-                m_PrivateActionSet.m_Actions[0] = this;
+                this.action = action;
+                m_BindingIndex = bindingIndex;
+            }
+
+            public AddBindingSyntax And()
+            {
+                throw new NotImplementedException();
             }
         }
     }

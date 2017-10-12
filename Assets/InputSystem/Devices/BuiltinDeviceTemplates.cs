@@ -1,5 +1,7 @@
 namespace ISX
 {
+    ////TODO: make sure the editor always has *all* templates from all platforms
+
     internal static class BuiltinDeviceTemplates
     {
         public static void RegisterTemplates(InputManager manager)
@@ -41,7 +43,7 @@ namespace ISX
     { ""name"" : ""buttonEast"", ""offset"" : 2, ""bit"" : 13 },
     { ""name"" : ""buttonWest"", ""offset"" : 2, ""bit"" : 14 },
     { ""name"" : ""buttonNorth"", ""offset"" : 2, ""bit"" : 15 },
-    { ""name"" : ""dpad"", ""offset"" : 2 },
+    { ""name"" : ""dpad"", ""offset"" : 2, ""bit"" : 8 },
     { ""name"" : ""dpad/up"", ""offset"" : 0, ""bit"" : 8 },
     { ""name"" : ""dpad/down"", ""offset"" : 0, ""bit"" : 9 },
     { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 10 },

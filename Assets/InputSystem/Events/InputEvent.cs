@@ -66,5 +66,10 @@ namespace ISX
         {
             return $"id={eventId} type={type} device={deviceId} size={sizeInBytes} time={time}";
         }
+
+        internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
+        {
+            return (InputEvent*)((byte*)current + current->sizeInBytes);
+        }
     }
 }

@@ -9,11 +9,17 @@ namespace ISX
     // action set. "Lose" actions constructed without a set will internally
     // create their own "set" to hold their data.
     [Serializable]
-    public class InputActionSet : ISerializationCallbackReceiver
+    public class InputActionSet
     {
         public string name => m_Name;
 
         ////TODO: allow actions in a set to leave their device root open and then allow devices to be assigned at the action set level
+        ////      (actually... thinking about this I think this is not functionality we need;
+        ////      the bindings should go to all possible controls from all supported devices;
+        ////      if the user wants to track which particular device the user is currently
+        ////      using as input (e.g. gamepad vs keyboard&mouse), the user can do that himself
+        ////      and restrict hints that are displayed by filtering for bindings from those
+        ////      devices)
 
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
@@ -106,7 +112,7 @@ namespace ISX
         // instead we just link all the action sets in the system together in a list that has its link embedded
         // right here in an action set.
         // NOTE: Only sets with enabled actions will put themselves on this list.
-        private static int m_EnabledActionsCount;
+        private static int s_EnabledActionsCount;
         private static InputActionSet s_FirstSetInGlobalList;
         [NonSerialized] internal InputActionSet m_NextInGlobalList;
         [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
@@ -123,6 +129,7 @@ namespace ISX
                 set = next;
             }
             s_FirstSetInGlobalList = null;
+            s_EnabledActionsCount = 0;
         }
 
         // Walk all sets with enabled actions and add all enabled actions to the given list.
@@ -144,11 +151,17 @@ namespace ISX
             return numFound;
         }
 
+        internal static void RefreshEnabledActions()
+        {
+            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+                set.ResolveBindingsOfAllActions();
+        }
+
         internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
         {
             if (enable)
             {
-                ++m_EnabledActionsCount;
+                ++s_EnabledActionsCount;
                 if (m_NextInGlobalList == null)
                 {
                     if (s_FirstSetInGlobalList != null)
@@ -168,7 +181,8 @@ namespace ISX
         internal InputControl[] m_Controls;
         internal InputActionModifier[] m_Modifiers;
 
-        internal void ResolveSources()
+        // Create m_Controls array by going through all actions and resolving their bindings.
+        internal void ResolveBindingsOfAllActions()
         {
             if (m_Actions == null)
                 return;
@@ -181,14 +195,15 @@ namespace ISX
                 var action = m_Actions[i];
                 var controlsStartIndex = controls.Count;
 
-                // Skip actions that don't have a path set on them.
-                if (string.IsNullOrEmpty(action.m_Binding))
-                    continue;
-
-                var numMatches = InputSystem.GetControls(action.m_Binding, controls);
-                if (numMatches > 0)
+                var bindings = action.bindings;
+                for (var n = 0; n < bindings.Count; ++n)
                 {
-                    action.m_Controls = new ReadOnlyArray<InputControl>(null, controlsStartIndex, numMatches);
+                    var binding = bindings[n];
+                    var numMatches = InputSystem.GetControls(binding.path, controls);
+                    if (numMatches > 0)
+                    {
+                        action.m_Controls = new ReadOnlyArray<InputControl>(null, controlsStartIndex, numMatches);
+                    }
                 }
             }
 
@@ -204,22 +219,6 @@ namespace ISX
                 action.m_Controls = new ReadOnlyArray<InputControl>(m_Controls, runningOffset, numControls);
                 runningOffset += numControls;
             }
-        }
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-            // For "hidden" action sets created into internally stand-alone InputActions, we
-            // don't want to serialize that action as otherwise we'd have an infinite cycle --
-            // it's the action keeping us alive. So for those actions, we go and remove our
-            // actions array. InputAction.OnAfterDeserialize will take of getting the array
-            // back after deserialization.
-
-            if (m_Actions.Length == 1 && m_Actions[0].m_PrivateActionSet != null)
-                m_Actions = null;
-        }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
         }
 
         [Serializable]

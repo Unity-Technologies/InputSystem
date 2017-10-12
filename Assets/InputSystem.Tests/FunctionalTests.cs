@@ -1108,6 +1108,26 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
+    {
+        var gamepad1 = InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice("Gamepad");
+        InputSystem.AddDevice("Keyboard");
+
+        Assert.That(Gamepad.all, Has.Count.EqualTo(2));
+        Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad1));
+        Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad2));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_AllGamepadListRefreshesWhenGamepadIsAdded()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
     [TestCase("Gamepad")]
     [TestCase("Keyboard")]
     [TestCase("Mouse")]
@@ -1424,7 +1444,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Events")]
-    public void Events_AreHandledInOrderOfIncreasingTime()
+    public void Events_AreProcessedInOrderTheyAreQueuedIn()
     {
         const double kFirstTime = 0.5;
         const double kSecondTime = 1.5;
@@ -1449,9 +1469,6 @@ public class FunctionalTests
 
         var device = InputSystem.AddDevice("Gamepad");
 
-        // Queue events such that no matter whether the system goes through the front
-        // to back or back to front, we only end up with the correct ordering if the
-        // times are ordered.
         InputSystem.QueueStateEvent(device, new GamepadState(), kSecondTime);
         InputSystem.QueueStateEvent(device, new GamepadState(), kFirstTime);
         InputSystem.QueueStateEvent(device, new GamepadState(), kThirdTime);
@@ -1459,8 +1476,8 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(3));
-        Assert.That(receivedFirstTime, Is.EqualTo(kFirstTime).Within(0.00001));
-        Assert.That(receivedSecondTime, Is.EqualTo(kSecondTime).Within(0.00001));
+        Assert.That(receivedFirstTime, Is.EqualTo(kSecondTime).Within(0.00001));
+        Assert.That(receivedSecondTime, Is.EqualTo(kFirstTime).Within(0.00001));
         Assert.That(receivedThirdTime, Is.EqualTo(kThirdTime).Within(0.00001));
     }
 
@@ -1594,11 +1611,11 @@ public class FunctionalTests
     {
         var device = InputSystem.AddDevice("Gamepad");
         var noise = InputSystem.AddDevice("Gamepad");
-        var trace = new InputEventTrace {deviceId = device.id};
-        trace.Enable();
 
-        try
+        using (var trace = new InputEventTrace {deviceId = device.id})
         {
+            trace.Enable();
+
             var firstState = new GamepadState {rightTrigger = 0.35f};
             var secondState = new GamepadState {leftTrigger = 0.75f};
 
@@ -1628,10 +1645,6 @@ public class FunctionalTests
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState), StateEvent.From(events[1])->state,
                     UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
-        finally
-        {
-            trace.Dispose();
-        }
     }
 
     [Test]
@@ -1639,11 +1652,11 @@ public class FunctionalTests
     public void Events_WhenTraceIsFull_WillStartOverwritingOldEvents()
     {
         var device = InputSystem.AddDevice("Gamepad");
-        var trace = new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.id};
-        trace.Enable();
-
-        try
+        using (var trace =
+                   new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.id})
         {
+            trace.Enable();
+
             var firstState = new GamepadState {rightTrigger = 0.35f};
             var secondState = new GamepadState {leftTrigger = 0.75f};
             var thirdState = new GamepadState {leftTrigger = 0.95f};
@@ -1661,10 +1674,6 @@ public class FunctionalTests
             Assert.That(events, Has.Count.EqualTo(2));
             Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(1.5).Within(0.000001));
             Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(2.5).Within(0.000001));
-        }
-        finally
-        {
-            trace.Dispose();
         }
     }
 
@@ -1731,12 +1740,37 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Events")]
+    public void Events_IfOldStateEventIsSentToDevice_IsIgnored()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 0.5f }, 2.0);
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 0.75f }, 1.0);
+        InputSystem.Update();
+
+        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotQueryControlsOnActionThatIsNotEnabled()
+    {
+        var action = new InputAction();
+
+        Assert.That(() => action.controls, Throws.InvalidOperationException);
+    }
+
+    [Test]
     [Category("Actions")]
     public void Actions_CanAddActionThatTargetsSingleControl()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(binding: "/gamepad/leftStick");
+        action.Enable();
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -1749,6 +1783,7 @@ public class FunctionalTests
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(binding: "/gamepad/*stick");
+        action.Enable();
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -1779,7 +1814,7 @@ public class FunctionalTests
     ////REVIEW: not sure whether this is the best behavior
     [Test]
     [Category("Actions")]
-    public void Actions_SourcePathsLeadingNowhereAreIgnored()
+    public void Actions_PathLeadingNowhereAreIgnored()
     {
         var action = new InputAction(binding: "nothing");
 
@@ -1793,6 +1828,16 @@ public class FunctionalTests
         var action = new InputAction();
 
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_LoseActionHasNoSet()
+    {
+        var action = new InputAction();
+        action.Enable(); // Force to create private action set.
+
+        Assert.That(action.actionSet, Is.Null);
     }
 
     [Test]
@@ -1996,10 +2041,77 @@ public class FunctionalTests
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanSerializeAction()
+    {
+        var action = new InputAction(name: "MyAction", binding: "/gamepad/leftStick");
+
+        // Unity's JSON serializer goes through Unity's normal serialization machinery so if
+        // this works, we should have a pretty good shot that binary and YAML serialization
+        // are also working.
+        var json = JsonUtility.ToJson(action);
+        var deserializedAction = JsonUtility.FromJson<InputAction>(json);
+
+        Assert.That(deserializedAction.name, Is.EqualTo(action.name));
+        Assert.That(deserializedAction.bindings, Has.Count.EqualTo(1));
+        Assert.That(deserializedAction.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddMultipleBindings()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("/gamepad/leftStick");
+        action.AddBinding("/gamepad/rightStick");
+
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(action.bindings[1].path, Is.EqualTo("/gamepad/rightStick"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ControlsUpdateWhenNewDeviceIsAdded()
+    {
+        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(binding: "/<gamepad>/buttonSouth");
+        action.Enable();
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls[0], Is.SameAs(gamepad1.aButton));
+
+        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.aButton));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.aButton));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanFindEnabledActions()
+    {
+        var action1 = new InputAction();
+        var action2 = new InputAction();
+
+        action1.Enable();
+        action2.Enable();
+
+        var enabledActions = InputSystem.FindAllEnabledActions();
+
+        Assert.That(enabledActions, Has.Count.EqualTo(2));
+        Assert.That(enabledActions, Has.Exactly(1).SameAs(action1));
+        Assert.That(enabledActions, Has.Exactly(1).SameAs(action2));
+    }
+
 #if UNITY_EDITOR
     [Test]
-    [Category("Misc")]
-    public void Misc_CanSaveAndRestoreStateInEditor()
+    [Category("Editor")]
+    public void Editor_CanSaveAndRestoreState()
     {
         const string json = @"
             {
@@ -2017,6 +2129,28 @@ public class FunctionalTests
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RestoringStateWillCleanUpEventHooks()
+    {
+        InputSystem.Save();
+
+        var receivedOnEvent = 0;
+        var receivedOnDeviceChange = 0;
+
+        InputSystem.onEvent += _ => ++ receivedOnEvent;
+        InputSystem.onDeviceChange += (c, d) => ++ receivedOnDeviceChange;
+
+        InputSystem.Restore();
+
+        var device = InputSystem.AddDevice("Gamepad");
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedOnEvent, Is.Zero);
+        Assert.That(receivedOnDeviceChange, Is.Zero);
     }
 
 #endif

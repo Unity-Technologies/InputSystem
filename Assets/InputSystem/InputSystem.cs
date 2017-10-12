@@ -30,19 +30,7 @@ namespace ISX
 #endif
     public static class InputSystem
     {
-        public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
-
-        public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
-        {
-            add { s_Manager.onDeviceChange += value; }
-            remove { s_Manager.onDeviceChange -= value; }
-        }
-
-        public static event UnityAction<InputEventPtr> onEvent
-        {
-            add { s_Manager.onEvent += value; }
-            remove { s_Manager.onEvent -= value; }
-        }
+        #region Templates
 
         public static void RegisterTemplate(Type type, string name = null)
         {
@@ -67,6 +55,20 @@ namespace ISX
             return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
+        public static List<string> ListTemplates()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static InputTemplate LoadTemplate(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Processors
+
         public static void RegisterProcessor(string name, Type type)
         {
             s_Manager.RegisterProcessor(name, type);
@@ -75,6 +77,18 @@ namespace ISX
         public static Type TryGetProcessor(string name)
         {
             return s_Manager.TryGetProcessor(name);
+        }
+
+        #endregion
+
+        #region Devices
+
+        public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
+
+        public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
+        {
+            add { s_Manager.onDeviceChange += value; }
+            remove { s_Manager.onDeviceChange -= value; }
         }
 
         public static InputDevice AddDevice(string template)
@@ -107,6 +121,7 @@ namespace ISX
             return s_Manager.TryGetDeviceById(deviceId);
         }
 
+        ////REVIEW: this seems somewhat pointless without also agreeing on an ID for the device
         public static void ReportAvailableDevice(InputDeviceDescription description)
         {
             s_Manager.ReportAvailableDevice(description);
@@ -116,6 +131,8 @@ namespace ISX
         {
             return s_Manager.GetUnrecognizedDevices(descriptions);
         }
+
+        #endregion
 
         public static List<InputControl> GetControls(string path)
         {
@@ -127,6 +144,14 @@ namespace ISX
         public static int GetControls(string path, List<InputControl> controls)
         {
             return s_Manager.GetControls(path, controls);
+        }
+
+        #region Events
+
+        public static event UnityAction<InputEventPtr> onEvent
+        {
+            add { s_Manager.onEvent += value; }
+            remove { s_Manager.onEvent -= value; }
         }
 
         public static void QueueEvent<TEvent>(ref TEvent inputEvent)
@@ -211,6 +236,8 @@ namespace ISX
             s_Manager.Update(updateType);
         }
 
+        #endregion
+
         // Return a list of all the actions that are currently enabled in the system.
         public static List<InputAction> FindAllEnabledActions()
         {
@@ -229,6 +256,9 @@ namespace ISX
         }
 
         internal static InputManager s_Manager;
+
+        // The rest here is internal stuff to manage singletons, survive domain reloads,
+        // and to support the reset ability for tests.
 
 #if UNITY_EDITOR
         private static bool s_Initialized;
@@ -266,6 +296,7 @@ namespace ISX
 
         internal static void Reset()
         {
+            ////TODO: clear current&all props (probably best from InputSystemObject)
             if (m_SystemObject != null)
                 UnityEngine.Object.DestroyImmediate(m_SystemObject);
             m_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();

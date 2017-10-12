@@ -2,14 +2,19 @@ using System;
 
 namespace ISX
 {
-    // Correlates an input action with one or more source controls.
     [Serializable]
     public struct InputBinding
     {
-        public string action;
-        public string sources;
+        [Flags]
+        public enum Flags
+        {
+            // This binding and the next one in the list are a combo. The next
+            // one can't trigger until this binding triggers.
+            ThisAndNextCombine = 1 << 0,
+        }
 
-
-        public string modifier;////REVIEW: allow this?
+        public string path;
+        public string modifiers;
+        public Flags flags;
     }
 }

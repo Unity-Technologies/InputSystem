@@ -28,6 +28,9 @@ namespace ISX
         // For native devices, this is assigned by the underlying runtime.
         public int id => m_Id;
 
+        // Timestamp of last state event used to update the device.
+        public double lastUpdateTime => m_LastUpdateTime;
+
         // Make this the current device of its type.
         // Use this to set static properties that give fast access to the latest device used of a given
         // type (see Gamepad.current).
@@ -58,6 +61,7 @@ namespace ISX
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
+        internal double m_LastUpdateTime;
         internal int m_StateChangeCount;
         internal int m_LastDynamicUpdate;
         internal int m_LastFixedUpdate;

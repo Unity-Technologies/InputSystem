@@ -36,6 +36,7 @@ namespace ISX
         {
             get
             {
+                ////FIXME: this produces unnormalized vectors; we want diagonal vectors to still be unit vectors
                 var upValue = up.isPressed ? 1.0f : 0.0f;
                 var downValue = down.isPressed ? -1.0f : 0.0f;
                 var leftValue = left.isPressed ? -1.0f : 0.0f;

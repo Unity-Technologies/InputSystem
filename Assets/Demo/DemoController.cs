@@ -1,4 +1,3 @@
-using System;
 using ISX;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -10,6 +9,10 @@ public class DemoController : MonoBehaviour
     public float timeBetweenShots = 0.5f;
     public float moveSpeed = 5;
 
+    public InputAction fireAction;
+    public InputAction lookAction;
+    public InputAction walkAction;
+
     private Vector2 m_Look;
     private Vector2 m_Walk;
     private Vector2 m_Rotation;
@@ -17,32 +20,23 @@ public class DemoController : MonoBehaviour
 
     ////TODO: put actions in set (actually, load them from actions.json and their bindings from bindings.json)
 
-    [NonSerialized]////FIXME: seems like the recursion prevention code doesn't work properly
-    private InputAction m_FireAction;
-
-    [NonSerialized] private InputAction m_LookAction;
-    [NonSerialized] private InputAction m_WalkAction;
-
     public void Awake()
     {
-        m_FireAction = new InputAction("Fire", binding: "/*/{primaryAction}");
-        m_WalkAction = new InputAction("Walk", binding: "/*/{primaryStick}");
-        m_LookAction = new InputAction("Look", binding: "/*/{secondaryStick}");
-
         ////TODO: ideally should have a way to get values from controls without having to make assumptions about
         ////      what kind of control sits behind the binding
-        m_LookAction.performed += (action, control) => m_Look = ((Vector2Control)control).value;
-        m_WalkAction.performed += (action, control) => m_Walk = ((Vector2Control)control).value;
-        m_FireAction.performed += (action, control) => Fire();
+
+        lookAction.performed += (action, control) => m_Look = ((Vector2Control)control).value;
+        walkAction.performed += (action, control) => m_Walk = ((Vector2Control)control).value;
+        fireAction.performed += (action, control) => Fire();
     }
 
     public void Start()
     {
         m_RigidBody = GetComponent<Rigidbody>();
 
-        m_FireAction.Enable();
-        m_LookAction.Enable();
-        m_WalkAction.Enable();
+        fireAction.Enable();
+        lookAction.Enable();
+        walkAction.Enable();
     }
 
     public void Update()
