@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 
 namespace ISX
@@ -579,8 +580,8 @@ namespace ISX
             if (ReferenceEquals(InputProcessor.s_Processors, m_Processors))
                 InputProcessor.s_Processors = null;
 
-            NativeInputSystem.onUpdate -= OnNativeUpdate;
-            NativeInputSystem.onDeviceDiscovered -= OnNativeDeviceDiscovered;
+            NativeInputSystem.onUpdate = null;
+            NativeInputSystem.onDeviceDiscovered = null;
         }
 
         // Revive after domain reload.
@@ -591,8 +592,8 @@ namespace ISX
             InputTemplate.s_BaseTemplateTable = m_BaseTemplateTable;
             InputProcessor.s_Processors = m_Processors;
 
-            NativeInputSystem.onUpdate += OnNativeUpdate;
-            NativeInputSystem.onDeviceDiscovered += OnNativeDeviceDiscovered;
+            NativeInputSystem.onUpdate = OnNativeUpdate;
+            NativeInputSystem.onDeviceDiscovered = OnNativeDeviceDiscovered;
         }
 
         // Bundles a template name and a device description.
@@ -797,6 +798,13 @@ namespace ISX
         // to the global state buffers so the user won't ever know that updates happen in the background.
         private unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
         {
+#if ENABLE_PROFILER
+            Profiler.BeginSample("InputUpdate");
+            try
+            {
+#endif
+
+            ////REVIEW: this will become obsolete when we actually turn off unneeded updates in native
             // We *always* have to process events into the current state even if the given update isn't enabled.
             // This is because the current state is for all updates and reflects the most up-to-date device states.
 
@@ -805,10 +813,13 @@ namespace ISX
             if (eventCount <= 0)
                 return;
 
+            var isBeforeRenderUpdate = false;
             if (updateType == NativeInputUpdateType.Dynamic)
                 ++m_CurrentDynamicUpdateCount;
             else if (updateType == NativeInputUpdateType.Fixed)
                 ++m_CurrentFixedUpdateCount;
+            else if (updateType == NativeInputUpdateType.BeforeRender)
+                isBeforeRenderUpdate = true;
 
             // Before render updates work in a special way. For them, we only want specific devices (and
             // sometimes even just specific controls on those devices) to be updated. What native will do is
@@ -820,37 +831,91 @@ namespace ISX
             // be used to, for example, *only* update tracking on a device that also contains buttons -- which
             // should not get updated in berfore render).
 
+            var firstEventPtr = (InputEvent*)eventData;
+            var remainingEventCount = eventCount;
+
             // Handle events.
-            var firstEvent = (InputEvent*)eventData;
-            for (var i = 0; i < eventCount; ++i)
+            while (remainingEventCount > 0)
             {
-                // Bump firstEvent up to the next unhandled event.
-                while (eventCount > 0 && firstEvent->handled)
+                InputDevice device = null;
+                InputEvent* currentEventPtr;
+                double currentEventTime;
+
+                ////REVIEW: The whole event sorting/filtering logic here is too convoluted. Unfortunately,
+                ////        neither the sorting by time nor the filtering of before-render events is
+                ////        super trivial. Hope there is a much simpler and also more performant way to do
+                ////        this. I'm pretty sure that the cost of the sorting especially can easily
+                ////        overshadow the cost of event handling itself.
+
+#if ENABLE_PROFILER
+                Profiler.BeginSample("SortInputEvents");
+                try
                 {
-                    firstEvent = (InputEvent*)((byte*)firstEvent + firstEvent->sizeInBytes);
-                    --eventCount;
+#endif
+
+                // Bump firstEvent up to the next unhandled event (in before-render updates
+                // the event needs to be *both* unhandled *and* for a device with before
+                // render updates enabled).
+                while (remainingEventCount > 0)
+                {
+                    if (isBeforeRenderUpdate)
+                    {
+                        if (!firstEventPtr->handled)
+                        {
+                            device = TryGetDeviceById(firstEventPtr->deviceId);
+                            if (device != null && device.updateBeforeRender)
+                                break;
+                        }
+                    }
+                    else if (!firstEventPtr->handled)
+                        break;
+
+                    firstEventPtr = (InputEvent*)((byte*)firstEventPtr + firstEventPtr->sizeInBytes);
+                    --remainingEventCount;
                 }
-                if (eventCount == 0)
+                if (remainingEventCount == 0)
                     break;
 
+                ////REVIEW: can we do this faster?
                 // Find next oldest unhandled event.
-                var currentEventPtr = firstEvent;
+                currentEventPtr = firstEventPtr;
                 var oldestEventPtr = currentEventPtr;
                 var oldestEventTime = oldestEventPtr->time;
-                for (var n = 1; n < eventCount; ++n)
+                for (var n = 1; n < remainingEventCount; ++n)
                 {
                     var nextEventPtr = (InputEvent*)((byte*)currentEventPtr + currentEventPtr->sizeInBytes);
 
-                    if (!nextEventPtr->handled && nextEventPtr->time < oldestEventTime)
+                    if (isBeforeRenderUpdate)
+                    {
+                        if (!nextEventPtr->handled && nextEventPtr->time < oldestEventTime)
+                        {
+                            var nextEventDevice = TryGetDeviceById(nextEventPtr->deviceId);
+                            if (nextEventDevice != null && nextEventDevice.updateBeforeRender)
+                            {
+                                oldestEventPtr = nextEventPtr;
+                                oldestEventTime = nextEventPtr->time;
+                                device = nextEventDevice;
+                            }
+                        }
+                    }
+                    else if (!nextEventPtr->handled && nextEventPtr->time < oldestEventTime)
                     {
                         oldestEventPtr = nextEventPtr;
-                        oldestEventTime = oldestEventPtr->time;
+                        oldestEventTime = nextEventPtr->time;
                     }
 
                     currentEventPtr = nextEventPtr;
                 }
                 currentEventPtr = oldestEventPtr;
-                var currentEventTime = oldestEventTime;
+                currentEventTime = oldestEventTime;
+
+#if ENABLE_PROFILER
+            }
+            finally
+            {
+                Profiler.EndSample();
+            }
+#endif
 
                 // Give listeners a shot at the event.
                 if (m_EventReceivedEvent != null)
@@ -860,26 +925,22 @@ namespace ISX
                         continue;
                 }
 
-                // Grab device for event.
-                var device = TryGetDeviceById(currentEventPtr->deviceId);
+                // Grab device for event. In before-render updates, we already had to
+                // check the device.
+                if (!isBeforeRenderUpdate)
+                    device = TryGetDeviceById(currentEventPtr->deviceId);
                 if (device == null)
+                {
+                    // No device found matching event. Consider it handled.
+                    currentEventPtr->handled = true;
                     continue;
+                }
 
                 // Process.
                 var currentEventType = currentEventPtr->type;
                 switch (currentEventType)
                 {
                     case StateEvent.Type:
-
-                        // In before render updates, only devices that explicitly enable
-                        // before render updates will see their state updated. Events shown
-                        // to us in before render updates will re-surface again on the next
-                        // normal update so we can safely skip those events.
-                        if (updateType == NativeInputUpdateType.BeforeRender && !device.updateBeforeRender)
-                            ////FIXME: have to make sure next iteration doesn't come up with the same
-                            ////       event again; current code produces an infinite loop
-                            continue;
-
                         var stateEventPtr = (StateEvent*)currentEventPtr;
                         var stateType = stateEventPtr->stateFormat;
                         var stateBlock = device.m_StateBlock;
@@ -977,13 +1038,30 @@ namespace ISX
                 }
 
                 // Mark as processed by setting time to negative.
-                oldestEventPtr->handled = true;
+                currentEventPtr->handled = true;
+
+                // If the event we handled was the first one at our current buffer position and
+                // have still more events to go, bump our buffer position by one.
+                if (currentEventPtr == firstEventPtr && remainingEventCount >= 1)
+                {
+                    firstEventPtr = (InputEvent*)((byte*)currentEventPtr + currentEventPtr->sizeInBytes);
+                    --remainingEventCount;
+                }
 
                 // Device received event so make it current.
                 device.MakeCurrent();
             }
 
             ////TODO: fire event that allows code to update state *from* state we just updated
+
+#if ENABLE_PROFILER
+        }
+
+        finally
+        {
+            Profiler.EndSample();
+        }
+#endif
         }
 
         // If anyone is listening for state changes on the given device, run state change detections

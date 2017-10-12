@@ -62,6 +62,7 @@ namespace ISX
             }
         }
 
+        ////REVIEW: this would technically allow a GetValue<TValue>() method
         public InputControl lastSource => m_LastSource;
 
         public bool enabled => m_Enabled;

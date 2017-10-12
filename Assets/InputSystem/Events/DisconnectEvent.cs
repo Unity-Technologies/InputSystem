@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace ISX
 {
     // Input device got disconnected.
-    [StructLayout(LayoutKind.Explicit, Size = 20)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct DisconnectEvent : IInputEventTypeInfo
     {
         public const int Type = 0x44444953;
@@ -19,7 +19,7 @@ namespace ISX
         public static DisconnectEvent Create(int deviceId, double time)
         {
             var inputEvent = new DisconnectEvent();
-            inputEvent.baseEvent = new InputEvent(Type, 20, deviceId, time);
+            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize, deviceId, time);
             return inputEvent;
         }
     }

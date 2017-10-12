@@ -35,6 +35,16 @@ namespace ISX
             }
         }
 
+        public int id
+        {
+            get
+            {
+                if (!valid)
+                    return 0;
+                return m_EventPtr->eventId;
+            }
+        }
+
         public FourCC type
         {
             get

@@ -24,6 +24,7 @@ namespace ISX
             return value >= point;
         }
 
+        ////REVIEW: this may have to go into value itself; otherwise actions will trigger on the slightest value change
         public bool isPressed => IsValueConsideredPressed(value);
         public bool wasPressedThisFrame => IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous);
         public bool wasReleasedThisFrame => !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous);

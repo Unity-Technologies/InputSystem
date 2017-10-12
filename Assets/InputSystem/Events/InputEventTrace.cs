@@ -93,12 +93,6 @@ namespace ISX
             var nextEvent = current.data + current.sizeInBytes;
             var endOfBuffer = m_EventBuffer + m_EventBufferSize;
 
-            Debug.Assert(nextEvent.ToInt64() < endOfBuffer.ToInt64());
-
-            // If we've run into our tail, there's no more events.
-            if (nextEvent.ToInt64() >= m_EventBufferTail.ToInt64())
-                return false;
-
             // If we've reached blank space at the end of the buffer, wrap
             // around to the beginning. In this scenario there must be an event
             // at the beginning of the buffer; tail won't position itself at
@@ -107,8 +101,10 @@ namespace ISX
                 ((InputEvent*)nextEvent)->sizeInBytes == 0)
             {
                 nextEvent = m_EventBuffer;
-                return true;
             }
+            // If we've run into our tail, there's no more events.
+            else if (nextEvent.ToInt64() >= m_EventBufferTail.ToInt64())
+                return false;
 
             // We're good. There's still space between us and our tail.
             current = new InputEventPtr((InputEvent*)nextEvent);
@@ -215,16 +211,28 @@ namespace ISX
                     newTail = m_EventBuffer + eventSize;
 
                     // Recheck whether we're overtaking head.
-                    newTailOvertakesHead &= newTail.ToInt64() > m_EventBufferHead.ToInt64();
+                    newTailOvertakesHead = newTail.ToInt64() > m_EventBufferHead.ToInt64();
                 }
 
                 // If the new tail runs into head, bump head as many times as we need to
                 // make room for the event. Head may itself wrap around here.
                 if (newTailOvertakesHead)
                 {
-                    var ptr = new InputEventPtr((InputEvent*)m_EventBufferHead);
-                    while (GetNextEvent(ref ptr))
-                        m_EventBufferHead = ptr.data;
+                    var newHead = (byte*)m_EventBufferHead;
+                    var endOfBufferMinusOneEvent =
+                        (byte*)m_EventBuffer + m_EventBufferSize - InputEvent.kBaseEventSize;
+
+                    while (newHead < (byte*)newTail)
+                    {
+                        newHead += ((InputEvent*)newHead)->sizeInBytes;
+                        if (newHead > endOfBufferMinusOneEvent)
+                        {
+                            newHead = (byte*)m_EventBuffer;
+                            break;
+                        }
+                    }
+
+                    m_EventBufferHead = new IntPtr(newHead);
                 }
 
                 buffer = m_EventBufferTail;

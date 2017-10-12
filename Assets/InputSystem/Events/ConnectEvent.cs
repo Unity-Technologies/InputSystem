@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace ISX
 {
     // Input device got re-connected after a disconnect.
-    [StructLayout(LayoutKind.Explicit, Size = 20)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct ConnectEvent : IInputEventTypeInfo
     {
         public const int Type = 0x44434F4E;
@@ -19,7 +19,7 @@ namespace ISX
         public static ConnectEvent Create(int deviceId, double time)
         {
             var inputEvent = new ConnectEvent();
-            inputEvent.baseEvent = new InputEvent(Type, 20, deviceId, time);
+            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize, deviceId, time);
             return inputEvent;
         }
     }

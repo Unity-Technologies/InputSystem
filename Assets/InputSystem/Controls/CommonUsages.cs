@@ -21,6 +21,11 @@ namespace ISX
         public const string Pressure = "Pressure";
         public const string Position = "Position";
         public const string Orientation = "Orientation";
+
+        // Rotation around single, fixed axis.
+        // Example: twist on joystick or twist of pen (few pens support that).
+        public const string Twist = "Twist";
+
         public const string Point = "Point";
 
         public const string LowFreqMotor = "LowFreqMotor";

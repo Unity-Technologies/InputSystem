@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngineInternal.Input;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
@@ -20,11 +20,16 @@ public class FunctionalTests
         ////REVIEW: We probably need to prevent device discoveries and events
         ////        that could happen on the native side from mucking with our
         ////        test. We can't completely disconnect from native, though,
-        ////        as we need the event queue.
+        ////        as we need the event queue. Could have a mode where we
+        ////        don't send event discoveries and don't flush the background
+        ////        queue.
 
         // Put system in a blank state where it has all the templates but has
         // none of the native devices.
         InputSystem.Reset();
+
+        if (InputSystem.devices.Count > 0)
+            Assert.Fail("Input system should not have devices after reset");
     }
 
     [TearDown]
@@ -771,11 +776,6 @@ public class FunctionalTests
         Assert.That(device.leftStick.right.stateBlock.sizeInBits, Is.EqualTo(2 * 8));
     }
 
-    struct CustomGamepadState
-    {
-        public short rightTrigger;
-    }
-
     [Test]
     [Category("State")]
     public void State_CanStoreAxisAsShort()
@@ -1424,23 +1424,6 @@ public class FunctionalTests
 
     [Test]
     [Category("Events")]
-    public void Events_DeviceIdIsUnaffectedByHandledFlag()
-    {
-        // We internally use a bit in m_DeviceId to mark events as handled.
-        // Make sure we don't leak that fiddlery through the API.
-        var inputEvent = new InputEvent {deviceId = 5};
-
-        inputEvent.handled = true;
-
-        Assert.That(inputEvent.deviceId, Is.EqualTo(5));
-
-        inputEvent.deviceId = 6;
-
-        Assert.That(inputEvent.handled, Is.True);
-    }
-
-    [Test]
-    [Category("Events")]
     public void Events_AreHandledInOrderOfIncreasingTime()
     {
         const double kFirstTime = 0.5;
@@ -1483,8 +1466,92 @@ public class FunctionalTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanQueueAndReceiveEventsAgainstNonExistingDevices()
+    {
+        // Device IDs are looked up only *after* the system shows the event to us.
+
+        var receivedCalls = 0;
+        var receivedDeviceId = InputDevice.kInvalidDeviceId;
+        InputSystem.onEvent +=
+            eventPtr =>
+            {
+                ++receivedCalls;
+                receivedDeviceId = eventPtr.deviceId;
+            };
+
+        var inputEvent = ConnectEvent.Create(4, 1.0);
+        InputSystem.QueueEvent(ref inputEvent);
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDeviceId, Is.EqualTo(4));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_HandledFlagIsResetWhenEventIsQueued()
+    {
+        var receivedCalls = 0;
+        var wasHandled = true;
+
+        InputSystem.onEvent +=
+            eventPtr =>
+            {
+                ++receivedCalls;
+                wasHandled = eventPtr.handled;
+            };
+
+        var inputEvent = ConnectEvent.Create(4, 1.0);
+
+        // This should go back to false when we inputEvent goes on the queue.
+        inputEvent.baseEvent.handled = true;
+
+        InputSystem.QueueEvent(ref inputEvent);
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(wasHandled, Is.False);
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_AlreadyHandledEventsAreIgnoredWhenProcessingEvents()
     {
+        // Need a device with before render enabled so we can produce
+        // the effect of having already handled events in the event queue.
+        // If we use an invalid device, before render updates will simply
+        // ignore the event.
+        const string json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = InputSystem.AddDevice("CustomGamepad");
+
+        InputSystem.onEvent +=
+            inputEvent =>
+            {
+                inputEvent.handled = true;
+            };
+
+        var event1 = ConnectEvent.Create(device.id, 1.0);
+        var event2 = ConnectEvent.Create(device.id, 2.0);
+
+        InputSystem.QueueEvent(ref event1);
+
+        // Before render update won't clear queue so after the update
+        // event1 is still in there.
+        InputSystem.Update(InputUpdateType.BeforeRender);
+
+        // Add new unhandled event.
+        InputSystem.QueueEvent(ref event2);
+
         var receivedCalls = 0;
         var receivedTime = 0.0;
 
@@ -1494,20 +1561,11 @@ public class FunctionalTests
                 ++receivedCalls;
                 receivedTime = inputEvent.time;
             };
-
-        var device = InputSystem.AddDevice("Gamepad");
-
-        var unhandledEvent = ConnectEvent.Create(device.id, 1.0);
-        var handledEvent = ConnectEvent.Create(device.id, 2.0);
-        handledEvent.baseEvent.handled = true;
-
-        InputSystem.QueueEvent(ref unhandledEvent);
-        InputSystem.QueueEvent(ref handledEvent);
-
         InputSystem.Update();
 
+        // On the second update, we should have seen only event2.
         Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedTime, Is.EqualTo(1.0).Within(0.00001));
+        Assert.That(receivedTime, Is.EqualTo(2.0).Within(0.00001));
     }
 
     [Test]
@@ -1574,6 +1632,102 @@ public class FunctionalTests
         {
             trace.Dispose();
         }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_WhenTraceIsFull_WillStartOverwritingOldEvents()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+        var trace = new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.id};
+        trace.Enable();
+
+        try
+        {
+            var firstState = new GamepadState {rightTrigger = 0.35f};
+            var secondState = new GamepadState {leftTrigger = 0.75f};
+            var thirdState = new GamepadState {leftTrigger = 0.95f};
+
+            InputSystem.QueueStateEvent(device, firstState, 0.5);
+            InputSystem.QueueStateEvent(device, secondState, 1.5);
+            InputSystem.QueueStateEvent(device, thirdState, 2.5);
+
+            InputSystem.Update();
+
+            trace.Disable();
+
+            var events = trace.ToList();
+
+            Assert.That(events, Has.Count.EqualTo(2));
+            Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(1.5).Within(0.000001));
+            Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(2.5).Within(0.000001));
+        }
+        finally
+        {
+            trace.Dispose();
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_GetUniqueIds()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.QueueStateEvent(device, new GamepadState());
+
+        var receivedCalls = 0;
+        var firstId = InputEvent.kInvalidId;
+        var secondId = InputEvent.kInvalidId;
+
+        InputSystem.onEvent +=
+            eventPtr =>
+            {
+                ++receivedCalls;
+                if (receivedCalls == 1)
+                    firstId = eventPtr.id;
+                else if (receivedCalls == 2)
+                    secondId = eventPtr.id;
+            };
+
+        InputSystem.Update();
+
+        Assert.That(firstId, Is.Not.EqualTo(secondId));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_DoNotLeakIntoNextUpdate()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(device, new GamepadState(), 1.0);
+        InputSystem.QueueStateEvent(device, new GamepadState(), 2.0);
+
+        var receivedUpdateCalls = 0;
+        var receivedEventCount = 0;
+
+        NativeUpdateCallback onUpdate =
+            (updateType, eventCount, eventData) =>
+            {
+                ++receivedUpdateCalls;
+                receivedEventCount += eventCount;
+            };
+        NativeInputSystem.onUpdate += onUpdate;
+
+        InputSystem.Update();
+
+        Assert.That(receivedUpdateCalls, Is.EqualTo(1));
+        Assert.That(receivedEventCount, Is.EqualTo(2));
+
+        receivedEventCount = 0;
+        receivedUpdateCalls = 0;
+
+        InputSystem.Update();
+
+        Assert.That(receivedEventCount, Is.Zero);
+        Assert.That(receivedUpdateCalls, Is.EqualTo(1));
     }
 
     [Test]
