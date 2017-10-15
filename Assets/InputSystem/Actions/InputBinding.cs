@@ -14,7 +14,8 @@ namespace ISX
         }
 
         public string path;
-        public string modifiers;
+        public string modifiers;////REVIEW: singular?
+        public string processors;////TODO
         public Flags flags;
     }
 }

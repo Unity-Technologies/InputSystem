@@ -27,6 +27,9 @@ namespace ISX
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
             m_PathProperty = pathProperty;
+
+            m_PathTreeState = new TreeViewState();
+            m_PathTree = new PathTreeView(m_PathTreeState);
         }
 
         public override void OnGUI(Rect rect)
@@ -52,6 +55,9 @@ namespace ISX
             GUILayout.EndHorizontal();
         }
 
+        private PathTreeView m_PathTree;
+        private TreeViewState m_PathTreeState;
+
         private static class Styles
         {
             public static GUIStyle toolbarSearchField = new GUIStyle("ToolbarSeachTextField");
@@ -67,6 +73,16 @@ namespace ISX
             }
 
             protected override TreeViewItem BuildRoot()
+            {
+                throw new NotImplementedException();
+            }
+
+            private TreeViewItem BuildItemFromUsage(string usage)
+            {
+                throw new NotImplementedException();
+            }
+
+            private TreeViewItem BuildItemFromControlTemplate(InputTemplate.ControlTemplate template)
             {
                 throw new NotImplementedException();
             }

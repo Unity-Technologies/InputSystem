@@ -403,7 +403,7 @@ namespace ISX
             }
         }
 
-        private static void SetParameters(object onObject, ReadOnlyArray<InputTemplate.ParameterValue> parameters)
+        internal static void SetParameters(object onObject, ReadOnlyArray<InputTemplate.ParameterValue> parameters)
         {
             var objectType = onObject.GetType();
             for (var i = 0; i < parameters.Count; ++i)

@@ -380,7 +380,7 @@ namespace ISX
             };
         }
 
-        private static Processor[] ParseProcessors(string processorString)
+        internal static Processor[] ParseProcessors(string processorString)
         {
             processorString = processorString.Trim();
             if (string.IsNullOrEmpty(processorString))
@@ -685,6 +685,7 @@ namespace ISX
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
             #pragma warning disable CS0649
+            // ReSharper disable MemberCanBePrivate.Local
 
             public string name;
             public string extend;
@@ -695,6 +696,7 @@ namespace ISX
             public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
 
+            // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore CS0649
 
             public InputTemplate ToTemplate()
@@ -765,6 +767,7 @@ namespace ISX
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
             #pragma warning disable CS0649
+            // ReSharper disable MemberCanBePrivate.Local
 
             public string name;
             public string template;
@@ -777,6 +780,7 @@ namespace ISX
             public string parameters;
             public string processors;
 
+            // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore CS0649
 
             public ControlTemplateJson()
@@ -826,6 +830,7 @@ namespace ISX
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
             #pragma warning disable CS0649
+            // ReSharper disable MemberCanBePrivate.Local
 
             public string @interface;
             public string[] interfaces;
@@ -838,6 +843,7 @@ namespace ISX
             public string version;
             public string[] versions;
 
+            // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore CS0649
 
             public InputDeviceDescription ToDescriptor()
@@ -884,22 +890,22 @@ namespace ISX
         // Constructs InputTemplate instances and caches them.
         internal struct Cache
         {
-            private Dictionary<string, InputTemplate> m_CachedTemplates;
+            public Dictionary<string, InputTemplate> table;
 
             public InputTemplate FindOrLoadTemplate(string name)
             {
-                Debug.Assert(InputTemplate.s_TemplateTypes != null);
-                Debug.Assert(InputTemplate.s_TemplateStrings != null);
+                Debug.Assert(s_TemplateTypes != null);
+                Debug.Assert(s_TemplateStrings != null);
 
                 var nameLowerCase = name.ToLower();
 
                 // See if we have it cached.
                 InputTemplate template;
-                if (m_CachedTemplates != null && m_CachedTemplates.TryGetValue(nameLowerCase, out template))
+                if (table != null && table.TryGetValue(nameLowerCase, out template))
                     return template;
 
-                if (m_CachedTemplates == null)
-                    m_CachedTemplates = new Dictionary<string, InputTemplate>();
+                if (table == null)
+                    table = new Dictionary<string, InputTemplate>();
 
                 // No, so see if we have a string template for it. These
                 // always take precedence over ones from type so that we can
@@ -907,8 +913,8 @@ namespace ISX
                 string json;
                 if (InputTemplate.s_TemplateStrings.TryGetValue(nameLowerCase, out json))
                 {
-                    template = InputTemplate.FromJson(name, json);
-                    m_CachedTemplates[nameLowerCase] = template;
+                    template = FromJson(name, json);
+                    table[nameLowerCase] = template;
 
                     // If the template extends another template, we need to merge the
                     // base template into the final template.
@@ -926,8 +932,8 @@ namespace ISX
                 Type type;
                 if (InputTemplate.s_TemplateTypes.TryGetValue(nameLowerCase, out type))
                 {
-                    template = InputTemplate.FromType(name, type);
-                    m_CachedTemplates[nameLowerCase] = template;
+                    template = FromType(name, type);
+                    table[nameLowerCase] = template;
                     return template;
                 }
 

@@ -125,11 +125,23 @@ namespace ISX
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
+        // We don't allow custom default values for state so all zeros indicates
+        // default states for us.
         internal unsafe bool CheckStateIsAllZeroes()
         {
-            var numBytes = m_StateBlock.alignedSizeInBytes;
             var ptr = (byte*)currentValuePtr;
 
+            // Bitfield value.
+            if (m_StateBlock.sizeInBits % 8 != 0)
+            {
+                if (m_StateBlock.sizeInBits > 1)
+                    throw new NotImplementedException("multi-bit zero check");
+
+                return BitfieldHelpers.ReadSingleBit(new IntPtr(ptr), m_StateBlock.bitOffset) == false;
+            }
+
+            // Multi-byte value.
+            var numBytes = m_StateBlock.alignedSizeInBytes;
             for (var i = 0; i < numBytes; ++i, ++ptr)
                 if (*ptr != 0)
                     return false;
@@ -168,7 +180,7 @@ namespace ISX
             return value;
         }
 
-        internal OptimizedArray<IInputProcessor<TValue>> m_ProcessorStack;
+        internal InlinedArray<IInputProcessor<TValue>> m_ProcessorStack;
 
         // Only templates are allowed to modify the processor stack.
         internal void AddProcessor(IInputProcessor<TValue> processor)

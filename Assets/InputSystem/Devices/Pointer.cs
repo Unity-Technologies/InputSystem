@@ -12,12 +12,15 @@ namespace ISX
         Canceled
     }
 
+    ////REVIEW: shouldn't this be a control by itself? PointerControl?
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
-        public const uint kInvalidPointerId = 0xffffffff;
+        // There's systems where 0 is a valid finger ID. Should add +1 for to system IDs
+        // in that case.
+        public const uint kInvalidPointerId = 0;
 
         [InputControl(template = "Digital")]
         public uint pointerId;

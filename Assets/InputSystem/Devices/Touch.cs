@@ -12,6 +12,8 @@ namespace ISX
 
         public const int kMaxFingers = 10;
 
+        ////REVIEW: shouldn't these all be controls?
+
         public PointerState finger1;
         public PointerState finger2;
         public PointerState finger3;

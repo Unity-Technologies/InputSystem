@@ -1,5 +1,8 @@
 using System;
 
+////TODO: some kind of per-device callback which gives you an event buffer to fill and a return value
+////      which indicates whether there are more events; called when an update is performed
+
 namespace ISX
 {
     // Input devices are the roots of control hierarchies.

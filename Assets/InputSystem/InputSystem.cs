@@ -69,9 +69,21 @@ namespace ISX
 
         #region Processors
 
-        public static void RegisterProcessor(string name, Type type)
+        public static void RegisterProcessor(Type type, string name = null)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = type.Name;
+                if (name.EndsWith("Processor"))
+                    name = name.Substring(0, name.Length - "Processor".Length);
+            }
+
             s_Manager.RegisterProcessor(name, type);
+        }
+
+        public static void RegisterProcessor<T>(string name = null)
+        {
+            RegisterProcessor(typeof(T), name);
         }
 
         public static Type TryGetProcessor(string name)
@@ -238,6 +250,30 @@ namespace ISX
 
         #endregion
 
+        #region Actions
+
+        public static void RegisterModifier(Type type, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = type.Name;
+                if (name.EndsWith("Modifier"))
+                    name = name.Substring(0, name.Length - "Modifier".Length);
+            }
+
+            s_Manager.RegisterModifier(name, type);
+        }
+
+        public static void RegisterModifier<T>(string name = null)
+        {
+            RegisterModifier(typeof(T), name);
+        }
+
+        public static Type TryGetModifier(string name)
+        {
+            return s_Manager.TryGetModifier(name);
+        }
+
         // Return a list of all the actions that are currently enabled in the system.
         public static List<InputAction> FindAllEnabledActions()
         {
@@ -254,6 +290,8 @@ namespace ISX
                 throw new ArgumentNullException(nameof(actions));
             return InputActionSet.FindEnabledActions(actions);
         }
+
+        #endregion
 
         internal static InputManager s_Manager;
 

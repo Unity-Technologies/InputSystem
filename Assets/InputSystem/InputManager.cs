@@ -244,6 +244,27 @@ namespace ISX
             return null;
         }
 
+        public void RegisterModifier(string name, Type type)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name));
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            m_Modifiers[name.ToLower()] = type;
+        }
+
+        public Type TryGetModifier(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name));
+
+            Type type;
+            if (m_Modifiers.TryGetValue(name, out type))
+                return type;
+            return null;
+        }
+
         // Processes a path specification that may match more than a single control.
         // Adds all controls that match to the given list.
         // Returns true if at least one control was matched.
@@ -361,6 +382,8 @@ namespace ISX
             // Make the device current.
             device.MakeCurrent();
 
+            ////REVIEW: what about device connects and disconnects? should actions stay with controls
+            ////        of disconnected devices or do we want to restrict them to just connected devices?
             // Let actions re-resolve their paths.
             InputActionSet.RefreshEnabledActions();
 
@@ -519,6 +542,7 @@ namespace ISX
             m_BaseTemplateTable = new Dictionary<string, string>();
             m_SupportedDevices = new List<SupportedDevice>();
             m_Processors = new Dictionary<string, Type>();
+            m_Modifiers = new Dictionary<string, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = new List<AvailableDevice>();
 
@@ -565,7 +589,11 @@ namespace ISX
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
             // Register action modifiers.
-            //RegisterModifier("Hold", typeof(HoldModifier));
+            RegisterModifier("Hold", typeof(HoldModifier));
+            RegisterModifier("Tap", typeof(TapModifier));
+            RegisterModifier("SlowTap", typeof(SlowTapModifier));
+            RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
+            RegisterModifier("Swipe", typeof(SwipeModifier));
 
             BuiltinDeviceTemplates.RegisterTemplates(this);
 
@@ -618,6 +646,7 @@ namespace ISX
         private Dictionary<string, string> m_TemplateStrings;
         private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to its base template name.
         private Dictionary<string, Type> m_Processors;
+        private Dictionary<string, Type> m_Modifiers;
 
         private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
         private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
@@ -653,6 +682,7 @@ namespace ISX
         {
             public InputControl control;
             public InputAction action;
+            public int bindingIndex;
         }
 
         // Indices correspond with those in m_Devices.
@@ -661,7 +691,7 @@ namespace ISX
         private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
 
         ////TODO: support combining monitors for bitfields
-        internal void AddStateChangeMonitor(InputControl control, InputAction action)
+        internal void AddStateChangeMonitor(InputControl control, InputAction action, int bindingIndex)
         {
             var device = control.device;
             Debug.Assert(device != null);
@@ -700,7 +730,7 @@ namespace ISX
             }
 
             // Add monitor.
-            listeners.Add(new StateChangeMonitorListener {action = action, control = control});
+            listeners.Add(new StateChangeMonitorListener {action = action, bindingIndex = bindingIndex, control = control});
             memoryRegions.Add(new StateChangeMonitorMemoryRegion
             {
                 offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
@@ -712,6 +742,7 @@ namespace ISX
 
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
         {
+            throw new NotImplementedException();
         }
 
         private void MakeDeviceNameUnique(InputDevice device)
@@ -801,11 +832,16 @@ namespace ISX
         // to the global state buffers so the user won't ever know that updates happen in the background.
         private unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
         {
+            ////TODO: have new native callback that is triggered right *before* updates and allows managed devices
+            ////      to flush their state into the native event queue
+
 #if ENABLE_PROFILER
             Profiler.BeginSample("InputUpdate");
             try
             {
 #endif
+
+            ////TODO: check for action modifiers that have associated timers and trigger any timer that has expired
 
             ////REVIEW: this will become obsolete when we actually turn off unneeded updates in native
             // We *always* have to process events into the current state even if the given update isn't enabled.
@@ -995,9 +1031,6 @@ namespace ISX
 
                 // Mark as processed.
                 currentEventPtr->handled = true;
-
-                // If the event we handled was the first one at our current buffer position and
-                // have still more events to go, bump our buffer position by one.
                 if (remainingEventCount >= 1)
                 {
                     currentEventPtr = InputEvent.GetNextInMemory(currentEventPtr);
@@ -1098,7 +1131,7 @@ namespace ISX
                 if (signals[i])
                 {
                     var listener = listeners[i];
-                    listener.action.NotifyControlValueChanged(listener.control, time);
+                    listener.action.NotifyControlValueChanged(listener.control, listener.bindingIndex, time);
                     signals[i] = false;
                 }
             }
@@ -1191,10 +1224,26 @@ namespace ISX
         }
 
         [Serializable]
-        internal struct ProcessorState
+        internal struct TypeRegistrationState
         {
             public string name;
             public string typeName;
+
+            public static TypeRegistrationState[] SaveState(Dictionary<string, Type> table)
+            {
+                var count = table.Count;
+                var array = new TypeRegistrationState[count];
+
+                var i = 0;
+                foreach (var entry in table)
+                    array[i++] = new TypeRegistrationState
+                    {
+                        name = entry.Key,
+                        typeName = entry.Value.AssemblyQualifiedName
+                    };
+
+                return array;
+            }
         }
 
         [Serializable]
@@ -1203,7 +1252,8 @@ namespace ISX
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
             public KeyValuePair<string, string>[] baseTemplates;
-            public ProcessorState[] processors;
+            public TypeRegistrationState[] processors;
+            public TypeRegistrationState[] modifiers;
             public SupportedDevice[] supportedDevices;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -1239,18 +1289,6 @@ namespace ISX
                     typeNameOrJson = entry.Value
                 };
 
-            // Processors
-            var processorCount = m_Processors.Count;
-            var processorArray = new ProcessorState[processorCount];
-
-            i = 0;
-            foreach (var entry in m_Processors)
-                processorArray[i++] = new ProcessorState
-                {
-                    name = entry.Key,
-                    typeName = entry.Value.AssemblyQualifiedName
-                };
-
             // Devices.
             var deviceCount = m_Devices?.Length ?? 0;
             var deviceArray = new DeviceState[deviceCount];
@@ -1274,7 +1312,8 @@ namespace ISX
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
                 baseTemplates = m_BaseTemplateTable.ToArray(),
-                processors = processorArray,
+                processors = TypeRegistrationState.SaveState(m_Processors),
+                modifiers = TypeRegistrationState.SaveState(m_Modifiers),
                 supportedDevices = m_SupportedDevices.ToArray(),
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
@@ -1298,6 +1337,7 @@ namespace ISX
             m_BaseTemplateTable = new Dictionary<string, string>();
             m_SupportedDevices = state.supportedDevices.ToList();
             m_Processors = new Dictionary<string, Type>();
+            m_Modifiers = new Dictionary<string, Type>();
             m_StateBuffers = state.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_DeviceChangeEvent = state.deviceChangeEvent;
@@ -1308,6 +1348,8 @@ namespace ISX
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);
+
+            ////TODO: protect against failing Type.GetType() calls by logging error and removing entry
 
             // Template types.
             foreach (var template in state.templateTypes)
@@ -1329,6 +1371,10 @@ namespace ISX
             foreach (var processor in state.processors)
                 m_Processors[processor.name] = Type.GetType(processor.typeName, true);
             InputProcessor.s_Processors = m_Processors;
+
+            // Modifiers.
+            foreach (var modifier in state.modifiers)
+                m_Modifiers[modifier.name] = Type.GetType(modifier.typeName, true);
 
             // Refresh builtin templates.
             BuiltinDeviceTemplates.RegisterTemplates(this);

@@ -9,17 +9,23 @@ namespace ISX
     // action set. "Lose" actions constructed without a set will internally
     // create their own "set" to hold their data.
     [Serializable]
-    public class InputActionSet
+    public class InputActionSet : ISerializationCallbackReceiver
     {
         public string name => m_Name;
 
-        ////TODO: allow actions in a set to leave their device root open and then allow devices to be assigned at the action set level
-        ////      (actually... thinking about this I think this is not functionality we need;
-        ////      the bindings should go to all possible controls from all supported devices;
-        ////      if the user wants to track which particular device the user is currently
-        ////      using as input (e.g. gamepad vs keyboard&mouse), the user can do that himself
-        ////      and restrict hints that are displayed by filtering for bindings from those
-        ////      devices)
+        // Optional backing asset. If this is set, the actions in the set
+        // are taken from the given JSON file. Otherwise, the actions are
+        // defined directly on the set and stored with the set wherever
+        // the set is serialized.
+        public TextAsset asset
+        {
+            get { return m_Asset; }
+            set
+            {
+                m_Asset = value;
+                ////TODO: reload
+            }
+        }
 
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
@@ -39,6 +45,11 @@ namespace ISX
             action.m_ActionSet = this;
         }
 
+        public InputAction GetAction(string name)
+        {
+            throw new NotImplementedException();
+        }
+
         public void EnableAll()
         {
             throw new NotImplementedException();
@@ -47,6 +58,276 @@ namespace ISX
         public void DisableAll()
         {
             throw new NotImplementedException();
+        }
+
+        [SerializeField] private string m_Name;
+        [SerializeField] internal TextAsset m_Asset;
+        [SerializeField] internal InputAction[] m_Actions;
+
+        // Action sets that are created internally by singleton actions to hold their data
+        // are never exposed and never serialized so there is no point allocating an m_Actions
+        // array.
+        [NonSerialized] internal InputAction m_SingletonAction;
+
+        internal struct ResolvedBinding
+        {
+            public ReadOnlyArray<InputControl> controls;
+            public ReadOnlyArray<IInputActionModifier> modifiers;
+        }
+
+        // These arrays hold data for all actions in the set. Each action will
+        // refer to a slice of the arrays.
+        [SerializeField] InputBinding[] m_Bindings;
+        [NonSerialized] internal InputControl[] m_Controls;
+        [NonSerialized] internal IInputActionModifier[] m_Modifiers;
+        [NonSerialized] internal ResolvedBinding[] m_ResolvedBingings;
+
+        // Resolve all bindings to their controls and also add any action modifiers
+        // from the bindings. The best way is for this to happen once for each action
+        // set at the beginning of the game and to then enable and disable the sets
+        // as needed. However, the system will also re-resolve bindings if the control
+        // setup in the system changes (i.e. if devices are added or removed or if
+        // templates in the system are changed).
+        internal void ResolveBindings()
+        {
+            if (m_Actions == null && m_SingletonAction == null)
+                return;
+
+            ////REVIEW: cache and reuse these?
+            // We lazily allocate these as needed. No point allocating arrays
+            // we don't use.
+            List<InputControl> controls = null;
+            List<IInputActionModifier> modifiers = null;
+            List<ResolvedBinding> resolvedBindings = null;
+
+            // Resolve all source paths.
+            if (m_SingletonAction != null)
+                ResolveBindings(m_SingletonAction, ref controls, ref modifiers, ref resolvedBindings);
+            else
+            {
+                for (var i = 0; i < m_Actions.Length; ++i)
+                    ResolveBindings(m_Actions[i], ref controls, ref modifiers, ref resolvedBindings);
+            }
+
+            // Grab final arrays.
+            m_Controls = controls != null && controls.Count > 0 ? controls.ToArray() : null;
+            m_Modifiers = modifiers != null && modifiers.Count > 0 ? modifiers.ToArray() : null;
+
+            if (resolvedBindings != null && resolvedBindings.Count > 0)
+            {
+                m_ResolvedBingings = resolvedBindings != null && resolvedBindings.Count > 0 ? resolvedBindings.ToArray() : null;
+
+                for (var i = 0; i < m_ResolvedBingings.Length; ++i)
+                {
+                    m_ResolvedBingings[i].controls.m_Array = m_Controls;
+                    m_ResolvedBingings[i].modifiers.m_Array = m_Modifiers;
+                }
+            }
+
+            // Patch up all the array references in the ReadOnlyArray structs.
+            if (m_SingletonAction != null)
+            {
+                if (m_Controls != null)
+                {
+                    m_SingletonAction.m_Controls.m_Array = m_Controls;
+                    m_SingletonAction.m_ResolvedBindings.m_Array = m_ResolvedBingings;
+                }
+            }
+            else
+            {
+                //indices in resolvedBindings and bindings should always match
+                throw new NotImplementedException();
+            }
+        }
+
+        // Resolve the bindings of a single action and add their data to the given lists of
+        // controls, modifiers, and resolved bindings. Allocates the lists, if necessary.
+        private void ResolveBindings(InputAction action, ref List<InputControl> controls,
+            ref List<IInputActionModifier> modifiers, ref List<ResolvedBinding> resolvedBindings)
+        {
+            var bindings = action.bindings;
+            if (bindings.Count == 0)
+                return;
+
+            if (resolvedBindings == null)
+                resolvedBindings = new List<ResolvedBinding>();
+            if (controls == null)
+                controls = new List<InputControl>();
+
+            var controlStartIndex = controls.Count;
+            var resolvedBindingsStartIndex = resolvedBindings.Count;
+
+            for (var n = 0; n < bindings.Count; ++n)
+            {
+                var binding = bindings[n];
+                var firstControl = controls.Count;
+
+                // Look up controls.
+                var numControls = InputSystem.GetControls(binding.path, controls);
+                if (numControls == 0)
+                    continue;
+
+                // Instantiate modifiers.
+                var firstModifier = 0;
+                var numModifiers = 0;
+                if (!string.IsNullOrEmpty(binding.modifiers))
+                {
+                    firstModifier = ResolveModifiers(binding.modifiers, ref modifiers);
+                    if (modifiers != null)
+                        numModifiers = modifiers.Count - numModifiers;
+                }
+
+                // Add entry for resolved binding.
+                resolvedBindings.Add(new ResolvedBinding
+                {
+                    controls = new ReadOnlyArray<InputControl>(null, firstControl, numControls),
+                    modifiers = new ReadOnlyArray<IInputActionModifier>(null, firstModifier, numModifiers)
+                });
+            }
+
+            // Let action know where its control and resolved binding entries are.
+            action.m_Controls =
+                new ReadOnlyArray<InputControl>(null, controlStartIndex, controls.Count - controlStartIndex);
+            action.m_ResolvedBindings =
+                new ReadOnlyArray<ResolvedBinding>(null, resolvedBindingsStartIndex, resolvedBindings.Count - resolvedBindingsStartIndex);
+        }
+
+        private static int ResolveModifiers(string modifierString, ref List<IInputActionModifier> modifiers)
+        {
+            ////REVIEW: We're piggybacking off the processor parsing here as the two syntaxes are identical. Might consider
+            ////        moving the logic to a shared place.
+            ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
+
+            var firstModifierIndex = modifiers?.Count ?? 0;
+
+            ////TODO: get rid of the extra array allocations here
+            var list = InputTemplate.ParseProcessors(modifierString);
+            for (var i = 0; i < list.Length; ++i)
+            {
+                // Look up modifier.
+                var type = InputSystem.TryGetModifier(list[i].name);
+                if (type == null)
+                    throw new Exception($"No modifier with name '{list[i].name}' (mentioned in '{modifierString}') has been registered");
+
+                // Instantiate it.
+                var modifier = Activator.CreateInstance(type) as IInputActionModifier;
+                if (modifier == null)
+                    throw new Exception($"Modifier '{list[i].name}' is not an IInputActionModifier");
+
+                // Pass parameters to it.
+                InputControlSetup.SetParameters(modifier, list[i].parameters);
+
+                // Add to list.
+                if (modifiers == null)
+                    modifiers = new List<IInputActionModifier>();
+                modifiers.Add(modifier);
+            }
+
+            return firstModifierIndex;
+        }
+
+        // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
+        // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
+        // instead we just link all action sets that have enabled actions together in a list that has its link
+        // embedded right here in an action set.
+        private static int s_EnabledActionsCount;
+        private static InputActionSet s_FirstSetInGlobalList;
+        [NonSerialized] internal InputActionSet m_NextInGlobalList;
+        [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
+
+        internal static void ResetGlobals()
+        {
+            for (var set = s_FirstSetInGlobalList; set != null;)
+            {
+                var next = set.m_NextInGlobalList;
+                set.m_NextInGlobalList = null;
+                set.m_PreviousInGlobalList = null;
+                if (set.m_SingletonAction != null)
+                    set.m_SingletonAction.m_Enabled = false;
+                else
+                {
+                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                        set.m_Actions[i].m_Enabled = false;
+                }
+
+                set = next;
+            }
+            s_FirstSetInGlobalList = null;
+            s_EnabledActionsCount = 0;
+        }
+
+        // Walk all sets with enabled actions and add all enabled actions to the given list.
+        internal static int FindEnabledActions(List<InputAction> actions)
+        {
+            var numFound = 0;
+            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+            {
+                if (set.m_SingletonAction != null)
+                {
+                    actions.Add(set.m_SingletonAction);
+                }
+                else
+                {
+                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                    {
+                        var action = set.m_Actions[i];
+                        if (!action.enabled)
+                            continue;
+
+                        actions.Add(action);
+                        ++numFound;
+                    }
+                }
+            }
+            return numFound;
+        }
+
+        internal static void RefreshEnabledActions()
+        {
+            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+                set.ResolveBindings();
+        }
+
+        internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
+        {
+            if (enable)
+            {
+                ++s_EnabledActionsCount;
+                if (m_NextInGlobalList == null)
+                {
+                    if (s_FirstSetInGlobalList != null)
+                        s_FirstSetInGlobalList.m_PreviousInGlobalList = this;
+                    m_NextInGlobalList = s_FirstSetInGlobalList;
+                    s_FirstSetInGlobalList = this;
+                }
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Serializable]
+        private struct ActionJson
+        {
+            public string name;
+            public string defaultBinding;
+            public string modifier;
+        }
+
+        [Serializable]
+        private struct ActionSetJson
+        {
+            public string name;
+            public ActionJson[] actions;
+        }
+
+        // JsonUtility can't deal with having an array or dictionary at the top so
+        // we have to wrap this in a struct.
+        [Serializable]
+        private struct ActionFileJson
+        {
+            public ActionSetJson[] sets;
         }
 
         // Load one or more action sets from JSON. The given JSON string may
@@ -104,144 +385,26 @@ namespace ISX
             throw new NotImplementedException();
         }
 
-        [SerializeField] private string m_Name;
-        [SerializeField] internal InputAction[] m_Actions;
-
-        // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
-        // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
-        // instead we just link all the action sets in the system together in a list that has its link embedded
-        // right here in an action set.
-        // NOTE: Only sets with enabled actions will put themselves on this list.
-        private static int s_EnabledActionsCount;
-        private static InputActionSet s_FirstSetInGlobalList;
-        [NonSerialized] internal InputActionSet m_NextInGlobalList;
-        [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
-
-        internal static void ResetGlobals()
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            for (var set = s_FirstSetInGlobalList; set != null;)
-            {
-                var next = set.m_NextInGlobalList;
-                set.m_NextInGlobalList = null;
-                set.m_PreviousInGlobalList = null;
-                for (var i = 0; i < set.m_Actions.Length; ++i)
-                    set.m_Actions[i].m_Enabled = false;
-                set = next;
-            }
-            s_FirstSetInGlobalList = null;
-            s_EnabledActionsCount = 0;
-        }
+            // Action sets created internally for singleton actions are meant to be purely transient.
+            // The way we up their data, the sets won't serialize properly.
+            Debug.Assert(m_SingletonAction == null, "Must not serialize internal arrays of singleton actions!");
 
-        // Walk all sets with enabled actions and add all enabled actions to the given list.
-        internal static int FindEnabledActions(List<InputAction> actions)
-        {
-            var numFound = 0;
-            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
-            {
-                for (var i = 0; i < set.m_Actions.Length; ++i)
-                {
-                    var action = set.m_Actions[i];
-                    if (!action.enabled)
-                        continue;
-
-                    actions.Add(action);
-                    ++numFound;
-                }
-            }
-            return numFound;
-        }
-
-        internal static void RefreshEnabledActions()
-        {
-            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
-                set.ResolveBindingsOfAllActions();
-        }
-
-        internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
-        {
-            if (enable)
-            {
-                ++s_EnabledActionsCount;
-                if (m_NextInGlobalList == null)
-                {
-                    if (s_FirstSetInGlobalList != null)
-                        s_FirstSetInGlobalList.m_PreviousInGlobalList = this;
-                    m_NextInGlobalList = s_FirstSetInGlobalList;
-                    s_FirstSetInGlobalList = this;
-                }
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        // These arrays hold data for all actions in the set. Each action will
-        // refer to a slice of the arrays.
-        internal InputControl[] m_Controls;
-        internal InputActionModifier[] m_Modifiers;
-
-        // Create m_Controls array by going through all actions and resolving their bindings.
-        internal void ResolveBindingsOfAllActions()
-        {
-            if (m_Actions == null)
-                return;
-
-            var controls = new List<InputControl>(); ////REVIEW: cache and reuse this?
-
-            // Resolve all source paths.
+            // All actions in the set refer to our combined m_Bindings array. We don't
+            // want to serialize that as part of each action so we null out all the
+            // array references and re-establish them when the set comes back in from
+            // serialization. We do want the index and length values from m_Bindings
+            // in the actions, though.
             for (var i = 0; i < m_Actions.Length; ++i)
-            {
-                var action = m_Actions[i];
-                var controlsStartIndex = controls.Count;
+                m_Actions[i].m_Bindings = null;
+        }
 
-                var bindings = action.bindings;
-                for (var n = 0; n < bindings.Count; ++n)
-                {
-                    var binding = bindings[n];
-                    var numMatches = InputSystem.GetControls(binding.path, controls);
-                    if (numMatches > 0)
-                    {
-                        action.m_Controls = new ReadOnlyArray<InputControl>(null, controlsStartIndex, numMatches);
-                    }
-                }
-            }
-
-            // Grab final array.
-            m_Controls = controls.ToArray();
-
-            // Patch up all the array references in the ReadOnlyArray structs.
-            var runningOffset = 0;
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            // Re-establish links to m_Bindings.
             for (var i = 0; i < m_Actions.Length; ++i)
-            {
-                var action = m_Actions[i];
-                var numControls = action.m_Controls.Count;
-                action.m_Controls = new ReadOnlyArray<InputControl>(m_Controls, runningOffset, numControls);
-                runningOffset += numControls;
-            }
-        }
-
-        [Serializable]
-        private struct ActionJson
-        {
-            public string name;
-            public string defaultBinding;
-            public string modifier;
-        }
-
-        [Serializable]
-        private struct ActionSetJson
-        {
-            public string name;
-            public ActionJson[] actions;
-        }
-
-        // JsonUtility can't deal with having an array or dictionary at the top so
-        // we have to wrap this in a struct.
-        [Serializable]
-        private struct ActionFileJson
-        {
-            public ActionSetJson[] sets;
+                m_Actions[i].m_Bindings = m_Bindings;
         }
     }
 }

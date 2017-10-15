@@ -5,12 +5,39 @@ namespace ISX
 {
     // Helper to avoid array allocations if there's only a single value in the
     // array.
-    internal struct OptimizedArray<TValue>
+    internal struct InlinedArray<TValue>
     {
         // We inline the first value so if there's only one, there's
         // no additional allocation. If more are added, we allocate an array.
         public TValue firstValue;
         public TValue[] additionalValues;
+
+        public int Count
+        {
+            get
+            {
+                var count = 0;
+                if (firstValue != null)
+                    ++count;
+                if (additionalValues != null)
+                    count += additionalValues.Length;
+                return count;
+            }
+        }
+
+        public TValue this[int index]
+        {
+            get
+            {
+                if (index == 0 && firstValue != null)
+                    return firstValue;
+
+                if (additionalValues == null)
+                    throw new IndexOutOfRangeException();
+
+                return additionalValues[index - 1];
+            }
+        }
 
         public TValue[] ToArray()
         {

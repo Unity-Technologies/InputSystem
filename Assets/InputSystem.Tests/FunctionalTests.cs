@@ -1814,7 +1814,7 @@ public class FunctionalTests
     ////REVIEW: not sure whether this is the best behavior
     [Test]
     [Category("Actions")]
-    public void Actions_PathLeadingNowhereAreIgnored()
+    public void Actions_PathLeadingNowhereIsIgnored()
     {
         var action = new InputAction(binding: "nothing");
 
@@ -1934,72 +1934,62 @@ public class FunctionalTests
         Assert.That(receivedCalls, Is.EqualTo(1));
     }
 
-    /*
     [Test]
     [Category("Actions")]
     public void Actions_CanPerformHoldAction()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var onPerformedReceivedCalls = 0;
-        InputAction onPerformedAction = null;
-        InputControl onPerfomedControl = null;
+        var performedReceivedCalls = 0;
+        InputAction performedAction = null;
+        InputControl performedControl = null;
 
-        var onStartedReceivedCalls = 0;
-        InputAction onStartedAction = null;
-        InputControl onStartedControl = null;
+        var startedReceivedCalls = 0;
+        InputAction startedAction = null;
+        InputControl startedControl = null;
 
-        var action = new InputAction(sourcePath: "/gamepad/{primaryAction}", modifiers: "hold(0.4)");
-        action.onPerformed +=
+        var action = new InputAction(binding: "/gamepad/{primaryAction}", modifiers: "hold(0.4)");
+        action.performed +=
             (a, c) =>
             {
-                ++onPerformedReceivedCalls;
-                onPerformedAction = a;
-                onPerfomedControl = c;
+                ++performedReceivedCalls;
+                performedAction = a;
+                performedControl = c;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
             };
-        action.onStarted +=
+        action.started +=
             (a, c) =>
             {
-                ++onStartedReceivedCalls;
-                onStartedAction = a;
-                onStartedControl = c;
+                ++startedReceivedCalls;
+                startedAction = a;
+                startedControl = c;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
             };
         action.Enable();
 
-        var stateEvent = StateEvent.Create(
-            gamepad.id,
-            0.0, // First point in time.
-            new GamepadState
-            {
-                buttons = 1 << (int) GamepadState.Button.South
-            });
-
-        InputSystem.QueueEvent(stateEvent);
-
-        stateEvent.baseEvent.time = 0.5; // Second point in time.
-        stateEvent.state.buttons = 0;
-
-        InputSystem.QueueEvent(stateEvent);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.South}, 0.0);
         InputSystem.Update();
 
-        Assert.That(onPerformedReceivedCalls, Is.EqualTo(1));
-        Assert.That(receivedOnPerformedCalls, Is.Zero);
-        Assert.That(receivedAction, Is.SameAs(action));
-        Assert.That(receivedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(startedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedReceivedCalls, Is.Zero);
+        Assert.That(startedAction, Is.SameAs(action));
+        Assert.That(startedControl, Is.SameAs(gamepad.aButton));
 
-        Assert.That(receivedOnStartedCalls, Is.EqualTo(0));
-        Assert.That(receivedOnPerformedCalls, Is.EqualTo(1));
-        Assert.That(receivedAction, Is.SameAs(action));
-        Assert.That(receivedControl, Is.SameAs(gamepad.aButton));
+        startedReceivedCalls = 0;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 0.5);
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedAction, Is.SameAs(action));
+        Assert.That(performedControl, Is.SameAs(gamepad.aButton));
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
     }
-    */
 
     [Test]
     [Category("Actions")]
@@ -2010,11 +2000,7 @@ public class FunctionalTests
                 ""sets"" : [
                     {
                         ""name"" : ""default"",
-                        ""actions"" : [
-                            {
-                                ""name"" : ""jump""
-                            }
-                        ]
+                        ""actions"" : [ { ""name"" : ""jump"" } ]
                     }
                 ]
             }
@@ -2062,14 +2048,41 @@ public class FunctionalTests
     [Category("Actions")]
     public void Actions_CanAddMultipleBindings()
     {
-        var action = new InputAction();
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(name: "test");
 
         action.AddBinding("/gamepad/leftStick");
         action.AddBinding("/gamepad/rightStick");
 
+        action.Enable();
+
         Assert.That(action.bindings, Has.Count.EqualTo(2));
         Assert.That(action.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(action.bindings[1].path, Is.EqualTo("/gamepad/rightStick"));
+
+        var performedReceivedCalls = 0;
+        InputControl performedControl = null;
+
+        action.performed +=
+            (a, c) =>
+            {
+                ++performedReceivedCalls;
+                performedControl = c;
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.Update();
+
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedControl, Is.SameAs(gamepad.leftStick));
+
+        performedReceivedCalls = 0;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.Update();
+
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedControl, Is.SameAs(gamepad.rightStick));
     }
 
     [Test]
@@ -2095,8 +2108,8 @@ public class FunctionalTests
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
-        var action1 = new InputAction();
-        var action2 = new InputAction();
+        var action1 = new InputAction(name: "a");
+        var action2 = new InputAction(name: "b");
 
         action1.Enable();
         action2.Enable();
@@ -2106,6 +2119,40 @@ public class FunctionalTests
         Assert.That(enabledActions, Has.Count.EqualTo(2));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action2));
+    }
+
+    private class TestModifier : IInputActionModifier
+    {
+        public float parm1;
+
+        public static bool s_GotInvoked;
+
+        public void Process(ref InputAction.Context context)
+        {
+            Assert.That(parm1, Is.EqualTo(5.0).Within(0.000001));
+            s_GotInvoked = true;
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRegisterNewModifier()
+    {
+        InputSystem.RegisterModifier<TestModifier>();
+        TestModifier.s_GotInvoked = false;
+
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftStick/x", modifiers: "test(parm1=5.0)");
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(TestModifier.s_GotInvoked, Is.True);
     }
 
 #if UNITY_EDITOR

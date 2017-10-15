@@ -39,18 +39,20 @@ namespace ISX
             window.AddToList();
         }
 
+        public void Awake()
+        {
+            if (m_EventListResizer == null)
+                m_EventListResizer = new PreviewResizer();
+            m_EventListResizer.Init("InputDeviceDebugger");
+            InputSystem.onDeviceChange += OnDeviceChange;
+        }
+
         public void OnDestroy()
         {
             RemoveFromList();
 
             m_EventTrace?.Dispose();
-        }
-
-        public void OnEnable()
-        {
-            if (m_EventListResizer == null)
-                m_EventListResizer = new PreviewResizer();
-            m_EventListResizer.Init("InputDeviceDebugger");
+            InputSystem.onDeviceChange -= OnDeviceChange;
         }
 
         public void OnGUI()

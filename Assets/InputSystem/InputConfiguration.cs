@@ -15,13 +15,13 @@ namespace ISX
         public static float ButtonPressPoint = 0.5f;
 
         // Before how long does a button have to be released for it to be considered a click?
-        public static float ClickTime = 0.2f;
+        public static float TapTime = 0.2f;
 
         // After how long do does a button have to be held and then released for it to be considered a "slow click"?
-        public static float SlowClickTime = 0.5f;
+        public static float SlowTapTime = 0.5f;
 
         // After how long a time do we no longer consider clicks consecutive?
-        public static float MultiClickMaximumDelay = 0.75f;
+        public static float MultiTapMaximumDelay = 0.75f;
 
         // How long does a button have to be held for it to be considered a hold?
         public static float HoldTime = 0.4f;
@@ -31,9 +31,9 @@ namespace ISX
             public float defaultDeadzoneMin;
             public float defaultDeadzoneMax;
             public float buttonPressPoint;
-            public float clickTime;
-            public float slowClickTime;
-            public float multiClickMaximumDelay;
+            public float tapTime;
+            public float slowTapTime;
+            public float multiTapMaximumDelay;
             public float holdTime;
         }
 
@@ -44,9 +44,9 @@ namespace ISX
                 defaultDeadzoneMin = DefaultDeadzoneMin,
                 defaultDeadzoneMax = DefaultDeadzoneMax,
                 buttonPressPoint = ButtonPressPoint,
-                clickTime = ClickTime,
-                slowClickTime = SlowClickTime,
-                multiClickMaximumDelay = MultiClickMaximumDelay,
+                tapTime = TapTime,
+                slowTapTime = SlowTapTime,
+                multiTapMaximumDelay = MultiTapMaximumDelay,
                 holdTime = HoldTime
             };
         }
@@ -55,9 +55,9 @@ namespace ISX
         {
             DefaultDeadzoneMin = state.defaultDeadzoneMin;
             DefaultDeadzoneMax = state.defaultDeadzoneMax;
-            ClickTime = state.clickTime;
-            SlowClickTime = state.slowClickTime;
-            MultiClickMaximumDelay = state.multiClickMaximumDelay;
+            TapTime = state.tapTime;
+            SlowTapTime = state.slowTapTime;
+            MultiTapMaximumDelay = state.multiTapMaximumDelay;
             HoldTime = state.holdTime;
         }
     }
