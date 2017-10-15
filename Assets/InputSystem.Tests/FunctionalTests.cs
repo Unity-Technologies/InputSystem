@@ -298,7 +298,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
+    public void Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
     {
         // Create a device hiearchy and then replace the base template. We can't easily use
         // the gamepad (or something similar) as a base template as it will use the Gamepad
@@ -1980,6 +1980,63 @@ public class FunctionalTests
         startedReceivedCalls = 0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(), 0.5);
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedAction, Is.SameAs(action));
+        Assert.That(performedControl, Is.SameAs(gamepad.aButton));
+
+        // Action should be waiting again.
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformTapAction()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var performedReceivedCalls = 0;
+        InputAction performedAction = null;
+        InputControl performedControl = null;
+
+        var startedReceivedCalls = 0;
+        InputAction startedAction = null;
+        InputControl startedControl = null;
+
+        var action = new InputAction(binding: "/gamepad/{primaryAction}", modifiers: "tap");
+        action.performed +=
+            (a, c) =>
+            {
+                ++performedReceivedCalls;
+                performedAction = a;
+                performedControl = c;
+
+                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
+            };
+        action.started +=
+            (a, c) =>
+            {
+                ++startedReceivedCalls;
+                startedAction = a;
+                startedControl = c;
+
+                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
+            };
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.South}, 0.0);
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedReceivedCalls, Is.Zero);
+        Assert.That(startedAction, Is.SameAs(action));
+        Assert.That(startedControl, Is.SameAs(gamepad.aButton));
+
+        startedReceivedCalls = 0;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), InputConfiguration.TapTime);
         InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(0));

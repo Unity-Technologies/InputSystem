@@ -187,13 +187,15 @@ namespace ISX
         private bool IsControlUsingTemplate(InputControl control, string templateLowerCase)
         {
             // Check direct match.
-            if (control.template.ToLower() == templateLowerCase)
+            var controlTemplateLowerCase = control.template.ToLower();
+            if (controlTemplateLowerCase == templateLowerCase)
                 return true;
 
             // Check base template chain.
-            string baseTemplate;
-            if (m_BaseTemplateTable.TryGetValue(templateLowerCase, out baseTemplate))
-                return IsControlUsingTemplate(control, baseTemplate);
+            string baseTemplate = controlTemplateLowerCase;
+            while (m_BaseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
+                if (baseTemplate == templateLowerCase)
+                    return true;
 
             return false;
         }

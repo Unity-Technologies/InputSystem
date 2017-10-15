@@ -212,6 +212,25 @@ MonoBehaviour:
   projectile: {fileID: 1050929111787496, guid: 10d52fac856bc411c8b30746a4f3bb05, type: 2}
   timeBetweenShots: 0.5
   moveSpeed: 5
+  fireAction:
+    m_Name: 
+    m_Bindings:
+    - path: <gamepad>/buttonNorth
+      modifiers: 
+      processors: 
+      flags: 0
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 0
+  lookAction:
+    m_Name: 
+    m_Bindings: []
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 0
+  walkAction:
+    m_Name: 
+    m_Bindings: []
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 0
 --- !u!81 &919824550
 AudioListener:
   m_ObjectHideFlags: 0

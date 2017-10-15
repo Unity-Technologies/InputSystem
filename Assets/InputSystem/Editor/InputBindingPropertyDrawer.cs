@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -40,9 +41,33 @@ namespace ISX
 
         private GUIContent GetContentForPath(string path)
         {
-            ////TODO: instead of just dumping straight paths, parse them and show what they mean, not how they read
+            if (s_UsageRegex == null)
+                s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
+            if (s_ControlRegex == null)
+                s_ControlRegex = new Regex("<([A-Za-z0-9]+)>/([A-Za-z0-9]+)");
+
+            var usageMatch = s_UsageRegex.Match(path);
+            if (usageMatch.Success)
+            {
+                return new GUIContent(usageMatch.Groups[1].Value);
+            }
+
+            var controlMatch = s_ControlRegex.Match(path);
+            if (controlMatch.Success)
+            {
+                var device = controlMatch.Groups[1].Value;
+                var control = controlMatch.Groups[2].Value;
+
+                ////TODO: would be nice to print something like "Gamepad: A Button" instead of "Gamepad: A" (or whatever)
+
+                return new GUIContent($"{device}: {control}");
+            }
+
             return new GUIContent(path);
         }
+
+        private static Regex s_UsageRegex;
+        private static Regex s_ControlRegex;
     }
 }
 #endif // UNITY_EDITOR
