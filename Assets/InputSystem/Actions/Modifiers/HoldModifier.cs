@@ -5,6 +5,9 @@ namespace ISX
     public class HoldModifier : IInputActionModifier
     {
         public float duration;
+        public float durationOrDefault => duration > 0.0 ? duration : InputConfiguration.HoldTime;
+
+        private double m_TimePressed;
 
         public void Process(ref InputAction.Context context)
         {
@@ -14,22 +17,18 @@ namespace ISX
                 return;
             }
 
-            if (context.phase == InputAction.Phase.Waiting && !context.controlHasDefaultValue)
+            if (context.isWaiting && !context.controlHasDefaultValue)
             {
                 m_TimePressed = context.time;
                 context.Started();
 
-                var holdTime = duration;
-                if (holdTime <= 0.0)
-                    holdTime = InputConfiguration.HoldTime;
-
-                context.SetTimeout(holdTime);
+                context.SetTimeout(durationOrDefault);
                 return;
             }
 
-            if (context.phase == InputAction.Phase.Started && context.controlHasDefaultValue)
+            if (context.isStarted && context.controlHasDefaultValue)
             {
-                if (context.time - m_TimePressed >= duration)
+                if (context.time - m_TimePressed >= durationOrDefault)
                     context.Performed();
                 else
                     context.Cancelled();
@@ -40,7 +39,5 @@ namespace ISX
         {
             m_TimePressed = 0;
         }
-
-        private double m_TimePressed;
     }
 }

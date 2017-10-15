@@ -84,6 +84,7 @@ namespace ISX
             // in a game that never uses VR.
             var nameLowerCase = name.ToLower();
             m_TemplateTypes[nameLowerCase] = type;
+            ++m_TemplateSetupVersion;
 
             // Re-create any devices using the template.
             RecreateDevicesUsingTemplate(nameLowerCase, isDeviceTemplate);
@@ -118,6 +119,7 @@ namespace ISX
             m_TemplateStrings[nameLowerCase] = json;
             if (!string.IsNullOrEmpty(baseTemplate))
                 m_BaseTemplateTable[nameLowerCase] = baseTemplate.ToLower();
+            ++m_TemplateSetupVersion;
 
             // Re-create any devices using the template.
             RecreateDevicesUsingTemplate(nameLowerCase);
@@ -219,6 +221,21 @@ namespace ISX
             }
 
             return null;
+        }
+
+        public int ListTemplates(List<string> templates)
+        {
+            if (templates == null)
+                throw new ArgumentNullException(nameof(templates));
+
+            var countBefore = templates.Count;
+
+            ////FIXME: this may add a name twice; also allocates
+
+            templates.AddRange(m_TemplateTypes.Keys);
+            templates.AddRange(m_TemplateStrings.Keys);
+
+            return templates.Count - countBefore;
         }
 
         public void RegisterProcessor(string name, Type type)
@@ -642,6 +659,7 @@ namespace ISX
             public int deviceId;
         }
 
+        internal int m_TemplateSetupVersion;
         private Dictionary<string, Type> m_TemplateTypes;
         private Dictionary<string, string> m_TemplateStrings;
         private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to its base template name.
@@ -1287,6 +1305,7 @@ namespace ISX
         [Serializable]
         internal struct SerializedState
         {
+            public int templateSetupVersion;
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
             public KeyValuePair<string, string>[] baseTemplates;
@@ -1347,6 +1366,7 @@ namespace ISX
 
             return new SerializedState
             {
+                templateSetupVersion = m_TemplateSetupVersion,
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
                 baseTemplates = m_BaseTemplateTable.ToArray(),
@@ -1383,6 +1403,7 @@ namespace ISX
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = state.availableDevices.ToList();
             m_Devices = null;
+            m_TemplateSetupVersion = state.templateSetupVersion + 1;
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);

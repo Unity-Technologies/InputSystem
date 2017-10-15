@@ -40,8 +40,8 @@ namespace ISX
 
         private GUIContent GetContentForPath(string path)
         {
-            ////TODO
-            return new GUIContent("path");
+            ////TODO: instead of just dumping straight paths, parse them and show what they mean, not how they read
+            return new GUIContent(path);
         }
     }
 }

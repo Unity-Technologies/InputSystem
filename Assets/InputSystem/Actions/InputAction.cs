@@ -42,6 +42,8 @@ namespace ISX
 
         public InputActionSet actionSet => isSingletonAction ? null : m_ActionSet;
 
+        ////TODO: add hasBeenPerformedThisFrame which compares a m_LastPerformedFrame to current frame counter (same for hasBeenStarted)
+
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devics set on action set)
 
@@ -168,8 +170,8 @@ namespace ISX
         // Unity can't serialize generic types. So we explode the structure here and turn
         // it into a ReadOnlyArray whenever needed.
         [SerializeField] internal InputBinding[] m_Bindings;
-        [SerializeField] internal int m_BindingsStartIndex;
-        [SerializeField] internal int m_BindingsCount;
+        [SerializeField][HideInInspector] internal int m_BindingsStartIndex;
+        [SerializeField][HideInInspector] internal int m_BindingsCount;
 
         // The action set that owns us.
         [NonSerialized] internal InputActionSet m_ActionSet;
@@ -301,6 +303,9 @@ namespace ISX
             public double time => m_Time;
             public bool controlHasDefaultValue => m_ControlIsAtDefaultValue;
             public bool timerHasExpired => m_TimerHasExpired;
+
+            public bool isWaiting => phase == Phase.Waiting;
+            public bool isStarted => phase == Phase.Started;
 
             public void Started()
             {

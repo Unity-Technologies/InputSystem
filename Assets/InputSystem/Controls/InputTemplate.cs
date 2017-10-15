@@ -911,14 +911,14 @@ namespace ISX
                 // always take precedence over ones from type so that we can
                 // override what's in the code using data.
                 string json;
-                if (InputTemplate.s_TemplateStrings.TryGetValue(nameLowerCase, out json))
+                if (s_TemplateStrings.TryGetValue(nameLowerCase, out json))
                 {
                     template = FromJson(name, json);
                     table[nameLowerCase] = template;
 
                     // If the template extends another template, we need to merge the
                     // base template into the final template.
-                    if (!String.IsNullOrEmpty(template.extendsTemplate))
+                    if (!string.IsNullOrEmpty(template.extendsTemplate))
                     {
                         ////TODO: catch cycles
                         var superTemplate = FindOrLoadTemplate(template.extendsTemplate);
@@ -930,7 +930,7 @@ namespace ISX
 
                 // No, but maybe we have a type template for it.
                 Type type;
-                if (InputTemplate.s_TemplateTypes.TryGetValue(nameLowerCase, out type))
+                if (s_TemplateTypes.TryGetValue(nameLowerCase, out type))
                 {
                     template = FromType(name, type);
                     table[nameLowerCase] = template;

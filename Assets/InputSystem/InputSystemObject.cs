@@ -20,6 +20,9 @@ namespace ISX
         {
             InputActionSet.ResetGlobals();
             manager.Destroy();
+            #if UNITY_EDITOR
+            EditorInputTemplateCache.Clear();
+            #endif
         }
     }
 }
