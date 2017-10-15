@@ -1948,7 +1948,7 @@ public class FunctionalTests
         InputAction startedAction = null;
         InputControl startedControl = null;
 
-        var action = new InputAction(binding: "/gamepad/{primaryAction}", modifiers: "hold(0.4)");
+        var action = new InputAction(binding: "/gamepad/{primaryAction}", modifiers: "hold(duration=0.4)");
         action.performed +=
             (a, c) =>
             {

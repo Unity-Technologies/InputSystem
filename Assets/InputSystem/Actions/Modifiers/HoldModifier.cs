@@ -8,6 +8,12 @@ namespace ISX
 
         public void Process(ref InputAction.Context context)
         {
+            if (context.timerHasExpired)
+            {
+                context.Performed();
+                return;
+            }
+
             if (context.phase == InputAction.Phase.Waiting && !context.controlHasDefaultValue)
             {
                 m_TimePressed = context.time;
@@ -18,6 +24,7 @@ namespace ISX
                     holdTime = InputConfiguration.HoldTime;
 
                 context.SetTimeout(holdTime);
+                return;
             }
 
             if (context.phase == InputAction.Phase.Started && context.controlHasDefaultValue)

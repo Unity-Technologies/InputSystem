@@ -121,12 +121,11 @@ namespace ISX
             if (m_ActionSet.m_Controls == null)
                 m_ActionSet.ResolveBindings();
 
-            var manager = InputSystem.s_Manager;
-
             // Let set know we're changing state.
             m_ActionSet.TellAboutActionChangingEnabledStatus(this, true);
 
             // Hook up state monitors for all our controls.
+            var manager = InputSystem.s_Manager;
             for (var i = 0; i < m_ResolvedBindings.Count; ++i)
             {
                 var controls = m_ResolvedBindings[i].controls;
@@ -141,6 +140,7 @@ namespace ISX
 
         public void Disable()
         {
+            ////TODO: remove state change monitors and action timeouts
             throw new NotImplementedException();
         }
 
@@ -206,11 +206,13 @@ namespace ISX
                 case Phase.Performed:
                     CallListeners(ref m_OnPerformed, triggerControl);
                     m_LastSource = triggerControl;
+                    m_CurrentPhase = Phase.Waiting;
                     break;
 
                 case Phase.Cancelled:
                     CallListeners(ref m_OnCancelled, triggerControl);
                     m_LastSource = triggerControl;
+                    m_CurrentPhase = Phase.Waiting;
                     break;
             }
         }
@@ -246,6 +248,7 @@ namespace ISX
                 context.m_TriggerControl = control;
                 context.m_Time = time;
                 context.m_ControlIsAtDefaultValue = isAtDefault;
+                context.m_TimerHasExpired = false;
 
                 for (var i = 0; i < modifiers.Count; ++i)
                 {
@@ -257,12 +260,26 @@ namespace ISX
             }
             else
             {
+                // Default logic has no support for cancellations and won't ever go into started
+                // phase. Will go from waiting straight to performed and then straight to waiting
+                // again.
                 if (phase == Phase.Waiting && !isAtDefault)
-                {
                     GoToPhase(Phase.Performed, control);
-                    m_CurrentPhase = Phase.Waiting;
-                }
             }
+        }
+
+        internal void NotifyTimerExpired(IInputActionModifier modifier, double time)
+        {
+            Context context;
+
+            context.m_Action = this;
+            context.m_TriggerControl = null;
+            context.m_CurrentModifier = modifier;
+            context.m_Time = time;
+            context.m_ControlIsAtDefaultValue = false; ////REVIEW: how should this be handled?
+            context.m_TimerHasExpired = true;
+
+            modifier.Process(ref context);
         }
 
         // Data we pass to modifiers during processing. Encapsulates all the context
@@ -276,12 +293,14 @@ namespace ISX
             internal double m_Time;
             internal IInputActionModifier m_CurrentModifier;
             internal bool m_ControlIsAtDefaultValue;
+            internal bool m_TimerHasExpired;
 
             public InputAction action => m_Action;
             public InputControl control => m_TriggerControl;
             public Phase phase => action.phase;
             public double time => m_Time;
             public bool controlHasDefaultValue => m_ControlIsAtDefaultValue;
+            public bool timerHasExpired => m_TimerHasExpired;
 
             public void Started()
             {
@@ -300,7 +319,8 @@ namespace ISX
 
             public void SetTimeout(double seconds)
             {
-                throw new NotImplementedException();
+                var manager = InputSystem.s_Manager;
+                manager.AddActionTimeout(m_Action, Time.time + seconds, m_CurrentModifier);
             }
         }
 

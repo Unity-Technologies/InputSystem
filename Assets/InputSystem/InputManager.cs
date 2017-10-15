@@ -664,6 +664,9 @@ namespace ISX
         private DeviceChangeEvent m_DeviceChangeEvent;
         private EventReceivedEvent m_EventReceivedEvent;
 
+        ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
+        ////        to present mechanisms that the user could build different action systems on?
+
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
         // processing the control repeatedly but we assume this is the exception
@@ -681,6 +684,7 @@ namespace ISX
         private struct StateChangeMonitorListener
         {
             public InputControl control;
+            ////REVIEW: this could easily be generalized to take an arbitrary user object plus a "user data" value
             public InputAction action;
             public int bindingIndex;
         }
@@ -689,6 +693,15 @@ namespace ISX
         private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
         private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
+
+        private struct ActionTimeout
+        {
+            public double time;
+            public InputAction action;
+            public IInputActionModifier modifier;
+        }
+
+        private List<ActionTimeout> m_ActionTimeouts;
 
         ////TODO: support combining monitors for bitfields
         internal void AddStateChangeMonitor(InputControl control, InputAction action, int bindingIndex)
@@ -743,6 +756,19 @@ namespace ISX
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
         {
             throw new NotImplementedException();
+        }
+
+        internal void AddActionTimeout(InputAction action, double time, IInputActionModifier modifier)
+        {
+            if (m_ActionTimeouts == null)
+                m_ActionTimeouts = new List<ActionTimeout>();
+
+            m_ActionTimeouts.Add(new ActionTimeout
+            {
+                time = time,
+                action = action,
+                modifier = modifier
+            });
         }
 
         private void MakeDeviceNameUnique(InputDevice device)
@@ -841,7 +867,8 @@ namespace ISX
             {
 #endif
 
-            ////TODO: check for action modifiers that have associated timers and trigger any timer that has expired
+            if (m_ActionTimeouts != null)
+                ProcessActionTimeouts();
 
             ////REVIEW: this will become obsolete when we actually turn off unneeded updates in native
             // We *always* have to process events into the current state even if the given update isn't enabled.
@@ -1135,6 +1162,17 @@ namespace ISX
                     signals[i] = false;
                 }
             }
+        }
+
+        private void ProcessActionTimeouts()
+        {
+            var time = Time.time;
+            for (var i = 0; i < m_ActionTimeouts.Count; ++i)
+                if (m_ActionTimeouts[i].time <= time)
+                {
+                    m_ActionTimeouts[i].action.NotifyTimerExpired(m_ActionTimeouts[i].modifier, time);
+                    m_ActionTimeouts.RemoveAt(i);
+                }
         }
 
         private void FlipBuffersForDeviceIfNecessary(InputDevice device, NativeInputUpdateType updateType)
