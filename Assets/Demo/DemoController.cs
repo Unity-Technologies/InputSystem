@@ -2,6 +2,8 @@ using ISX;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+////TODO: have fire action perform both normal fire on simple press and burst fire on long press
+
 public class DemoController : MonoBehaviour
 {
     public Transform head;

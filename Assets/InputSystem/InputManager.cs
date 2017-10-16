@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 
 namespace ISX
 {
+    using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
+    using EventListener = Action<InputEventPtr>;
+
     // The hub of the input system.
     // All state is ultimately gathered here.
     // Not exposed. Use InputSystem as the public entry point to the system.
@@ -32,32 +34,16 @@ namespace ISX
             }
         }
 
-        public event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
+        public event DeviceChangeListener onDeviceChange
         {
-            add
-            {
-                if (m_DeviceChangeEvent == null)
-                    m_DeviceChangeEvent = new DeviceChangeEvent();
-                m_DeviceChangeEvent.AddListener(value);
-            }
-            remove
-            {
-                m_DeviceChangeEvent?.RemoveListener(value);
-            }
+            add { m_DeviceChangeListeners.Append(value); }
+            remove { m_DeviceChangeListeners.Remove(value); }
         }
 
-        public event UnityAction<InputEventPtr> onEvent
+        public event EventListener onEvent
         {
-            add
-            {
-                if (m_EventReceivedEvent == null)
-                    m_EventReceivedEvent = new EventReceivedEvent();
-                m_EventReceivedEvent.AddListener(value);
-            }
-            remove
-            {
-                m_EventReceivedEvent?.RemoveListener(value);
-            }
+            add { m_EventListeners.Append(value); }
+            remove { m_EventListeners.Remove(value); }
         }
 
         // Add a template constructed from a type.
@@ -142,8 +128,7 @@ namespace ISX
 
                     if (deviceDescription.Matches(m_AvailableDevices[i].description))
                     {
-                        var device = AddDevice(name, deviceId);
-                        device.m_Description = deviceDescription;
+                        AddDevice(name, deviceId, deviceDescription);
                     }
                 }
             }
@@ -353,11 +338,15 @@ namespace ISX
         }
 
         // Add device with a forced ID. Used when creating devices reported to us by native.
-        private InputDevice AddDevice(string template, int deviceId)
+        private InputDevice AddDevice(string template, int deviceId, InputDeviceDescription description)
         {
             var setup = new InputControlSetup(template);
             var device = setup.Finish();
             device.m_Id = deviceId;
+            device.m_Description = description;
+
+            if (!string.IsNullOrEmpty(description.product) && description.product != "Generic")////REVIEW: probably want a better approach to filtering out nonsense product names
+                device.m_Name = description.product;
 
             AddDevice(device);
 
@@ -407,7 +396,8 @@ namespace ISX
             InputActionSet.RefreshEnabledActions();
 
             // Notify listeners.
-            m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Added);
+            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
         }
 
         public InputDevice AddDevice(InputDeviceDescription description)
@@ -514,8 +504,7 @@ namespace ISX
             var template = TryFindMatchingTemplate(description);
             if (template != null)
             {
-                var device = AddDevice(template, deviceId);
-                device.m_Description = description;
+                AddDevice(template, deviceId, description);
             }
         }
 
@@ -681,8 +670,11 @@ namespace ISX
         private int m_CurrentDynamicUpdateCount;
         private int m_CurrentFixedUpdateCount;
 
-        private DeviceChangeEvent m_DeviceChangeEvent;
-        private EventReceivedEvent m_EventReceivedEvent;
+        // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
+        // Restoration of UnityActions is unreliable and it's too easy to end up with double
+        // registrations what will lead to all kinds of misbehavior.
+        private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
+        private InlinedArray<EventListener> m_EventListeners;
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
@@ -949,9 +941,11 @@ namespace ISX
                     break;
 
                 // Give listeners a shot at the event.
-                if (m_EventReceivedEvent != null)
+                var listenerCount = m_EventListeners.Count;
+                if (listenerCount > 0)
                 {
-                    m_EventReceivedEvent.Invoke(new InputEventPtr(currentEventPtr));
+                    for (var i = 0; i < listenerCount; ++i)
+                        m_EventListeners[i](new InputEventPtr(currentEventPtr));
                     if (currentEventPtr->handled)
                         continue;
                 }
@@ -1063,7 +1057,8 @@ namespace ISX
                         if (!device.connected)
                         {
                             device.m_Flags |= InputDevice.Flags.Connected;
-                            m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Connected);
+                            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                                m_DeviceChangeListeners[i](device, InputDeviceChange.Connected);
                         }
                         break;
 
@@ -1071,7 +1066,8 @@ namespace ISX
                         if (device.connected)
                         {
                             device.m_Flags &= ~InputDevice.Flags.Connected;
-                            m_DeviceChangeEvent?.Invoke(device, InputDeviceChange.Disconnected);
+                            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                                m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
                         }
                         break;
                 }
@@ -1244,16 +1240,6 @@ namespace ISX
             // Don't flip.
         }
 
-        [Serializable]
-        internal class DeviceChangeEvent : UnityEvent<InputDevice, InputDeviceChange>
-        {
-        }
-
-        [Serializable]
-        internal class EventReceivedEvent : UnityEvent<InputEventPtr>
-        {
-        }
-
         // Domain reload survival logic.
 #if UNITY_EDITOR
         [Serializable]
@@ -1317,9 +1303,13 @@ namespace ISX
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
-            public DeviceChangeEvent deviceChangeEvent;
-            public EventReceivedEvent eventReceivedEvent;
             public InputConfiguration.SerializedState configuration;
+
+            // We want to preserve the event listeners across Save() and Restore() but not
+            // across domain reloads. So we put them in here but don't serialize them (and
+            // can't either except if we make them UnityEvents).
+            [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
+            [NonSerialized] public InlinedArray<EventListener> eventListeners;
         }
 
         internal SerializedState SaveState()
@@ -1378,10 +1368,9 @@ namespace ISX
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
-                ////FIXME: this does not actually seem to survive reloads properly
-                deviceChangeEvent = m_DeviceChangeEvent,
-                eventReceivedEvent = m_EventReceivedEvent,
-                configuration = InputConfiguration.Save()
+                configuration = InputConfiguration.Save(),
+                deviceChangeListeners = m_DeviceChangeListeners.Clone(),
+                eventListeners = m_EventListeners.Clone()
             };
 
             // We don't bring monitors along. InputActions and related classes are equipped
@@ -1400,12 +1389,12 @@ namespace ISX
             m_Modifiers = new Dictionary<string, Type>();
             m_StateBuffers = state.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
-            m_DeviceChangeEvent = state.deviceChangeEvent;
-            m_EventReceivedEvent = state.eventReceivedEvent;
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = state.availableDevices.ToList();
             m_Devices = null;
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
+            m_DeviceChangeListeners = state.deviceChangeListeners;
+            m_EventListeners = state.eventListeners;
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);

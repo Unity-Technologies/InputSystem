@@ -657,6 +657,8 @@ public class FunctionalTests
         InputSystem.QueueStateEvent(gamepad, oldState);
         InputSystem.Update();
 
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.25f, 0.25f)));
+
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
@@ -1674,6 +1676,27 @@ public class FunctionalTests
             Assert.That(events, Has.Count.EqualTo(2));
             Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(1.5).Within(0.000001));
             Assert.That(events, Has.Exactly(1).With.Property("time").EqualTo(2.5).Within(0.000001));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanClearEventTrace()
+    {
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            var device = InputSystem.AddDevice("Gamepad");
+            InputSystem.QueueStateEvent(device, new GamepadState());
+            InputSystem.QueueStateEvent(device, new GamepadState());
+            InputSystem.Update();
+
+            Assert.That(trace.ToList(), Has.Count.EqualTo(2));
+
+            trace.Clear();
+
+            Assert.That(trace.ToList(), Has.Count.EqualTo(0));
         }
     }
 

@@ -39,6 +39,21 @@ namespace ISX
             }
         }
 
+        public void Clear()
+        {
+            firstValue = default(TValue);
+            additionalValues = null;
+        }
+
+        public InlinedArray<TValue> Clone()
+        {
+            return new InlinedArray<TValue>
+            {
+                firstValue = firstValue,
+                additionalValues = (TValue[])additionalValues?.Clone()
+            };
+        }
+
         public TValue[] ToArray()
         {
             return ArrayHelpers.Join(firstValue, additionalValues);

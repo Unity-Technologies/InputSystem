@@ -84,9 +84,9 @@ namespace ISX
 
         protected internal InputStateBlock m_StateBlock;
 
-        protected IntPtr currentValuePtr =>
+        protected internal IntPtr currentValuePtr =>
         InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
-        protected IntPtr previousValuePtr =>
+        protected internal IntPtr previousValuePtr =>
         InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
 
 

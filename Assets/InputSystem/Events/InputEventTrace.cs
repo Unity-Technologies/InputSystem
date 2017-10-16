@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Collections;
-using UnityEngine.Events;
 
 namespace ISX
 {
@@ -24,18 +23,10 @@ namespace ISX
 
         public bool enabled => m_Enabled;
 
-        public event UnityAction<InputEventPtr> onEvent
+        public event Action<InputEventPtr> onEvent
         {
-            add
-            {
-                if (m_ReceiveEvent == null)
-                    m_ReceiveEvent = new InputManager.EventReceivedEvent();
-                m_ReceiveEvent.AddListener(value);
-            }
-            remove
-            {
-                m_ReceiveEvent?.RemoveListener(value);
-            }
+            add { m_EventListeners.Append(value); }
+            remove { m_EventListeners.Remove(value); }
         }
 
         // Create a disabled event trace that does not perform any allocation
@@ -46,9 +37,9 @@ namespace ISX
             m_EventBufferSize = bufferSize;
         }
 
-        public void Reset()
+        public void Clear()
         {
-            throw new NotImplementedException();
+            m_EventBufferHead = m_EventBufferTail = IntPtr.Zero;
         }
 
         public void Enable()
@@ -93,6 +84,10 @@ namespace ISX
             var nextEvent = current.data + current.sizeInBytes;
             var endOfBuffer = m_EventBuffer + m_EventBufferSize;
 
+            // If we've run into our tail, there's no more events.
+            if (nextEvent.ToInt64() == m_EventBufferTail.ToInt64())
+                return false;
+
             // If we've reached blank space at the end of the buffer, wrap
             // around to the beginning. In this scenario there must be an event
             // at the beginning of the buffer; tail won't position itself at
@@ -102,9 +97,6 @@ namespace ISX
             {
                 nextEvent = m_EventBuffer;
             }
-            // If we've run into our tail, there's no more events.
-            else if (nextEvent.ToInt64() >= m_EventBufferTail.ToInt64())
-                return false;
 
             // We're good. There's still space between us and our tail.
             current = new InputEventPtr((InputEvent*)nextEvent);
@@ -139,7 +131,7 @@ namespace ISX
         [NonSerialized] private bool m_Enabled;
 
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
-        [SerializeField] private InputManager.EventReceivedEvent m_ReceiveEvent;
+        [SerializeField] private InlinedArray<Action<InputEventPtr>> m_EventListeners;
 
         // Buffer for storing event trace. Allocated in native so that we can survive a
         // domain reload without losing event traces.
@@ -244,7 +236,8 @@ namespace ISX
             ++m_ChangeCounter;
 
             // Notify listeners.
-            m_ReceiveEvent?.Invoke(new InputEventPtr((InputEvent*)buffer));
+            for (var i = 0; i < m_EventListeners.Count; ++i)
+                m_EventListeners[i](new InputEventPtr((InputEvent*)buffer));
         }
 
         private class Enumerator : IEnumerator<InputEventPtr>

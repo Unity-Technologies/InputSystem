@@ -3,8 +3,9 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEditorInternal; // For PreviewResizer.
 using UnityEngine;
+
+////FIXME: doesn't survive domain reload correctly
 
 namespace ISX
 {
@@ -41,9 +42,6 @@ namespace ISX
 
         public void Awake()
         {
-            if (m_EventListResizer == null)
-                m_EventListResizer = new PreviewResizer();
-            m_EventListResizer.Init("InputDeviceDebugger");
             InputSystem.onDeviceChange += OnDeviceChange;
         }
 
@@ -71,8 +69,8 @@ namespace ISX
                 InitializeWith(m_Device);
             }
 
-            ////FIXME: editor still expands height for some reason....
-            EditorGUILayout.BeginVertical("OL Box", GUILayout.ExpandHeight(false));
+            ////FIXME: with ExpandHeight(false), editor still expands height for some reason....
+            EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(160));// GUILayout.ExpandHeight(false));
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Template", m_Device.template);
             EditorGUILayout.LabelField("Connected", m_Device.connected ? "True" : "False");
@@ -89,6 +87,19 @@ namespace ISX
 
         private void DrawControlTree()
         {
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(Contents.stateContent, EditorStyles.toolbarButton))
+            {
+                var window = CreateInstance<InputStateWindow>();
+                window.InitializeWithControl(m_Device);
+                window.Show();
+            }
+
+            GUILayout.EndHorizontal();
+
             m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_ControlTree.OnGUI(rect);
@@ -99,27 +110,20 @@ namespace ISX
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Events", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.FlexibleSpace();
 
-            var toolbarRect = GUILayoutUtility.GetLastRect();
+            if (GUILayout.Button(Contents.clearContent, EditorStyles.toolbarButton))
+            {
+                m_EventTrace.Clear();
+                m_EventTree.Reload();
+            }
 
             GUILayout.EndHorizontal();
 
-            var listHeight = m_EventListResizer.ResizeHandle(new Rect(toolbarRect.x, position.y, toolbarRect.width, position.height), 100, 250, 17);
-            if (listHeight > 0)
-            {
-                ////TODO: make this a multi-column tree view with a single level
-                ////      when a row with a state event is clicked, pop up a StateWindow looking into the state
-
-                m_EventListScrollPosition = EditorGUILayout.BeginScrollView(m_EventListScrollPosition);
-
-                var currentPtr = new InputEventPtr();
-                while (m_EventTrace.GetNextEvent(ref currentPtr))
-                {
-                    EditorGUILayout.LabelField(currentPtr.ToString());
-                }
-
-                EditorGUILayout.EndScrollView();
-            }
+            m_EventListScrollPosition = EditorGUILayout.BeginScrollView(m_EventListScrollPosition);
+            var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
+            m_EventTree.OnGUI(rect);
+            EditorGUILayout.EndScrollView();
         }
 
         private void InitializeWith(InputDevice device)
@@ -133,53 +137,19 @@ namespace ISX
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
                 m_EventTrace = new InputEventTrace(device.stateBlock.alignedSizeInBytes * 64) {deviceId = device.id};
-            m_EventTrace.onEvent += _ => Repaint();
+            m_EventTrace.onEvent += _ =>
+                {
+                    ////FIXME: this is very inefficient
+                    m_EventTree.Reload();
+                    Repaint();
+                };
             m_EventTrace.Enable();
 
+            // Set up event tree.
+            m_EventTree = InputEventTreeView.Create(m_Device, m_EventTrace, ref m_EventTreeState, ref m_EventTreeHeaderState);
+
             // Set up control tree.
-            if (m_ControlTreeState == null)
-                m_ControlTreeState = new TreeViewState();
-            if (m_ControlTreeHeaderState == null)
-            {
-                var columns = new MultiColumnHeaderState.Column[(int)ControlTreeView.ColumnId.COUNT];
-
-                columns[(int)ControlTreeView.ColumnId.Name] =
-                    new MultiColumnHeaderState.Column
-                {
-                    width = 150,
-                    minWidth = 60,
-                    headerContent = new GUIContent("Name")
-                };
-                columns[(int)ControlTreeView.ColumnId.Template] =
-                    new MultiColumnHeaderState.Column
-                {
-                    width = 100,
-                    minWidth = 60,
-                    headerContent = new GUIContent("Template")
-                };
-                columns[(int)ControlTreeView.ColumnId.Type] =
-                    new MultiColumnHeaderState.Column
-                {
-                    width = 100,
-                    minWidth = 60,
-                    headerContent = new GUIContent("Type")
-                };
-                columns[(int)ControlTreeView.ColumnId.Format] =
-                    new MultiColumnHeaderState.Column {headerContent = new GUIContent("Format")};
-                columns[(int)ControlTreeView.ColumnId.Offset] =
-                    new MultiColumnHeaderState.Column {headerContent = new GUIContent("Offset")};
-                columns[(int)ControlTreeView.ColumnId.Bit] =
-                    new MultiColumnHeaderState.Column {width = 40, headerContent = new GUIContent("Bit")};
-                columns[(int)ControlTreeView.ColumnId.Size] =
-                    new MultiColumnHeaderState.Column {headerContent = new GUIContent("Size (Bits)")};
-                columns[(int)ControlTreeView.ColumnId.Value] =
-                    new MultiColumnHeaderState.Column {width = 120, headerContent = new GUIContent("Value")};
-
-                m_ControlTreeHeaderState = new MultiColumnHeaderState(columns);
-            }
-
-            var header = new MultiColumnHeader(m_ControlTreeHeaderState);
-            m_ControlTree = new ControlTreeView(m_Device, m_ControlTreeState, header);
+            m_ControlTree = InputControlTreeView.Create(m_Device, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
             m_ControlTree.ExpandAll();
         }
 
@@ -188,13 +158,14 @@ namespace ISX
         // fully come back to life as well.
         [NonSerialized] private InputDevice m_Device;
         [NonSerialized] private string m_DeviceIdString;
-        [NonSerialized] private ControlTreeView m_ControlTree;
+        [NonSerialized] private InputControlTreeView m_ControlTree;
+        [NonSerialized] private InputEventTreeView m_EventTree;
 
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
+        [SerializeField] private TreeViewState m_EventTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
-        [SerializeField] private PreviewResizer m_EventListResizer;
-        [SerializeField] private bool m_EventListExpanded;
+        [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
         [SerializeField] private Vector2 m_EventListScrollPosition;
         [SerializeField] private InputEventTrace m_EventTrace;
@@ -228,6 +199,12 @@ namespace ISX
             public static string notFoundHelpText = "Device could not be found.";
         }
 
+        private static class Contents
+        {
+            public static GUIContent clearContent = new GUIContent("Clear");
+            public static GUIContent stateContent = new GUIContent("State");
+        }
+
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
         }
@@ -235,157 +212,6 @@ namespace ISX
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             AddToList();
-        }
-
-        private class ControlTreeView : TreeView
-        {
-            private const float kRowHeight = 20f;
-
-            public class Item : TreeViewItem
-            {
-                public InputControl control;
-            }
-
-            public enum ColumnId
-            {
-                Name,
-                Template,
-                Type,
-                Format,
-                Offset,
-                Bit,
-                Size,
-                Value,
-
-                COUNT
-            }
-
-            public InputControl root;
-            private List<InputControl> m_Controls = new List<InputControl>();
-
-            public ControlTreeView(InputControl root, TreeViewState state, MultiColumnHeader header)
-                : base(state, header)
-            {
-                this.root = root;
-                showBorder = false;
-                rowHeight = kRowHeight;
-                Reload();
-            }
-
-            protected override TreeViewItem BuildRoot()
-            {
-                // Build tree from control down the control hierarchy.
-                var rootItem = BuildControlTreeRecursive(root, 0);
-
-                // Wrap root control in invisible item required by TreeView.
-                return new Item
-                {
-                    displayName = "Root",
-                    id = 0,
-                    children = new List<TreeViewItem> {rootItem},
-                    depth = -1
-                };
-            }
-
-            private TreeViewItem BuildControlTreeRecursive(InputControl control, int depth)
-            {
-                m_Controls.Add(control);
-                var id = m_Controls.Count;
-
-                ////TODO: come up with nice icons depicting different control types
-
-                var item = new Item
-                {
-                    id = id,
-                    displayName = control.name,
-                    control = control,
-                    depth = depth
-                };
-
-                // Build children.
-                if (control.children.Count > 0)
-                {
-                    var children = new List<TreeViewItem>();
-
-                    foreach (var child in control.children)
-                    {
-                        var childItem = BuildControlTreeRecursive(child, depth + 1);
-                        childItem.parent = item;
-                        children.Add(childItem);
-                    }
-
-                    item.children = children;
-                }
-
-                return item;
-            }
-
-            protected override void RowGUI(RowGUIArgs args)
-            {
-                var item = (Item)args.item;
-
-                var columnCount = args.GetNumVisibleColumns();
-                for (var i = 0; i < columnCount; ++i)
-                {
-                    ColumnGUI(args.GetCellRect(i), item, args.GetColumn(i), ref args);
-                }
-            }
-
-            private void ColumnGUI(Rect cellRect, Item item, int column, ref RowGUIArgs args)
-            {
-                CenterRectUsingSingleLineHeight(ref cellRect);
-
-                switch (column)
-                {
-                    case (int)ColumnId.Name:
-                        cellRect.x += GetContentIndent(item);
-                        args.rowRect = cellRect;
-                        base.RowGUI(args);
-                        break;
-                    case (int)ColumnId.Template:
-                        GUI.Label(cellRect, item.control.template);
-                        break;
-                    case (int)ColumnId.Format:
-                        GUI.Label(cellRect, item.control.stateBlock.format.ToString());
-                        break;
-                    case (int)ColumnId.Offset:
-                        GUI.Label(cellRect, item.control.stateBlock.byteOffset.ToString());
-                        break;
-                    case (int)ColumnId.Bit:
-                        GUI.Label(cellRect, item.control.stateBlock.bitOffset.ToString());
-                        break;
-                    case (int)ColumnId.Size:
-                        GUI.Label(cellRect, item.control.stateBlock.sizeInBits.ToString());
-                        break;
-                    case (int)ColumnId.Type:
-                        GUI.Label(cellRect, item.control.GetType().Name);
-                        break;
-                    case (int)ColumnId.Value:
-                        var value = item.control.valueAsObject;
-                        if (value != null)
-                            GUI.Label(cellRect, value.ToString());
-                        break;
-                }
-            }
-        }
-
-        // Additional window that we can pop open to inspect or even edit raw state (either
-        // on events or on controls/devices).
-        private class StateWindow : EditorWindow
-        {
-            // If set, this is a struct that describes the memory layout.
-            public Type structType;
-
-            public InputControl control;
-            public InputEvent eventInfo;
-            public IntPtr state;
-            public InputStateBlock block;
-
-            public enum VisualizerMode
-            {
-                AsControlTree,
-                AsHexDump
-            }
         }
     }
 }

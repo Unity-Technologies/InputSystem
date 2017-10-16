@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.Events;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -97,7 +96,7 @@ namespace ISX
 
         public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
 
-        public static event UnityAction<InputDevice, InputDeviceChange> onDeviceChange
+        public static event Action<InputDevice, InputDeviceChange> onDeviceChange
         {
             add { s_Manager.onDeviceChange += value; }
             remove { s_Manager.onDeviceChange -= value; }
@@ -160,7 +159,7 @@ namespace ISX
 
         #region Events
 
-        public static event UnityAction<InputEventPtr> onEvent
+        public static event Action<InputEventPtr> onEvent
         {
             add { s_Manager.onEvent += value; }
             remove { s_Manager.onEvent -= value; }

@@ -1,4 +1,4 @@
-using System;
+////TODO: allow variant to be attached to modifiers
 
 namespace ISX
 {

@@ -205,6 +205,7 @@ namespace ISX
                     m_LastSource = triggerControl;
                     break;
 
+                ////TODO: need to cancel pending timers
                 case Phase.Performed:
                     CallListeners(ref m_OnPerformed, triggerControl);
                     m_LastSource = triggerControl;

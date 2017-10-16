@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
+////      be docked into the container window of InputDebuggerWindow
+
 namespace ISX
 {
     // Allows looking at input activity in the editor.
