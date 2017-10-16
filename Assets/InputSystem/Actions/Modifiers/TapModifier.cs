@@ -1,7 +1,7 @@
 namespace ISX
 {
     // Requires the triggering control to press and release in less than
-    // the set duration (which defaults to InputConfiguration.ClickTime).
+    // the set duration (which defaults to InputConfiguration.TapTime).
     public class TapModifier : IInputActionModifier
     {
         public float duration;

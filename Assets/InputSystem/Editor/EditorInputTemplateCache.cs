@@ -45,6 +45,11 @@ namespace ISX
             }
         }
 
+        public static InputTemplate TryGetTemplate(string name)
+        {
+            return s_Cache.FindOrLoadTemplate(name);
+        }
+
         internal static void Clear()
         {
             s_TemplateSetupVersion = 0;

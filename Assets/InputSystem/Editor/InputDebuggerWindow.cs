@@ -24,6 +24,11 @@ namespace ISX
                 s_Instance.Show();
                 s_Instance.titleContent = new GUIContent("Input Debugger");
             }
+            else
+            {
+                s_Instance.Show();
+                s_Instance.Focus();
+            }
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -86,7 +91,6 @@ namespace ISX
             for (var i = 0; i < deviceCount; i++)
             {
                 var device = devices[i];
-                var deviceIndex = device.m_DeviceIndex;
 
                 // Skip devices that aren't in the connection state we're looking for.
                 if (device.connected != connected)

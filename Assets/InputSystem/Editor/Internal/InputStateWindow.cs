@@ -77,6 +77,7 @@ namespace ISX
                 {
                     m_ControlTree = InputControlTreeView.Create(m_Control, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
                     m_ControlTree.stateBuffer = m_StateData;
+                    m_ControlTree.ExpandAll();
                 }
 
                 m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);

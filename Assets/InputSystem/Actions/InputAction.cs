@@ -68,6 +68,8 @@ namespace ISX
 
         ////REVIEW: have single delegate that just gives you an InputAction and you get the control and phase from the action?
 
+        ////REVIEW: pass Context or Context-like struct to action listeners?
+
         public event ActionListener started
         {
             add { m_OnStarted.Append(value); }
@@ -307,6 +309,9 @@ namespace ISX
 
             public bool isWaiting => phase == Phase.Waiting;
             public bool isStarted => phase == Phase.Started;
+
+            ////TODO: when a modifier initiates a phase shift, remember the modifier and if another modifier wants to
+            ////      phase shift, either reset the original modifier or prevent the phase shift
 
             public void Started()
             {

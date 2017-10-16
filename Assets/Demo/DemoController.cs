@@ -32,13 +32,20 @@ public class DemoController : MonoBehaviour
         fireAction.performed += (action, control) => Fire();
     }
 
-    public void Start()
+    public void OnEnable()
     {
         m_RigidBody = GetComponent<Rigidbody>();
 
         fireAction.Enable();
         lookAction.Enable();
         walkAction.Enable();
+    }
+
+    public void OnDisable()
+    {
+        fireAction.Disable();
+        lookAction.Disable();
+        walkAction.Disable();
     }
 
     public void Update()

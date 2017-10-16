@@ -264,7 +264,7 @@ namespace ISX
                 throw new ArgumentException(nameof(name));
 
             Type type;
-            if (m_Modifiers.TryGetValue(name, out type))
+            if (m_Modifiers.TryGetValue(name.ToLower(), out type))
                 return type;
             return null;
         }
@@ -968,6 +968,8 @@ namespace ISX
                 {
                     case StateEvent.Type:
 
+                        //Debug.Log($"Update with state event for {device.name} in {updateType}");
+
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is.
                         if (currentEventTime < device.m_LastUpdateTime)
@@ -1215,6 +1217,8 @@ namespace ISX
                      m_CurrentFixedUpdateCount == m_CurrentDynamicUpdateCount - 1 &&
                      device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
             {
+                Debug.Log($"Flipping device {device.name} in both fixed and dynamic {m_CurrentFixedUpdateCount}");
+
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
 
@@ -1226,6 +1230,8 @@ namespace ISX
             else if (updateType == NativeInputUpdateType.Dynamic &&
                      device.m_LastDynamicUpdate != m_CurrentDynamicUpdateCount)
             {
+                Debug.Log($"Flipping device {device.name} in dynamic {m_CurrentDynamicUpdateCount}");
+
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
             }
@@ -1233,6 +1239,8 @@ namespace ISX
             else if (updateType == NativeInputUpdateType.Fixed &&
                      device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
             {
+                Debug.Log($"Flipping device {device.name} in fixed {m_CurrentFixedUpdateCount}");
+
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
             }

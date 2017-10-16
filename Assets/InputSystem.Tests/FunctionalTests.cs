@@ -298,7 +298,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
+    public void TODO_Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
     {
         // Create a device hiearchy and then replace the base template. We can't easily use
         // the gamepad (or something similar) as a base template as it will use the Gamepad
@@ -2233,6 +2233,28 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(TestModifier.s_GotInvoked, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanDistinguishTapAndSlowTapOnSameAction()
+    {
+        // Actions can have more than one modifier. Depending on the interaction happening on the bound
+        // controls one of the modifiers may initiate a phase shift and which modifier initiated the
+        // shift is visible on the callback.
+        //
+        // This is most useful for allowing variations of the same action. For example, you can have a
+        // "Fire" action, bind it to the "PrimaryAction" button, and then put both a TapModifier and a
+        // SlowTapModifier on the same binding. In the 'performed' callback you can then detect whether
+        // the button was slow-pressed or fast-pressed. Depending on that, you can perform a normal
+        // fire action or a charged fire action.
+
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/buttonSouth",
+                modifiers: "tap(duration=0.1),slowTap(duration=0.5)");
+        action.Enable();
+
+        Assert.Fail();
     }
 
 #if UNITY_EDITOR

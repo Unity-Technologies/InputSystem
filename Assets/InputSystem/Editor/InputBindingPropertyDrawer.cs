@@ -31,7 +31,7 @@ namespace ISX
             var pathButtonRect = new Rect(position.x + kPathLabelWidth + 4, position.y, kPathButtonWidth, position.height);
 
             EditorGUI.LabelField(pathRect, pathContent);
-            if (EditorGUI.DropdownButton(pathButtonRect, new GUIContent("Edit"), FocusType.Keyboard))
+            if (EditorGUI.DropdownButton(pathButtonRect, Contents.pickContent, FocusType.Keyboard))
             {
                 PopupWindow.Show(pathButtonRect, new InputBindingPathSelector(pathProperty));
             }
@@ -68,6 +68,11 @@ namespace ISX
 
         private static Regex s_UsageRegex;
         private static Regex s_ControlRegex;
+
+        private static class Contents
+        {
+            public static GUIContent pickContent = new GUIContent("Pick");
+        }
     }
 }
 #endif // UNITY_EDITOR

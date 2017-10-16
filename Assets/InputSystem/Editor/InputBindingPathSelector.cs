@@ -42,7 +42,7 @@ namespace ISX
             DrawToolbar();
 
             var toolbarRect = GUILayoutUtility.GetLastRect();
-            var listRect = new Rect(rect.x, rect.y + toolbarRect.height, rect.width, rect.height);
+            var listRect = new Rect(rect.x, rect.y + toolbarRect.height, rect.width, rect.height - toolbarRect.height);
 
             m_PathTree.OnGUI(listRect);
         }
@@ -153,7 +153,7 @@ namespace ISX
             {
                 var usageRoot = new TreeViewItem
                 {
-                    displayName = "Usages",
+                    displayName = "By Usage",
                     id = id++,
                     depth = 0
                 };
@@ -185,34 +185,38 @@ namespace ISX
                 };
                 m_Items.Add(new Item { device = template.name });
 
-                foreach (var control in template.controls)
-                {
-                    ////TODO: want recursive children here
-                    var child = new TreeViewItem
-                    {
-                        id = id++,
-                        depth = 1,
-                        displayName = control.name
-                    };
-                    m_Items.Add(new Item { device = template.name, control = control.name });
-
-                    deviceRoot.AddChild(child);
-                }
-
-                deviceRoot.children?.Sort((a, b) =>
-                    string.Compare(a.displayName, b.displayName, StringComparison.Ordinal));
+                BuildControlsRecursive(deviceRoot, template, string.Empty, ref id);
 
                 return deviceRoot;
             }
 
-            private TreeViewItem BuildItemFromUsage(string usage)
+            private void BuildControlsRecursive(TreeViewItem parent, InputTemplate template, string prefix, ref int id)
             {
-                throw new NotImplementedException();
-            }
+                foreach (var control in template.controls)
+                {
+                    if (control.isModifyingChildControlByPath)
+                        continue;
 
-            private TreeViewItem BuildItemFromControlTemplate(InputTemplate.ControlTemplate template)
-            {
-                throw new NotImplementedException();
+                    var controlPath = prefix + control.name;
+                    var child = new TreeViewItem
+                    {
+                        id = id++,
+                        depth = 1,
+                        displayName = controlPath
+                    };
+                    m_Items.Add(new Item { device = template.name, control = controlPath });
+
+                    var childTemplate = EditorInputTemplateCache.TryGetTemplate(control.template);
+                    if (childTemplate != null)
+                    {
+                        BuildControlsRecursive(parent, childTemplate, controlPath + "/", ref id);
+                    }
+
+                    parent.AddChild(child);
+                }
+
+                parent.children?.Sort((a, b) =>
+                    string.Compare(a.displayName, b.displayName, StringComparison.Ordinal));
             }
         }
     }
