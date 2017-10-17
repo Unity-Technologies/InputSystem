@@ -60,7 +60,7 @@ namespace ISX
 
                 ////TODO: would be nice to print something like "Gamepad: A Button" instead of "Gamepad: A" (or whatever)
 
-                return new GUIContent($"{device}: {control}");
+                return new GUIContent($"{device} {control}");
             }
 
             return new GUIContent(path);

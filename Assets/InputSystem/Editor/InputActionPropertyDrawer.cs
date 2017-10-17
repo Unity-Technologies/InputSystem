@@ -32,6 +32,8 @@ namespace ISX
         {
             EditorGUI.BeginProperty(position, label, property);
 
+            ////TODO: set name on action if not set (infer from property name of action)
+
             var foldoutRect = position;
             foldoutRect.height = kFoldoutHeight;
 

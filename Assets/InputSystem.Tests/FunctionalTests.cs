@@ -1524,6 +1524,9 @@ public class FunctionalTests
         var inputEvent = ConnectEvent.Create(4, 1.0);
 
         // This should go back to false when we inputEvent goes on the queue.
+        // The way the behavior is implemented is a side-effect of how we store
+        // the handled flag as a bit on the event ID -- which will get set by
+        // native on an event when it is queued.
         inputEvent.baseEvent.handled = true;
 
         InputSystem.QueueEvent(ref inputEvent);
@@ -1617,6 +1620,7 @@ public class FunctionalTests
         using (var trace = new InputEventTrace {deviceId = device.id})
         {
             trace.Enable();
+            Assert.That(trace.enabled, Is.True);
 
             var firstState = new GamepadState {rightTrigger = 0.35f};
             var secondState = new GamepadState {leftTrigger = 0.75f};
@@ -2254,6 +2258,7 @@ public class FunctionalTests
                 modifiers: "tap(duration=0.1),slowTap(duration=0.5)");
         action.Enable();
 
+        ////TODO
         Assert.Fail();
     }
 

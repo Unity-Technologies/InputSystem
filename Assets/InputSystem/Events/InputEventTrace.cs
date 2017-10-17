@@ -51,6 +51,7 @@ namespace ISX
                 Allocate();
 
             InputSystem.onEvent += OnInputEvent;
+            m_Enabled = true;
         }
 
         public void Disable()
@@ -217,7 +218,7 @@ namespace ISX
                     while (newHead < (byte*)newTail)
                     {
                         newHead += ((InputEvent*)newHead)->sizeInBytes;
-                        if (newHead > endOfBufferMinusOneEvent)
+                        if (newHead > endOfBufferMinusOneEvent || ((InputEvent*)newHead)->sizeInBytes == 0)
                         {
                             newHead = (byte*)m_EventBuffer;
                             break;

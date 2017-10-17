@@ -265,6 +265,7 @@ namespace ISX
             }
             else
             {
+                ////TODO: default should be to go to performed on press but only go back to waiting on release
                 // Default logic has no support for cancellations and won't ever go into started
                 // phase. Will go from waiting straight to performed and then straight to waiting
                 // again.

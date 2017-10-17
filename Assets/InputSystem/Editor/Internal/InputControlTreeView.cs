@@ -19,11 +19,10 @@ namespace ISX
             if (treeState == null)
                 treeState = new TreeViewState();
 
-            if (headerState == null)
-            {
-                var columns = CreateColumnArray();
-                headerState = new MultiColumnHeaderState(columns);
-            }
+            // MultiColumnHeaderState loses its columns on domain reloads so we wipe the column
+            // state every time.
+            var columns = CreateColumnArray();
+            headerState = new MultiColumnHeaderState(columns);
 
             var header = new MultiColumnHeader(headerState);
             return new InputControlTreeView(rootControl, treeState, header);
