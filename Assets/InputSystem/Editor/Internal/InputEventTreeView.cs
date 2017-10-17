@@ -120,13 +120,6 @@ namespace ISX
                 displayName = "Root"
             };
 
-            var currentPtr = new InputEventPtr();
-            while (m_EventTrace.GetNextEvent(ref currentPtr))
-            {
-                if (currentPtr.id == 0)
-                    Debug.Log("Umpf");
-            }
-
             ////FIXME: doing this over and over is very inefficient
             m_Events = m_EventTrace.ToArray();
             Array.Sort(m_Events,

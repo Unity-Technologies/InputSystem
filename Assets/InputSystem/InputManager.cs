@@ -868,10 +868,14 @@ namespace ISX
         // split off and put in its own job(s) (might not yield a gain; might be enough to just have
         // this thing in a job). The system can easily sync on a fence when some control goes
         // to the global state buffers so the user won't ever know that updates happen in the background.
+        //
+        // NOTE: Update types do *NOT* say what the events we receive are for. The update type only indicates
+        //       where in the Unity's application loop we got called from.
         private unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
         {
             ////TODO: have new native callback that is triggered right *before* updates and allows managed devices
             ////      to flush their state into the native event queue
+
 
 #if ENABLE_PROFILER
             Profiler.BeginSample("InputUpdate");
@@ -879,6 +883,7 @@ namespace ISX
             {
 #endif
 
+            ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (m_ActionTimeouts != null)
                 ProcessActionTimeouts();
 
@@ -898,6 +903,13 @@ namespace ISX
                 ++m_CurrentFixedUpdateCount;
             else if (updateType == NativeInputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
+
+            // In the editor, we need to decide where to route state. Whenever the game is playing and
+            // has focus, we route all input to play mode buffers. When the game is stopped or if any
+            // of the other editor windows has focus, we route input to edit mode buffers.
+#if UNITY_EDITOR
+            var gameIsPlayingAndHasFocus = UnityEditor.EditorApplication.isPlaying && Application.isFocused;
+#endif
 
             // Before render updates work in a special way. For them, we only want specific devices (and
             // sometimes even just specific controls on those devices) to be updated. What native will do is
@@ -968,8 +980,6 @@ namespace ISX
                 {
                     case StateEvent.Type:
 
-                        //Debug.Log($"Update with state event for {device.name} in {updateType}");
-
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is.
                         if (currentEventTime < device.m_LastUpdateTime)
@@ -1002,46 +1012,40 @@ namespace ISX
                             FlipBuffersForDeviceIfNecessary(device, updateType);
 
                             // Now write the state.
-                            switch (updateType)
-                            {
 #if UNITY_EDITOR
-                                case NativeInputUpdateType.Editor:
-                                {
-                                    var buffer =
-                                        new IntPtr(
-                                            m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex));
-                                    Debug.Assert(buffer != IntPtr.Zero);
-                                    UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
-                                }
-                                break;
+                            if (!gameIsPlayingAndHasFocus)
+                            {
+                                var buffer =
+                                    new IntPtr(
+                                        m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                Debug.Assert(buffer != IntPtr.Zero);
+                                UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
+                            }
+                            else
 #endif
-
+                            {
                                 // For dynamic and fixed updates, we have to write into the front buffer
                                 // of both updates as a state change event comes in only once and we have
                                 // to reflect the most current state in both update types.
                                 //
                                 // If one or the other update is disabled, however, we will perform a single
                                 // memcpy here.
-                                case NativeInputUpdateType.BeforeRender:
-                                case NativeInputUpdateType.Dynamic:
-                                case NativeInputUpdateType.Fixed:
-                                    if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
-                                    {
-                                        var buffer =
-                                            new IntPtr(
-                                                m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex));
-                                        Debug.Assert(buffer != IntPtr.Zero);
-                                        UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
-                                    }
-                                    if (m_StateBuffers.m_FixedUpdateBuffers.valid)
-                                    {
-                                        var buffer =
-                                            new IntPtr(
-                                                m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex));
-                                        Debug.Assert(buffer != IntPtr.Zero);
-                                        UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
-                                    }
-                                    break;
+                                if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+                                {
+                                    var buffer =
+                                        new IntPtr(
+                                            m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                    Debug.Assert(buffer != IntPtr.Zero);
+                                    UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
+                                }
+                                if (m_StateBuffers.m_FixedUpdateBuffers.valid)
+                                {
+                                    var buffer =
+                                        new IntPtr(
+                                            m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                    Debug.Assert(buffer != IntPtr.Zero);
+                                    UnsafeUtility.MemCpy(buffer + (int)stateOffset, statePtr, stateSize);
+                                }
                             }
 
                             ++device.m_StateChangeCount; ////REVIEW: is this really useful?
@@ -1217,8 +1221,6 @@ namespace ISX
                      m_CurrentFixedUpdateCount == m_CurrentDynamicUpdateCount - 1 &&
                      device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
             {
-                Debug.Log($"Flipping device {device.name} in both fixed and dynamic {m_CurrentFixedUpdateCount}");
-
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
 
@@ -1230,8 +1232,6 @@ namespace ISX
             else if (updateType == NativeInputUpdateType.Dynamic &&
                      device.m_LastDynamicUpdate != m_CurrentDynamicUpdateCount)
             {
-                Debug.Log($"Flipping device {device.name} in dynamic {m_CurrentDynamicUpdateCount}");
-
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
             }
@@ -1239,8 +1239,6 @@ namespace ISX
             else if (updateType == NativeInputUpdateType.Fixed &&
                      device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
             {
-                Debug.Log($"Flipping device {device.name} in fixed {m_CurrentFixedUpdateCount}");
-
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
                 device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
             }
