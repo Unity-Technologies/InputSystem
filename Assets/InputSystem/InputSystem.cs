@@ -54,7 +54,7 @@ namespace ISX
             return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
-        public static List<string> ListTemplates()
+        public static IEnumerable<string> ListTemplates()
         {
             throw new NotImplementedException();
         }
@@ -271,6 +271,11 @@ namespace ISX
         public static Type TryGetModifier(string name)
         {
             return s_Manager.TryGetModifier(name);
+        }
+
+        public static IEnumerable<string> ListModifiers()
+        {
+            return s_Manager.ListModifiers();
         }
 
         // Return a list of all the actions that are currently enabled in the system.

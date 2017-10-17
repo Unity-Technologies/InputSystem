@@ -115,5 +115,15 @@ namespace ISX
 
             return merged.ToArray();
         }
+
+        public static void Erase<TValue>(ref TValue[] array, int index)
+        {
+            var length = array.Length;
+
+            if (index < length - 1)
+                Array.Copy(array, index + 1, array, index, length - index - 1);
+
+            Array.Resize(ref array, length - 1);
+        }
     }
 }

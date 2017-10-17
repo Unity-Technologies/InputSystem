@@ -201,7 +201,7 @@ namespace ISX
             var firstModifierIndex = modifiers?.Count ?? 0;
 
             ////TODO: get rid of the extra array allocations here
-            var list = InputTemplate.ParseProcessors(modifierString);
+            var list = InputTemplate.ParseNameAndParameterList(modifierString);
             for (var i = 0; i < list.Length; ++i)
             {
                 // Look up modifier.

@@ -59,12 +59,42 @@ namespace ISX
                     return 0;
                 }
             }
+
+            public override string ToString()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            if (*((bool*)ptr))
+                                return name;
+                            return $"{name}=false";
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return $"{name}={intValue}";
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return $"{name}={floatValue}";
+                    }
+                }
+
+                return string.Empty;
+            }
         }
 
-        public struct Processor
+        public struct NameAndParameters
         {
             public string name;
             public ReadOnlyArray<ParameterValue> parameters;
+
+            public override string ToString()
+            {
+                if (parameters.Count == 0)
+                    return name;
+                var parameterString = string.Join(",", parameters.Select(x => x.ToString()));
+                return $"name({parameterString})";
+            }
         }
 
         ////TODO: need to figure out how to handle the root control; ATM the ControlTemplates always represent children
@@ -83,7 +113,7 @@ namespace ISX
             public ReadOnlyArray<ParameterValue> parameters;
             public ReadOnlyArray<string> usages;
             public ReadOnlyArray<string> aliases;
-            public ReadOnlyArray<Processor> processors;
+            public ReadOnlyArray<NameAndParameters> processors;
             public uint offset;
             public uint bit;
             public uint sizeInBits;
@@ -380,58 +410,58 @@ namespace ISX
             };
         }
 
-        internal static Processor[] ParseProcessors(string processorString)
+        internal static NameAndParameters[] ParseNameAndParameterList(string text)
         {
-            processorString = processorString.Trim();
-            if (string.IsNullOrEmpty(processorString))
+            text = text.Trim();
+            if (string.IsNullOrEmpty(text))
                 return null;
 
-            var list = new List<Processor>();
+            var list = new List<NameAndParameters>();
 
             var index = 0;
-            var processorStringLength = processorString.Length;
+            var textLength = text.Length;
 
-            while (index < processorStringLength)
+            while (index < textLength)
             {
                 // Skip whitespace.
-                while (index < processorStringLength && char.IsWhiteSpace(processorString[index]))
+                while (index < textLength && char.IsWhiteSpace(text[index]))
                     ++index;
 
                 // Parse name.
                 var nameStart = index;
-                while (index < processorStringLength)
+                while (index < textLength)
                 {
-                    var nextChar = processorString[index];
+                    var nextChar = text[index];
                     if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
                         break;
                     ++index;
                 }
                 if (index - nameStart == 0)
-                    throw new Exception($"Expecting name at position {nameStart} in '{processorString}'");
-                var name = processorString.Substring(nameStart, index - nameStart);
+                    throw new Exception($"Expecting name at position {nameStart} in '{text}'");
+                var name = text.Substring(nameStart, index - nameStart);
 
                 // Skip whitespace.
-                while (index < processorStringLength && char.IsWhiteSpace(processorString[index]))
+                while (index < textLength && char.IsWhiteSpace(text[index]))
                     ++index;
 
                 // Parse parameters.
                 ParameterValue[] parameters = null;
-                if (index < processorStringLength && processorString[index] == '(')
+                if (index < textLength && text[index] == '(')
                 {
                     ++index;
-                    var closeParenIndex = processorString.IndexOf(')', index);
+                    var closeParenIndex = text.IndexOf(')', index);
                     if (closeParenIndex == -1)
-                        throw new Exception($"Expecting ')' after '(' at position {index} in '{processorString}'");
+                        throw new Exception($"Expecting ')' after '(' at position {index} in '{text}'");
 
-                    var parameterString = processorString.Substring(index, closeParenIndex - index);
+                    var parameterString = text.Substring(index, closeParenIndex - index);
                     parameters = ParseParameters(parameterString);
                     index = closeParenIndex + 1;
                 }
 
-                if (index < processorStringLength && processorString[index] == ',')
+                if (index < textLength && text[index] == ',')
                     ++index;
 
-                list.Add(new Processor { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
+                list.Add(new NameAndParameters { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
             }
 
             return list.ToArray();
@@ -818,7 +848,7 @@ namespace ISX
                     template.parameters = new ReadOnlyArray<ParameterValue>(ParseParameters(parameters));
 
                 if (!string.IsNullOrEmpty(processors))
-                    template.processors = new ReadOnlyArray<Processor>(ParseProcessors(processors));
+                    template.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
 
                 return template;
             }

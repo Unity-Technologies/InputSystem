@@ -19,7 +19,7 @@ namespace ISX
     // a path string as a result and store it in the given "path" property.
     //
     // At the moment, the interface is pretty simplistic. You can either select a usage
-    // or select a specific control on a specific template.
+    // or select a specific control on a specific base device template.
     //
     // Usages are discovered from all templates that are registered with the system.
     public class InputBindingPathSelector : PopupWindowContent
@@ -204,7 +204,7 @@ namespace ISX
                         depth = 1,
                         displayName = controlPath
                     };
-                    m_Items.Add(new Item { device = template.name, control = controlPath });
+                    m_Items.Add(new Item { device = parent.displayName, control = controlPath });
 
                     var childTemplate = EditorInputTemplateCache.TryGetTemplate(control.template);
                     if (childTemplate != null)

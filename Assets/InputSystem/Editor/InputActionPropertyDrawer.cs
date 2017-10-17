@@ -54,6 +54,7 @@ namespace ISX
                 rect.y += kFoldoutHeight + 2;
                 rect.x += kBindingIndent;
                 rect.height = kBindingHeight;
+                rect.width -= kBindingIndent;
 
                 for (var i = 0; i < bindingsCount; ++i)
                 {
@@ -68,15 +69,17 @@ namespace ISX
                     }
 
                     var bindingRect = rect;
-                    bindingRect.x += minusButtonRect.width + 2;
-                    bindingRect.width -= minusButtonRect.width + 2;
+                    bindingRect.x += minusButtonRect.width + 15;
+                    bindingRect.width -= minusButtonRect.width + 15;
 
-                    EditorGUI.PropertyField(bindingRect, bindingsArray.GetArrayElementAtIndex(i));
+                    var currentBinding = bindingsArray.GetArrayElementAtIndex(i);
+                    EditorGUI.PropertyField(bindingRect, currentBinding);
 
                     rect.y += kBindingHeight;
                 }
 
                 rect.height = Contents.iconPlus.image.height;
+                rect.width = Contents.iconPlus.image.width;
                 if (GUI.Button(rect, Contents.iconPlus, GUIStyle.none))
                 {
                     bindingsArray.InsertArrayElementAtIndex(bindingsCount);

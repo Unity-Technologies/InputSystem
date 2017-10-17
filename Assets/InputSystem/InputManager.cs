@@ -269,6 +269,11 @@ namespace ISX
             return null;
         }
 
+        public IEnumerable<string> ListModifiers()
+        {
+            return m_Modifiers.Keys;
+        }
+
         // Processes a path specification that may match more than a single control.
         // Adds all controls that match to the given list.
         // Returns true if at least one control was matched.
