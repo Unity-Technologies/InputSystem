@@ -235,7 +235,11 @@ namespace ISX
             // template values.
             try
             {
-                AddChildControls(template, control);
+                // Pass list of existing control on to function as we may have decided to not
+                // actually reuse the existing control (and thus control.m_ChildrenReadOnly will
+                // now be blank) but still want crawling down the hierarchy to preserve existing
+                // controls where possible.
+                AddChildControls(template, control, existingControl?.m_ChildrenReadOnly);
             }
             catch
             {
@@ -250,7 +254,7 @@ namespace ISX
             return control;
         }
 
-        private void AddChildControls(InputTemplate template, InputControl parent)
+        private void AddChildControls(InputTemplate template, InputControl parent, ReadOnlyArray<InputControl>? existingChildren)
         {
             var controlTemplates = template.m_Controls;
             if (controlTemplates == null)
@@ -288,14 +292,18 @@ namespace ISX
 
                 // See if we have an existing control that we might be able to re-use.
                 InputControl existingControl = null;
-                for (var n = 0; n < parent.m_ChildrenReadOnly.Count; ++n)
+                if (existingChildren != null)
                 {
-                    var existingChild = parent.m_ChildrenReadOnly[n];
-                    if (existingChild.template == controlTemplate.template
-                        && existingChild.name.ToLower() == controlTemplate.name.ToLower())
+                    var existingChildCount = existingChildren.Value.Count;
+                    for (var n = 0; n < existingChildCount; ++n)
                     {
-                        existingControl = existingChild;
-                        break;
+                        var existingChild = existingChildren.Value[n];
+                        if (existingChild.template == controlTemplate.template
+                            && existingChild.name.ToLower() == controlTemplate.name.ToLower())
+                        {
+                            existingControl = existingChild;
+                            break;
+                        }
                     }
                 }
 

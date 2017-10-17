@@ -504,7 +504,41 @@ public class FunctionalTests
     [Category("Devices")]
     public void Devices_CanChangeDeviceTypeAfterCreation()
     {
-        Assert.Fail();
+        // Device template for a generic InputDevice.
+        const string initialJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    { ""name"" : ""buttonSouth"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(initialJson);
+
+        // Create initial version of device.
+        var initialSetup = new InputControlSetup("MyDevice");
+        var initialButton = initialSetup.GetControl<ButtonControl>("buttonSouth");
+        var initialDevice = initialSetup.Finish();
+
+        // Change template to now be a gamepad.
+        const string modifiedJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+        InputSystem.RegisterTemplate(modifiedJson);
+
+        // Modify device.
+        var modifiedSetup = new InputControlSetup("MyDevice", existingDevice: initialDevice);
+        var modifiedButton = modifiedSetup.GetControl<ButtonControl>("buttonSouth");
+        var modifiedDevice = modifiedSetup.Finish();
+
+        Assert.That(modifiedDevice, Is.Not.SameAs(initialDevice));
+        Assert.That(modifiedDevice, Is.TypeOf<Gamepad>());
+        Assert.That(initialDevice, Is.TypeOf<InputDevice>());
+        Assert.That(modifiedButton, Is.SameAs(initialButton)); // Button survives.
     }
 
     [Test]
