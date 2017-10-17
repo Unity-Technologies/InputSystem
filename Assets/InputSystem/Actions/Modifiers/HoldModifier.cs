@@ -10,7 +10,7 @@ namespace ISX
         private double m_TimePressed;
         private InputControl m_PressedControl;
 
-        public void Process(ref InputAction.Context context)
+        public void Process(ref InputAction.ModifierContext context)
         {
             if (context.timerHasExpired)
             {

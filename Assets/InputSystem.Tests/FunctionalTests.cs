@@ -28,6 +28,10 @@ public class FunctionalTests
         // none of the native devices.
         InputSystem.Reset();
 
+        // Make sure we're not affected by the user giving focus away from the
+        // game view.
+        InputConfiguration.LockInputToGame = true;
+
         if (InputSystem.devices.Count > 0)
             Assert.Fail("Input system should not have devices after reset");
     }
@@ -298,7 +302,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
+    public void Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
     {
         // Create a device hiearchy and then replace the base template. We can't easily use
         // the gamepad (or something similar) as a base template as it will use the Gamepad
@@ -430,6 +434,80 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
+    public void Devices_CanCreateDeviceFromTemplateVariant()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CannotChangeSetupOfDeviceWhileAddedToSystem()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+
+        Assert.That(() => new InputControlSetup("Keyboard", device), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanChangeControlSetupAfterCreation()
+    {
+        const string initialJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""template"" : ""Button"" },
+                    { ""name"" : ""second"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(initialJson);
+
+        // Create initial version of device.
+        var initialSetup = new InputControlSetup("MyDevice");
+        var initialFirstControl = initialSetup.GetControl("first");
+        var initialSecondControl = initialSetup.GetControl("second");
+        var initialDevice = initialSetup.Finish();
+
+        // Change template.
+        const string modifiedJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""template"" : ""Button"" },
+                    { ""name"" : ""second"", ""template"" : ""Axis"" },
+                    { ""name"" : ""third"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+        InputSystem.RegisterTemplate(modifiedJson);
+
+        // Modify device.
+        var modifiedSetup = new InputControlSetup("MyDevice", existingDevice: initialDevice);
+        var modifiedFirstControl = modifiedSetup.GetControl("first");
+        var modifiedSecondControl = modifiedSetup.GetControl("second");
+        var modifiedThirdControl = modifiedSetup.GetControl("third");
+        var modifiedDevice = modifiedSetup.Finish();
+
+        Assert.That(modifiedDevice, Is.SameAs(initialDevice));
+        Assert.That(modifiedFirstControl, Is.SameAs(initialFirstControl));
+        Assert.That(initialFirstControl, Is.TypeOf<ButtonControl>());
+        Assert.That(modifiedSecondControl, Is.Not.SameAs(initialSecondControl));
+        Assert.That(initialSecondControl, Is.TypeOf<ButtonControl>());
+        Assert.That(modifiedSecondControl, Is.TypeOf<AxisControl>());
+        Assert.That(modifiedThirdControl, Is.TypeOf<ButtonControl>());
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanChangeDeviceTypeAfterCreation()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsInSetupByPath()
     {
@@ -548,14 +626,14 @@ public class FunctionalTests
 
         var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
 
-        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMin));
-        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMax));
+        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
+        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
 
-        InputConfiguration.DefaultDeadzoneMin = InputConfiguration.DefaultDeadzoneMin + 0.1f;
-        InputConfiguration.DefaultDeadzoneMax = InputConfiguration.DefaultDeadzoneMin - 0.1f;
+        InputConfiguration.DeadzoneMin = InputConfiguration.DeadzoneMin + 0.1f;
+        InputConfiguration.DeadzoneMax = InputConfiguration.DeadzoneMin - 0.1f;
 
-        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMin));
-        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DefaultDeadzoneMax));
+        Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
+        Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
     }
 
     [Test]
@@ -1879,11 +1957,11 @@ public class FunctionalTests
 
         var action = new InputAction(binding: "/gamepad/leftStick");
         action.performed +=
-            (a, c) =>
+            ctx =>
             {
                 ++receivedCalls;
-                receivedAction = a;
-                receivedControl = c;
+                receivedAction = ctx.action;
+                receivedControl = ctx.control;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
             };
@@ -1915,10 +1993,10 @@ public class FunctionalTests
 
         var action = new InputAction(binding: "/gamepad");
         action.performed +=
-            (a, c) =>
+            ctx =>
             {
                 ++receivedCalls;
-                receivedControl = c;
+                receivedControl = ctx.control;
             };
         action.Enable();
 
@@ -1944,7 +2022,7 @@ public class FunctionalTests
 
         var receivedCalls = 0;
         action.performed +=
-            (a, c) =>
+            ctx =>
             {
                 ++receivedCalls;
             };
@@ -1977,20 +2055,20 @@ public class FunctionalTests
 
         var action = new InputAction(binding: "/gamepad/{primaryAction}", modifiers: "hold(duration=0.4)");
         action.performed +=
-            (a, c) =>
+            ctx =>
             {
                 ++performedReceivedCalls;
-                performedAction = a;
-                performedControl = c;
+                performedAction = ctx.action;
+                performedControl = ctx.control;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
             };
         action.started +=
-            (a, c) =>
+            ctx =>
             {
                 ++startedReceivedCalls;
-                startedAction = a;
-                startedControl = c;
+                startedAction = ctx.action;
+                startedControl = ctx.control;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
             };
@@ -2034,20 +2112,20 @@ public class FunctionalTests
 
         var action = new InputAction(binding: "/gamepad/{primaryAction}", modifiers: "tap");
         action.performed +=
-            (a, c) =>
+            ctx =>
             {
                 ++performedReceivedCalls;
-                performedAction = a;
-                performedControl = c;
+                performedAction = ctx.action;
+                performedControl = ctx.control;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
             };
         action.started +=
-            (a, c) =>
+            ctx =>
             {
                 ++startedReceivedCalls;
-                startedAction = a;
-                startedControl = c;
+                startedAction = ctx.action;
+                startedControl = ctx.control;
 
                 Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
             };
@@ -2148,10 +2226,10 @@ public class FunctionalTests
         InputControl performedControl = null;
 
         action.performed +=
-            (a, c) =>
+            ctx =>
             {
                 ++performedReceivedCalls;
-                performedControl = c;
+                performedControl = ctx.control;
             };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f)});
@@ -2211,7 +2289,7 @@ public class FunctionalTests
 
         public static bool s_GotInvoked;
 
-        public void Process(ref InputAction.Context context)
+        public void Process(ref InputAction.ModifierContext context)
         {
             Assert.That(parm1, Is.EqualTo(5.0).Within(0.000001));
             s_GotInvoked = true;
@@ -2243,7 +2321,7 @@ public class FunctionalTests
     [Category("Actions")]
     public void TODO_Actions_CanDistinguishTapAndSlowTapOnSameAction()
     {
-        // Actions can have more than one modifier. Depending on the interaction happening on the bound
+        // Bindings can have more than one modifier. Depending on the interaction happening on the bound
         // controls one of the modifiers may initiate a phase shift and which modifier initiated the
         // shift is visible on the callback.
         //
@@ -2258,7 +2336,31 @@ public class FunctionalTests
                 modifiers: "tap(duration=0.1),slowTap(duration=0.5)");
         action.Enable();
 
-        ////TODO
+        action.performed +=
+            ctx =>
+            {
+                ////TODO
+            };
+
+        // Perform tap.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 0.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << 0}, InputConfiguration.TapTime - 0.0001);
+        InputSystem.Update();
+
+        // Perform slow tap.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 2.0);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << 0}, 2.0 + InputConfiguration.SlowTapTime + 0.0001);
+        InputSystem.Update();
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanPerformContinuousActionOnAxis()
+    {
+        //set up action that goes to a continuous axis instead of a button
+        //make sure we can respond to the value changes in a proper way
         Assert.Fail();
     }
 

@@ -9,7 +9,7 @@ namespace ISX
     // Modifiers can be stateful and mutate state over time.
     public interface IInputActionModifier
     {
-        void Process(ref InputAction.Context context);
+        void Process(ref InputAction.ModifierContext context);
         void Reset();
     }
 }

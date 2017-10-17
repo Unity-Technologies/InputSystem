@@ -143,7 +143,7 @@ namespace ISX
             {
                 var device = m_Devices[i];
 
-                var usesTemplate = false;
+                bool usesTemplate;
                 if (isKnownToBeDeviceTemplate)
                     usesTemplate = IsControlUsingTemplate(device, templateLowerCase);
                 else
@@ -582,6 +582,7 @@ namespace ISX
             RegisterTemplate("Pose", typeof(PoseControl));
             RegisterTemplate("Stick", typeof(StickControl));
             RegisterTemplate("Dpad", typeof(DpadControl));
+            RegisterTemplate("Pointer", typeof(PointerControl));
 
             RegisterTemplate("Motor", typeof(MotorControl)); // Outputs.
 
@@ -909,11 +910,13 @@ namespace ISX
             else if (updateType == NativeInputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
 
+            ////FIXME: this messes up test runs if you happen to focus away from the game view
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
             // of the other editor windows has focus, we route input to edit mode buffers.
 #if UNITY_EDITOR
-            var gameIsPlayingAndHasFocus = UnityEditor.EditorApplication.isPlaying && Application.isFocused;
+            var gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
+                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
 #endif
 
             // Before render updates work in a special way. For them, we only want specific devices (and

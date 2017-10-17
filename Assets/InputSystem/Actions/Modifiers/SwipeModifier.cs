@@ -7,7 +7,7 @@ namespace ISX
         public float angle;
         public float minDistance;
 
-        public void Process(ref InputAction.Context context)
+        public void Process(ref InputAction.ModifierContext context)
         {
             throw new System.NotImplementedException();
         }

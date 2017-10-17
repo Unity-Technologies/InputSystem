@@ -54,6 +54,14 @@ namespace ISX
             return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
+        // Switch all the controls in the given hierarchy that use 'oldTemplate' (either directly or as
+        // a base template) to use 'newTemplate' instead.
+        public static void SwitchTemplate(InputControl control, string oldTemplate, string newTemplate)
+        {
+            ////REVIEW: to make this happen, we'd need to create permanent template variants with the substitutions
+            throw new NotImplementedException();
+        }
+
         public static IEnumerable<string> ListTemplates()
         {
             throw new NotImplementedException();

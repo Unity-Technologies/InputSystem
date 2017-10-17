@@ -30,6 +30,7 @@ namespace ISX
             }
         }
 
+        ////TODO: add variant that goes along with template and can modify it
         // Template the control is based on.
         // We store the name rather than reference the InputTemplate as we want
         // to avoid allocating those objects except where necessary.

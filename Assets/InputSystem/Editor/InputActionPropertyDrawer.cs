@@ -32,7 +32,8 @@ namespace ISX
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            ////TODO: set name on action if not set (infer from property name of action)
+            // If the action has no name, infer it from the name of the action property.
+            SetActionNameIfNotSet(property);
 
             var foldoutRect = position;
             foldoutRect.height = kFoldoutHeight;
@@ -88,6 +89,21 @@ namespace ISX
             }
 
             EditorGUI.EndProperty();
+        }
+
+        private void SetActionNameIfNotSet(SerializedProperty actionProperty)
+        {
+            var nameProperty = actionProperty.FindPropertyRelative("m_Name");
+            if (!string.IsNullOrEmpty(nameProperty.stringValue))
+                return;
+
+            var name = actionProperty.displayName;
+            if (name.EndsWith(" Action"))
+                name = name.Substring(0, name.Length - " Action".Length);
+
+            nameProperty.stringValue = name;
+            // Don't apply. Let's apply it as a side-effect whenever something about
+            // the action in the UI is changed.
         }
 
         public static class Contents

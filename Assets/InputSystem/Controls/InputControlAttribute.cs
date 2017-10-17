@@ -11,6 +11,7 @@ namespace ISX
     public class InputControlAttribute : Attribute
     {
         public string template;
+        public string variant;
         public string name;
         public string format;
         public string usage;

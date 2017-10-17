@@ -11,7 +11,7 @@ namespace ISX
 {
     // Allows looking at input activity in the editor.
     // Can display either local input in editor or input activity in connected player or both.
-    internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
+    internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IHasCustomMenu
     {
         private static InputDebuggerWindow s_Instance;
 
@@ -44,6 +44,16 @@ namespace ISX
         public void OnDestroy()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
+        }
+
+        public void AddItemsToMenu(GenericMenu menu)
+        {
+            menu.AddItem(Contents.lockInputToGameContent, InputConfiguration.LockInputToGame, ToggleLockInputToGame);
+        }
+
+        private void ToggleLockInputToGame()
+        {
+            InputConfiguration.LockInputToGame = !InputConfiguration.LockInputToGame;
         }
 
         public void OnGUI()
@@ -191,6 +201,7 @@ namespace ISX
             public static GUIContent unrecognizedDevicesContent = new GUIContent("Unrecognized Devices");
             public static GUIContent showUnrecognizedDevicesContent = new GUIContent("Show Unrecognized Devices");
             public static GUIContent showDisconnectedDevicesContent = new GUIContent("Show Disconnected Devices");
+            public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

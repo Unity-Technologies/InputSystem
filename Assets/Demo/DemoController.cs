@@ -27,9 +27,9 @@ public class DemoController : MonoBehaviour
         ////TODO: ideally should have a way to get values from controls without having to make assumptions about
         ////      what kind of control sits behind the binding
 
-        lookAction.performed += (action, control) => m_Look = ((Vector2Control)control).value;
-        walkAction.performed += (action, control) => m_Walk = ((Vector2Control)control).value;
-        fireAction.performed += (action, control) => Fire();
+        lookAction.performed += ctx => m_Look = ((Vector2Control)ctx.control).value;
+        walkAction.performed += ctx => m_Walk = ((Vector2Control)ctx.control).value;
+        fireAction.performed += ctx => Fire();
     }
 
     public void OnEnable()

@@ -159,6 +159,8 @@ namespace ISX
                 };
                 m_Items.Add(new Item());
 
+                ////TODO: filter out usages for output controls
+
                 foreach (var usage in EditorInputTemplateCache.allUsages)
                 {
                     var child = new TreeViewItem
@@ -192,6 +194,7 @@ namespace ISX
 
             private void BuildControlsRecursive(TreeViewItem parent, InputTemplate template, string prefix, ref int id)
             {
+                ////TODO: filter out output controls
                 foreach (var control in template.controls)
                 {
                     if (control.isModifyingChildControlByPath)

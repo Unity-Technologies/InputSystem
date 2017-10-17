@@ -5,10 +5,7 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct TrackingState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('T', 'R', 'A', 'K'); }
-        }
+        public static FourCC kFormat => new FourCC('T', 'R', 'A', 'K');
 
         [InputControl] public Pose pose;
 
@@ -21,10 +18,7 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct HMDState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('H', 'E', 'A', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('H', 'E', 'A', 'D');
 
         public TrackingState head;
 
@@ -52,10 +46,7 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct XRControllerState
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('C', 'T', 'R', 'L'); }
-        }
+        public static FourCC kFormat => new FourCC('C', 'T', 'R', 'L');
 
         [InputControl] public Pose pose;
     }
@@ -64,5 +55,14 @@ namespace ISX
     [InputState(typeof(XRControllerState))]
     public class XRController : TrackedDevice
     {
+        public static XRController leftHand { get; private set; }
+        public static XRController rightHand { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+
+            //check usages and set leftHand or rightHand (or none if none applies)
+        }
     }
 }

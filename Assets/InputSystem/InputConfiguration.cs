@@ -5,10 +5,10 @@ namespace ISX
     public static class InputConfiguration
     {
         // Default value used when nothing is set explicitly on DeadzoneProcessor.min.
-        public static float DefaultDeadzoneMin = 0.125f;
+        public static float DeadzoneMin = 0.125f;
 
         // Default value used when nothing is set explicitly on DeadzoneProcessor.max.
-        public static float DefaultDeadzoneMax = 0.925f;
+        public static float DeadzoneMax = 0.925f;
 
         // If a button is stored as anything but a bit, this is the threshold the value
         // of the button has to cross in order for the button to be considered pressed.
@@ -26,39 +26,55 @@ namespace ISX
         // How long does a button have to be held for it to be considered a hold?
         public static float HoldTime = 0.4f;
 
+        #if UNITY_EDITOR
+        // We support input in edit mode as well. If the editor is in play mode and the game view
+        // has focus, input goes to the game. Otherwise input goes to the editor. This behavior can
+        // be annoying so this switch allows to route input exclusively to the game.
+        public static bool LockInputToGame;
+        #endif
+
         internal struct SerializedState
         {
-            public float defaultDeadzoneMin;
-            public float defaultDeadzoneMax;
+            public float deadzoneMin;
+            public float deadzoneMax;
             public float buttonPressPoint;
             public float tapTime;
             public float slowTapTime;
             public float multiTapMaximumDelay;
             public float holdTime;
+            #if UNITY_EDITOR
+            public bool lockInputToGame;
+            #endif
         }
 
         internal static SerializedState Save()
         {
             return new SerializedState
             {
-                defaultDeadzoneMin = DefaultDeadzoneMin,
-                defaultDeadzoneMax = DefaultDeadzoneMax,
+                deadzoneMin = DeadzoneMin,
+                deadzoneMax = DeadzoneMax,
                 buttonPressPoint = ButtonPressPoint,
                 tapTime = TapTime,
                 slowTapTime = SlowTapTime,
                 multiTapMaximumDelay = MultiTapMaximumDelay,
-                holdTime = HoldTime
+                holdTime = HoldTime,
+                #if UNITY_EDITOR
+                lockInputToGame = LockInputToGame
+                #endif
             };
         }
 
         internal static void Restore(SerializedState state)
         {
-            DefaultDeadzoneMin = state.defaultDeadzoneMin;
-            DefaultDeadzoneMax = state.defaultDeadzoneMax;
+            DeadzoneMin = state.deadzoneMin;
+            DeadzoneMax = state.deadzoneMax;
             TapTime = state.tapTime;
             SlowTapTime = state.slowTapTime;
             MultiTapMaximumDelay = state.multiTapMaximumDelay;
             HoldTime = state.holdTime;
+            #if UNITY_EDITOR
+            LockInputToGame = state.lockInputToGame;
+#endif
         }
     }
 }

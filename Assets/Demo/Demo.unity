@@ -215,7 +215,7 @@ MonoBehaviour:
   fireAction:
     m_Name: 
     m_Bindings:
-    - path: <gamepad>/buttonNorth
+    - path: '*/{primarytrigger}'
       modifiers: 
       processors: 
       flags: 0
@@ -223,12 +223,20 @@ MonoBehaviour:
     m_BindingsCount: 0
   lookAction:
     m_Name: 
-    m_Bindings: []
+    m_Bindings:
+    - path: '*/{secondarystick}'
+      modifiers: 
+      processors: 
+      flags: 0
     m_BindingsStartIndex: 0
     m_BindingsCount: 0
   walkAction:
     m_Name: 
-    m_Bindings: []
+    m_Bindings:
+    - path: '*/{primarystick}'
+      modifiers: 
+      processors: 
+      flags: 0
     m_BindingsStartIndex: 0
     m_BindingsCount: 0
 --- !u!81 &919824550

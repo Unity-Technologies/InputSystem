@@ -31,6 +31,7 @@ namespace ISX
         public int buttons;
 
         [InputControl(template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
+        //[InputControl(variant = "Lefty", template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
         public Vector2 leftStick;
         [InputControl(template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
         public Vector2 rightStick;

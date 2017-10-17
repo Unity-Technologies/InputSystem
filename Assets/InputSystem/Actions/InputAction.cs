@@ -5,8 +5,8 @@ using UnityEngine;
 
 namespace ISX
 {
-    ////REVIEW: omit InputControl fro the callback and have users use InputAction.lastSource?
-    using ActionListener = Action<InputAction, InputControl>;
+    ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas
+    public delegate void InputActionListener(InputAction.CallbackContext context);
 
     // A named input signal that can flexibly decide which input data to tap.
     // Unlike controls, actions signal value *changes* rather than the values themselves.
@@ -68,15 +68,13 @@ namespace ISX
 
         ////REVIEW: have single delegate that just gives you an InputAction and you get the control and phase from the action?
 
-        ////REVIEW: pass Context or Context-like struct to action listeners?
-
-        public event ActionListener started
+        public event InputActionListener started
         {
             add { m_OnStarted.Append(value); }
             remove { m_OnStarted.Remove(value); }
         }
 
-        public event ActionListener cancelled
+        public event InputActionListener cancelled
         {
             add { m_OnCancelled.Append(value); }
             remove { m_OnCancelled.Remove(value); }
@@ -85,7 +83,7 @@ namespace ISX
         // Listeners that are called when the action has been fully performed.
         // Passes along the control that triggered the state change and the action
         // object iself as well.
-        public event ActionListener performed
+        public event InputActionListener performed
         {
             add { m_OnPerformed.Append(value); }
             remove { m_OnPerformed.Remove(value); }
@@ -97,7 +95,6 @@ namespace ISX
         {
         }
 
-        ////REVIEW: single modifier?
         // Construct a disabled action targeting the given sources.
         public InputAction(string name = null, string binding = null, string modifiers = null)
         {
@@ -179,9 +176,9 @@ namespace ISX
         [NonSerialized] internal InputActionSet m_ActionSet;
 
         // Listeners. No array allocations if only a single listener.
-        [NonSerialized] private InlinedArray<ActionListener> m_OnStarted;
-        [NonSerialized] private InlinedArray<ActionListener> m_OnCancelled;
-        [NonSerialized] private InlinedArray<ActionListener> m_OnPerformed;
+        [NonSerialized] private InlinedArray<InputActionListener> m_OnStarted;
+        [NonSerialized] private InlinedArray<InputActionListener> m_OnCancelled;
+        [NonSerialized] private InlinedArray<InputActionListener> m_OnPerformed;
 
         // State we keep for enabling/disabling. This is volatile and not put on disk.
         [NonSerialized] internal bool m_Enabled;
@@ -222,16 +219,20 @@ namespace ISX
             }
         }
 
-        private void CallListeners(ref InlinedArray<ActionListener> listeners, InputControl triggerControl)
+        private void CallListeners(ref InlinedArray<InputActionListener> listeners, InputControl triggerControl)
         {
             if (listeners.firstValue == null)
                 return;
 
-            listeners.firstValue(this, triggerControl);
+            var context = new CallbackContext();
+            context.m_Action = this;
+            context.m_TriggerControl = triggerControl;
+
+            listeners.firstValue(context);
             if (listeners.additionalValues != null)
             {
                 for (var i = 0; i < listeners.additionalValues.Length; ++i)
-                    listeners.additionalValues[i](this, triggerControl);
+                    listeners.additionalValues[i](context);
             }
         }
 
@@ -248,7 +249,7 @@ namespace ISX
             var modifiers = m_ResolvedBindings[bindingIndex].modifiers;
             if (modifiers.Count > 0)
             {
-                Context context;
+                ModifierContext context;
                 context.m_Action = this;
                 context.m_TriggerControl = control;
                 context.m_Time = time;
@@ -276,7 +277,7 @@ namespace ISX
 
         internal void NotifyTimerExpired(IInputActionModifier modifier, double time)
         {
-            Context context;
+            ModifierContext context;
 
             context.m_Action = this;
             context.m_TriggerControl = null;
@@ -291,7 +292,7 @@ namespace ISX
         // Data we pass to modifiers during processing. Encapsulates all the context
         // they have access to and allows us to extend that functionality without
         // changing the IInputActionModifier interface.
-        public struct Context
+        public struct ModifierContext
         {
             // These are all set by NotifyControlValueChanged.
             internal InputAction m_Action;
@@ -334,6 +335,15 @@ namespace ISX
                 var manager = InputSystem.s_Manager;
                 manager.AddActionTimeout(m_Action, Time.time + seconds, m_CurrentModifier);
             }
+        }
+
+        public struct CallbackContext
+        {
+            internal InputAction m_Action;
+            internal InputControl m_TriggerControl;
+
+            public InputAction action => m_Action;
+            public InputControl control => m_TriggerControl;
         }
 
         public struct AddBindingSyntax

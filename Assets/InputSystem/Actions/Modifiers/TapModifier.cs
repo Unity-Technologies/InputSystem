@@ -9,7 +9,7 @@ namespace ISX
 
         private double m_TapStartTime;
 
-        public void Process(ref InputAction.Context context)
+        public void Process(ref InputAction.ModifierContext context)
         {
             if (context.isWaiting && !context.controlHasDefaultValue)
             {

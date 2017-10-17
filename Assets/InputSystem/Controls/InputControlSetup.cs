@@ -18,16 +18,24 @@ namespace ISX
     //
     // NOTE: InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
     //       use them during normal gameplay.
+    //
+    // NOTE: Running an *existing* device through another control setup is a *destructive* operation.
+    //       Existing controls may be reused while at the same time the hierarchy and even the device instance
+    //       itself may change.
     public class InputControlSetup
     {
-        public InputControlSetup(string template)
+        public InputControlSetup(string template, InputDevice existingDevice = null)
         {
-            Setup(template);
+            Setup(template, existingDevice);
         }
 
-        internal void Setup(string template)
+        internal void Setup(string template, InputDevice existingDevice)
         {
-            AddControl(template, null, null);
+            if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
+                throw new InvalidOperationException(
+                    $"Cannot modify control setup of existing device {existingDevice} while added to system.");
+
+            AddControl(template, null, null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
         }
@@ -158,23 +166,33 @@ namespace ISX
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl AddControl(string template, string name, InputControl parent)
+        private InputControl AddControl(string template, string name, InputControl parent, InputControl existingControl)
         {
             // Look up template by name.
             var templateInstance = FindOrLoadTemplate(template);
 
             // Create control hiearchy.
-            return AddControlRecursive(templateInstance, name, parent);
+            return AddControlRecursive(templateInstance, name, parent, existingControl);
         }
 
-        private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent)
+        private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent, InputControl existingControl)
         {
-            // Create control.
-            var controlObject = Activator.CreateInstance(template.type);
-            var control = controlObject as InputControl;
-            if (control == null)
+            InputControl control = null;
+
+            // If we have an existing control, see whether it's usable.
+            if (existingControl != null && existingControl.template == template.name && existingControl.GetType() == template.type)
             {
-                throw new Exception($"Type '{template.type.Name}' referenced by template '{template.name}' is not an InputControl");
+                control = existingControl;
+            }
+            else
+            {
+                // No, so create a new control.
+                var controlObject = Activator.CreateInstance(template.type);
+                control = controlObject as InputControl;
+                if (control == null)
+                {
+                    throw new Exception($"Type '{template.type.Name}' referenced by template '{template.name}' is not an InputControl");
+                }
             }
 
             // If it's a device, perform some extra work specific to the control
@@ -185,15 +203,18 @@ namespace ISX
                 if (parent != null)
                     throw new Exception($"Cannot instantiate device template '{template.name}' as child of '{parent.path}'; devices must be added at root");
 
-                ////TODO: allow reusing a previously created device; this way an InputControlSetup
-                ////      can be used to adjust a device's control setup without also causing it to
-                ////      become an entirely new device
-                ////      (probably also want to retain InputControls that are the same in that case
-                ////      so that if anyone holds on to them, they still work)
-
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
                 m_Device.m_StateBlock.format = template.format;
+
+                // If we have an existing device, we'll start the various control arrays
+                // from scratch. Note that all the controls still refer to the existing
+                // arrays and so we can iterate children, for example, just fine while
+                // we are rebuilding the control hierarchy.
+                m_Device.m_AliasesForEachControl = null;
+                m_Device.m_ChildrenForEachControl = null;
+                m_Device.m_UsagesForEachControl = null;
+                m_Device.m_UsageToControl = null;
 
                 if (template.m_UpdateBeforeRender == true)
                     m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
@@ -265,7 +286,21 @@ namespace ISX
                 if (string.IsNullOrEmpty(controlTemplate.template))
                     throw new Exception($"Template has not been set on control '{controlTemplate.name}' in '{template.name}'");
 
-                var control = AddControl(controlTemplate.template, controlTemplate.name, parent);
+                // See if we have an existing control that we might be able to re-use.
+                InputControl existingControl = null;
+                for (var n = 0; n < parent.m_ChildrenReadOnly.Count; ++n)
+                {
+                    var existingChild = parent.m_ChildrenReadOnly[n];
+                    if (existingChild.template == controlTemplate.template
+                        && existingChild.name.ToLower() == controlTemplate.name.ToLower())
+                    {
+                        existingControl = existingChild;
+                        break;
+                    }
+                }
+
+                // Create control.
+                var control = AddControl(controlTemplate.template, controlTemplate.name, parent, existingControl);
 
                 // Add to array.
                 m_Device.m_ChildrenForEachControl[childIndex] = control;
