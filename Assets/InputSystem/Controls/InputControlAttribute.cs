@@ -20,6 +20,7 @@ namespace ISX
         public string processors;
         public string alias;
         public string[] aliases;
+        public string useStateFrom;
         public uint bit = InputStateBlock.kInvalidOffset;
         public uint offset = InputStateBlock.kInvalidOffset;
         public uint sizeInBits;

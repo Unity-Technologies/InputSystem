@@ -108,6 +108,8 @@ namespace ISX
             ////REVIEW: if we expose InputTemplate, the arrays in here should turn into ReadOnlyArrays
             public string name; // Can be null/empty for "root" control but only one such control may exist.
             public string template;
+            public string variant;
+            public string useStateFrom;
             ////REVIEW: maybe make this more flexible to include name + image; maybe combined string
             public string icon; ////TODO: fill this (also have InputControlSetup put it on the control)
             public ReadOnlyArray<ParameterValue> parameters;
@@ -359,8 +361,13 @@ namespace ISX
 
             // Determine format.
             var format = new FourCC();
-            if (attribute != null && !string.IsNullOrEmpty(attribute.format))
+            if (!string.IsNullOrEmpty(attribute?.format))
                 format = new FourCC(attribute.format);
+
+            // Determine variant.
+            string variant = null;
+            if (!string.IsNullOrEmpty(attribute?.variant))
+                variant = attribute.variant;
 
             // Determine offset.
             var offset = InputStateBlock.kInvalidOffset;
@@ -391,8 +398,13 @@ namespace ISX
 
             // Determine parameters.
             ParameterValue[] parameters = null;
-            if (attribute != null && !string.IsNullOrEmpty(attribute.parameters))
+            if (!string.IsNullOrEmpty(attribute?.parameters))
                 parameters = ParseParameters(attribute.parameters);
+
+            // Determine whether to use state from another control.
+            string useStateFrom = null;
+            if (!string.IsNullOrEmpty(attribute?.useStateFrom))
+                useStateFrom = attribute.useStateFrom;
 
             ////TODO: remaining template stuff
 
@@ -400,6 +412,8 @@ namespace ISX
             {
                 name = name,
                 template = template,
+                variant = variant,
+                useStateFrom = useStateFrom,
                 format = format,
                 offset = offset,
                 bit = bit,
@@ -580,15 +594,15 @@ namespace ISX
             else
             {
                 var baseControls = other.m_Controls;
-                var baseControlCount = baseControls.Length;
 
                 // Even if the counts match we don't know how many controls are in the
                 // set until we actually gone through both control lists and looked at
                 // the names.
 
                 var controls = new List<ControlTemplate>();
+                var baseControlVariants = new List<string>();
 
-                var baseControlTable = CreateLookupTableForControls(baseControls);
+                var baseControlTable = CreateLookupTableForControls(baseControls, baseControlVariants);
                 var thisControlTable = CreateLookupTableForControls(m_Controls);
 
                 // First go through every control we have in this template.
@@ -597,7 +611,7 @@ namespace ISX
                     ControlTemplate baseControlTemplate;
                     if (baseControlTable.TryGetValue(pair.Key, out baseControlTemplate))
                     {
-                        ControlTemplate mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
+                        var mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
                         controls.Add(mergedTemplate);
 
                         // Remove the entry so we don't hit it again in the pass through
@@ -606,7 +620,27 @@ namespace ISX
                     }
                     else
                     {
-                        controls.Add(pair.Value);
+                        // We may be looking at a control that is using variants on the base template but
+                        // isn't targeting a specific variant on the derived template. In that case, we
+                        // want to take each of the variants from the base template and merge them with
+                        // the control template in the derived template.
+                        var isTargetingVariants = false;
+                        foreach (var variant in baseControlVariants)
+                        {
+                            var key = $"{pair.Key}@{variant}";
+                            if (baseControlTable.TryGetValue(key, out baseControlTemplate))
+                            {
+                                var mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
+                                controls.Add(mergedTemplate);
+                                baseControlTable.Remove(key);
+                                isTargetingVariants = true;
+                            }
+                        }
+
+                        // Okay, this template isn't corresponding to anything in the base template
+                        // so just add it as is.
+                        if (!isTargetingVariants)
+                            controls.Add(pair.Value);
                     }
                 }
 
@@ -620,11 +654,22 @@ namespace ISX
         }
 
         private static Dictionary<string, ControlTemplate> CreateLookupTableForControls(
-            ControlTemplate[] controlTemplates)
+            ControlTemplate[] controlTemplates, List<string> variants = null)
         {
             var table = new Dictionary<string, ControlTemplate>();
             for (var i = 0; i < controlTemplates.Length; ++i)
-                table[controlTemplates[i].name.ToLower()] = controlTemplates[i];
+            {
+                var key = controlTemplates[i].name.ToLower();
+                // Need to take variant into account as well. Otherwise two variants for
+                // "leftStick", for example, will overwrite each other.
+                if (!string.IsNullOrEmpty(controlTemplates[i].variant))
+                {
+                    var variant = controlTemplates[i].variant.ToLower();
+                    key = $"{key}@{variant}";
+                    variants?.Add(variant);
+                }
+                table[key] = controlTemplates[i];
+            }
             return table;
         }
 
@@ -636,6 +681,8 @@ namespace ISX
             Debug.Assert(derivedTemplate.name != null);
 
             result.template = derivedTemplate.template ?? baseTemplate.template;
+            result.variant = derivedTemplate.variant ?? baseTemplate.variant;
+            result.useStateFrom = derivedTemplate.useStateFrom ?? baseTemplate.useStateFrom;
 
             if (derivedTemplate.offset != InputStateBlock.kInvalidOffset)
                 result.offset = derivedTemplate.offset;
@@ -689,7 +736,8 @@ namespace ISX
         {
             var name = controlTemplate.name;
             foreach (var existing in controlTemplates)
-                if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
+                    existing.variant == controlTemplate.variant)
                     throw new Exception($"Duplicate control '{name}' in template '{templateName}'");
         }
 
@@ -801,7 +849,9 @@ namespace ISX
 
             public string name;
             public string template;
+            public string variant;
             public string usage; // Convenince to not have to create array for single usage.
+            public string useStateFrom;
             public uint offset;
             public uint bit;
             public uint sizeInBits;
@@ -825,7 +875,9 @@ namespace ISX
                 {
                     name = name,
                     template = this.template,
+                    variant = variant,
                     offset = offset,
+                    useStateFrom = useStateFrom,
                     bit = bit,
                     sizeInBits = sizeInBits,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1

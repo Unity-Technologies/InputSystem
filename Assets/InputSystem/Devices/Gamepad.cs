@@ -30,14 +30,20 @@ namespace ISX
         [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
         public int buttons;
 
-        [InputControl(template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
-        //[InputControl(variant = "Lefty", template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
+        [InputControl(variant = "default", template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
+        [InputControl(variant = "Lefty", template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
         public Vector2 leftStick;
-        [InputControl(template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
+
+        [InputControl(variant = "default", template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
+        [InputControl(variant = "Lefty", template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
         public Vector2 rightStick;
-        [InputControl(template = "Button", format = "FLT", usage = "SecondaryTrigger")]
+
+        [InputControl(variant = "default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
         public float leftTrigger;
-        [InputControl(template = "Button", format = "FLT", usage = "PrimaryTrigger")]
+
+        [InputControl(variant = "default", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
         public float rightTrigger;
 
         public GamepadOutputState motors;

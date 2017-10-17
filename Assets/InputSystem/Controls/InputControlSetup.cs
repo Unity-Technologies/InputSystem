@@ -24,18 +24,23 @@ namespace ISX
     //       itself may change.
     public class InputControlSetup
     {
-        public InputControlSetup(string template, InputDevice existingDevice = null)
+        public InputControlSetup(string template, InputDevice existingDevice = null, string variant = null)
         {
-            Setup(template, existingDevice);
+            Setup(template, existingDevice, variant);
         }
 
-        internal void Setup(string template, InputDevice existingDevice)
+        internal void Setup(string template, InputDevice existingDevice, string variant)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
                     $"Cannot modify control setup of existing device {existingDevice} while added to system.");
 
-            AddControl(template, null, null, existingDevice);
+            if (string.IsNullOrEmpty(variant))
+                variant = "default";
+            else
+                variant = variant.ToLower();
+
+            AddControl(template, variant, null, null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
         }
@@ -73,6 +78,9 @@ namespace ISX
                 if (match != null)
                     return match;
             }
+
+            if (ReferenceEquals(parent, m_Device))
+                return PathHelpers.FindControl(m_Device, $"{m_Device.name}/{path}");
 
             return null;
         }
@@ -166,18 +174,18 @@ namespace ISX
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl AddControl(string template, string name, InputControl parent, InputControl existingControl)
+        private InputControl AddControl(string template, string variant, string name, InputControl parent, InputControl existingControl)
         {
             // Look up template by name.
             var templateInstance = FindOrLoadTemplate(template);
 
             // Create control hiearchy.
-            return AddControlRecursive(templateInstance, name, parent, existingControl);
+            return AddControlRecursive(templateInstance, variant, name, parent, existingControl);
         }
 
-        private InputControl AddControlRecursive(InputTemplate template, string name, InputControl parent, InputControl existingControl)
+        private InputControl AddControlRecursive(InputTemplate template, string variant, string name, InputControl parent, InputControl existingControl)
         {
-            InputControl control = null;
+            InputControl control;
 
             // If we have an existing control, see whether it's usable.
             if (existingControl != null && existingControl.template == template.name && existingControl.GetType() == template.type)
@@ -239,7 +247,7 @@ namespace ISX
                 // actually reuse the existing control (and thus control.m_ChildrenReadOnly will
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
-                AddChildControls(template, control, existingControl?.m_ChildrenReadOnly);
+                AddChildControls(template, variant, control, existingControl?.m_ChildrenReadOnly);
             }
             catch
             {
@@ -254,7 +262,7 @@ namespace ISX
             return control;
         }
 
-        private void AddChildControls(InputTemplate template, InputControl parent, ReadOnlyArray<InputControl>? existingChildren)
+        private void AddChildControls(InputTemplate template, string variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren)
         {
             var controlTemplates = template.m_Controls;
             if (controlTemplates == null)
@@ -265,10 +273,20 @@ namespace ISX
             var haveControlTemplateWithPath = false;
             for (var i = 0; i < controlTemplates.Length; ++i)
             {
-                if (!controlTemplates[i].isModifyingChildControlByPath)
-                    ++childCount;
-                else
+                // Not a new child if it's a template reaching in to the hierarchy to modify
+                // an existing child.
+                if (controlTemplates[i].isModifyingChildControlByPath)
+                {
                     haveControlTemplateWithPath = true;
+                    continue;
+                }
+
+                // Skip if variant doesn't match.
+                if (!string.IsNullOrEmpty(controlTemplates[i].variant) &&
+                    controlTemplates[i].variant.ToLower() != variant)
+                    continue;
+
+                ++childCount;
             }
 
             // Add room for us in the device's child array.
@@ -287,6 +305,12 @@ namespace ISX
                 if (controlTemplate.isModifyingChildControlByPath)
                     continue;
 
+                // If the control is part of a variant, skip it if it isn't the variant we're
+                // looking for.
+                if (!string.IsNullOrEmpty(controlTemplate.variant) && controlTemplate.variant.ToLower() != variant)
+                    continue;
+
+                ////REVIEW: can we check this in InputTemplate instead?
                 if (string.IsNullOrEmpty(controlTemplate.template))
                     throw new Exception($"Template has not been set on control '{controlTemplate.name}' in '{template.name}'");
 
@@ -308,7 +332,7 @@ namespace ISX
                 }
 
                 // Create control.
-                var control = AddControl(controlTemplate.template, controlTemplate.name, parent, existingControl);
+                var control = AddControl(controlTemplate.template, variant, controlTemplate.name, parent, existingControl);
 
                 // Add to array.
                 m_Device.m_ChildrenForEachControl[childIndex] = control;

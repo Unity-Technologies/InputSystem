@@ -344,6 +344,13 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanHaveOneControlUseStateOfAnotherControl()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
     public void TODO_Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
     {
         Assert.Fail();
@@ -437,7 +444,27 @@ public class FunctionalTests
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromTemplateVariant()
     {
-        Assert.Fail();
+        var leftyGamepadSetup = new InputControlSetup("Gamepad", variant: "Lefty");
+        var leftyGamepadPrimaryStick = leftyGamepadSetup.GetControl("{PrimaryStick}");
+        var leftyGamepadSecondaryStick = leftyGamepadSetup.GetControl("{SecondaryStick}");
+        var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
+        var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
+        //shoulder?
+
+        var defaultGamepadSetup = new InputControlSetup("Gamepad");
+        var defaultGamepadPrimaryStick = defaultGamepadSetup.GetControl("{PrimaryStick}");
+        var defaultGamepadSecondaryStick = defaultGamepadSetup.GetControl("{SecondaryStick}");
+        var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
+        var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
+
+        var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
+        var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
+
+        Assert.That(leftyGamepadPrimaryStick, Is.SameAs(leftyGamepad.rightStick));
+        Assert.That(leftyGamepadSecondaryStick, Is.SameAs(leftyGamepad.leftStick));
+
+        Assert.That(defaultGamepadPrimaryStick, Is.SameAs(defaultGamepad.leftStick));
+        Assert.That(defaultGamepadSecondaryStick, Is.SameAs(defaultGamepad.rightStick));
     }
 
     [Test]
