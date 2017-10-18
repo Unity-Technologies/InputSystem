@@ -94,13 +94,11 @@ namespace ISX
         Count = 256
     }
 
+    ////FIXME: state layout somehow comes up with a size of 8 bits for this
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('K', 'E', 'Y', 'S'); }
-        }
+        public static FourCC kFormat { get; } = new FourCC('K', 'E', 'Y', 'S');
 
         [InputControl(name = "Escape", template = "Button", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Enter)]
         [InputControl(name = "Space", template = "Button", bit = (int)Key.Space)]
@@ -181,10 +179,6 @@ namespace ISX
         public ButtonControl right { get; private set; }
 
         public static Keyboard current { get; protected set; }
-
-        public Keyboard()
-        {
-        }
 
         public override void MakeCurrent()
         {

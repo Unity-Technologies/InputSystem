@@ -54,14 +54,6 @@ namespace ISX
             return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
-        // Switch all the controls in the given hierarchy that use 'oldTemplate' (either directly or as
-        // a base template) to use 'newTemplate' instead.
-        public static void SwitchTemplate(InputControl control, string oldTemplate, string newTemplate)
-        {
-            ////REVIEW: to make this happen, we'd need to create permanent template variants with the substitutions
-            throw new NotImplementedException();
-        }
-
         public static IEnumerable<string> ListTemplates()
         {
             throw new NotImplementedException();
@@ -125,6 +117,11 @@ namespace ISX
             s_Manager.AddDevice(device);
         }
 
+        public static void RemoveDevice(InputDevice device)
+        {
+            s_Manager.RemoveDevice(device);
+        }
+
         public static InputDevice TryGetDevice(string nameOrTemplate)
         {
             return s_Manager.TryGetDevice(nameOrTemplate);
@@ -153,6 +150,13 @@ namespace ISX
 
         #endregion
 
+        #region Controls
+
+        public static void SetVariant(InputControl control, string variant)
+        {
+            throw new NotImplementedException();
+        }
+
         public static List<InputControl> GetControls(string path)
         {
             var list = new List<InputControl>();
@@ -164,6 +168,8 @@ namespace ISX
         {
             return s_Manager.GetControls(path, controls);
         }
+
+        #endregion
 
         #region Events
 

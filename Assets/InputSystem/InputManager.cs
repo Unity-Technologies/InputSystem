@@ -419,8 +419,37 @@ namespace ISX
 
         public void RemoveDevice(InputDevice device)
         {
-            //need to make sure that all actions rescan their source paths
-            throw new NotImplementedException();
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            // If device has not been added, ignore.
+            if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                return;
+
+            // Remove from device array.
+            var deviceIndex = device.m_DeviceIndex;
+            ArrayHelpers.Erase(ref m_Devices, deviceIndex);
+            var oldDeviceIndices = new int[m_Devices.Length];
+            for (var i = 0; i < m_Devices.Length; ++i)
+            {
+                oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
+                m_Devices[i].m_DeviceIndex = i;
+            }
+            m_DevicesById.Remove(device.id);
+            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
+
+            // Remove from state buffers.
+            ReallocateStateBuffers(oldDeviceIndices);
+
+            // Unbake offset into global state buffers.
+            device.BakeOffsetIntoStateBlockRecursive((uint)(-device.m_StateBlock.byteOffset));
+
+            // Let actions know.
+            InputActionSet.RefreshEnabledActions();
+
+            // Let listeners know.
+            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
         }
 
         public InputDevice TryGetDevice(string nameOrTemplate)
@@ -839,7 +868,7 @@ namespace ISX
 
         // (Re)allocates state buffers and assigns each device that's been added
         // a segment of the buffer. Preserves the current state of devices.
-        private void ReallocateStateBuffers()
+        private void ReallocateStateBuffers(int[] oldDeviceIndices = null)
         {
             var devices = m_Devices;
             var oldBuffers = m_StateBuffers;
@@ -850,7 +879,7 @@ namespace ISX
 
             ////TODO: this code will have to be extended when we allow device removals
             // Migrate state.
-            newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers, null);
+            newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
 
             // Install the new buffers.
             oldBuffers.FreeAll();

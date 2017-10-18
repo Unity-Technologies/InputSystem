@@ -1249,6 +1249,49 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanBeRemoved()
+    {
+        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad3 = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var gamepad2Offset = gamepad2.stateBlock.byteOffset;
+
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedChange = null;
+
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+            {
+                ++receivedCalls;
+                receivedDevice = device;
+                receivedChange = change;
+            };
+
+        InputSystem.RemoveDevice(gamepad2);
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
+        Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad1));
+        Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad3));
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(gamepad2));
+        Assert.That(receivedChange, Is.EqualTo(InputDeviceChange.Removed));
+        Assert.That(gamepad2.stateBlock.byteOffset, Is.EqualTo(0)); // Should have lost its offset into state buffers.
+        Assert.That(gamepad3.stateBlock.byteOffset, Is.EqualTo(gamepad2Offset)); // 3 should have moved into 2's position.
+        Assert.That(gamepad2.leftStick.stateBlock.byteOffset,
+            Is.EqualTo(UnsafeUtility.OffsetOf<GamepadState>("leftStick"))); // Should have unbaked offsets in control hierarchy.
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanBeReadded()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
     {
         var gamepad1 = InputSystem.AddDevice("Gamepad");
@@ -2425,6 +2468,21 @@ public class FunctionalTests
         Assert.Fail();
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_RemovingDeviceWillUpdateControlsOnAction()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftStick");
+        action.Enable();
+
+        Assert.That(action.controls, Contains.Item(gamepad.leftStick));
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(action.controls, Is.Empty);
+    }
+
 #if UNITY_EDITOR
     [Test]
     [Category("Editor")]
@@ -2518,14 +2576,6 @@ public class FunctionalTests
     [Test]
     [Category("Devices")]
     public void TODO_Devices_CanSwitchTemplateOfExistingDevice()
-    {
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_CanBeRemoved()
     {
         ////TODO
         Assert.Fail();

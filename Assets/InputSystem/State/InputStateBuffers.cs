@@ -337,19 +337,15 @@ namespace ISX
                 if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
                     continue;
 
-                // Skip if this is a device that got added after we allocated the
-                // previous buffers.
                 var oldDeviceIndex = oldDeviceIndices ? [i] ?? i;
-                if (oldDeviceIndex == -1)
-                    continue;
-
+                var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
 
                 var oldFrontPtr = new IntPtr(oldBuffer.GetFrontBuffer(oldDeviceIndex)) + (int)device.m_StateBlock.byteOffset;
                 var oldBackPtr = new IntPtr(oldBuffer.GetBackBuffer(oldDeviceIndex)) + (int)device.m_StateBlock.byteOffset;
 
-                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(i)) + (int)newStateBlockOffsets[i];
-                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(i)) + (int)newStateBlockOffsets[i];
+                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(newDeviceIndex)) + (int)newStateBlockOffsets[i];
+                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(newDeviceIndex)) + (int)newStateBlockOffsets[i];
 
                 // Copy state.
                 UnsafeUtility.MemCpy(oldFrontPtr, newFrontPtr, numBytes);

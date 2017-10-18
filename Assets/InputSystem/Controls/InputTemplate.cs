@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
+
 namespace ISX
 {
     // A template lays out the composition of an input control.
@@ -771,6 +773,7 @@ namespace ISX
             public string[] overrides;
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
+            public string[] usages;
             public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
 
