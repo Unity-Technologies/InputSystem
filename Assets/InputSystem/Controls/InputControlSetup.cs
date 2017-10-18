@@ -559,9 +559,10 @@ namespace ISX
                 if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
                     continue;
 
-                if (child.m_StateBlock.byteOffset >= firstUnfixedByteOffset)
-                    firstUnfixedByteOffset =
-                        BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.sizeInBits);
+                var endOffset =
+                    BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits);
+                if (endOffset > firstUnfixedByteOffset)
+                    firstUnfixedByteOffset = endOffset;
             }
 
             ////TODO: this doesn't support mixed automatic and fixed layouting *within* bitfields;

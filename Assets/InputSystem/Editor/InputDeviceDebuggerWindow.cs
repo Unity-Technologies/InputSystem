@@ -73,6 +73,7 @@ namespace ISX
             EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(160));// GUILayout.ExpandHeight(false));
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Template", m_Device.template);
+            EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
             EditorGUILayout.LabelField("Connected", m_Device.connected ? "True" : "False");
             EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
             EditorGUILayout.LabelField("Product", m_Device.description.product);

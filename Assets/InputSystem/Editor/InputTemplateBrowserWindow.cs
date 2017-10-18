@@ -5,8 +5,14 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
+////TODO: explore a way to add a toggle that switches between browsing merged and unmerged templates
+
 namespace ISX
 {
+    // Allows browsing through all templates currently registered with the input system.
+    //
+    // NOTE: Templates are shown in their fully merged form, i.e. all the information from base
+    //       templates is merged into templates targeting them with the "extends" field.
     public class InputTemplateBrowserWindow : EditorWindow
     {
         private static InputTemplateBrowserWindow s_Instance;
@@ -174,7 +180,8 @@ namespace ISX
                 var item = AddChild(parent, control.variant.IsEmpty() ? control.name : $"{control.name} ({control.variant})", ref id);
 
                 ////TODO: allow clicking this field to jump to the template
-                AddChild(item, $"Template: {control.template}", ref id);
+                if (!control.template.IsEmpty())
+                    AddChild(item, $"Template: {control.template}", ref id);
                 if (!control.variant.IsEmpty())
                     AddChild(item, $"Variant: {control.variant}", ref id);
                 if (control.format != 0)

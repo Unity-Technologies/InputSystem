@@ -91,18 +91,31 @@ namespace ISX
         Numpad8,
         Numpad9,
 
-        Count = 256
+        Count
     }
 
     ////FIXME: state layout somehow comes up with a size of 8 bits for this
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kFormat { get; } = new FourCC('K', 'E', 'Y', 'S');
+        public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
-        [InputControl(name = "Escape", template = "Button", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Enter)]
+        public const int kSizeInBytes = ((int)Key.Count) / 8 + (((int)Key.Count) % 8 > 0 ? 1 : 0);
+
+        [InputControl(name = "Escape", template = "Button", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "Space", template = "Button", bit = (int)Key.Space)]
         [InputControl(name = "Enter", template = "Button", usage = "Submit", bit = (int)Key.Enter)]
+        [InputControl(name = "Tab", template = "Button", bit = (int)Key.Tab)]
+        [InputControl(name = "Backtick", template = "Button", bit = (int)Key.Backtick)]
+        [InputControl(name = "Semicolon", template = "Button", bit = (int)Key.Semicolon)]
+        [InputControl(name = "Comma", template = "Button", bit = (int)Key.Comma)]
+        [InputControl(name = "Period", template = "Button", bit = (int)Key.Period)]
+        [InputControl(name = "Slash", template = "Button", bit = (int)Key.Slash)]
+        [InputControl(name = "Backslash", template = "Button", bit = (int)Key.Backslash)]
+        [InputControl(name = "LeftBracket", template = "Button", bit = (int)Key.LeftBracket)]
+        [InputControl(name = "RightBracket", template = "Button", bit = (int)Key.RightBracket)]
+        [InputControl(name = "Minus", template = "Button", bit = (int)Key.Minus)]
+        [InputControl(name = "Equals", template = "Button", bit = (int)Key.Equals)]
         [InputControl(name = "UpArrow", template = "Button", bit = (int)Key.UpArrow)]
         [InputControl(name = "DownArrow", template = "Button", bit = (int)Key.DownArrow)]
         [InputControl(name = "LeftArrow", template = "Button", bit = (int)Key.LeftArrow)]
@@ -133,13 +146,41 @@ namespace ISX
         [InputControl(name = "X", template = "Button", bit = (int)Key.X)]
         [InputControl(name = "Y", template = "Button", bit = (int)Key.Y)]
         [InputControl(name = "Z", template = "Button", bit = (int)Key.Z)]
+        [InputControl(name = "1", template = "Button", bit = (int)Key.Digit1)]
+        [InputControl(name = "2", template = "Button", bit = (int)Key.Digit2)]
+        [InputControl(name = "3", template = "Button", bit = (int)Key.Digit3)]
+        [InputControl(name = "4", template = "Button", bit = (int)Key.Digit4)]
+        [InputControl(name = "5", template = "Button", bit = (int)Key.Digit5)]
+        [InputControl(name = "6", template = "Button", bit = (int)Key.Digit6)]
+        [InputControl(name = "7", template = "Button", bit = (int)Key.Digit7)]
+        [InputControl(name = "8", template = "Button", bit = (int)Key.Digit8)]
+        [InputControl(name = "9", template = "Button", bit = (int)Key.Digit9)]
+        [InputControl(name = "0", template = "Button", bit = (int)Key.Digit0)]
         [InputControl(name = "LeftShift", template = "Button", usage = "Modifier", bit = (int)Key.LeftShift)]
         [InputControl(name = "RightShift", template = "Button", usage = "Modifier", bit = (int)Key.RightShift)]
         [InputControl(name = "LeftAlt", template = "Button", usage = "Modifier", bit = (int)Key.LeftAlt)]
         [InputControl(name = "RightAlt", template = "Button", usage = "Modifier", bit = (int)Key.RightAlt)]
         [InputControl(name = "LeftCtrl", template = "Button", usage = "Modifier", bit = (int)Key.LeftCtrl)]
         [InputControl(name = "RightCtrl", template = "Button", usage = "Modifier", bit = (int)Key.RightCtrl)]
-        public fixed byte keys[256 / 8]; // For some reason, the Mono compiler won't accept "(int)Key.Count/8" as a constant expression.
+        [InputControl(name = "Backspace", template = "Button", bit = (int)Key.Backspace)]
+        [InputControl(name = "PageDown", template = "Button", bit = (int)Key.PageDown)]
+        [InputControl(name = "PageUp", template = "Button", bit = (int)Key.PageUp)]
+        [InputControl(name = "Home", template = "Button", bit = (int)Key.Home)]
+        [InputControl(name = "End", template = "Button", bit = (int)Key.End)]
+        [InputControl(name = "Insert", template = "Button", bit = (int)Key.Insert)]
+        [InputControl(name = "Erase", template = "Button", bit = (int)Key.Erase)]
+        [InputControl(name = "NumpadEnter", template = "Button", bit = (int)Key.NumpadEnter)]
+        [InputControl(name = "Numpad1", template = "Button", bit = (int)Key.Numpad1)]
+        [InputControl(name = "Numpad2", template = "Button", bit = (int)Key.Numpad2)]
+        [InputControl(name = "Numpad3", template = "Button", bit = (int)Key.Numpad3)]
+        [InputControl(name = "Numpad4", template = "Button", bit = (int)Key.Numpad4)]
+        [InputControl(name = "Numpad5", template = "Button", bit = (int)Key.Numpad5)]
+        [InputControl(name = "Numpad6", template = "Button", bit = (int)Key.Numpad6)]
+        [InputControl(name = "Numpad7", template = "Button", bit = (int)Key.Numpad7)]
+        [InputControl(name = "Numpad8", template = "Button", bit = (int)Key.Numpad8)]
+        [InputControl(name = "Numpad9", template = "Button", bit = (int)Key.Numpad9)]
+        [InputControl(name = "Numpad0", template = "Button", bit = (int)Key.Numpad0)]
+        public fixed byte keys[kSizeInBytes];
 
         public FourCC GetFormat()
         {

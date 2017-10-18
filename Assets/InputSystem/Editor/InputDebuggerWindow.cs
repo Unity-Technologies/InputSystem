@@ -7,8 +7,6 @@ using UnityEditor;
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
-////TODO: add way to explore all registered templates
-
 namespace ISX
 {
     // Allows looking at input activity in the editor.
@@ -83,6 +81,8 @@ namespace ISX
                     Contents.showUnrecognizedDevicesContent, EditorStyles.toolbarButton);
             m_ShowDisconnectedDevices = GUILayout.Toggle(m_ShowDisconnectedDevices,
                     Contents.showDisconnectedDevicesContent, EditorStyles.toolbarButton);
+            m_ShowDisabledActions = GUILayout.Toggle(m_ShowDisabledActions,
+                    Contents.showDisabledActionsContent, EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(Contents.browseTemplatesContent, EditorStyles.toolbarButton))
                 InputTemplateBrowserWindow.CreateOrShowExisting();
@@ -102,6 +102,8 @@ namespace ISX
 
             var displayedDeviceCount = 0;
 
+            ////TODO: make buttons overflow into subsequent lines if they don't fit across width
+
             for (var i = 0; i < deviceCount; i++)
             {
                 var device = devices[i];
@@ -112,8 +114,9 @@ namespace ISX
                 ++displayedDeviceCount;
 
                 // Draw it.
-                var rect = GUILayoutUtility.GetRect(new GUIContent(device.name), Styles.deviceStyle, GUILayout.Width(kDeviceElementWidth));
-                DrawDevice(device, rect);
+                var deviceLabel = new GUIContent(device.name);
+                var rect = GUILayoutUtility.GetRect(deviceLabel, Styles.deviceStyle, GUILayout.Width(kDeviceElementWidth));
+                DrawDevice(deviceLabel, device, rect);
             }
 
             if (displayedDeviceCount == 0)
@@ -122,12 +125,11 @@ namespace ISX
             EditorGUILayout.EndHorizontal();
         }
 
-        private void DrawDevice(InputDevice device, Rect position)
+        private void DrawDevice(GUIContent deviceLabel, InputDevice device, Rect position)
         {
-            var deviceContent = new GUIContent(device.name);
-            var width = Styles.deviceStyle.CalcSize(deviceContent).x;
+            var width = Styles.deviceStyle.CalcSize(deviceLabel).x;
             var textIsClipped = width > position.width;
-            if (GUI.Button(position, deviceContent, textIsClipped ? Styles.deviceStyleClipped : Styles.deviceStyle))
+            if (GUI.Button(position, deviceLabel, textIsClipped ? Styles.deviceStyleClipped : Styles.deviceStyle))
                 InputDeviceDebuggerWindow.CreateOrShowExisting(device);
         }
 
@@ -158,6 +160,34 @@ namespace ISX
 
         private void DrawActionsGUI()
         {
+            GUILayout.Label(Contents.enabledActionsContent, EditorStyles.boldLabel);
+
+            if (m_EnabledActions == null)
+                m_EnabledActions = new List<InputAction>();
+            else
+                m_EnabledActions.Clear();
+
+            InputSystem.FindAllEnabledActions(m_EnabledActions);
+
+            EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+
+            var numEnabledActions = m_EnabledActions.Count;
+            if (numEnabledActions == 0)
+            {
+                GUILayout.Label(Contents.noneContent);
+            }
+            else
+            {
+                for (var i = 0; i < m_EnabledActions.Count; ++i)
+                {
+                    var action = m_EnabledActions[i];
+                    if (GUILayout.Button(action.name))
+                    {
+                    }
+                }
+            }
+
+            EditorGUILayout.EndHorizontal();
         }
 
         // Whether to display devices from a player connection or not.
@@ -174,8 +204,10 @@ namespace ISX
         [SerializeField] private Vector2 m_ScrollPosition;
         [SerializeField] private bool m_ShowUnrecognizedDevices;
         [SerializeField] private bool m_ShowDisconnectedDevices;
+        [SerializeField] private bool m_ShowDisabledActions;
 
         [NonSerialized] private List<InputDeviceDescription> m_UnrecognizedDevices;
+        [NonSerialized] private List<InputAction> m_EnabledActions;
 
         internal static void ReviveAfterDomainReload()
         {
@@ -205,8 +237,10 @@ namespace ISX
             public static GUIContent unrecognizedDevicesContent = new GUIContent("Unrecognized Devices");
             public static GUIContent showUnrecognizedDevicesContent = new GUIContent("Show Unrecognized Devices");
             public static GUIContent showDisconnectedDevicesContent = new GUIContent("Show Disconnected Devices");
+            public static GUIContent showDisabledActionsContent = new GUIContent("Show Disabled Actions");
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
             public static GUIContent browseTemplatesContent = new GUIContent("Browse Templates");
+            public static GUIContent enabledActionsContent = new GUIContent("Enabled Actions");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

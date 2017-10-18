@@ -749,6 +749,19 @@ public class FunctionalTests
 
     [Test]
     [Category("State")]
+    public void State_CanComputeStateLayoutForMultiByteBitfieldWithFixedOffset()
+    {
+        var setup = new InputControlSetup("Keyboard");
+        var downArrow = setup.GetControl("DownArrow");
+        var keyboard = setup.Finish();
+
+        Assert.That(downArrow.stateBlock.bitOffset, Is.EqualTo((int)Key.DownArrow));
+        Assert.That(downArrow.stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(keyboard.stateBlock.alignedSizeInBytes, Is.EqualTo(KeyboardState.kSizeInBytes));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_BeforeAddingDevice_OffsetsInStateLayoutsAreRelativeToRoot()
     {
         var setup = new InputControlSetup("Gamepad");
@@ -2545,13 +2558,6 @@ public class FunctionalTests
 #endif
 
     ////TODO:-----------------------------------------------------------------
-    [Test]
-    [Category("State")]
-    public void TODO_State_SupportsBitAddressingControlsWithFixedOffsets()
-    {
-        ////TODO
-        Assert.Fail();
-    }
 
     [Test]
     [Category("State")]
