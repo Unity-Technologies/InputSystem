@@ -7,6 +7,7 @@ namespace ISX
     {
         // No component controls as doing individual operations on the xyzw components of a quaternion
         // doesn't really make sense as individual input controls.
+        ////REVIEW: while exposing quaternion fields makes no sense, might make sense to expose euler angle subcontrols
 
         public QuaternionControl()
         {

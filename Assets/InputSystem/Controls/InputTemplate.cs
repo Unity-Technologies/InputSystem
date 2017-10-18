@@ -154,6 +154,9 @@ namespace ISX
 
         public ReadOnlyArray<ControlTemplate> controls => new ReadOnlyArray<ControlTemplate>(m_Controls);
 
+        public bool isDeviceTemplate => typeof(InputDevice).IsAssignableFrom(m_Type);
+        public bool isControlTemplate => !isDeviceTemplate;
+
         public string ToJson()
         {
             throw new NotImplementedException();

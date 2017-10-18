@@ -170,6 +170,8 @@ namespace ISX
             {
                 var device = devicesUsingTemplate[i];
 
+                ////TODO: preserve state where possible
+
                 // Remove.
                 RemoveDevice(device);
 
@@ -351,6 +353,18 @@ namespace ISX
             }
 
             return numMatches;
+        }
+
+        public void SetVariant(InputControl control, string variant)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (string.IsNullOrEmpty(variant))
+                variant = "Default";
+
+            //how can we do this efficiently without having to take the control's device out of the system?
+
+            throw new NotImplementedException();
         }
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system

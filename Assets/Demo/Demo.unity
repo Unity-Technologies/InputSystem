@@ -215,7 +215,7 @@ MonoBehaviour:
   fireAction:
     m_Name: Fire
     m_Bindings:
-    - path: '*/{primarytrigger}'
+    - path: '*/{PrimaryTrigger}'
       modifiers: 
       processors: 
       flags: 0
@@ -224,7 +224,7 @@ MonoBehaviour:
   lookAction:
     m_Name: Look
     m_Bindings:
-    - path: '*/{secondarystick}'
+    - path: '*/{SecondaryStick}'
       modifiers: 
       processors: 
       flags: 0
@@ -233,7 +233,7 @@ MonoBehaviour:
   walkAction:
     m_Name: Walk
     m_Bindings:
-    - path: '*/{primarystick}'
+    - path: '*/{PrimaryStick}'
       modifiers: 
       processors: 
       flags: 0

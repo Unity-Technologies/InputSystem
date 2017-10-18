@@ -44,6 +44,17 @@ namespace ISX
             }
         }
 
+        public static event Action onRefresh
+        {
+            add
+            {
+                if (s_RefreshListeners == null)
+                    s_RefreshListeners = new List<Action>();
+                s_RefreshListeners.Add(value);
+            }
+            remove { s_RefreshListeners?.Remove(value); }
+        }
+
         public static InputTemplate TryGetTemplate(string name)
         {
             return s_Cache.FindOrLoadTemplate(name);
@@ -75,10 +86,15 @@ namespace ISX
             }
 
             s_TemplateSetupVersion = manager.m_TemplateSetupVersion;
+
+            if (s_RefreshListeners != null)
+                foreach (var listener in s_RefreshListeners)
+                    listener();
         }
 
         private static int s_TemplateSetupVersion;
         private static InputTemplate.Cache s_Cache;
+        private static List<Action> s_RefreshListeners;
 
         // We keep a map of all unique usages we find in templates and also
         // retain a list of the templates they are used with.

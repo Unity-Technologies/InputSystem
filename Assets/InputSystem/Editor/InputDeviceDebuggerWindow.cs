@@ -100,6 +100,7 @@ namespace ISX
 
             GUILayout.EndHorizontal();
 
+            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
             m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_ControlTree.OnGUI(rect);
@@ -120,6 +121,7 @@ namespace ISX
 
             GUILayout.EndHorizontal();
 
+            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
             m_EventListScrollPosition = EditorGUILayout.BeginScrollView(m_EventListScrollPosition);
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_EventTree.OnGUI(rect);

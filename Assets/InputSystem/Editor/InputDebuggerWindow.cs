@@ -84,6 +84,8 @@ namespace ISX
             m_ShowDisconnectedDevices = GUILayout.Toggle(m_ShowDisconnectedDevices,
                     Contents.showDisconnectedDevicesContent, EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
+            if (GUILayout.Button(Contents.browseTemplatesContent, EditorStyles.toolbarButton))
+                InputTemplateBrowserWindow.CreateOrShowExisting();
             EditorGUILayout.EndHorizontal();
         }
 
@@ -204,6 +206,7 @@ namespace ISX
             public static GUIContent showUnrecognizedDevicesContent = new GUIContent("Show Unrecognized Devices");
             public static GUIContent showDisconnectedDevicesContent = new GUIContent("Show Disconnected Devices");
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
+            public static GUIContent browseTemplatesContent = new GUIContent("Browse Templates");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

@@ -570,6 +570,19 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanChangeHandednessOfXRController()
+    {
+        var controller = InputSystem.AddDevice("XRController");
+
+        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
+
+        InputSystem.SetVariant(controller, CommonUsages.LeftHand);
+
+        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_CanFindControlsInSetupByPath()
     {

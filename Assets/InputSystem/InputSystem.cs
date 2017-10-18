@@ -154,7 +154,7 @@ namespace ISX
 
         public static void SetVariant(InputControl control, string variant)
         {
-            throw new NotImplementedException();
+            s_Manager.SetVariant(control, variant);
         }
 
         public static List<InputControl> GetControls(string path)
