@@ -30,11 +30,14 @@ namespace ISX
             }
         }
 
-        ////TODO: add variant that goes along with template and can modify it
         // Template the control is based on.
         // We store the name rather than reference the InputTemplate as we want
         // to avoid allocating those objects except where necessary.
         public string template => m_Template;
+
+        // Variant of the template or null.
+        // Example: "Lefty" when using the "Lefty" gamepad layout.
+        public string variant => m_Variant;
 
         ////TODO: setting value (will it also go through the processor stack?)
 
@@ -95,6 +98,7 @@ namespace ISX
         internal InternedString m_Name;
         internal string m_Path;
         internal InternedString m_Template;
+        internal InternedString m_Variant;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
         internal ReadOnlyArray<string> m_UsagesReadOnly;

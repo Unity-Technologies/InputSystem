@@ -24,6 +24,11 @@ namespace ISX
     //       itself may change.
     public class InputControlSetup
     {
+        // We use this constructor when we create devices in batches.
+        internal InputControlSetup()
+        {
+        }
+
         public InputControlSetup(string template, InputDevice existingDevice = null, string variant = null)
         {
             Setup(template, existingDevice, variant);

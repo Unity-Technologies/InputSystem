@@ -460,6 +460,7 @@ public class FunctionalTests
         var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
         var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
 
+        Assert.That(leftyGamepad.variant, Is.EqualTo("Lefty"));
         Assert.That(leftyGamepadPrimaryStick, Is.SameAs(leftyGamepad.rightStick));
         Assert.That(leftyGamepadSecondaryStick, Is.SameAs(leftyGamepad.leftStick));
 

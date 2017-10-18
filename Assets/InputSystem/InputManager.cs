@@ -139,6 +139,9 @@ namespace ISX
             if (m_Devices == null)
                 return;
 
+            List<InputDevice> devicesUsingTemplate = null;
+
+            // Find all devices using the template.
             for (var i = 0; i < m_Devices.Length; ++i)
             {
                 var device = m_Devices[i];
@@ -150,7 +153,32 @@ namespace ISX
                     usesTemplate = IsControlOrChildUsingTemplateRecursive(device, template);
 
                 if (usesTemplate)
-                    throw new NotImplementedException();
+                {
+                    if (devicesUsingTemplate == null)
+                        devicesUsingTemplate = new List<InputDevice>();
+                    devicesUsingTemplate.Add(device);
+                }
+            }
+
+            // If there's none, we're good.
+            if (devicesUsingTemplate == null)
+                return;
+
+            // Remove and re-add the matching devices.
+            var setup = new InputControlSetup();
+            for (var i = 0; i < devicesUsingTemplate.Count; ++i)
+            {
+                var device = devicesUsingTemplate[i];
+
+                // Remove.
+                RemoveDevice(device);
+
+                // Re-setup device.
+                setup.Setup(device.m_Template, device, device.m_Variant);
+                var newDevice = setup.Finish();
+
+                // Re-add.
+                AddDevice(newDevice);
             }
         }
 
@@ -176,7 +204,7 @@ namespace ISX
                 return true;
 
             // Check base template chain.
-            var baseTemplate = template;
+            var baseTemplate = control.m_Template;
             while (m_BaseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
                 if (baseTemplate == template)
                     return true;
