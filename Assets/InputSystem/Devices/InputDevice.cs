@@ -77,7 +77,7 @@ namespace ISX
         // List of usages for all controls. Each control gets a slice of this array.
         // See 'InputControl.usages'.
         // NOTE: The device's own usages are part of this array as well.
-        internal string[] m_UsagesForEachControl;
+        internal InternedString[] m_UsagesForEachControl;
         internal InputControl[] m_UsageToControl;
 
         // List of children for all controls. Each control gets a slice of this array.

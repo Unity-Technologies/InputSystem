@@ -344,7 +344,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void Templates_CanHaveOneControlUseStateOfAnotherControl()
+    public void TODO_Templates_CanHaveOneControlUseStateOfAnotherControl()
     {
         Assert.Fail();
     }

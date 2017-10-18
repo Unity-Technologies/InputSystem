@@ -35,7 +35,7 @@ namespace ISX
         // to avoid allocating those objects except where necessary.
         public string template => m_Template;
 
-        // Variant of the template or null.
+        // Variant of the template or "default".
         // Example: "Lefty" when using the "Lefty" gamepad layout.
         public string variant => m_Variant;
 
@@ -61,7 +61,7 @@ namespace ISX
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
         // NOTE: This will only be populated when setup is finished.
-        public ReadOnlyArray<string> usages => m_UsagesReadOnly;
+        public ReadOnlyArray<InternedString> usages => m_UsagesReadOnly;
 
         // List of alternate names for the control.
         public ReadOnlyArray<string> aliases => m_AliasesReadOnly;
@@ -101,7 +101,7 @@ namespace ISX
         internal InternedString m_Variant;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
-        internal ReadOnlyArray<string> m_UsagesReadOnly;
+        internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<string> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
 

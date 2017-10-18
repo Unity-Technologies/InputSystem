@@ -108,13 +108,13 @@ namespace ISX
         {
             ////REVIEW: if we expose InputTemplate, the arrays in here should turn into ReadOnlyArrays
             public string name; // Can be null/empty for "root" control but only one such control may exist.
-            public string template;
-            public string variant;
+            public InternedString template;
+            public InternedString variant;
             public string useStateFrom;
             ////REVIEW: maybe make this more flexible to include name + image; maybe combined string
             public string icon; ////TODO: fill this (also have InputControlSetup put it on the control)
             public ReadOnlyArray<ParameterValue> parameters;
-            public ReadOnlyArray<string> usages;
+            public ReadOnlyArray<InternedString> usages;
             public ReadOnlyArray<string> aliases;
             public ReadOnlyArray<NameAndParameters> processors;
             public uint offset;
@@ -133,13 +133,13 @@ namespace ISX
 
         public struct DeviceUsage
         {
-            public string usage;
-            public string variant;
+            public InternedString usage;
+            public InternedString variant;
         }
 
         // Unique name of the template.
         // NOTE: Case-insensitive.
-        public string name => m_Name;
+        public InternedString name => m_Name;
 
         public Type type => m_Type;
 
@@ -210,7 +210,7 @@ namespace ISX
             return templateJson.ToTemplate();
         }
 
-        private string m_Name;
+        private InternedString m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
         internal FourCC m_Format;
         internal bool? m_UpdateBeforeRender;
@@ -222,7 +222,7 @@ namespace ISX
 
         private InputTemplate(string name, Type type)
         {
-            m_Name = name;
+            m_Name = new InternedString(name);
             m_Type = type;
         }
 
@@ -383,9 +383,15 @@ namespace ISX
                 aliases = ArrayHelpers.Join(attribute.alias, attribute.aliases);
 
             // Determine usages.
-            string[] usages = null;
+            InternedString[] usages = null;
             if (attribute != null)
-                usages = ArrayHelpers.Join(attribute.usage, attribute.usages);
+            {
+                if (attribute.usage != null && attribute.usages == null)
+                    usages = new InternedString[1] { new InternedString(attribute.usage) };
+                else if (attribute.usages != null)
+                    usages = ArrayHelpers.Join(attribute.usage, attribute.usages)?.Select(x => new InternedString(x))
+                        .ToArray();
+            }
 
             // Determine parameters.
             ParameterValue[] parameters = null;
@@ -402,15 +408,15 @@ namespace ISX
             return new ControlTemplate
             {
                 name = name,
-                template = template,
-                variant = variant,
+                template = new InternedString(template),
+                variant = new InternedString(variant),
                 useStateFrom = useStateFrom,
                 format = format,
                 offset = offset,
                 bit = bit,
                 sizeInBits = sizeInBits,
                 parameters = new ReadOnlyArray<ParameterValue>(parameters),
-                usages = new ReadOnlyArray<string>(usages),
+                usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<string>(aliases)
             };
         }
@@ -653,7 +659,7 @@ namespace ISX
                 var key = controlTemplates[i].name.ToLower();
                 // Need to take variant into account as well. Otherwise two variants for
                 // "leftStick", for example, will overwrite each other.
-                if (!string.IsNullOrEmpty(controlTemplates[i].variant))
+                if (!controlTemplates[i].variant.IsEmpty())
                 {
                     var variant = controlTemplates[i].variant.ToLower();
                     key = $"{key}@{variant}";
@@ -671,8 +677,8 @@ namespace ISX
             result.name = derivedTemplate.name;
             Debug.Assert(derivedTemplate.name != null);
 
-            result.template = derivedTemplate.template ?? baseTemplate.template;
-            result.variant = derivedTemplate.variant ?? baseTemplate.variant;
+            result.template = derivedTemplate.template.IsEmpty() ? baseTemplate.template : derivedTemplate.template;
+            result.variant = derivedTemplate.variant.IsEmpty() ? baseTemplate.variant : derivedTemplate.variant;
             result.useStateFrom = derivedTemplate.useStateFrom ?? baseTemplate.useStateFrom;
 
             if (derivedTemplate.offset != InputStateBlock.kInvalidOffset)
@@ -700,10 +706,9 @@ namespace ISX
                         baseTemplate.aliases.m_Array,
                         StringComparer.OrdinalIgnoreCase));
 
-            result.usages = new ReadOnlyArray<string>(
+            result.usages = new ReadOnlyArray<InternedString>(
                     ArrayHelpers.Merge(derivedTemplate.usages.m_Array,
-                        baseTemplate.usages.m_Array,
-                        StringComparer.OrdinalIgnoreCase));
+                        baseTemplate.usages.m_Array));
 
             if (derivedTemplate.parameters.Count == 0)
                 result.parameters = baseTemplate.parameters;
@@ -866,8 +871,8 @@ namespace ISX
                 var template = new ControlTemplate
                 {
                     name = name,
-                    template = this.template,
-                    variant = variant,
+                    template = new InternedString(this.template),
+                    variant = new InternedString(variant),
                     offset = offset,
                     useStateFrom = useStateFrom,
                     bit = bit,
@@ -885,7 +890,7 @@ namespace ISX
                         usagesList.Add(usage);
                     if (usages != null)
                         usagesList.AddRange(usages);
-                    template.usages = new ReadOnlyArray<string>(usagesList.ToArray());
+                    template.usages = new ReadOnlyArray<InternedString>(usagesList.Select(x => new InternedString(x)).ToArray());
                 }
 
                 if (!string.IsNullOrEmpty(parameters))

@@ -10,11 +10,11 @@ namespace ISX
 
         public PointerState pointer;
 
-        [InputControl(name = "Left", template = "Button", bit = (int)Button.Left, usages = new[] { CommonUsages.PrimaryAction, CommonUsages.PrimaryTrigger })]
-        [InputControl(name = "Right", template = "Button", bit = (int)Button.Right, usages = new[] { CommonUsages.SecondaryAction, CommonUsages.SecondaryTrigger })]
+        [InputControl(name = "Left", template = "Button", bit = (int)Button.Left, usages = new string[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "Right", template = "Button", bit = (int)Button.Right, usages = new string[] { "SecondaryAction", "SecondaryTrigger" })]
         [InputControl(name = "Middle", template = "Button", bit = (int)Button.Middle)]
-        [InputControl(name = "Forward", template = "Button", bit = (int)Button.Forward, usage = CommonUsages.Forward)]
-        [InputControl(name = "Backward", template = "Button", bit = (int)Button.Backward, usage = CommonUsages.Back)]
+        [InputControl(name = "Forward", template = "Button", bit = (int)Button.Forward, usage = "Forward")]
+        [InputControl(name = "Backward", template = "Button", bit = (int)Button.Backward, usage = "Back")]
         public int buttons;
 
         public enum Button

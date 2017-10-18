@@ -31,19 +31,17 @@ namespace ISX
 
         public InputControlSetup(string template, InputDevice existingDevice = null, string variant = null)
         {
-            Setup(template, existingDevice, variant);
+            Setup(new InternedString(template), existingDevice, new InternedString(variant));
         }
 
-        internal void Setup(string template, InputDevice existingDevice, string variant)
+        internal void Setup(InternedString template, InputDevice existingDevice, InternedString variant)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
                     $"Cannot modify control setup of existing device {existingDevice} while added to system.");
 
-            if (string.IsNullOrEmpty(variant))
-                variant = "default";
-            else
-                variant = variant.ToLower();
+            if (variant.IsEmpty())
+                variant = new InternedString("Default");
 
             AddControl(template, variant, null, null, existingDevice);
             FinalizeControlHierarchy();
@@ -179,7 +177,7 @@ namespace ISX
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl AddControl(string template, string variant, string name, InputControl parent, InputControl existingControl)
+        private InputControl AddControl(InternedString template, InternedString variant, string name, InputControl parent, InputControl existingControl)
         {
             // Look up template by name.
             var templateInstance = FindOrLoadTemplate(template);
@@ -188,7 +186,7 @@ namespace ISX
             return AddControlRecursive(templateInstance, variant, name, parent, existingControl);
         }
 
-        private InputControl AddControlRecursive(InputTemplate template, string variant, string name, InputControl parent, InputControl existingControl)
+        private InputControl AddControlRecursive(InputTemplate template, InternedString variant, string name, InputControl parent, InputControl existingControl)
         {
             InputControl control;
 
@@ -239,8 +237,10 @@ namespace ISX
                 name = template.name;
             }
 
+            ////TODO: intern these strings directly on the templates
             control.m_Name = new InternedString(name);
-            control.m_Template = new InternedString(template.name);
+            control.m_Template = template.name;
+            control.m_Variant = variant;
             control.m_Parent = parent;
             control.m_Device = m_Device;
 
@@ -267,7 +267,7 @@ namespace ISX
             return control;
         }
 
-        private void AddChildControls(InputTemplate template, string variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren)
+        private void AddChildControls(InputTemplate template, InternedString variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren)
         {
             var controlTemplates = template.m_Controls;
             if (controlTemplates == null)
@@ -287,8 +287,8 @@ namespace ISX
                 }
 
                 // Skip if variant doesn't match.
-                if (!string.IsNullOrEmpty(controlTemplates[i].variant) &&
-                    controlTemplates[i].variant.ToLower() != variant)
+                if (!controlTemplates[i].variant.IsEmpty() &&
+                    controlTemplates[i].variant != variant)
                     continue;
 
                 ++childCount;
@@ -312,7 +312,7 @@ namespace ISX
 
                 // If the control is part of a variant, skip it if it isn't the variant we're
                 // looking for.
-                if (!string.IsNullOrEmpty(controlTemplate.variant) && controlTemplate.variant.ToLower() != variant)
+                if (!controlTemplate.variant.IsEmpty() && controlTemplate.variant != variant)
                     continue;
 
                 ////REVIEW: can we check this in InputTemplate instead?
@@ -360,7 +360,7 @@ namespace ISX
                 {
                     var usageCount = controlTemplate.usages.Count;
                     var usageIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlTemplate.usages.m_Array);
-                    control.m_UsagesReadOnly = new ReadOnlyArray<string>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
+                    control.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
 
                     ArrayHelpers.GrowBy(ref m_Device.m_UsageToControl, usageCount);
                     for (var n = 0; n < usageCount; ++n)

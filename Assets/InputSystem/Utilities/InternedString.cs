@@ -11,8 +11,27 @@ namespace ISX
 
         public InternedString(string text)
         {
-            m_StringOriginalCase = string.Intern(text);
-            m_StringLowerCase = string.Intern(text.ToLower());
+            if (string.IsNullOrEmpty(text))
+            {
+                m_StringOriginalCase = null;
+                m_StringLowerCase = null;
+            }
+            else
+            {
+                ////TODO: I think instead of string.Intern() this should use a custom weak-referenced intern table
+                m_StringOriginalCase = string.Intern(text);
+                m_StringLowerCase = string.Intern(text.ToLower());
+            }
+        }
+
+        public bool IsEmpty()
+        {
+            return m_StringLowerCase == null;
+        }
+
+        public string ToLower()
+        {
+            return m_StringLowerCase;
         }
 
         public bool Equals(InternedString other)
@@ -35,6 +54,16 @@ namespace ISX
         public override string ToString()
         {
             return m_StringOriginalCase ?? string.Empty;
+        }
+
+        public static bool operator==(InternedString a, InternedString b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator!=(InternedString a, InternedString b)
+        {
+            return !a.Equals(b);
         }
 
         public static implicit operator string(InternedString str)

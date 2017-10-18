@@ -3,35 +3,35 @@ namespace ISX
     public static class CommonUsages
     {
         ////REVIEW: may want to rename to PrimaryMotion and SecondaryMotion or something like that
-        public const string PrimaryStick = "PrimaryStick";
-        public const string SecondaryStick = "SecondaryStick";
-        public const string PrimaryAction = "PrimaryAction";
-        public const string SecondaryAction = "SecondaryAction";
-        public const string PrimaryTrigger = "PrimaryTrigger";
-        public const string SecondaryTrigger = "SecondaryTrigger";
-        public const string Back = "Back";
-        public const string Forward = "Forward";
-        public const string Menu = "Menu";
-        public const string Submit = "Submit";
-        public const string Cancel = "Cancel";
-        public const string Previous = "Previous";
-        public const string Next = "Next";
-        public const string Modifier = "Modifier"; // Stuff like CTRL
-        public const string ScrollHorizontal = "ScrollHorizontal";
-        public const string Pressure = "Pressure";
-        public const string Position = "Position";
-        public const string Orientation = "Orientation";
+        public static InternedString PrimaryStick = new InternedString("PrimaryStick");
+        public static InternedString SecondaryStick = new InternedString("SecondaryStick");
+        public static InternedString PrimaryAction = new InternedString("PrimaryAction");
+        public static InternedString SecondaryAction = new InternedString("SecondaryAction");
+        public static InternedString PrimaryTrigger = new InternedString("PrimaryTrigger");
+        public static InternedString SecondaryTrigger = new InternedString("SecondaryTrigger");
+        public static InternedString Back = new InternedString("Back");
+        public static InternedString Forward = new InternedString("Forward");
+        public static InternedString Menu = new InternedString("Menu");
+        public static InternedString Submit = new InternedString("Submit");
+        public static InternedString Cancel = new InternedString("Cancel");
+        public static InternedString Previous = new InternedString("Previous");
+        public static InternedString Next = new InternedString("Next");
+        public static InternedString Modifier = new InternedString("Modifier"); // Stuff like CTRL
+        public static InternedString ScrollHorizontal = new InternedString("ScrollHorizontal");
+        public static InternedString Pressure = new InternedString("Pressure");
+        public static InternedString Position = new InternedString("Position");
+        public static InternedString Orientation = new InternedString("Orientation");
 
         // Rotation around single, fixed axis.
         // Example: twist on joystick or twist of pen (few pens support that).
-        public const string Twist = "Twist";
+        public static InternedString Twist = new InternedString("Twist");
 
-        public const string Point = "Point";
+        public static InternedString Point = new InternedString("Point");
 
-        public const string LowFreqMotor = "LowFreqMotor";
-        public const string HighFreqMotor = "HighFreqMotor";
+        public static InternedString LowFreqMotor = new InternedString("LowFreqMotor");
+        public static InternedString HighFreqMotor = new InternedString("HighFreqMotor");
 
-        public const string LeftHand = "LeftHand";
-        public const string RightHand = "RightHand";
+        public static InternedString LeftHand = new InternedString("LeftHand");
+        public static InternedString RightHand = new InternedString("RightHand");
     }
 }
