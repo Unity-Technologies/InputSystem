@@ -11,8 +11,6 @@ using UnityEngine;
 //  the other dimension is template
 //  the third one is custom where the user can just enter a string
 
-////FIXME: lower-casing done internally is visible
-
 namespace ISX
 {
     // Popup window that allows selecting controls to target in a binding. Will generate

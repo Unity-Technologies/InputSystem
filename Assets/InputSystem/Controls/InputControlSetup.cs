@@ -234,8 +234,8 @@ namespace ISX
                 name = template.name;
             }
 
-            control.m_Name = name;
-            control.m_Template = template.name;
+            control.m_Name = new InternedString(name);
+            control.m_Template = new InternedString(template.name);
             control.m_Parent = parent;
             control.m_Device = m_Device;
 

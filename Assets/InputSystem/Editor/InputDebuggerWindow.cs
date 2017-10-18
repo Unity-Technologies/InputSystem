@@ -7,6 +7,8 @@ using UnityEditor;
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
+////TODO: add way to explore all registered templates
+
 namespace ISX
 {
     // Allows looking at input activity in the editor.

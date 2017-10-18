@@ -53,6 +53,8 @@ namespace ISX
 
     // A hand and interaction tracking device.
     [InputState(typeof(XRControllerState))]
+    //[InputControl(variant = "LeftHand", usage = "LeftHand")]
+    //[InputControl(variant = "RightHand", usage = "RightHand")]
     public class XRController : TrackedDevice
     {
         public static XRController leftHand { get; private set; }

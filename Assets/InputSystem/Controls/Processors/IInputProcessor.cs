@@ -15,12 +15,13 @@ namespace ISX
 
     internal static class InputProcessor
     {
-        public static Dictionary<string, Type> s_Processors;
+        public static Dictionary<InternedString, Type> s_Processors;
 
         public static Type TryGet(string name)
         {
             Type type;
-            if (s_Processors.TryGetValue(name.ToLower(), out type))
+            var internedName = new InternedString(name);
+            if (s_Processors.TryGetValue(internedName, out type))
                 return type;
             return null;
         }

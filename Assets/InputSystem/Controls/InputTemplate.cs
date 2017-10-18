@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -132,6 +131,12 @@ namespace ISX
             public bool isModifyingChildControlByPath;
         }
 
+        public struct DeviceUsage
+        {
+            public string usage;
+            public string variant;
+        }
+
         // Unique name of the template.
         // NOTE: Case-insensitive.
         public string name => m_Name;
@@ -147,20 +152,7 @@ namespace ISX
         // actual device descriptor.
         public InputDeviceDescription deviceDescription => m_DeviceDescription;
 
-        public ReadOnlyCollection<ControlTemplate> controls
-        {
-            get
-            {
-                if (m_ControlsReadOnly == null)
-                {
-                    var controls = m_Controls;
-                    if (controls == null)
-                        controls = Array.Empty<ControlTemplate>();
-                    m_ControlsReadOnly = Array.AsReadOnly(controls);
-                }
-                return m_ControlsReadOnly;
-            }
-        }
+        public ReadOnlyArray<ControlTemplate> controls => new ReadOnlyArray<ControlTemplate>(m_Controls);
 
         public string ToJson()
         {
@@ -218,9 +210,6 @@ namespace ISX
             return templateJson.ToTemplate();
         }
 
-        ////REVIEW: for device templates, should we always add one ControlTemplate that represents the
-        ////        device control itself? this would get rid of a number of special cases in InputControlSetup
-
         private string m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
         internal FourCC m_Format;
@@ -228,7 +217,7 @@ namespace ISX
         private string m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
         internal ControlTemplate[] m_Controls;
-        private ReadOnlyCollection<ControlTemplate> m_ControlsReadOnly;
+        private DeviceUsage[] m_Usages;
         private InputDeviceDescription m_DeviceDescription;
 
         private InputTemplate(string name, Type type)
@@ -968,38 +957,38 @@ namespace ISX
 
 
         // These dictionaries are owned and managed by InputManager.
-        internal static Dictionary<string, Type> s_TemplateTypes;
-        internal static Dictionary<string, string> s_TemplateStrings;
-        internal static Dictionary<string, string> s_BaseTemplateTable;
+        internal static Dictionary<InternedString, Type> s_TemplateTypes;
+        internal static Dictionary<InternedString, string> s_TemplateStrings;
+        internal static Dictionary<InternedString, InternedString> s_BaseTemplateTable;
 
         // Constructs InputTemplate instances and caches them.
         internal struct Cache
         {
-            public Dictionary<string, InputTemplate> table;
+            public Dictionary<InternedString, InputTemplate> table;
 
             public InputTemplate FindOrLoadTemplate(string name)
             {
                 Debug.Assert(s_TemplateTypes != null);
                 Debug.Assert(s_TemplateStrings != null);
 
-                var nameLowerCase = name.ToLower();
+                var internedName = new InternedString(name);
 
                 // See if we have it cached.
                 InputTemplate template;
-                if (table != null && table.TryGetValue(nameLowerCase, out template))
+                if (table != null && table.TryGetValue(internedName, out template))
                     return template;
 
                 if (table == null)
-                    table = new Dictionary<string, InputTemplate>();
+                    table = new Dictionary<InternedString, InputTemplate>();
 
                 // No, so see if we have a string template for it. These
                 // always take precedence over ones from type so that we can
                 // override what's in the code using data.
                 string json;
-                if (s_TemplateStrings.TryGetValue(nameLowerCase, out json))
+                if (s_TemplateStrings.TryGetValue(internedName, out json))
                 {
                     template = FromJson(name, json);
-                    table[nameLowerCase] = template;
+                    table[internedName] = template;
 
                     // If the template extends another template, we need to merge the
                     // base template into the final template.
@@ -1015,10 +1004,10 @@ namespace ISX
 
                 // No, but maybe we have a type template for it.
                 Type type;
-                if (s_TemplateTypes.TryGetValue(nameLowerCase, out type))
+                if (s_TemplateTypes.TryGetValue(internedName, out type))
                 {
                     template = FromType(name, type);
-                    table[nameLowerCase] = template;
+                    table[internedName] = template;
                     return template;
                 }
 

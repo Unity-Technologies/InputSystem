@@ -92,9 +92,9 @@ namespace ISX
 
 
         // This data is initialized by InputControlSetup.
-        internal string m_Name;
+        internal InternedString m_Name;
         internal string m_Path;
-        internal string m_Template;
+        internal InternedString m_Template;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
         internal ReadOnlyArray<string> m_UsagesReadOnly;

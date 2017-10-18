@@ -213,7 +213,7 @@ MonoBehaviour:
   timeBetweenShots: 0.5
   moveSpeed: 5
   fireAction:
-    m_Name: 
+    m_Name: Fire
     m_Bindings:
     - path: '*/{primarytrigger}'
       modifiers: 
@@ -222,7 +222,7 @@ MonoBehaviour:
     m_BindingsStartIndex: 0
     m_BindingsCount: 0
   lookAction:
-    m_Name: 
+    m_Name: Look
     m_Bindings:
     - path: '*/{secondarystick}'
       modifiers: 
@@ -231,7 +231,7 @@ MonoBehaviour:
     m_BindingsStartIndex: 0
     m_BindingsCount: 0
   walkAction:
-    m_Name: 
+    m_Name: Walk
     m_Bindings:
     - path: '*/{primarystick}'
       modifiers: 

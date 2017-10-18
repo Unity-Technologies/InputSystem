@@ -68,12 +68,12 @@ namespace ISX
             // This not only avoids us creating a bunch of objects on the managed heap but
             // also avoids us laboriously constructing a VRController template, for example,
             // in a game that never uses VR.
-            var nameLowerCase = name.ToLower();
-            m_TemplateTypes[nameLowerCase] = type;
+            var internedName = new InternedString(name);
+            m_TemplateTypes[internedName] = type;
             ++m_TemplateSetupVersion;
 
             // Re-create any devices using the template.
-            RecreateDevicesUsingTemplate(nameLowerCase, isDeviceTemplate);
+            RecreateDevicesUsingTemplate(internedName, isDeviceTemplate);
         }
 
         // Add a template constructed from a JSON string.
@@ -101,14 +101,14 @@ namespace ISX
             }
 
             // Add it to our records.
-            var nameLowerCase = name.ToLower();
-            m_TemplateStrings[nameLowerCase] = json;
+            var internedName = new InternedString(name);
+            m_TemplateStrings[internedName] = json;
             if (!string.IsNullOrEmpty(baseTemplate))
-                m_BaseTemplateTable[nameLowerCase] = baseTemplate.ToLower();
+                m_BaseTemplateTable[internedName] = new InternedString(baseTemplate);
             ++m_TemplateSetupVersion;
 
             // Re-create any devices using the template.
-            RecreateDevicesUsingTemplate(nameLowerCase);
+            RecreateDevicesUsingTemplate(internedName);
 
             // If the template has a device description, see if it allows us
             // to make sense of any device we couldn't make sense of so far.
@@ -134,7 +134,7 @@ namespace ISX
             }
         }
 
-        private void RecreateDevicesUsingTemplate(string templateLowerCase, bool isKnownToBeDeviceTemplate = false)
+        private void RecreateDevicesUsingTemplate(InternedString template, bool isKnownToBeDeviceTemplate = false)
         {
             if (m_Devices == null)
                 return;
@@ -145,41 +145,40 @@ namespace ISX
 
                 bool usesTemplate;
                 if (isKnownToBeDeviceTemplate)
-                    usesTemplate = IsControlUsingTemplate(device, templateLowerCase);
+                    usesTemplate = IsControlUsingTemplate(device, template);
                 else
-                    usesTemplate = IsControlOrChildUsingTemplateRecursive(device, templateLowerCase);
+                    usesTemplate = IsControlOrChildUsingTemplateRecursive(device, template);
 
                 if (usesTemplate)
                     throw new NotImplementedException();
             }
         }
 
-        private bool IsControlOrChildUsingTemplateRecursive(InputControl control, string templateLowerCase)
+        private bool IsControlOrChildUsingTemplateRecursive(InputControl control, InternedString template)
         {
             // Check control itself.
-            if (IsControlUsingTemplate(control, templateLowerCase))
+            if (IsControlUsingTemplate(control, template))
                 return true;
 
             // Check children.
             var children = control.children;
             for (var i = 0; i < children.Count; ++i)
-                if (IsControlOrChildUsingTemplateRecursive(children[i], templateLowerCase))
+                if (IsControlOrChildUsingTemplateRecursive(children[i], template))
                     return true;
 
             return false;
         }
 
-        private bool IsControlUsingTemplate(InputControl control, string templateLowerCase)
+        private bool IsControlUsingTemplate(InputControl control, InternedString template)
         {
             // Check direct match.
-            var controlTemplateLowerCase = control.template.ToLower();
-            if (controlTemplateLowerCase == templateLowerCase)
+            if (control.template == template)
                 return true;
 
             // Check base template chain.
-            string baseTemplate = controlTemplateLowerCase;
+            var baseTemplate = template;
             while (m_BaseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
-                if (baseTemplate == templateLowerCase)
+                if (baseTemplate == template)
                     return true;
 
             return false;
@@ -201,7 +200,7 @@ namespace ISX
             // that template.
             if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
             {
-                var deviceClassLowerCase = deviceDescription.deviceClass.ToLower();
+                var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
                 if (m_TemplateStrings.ContainsKey(deviceClassLowerCase) ||
                     m_TemplateTypes.ContainsKey(deviceClassLowerCase))
                     return deviceDescription.deviceClass;
@@ -219,8 +218,8 @@ namespace ISX
 
             ////FIXME: this may add a name twice; also allocates
 
-            templates.AddRange(m_TemplateTypes.Keys);
-            templates.AddRange(m_TemplateStrings.Keys);
+            templates.AddRange(m_TemplateTypes.Keys.Select(x => x.ToString()));
+            templates.AddRange(m_TemplateStrings.Keys.Select(x => x.ToString()));
 
             return templates.Count - countBefore;
         }
@@ -234,7 +233,8 @@ namespace ISX
 
             ////REVIEW: probably good to typecheck here but it would require dealing with generic type stuff
 
-            m_Processors[name.ToLower()] = type;
+            var internedName = new InternedString(name);
+            m_Processors[internedName] = type;
         }
 
         public Type TryGetProcessor(string name)
@@ -243,7 +243,8 @@ namespace ISX
                 throw new ArgumentException(nameof(name));
 
             Type type;
-            if (m_Processors.TryGetValue(name, out type))
+            var internedName = new InternedString(name);
+            if (m_Processors.TryGetValue(internedName, out type))
                 return type;
             return null;
         }
@@ -255,7 +256,8 @@ namespace ISX
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            m_Modifiers[name.ToLower()] = type;
+            var internedName = new InternedString(name);
+            m_Modifiers[internedName] = type;
         }
 
         public Type TryGetModifier(string name)
@@ -264,14 +266,15 @@ namespace ISX
                 throw new ArgumentException(nameof(name));
 
             Type type;
-            if (m_Modifiers.TryGetValue(name.ToLower(), out type))
+            var internedName = new InternedString(name);
+            if (m_Modifiers.TryGetValue(internedName, out type))
                 return type;
             return null;
         }
 
         public IEnumerable<string> ListModifiers()
         {
-            return m_Modifiers.Keys;
+            return m_Modifiers.Keys.Select(x => x.ToString());
         }
 
         // Processes a path specification that may match more than a single control.
@@ -335,7 +338,7 @@ namespace ISX
             var device = setup.Finish();
 
             if (!string.IsNullOrEmpty(name))
-                device.m_Name = name;
+                device.m_Name = new InternedString(name);
 
             AddDevice(device);
 
@@ -350,8 +353,8 @@ namespace ISX
             device.m_Id = deviceId;
             device.m_Description = description;
 
-            if (!string.IsNullOrEmpty(description.product) && description.product != "Generic")////REVIEW: probably want a better approach to filtering out nonsense product names
-                device.m_Name = description.product;
+            if (!string.IsNullOrEmpty(description.product) && description.product != "Generic") ////REVIEW: probably want a better approach to filtering out nonsense product names
+                device.m_Name = new InternedString(description.product);
 
             AddDevice(device);
 
@@ -579,12 +582,12 @@ namespace ISX
 
         internal void Initialize()
         {
-            m_TemplateTypes = new Dictionary<string, Type>();
-            m_TemplateStrings = new Dictionary<string, string>();
-            m_BaseTemplateTable = new Dictionary<string, string>();
+            m_TemplateTypes = new Dictionary<InternedString, Type>();
+            m_TemplateStrings = new Dictionary<InternedString, string>();
+            m_BaseTemplateTable = new Dictionary<InternedString, InternedString>();
             m_SupportedDevices = new List<SupportedDevice>();
-            m_Processors = new Dictionary<string, Type>();
-            m_Modifiers = new Dictionary<string, Type>();
+            m_Processors = new Dictionary<InternedString, Type>();
+            m_Modifiers = new Dictionary<InternedString, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = new List<AvailableDevice>();
 
@@ -686,11 +689,11 @@ namespace ISX
         }
 
         internal int m_TemplateSetupVersion;
-        private Dictionary<string, Type> m_TemplateTypes;
-        private Dictionary<string, string> m_TemplateStrings;
-        private Dictionary<string, string> m_BaseTemplateTable; // Maps a template name to its base template name.
-        private Dictionary<string, Type> m_Processors;
-        private Dictionary<string, Type> m_Modifiers;
+        private Dictionary<InternedString, Type> m_TemplateTypes;
+        private Dictionary<InternedString, string> m_TemplateStrings;
+        private Dictionary<InternedString, InternedString> m_BaseTemplateTable; // Maps a template name to its base template name.
+        private Dictionary<InternedString, Type> m_Processors;
+        private Dictionary<InternedString, Type> m_Modifiers;
 
         private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
         private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
@@ -844,7 +847,7 @@ namespace ISX
                 }
             }
 
-            device.m_Name = name;
+            device.m_Name = new InternedString(name);
         }
 
         private void AssignUniqueDeviceId(InputDevice device)
@@ -1316,7 +1319,7 @@ namespace ISX
             public string name;
             public string typeName;
 
-            public static TypeRegistrationState[] SaveState(Dictionary<string, Type> table)
+            public static TypeRegistrationState[] SaveState(Dictionary<InternedString, Type> table)
             {
                 var count = table.Count;
                 var array = new TypeRegistrationState[count];
@@ -1404,7 +1407,7 @@ namespace ISX
                 templateSetupVersion = m_TemplateSetupVersion,
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
-                baseTemplates = m_BaseTemplateTable.ToArray(),
+                baseTemplates = m_BaseTemplateTable.Select(x => new KeyValuePair<string, string>(x.Key, x.Value)).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
                 modifiers = TypeRegistrationState.SaveState(m_Modifiers),
                 supportedDevices = m_SupportedDevices.ToArray(),
@@ -1424,12 +1427,12 @@ namespace ISX
 
         internal void RestoreState(SerializedState state)
         {
-            m_TemplateTypes = new Dictionary<string, Type>();
-            m_TemplateStrings = new Dictionary<string, string>();
-            m_BaseTemplateTable = new Dictionary<string, string>();
+            m_TemplateTypes = new Dictionary<InternedString, Type>();
+            m_TemplateStrings = new Dictionary<InternedString, string>();
+            m_BaseTemplateTable = new Dictionary<InternedString, InternedString>();
             m_SupportedDevices = state.supportedDevices.ToList();
-            m_Processors = new Dictionary<string, Type>();
-            m_Modifiers = new Dictionary<string, Type>();
+            m_Processors = new Dictionary<InternedString, Type>();
+            m_Modifiers = new Dictionary<InternedString, Type>();
             m_StateBuffers = state.buffers;
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_DevicesById = new Dictionary<int, InputDevice>();
@@ -1446,28 +1449,28 @@ namespace ISX
 
             // Template types.
             foreach (var template in state.templateTypes)
-                m_TemplateTypes[template.name] = Type.GetType(template.typeNameOrJson, true);
+                m_TemplateTypes[new InternedString(template.name)] = Type.GetType(template.typeNameOrJson, true);
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
 
             // Template strings.
             foreach (var template in state.templateStrings)
-                m_TemplateStrings[template.name] = template.typeNameOrJson;
+                m_TemplateStrings[new InternedString(template.name)] = template.typeNameOrJson;
             InputTemplate.s_TemplateStrings = m_TemplateStrings;
 
             // Base templates.
             if (state.baseTemplates != null)
                 foreach (var entry in state.baseTemplates)
-                    m_BaseTemplateTable[entry.Key] = entry.Value;
+                    m_BaseTemplateTable[new InternedString(entry.Key)] = new InternedString(entry.Value);
             InputTemplate.s_BaseTemplateTable = m_BaseTemplateTable;
 
             // Processors.
             foreach (var processor in state.processors)
-                m_Processors[processor.name] = Type.GetType(processor.typeName, true);
+                m_Processors[new InternedString(processor.name)] = Type.GetType(processor.typeName, true);
             InputProcessor.s_Processors = m_Processors;
 
             // Modifiers.
             foreach (var modifier in state.modifiers)
-                m_Modifiers[modifier.name] = Type.GetType(modifier.typeName, true);
+                m_Modifiers[new InternedString(modifier.name)] = Type.GetType(modifier.typeName, true);
 
             // Refresh builtin templates.
             BuiltinDeviceTemplates.RegisterTemplates(this);
@@ -1480,7 +1483,7 @@ namespace ISX
                 var deviceState = state.devices[i];
                 var setup = new InputControlSetup(deviceState.template);
                 var device = setup.Finish();
-                device.m_Name = deviceState.name;
+                device.m_Name = new InternedString(deviceState.name);
                 device.m_Id = deviceState.deviceId;
                 device.m_DeviceIndex = i;
                 device.m_Description = deviceState.description;

@@ -27,7 +27,7 @@ namespace ISX
             get
             {
                 Refresh();
-                return s_Usages.Select(pair => new KeyValuePair<string, IEnumerable<string>>(pair.Key, pair.Value));
+                return s_Usages.Select(pair => new KeyValuePair<string, IEnumerable<string>>(pair.Key, pair.Value.Select(x => x.ToString())));
             }
         }
 
@@ -37,8 +37,7 @@ namespace ISX
         {
             get
             {
-                Refresh();
-                foreach (var template in s_Cache.table.Values)
+                foreach (var template in allTemplates)
                     if (string.IsNullOrEmpty(template.extendsTemplate) &&
                         typeof(InputDevice).IsAssignableFrom(template.type))
                         yield return template;
@@ -83,7 +82,8 @@ namespace ISX
 
         // We keep a map of all unique usages we find in templates and also
         // retain a list of the templates they are used with.
-        private static SortedDictionary<string, List<string>> s_Usages = new SortedDictionary<string, List<string>>();
+        private static SortedDictionary<InternedString, List<InternedString>> s_Usages =
+            new SortedDictionary<InternedString, List<InternedString>>();
 
         private static void ScanTemplate(InputTemplate template)
         {
@@ -92,21 +92,21 @@ namespace ISX
                 // Collect unique usages and the templates used with them.
                 foreach (var usage in control.usages)
                 {
-                    var usageLowerCase = usage.ToLower();
+                    var internedUsage = new InternedString(usage);
+                    var internedControlTemplate = new InternedString(control.template);
 
-                    List<string> templateList;
-                    if (!s_Usages.TryGetValue(usageLowerCase, out templateList))
+                    List<InternedString> templateList;
+                    if (!s_Usages.TryGetValue(internedUsage, out templateList))
                     {
-                        templateList = new List<string> {control.template};
-                        s_Usages[usageLowerCase] = templateList;
+                        templateList = new List<InternedString> {internedControlTemplate};
+                        s_Usages[internedUsage] = templateList;
                     }
                     else
                     {
                         var templateAlreadyInList =
-                            templateList.Any(x =>
-                                string.Compare(x, control.template, StringComparison.InvariantCultureIgnoreCase) == 0);
+                            templateList.Any(x => x == internedControlTemplate);
                         if (!templateAlreadyInList)
-                            templateList.Add(control.template);
+                            templateList.Add(internedControlTemplate);
                     }
                 }
             }
