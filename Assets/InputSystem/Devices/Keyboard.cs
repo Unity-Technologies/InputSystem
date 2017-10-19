@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace ISX
 {
@@ -94,14 +94,15 @@ namespace ISX
         Count
     }
 
-    ////FIXME: state layout somehow comes up with a size of 8 bits for this
+    // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
-
         public const int kSizeInBytes = ((int)Key.Count) / 8 + (((int)Key.Count) % 8 > 0 ? 1 : 0);
+        public const int kSizeInBits = kSizeInBytes * 8;
 
+        [InputControl(name = "AnyKey", template = "AnyKey", sizeInBits = kSizeInBits)]
         [InputControl(name = "Escape", template = "Button", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "Space", template = "Button", bit = (int)Key.Space)]
         [InputControl(name = "Enter", template = "Button", usage = "Submit", bit = (int)Key.Enter)]
@@ -182,6 +183,18 @@ namespace ISX
         [InputControl(name = "Numpad0", template = "Button", bit = (int)Key.Numpad0)]
         public fixed byte keys[kSizeInBytes];
 
+        public KeyboardState(params Key[] pressedKeys)
+        {
+            fixed(byte* keysPtr = keys)
+            {
+                UnsafeUtility.MemClear(new IntPtr(keysPtr), kSizeInBytes);
+                for (var i = 0; i < pressedKeys.Length; ++i)
+                {
+                    BitfieldHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
+                }
+            }
+        }
+
         public FourCC GetFormat()
         {
             return kFormat;
@@ -191,35 +204,93 @@ namespace ISX
     [InputState(typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
-        ////TODO: add anyKeyPressed which simply does a MemCmp of th state against default(KeyboardState)
-
         public event Action<char> onTextInput
         {
-            add
-            {
-                if (m_TextInputListeners == null)
-                    m_TextInputListeners = new List<Action<char>>();
-                lock (m_TextInputListeners)
-                    m_TextInputListeners.Add(value);
-            }
-            remove
-            {
-                if (m_TextInputListeners != null)
-                    lock (m_TextInputListeners)
-                        m_TextInputListeners.Remove(value);
-            }
+            add { m_TextInputListeners.Append(value); }
+            remove { m_TextInputListeners.Remove(value); }
         }
 
-        // Some common keys.
-        public ButtonControl escape { get; private set; }
+        public AnyKeyControl any { get; private set; }
         public ButtonControl space { get; private set; }
         public ButtonControl enter { get; private set; }
-        public ButtonControl up { get; private set; }
-        public ButtonControl down { get; private set; }
-        public ButtonControl left { get; private set; }
-        public ButtonControl right { get; private set; }
+        public ButtonControl tab { get; private set; }
+        public ButtonControl backtick { get; private set; }
+        public ButtonControl semicolon { get; private set; }
+        public ButtonControl comma { get; private set; }
+        public ButtonControl period { get; private set; }
+        public ButtonControl slash { get; private set; }
+        public ButtonControl backslash { get; private set; }
+        public ButtonControl leftBracket { get; private set; }
+        public ButtonControl rightBracket { get; private set; }
+        public ButtonControl minus { get; private set; }
+        public ButtonControl equals { get; private set; }
+        public ButtonControl a { get; private set; }
+        public ButtonControl b { get; private set; }
+        public ButtonControl c { get; private set; }
+        public ButtonControl d { get; private set; }
+        public ButtonControl e { get; private set; }
+        public ButtonControl f { get; private set; }
+        public ButtonControl g { get; private set; }
+        public ButtonControl h { get; private set; }
+        public ButtonControl i { get; private set; }
+        public ButtonControl j { get; private set; }
+        public ButtonControl k { get; private set; }
+        public ButtonControl l { get; private set; }
+        public ButtonControl m { get; private set; }
+        public ButtonControl n { get; private set; }
+        public ButtonControl o { get; private set; }
+        public ButtonControl p { get; private set; }
+        public ButtonControl q { get; private set; }
+        public ButtonControl r { get; private set; }
+        public ButtonControl s { get; private set; }
+        public ButtonControl t { get; private set; }
+        public ButtonControl u { get; private set; }
+        public ButtonControl v { get; private set; }
+        public ButtonControl w { get; private set; }
+        public ButtonControl x { get; private set; }
+        public ButtonControl y { get; private set; }
+        public ButtonControl z { get; private set; }
+        public ButtonControl digit1 { get; private set; }
+        public ButtonControl digit2 { get; private set; }
+        public ButtonControl digit3 { get; private set; }
+        public ButtonControl digit4 { get; private set; }
+        public ButtonControl digit5 { get; private set; }
+        public ButtonControl digit6 { get; private set; }
+        public ButtonControl digit7 { get; private set; }
+        public ButtonControl digit8 { get; private set; }
+        public ButtonControl digit9 { get; private set; }
+        public ButtonControl digit0 { get; private set; }
+        public ButtonControl leftShift { get; private set; }
+        public ButtonControl rightShift { get; private set; }
+        public ButtonControl leftAlt { get; private set; }
+        public ButtonControl rightAlt { get; private set; }
+        public ButtonControl leftCtrl { get; private set; }
+        public ButtonControl rightCtrl { get; private set; }
+        public ButtonControl escape { get; private set; }
+        public ButtonControl leftArrow { get; private set; }
+        public ButtonControl rightArrow { get; private set; }
+        public ButtonControl upArrow { get; private set; }
+        public ButtonControl downArrow { get; private set; }
+        public ButtonControl backspace { get; private set; }
+        public ButtonControl pageDown { get; private set; }
+        public ButtonControl pageUp { get; private set; }
+        public ButtonControl home { get; private set; }
+        public ButtonControl end { get; private set; }
+        public ButtonControl insert { get; private set; }
+        public ButtonControl erase { get; private set; }
+        public ButtonControl numpadEnter { get; private set; }
+        public ButtonControl numpad0 { get; private set; }
+        public ButtonControl numpad1 { get; private set; }
+        public ButtonControl numpad2 { get; private set; }
+        public ButtonControl numpad3 { get; private set; }
+        public ButtonControl numpad4 { get; private set; }
+        public ButtonControl numpad5 { get; private set; }
+        public ButtonControl numpad6 { get; private set; }
+        public ButtonControl numpad7 { get; private set; }
+        public ButtonControl numpad8 { get; private set; }
+        public ButtonControl numpad9 { get; private set; }
 
-        public static Keyboard current { get; protected set; }
+        public static Keyboard current { get; internal set; }
 
         public override void MakeCurrent()
         {
@@ -229,17 +300,89 @@ namespace ISX
 
         protected override void FinishSetup(InputControlSetup setup)
         {
-            escape = setup.GetControl<ButtonControl>("Escape");
+            any = setup.GetControl<AnyKeyControl>("AnyKey");
             space = setup.GetControl<ButtonControl>("Space");
             enter = setup.GetControl<ButtonControl>("Enter");
-            up = setup.GetControl<ButtonControl>("UpArrow");
-            down = setup.GetControl<ButtonControl>("DownArrow");
-            left = setup.GetControl<ButtonControl>("LeftArrow");
-            right = setup.GetControl<ButtonControl>("RightArrow");
+            tab = setup.GetControl<ButtonControl>("Tab");
+            backtick = setup.GetControl<ButtonControl>("Backtick");
+            semicolon = setup.GetControl<ButtonControl>("Semicolon");
+            comma = setup.GetControl<ButtonControl>("Comma");
+            period = setup.GetControl<ButtonControl>("Period");
+            slash = setup.GetControl<ButtonControl>("Slash");
+            backslash = setup.GetControl<ButtonControl>("Backslash");
+            leftBracket = setup.GetControl<ButtonControl>("LeftBracket");
+            rightBracket = setup.GetControl<ButtonControl>("RightBracket");
+            minus = setup.GetControl<ButtonControl>("Minus");
+            equals = setup.GetControl<ButtonControl>("Equals");
+            a = setup.GetControl<ButtonControl>("A");
+            b = setup.GetControl<ButtonControl>("B");
+            c = setup.GetControl<ButtonControl>("C");
+            d = setup.GetControl<ButtonControl>("D");
+            e = setup.GetControl<ButtonControl>("E");
+            f = setup.GetControl<ButtonControl>("F");
+            g = setup.GetControl<ButtonControl>("G");
+            h = setup.GetControl<ButtonControl>("H");
+            i = setup.GetControl<ButtonControl>("I");
+            j = setup.GetControl<ButtonControl>("J");
+            k = setup.GetControl<ButtonControl>("K");
+            l = setup.GetControl<ButtonControl>("L");
+            m = setup.GetControl<ButtonControl>("M");
+            n = setup.GetControl<ButtonControl>("N");
+            o = setup.GetControl<ButtonControl>("O");
+            p = setup.GetControl<ButtonControl>("P");
+            q = setup.GetControl<ButtonControl>("Q");
+            r = setup.GetControl<ButtonControl>("R");
+            s = setup.GetControl<ButtonControl>("S");
+            t = setup.GetControl<ButtonControl>("T");
+            u = setup.GetControl<ButtonControl>("U");
+            v = setup.GetControl<ButtonControl>("V");
+            w = setup.GetControl<ButtonControl>("W");
+            x = setup.GetControl<ButtonControl>("X");
+            y = setup.GetControl<ButtonControl>("Y");
+            z = setup.GetControl<ButtonControl>("Z");
+            digit1 = setup.GetControl<ButtonControl>("1");
+            digit2 = setup.GetControl<ButtonControl>("2");
+            digit3 = setup.GetControl<ButtonControl>("3");
+            digit4 = setup.GetControl<ButtonControl>("4");
+            digit5 = setup.GetControl<ButtonControl>("5");
+            digit6 = setup.GetControl<ButtonControl>("6");
+            digit7 = setup.GetControl<ButtonControl>("7");
+            digit8 = setup.GetControl<ButtonControl>("8");
+            digit9 = setup.GetControl<ButtonControl>("9");
+            digit0 = setup.GetControl<ButtonControl>("0");
+            leftShift = setup.GetControl<ButtonControl>("LeftShift");
+            rightShift = setup.GetControl<ButtonControl>("RightShift");
+            leftAlt = setup.GetControl<ButtonControl>("LeftAlt");
+            rightAlt = setup.GetControl<ButtonControl>("RightAlt");
+            leftCtrl = setup.GetControl<ButtonControl>("LeftCtrl");
+            rightCtrl = setup.GetControl<ButtonControl>("RightCtrl");
+            escape = setup.GetControl<ButtonControl>("Escape");
+            leftArrow = setup.GetControl<ButtonControl>("LeftArrow");
+            rightArrow = setup.GetControl<ButtonControl>("RightArrow");
+            upArrow = setup.GetControl<ButtonControl>("UpArrow");
+            downArrow = setup.GetControl<ButtonControl>("DownArrow");
+            backspace = setup.GetControl<ButtonControl>("Backspace");
+            pageDown = setup.GetControl<ButtonControl>("PageDown");
+            pageUp = setup.GetControl<ButtonControl>("PageUp");
+            home = setup.GetControl<ButtonControl>("Home");
+            end = setup.GetControl<ButtonControl>("End");
+            insert = setup.GetControl<ButtonControl>("Insert");
+            erase = setup.GetControl<ButtonControl>("Erase");
+            numpadEnter = setup.GetControl<ButtonControl>("NumpadEnter");
+            numpad0 = setup.GetControl<ButtonControl>("Numpad0");
+            numpad1 = setup.GetControl<ButtonControl>("Numpad1");
+            numpad2 = setup.GetControl<ButtonControl>("Numpad2");
+            numpad3 = setup.GetControl<ButtonControl>("Numpad3");
+            numpad4 = setup.GetControl<ButtonControl>("Numpad4");
+            numpad5 = setup.GetControl<ButtonControl>("Numpad5");
+            numpad6 = setup.GetControl<ButtonControl>("Numpad6");
+            numpad7 = setup.GetControl<ButtonControl>("Numpad7");
+            numpad8 = setup.GetControl<ButtonControl>("Numpad8");
+            numpad9 = setup.GetControl<ButtonControl>("Numpad9");
 
             base.FinishSetup(setup);
         }
 
-        internal List<Action<char>> m_TextInputListeners;
+        internal InlinedArray<Action<char>> m_TextInputListeners;
     }
 }

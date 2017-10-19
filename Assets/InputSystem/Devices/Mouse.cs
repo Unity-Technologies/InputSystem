@@ -30,7 +30,7 @@ namespace ISX
     [InputState(typeof(MouseState))]
     public class Mouse : Pointer
     {
-        public new static Mouse current { get; private set; }
+        public new static Mouse current { get; internal set; }
 
         public override void MakeCurrent()
         {

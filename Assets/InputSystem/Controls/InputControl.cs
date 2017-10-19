@@ -132,9 +132,12 @@ namespace ISX
 
         // We don't allow custom default values for state so all zeros indicates
         // default states for us.
-        internal unsafe bool CheckStateIsAllZeroes()
+        internal unsafe bool CheckStateIsAllZeroes(IntPtr statePtr = new IntPtr())
         {
-            var ptr = (byte*)currentValuePtr;
+            if (statePtr == IntPtr.Zero)
+                statePtr = currentValuePtr;
+
+            var ptr = (byte*)statePtr;
 
             // Bitfield value.
             if (m_StateBlock.sizeInBits % 8 != 0)

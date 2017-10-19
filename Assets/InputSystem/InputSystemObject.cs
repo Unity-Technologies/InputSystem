@@ -20,10 +20,15 @@ namespace ISX
         {
             InputActionSet.ResetGlobals();
             manager.Destroy();
-            #if UNITY_EDITOR
             EditorInputTemplateCache.Clear();
-            #endif
+
+            // Reset any current&all getters.
+            Gamepad.current = null;
+            Keyboard.current = null;
+            Pointer.current = null;
+            Mouse.current = null;
+            Touchscreen.current = null;
         }
     }
 }
-#endif
+#endif // UNITY_EDITOR

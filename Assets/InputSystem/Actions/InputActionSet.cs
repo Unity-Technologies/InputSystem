@@ -235,6 +235,11 @@ namespace ISX
         [NonSerialized] internal InputActionSet m_NextInGlobalList;
         [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
 
+        #if UNITY_EDITOR
+        ////REVIEW: not sure yet whether this warrants a publicly accessible callback so keeping it a private hook for now
+        internal static List<Action> s_OnEnabledActionsChanged;
+        #endif
+
         internal static void ResetGlobals()
         {
             for (var set = s_FirstSetInGlobalList; set != null;)
@@ -305,6 +310,12 @@ namespace ISX
             {
                 throw new NotImplementedException();
             }
+
+            #if UNITY_EDITOR
+            if (s_OnEnabledActionsChanged != null)
+                foreach (var listener in s_OnEnabledActionsChanged)
+                    listener();
+            #endif
         }
 
         [Serializable]

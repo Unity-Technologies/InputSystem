@@ -12,13 +12,13 @@ namespace ISX
         Canceled
     }
 
-    ////REVIEW: shouldn't this be a control by itself? PointerControl?
+    // NOTE: This layout has to match the PointerInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
-        // There's systems where 0 is a valid finger ID. Should add +1 for to system IDs
+        // There's systems where 0 is a valid finger ID. Should add +1 to system IDs
         // in that case.
         public const uint kInvalidPointerId = 0;
 
@@ -49,7 +49,7 @@ namespace ISX
     [InputState(typeof(PointerState))]
     public class Pointer : InputDevice
     {
-        public static Pointer current { get; protected set; }
+        public static Pointer current { get; internal set; }
 
         public override void MakeCurrent()
         {

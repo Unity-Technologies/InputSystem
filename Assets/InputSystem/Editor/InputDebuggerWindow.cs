@@ -39,11 +39,17 @@ namespace ISX
         public void Awake()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
+
+            if (InputActionSet.s_OnEnabledActionsChanged == null)
+                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
+            InputActionSet.s_OnEnabledActionsChanged.Add(Repaint);
         }
 
         public void OnDestroy()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
+            if (InputActionSet.s_OnEnabledActionsChanged != null)
+                InputActionSet.s_OnEnabledActionsChanged.Remove(Repaint);
         }
 
         public void AddItemsToMenu(GenericMenu menu)
@@ -116,21 +122,24 @@ namespace ISX
                 // Draw it.
                 var deviceLabel = new GUIContent(device.name);
                 var rect = GUILayoutUtility.GetRect(deviceLabel, Styles.deviceStyle, GUILayout.Width(kDeviceElementWidth));
-                DrawDevice(deviceLabel, device, rect);
+                var width = Styles.deviceStyle.CalcSize(deviceLabel).x;
+                var textOverflowingButton = width > rect.width;
+
+                if (rect.x + rect.width >= position.width)
+                {
+                    ////FIXME: this does not work; Unity just throws a bunch of exceptions when trying to break horizontal groups like this
+                    //EditorGUILayout.EndHorizontal();
+                    //EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+                }
+
+                if (GUI.Button(rect, deviceLabel, textOverflowingButton ? Styles.deviceStyleLeftAligned : Styles.deviceStyle))
+                    InputDeviceDebuggerWindow.CreateOrShowExisting(device);
             }
 
             if (displayedDeviceCount == 0)
                 EditorGUILayout.LabelField(Contents.noneContent);
 
             EditorGUILayout.EndHorizontal();
-        }
-
-        private void DrawDevice(GUIContent deviceLabel, InputDevice device, Rect position)
-        {
-            var width = Styles.deviceStyle.CalcSize(deviceLabel).x;
-            var textIsClipped = width > position.width;
-            if (GUI.Button(position, deviceLabel, textIsClipped ? Styles.deviceStyleClipped : Styles.deviceStyle))
-                InputDeviceDebuggerWindow.CreateOrShowExisting(device);
         }
 
         private void DrawUnrecognizedDevicesGUI()
@@ -226,7 +235,7 @@ namespace ISX
         private static class Styles
         {
             public static GUIStyle deviceStyle = new GUIStyle("button");
-            public static GUIStyle deviceStyleClipped = new GUIStyle(deviceStyle) {alignment = TextAnchor.MiddleLeft};
+            public static GUIStyle deviceStyleLeftAligned = new GUIStyle(deviceStyle) {alignment = TextAnchor.MiddleLeft};
         }
 
         private static class Contents

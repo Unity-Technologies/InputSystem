@@ -9,6 +9,34 @@ namespace ISX
             return (uint)(byteOffset + sizeInBits / 8 + ((sizeInBits % 8) > 0 ? 1 : 0));
         }
 
+        public static unsafe void WriteSingleBit(IntPtr ptr, uint bitOffset, bool value)
+        {
+            if (bitOffset < 8)
+            {
+                if (value)
+                    *((byte*)ptr) |= (byte)(1 << (int)bitOffset);
+                else
+                    *((byte*)ptr) &= (byte)~(1 << (int)bitOffset);
+            }
+            else if (bitOffset < 32)
+            {
+                if (value)
+                    *((int*)ptr) |= 1 << (int)bitOffset;
+                else
+                    *((int*)ptr) &= ~(1 << (int)bitOffset);
+            }
+            else
+            {
+                var byteOffset = bitOffset / 8;
+                bitOffset = bitOffset % 8;
+
+                if (value)
+                    *((byte*)ptr + byteOffset) |= (byte)(1 << (int)bitOffset);
+                else
+                    *((byte*)ptr + byteOffset) &= (byte)~(1 << (int)bitOffset);
+            }
+        }
+
         public static unsafe bool ReadSingleBit(IntPtr ptr, uint bitOffset)
         {
             ////TODO: currently this is not actually enforced...

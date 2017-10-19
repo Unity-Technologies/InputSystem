@@ -142,7 +142,7 @@ namespace ISX
 
         ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
-        public static Gamepad current { get; protected set; }
+        public static Gamepad current { get; internal set; }
 
         public static ReadOnlyArray<Gamepad> all
         {

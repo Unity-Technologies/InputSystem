@@ -462,6 +462,7 @@ namespace ISX
             return device;
         }
 
+        ////TODO: get current&all getters to update
         public void RemoveDevice(InputDevice device)
         {
             if (device == null)
@@ -656,7 +657,7 @@ namespace ISX
             RegisterTemplate("Pose", typeof(PoseControl));
             RegisterTemplate("Stick", typeof(StickControl));
             RegisterTemplate("Dpad", typeof(DpadControl));
-            RegisterTemplate("Pointer", typeof(PointerControl));
+            RegisterTemplate("AnyKey", typeof(AnyKeyControl));
 
             RegisterTemplate("Motor", typeof(MotorControl)); // Outputs.
 
@@ -1487,11 +1488,15 @@ namespace ISX
             // Configuration.
             InputConfiguration.Restore(state.configuration);
 
-            ////TODO: protect against failing Type.GetType() calls by logging error and removing entry
-
             // Template types.
             foreach (var template in state.templateTypes)
-                m_TemplateTypes[new InternedString(template.name)] = Type.GetType(template.typeNameOrJson, true);
+            {
+                var type = Type.GetType(template.typeNameOrJson, false);
+                if (type != null)
+                    m_TemplateTypes[new InternedString(template.name)] = type;
+                else
+                    Debug.Log($"Input template '{template.name}' has been removed (type '{template.typeNameOrJson}' cannot be found)");
+            }
             InputTemplate.s_TemplateTypes = m_TemplateTypes;
 
             // Template strings.
@@ -1507,12 +1512,24 @@ namespace ISX
 
             // Processors.
             foreach (var processor in state.processors)
-                m_Processors[new InternedString(processor.name)] = Type.GetType(processor.typeName, true);
+            {
+                var type = Type.GetType(processor.typeName, false);
+                if (type != null)
+                    m_Processors[new InternedString(processor.name)] = type;
+                else
+                    Debug.Log($"Input processor '{processor.name}' has been removed (type '{processor.typeName}' cannot be found)");
+            }
             InputProcessor.s_Processors = m_Processors;
 
             // Modifiers.
             foreach (var modifier in state.modifiers)
-                m_Modifiers[new InternedString(modifier.name)] = Type.GetType(modifier.typeName, true);
+            {
+                var type = Type.GetType(modifier.typeName, false);
+                if (type != null)
+                    m_Modifiers[new InternedString(modifier.name)] = Type.GetType(modifier.typeName, true);
+                else
+                    Debug.Log($"Input action modifier '{modifier.name}' has been removed (type '{modifier.typeName}' cannot be found)");
+            }
 
             // Refresh builtin templates.
             BuiltinDeviceTemplates.RegisterTemplates(this);

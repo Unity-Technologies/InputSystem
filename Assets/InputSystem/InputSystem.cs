@@ -352,7 +352,6 @@ namespace ISX
 
         internal static void Reset()
         {
-            ////TODO: clear current&all props (probably best from InputSystemObject)
             if (m_SystemObject != null)
                 UnityEngine.Object.DestroyImmediate(m_SystemObject);
             m_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();

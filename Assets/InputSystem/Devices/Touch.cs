@@ -40,7 +40,7 @@ namespace ISX
     [InputState(typeof(TouchscreenState))]
     public class Touchscreen : Pointer
     {
-        public new static Touchscreen current { get; private set; }
+        public new static Touchscreen current { get; internal set; }
 
         public override void MakeCurrent()
         {

@@ -1373,6 +1373,18 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Devices")]
+    public void Devices_CanCheckAnyKeyOnKeyboard()
+    {
+        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+        InputSystem.Update();
+
+        Assert.That(keyboard.any.isPressed, Is.True);
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
     {
