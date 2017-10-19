@@ -1,10 +1,11 @@
 namespace ISX
 {
-    // Requires a directional swipe from the initial contact point in order
-    // to go to consider the action to be performed.
+    // Performs the action if the 2D control is pressed and then released within
+    // 'minDistance' in the direction between 'minAngle' and 'maxAngle'.
     public class SwipeModifier : IInputActionModifier
     {
-        public float angle;
+        public float minAngle;
+        public float maxAngle;
         public float minDistance;
 
         public void Process(ref InputAction.ModifierContext context)

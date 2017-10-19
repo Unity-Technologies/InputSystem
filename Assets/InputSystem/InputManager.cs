@@ -664,6 +664,7 @@ namespace ISX
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
             RegisterTemplate("Keyboard", typeof(Keyboard));
             RegisterTemplate("Mouse", typeof(Mouse));
+            RegisterTemplate("Stylus", typeof(Stylus));
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
             RegisterTemplate("HMD", typeof(HMD));
             RegisterTemplate("XRController", typeof(XRController));
@@ -782,6 +783,8 @@ namespace ISX
             public int bindingIndex;
         }
 
+        ////TODO: optimize the lists away
+        ////REVIEW: I think these can be organized smarter to make bookkeeping cheaper
         // Indices correspond with those in m_Devices.
         private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
         private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
@@ -846,9 +849,32 @@ namespace ISX
             signals.Add(false);
         }
 
+        ////REVIEW: better to to just pass device+action and remove all state change monitors for the pair?
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
         {
-            throw new NotImplementedException();
+            if (m_StateChangeMonitorListeners == null)
+                return;
+
+            var device = control.device;
+            var deviceIndex = device.m_DeviceIndex;
+
+            if (m_StateChangeMonitorListeners.Length <= deviceIndex)
+                return;
+
+            var listeners = m_StateChangeMonitorListeners[deviceIndex];
+            var regions = m_StateChangeMonitorMemoryRegions[deviceIndex];
+            var signals = m_StateChangeSignalled[deviceIndex];
+
+            for (var i = 0; i < listeners.Count; ++i)
+            {
+                if (listeners[i].action == action && listeners[i].control == control)
+                {
+                    listeners.RemoveAt(i);
+                    regions.RemoveAt(i);
+                    signals.RemoveAt(i);
+                    break;
+                }
+            }
         }
 
         internal void AddActionTimeout(InputAction action, double time, IInputActionModifier modifier)

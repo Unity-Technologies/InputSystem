@@ -1,7 +1,7 @@
 namespace ISX
 {
-    // Triggers 'Performed' if a source control, after being triggered, does not reset to its
-    // default state before a specified amount of time has passed.
+    // Performs the action if the control is pressed and *held* for at least the
+    // set duration (which defaults to InputConfiguration.HoldTime).
     public class HoldModifier : IInputActionModifier
     {
         public float duration;

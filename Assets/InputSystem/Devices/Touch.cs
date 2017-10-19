@@ -6,7 +6,7 @@ namespace ISX
     // All fingers combine to quite a bit of state; ideally send delta events that update
     // only specific fingers.
     [StructLayout(LayoutKind.Sequential)]
-    public struct TouchscreenState
+    public struct TouchscreenState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
@@ -14,16 +14,17 @@ namespace ISX
 
         ////REVIEW: shouldn't these all be controls?
 
-        public PointerState finger1;
-        public PointerState finger2;
-        public PointerState finger3;
-        public PointerState finger4;
-        public PointerState finger5;
-        public PointerState finger6;
-        public PointerState finger7;
-        public PointerState finger8;
-        public PointerState finger9;
-        public PointerState finger10;
+        /*
+        [InputControl] public PointerState finger1;
+        [InputControl] public PointerState finger2;
+        [InputControl] public PointerState finger3;
+        [InputControl] public PointerState finger4;
+        [InputControl] public PointerState finger5;
+        [InputControl] public PointerState finger6;
+        [InputControl] public PointerState finger7;
+        [InputControl] public PointerState finger8;
+        [InputControl] public PointerState finger9;
+        [InputControl] public PointerState finger10;
 
         public unsafe PointerState* fingers
         {
@@ -34,6 +35,12 @@ namespace ISX
                     return ptr;
                 }
             }
+        }
+        */
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
         }
     }
 

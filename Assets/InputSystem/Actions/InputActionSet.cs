@@ -230,8 +230,8 @@ namespace ISX
         // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
         // instead we just link all action sets that have enabled actions together in a list that has its link
         // embedded right here in an action set.
-        private static int s_EnabledActionsCount;
         private static InputActionSet s_FirstSetInGlobalList;
+        [NonSerialized] private int m_EnabledActionsCount;
         [NonSerialized] internal InputActionSet m_NextInGlobalList;
         [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
 
@@ -247,6 +247,7 @@ namespace ISX
                 var next = set.m_NextInGlobalList;
                 set.m_NextInGlobalList = null;
                 set.m_PreviousInGlobalList = null;
+                set.m_EnabledActionsCount = 0;
                 if (set.m_SingletonAction != null)
                     set.m_SingletonAction.m_Enabled = false;
                 else
@@ -258,7 +259,6 @@ namespace ISX
                 set = next;
             }
             s_FirstSetInGlobalList = null;
-            s_EnabledActionsCount = 0;
         }
 
         // Walk all sets with enabled actions and add all enabled actions to the given list.
@@ -297,7 +297,7 @@ namespace ISX
         {
             if (enable)
             {
-                ++s_EnabledActionsCount;
+                ++m_EnabledActionsCount;
                 if (m_NextInGlobalList == null)
                 {
                     if (s_FirstSetInGlobalList != null)
@@ -308,7 +308,18 @@ namespace ISX
             }
             else
             {
-                throw new NotImplementedException();
+                --m_EnabledActionsCount;
+                if (m_EnabledActionsCount == 0)
+                {
+                    if (m_NextInGlobalList != null)
+                        m_NextInGlobalList.m_PreviousInGlobalList = m_PreviousInGlobalList;
+                    if (m_PreviousInGlobalList != null)
+                        m_PreviousInGlobalList.m_NextInGlobalList = m_NextInGlobalList;
+                    if (s_FirstSetInGlobalList == this)
+                        s_FirstSetInGlobalList = m_NextInGlobalList;
+                    m_NextInGlobalList = null;
+                    m_PreviousInGlobalList = null;
+                }
             }
 
             #if UNITY_EDITOR

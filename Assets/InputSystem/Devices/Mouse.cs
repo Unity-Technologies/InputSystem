@@ -1,14 +1,20 @@
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace ISX
 {
     // Combine a single pointer with buttons.
     [StructLayout(LayoutKind.Sequential)]
-    public struct MouseState
+    public struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
 
         public PointerState pointer;
+
+        [InputControl(template = "Vector2")]
+        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal")]
+        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical")]
+        public Vector2 scroll;
 
         [InputControl(name = "leftButton", template = "Button", bit = (int)Button.Left, usages = new string[] { "PrimaryAction", "PrimaryTrigger" })]
         [InputControl(name = "rightButton", template = "Button", bit = (int)Button.Right, usages = new string[] { "SecondaryAction", "SecondaryTrigger" })]
@@ -24,6 +30,11 @@ namespace ISX
             Middle,
             Forward,
             Backward
+        }
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
         }
     }
 

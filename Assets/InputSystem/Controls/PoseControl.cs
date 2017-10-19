@@ -2,10 +2,12 @@ namespace ISX
 {
     public class PoseControl : InputControl<Pose>
     {
-        [InputControl(offset = 0)]
         public Vector3Control translation { get; private set; }
-        [InputControl(offset = 3 * sizeof(float))]
         public QuaternionControl rotation { get; private set; }
+        public Vector3Control velocity { get; private set; }
+        public Vector3Control angularVelocity { get; private set; }
+        public Vector3Control acceleration { get; private set; }
+        public Vector3Control angularAcceleration { get; private set; }
 
         public PoseControl()
         {
@@ -20,6 +22,10 @@ namespace ISX
         {
             translation = setup.GetControl<Vector3Control>(this, "translation");
             rotation = setup.GetControl<QuaternionControl>(this, "rotation");
+            velocity = setup.GetControl<Vector3Control>(this, "velocity");
+            angularVelocity = setup.GetControl<Vector3Control>(this, "angularVelocity");
+            acceleration = setup.GetControl<Vector3Control>(this, "acceleration");
+            angularAcceleration = setup.GetControl<Vector3Control>(this, "angularAcceleration");
             base.FinishSetup(setup);
         }
     }

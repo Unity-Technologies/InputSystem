@@ -30,12 +30,12 @@ namespace ISX
         [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
         public int buttons;
 
-        [InputControl(variant = "default", template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
-        [InputControl(variant = "Lefty", template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
+        [InputControl(variant = "default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Lefty", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         public Vector2 leftStick;
 
-        [InputControl(variant = "default", template = "Stick", usage = "SecondaryStick", processors = "deadzone")]
-        [InputControl(variant = "Lefty", template = "Stick", usage = "PrimaryStick", processors = "deadzone")]
+        [InputControl(variant = "default", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Lefty", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         public Vector2 rightStick;
 
         [InputControl(variant = "default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]

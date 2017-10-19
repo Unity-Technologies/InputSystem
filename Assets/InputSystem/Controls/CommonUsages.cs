@@ -2,9 +2,8 @@ namespace ISX
 {
     public static class CommonUsages
     {
-        ////REVIEW: may want to rename to PrimaryMotion and SecondaryMotion or something like that
-        public static InternedString PrimaryStick = new InternedString("PrimaryStick");
-        public static InternedString SecondaryStick = new InternedString("SecondaryStick");
+        public static InternedString Primary2DMotion = new InternedString("Primary2DMotion");
+        public static InternedString Secondary2DMotion = new InternedString("Secondary2DMotion");
         public static InternedString PrimaryAction = new InternedString("PrimaryAction");
         public static InternedString SecondaryAction = new InternedString("SecondaryAction");
         public static InternedString PrimaryTrigger = new InternedString("PrimaryTrigger");

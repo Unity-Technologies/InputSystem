@@ -157,7 +157,7 @@ public class FunctionalTests
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(CommonUsages.PrimaryStick));
+        Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(CommonUsages.Primary2DMotion));
     }
 
     [Test]
@@ -445,15 +445,15 @@ public class FunctionalTests
     public void Devices_CanCreateDeviceFromTemplateVariant()
     {
         var leftyGamepadSetup = new InputControlSetup("Gamepad", variant: "Lefty");
-        var leftyGamepadPrimaryStick = leftyGamepadSetup.GetControl("{PrimaryStick}");
-        var leftyGamepadSecondaryStick = leftyGamepadSetup.GetControl("{SecondaryStick}");
+        var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
+        var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
         var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
         var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
         //shoulder?
 
         var defaultGamepadSetup = new InputControlSetup("Gamepad");
-        var defaultGamepadPrimaryStick = defaultGamepadSetup.GetControl("{PrimaryStick}");
-        var defaultGamepadSecondaryStick = defaultGamepadSetup.GetControl("{SecondaryStick}");
+        var defaultGamepadPrimary2DMotion = defaultGamepadSetup.GetControl("{Primary2DMotion}");
+        var defaultGamepadSecondary2DMotion = defaultGamepadSetup.GetControl("{Secondary2DMotion}");
         var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
         var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
 
@@ -461,11 +461,11 @@ public class FunctionalTests
         var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
 
         Assert.That(leftyGamepad.variant, Is.EqualTo("Lefty"));
-        Assert.That(leftyGamepadPrimaryStick, Is.SameAs(leftyGamepad.rightStick));
-        Assert.That(leftyGamepadSecondaryStick, Is.SameAs(leftyGamepad.leftStick));
+        Assert.That(leftyGamepadPrimary2DMotion, Is.SameAs(leftyGamepad.rightStick));
+        Assert.That(leftyGamepadSecondary2DMotion, Is.SameAs(leftyGamepad.leftStick));
 
-        Assert.That(defaultGamepadPrimaryStick, Is.SameAs(defaultGamepad.leftStick));
-        Assert.That(defaultGamepadSecondaryStick, Is.SameAs(defaultGamepad.rightStick));
+        Assert.That(defaultGamepadPrimary2DMotion, Is.SameAs(defaultGamepad.leftStick));
+        Assert.That(defaultGamepadSecondary2DMotion, Is.SameAs(defaultGamepad.rightStick));
     }
 
     [Test]
@@ -576,10 +576,13 @@ public class FunctionalTests
         var controller = InputSystem.AddDevice("XRController");
 
         Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
+        Assert.That(XRController.leftHand, Is.SameAs(controller));
 
-        InputSystem.SetVariant(controller, CommonUsages.LeftHand);
+        InputSystem.SetUsage(controller, CommonUsages.LeftHand);
 
         Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+        Assert.That(XRController.rightHand, Is.SameAs(controller));
+        Assert.That(XRController.leftHand, Is.Not.SameAs(controller));
     }
 
     [Test]
@@ -1312,9 +1315,19 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanBeReadded()
+    public void Devices_CanBeReadded()
     {
-        Assert.Fail();
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        InputSystem.AddDevice("Keyboard");
+
+        InputSystem.RemoveDevice(gamepad);
+        InputSystem.AddDevice(gamepad);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(gamepad.leftStick.value.x, Is.EqualTo(0.5f).Within(0.0000001));
     }
 
     [Test]
@@ -1437,7 +1450,7 @@ public class FunctionalTests
     public void Controls_CanFindControlsByUsage()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-        var matches = InputSystem.GetControls("/gamepad/{primaryStick}");
+        var matches = InputSystem.GetControls("/gamepad/{Primary2DMotion}");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -1448,7 +1461,7 @@ public class FunctionalTests
     public void Controls_CanFindChildControlsOfControlsFoundByUsage()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-        var matches = InputSystem.GetControls("/gamepad/{primaryStick}/x");
+        var matches = InputSystem.GetControls("/gamepad/{Primary2DMotion}/x");
 
         Assert.That(matches, Has.Count.EqualTo(1));
         Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick.x));
@@ -1592,6 +1605,20 @@ public class FunctionalTests
 
         Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123f));
         Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456f));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanUpdatePartialStateOfDeviceWithEvent()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        // Update just left stick.
+        InputSystem.QueueDeltaStateEvent(gamepad, new Vector2(0.5f, 0.5f), (uint)UnsafeUtility.OffsetOf<GamepadState>("leftStick"));
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.x, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.y, Is.EqualTo(0.5).Within(0.000001));
     }
 
     [Test]
@@ -2479,23 +2506,34 @@ public class FunctionalTests
                 modifiers: "tap(duration=0.1),slowTap(duration=0.5)");
         action.Enable();
 
+        var receivedCalls = 0;
+        IInputActionModifier receivedModifier = null;
+
         action.performed +=
             ctx =>
             {
-                ////TODO
+                ++receivedCalls;
+                receivedModifier = ctx.modifier;
             };
 
         // Perform tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 0.0);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << 0}, InputConfiguration.TapTime - 0.0001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, InputConfiguration.TapTime - 0.0001);
         InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedModifier, Is.TypeOf<TapModifier>());
+
+        receivedCalls = 0;
+        receivedModifier = null;
 
         // Perform slow tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 2.0);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << 0}, 2.0 + InputConfiguration.SlowTapTime + 0.0001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, 2.0 + InputConfiguration.SlowTapTime + 0.0001);
         InputSystem.Update();
 
-        Assert.Fail();
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedModifier, Is.TypeOf<SlowTapModifier>());
     }
 
     [Test]
@@ -2520,6 +2558,22 @@ public class FunctionalTests
         InputSystem.RemoveDevice(gamepad);
 
         Assert.That(action.controls, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAction()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftStick");
+
+        action.Enable();
+        action.Disable();
+
+        Assert.That(InputSystem.FindAllEnabledActions(), Has.Exactly(0).SameAs(action));
+        Assert.That(() => action.controls, Throws.InvalidOperationException);
+        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
+        Assert.That(action.enabled, Is.False);
     }
 
 #if UNITY_EDITOR

@@ -14,7 +14,7 @@ namespace ISX
 
     // NOTE: This layout has to match the PointerInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
-    public struct PointerState
+    public struct PointerState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
@@ -25,25 +25,37 @@ namespace ISX
         [InputControl(template = "Digital")]
         public uint pointerId;
 
-        [InputControl(template = "Digital")]
-        public PointerPhase phase;
-
-        [InputControl(template = "Analog", usage = "Pressure")]
-        public float pressure;
-
         [InputControl(template = "Vector2", usage = "Point")]
         public Vector2 position;
 
         // IMPORTANT: Accumulation and *resetting* (i.e. going back to zero in-between frames)
         //            has to be done by the code that generates state events. The system will *not*
         //            automatically maintain deltas.
-        [InputControl(usage = "secondaryStick")]
+        [InputControl(usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(template = "Vector2")]
-        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal")]
-        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical")]
-        public Vector2 scroll;
+        [InputControl(template = "Analog", usage = "Pressure")]
+        public float pressure;
+
+        [InputControl(template = "Axis", usage = "Twist")]
+        public float twist;
+
+        [InputControl(template = "Vector2", usage = "Tilt")]
+        public Vector2 tilt;
+
+        [InputControl(template = "Vector2", usage = "Radius")]
+        public Vector2 radius;
+
+        [InputControl(template = "Digital")]
+        public ushort phase;
+
+        [InputControl(template = "Digital")]
+        public ushort displayIndex;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
     }
 
     [InputState(typeof(PointerState))]

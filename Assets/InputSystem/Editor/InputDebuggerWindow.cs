@@ -192,6 +192,7 @@ namespace ISX
                     var action = m_EnabledActions[i];
                     if (GUILayout.Button(action.name))
                     {
+                        InputActionDebuggerWindow.CreateOrShowExisting(m_EnabledActions[i]);
                     }
                 }
             }

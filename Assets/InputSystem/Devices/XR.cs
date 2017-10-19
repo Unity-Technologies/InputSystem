@@ -44,11 +44,16 @@ namespace ISX
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct XRControllerState
+    public struct XRControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('C', 'T', 'R', 'L');
 
         [InputControl] public Pose pose;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
     }
 
     // A hand and interaction tracking device.

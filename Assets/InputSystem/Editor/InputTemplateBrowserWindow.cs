@@ -128,6 +128,10 @@ namespace ISX
                         controls.AddChild(item);
                 }
 
+                controls.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                devices.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                products.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+
                 return root;
             }
 

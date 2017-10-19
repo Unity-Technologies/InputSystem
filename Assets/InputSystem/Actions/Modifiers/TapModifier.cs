@@ -1,7 +1,7 @@
 namespace ISX
 {
-    // Requires the triggering control to press and release in less than
-    // the set duration (which defaults to InputConfiguration.TapTime).
+    // Performs the action if the control is pressed and *released* within the set
+    // duration (which defaults to InputConfiguration.TapTime).
     public class TapModifier : IInputActionModifier
     {
         public float duration;
@@ -20,7 +20,7 @@ namespace ISX
 
             if (context.isStarted && context.controlHasDefaultValue)
             {
-                if (context.time - m_TapStartTime <= m_TapStartTime)
+                if (context.time - m_TapStartTime <= durationOrDefault)
                     context.Performed();
                 else
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?

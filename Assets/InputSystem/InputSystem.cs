@@ -157,6 +157,11 @@ namespace ISX
             s_Manager.SetVariant(control, variant);
         }
 
+        public static void SetUsage(InputDevice device, string usage)
+        {
+            throw new NotImplementedException();
+        }
+
         public static List<InputControl> GetControls(string path)
         {
             var list = new List<InputControl>();
@@ -220,6 +225,11 @@ namespace ISX
             }
 
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
+        }
+
+        public static unsafe void QueueDeltaStateEvent<TDelta>(InputDevice device, TDelta delta, uint offset, double time = -1)
+        {
+            throw new NotImplementedException();
         }
 
         public static void QueueDisconnectEvent(InputDevice device, double time = -1)

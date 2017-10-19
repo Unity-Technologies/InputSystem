@@ -369,6 +369,9 @@ namespace ISX
             for (var i = 0; i < devices.Length; ++i)
             {
                 var size = devices[i].m_StateBlock.alignedSizeInBytes;
+                ////REVIEW: what should we do about this case? silently accept it and just give the device the current offset?
+                if (size == 0)
+                    throw new Exception($"Device '{devices[i]}' has a zero-size state buffer");
                 sizeInBytes += size;
                 result[i] = currentOffset;
                 currentOffset += (uint)size;

@@ -141,8 +141,23 @@ namespace ISX
 
         public void Disable()
         {
-            ////TODO: remove state change monitors and action timeouts
-            throw new NotImplementedException();
+            if (!m_Enabled)
+                return;
+
+            // Let set know.
+            m_ActionSet.TellAboutActionChangingEnabledStatus(this, false);
+
+            // Delete state change monitors.
+            var manager = InputSystem.s_Manager;
+            for (var i = 0; i < m_ResolvedBindings.Count; ++i)
+            {
+                var controls = m_ResolvedBindings[i].controls;
+                for (var n = 0; n < controls.Count; ++n)
+                    manager.RemoveStateChangeMonitor(controls[n], this);
+            }
+
+            m_Enabled = false;
+            m_CurrentPhase = Phase.Disabled;
         }
 
         ////REVIEW: what if this is called after the action has been enabled? throw?
@@ -340,10 +355,17 @@ namespace ISX
         public struct CallbackContext
         {
             internal InputAction m_Action;
+            internal IInputActionModifier m_Modifier;
             internal InputControl m_TriggerControl;
 
             public InputAction action => m_Action;
+            public IInputActionModifier modifier => m_Modifier;
             public InputControl control => m_TriggerControl;
+
+            public TValue GetValue<TValue>()
+            {
+                return ((InputControl<TValue>)control).value;
+            }
         }
 
         public struct AddBindingSyntax
