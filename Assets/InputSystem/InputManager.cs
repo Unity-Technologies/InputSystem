@@ -1159,15 +1159,13 @@ namespace ISX
 #if UNITY_EDITOR
                         if (!gameIsPlayingAndHasFocus)
                         {
-                            var buffer =
-                                new IntPtr(
-                                    m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex));
+                            var buffer = m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
                             Debug.Assert(buffer != IntPtr.Zero);
 
                             if (needToCopyFromBackBuffer)
                                 UnsafeUtility.MemCpy(
                                     buffer + (int)device.m_StateBlock.byteOffset,
-                                    new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex)) +
+                                    m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex) +
                                     (int)device.m_StateBlock.byteOffset,
                                     device.m_StateBlock.alignedSizeInBytes);
 
@@ -1184,15 +1182,13 @@ namespace ISX
                             // memcpy here.
                             if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
                             {
-                                var buffer =
-                                    new IntPtr(
-                                        m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                var buffer = m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
                                 Debug.Assert(buffer != IntPtr.Zero);
 
                                 if (needToCopyFromBackBuffer)
                                     UnsafeUtility.MemCpy(
                                         buffer + (int)device.m_StateBlock.byteOffset,
-                                        new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex)) +
+                                        m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex) +
                                         (int)device.m_StateBlock.byteOffset,
                                         device.m_StateBlock.alignedSizeInBytes);
 
@@ -1200,15 +1196,13 @@ namespace ISX
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
-                                var buffer =
-                                    new IntPtr(
-                                        m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex));
+                                var buffer = m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
                                 Debug.Assert(buffer != IntPtr.Zero);
 
                                 if (needToCopyFromBackBuffer)
                                     UnsafeUtility.MemCpy(
                                         buffer + (int)device.m_StateBlock.byteOffset,
-                                        new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex)) +
+                                        m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex) +
                                         (int)device.m_StateBlock.byteOffset,
                                         device.m_StateBlock.alignedSizeInBytes);
 
@@ -1239,6 +1233,7 @@ namespace ISX
                         if (device.connected)
                         {
                             device.m_Flags &= ~InputDevice.Flags.Connected;
+                            ResetDeviceState(device);
                             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
                                 m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
                         }
@@ -1441,6 +1436,30 @@ namespace ISX
 
             // Don't flip.
             return false;
+        }
+
+        private void ResetDeviceState(InputDevice device)
+        {
+            var offset = (int)device.m_StateBlock.byteOffset;
+            var sizeInBytes = device.m_StateBlock.alignedSizeInBytes;
+            var deviceIndex = device.m_DeviceIndex;
+
+            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+            {
+                UnsafeUtility.MemClear(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex) + offset, sizeInBytes);
+                UnsafeUtility.MemClear(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex) + offset, sizeInBytes);
+            }
+
+            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
+            {
+                UnsafeUtility.MemClear(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex) + offset, sizeInBytes);
+                UnsafeUtility.MemClear(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex) + offset, sizeInBytes);
+            }
+
+#if UNITY_EDITOR
+            UnsafeUtility.MemClear(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex) + offset, sizeInBytes);
+            UnsafeUtility.MemClear(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex) + offset, sizeInBytes);
+#endif
         }
 
         // Domain reload survival logic.

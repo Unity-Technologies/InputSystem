@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace ISX
 {
@@ -132,23 +133,24 @@ namespace ISX
 
         // We don't allow custom default values for state so all zeros indicates
         // default states for us.
-        internal unsafe bool CheckStateIsAllZeroes(IntPtr statePtr = new IntPtr())
+        // NOTE: The given argument should point directly to the value *not* to the
+        //       base state to which the state block offset has to be added.
+        internal unsafe bool CheckStateIsAllZeros(IntPtr valuePtr = new IntPtr())
         {
-            if (statePtr == IntPtr.Zero)
-                statePtr = currentValuePtr;
-
-            var ptr = (byte*)statePtr;
+            if (valuePtr == IntPtr.Zero)
+                valuePtr = currentValuePtr;
 
             // Bitfield value.
-            if (m_StateBlock.sizeInBits % 8 != 0)
+            if (m_StateBlock.sizeInBits % 8 != 0 || m_StateBlock.bitOffset != 0)
             {
                 if (m_StateBlock.sizeInBits > 1)
                     throw new NotImplementedException("multi-bit zero check");
 
-                return BitfieldHelpers.ReadSingleBit(new IntPtr(ptr), m_StateBlock.bitOffset) == false;
+                return BitfieldHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) == false;
             }
 
             // Multi-byte value.
+            var ptr = (byte*)valuePtr;
             var numBytes = m_StateBlock.alignedSizeInBytes;
             for (var i = 0; i < numBytes; ++i, ++ptr)
                 if (*ptr != 0)

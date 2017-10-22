@@ -89,24 +89,24 @@ namespace ISX
 
             public bool valid => deviceToBufferMapping != null;
 
-            public void SetFrontBuffer(int deviceIndex, void* ptr)
+            public void SetFrontBuffer(int deviceIndex, IntPtr ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2] = ptr;
+                deviceToBufferMapping[deviceIndex * 2] = (void**)ptr;
             }
 
-            public void SetBackBuffer(int deviceIndex, void* ptr)
+            public void SetBackBuffer(int deviceIndex, IntPtr ptr)
             {
-                deviceToBufferMapping[deviceIndex * 2 + 1] = ptr;
+                deviceToBufferMapping[deviceIndex * 2 + 1] = (void**)ptr;
             }
 
-            public void* GetFrontBuffer(int deviceIndex)
+            public IntPtr GetFrontBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex * 2];
+                return new IntPtr(deviceToBufferMapping[deviceIndex * 2]);
             }
 
-            public void* GetBackBuffer(int deviceIndex)
+            public IntPtr GetBackBuffer(int deviceIndex)
             {
-                return deviceToBufferMapping[deviceIndex * 2 + 1];
+                return new IntPtr(deviceToBufferMapping[deviceIndex * 2 + 1]);
             }
 
             public void SwapBuffers(int deviceIndex)
@@ -133,14 +133,14 @@ namespace ISX
 
         private static DoubleBuffers s_CurrentBuffers;
 
-        public static unsafe IntPtr GetFrontBuffer(int deviceIndex)
+        public static IntPtr GetFrontBuffer(int deviceIndex)
         {
-            return new IntPtr(s_CurrentBuffers.GetFrontBuffer(deviceIndex));
+            return s_CurrentBuffers.GetFrontBuffer(deviceIndex);
         }
 
-        public static unsafe IntPtr GetBackBuffer(int deviceIndex)
+        public static IntPtr GetBackBuffer(int deviceIndex)
         {
-            return new IntPtr(s_CurrentBuffers.GetBackBuffer(deviceIndex));
+            return s_CurrentBuffers.GetBackBuffer(deviceIndex);
         }
 
         // Switch the current set of buffers used by the system.
@@ -233,8 +233,8 @@ namespace ISX
 
         private unsafe DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, ref IntPtr bufferPtr, int sizePerBuffer, int mappingTableSizePerBuffer)
         {
-            var front = bufferPtr.ToPointer();
-            var back = (bufferPtr + sizePerBuffer).ToPointer();
+            var front = bufferPtr;
+            var back = bufferPtr + sizePerBuffer;
             var mappings = (void**)(bufferPtr + sizePerBuffer * 2).ToPointer();  // Put mapping table at end.
             bufferPtr += sizePerBuffer * 2 + mappingTableSizePerBuffer;
 
@@ -341,11 +341,11 @@ namespace ISX
                 var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
 
-                var oldFrontPtr = new IntPtr(oldBuffer.GetFrontBuffer(oldDeviceIndex)) + (int)device.m_StateBlock.byteOffset;
-                var oldBackPtr = new IntPtr(oldBuffer.GetBackBuffer(oldDeviceIndex)) + (int)device.m_StateBlock.byteOffset;
+                var oldFrontPtr = oldBuffer.GetFrontBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset;
+                var oldBackPtr = oldBuffer.GetBackBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset;
 
-                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(newDeviceIndex)) + (int)newStateBlockOffsets[i];
-                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(newDeviceIndex)) + (int)newStateBlockOffsets[i];
+                var newFrontPtr = newBuffer.GetFrontBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
+                var newBackPtr = newBuffer.GetBackBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
 
                 // Copy state.
                 UnsafeUtility.MemCpy(oldFrontPtr, newFrontPtr, numBytes);

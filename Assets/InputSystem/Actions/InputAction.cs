@@ -257,7 +257,7 @@ namespace ISX
         // change and relays the binding index we gave it when we called AddStateChangeMonitor.
         internal void NotifyControlValueChanged(InputControl control, int bindingIndex, double time)
         {
-            var isAtDefault = control.CheckStateIsAllZeroes();
+            var isAtDefault = control.CheckStateIsAllZeros();
 
             // If we have modifiers, let them do all the processing. The precense of a modifier
             // essentially bypasses the default phase progression logic of an action.

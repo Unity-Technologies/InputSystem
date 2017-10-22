@@ -20,7 +20,7 @@ namespace ISX
 
         protected float GetValueFrom(IntPtr valuePtr)
         {
-            return CheckStateIsAllZeroes(valuePtr) ? 0.0f : 1.0f;
+            return CheckStateIsAllZeros(valuePtr) ? 0.0f : 1.0f;
         }
     }
 }

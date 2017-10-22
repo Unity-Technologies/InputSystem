@@ -1257,6 +1257,23 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_ResetToDefaultStateWhenDisconnected()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(Vector2.one));
+
+        InputSystem.QueueDisconnectEvent(gamepad);
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.value, Is.EqualTo(Vector2.zero));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
     {
         InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "MyController"});
@@ -2605,6 +2622,36 @@ public class FunctionalTests
         Assert.That(() => action.controls, Throws.InvalidOperationException);
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
         Assert.That(action.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanTargetSingleDeviceWithMultipleActions()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        var action1 = new InputAction(binding: "/gamepad/leftStick");
+        var action2 = new InputAction(binding: "/gamepad/leftStick");
+        var action3 = new InputAction(binding: "/gamepad/rightStick");
+
+        var action1Performed = 0;
+        var action2Performed = 0;
+        var action3Performed = 0;
+
+        action1.performed += _ => ++ action1Performed;
+        action2.performed += _ => ++ action2Performed;
+        action3.performed += _ => ++ action3Performed;
+
+        action1.Enable();
+        action2.Enable();
+        action3.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one, rightStick = Vector2.one});
+        InputSystem.Update();
+
+        Assert.That(action1Performed, Is.EqualTo(1));
+        Assert.That(action2Performed, Is.EqualTo(1));
+        Assert.That(action3Performed, Is.EqualTo(1));
     }
 
 #if UNITY_EDITOR
