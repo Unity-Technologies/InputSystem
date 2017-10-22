@@ -21,12 +21,12 @@ namespace ISX
 
         private new float Process(float value)
         {
-            if (invert)
-                value *= -1.0f;
             if (clamp)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax);
+            if (invert)
+                value *= -1.0f;
             return base.Process(value);
         }
 

@@ -594,7 +594,7 @@ public class FunctionalTests
         Assert.That(setup.TryGetControl("leftStick"), Is.TypeOf<StickControl>());
         Assert.That(setup.TryGetControl("leftStick/x"), Is.TypeOf<AxisControl>());
         Assert.That(setup.TryGetControl("leftStick/y"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.TryGetControl("leftStick/up"), Is.TypeOf<AxisControl>());
+        Assert.That(setup.TryGetControl("leftStick/up"), Is.TypeOf<ButtonControl>());
     }
 
     [Test]
@@ -712,6 +712,36 @@ public class FunctionalTests
 
         Assert.That(processor.minOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMin));
         Assert.That(processor.maxOrDefault, Is.EqualTo(InputConfiguration.DeadzoneMax));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_SticksProvideAccessToHalfAxes()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.up.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.down.value, Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.right.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.left.value, Is.EqualTo(0.0).Within(0.000001));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(-0.5f, -0.5f) });
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.up.value, Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.down.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.right.value, Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.left.value, Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void TODO_Controls_DpadVectorsAreCircular()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -1414,6 +1444,19 @@ public class FunctionalTests
         Assert.That(keyboard.any.isPressed, Is.True);
     }
 
+    struct CustomDeviceState : IInputStateTypeInfo
+    {
+        public static FourCC Type = new FourCC('C', 'U', 'S', 'T');
+
+        [InputControl(template = "Axis")]
+        public float axis;
+
+        public FourCC GetFormat()
+        {
+            return Type;
+        }
+    }
+
     [Test]
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
@@ -2052,6 +2095,55 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f).Within(0.000001));
+    }
+
+    [InputState(typeof(CustomDeviceState))]
+    class CustomDevice : InputDevice, IInputBeforeUpdateCallbackReceiver
+    {
+        public AxisControl axis { get; private set; }
+
+        public int onUpdateCallCount;
+        public InputUpdateType onUpdateType;
+
+        public void OnUpdate(InputUpdateType updateType)
+        {
+            ++onUpdateCallCount;
+            onUpdateType = updateType;
+            InputSystem.QueueStateEvent(this, new CustomDeviceState {axis = 0.234f});
+        }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            axis = setup.GetControl<AxisControl>(this, "axis");
+            base.FinishSetup(setup);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanUpdateDeviceWithEventsFromBeforeUpdateCallback()
+    {
+        InputSystem.RegisterTemplate<CustomDevice>();
+        var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
+
+        InputSystem.Update();
+
+        Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
+        Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+        Assert.That(device.axis.value, Is.EqualTo(0.234).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingDeviceCleansUpBeforeRenderCallback()
+    {
+        InputSystem.RegisterTemplate<CustomDevice>();
+        var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
+        InputSystem.RemoveDevice(device);
+
+        InputSystem.Update();
+
+        Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
     [Test]

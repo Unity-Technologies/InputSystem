@@ -21,7 +21,7 @@ namespace ISX
         {
             if (s_Instance == null)
             {
-                s_Instance = GetWindow<InputTemplateBrowserWindow>();
+                s_Instance = GetWindow<InputTemplateBrowserWindow>(desiredDockNextTo: typeof(InputDebuggerWindow));
                 s_Instance.titleContent = new GUIContent("Input Templates");
             }
 

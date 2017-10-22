@@ -9,6 +9,7 @@ namespace ISX
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using EventListener = Action<InputEventPtr>;
+    using UpdateListener = Action<InputUpdateType>;
 
     // The hub of the input system.
     // All state is ultimately gathered here.
@@ -44,6 +45,20 @@ namespace ISX
         {
             add { m_EventListeners.Append(value); }
             remove { m_EventListeners.Remove(value); }
+        }
+
+        public event UpdateListener onUpdate
+        {
+            add
+            {
+                if (!m_NativeBeforeUpdateHooked)
+                {
+                    NativeInputSystem.onBeforeUpdate = OnNativeBeforeUpdate;
+                    m_NativeBeforeUpdateHooked = true;
+                }
+                m_UpdateListeners.Append(value);
+            }
+            remove { m_UpdateListeners.Remove(value); }
         }
 
         // Add a template constructed from a type.
@@ -445,6 +460,12 @@ namespace ISX
             // Let actions re-resolve their paths.
             InputActionSet.RefreshEnabledActions();
 
+            // If the device wants automatic callbacks before input updates,
+            // put it on the list.
+            var beforeUpdateCallbackReceiver = device as IInputBeforeUpdateCallbackReceiver;
+            if (beforeUpdateCallbackReceiver != null)
+                onUpdate += beforeUpdateCallbackReceiver.OnUpdate;
+
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
@@ -492,6 +513,11 @@ namespace ISX
 
             // Let actions know.
             InputActionSet.RefreshEnabledActions();
+
+            // Kill before update callback, if applicable.
+            var beforeUpdateCallbackReceiver = device as IInputBeforeUpdateCallbackReceiver;
+            if (beforeUpdateCallbackReceiver != null)
+                onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
 
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
@@ -703,6 +729,7 @@ namespace ISX
 
             NativeInputSystem.onUpdate = null;
             NativeInputSystem.onDeviceDiscovered = null;
+            NativeInputSystem.onBeforeUpdate = null;
         }
 
         // Revive after domain reload.
@@ -715,6 +742,7 @@ namespace ISX
 
             NativeInputSystem.onUpdate = OnNativeUpdate;
             NativeInputSystem.onDeviceDiscovered = OnNativeDeviceDiscovered;
+            // We only hook NativeInputSystem.onBeforeUpdate if necessary.
         }
 
         // Bundles a template name and a device description.
@@ -757,6 +785,8 @@ namespace ISX
         // registrations what will lead to all kinds of misbehavior.
         private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
         private InlinedArray<EventListener> m_EventListeners;
+        private InlinedArray<UpdateListener> m_UpdateListeners;
+        private bool m_NativeBeforeUpdateHooked;
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
@@ -969,6 +999,12 @@ namespace ISX
 
             // Report it.
             ReportAvailableDevice(description, deviceInfo.deviceId);
+        }
+
+        private void OnNativeBeforeUpdate(NativeInputUpdateType updateType)
+        {
+            for (var i = 0; i < m_UpdateListeners.Count; ++i)
+                m_UpdateListeners[i]((InputUpdateType)updateType);
         }
 
         // When we have the C# job system, this should be a job and NativeInputSystem should double
