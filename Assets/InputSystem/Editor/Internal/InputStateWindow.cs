@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -8,10 +9,11 @@ using UnityEngine;
 ////      (probably needs an extension to the editor UI APIs as the only programmatic docking controls
 ////      seem to be through GetWindow)
 
+////TODO: allow setting a C# struct type that we can use to display the layout of the data
+
 namespace ISX
 {
-    // Additional window that we can pop open to inspect or even edit raw state (either
-    // on events or on controls/devices).
+    // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
     internal class InputStateWindow : EditorWindow
     {
         private const int kBytesPerHexGroup = 1;
@@ -33,27 +35,89 @@ namespace ISX
 
             // Copy event data.
             var eventSize = eventPtr.sizeInBytes;
-            m_StateData = new byte[eventSize];
-            fixed(byte* stateDataPtr = m_StateData)
+            var buffer = new byte[eventSize];
+            fixed(byte* stateDataPtr = buffer)
             {
                 var stateEventPtr = StateEvent.From(eventPtr);
                 UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), stateEventPtr->state, eventSize);
             }
+            m_StateBuffers = new byte[1][];
+            m_StateBuffers[0] = buffer;
+            m_SelectedStateBuffer = BufferSelector.Default;
         }
 
         public unsafe void InitializeWithControl(InputControl control)
         {
             m_Control = control;
+            m_SelectedStateBuffer = BufferSelector.Default;
 
-            ////TODO: have a dropdown that allows inspecting all available state for the control (for all update slices including editor)
+            var bufferChoices = new List<GUIContent>();
+            var bufferChoiceValues = new List<int>();
 
-            // Copy current state.
+            // Copy front and back buffer state for each update that has valid buffers.
+            var device = control.device;
             var stateSize = control.m_StateBlock.alignedSizeInBytes;
-            m_StateData = new byte[stateSize];
-            fixed(byte* stateDataPtr = m_StateData)
+            var stateOffset = control.m_StateBlock.byteOffset;
+            m_StateBuffers = new byte[(int)BufferSelector.COUNT][];
+            for (var i = 0; i < (int)BufferSelector.COUNT; ++i)
             {
-                UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), control.currentValuePtr, stateSize);
+                var selector = (BufferSelector)i;
+                var deviceState = TryGetDeviceState(device, selector);
+                if (deviceState == IntPtr.Zero)
+                    continue;
+
+                var buffer = new byte[stateSize];
+                fixed(byte* stateDataPtr = buffer)
+                {
+                    UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), deviceState + (int)stateOffset, stateSize);
+                }
+                m_StateBuffers[i] = buffer;
+
+                if (m_StateBuffers[(int)m_SelectedStateBuffer] == null)
+                    m_SelectedStateBuffer = selector;
+
+                bufferChoices.Add(Contents.bufferChoices[i]);
+                bufferChoiceValues.Add(i);
             }
+
+            m_BufferChoices = bufferChoices.ToArray();
+            m_BufferChoiceValues = bufferChoiceValues.ToArray();
+        }
+
+        private static IntPtr TryGetDeviceState(InputDevice device, BufferSelector selector)
+        {
+            var manager = InputSystem.s_Manager;
+            var deviceIndex = device.m_DeviceIndex;
+
+            switch (selector)
+            {
+                case BufferSelector.DynamicUpdateFrontBuffer:
+                    if (manager.m_StateBuffers.m_DynamicUpdateBuffers.valid)
+                        return manager.m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
+                    break;
+                case BufferSelector.DynamicUpdateBackBuffer:
+                    if (manager.m_StateBuffers.m_DynamicUpdateBuffers.valid)
+                        return manager.m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex);
+                    break;
+                case BufferSelector.FixedUpdateFrontBuffer:
+                    if (manager.m_StateBuffers.m_FixedUpdateBuffers.valid)
+                        return manager.m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
+                    break;
+                case BufferSelector.FixedUpdateBackBuffer:
+                    if (manager.m_StateBuffers.m_FixedUpdateBuffers.valid)
+                        return manager.m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex);
+                    break;
+                case BufferSelector.EditorUpdateFrontBuffer:
+                    if (manager.m_StateBuffers.m_EditorUpdateBuffers.valid)
+                        return manager.m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
+                    break;
+                case BufferSelector.EditorUpdateBackBuffer:
+                    if (manager.m_StateBuffers.m_EditorUpdateBuffers.valid)
+                        return manager.m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex);
+                    break;
+            }
+
+            return IntPtr.Zero;
         }
 
         public void OnGUI()
@@ -64,6 +128,20 @@ namespace ISX
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawBytes, EditorStyles.toolbarButton,
                     GUILayout.Width(150));
+
+            // If we have multiple state buffers to choose from, add dropdown that allows
+            // selecting which buffer to display.
+            if (m_StateBuffers.Length > 1)
+            {
+                var selectedBuffer = (BufferSelector)EditorGUILayout.IntPopup((int)m_SelectedStateBuffer, m_BufferChoices,
+                        m_BufferChoiceValues, EditorStyles.toolbarPopup);
+                if (selectedBuffer != m_SelectedStateBuffer)
+                {
+                    m_SelectedStateBuffer = selectedBuffer;
+                    m_ControlTree = null;
+                }
+            }
+
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
 
@@ -76,7 +154,7 @@ namespace ISX
                 if (m_ControlTree == null)
                 {
                     m_ControlTree = InputControlTreeView.Create(m_Control, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
-                    m_ControlTree.stateBuffer = m_StateData;
+                    m_ControlTree.stateBuffer = m_StateBuffers[(int)m_SelectedStateBuffer];
                     m_ControlTree.ExpandAll();
                 }
 
@@ -91,7 +169,8 @@ namespace ISX
         {
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 
-            var numBytes = m_StateData.Length;
+            var stateBuffer = m_StateBuffers[(int)m_SelectedStateBuffer];
+            var numBytes = stateBuffer.Length;
             var numHexGroups = numBytes / kBytesPerHexGroup + (numBytes % kBytesPerHexGroup > 0 ? 1 : 0);
             var numLines = numHexGroups / kHexGroupsPerLine + (numHexGroups % kHexGroupsPerLine > 0 ? 1 : 0);
             var currentOffset = 0;
@@ -126,7 +205,7 @@ namespace ISX
                         if (currentByte >= numBytes)
                             hex = "  " + hex;
                         else
-                            hex = m_StateData[currentByte].ToString("X2") + hex;
+                            hex = stateBuffer[currentByte].ToString("X2") + hex;
                         ++currentByte;
                     }
 
@@ -144,7 +223,10 @@ namespace ISX
 
         // We copy the state we're inspecting to a buffer we own so that we're safe
         // against any mutations.
-        [SerializeField] private byte[] m_StateData;
+        // When inspecting controls (as opposed to events), we copy all their various
+        // state buffers and allow switching between them.
+        [SerializeField] private byte[][] m_StateBuffers;
+        [SerializeField] private BufferSelector m_SelectedStateBuffer;
 
         [SerializeField] private bool m_ShowRawBytes;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -153,11 +235,23 @@ namespace ISX
         [SerializeField] private Vector2 m_HexDumpScrollPosition;
 
         [NonSerialized] private InputControlTreeView m_ControlTree;
+        [NonSerialized] private GUIContent[] m_BufferChoices;
+        [NonSerialized] private int[] m_BufferChoiceValues;
 
         ////FIXME: we lose this on domain reload; how should we recover?
         [NonSerialized] private InputControl m_Control;
 
-        ////TODO: allow setting a C# struct type that we can use to display the layout of the data
+        private enum BufferSelector
+        {
+            DynamicUpdateFrontBuffer,
+            DynamicUpdateBackBuffer,
+            FixedUpdateFrontBuffer,
+            FixedUpdateBackBuffer,
+            EditorUpdateFrontBuffer,
+            EditorUpdateBackBuffer,
+            COUNT,
+            Default = DynamicUpdateFrontBuffer
+        }
 
         private static class Styles
         {
@@ -174,6 +268,15 @@ namespace ISX
         private static class Contents
         {
             public static GUIContent showRawBytes = new GUIContent("Display Raw Bytes");
+            public static GUIContent[] bufferChoices =
+            {
+                new GUIContent("Dynamic Update (Current)"),
+                new GUIContent("Dynamic Update (Previous)"),
+                new GUIContent("Fixed Update (Current)"),
+                new GUIContent("Fixed Update (Previous)"),
+                new GUIContent("Editor (Current)"),
+                new GUIContent("Editor (Previous)")
+            };
         }
     }
 }

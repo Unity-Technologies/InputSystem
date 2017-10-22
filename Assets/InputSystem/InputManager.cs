@@ -747,7 +747,7 @@ namespace ISX
 
         private InputUpdateType m_CurrentUpdate;
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
-        private InputStateBuffers m_StateBuffers;
+        internal InputStateBuffers m_StateBuffers;
 
         private int m_CurrentDynamicUpdateCount;
         private int m_CurrentFixedUpdateCount;

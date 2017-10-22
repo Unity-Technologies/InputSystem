@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Collections;
 
+////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
+
 namespace ISX
 {
     // Helper to simplify recording events. Can record events for a specific device
