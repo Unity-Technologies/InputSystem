@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -203,6 +204,16 @@ namespace ISX
         public static unsafe void QueueStateEvent<TState>(InputDevice device, TState state, double time = -1)
             where TState : struct, IInputStateTypeInfo
         {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            // Make sure device is actually in the system.
+            if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                throw new InvalidOperationException(
+                    $"Cannot queue state event device '{device}' because device has not been added to system");
+
+            ////REVIEW: does it make more sense to go off the 'stateBlock' on the device and let that determine size?
+
             var stateSize = UnsafeUtility.SizeOf<TState>();
             if (stateSize > StateEventBuffer.kMaxSize)
                 throw new ArgumentException(
@@ -214,10 +225,13 @@ namespace ISX
                 time = Time.time;
 
             StateEventBuffer eventBuffer;
-            eventBuffer.stateEvent = new StateEvent();
+            eventBuffer.stateEvent =
+                new StateEvent
+            {
+                baseEvent = new InputEvent(StateEvent.Type, eventSize, device.id, time),
+                stateFormat = state.GetFormat()
+            };
 
-            eventBuffer.stateEvent.baseEvent = new InputEvent(StateEvent.Type, eventSize, device.id, time);
-            eventBuffer.stateEvent.stateFormat = state.GetFormat();
 
             fixed(byte* ptr = eventBuffer.stateEvent.stateData)
             {
@@ -227,9 +241,57 @@ namespace ISX
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
 
-        public static unsafe void QueueDeltaStateEvent<TDelta>(InputDevice device, TDelta delta, uint offset, double time = -1)
+        private unsafe struct DeltaStateEventBuffer
         {
-            throw new NotImplementedException();
+            public DeltaStateEvent stateEvent;
+            public const int kMaxSize = 512;
+            public fixed byte data[kMaxSize - 1]; // DeltaStateEvent already adds one.
+        }
+        public static unsafe void QueueStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
+            where TDelta : struct
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            if (control.stateBlock.bitOffset != 0)
+                throw new InvalidOperationException($"Cannot send delta state events against bitfield controls: {control}");
+
+            // Make sure device is actually in the system.
+            var device = control.device;
+            if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                throw new InvalidOperationException(
+                    $"Cannot queue state event for control '{control}' on device '{device}' because device has not been added to system");
+
+            if (time < 0)
+                time = Time.time;
+
+            var deltaSize = UnsafeUtility.SizeOf<TDelta>();
+            if (deltaSize > DeltaStateEventBuffer.kMaxSize)
+                throw new ArgumentException(
+                    $"Size of state delta '{typeof(TDelta).Name}' exceeds maximum supported state size of {DeltaStateEventBuffer.kMaxSize}",
+                    nameof(delta));
+
+            ////TODO: recognize a matching C# representation of a state format and convert to what we expect for trivial cases
+            if (deltaSize != control.stateBlock.alignedSizeInBytes)
+                throw new NotImplementedException("Delta state and control format don't match");
+
+            var eventSize = UnsafeUtility.SizeOf<DeltaStateEvent>() + deltaSize - 1;
+
+            DeltaStateEventBuffer eventBuffer;
+            eventBuffer.stateEvent =
+                new DeltaStateEvent
+            {
+                baseEvent = new InputEvent(DeltaStateEvent.Type, eventSize, device.id, time),
+                stateFormat = device.stateBlock.format,
+                stateOffset = control.m_StateBlock.byteOffset
+            };
+
+            fixed(byte* ptr = eventBuffer.stateEvent.stateData)
+            {
+                UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref delta), deltaSize);
+            }
+
+            s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
 
         public static void QueueDisconnectEvent(InputDevice device, double time = -1)

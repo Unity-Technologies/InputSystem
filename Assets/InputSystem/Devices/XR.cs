@@ -20,6 +20,9 @@ namespace ISX
     {
         public static FourCC kFormat => new FourCC('H', 'E', 'A', 'D');
 
+        [InputControl(name = "isWearing", template = "Button", bit = 0)]
+        public int buttons;
+
         public TrackingState head;
 
         [InputControl] public Pose leftEye;

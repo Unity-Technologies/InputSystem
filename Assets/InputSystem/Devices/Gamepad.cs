@@ -28,7 +28,7 @@ namespace ISX
         ////REVIEW: seems like these two should get less ambiguous names as well
         [InputControl(name = "start", template = "Button", bit = (uint)Button.Start, usage = "Menu")]
         [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
-        public int buttons;
+        public uint buttons;
 
         [InputControl(variant = "default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]

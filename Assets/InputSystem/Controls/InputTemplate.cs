@@ -377,7 +377,7 @@ namespace ISX
 
             ////TODO: if size is not set, determine from type of field
             // Determine size.
-            var sizeInBits = InputStateBlock.kInvalidOffset;
+            var sizeInBits = 0u;
             if (attribute != null)
                 sizeInBits = attribute.sizeInBits;
 

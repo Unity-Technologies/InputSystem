@@ -23,10 +23,10 @@ namespace ISX
         public unsafe void InitializeWithEvent(InputEventPtr eventPtr, InputControl control)
         {
             // Must be an event carrying state.
-            Debug.Assert(eventPtr.IsA<StateEvent>() || eventPtr.IsA<DeltaEvent>());
+            Debug.Assert(eventPtr.IsA<StateEvent>() || eventPtr.IsA<DeltaStateEvent>());
 
             ////TODO: support delta events
-            if (eventPtr.IsA<DeltaEvent>())
+            if (eventPtr.IsA<DeltaStateEvent>())
                 throw new NotImplementedException("delta event support not yet implemented");
 
             m_Control = control;

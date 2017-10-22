@@ -1613,12 +1613,20 @@ public class FunctionalTests
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        // Update just left stick.
-        InputSystem.QueueDeltaStateEvent(gamepad, new Vector2(0.5f, 0.5f), (uint)UnsafeUtility.OffsetOf<GamepadState>("leftStick"));
+        // Full state update to make sure we won't be overwriting other
+        // controls with state. Also, make sure we actually carry over
+        // those values on buffer flips.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 0xffffffff, rightStick = Vector2.one, leftTrigger = 0.123f, rightTrigger = 0.456f });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.y, Is.EqualTo(0.5).Within(0.000001));
+        // Update just left stick.
+        InputSystem.QueueStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(gamepad.rightStick.x.value, Is.EqualTo(1).Within(0.000001));
     }
 
     [Test]
@@ -2485,6 +2493,29 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(TestModifier.s_GotInvoked, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanTriggerActionFromPartialStateUpdate()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftStick");
+        action.Enable();
+
+        var receivedCalls = 0;
+        InputControl receivedControl = null;
+        action.performed += ctx =>
+            {
+                ++receivedCalls;
+                receivedControl = ctx.control;
+            };
+
+        InputSystem.QueueStateEvent(gamepad.leftStick, Vector2.one);
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
     }
 
     [Test]

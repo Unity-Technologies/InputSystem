@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the template cache around instead of throwing
@@ -555,12 +556,19 @@ namespace ISX
             var firstUnfixedByteOffset = 0u;
             foreach (var child in children)
             {
+                //
+                Debug.Assert(child.m_StateBlock.sizeInBits != 0);
+                // Make sure the child has a valid size set on it.
+                var childSizeInBits = child.m_StateBlock.sizeInBits;
+                if (childSizeInBits == 0)
+                    throw new Exception($"Child '{child.name}' of '{control.name}' has no size set!");
+
                 // Skip children that don't have fixed offsets.
                 if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
                     continue;
 
                 var endOffset =
-                    BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + child.m_StateBlock.sizeInBits);
+                    BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + childSizeInBits);
                 if (endOffset > firstUnfixedByteOffset)
                     firstUnfixedByteOffset = endOffset;
             }

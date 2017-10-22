@@ -66,11 +66,26 @@ namespace ISX
 
         // Type identifier for the memory layout used by the state. Used for safety checks to
         // make sure that when we do memory copies of entire state blocks, we copy between
-        // identical layouts.
+        // identical layouts. In the case of the memory layouts given by the type codes above,
+        // also used to determine the size of the state block.
         public FourCC format;
 
+        // Offset into state buffer. After a device is added to the system, this is relative
+        // to the global buffers; otherwise it is relative to the device root.
+        // During setup, this can be kInvalidOffset to indicate a control that should be placed
+        // at an offset automatically; otherwise it denotes a fixed offset relative to the
+        // parent control.
         public uint byteOffset;
+
+        // Bit offset from the given byte offset. Also zero-based (i.e. first bit is at bit
+        // offset #0).
         public uint bitOffset;
+
+        // Size of the state in bits. If this % 8 is not 0, the control is considered a
+        // bitfield control.
+        // During setup, if this field is 0 it means the size of the control should be automatically
+        // computed from either its children (if it has any) or its set format. If it has neither,
+        // setup will throw.
         public uint sizeInBits;
 
         public Semantics semantics

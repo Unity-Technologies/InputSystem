@@ -103,7 +103,7 @@ namespace ISX
 
             // We can only inspect state events so ignore double-clicks on other
             // types of events.
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaEvent>())
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                 return;
 
             var window = ScriptableObject.CreateInstance<InputStateWindow>();
