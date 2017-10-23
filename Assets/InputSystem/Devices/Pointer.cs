@@ -12,20 +12,15 @@ namespace ISX
         Canceled
     }
 
-    // NOTE: This layout has to match the PointerInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
-        // There's systems where 0 is a valid finger ID. Should add +1 to system IDs
-        // in that case.
-        public const uint kInvalidPointerId = 0;
-
         [InputControl(template = "Digital")]
         public uint pointerId;
 
-        [InputControl(template = "Vector2", usage = "Point")]
+        [InputControl(usage = "Point")]
         public Vector2 position;
 
         // IMPORTANT: Accumulation and *resetting* (i.e. going back to zero in-between frames)
@@ -46,8 +41,9 @@ namespace ISX
         [InputControl(template = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(template = "Digital")]
-        public ushort phase;
+        [InputControl(name = "phase", template = "Digital", sizeInBits = 4)]
+        [InputControl(name = "button", template = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        public ushort flags;
 
         [InputControl(template = "Digital")]
         public ushort displayIndex;
@@ -58,15 +54,44 @@ namespace ISX
         }
     }
 
+    ////REVIEW: should this be extended to 3D?
+    // A device that can move a pointer on a 2D surface.
     [InputState(typeof(PointerState))]
     public class Pointer : InputDevice
     {
+        public Vector2Control position { get; private set; }
+        public Vector2Control delta { get; private set; }
+        public Vector2Control tilt { get; private set; }
+        public Vector2Control radius { get; private set; }
+        public AxisControl pressure { get; private set; }
+        public AxisControl twist { get; private set; }
+        public DiscreteControl pointerId { get; private set; }
+        ////TODO: find a way which gives values as PointerPhase instead of as int
+        public DiscreteControl phase { get; private set; }
+        public DiscreteControl displayIndex { get; private set; }
+        public ButtonControl button { get; private set; }
+
         public static Pointer current { get; internal set; }
 
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
+        }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            position = setup.GetControl<Vector2Control>(this, "position");
+            delta = setup.GetControl<Vector2Control>(this, "delta");
+            tilt = setup.GetControl<Vector2Control>(this, "tilt");
+            radius = setup.GetControl<Vector2Control>(this, "radius");
+            pressure = setup.GetControl<AxisControl>(this, "pressure");
+            twist = setup.GetControl<AxisControl>(this, "twist");
+            pointerId = setup.GetControl<DiscreteControl>(this, "pointerId");
+            phase = setup.GetControl<DiscreteControl>(this, "phase");
+            displayIndex = setup.GetControl<DiscreteControl>(this, "displayIndex");
+            button = setup.GetControl<ButtonControl>(this, "button");
+            base.FinishSetup(setup);
         }
     }
 }

@@ -462,7 +462,7 @@ namespace ISX
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
-            var beforeUpdateCallbackReceiver = device as IInputBeforeUpdateCallbackReceiver;
+            var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate += beforeUpdateCallbackReceiver.OnUpdate;
 
@@ -515,7 +515,7 @@ namespace ISX
             InputActionSet.RefreshEnabledActions();
 
             // Kill before update callback, if applicable.
-            var beforeUpdateCallbackReceiver = device as IInputBeforeUpdateCallbackReceiver;
+            var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
 
@@ -675,6 +675,7 @@ namespace ISX
             RegisterTemplate("Axis", typeof(AxisControl));
             RegisterTemplate("Analog", typeof(AxisControl));
             RegisterTemplate("Digital", typeof(DiscreteControl));
+            RegisterTemplate("Discrete", typeof(DiscreteControl));
             RegisterTemplate("Vector2", typeof(Vector2Control));
             RegisterTemplate("Vector3", typeof(Vector3Control));
             RegisterTemplate("Magnitude2", typeof(Magnitude2Control));
@@ -684,13 +685,15 @@ namespace ISX
             RegisterTemplate("Stick", typeof(StickControl));
             RegisterTemplate("Dpad", typeof(DpadControl));
             RegisterTemplate("AnyKey", typeof(AnyKeyControl));
+            RegisterTemplate("Touch", typeof(TouchControl));
 
             RegisterTemplate("Motor", typeof(MotorControl)); // Outputs.
 
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
             RegisterTemplate("Keyboard", typeof(Keyboard));
+            RegisterTemplate("Pointer", typeof(Pointer));
             RegisterTemplate("Mouse", typeof(Mouse));
-            RegisterTemplate("Stylus", typeof(Stylus));
+            RegisterTemplate("Pen", typeof(Pen));
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
             RegisterTemplate("HMD", typeof(HMD));
             RegisterTemplate("XRController", typeof(XRController));

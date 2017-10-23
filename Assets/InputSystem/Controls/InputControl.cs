@@ -70,6 +70,11 @@ namespace ISX
         // Information about where the control stores its state.
         public InputStateBlock stateBlock => m_StateBlock;
 
+        public override string ToString()
+        {
+            return $"{template}:{path}";
+        }
+
         // Constructor for devices which are assigned names once plugged
         // into the system.
         protected InputControl()

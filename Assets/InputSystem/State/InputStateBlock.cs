@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace ISX
 {
@@ -64,6 +65,27 @@ namespace ISX
             return -1;
         }
 
+        public static FourCC GetPrimitiveFormatFromType(Type type)
+        {
+            if (ReferenceEquals(type, typeof(int)))
+                return kTypeInt;
+            if (ReferenceEquals(type, typeof(short)))
+                return kTypeShort;
+            if (ReferenceEquals(type, typeof(byte)))
+                return kTypeByte;
+            if (ReferenceEquals(type, typeof(float)))
+                return kTypeFloat;
+            if (ReferenceEquals(type, typeof(double)))
+                return kTypeDouble;
+            if (ReferenceEquals(type, typeof(Vector2)))
+                return kTypeVector2;
+            if (ReferenceEquals(type, typeof(Vector3)))
+                return kTypeVector3;
+            if (ReferenceEquals(type, typeof(Quaternion)))
+                return kTypeQuaternion;
+            return new FourCC();
+        }
+
         // Type identifier for the memory layout used by the state. Used for safety checks to
         // make sure that when we do memory copies of entire state blocks, we copy between
         // identical layouts. In the case of the memory layouts given by the type codes above,
@@ -106,7 +128,6 @@ namespace ISX
         }
 
         public bool isBitfield => sizeInBits % 8 != 0;
-
 
         [Flags]
         private enum Flags

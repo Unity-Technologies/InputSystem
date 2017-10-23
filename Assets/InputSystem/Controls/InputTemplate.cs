@@ -339,15 +339,13 @@ namespace ISX
             // Determine name.
             var name = attribute?.name;
             if (string.IsNullOrEmpty(name))
-            {
                 name = member.Name;
-                if (name.IndexOf('/') != -1)
-                    throw new Exception($"InputControlAttribute annotations cannot have paths as names: " + name);
-            }
+
+            var isModifyingChildControlByPath = name.IndexOf('/') != -1;
 
             // Determine template.
             var template = attribute?.template;
-            if (string.IsNullOrEmpty(template))
+            if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath)
             {
                 var valueType = TypeHelpers.GetValueType(member);
                 template = InferTemplateFromValueType(valueType);
@@ -357,6 +355,11 @@ namespace ISX
             var format = new FourCC();
             if (!string.IsNullOrEmpty(attribute?.format))
                 format = new FourCC(attribute.format);
+            else if (!isModifyingChildControlByPath)
+            {
+                var valueType = TypeHelpers.GetValueType(member);
+                format = InputStateBlock.GetPrimitiveFormatFromType(valueType);
+            }
 
             // Determine variant.
             string variant = null;
@@ -367,7 +370,7 @@ namespace ISX
             var offset = InputStateBlock.kInvalidOffset;
             if (attribute != null && attribute.offset != InputStateBlock.kInvalidOffset)
                 offset = attribute.offset;
-            else if (member is FieldInfo)
+            else if (member is FieldInfo && !isModifyingChildControlByPath)
                 offset = (uint)Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
 
             // Determine bit offset.
@@ -421,7 +424,8 @@ namespace ISX
                 sizeInBits = sizeInBits,
                 parameters = new ReadOnlyArray<ParameterValue>(parameters),
                 usages = new ReadOnlyArray<InternedString>(usages),
-                aliases = new ReadOnlyArray<string>(aliases)
+                aliases = new ReadOnlyArray<string>(aliases),
+                isModifyingChildControlByPath = isModifyingChildControlByPath
             };
         }
 

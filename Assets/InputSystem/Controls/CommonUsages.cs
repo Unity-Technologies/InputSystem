@@ -32,5 +32,7 @@ namespace ISX
 
         public static InternedString LeftHand = new InternedString("LeftHand");
         public static InternedString RightHand = new InternedString("RightHand");
+
+        public static InternedString BatteryStrength = new InternedString("BatteryStrength");
     }
 }

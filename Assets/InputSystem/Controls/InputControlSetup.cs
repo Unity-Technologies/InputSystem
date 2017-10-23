@@ -247,13 +247,15 @@ namespace ISX
 
             // Create children and configure their settings from our
             // template values.
+            var haveChildrenUsingStateFromOtherControl = false;
             try
             {
                 // Pass list of existing control on to function as we may have decided to not
                 // actually reuse the existing control (and thus control.m_ChildrenReadOnly will
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
-                AddChildControls(template, variant, control, existingControl?.m_ChildrenReadOnly);
+                AddChildControls(template, variant, control, existingControl?.m_ChildrenReadOnly,
+                    ref haveChildrenUsingStateFromOtherControl);
             }
             catch
             {
@@ -261,14 +263,44 @@ namespace ISX
                 throw;
             }
 
-
-            // Finally come up with a layout for our state.
+            // Come up with a layout for our state.
             ComputeStateLayout(control);
+
+            // Finally, if there we have child controls that take their state blocks from other
+            // controls, assign them their blocks now.
+            if (haveChildrenUsingStateFromOtherControl)
+            {
+                foreach (var controlTemplate in template.controls)
+                {
+                    if (string.IsNullOrEmpty(controlTemplate.useStateFrom))
+                        continue;
+
+                    var child = TryGetControl(controlTemplate.name);
+                    Debug.Assert(child != null);
+
+                    // Find the referenced control.
+                    var referencedControl = TryGetControl(controlTemplate.useStateFrom);
+                    if (referencedControl == null)
+                        throw new Exception(
+                            $"Cannot find control '{controlTemplate.useStateFrom}' referenced in 'useStateFrom' of control '{controlTemplate.name}' in template '{template.name}'");
+
+                    // Copy its state settings.
+                    child.m_StateBlock = referencedControl.m_StateBlock;
+
+                    // At this point, all byteOffsets are relative to parents so we need to
+                    // walk up the referenced control's parent chain and add offsets until
+                    // we are at the same level that we are at.
+                    for (var parentInChain = referencedControl.parent; parentInChain != control; parentInChain = parentInChain.parent)
+                        child.m_StateBlock.byteOffset = parentInChain.m_StateBlock.byteOffset;
+                }
+            }
 
             return control;
         }
 
-        private void AddChildControls(InputTemplate template, InternedString variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren)
+        private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.kInvalidOffset;
+
+        private void AddChildControls(InputTemplate template, InternedString variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
         {
             var controlTemplates = template.m_Controls;
             if (controlTemplates == null)
@@ -345,13 +377,24 @@ namespace ISX
                 ++childIndex;
 
                 // Pass state block config on to control.
-                control.m_StateBlock.byteOffset = controlTemplate.offset;
-                if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
-                    control.m_StateBlock.bitOffset = controlTemplate.bit;
-                if (controlTemplate.sizeInBits != 0)
-                    control.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
-                if (controlTemplate.format != 0)
-                    SetFormat(control, controlTemplate);
+                var usesStateFromOtherControl = !string.IsNullOrEmpty(controlTemplate.useStateFrom);
+                if (!usesStateFromOtherControl)
+                {
+                    control.m_StateBlock.byteOffset = controlTemplate.offset;
+                    if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
+                        control.m_StateBlock.bitOffset = controlTemplate.bit;
+                    if (controlTemplate.sizeInBits != 0)
+                        control.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
+                    if (controlTemplate.format != 0)
+                        SetFormat(control, controlTemplate);
+                }
+                else
+                {
+                    // Mark controls that don't have state blocks of their own but rather get their
+                    // blocks from other controls by setting their state size to kInvalidOffset.
+                    control.m_StateBlock.sizeInBits = kSizeForControlUsingStateFromOtherControl;
+                    haveChildrenUsingStateFromOtherControls = true;
+                }
 
                 ////REVIEW: the constant appending to m_UsagesForEachControl and m_AliasesForEachControl may lead to a lot
                 ////        of successive re-allocations
@@ -415,7 +458,8 @@ namespace ISX
                     var haveChangedLayoutOfChild = false;
 
                     // Apply modifications.
-                    if (controlTemplate.sizeInBits != 0 && child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
+                    if (controlTemplate.sizeInBits != 0 &&
+                        child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
                     {
                         child.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
                     }
@@ -556,8 +600,12 @@ namespace ISX
             var firstUnfixedByteOffset = 0u;
             foreach (var child in children)
             {
-                //
                 Debug.Assert(child.m_StateBlock.sizeInBits != 0);
+
+                // Skip children using state from other controls.
+                if (child.m_StateBlock.sizeInBits == kSizeForControlUsingStateFromOtherControl)
+                    continue;
+
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
                 if (childSizeInBits == 0)
@@ -587,6 +635,10 @@ namespace ISX
             {
                 // Skip children with fixed offsets.
                 if (child.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                    continue;
+
+                // Skip children using state from other controls.
+                if (child.m_StateBlock.sizeInBits == kSizeForControlUsingStateFromOtherControl)
                     continue;
 
                 // See if it's a bit addressing control.

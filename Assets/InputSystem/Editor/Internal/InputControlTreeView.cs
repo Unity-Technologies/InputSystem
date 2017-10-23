@@ -18,10 +18,10 @@ namespace ISX
             if (treeState == null)
                 treeState = new TreeViewState();
 
-            // MultiColumnHeaderState loses its columns on domain reloads so we wipe the column
-            // state every time.
-            var columns = CreateColumnArray();
-            headerState = new MultiColumnHeaderState(columns);
+            var newHeaderState = CreateHeaderState();
+            if (headerState != null)
+                MultiColumnHeaderState.OverwriteSerializedFields(headerState, newHeaderState);
+            headerState = newHeaderState;
 
             var header = new MultiColumnHeader(headerState);
             return new InputControlTreeView(rootControl, treeState, header);
@@ -51,7 +51,7 @@ namespace ISX
         private InputControl m_RootControl;
         private List<InputControl> m_Controls = new List<InputControl>();
 
-        private static MultiColumnHeaderState.Column[] CreateColumnArray()
+        private static MultiColumnHeaderState CreateHeaderState()
         {
             var columns = new MultiColumnHeaderState.Column[(int)ColumnId.COUNT];
 
@@ -87,7 +87,7 @@ namespace ISX
             columns[(int)ColumnId.Value] =
                 new MultiColumnHeaderState.Column {width = 120, headerContent = new GUIContent("Value")};
 
-            return columns;
+            return new MultiColumnHeaderState(columns);
         }
 
         private InputControlTreeView(InputControl root, TreeViewState state, MultiColumnHeader header)

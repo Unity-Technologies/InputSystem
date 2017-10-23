@@ -34,16 +34,16 @@ namespace ISX
             if (treeState == null)
                 treeState = new TreeViewState();
 
-            // MultiColumnHeaderState loses its columns on domain reloads so we wipe the column
-            // state every time.
-            var columns = CreateColumnArray();
-            headerState = new MultiColumnHeaderState(columns);
+            var newHeaderState = CreateHeaderState();
+            if (headerState != null)
+                MultiColumnHeaderState.OverwriteSerializedFields(headerState, newHeaderState);
+            headerState = newHeaderState;
 
             var header = new MultiColumnHeader(headerState);
             return new InputEventTreeView(treeState, header, eventTrace, device);
         }
 
-        private static MultiColumnHeaderState.Column[] CreateColumnArray()
+        private static MultiColumnHeaderState CreateHeaderState()
         {
             var columns = new MultiColumnHeaderState.Column[(int)ColumnId.COUNT];
 
@@ -83,7 +83,7 @@ namespace ISX
                 headerContent = new GUIContent("Time")
             };
 
-            return columns;
+            return new MultiColumnHeaderState(columns);
         }
 
         private InputEventTreeView(TreeViewState state, MultiColumnHeader multiColumnHeader, InputEventTrace eventTrace, InputControl rootControl)

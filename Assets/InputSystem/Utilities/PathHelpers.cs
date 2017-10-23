@@ -2,6 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
+////TODO: allow stuff like "/gamepad/**/<button>"
+////TODO: store CRC32s of names on controls and use that for first-level matching of name components
+
 namespace ISX
 {
     // Functions to deal with control path specs (like "/gamepad/*stick").
@@ -30,9 +34,6 @@ namespace ISX
             MatchControlsRecursive(control, path, indexInPath, matches);
             return matches.Count - countBefore;
         }
-
-        ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
-        ////TODO: allow stuff like "/gamepad/**/<button>"
 
         private static InputControl MatchControlsRecursive(InputControl control, string path, int indexInPath, List<InputControl> matches)
         {
@@ -69,6 +70,16 @@ namespace ISX
             {
                 // Normal name match.
                 controlIsMatch = MatchPathComponent(control.name, path, ref indexInPath, PathComponentType.Name);
+
+                // Alternative match by alias.
+                if (!controlIsMatch)
+                {
+                    for (var i = 0; i < control.aliases.Count && !controlIsMatch; ++i)
+                    {
+                        controlIsMatch = MatchPathComponent(control.aliases[i], path, ref indexInPath,
+                                PathComponentType.Name);
+                    }
+                }
             }
 
             // If we have a match, return it or, if there's children, recurse into them.

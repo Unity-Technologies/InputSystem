@@ -2,6 +2,7 @@ using System;
 
 namespace ISX
 {
+    ////TODO: allow format to be any integer format
     public class DiscreteControl : InputControl<int>
     {
         public DiscreteControl()

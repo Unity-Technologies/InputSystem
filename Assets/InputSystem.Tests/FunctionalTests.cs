@@ -342,11 +342,71 @@ public class FunctionalTests
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("yeah").And.Property("template").EqualTo("Stick"));
     }
 
+    // Want to ensure that if a state struct declares an "int" field, for example, and then
+    // assigns it then Axis template (which has a default format of float), the AxisControl
+    // comes out with an "INT" format and not a "FLT" format.
+    struct StateStructWithPrimitiveFields : IInputStateTypeInfo
+    {
+        [InputControl(template = "Axis")] public byte byteAxis;
+        [InputControl(template = "Axis")] public short shortAxis;
+        [InputControl(template = "Axis")] public int intAxis;
+        // No float as that is the default format for Axis anyway.
+        [InputControl(template = "Axis")] public double doubleAxis;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+    [InputState(typeof(StateStructWithPrimitiveFields))]
+    class DeviceWithStateStructWithPrimitiveFields : InputDevice
+    {
+    }
+
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanHaveOneControlUseStateOfAnotherControl()
+    public void Templates_FormatOfControlWithPrimitiveTypeInStateStructInferredFromType()
     {
-        Assert.Fail();
+        InputSystem.RegisterTemplate<DeviceWithStateStructWithPrimitiveFields>("Test");
+        var setup = new InputControlSetup("Test");
+
+        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
+        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
+        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
+        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeDouble));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanHaveOneControlUseStateOfAnotherControl()
+    {
+        // It's useful to be able to say that control X should simply use the same state as control
+        // Y. An example of this is the up/down/left/right controls of sticks that simply want to reuse
+        // state from the x and y controls already on the stick. "useStateFrom" not only ensures that
+        // if the state is moved around we move with it, it allows to redirect entire controls from
+        // one part of the hierarchy to another part of the hierarchy (Touchscreen does that to point
+        // the controls expected by the base Pointer class to the controls inside of "touch0").
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""test"", ""template"" : ""Axis"", ""useStateFrom"" : ""leftStick/x"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("MyDevice");
+        var testControl = setup.GetControl<AxisControl>("test");
+        var device = (Gamepad)setup.Finish();
+
+        Assert.That(device.stateBlock.alignedSizeInBytes, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>()));
+        Assert.That(testControl.stateBlock.byteOffset, Is.EqualTo(device.leftStick.x.stateBlock.byteOffset));
+        Assert.That(testControl.stateBlock.sizeInBits, Is.EqualTo(device.leftStick.x.stateBlock.sizeInBits));
+        Assert.That(testControl.stateBlock.format, Is.EqualTo(device.leftStick.x.stateBlock.format));
+        Assert.That(testControl.stateBlock.bitOffset, Is.EqualTo(device.leftStick.x.stateBlock.bitOffset));
     }
 
     [Test]
@@ -1401,7 +1461,10 @@ public class FunctionalTests
     [Category("Devices")]
     [TestCase("Gamepad")]
     [TestCase("Keyboard")]
+    [TestCase("Pointer")]
     [TestCase("Mouse")]
+    [TestCase("Pen")]
+    [TestCase("Touchscreen")]
     [TestCase("HMD")]
     [TestCase("XRController")]
     public void Devices_CanCreateDevice(string template)
@@ -1442,6 +1505,26 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(keyboard.any.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanPerformHorizontalAndVerticalScrollWithMouse()
+    {
+        var mouse = (Mouse)InputSystem.AddDevice("Mouse");
+
+        InputSystem.QueueStateEvent(mouse.scrollWheel, new Vector2(10, 12));
+        InputSystem.Update();
+
+        Assert.That(mouse.scrollWheel.x.value, Is.EqualTo(10).Within(0.0000001));
+        Assert.That(mouse.scrollWheel.y.value, Is.EqualTo(12).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_TouchscreenCanFunctionAsPointer()
+    {
+        Assert.Fail();
     }
 
     struct CustomDeviceState : IInputStateTypeInfo
@@ -1604,15 +1687,15 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void TODO_Controls_CanFindControlsByTheirAliases()
+    public void Controls_CanFindControlsByTheirAliases()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matchByName = InputSystem.GetControls("/gamepad/buttonSouth");
-        var matchByAlias1 = InputSystem.GetControls("/gamepad/x");
+        var matchByAlias1 = InputSystem.GetControls("/gamepad/a");
         var matchByAlias2 = InputSystem.GetControls("/gamepad/cross");
 
         Assert.That(matchByName, Has.Count.EqualTo(1));
-        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.xButton));
+        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.aButton));
         Assert.That(matchByAlias1, Is.EqualTo(matchByName));
         Assert.That(matchByAlias2, Is.EqualTo(matchByName));
     }
@@ -2098,7 +2181,7 @@ public class FunctionalTests
     }
 
     [InputState(typeof(CustomDeviceState))]
-    class CustomDevice : InputDevice, IInputBeforeUpdateCallbackReceiver
+    class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
     {
         public AxisControl axis { get; private set; }
 
@@ -2121,7 +2204,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanUpdateDeviceWithEventsFromBeforeUpdateCallback()
+    public void Events_CanUpdateDeviceWithEventsFromUpdateCallback()
     {
         InputSystem.RegisterTemplate<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
@@ -2135,7 +2218,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_RemovingDeviceCleansUpBeforeRenderCallback()
+    public void Devices_RemovingDeviceCleansUpUpdat3Callback()
     {
         InputSystem.RegisterTemplate<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
@@ -2658,7 +2741,7 @@ public class FunctionalTests
 
         // Perform tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 0.0);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, InputConfiguration.TapTime - 0.0001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, 0.05);
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
@@ -2704,7 +2787,7 @@ public class FunctionalTests
     [Category("Actions")]
     public void Actions_CanDisableAction()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/gamepad/leftStick");
 
         action.Enable();
@@ -2886,6 +2969,42 @@ public class FunctionalTests
     {
         //make sure that if you customize a gamepad layout, you don't end up with the "GPAD" format on the device
         //in fact, the system should require a format code to be specified in that case
+        Assert.Fail();
+    }
+
+    ////REVIEW: This one seems like it adds quite a bit of complexity for somewhat minor gain.
+    ////        May even be safer to *not* support this as it may inject controls at offsets where you don't expect them.
+    struct BaseInputState : IInputStateTypeInfo
+    {
+        [InputControl(template = "Axis")] public float axis;
+        public int padding;
+        public FourCC GetFormat()
+        {
+            return new FourCC("BASE");
+        }
+    }
+    [InputState(typeof(BaseInputState))]
+    class BaseInputDevice : InputDevice
+    {
+    }
+    //[InputControl(name = "axis", offset = InputStateBlock.kInvalidOffset)]
+    struct DerivedInputState : IInputStateTypeInfo
+    {
+        public FourCC GetFormat()
+        {
+            return new FourCC("DERI");
+        }
+    }
+    [InputState(typeof(DerivedInputState))]
+    class DerivedInputDevice : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
+    {
+        //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
         Assert.Fail();
     }
 }
