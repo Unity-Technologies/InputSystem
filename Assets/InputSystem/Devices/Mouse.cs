@@ -15,7 +15,7 @@ namespace ISX
         [FieldOffset(0)]
         public Vector2 position;
 
-        [InputControl(usage = "Secondary2DMotion")]
+        [InputControl(usage = "Secondary2DMotion", autoReset = true)]
         [FieldOffset(8)]
         public Vector2 delta;
 

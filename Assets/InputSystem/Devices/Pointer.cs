@@ -23,10 +23,7 @@ namespace ISX
         [InputControl(usage = "Point")]
         public Vector2 position;
 
-        // IMPORTANT: Accumulation and *resetting* (i.e. going back to zero in-between frames)
-        //            has to be done by the code that generates state events. The system will *not*
-        //            automatically maintain deltas.
-        [InputControl(usage = "Secondary2DMotion")]
+        [InputControl(usage = "Secondary2DMotion", autoReset = true)]
         public Vector2 delta;
 
         [InputControl(template = "Analog", usage = "Pressure")]

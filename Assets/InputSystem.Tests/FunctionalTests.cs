@@ -1196,6 +1196,47 @@ public class FunctionalTests
         Assert.That(gamepad.aButton.value, Is.EqualTo(0.5f));
     }
 
+    // Controls like mouse deltas need to reset to zero when there is no activity on them in a frame.
+    // This could be done by requiring the state producing code to always send appropriate state events
+    // when necessary. However, for state producers that are hooked to event sources (like eg. NSEvents
+    // on OSX and MSGs on Windows), this can be very awkward to handle as it requires synchronizing with
+    // input updates and can complicate state producer logic quite a bit.
+    //
+    // So, instead of putting the burden on state producers, controls come with an auto-reset features
+    // that will automatically cause the system to clear memory of controls when needed.
+    [Test]
+    [Category("State")]
+    public void TODO_State_CanAutomaticallyResetIndividualControlsBetweenFrames()
+    {
+        // Make leftStick/x automatically reset on gamepad.
+        var json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick/x"",
+                        ""autoReset"" : true
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
+
+        InputSystem.QueueStateEvent(device, new GamepadState {leftStick = new Vector2(0.123f, 0.456f)});
+        InputSystem.Update();
+
+        Assert.That(device.leftStick.x.value, Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
+
+        InputSystem.Update();
+
+        Assert.That(device.leftStick.x.value, Is.Zero);
+        Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromTemplate()

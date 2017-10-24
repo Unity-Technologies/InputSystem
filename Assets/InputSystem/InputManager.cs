@@ -410,7 +410,7 @@ namespace ISX
             device.m_Id = deviceId;
             device.m_Description = description;
 
-            if (!string.IsNullOrEmpty(description.product) && description.product != "Generic") ////REVIEW: probably want a better approach to filtering out nonsense product names
+            if (!string.IsNullOrEmpty(description.product))
                 device.m_Name = new InternedString(description.product);
 
             AddDevice(device);
@@ -775,6 +775,7 @@ namespace ISX
 
         private InputDevice[] m_Devices;
         private Dictionary<int, InputDevice> m_DevicesById;
+        private List<InputDevice> m_DevicesWithAutoResets;
 
         private InputUpdateType m_CurrentUpdate;
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
@@ -1249,7 +1250,6 @@ namespace ISX
                             }
                         }
 
-                        ++device.m_StateChangeCount; ////REVIEW: is this really useful?
                         device.m_LastUpdateTime = currentEventTime;
 
                         // Now that we've committed the new state to memory, if any of the change

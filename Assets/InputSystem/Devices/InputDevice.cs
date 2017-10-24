@@ -56,6 +56,7 @@ namespace ISX
         {
             Connected = 1 << 0,
             UpdateBeforeRender = 1 << 1,
+            HasAutoResetControls = 1 << 2,
         }
 
         internal Flags m_Flags;
@@ -65,7 +66,6 @@ namespace ISX
         internal InputDeviceDescription m_Description;
 
         internal double m_LastUpdateTime;
-        internal int m_StateChangeCount;
         internal int m_LastDynamicUpdate;
         internal int m_LastFixedUpdate;
 
@@ -84,6 +84,10 @@ namespace ISX
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        // List of state blocks in this device that require automatic resetting
+        // between frames.
+        internal InputStateBlock[] m_AutoResetStateBlocks;
 
         // NOTE: We don't store processors in an combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

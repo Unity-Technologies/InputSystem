@@ -24,5 +24,7 @@ namespace ISX
         public uint bit = InputStateBlock.kInvalidOffset;
         public uint offset = InputStateBlock.kInvalidOffset;
         public uint sizeInBits;
+        public bool autoReset;
+        public bool accumulate;
     }
 }

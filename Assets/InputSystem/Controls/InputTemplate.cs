@@ -106,7 +106,13 @@ namespace ISX
         // Specifies the composition of an input control.
         public struct ControlTemplate
         {
-            ////REVIEW: if we expose InputTemplate, the arrays in here should turn into ReadOnlyArrays
+            [Flags]
+            public enum Flags
+            {
+                IsModifyingChildControlByPath = 1 << 0,
+                StateAutomaticallyResetsBetweenFrames = 1 << 1,
+            }
+
             public string name; // Can be null/empty for "root" control but only one such control may exist.
             public InternedString template;
             public InternedString variant;
@@ -121,6 +127,7 @@ namespace ISX
             public uint bit;
             public uint sizeInBits;
             public FourCC format;
+            public Flags flags;
 
             // If true, the template will not add a control but rather a modify a control
             // inside the hierarchy added by 'template'. This allows, for example, to modify
@@ -128,7 +135,29 @@ namespace ISX
             // template instead of having to have a custom stick template for the left stick
             // than in turn would have to make use of a custom axis template for the X axis.
             // Insted, you can just have a control template with the name "leftStick/x".
-            public bool isModifyingChildControlByPath;
+            public bool isModifyingChildControlByPath
+            {
+                get { return (flags & Flags.IsModifyingChildControlByPath) == Flags.IsModifyingChildControlByPath; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.IsModifyingChildControlByPath;
+                    else
+                        flags &= ~Flags.IsModifyingChildControlByPath;
+                }
+            }
+
+            public bool isAutoResetControl
+            {
+                get { return (flags & Flags.StateAutomaticallyResetsBetweenFrames) == Flags.StateAutomaticallyResetsBetweenFrames; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.StateAutomaticallyResetsBetweenFrames;
+                    else
+                        flags &= ~Flags.StateAutomaticallyResetsBetweenFrames;
+                }
+            }
         }
 
         public struct DeviceUsage
@@ -410,7 +439,10 @@ namespace ISX
             if (!string.IsNullOrEmpty(attribute?.useStateFrom))
                 useStateFrom = attribute.useStateFrom;
 
-            ////TODO: remaining template stuff
+            // Determine whether state automatically resets.
+            var autoReset = false;
+            if (attribute != null)
+                autoReset = attribute.autoReset;
 
             return new ControlTemplate
             {
@@ -425,7 +457,8 @@ namespace ISX
                 parameters = new ReadOnlyArray<ParameterValue>(parameters),
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<string>(aliases),
-                isModifyingChildControlByPath = isModifyingChildControlByPath
+                isModifyingChildControlByPath = isModifyingChildControlByPath,
+                isAutoResetControl = autoReset
             };
         }
 
@@ -864,6 +897,7 @@ namespace ISX
             public string[] usages;
             public string parameters;
             public string processors;
+            public bool autoReset;
 
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore CS0649
@@ -885,6 +919,7 @@ namespace ISX
                     useStateFrom = useStateFrom,
                     bit = bit,
                     sizeInBits = sizeInBits,
+                    isAutoResetControl = autoReset,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1
                 };
 
