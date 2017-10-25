@@ -1,5 +1,7 @@
 using System;
 
+////TODO: allow control hierarchies to target arbitrary memory (like state events) to read out control data
+
 namespace ISX
 {
     // A typed and named value.

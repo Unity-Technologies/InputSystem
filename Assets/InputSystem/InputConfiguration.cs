@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     // Static configuration values that are picked up by the various pieces of logic.
@@ -33,6 +35,7 @@ namespace ISX
         public static bool LockInputToGame;
         #endif
 
+        [Serializable]
         internal struct SerializedState
         {
             public float deadzoneMin;

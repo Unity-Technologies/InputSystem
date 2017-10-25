@@ -69,18 +69,44 @@ namespace ISX
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
 
+        internal struct ModifierState
+        {
+            public IInputActionModifier modifier;
+            public InputControl control;
+            public InputAction.Phase phase;
+            public Flags flags;
+
+            [Flags]
+            public enum Flags
+            {
+                TimerRunning = 1 << 0,
+            }
+
+            public bool isTimerRunning
+            {
+                get { return (flags & Flags.TimerRunning) == Flags.TimerRunning; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.TimerRunning;
+                    else
+                        flags &= ~Flags.TimerRunning;
+                }
+            }
+        }
+
         internal struct ResolvedBinding
         {
             public ReadOnlyArray<InputControl> controls;
-            public ReadOnlyArray<IInputActionModifier> modifiers;
+            public ReadWriteArray<ModifierState> modifiers;
         }
 
         // These arrays hold data for all actions in the set. Each action will
         // refer to a slice of the arrays.
         [SerializeField] InputBinding[] m_Bindings;
         [NonSerialized] internal InputControl[] m_Controls;
-        [NonSerialized] internal IInputActionModifier[] m_Modifiers;
-        [NonSerialized] internal ResolvedBinding[] m_ResolvedBingings;
+        [NonSerialized] internal ModifierState[] m_Modifiers;
+        [NonSerialized] internal ResolvedBinding[] m_ResolvedBindings;
 
         // Resolve all bindings to their controls and also add any action modifiers
         // from the bindings. The best way is for this to happen once for each action
@@ -97,7 +123,7 @@ namespace ISX
             // We lazily allocate these as needed. No point allocating arrays
             // we don't use.
             List<InputControl> controls = null;
-            List<IInputActionModifier> modifiers = null;
+            List<ModifierState> modifiers = null;
             List<ResolvedBinding> resolvedBindings = null;
 
             // Resolve all source paths.
@@ -115,12 +141,12 @@ namespace ISX
 
             if (resolvedBindings != null && resolvedBindings.Count > 0)
             {
-                m_ResolvedBingings = resolvedBindings != null && resolvedBindings.Count > 0 ? resolvedBindings.ToArray() : null;
+                m_ResolvedBindings = resolvedBindings != null && resolvedBindings.Count > 0 ? resolvedBindings.ToArray() : null;
 
-                for (var i = 0; i < m_ResolvedBingings.Length; ++i)
+                for (var i = 0; i < m_ResolvedBindings.Length; ++i)
                 {
-                    m_ResolvedBingings[i].controls.m_Array = m_Controls;
-                    m_ResolvedBingings[i].modifiers.m_Array = m_Modifiers;
+                    m_ResolvedBindings[i].controls.m_Array = m_Controls;
+                    m_ResolvedBindings[i].modifiers.m_Array = m_Modifiers;
                 }
             }
 
@@ -130,7 +156,7 @@ namespace ISX
                 if (m_Controls != null)
                 {
                     m_SingletonAction.m_Controls.m_Array = m_Controls;
-                    m_SingletonAction.m_ResolvedBindings.m_Array = m_ResolvedBingings;
+                    m_SingletonAction.m_ResolvedBindings.m_Array = m_ResolvedBindings;
                 }
             }
             else
@@ -143,7 +169,7 @@ namespace ISX
         // Resolve the bindings of a single action and add their data to the given lists of
         // controls, modifiers, and resolved bindings. Allocates the lists, if necessary.
         private void ResolveBindings(InputAction action, ref List<InputControl> controls,
-            ref List<IInputActionModifier> modifiers, ref List<ResolvedBinding> resolvedBindings)
+            ref List<ModifierState> modifiers, ref List<ResolvedBinding> resolvedBindings)
         {
             var bindings = action.bindings;
             if (bindings.Count == 0)
@@ -181,7 +207,7 @@ namespace ISX
                 resolvedBindings.Add(new ResolvedBinding
                 {
                     controls = new ReadOnlyArray<InputControl>(null, firstControl, numControls),
-                    modifiers = new ReadOnlyArray<IInputActionModifier>(null, firstModifier, numModifiers)
+                    modifiers = new ReadWriteArray<ModifierState>(null, firstModifier, numModifiers)
                 });
             }
 
@@ -192,7 +218,7 @@ namespace ISX
                 new ReadOnlyArray<ResolvedBinding>(null, resolvedBindingsStartIndex, resolvedBindings.Count - resolvedBindingsStartIndex);
         }
 
-        private static int ResolveModifiers(string modifierString, ref List<IInputActionModifier> modifiers)
+        private static int ResolveModifiers(string modifierString, ref List<ModifierState> modifiers)
         {
             ////REVIEW: We're piggybacking off the processor parsing here as the two syntaxes are identical. Might consider
             ////        moving the logic to a shared place.
@@ -219,8 +245,12 @@ namespace ISX
 
                 // Add to list.
                 if (modifiers == null)
-                    modifiers = new List<IInputActionModifier>();
-                modifiers.Add(modifier);
+                    modifiers = new List<ModifierState>();
+                modifiers.Add(new ModifierState
+                {
+                    modifier = modifier,
+                    phase = InputAction.Phase.Waiting
+                });
             }
 
             return firstModifierIndex;

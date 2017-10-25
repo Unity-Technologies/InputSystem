@@ -174,6 +174,8 @@ namespace ISX
                     var controls = AddChild(item, "Controls", ref id);
                     foreach (var control in template.controls)
                         BuildItem(control, controls, ref id);
+
+                    controls.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 return item;
@@ -182,6 +184,8 @@ namespace ISX
             private void BuildItem(InputTemplate.ControlTemplate control, TreeViewItem parent, ref int id)
             {
                 var item = AddChild(parent, control.variant.IsEmpty() ? control.name : $"{control.name} ({control.variant})", ref id);
+
+                ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control templates into the control they modify
 
                 ////TODO: allow clicking this field to jump to the template
                 if (!control.template.IsEmpty())
@@ -196,6 +200,8 @@ namespace ISX
                     AddChild(item, $"Bit: {control.bit}", ref id);
                 if (control.sizeInBits != 0)
                     AddChild(item, $"Size in bits: {control.sizeInBits}", ref id);
+                if (control.isAutoResetControl)
+                    AddChild(item, $"Auto-Reset: true", ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages), ref id);

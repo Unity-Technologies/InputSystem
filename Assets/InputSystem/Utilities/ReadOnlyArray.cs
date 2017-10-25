@@ -56,7 +56,7 @@ namespace ISX
             }
         }
 
-        private class Enumerator<T> : IEnumerator<T>
+        internal class Enumerator<T> : IEnumerator<T>
         {
             private T[] m_Array;
             private int m_Index;

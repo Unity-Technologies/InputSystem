@@ -828,7 +828,8 @@ namespace ISX
         {
             public double time;
             public InputAction action;
-            public IInputActionModifier modifier;
+            public int bindingIndex;
+            public int modifierIndex;
         }
 
         private List<ActionTimeout> m_ActionTimeouts;
@@ -912,7 +913,7 @@ namespace ISX
             }
         }
 
-        internal void AddActionTimeout(InputAction action, double time, IInputActionModifier modifier)
+        internal void AddActionTimeout(InputAction action, double time, int bindingIndex, int modifierIndex)
         {
             if (m_ActionTimeouts == null)
                 m_ActionTimeouts = new List<ActionTimeout>();
@@ -921,8 +922,27 @@ namespace ISX
             {
                 time = time,
                 action = action,
-                modifier = modifier
+                bindingIndex = bindingIndex,
+                modifierIndex = modifierIndex
             });
+        }
+
+        internal void RemoveActionTimeout(InputAction action, int bindingIndex, int modifierIndex)
+        {
+            if (m_ActionTimeouts == null)
+                return;
+
+            for (var i = 0; i < m_ActionTimeouts.Count; ++i)
+            {
+                if (m_ActionTimeouts[i].action == action
+                    && m_ActionTimeouts[i].bindingIndex == bindingIndex
+                    && m_ActionTimeouts[i].modifierIndex == modifierIndex)
+                {
+                    ////TODO: leave state empty and compact array lazily on traversal
+                    m_ActionTimeouts.RemoveAt(i);
+                    break;
+                }
+            }
         }
 
         private void MakeDeviceNameUnique(InputDevice device)
@@ -1412,7 +1432,8 @@ namespace ISX
             for (var i = 0; i < m_ActionTimeouts.Count; ++i)
                 if (m_ActionTimeouts[i].time <= time)
                 {
-                    m_ActionTimeouts[i].action.NotifyTimerExpired(m_ActionTimeouts[i].modifier, time);
+                    m_ActionTimeouts[i].action.NotifyTimerExpired(m_ActionTimeouts[i].bindingIndex, m_ActionTimeouts[i].modifierIndex, time);
+                    ////TODO: use plain array and compact entries on traversal
                     m_ActionTimeouts.RemoveAt(i);
                 }
         }

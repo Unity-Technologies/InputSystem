@@ -1235,6 +1235,8 @@ public class FunctionalTests
 
         Assert.That(device.leftStick.x.value, Is.Zero);
         Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
+
+        ////TODO: this test will require a corresponding test that actions see resets properly
     }
 
     [Test]
@@ -2753,7 +2755,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanDistinguishTapAndSlowTapOnSameAction()
+    public void Actions_CanDistinguishTapAndSlowTapOnSameAction()
     {
         // Bindings can have more than one modifier. Depending on the interaction happening on the bound
         // controls one of the modifiers may initiate a phase shift and which modifier initiated the
@@ -2770,34 +2772,51 @@ public class FunctionalTests
                 modifiers: "tap(duration=0.1),slowTap(duration=0.5)");
         action.Enable();
 
-        var receivedCalls = 0;
-        IInputActionModifier receivedModifier = null;
+        var started = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var cancelled = new System.Collections.Generic.List<InputAction.CallbackContext>();
 
-        action.performed +=
-            ctx =>
-            {
-                ++receivedCalls;
-                receivedModifier = ctx.modifier;
-            };
+        action.started += ctx => started.Add(ctx);
+        action.performed += ctx => performed.Add(ctx);
+        action.cancelled += ctx => cancelled.Add(ctx);
 
         // Perform tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 0.0);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, 0.05);
         InputSystem.Update();
 
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedModifier, Is.TypeOf<TapModifier>());
+        // Only tap was started.
+        Assert.That(started, Has.Count.EqualTo(1));
+        Assert.That(started[0].modifier, Is.TypeOf<TapModifier>());
 
-        receivedCalls = 0;
-        receivedModifier = null;
+        // Only tap was performed.
+        Assert.That(performed, Has.Count.EqualTo(1));
+        Assert.That(performed[0].modifier, Is.TypeOf<TapModifier>());
+
+        // Nothing was cancelled.
+        Assert.That(cancelled, Has.Count.Zero);
+
+        started.Clear();
+        performed.Clear();
+        cancelled.Clear();
 
         // Perform slow tap.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.A}, 2.0);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 0}, 2.0 + InputConfiguration.SlowTapTime + 0.0001);
         InputSystem.Update();
 
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedModifier, Is.TypeOf<SlowTapModifier>());
+        // First tap was started, then slow tap was started.
+        Assert.That(started, Has.Count.EqualTo(2));
+        Assert.That(started[0].modifier, Is.TypeOf<TapModifier>());
+        Assert.That(started[1].modifier, Is.TypeOf<SlowTapModifier>());
+
+        // Tap got cancelled.
+        Assert.That(cancelled, Has.Count.EqualTo(1));
+        Assert.That(cancelled[0].modifier, Is.TypeOf<TapModifier>());
+
+        // Slow tap got performed.
+        Assert.That(performed, Has.Count.EqualTo(1));
+        Assert.That(performed[0].modifier, Is.TypeOf<SlowTapModifier>());
     }
 
     [Test]

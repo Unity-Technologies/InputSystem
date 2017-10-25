@@ -9,11 +9,20 @@ namespace ISX
 
         private double m_TapStartTime;
 
+        ////TODO: make sure 2d doesn't move too far
+
         public void Process(ref InputAction.ModifierContext context)
         {
+            if (context.timerHasExpired)
+            {
+                context.Cancelled();
+                return;
+            }
+
             if (context.isWaiting && !context.controlHasDefaultValue)
             {
                 m_TapStartTime = context.time;
+                context.SetTimeout(durationOrDefault);
                 context.Started();
                 return;
             }

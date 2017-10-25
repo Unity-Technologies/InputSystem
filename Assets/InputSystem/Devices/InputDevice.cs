@@ -19,7 +19,7 @@ namespace ISX
         // player inputs are usually numbered. For example, on a console the gamepads slots on the system
         // will be numbered and associated with gamepads. This number corresponds to the system assigned
         // player index for the device.
-        public int playerIndex => m_PlayerIndex;
+        public int playerId => m_PlayerId;
 
         // Whether the device is currently connected.
         // If you want to listen for state changes, hook into InputManager.onDeviceChange.
@@ -61,7 +61,7 @@ namespace ISX
 
         internal Flags m_Flags;
         internal int m_Id;
-        internal int m_PlayerIndex;
+        internal int m_PlayerId;////TODO: move to desc
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
