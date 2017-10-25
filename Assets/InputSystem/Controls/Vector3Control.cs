@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ISX
@@ -11,9 +12,6 @@ namespace ISX
         [InputControl(offset = 8)]
         public AxisControl z { get; private set; }
 
-        public override Vector3 value => Process(new Vector3(x.value, y.value, z.value));
-        public override Vector3 previous => Process(new Vector3(x.previous, y.previous, z.previous));
-
         public Vector3Control()
         {
             m_StateBlock.format = InputStateBlock.kTypeVector3;
@@ -25,6 +23,11 @@ namespace ISX
             y = setup.GetControl<AxisControl>(this, "y");
             z = setup.GetControl<AxisControl>(this, "z");
             base.FinishSetup(setup);
+        }
+
+        protected override Vector3 ReadRawValueFrom(IntPtr statePtr)
+        {
+            return new Vector3(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr));
         }
     }
 }

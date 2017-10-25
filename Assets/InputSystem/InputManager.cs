@@ -713,6 +713,7 @@ namespace ISX
             RegisterModifier("SlowTap", typeof(SlowTapModifier));
             RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
             RegisterModifier("Swipe", typeof(SwipeModifier));
+            RegisterModifier("DragAndDrop", typeof(DragAndDropModifier));
 
             BuiltinDeviceTemplates.RegisterTemplates(this);
 

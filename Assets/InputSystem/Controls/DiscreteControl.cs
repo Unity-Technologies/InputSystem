@@ -10,13 +10,10 @@ namespace ISX
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
-        private unsafe int GetValue(IntPtr valuePtr)
+        protected override unsafe int ReadRawValueFrom(IntPtr statePtr)
         {
-            var value = *(int*)valuePtr;
-            return Process(value);
+            var valuePtr = statePtr + (int)m_StateBlock.byteOffset;
+            return *(int*)valuePtr;
         }
-
-        public override int value => GetValue(currentValuePtr);
-        public override int previous => GetValue(previousValuePtr);
     }
 }

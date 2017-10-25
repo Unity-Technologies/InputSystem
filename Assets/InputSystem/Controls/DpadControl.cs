@@ -24,39 +24,12 @@ namespace ISX
         [InputControl(bit = (int)ButtonBits.Right)]
         public ButtonControl right { get; private set; }
 
-        ////REVIEW: should have X and Y child controls as well
+        ////TODO: should have X and Y child controls as well
 
         public DpadControl()
         {
             m_StateBlock.sizeInBits = 4;
             m_StateBlock.format = InputStateBlock.kTypeBit;
-        }
-
-        public override Vector2 value
-        {
-            get
-            {
-                ////FIXME: this produces unnormalized vectors; we want diagonal vectors to still be unit vectors
-                var upValue = up.isPressed ? 1.0f : 0.0f;
-                var downValue = down.isPressed ? -1.0f : 0.0f;
-                var leftValue = left.isPressed ? -1.0f : 0.0f;
-                var rightValue = right.isPressed ? 1.0f : 0.0f;
-
-                return Process(new Vector2(leftValue + rightValue, upValue + downValue));
-            }
-        }
-
-        public override Vector2 previous
-        {
-            get
-            {
-                var upValue = up.isPressed ? 1.0f : 0.0f;
-                var downValue = down.isPressed ? -1.0f : 0.0f;
-                var leftValue = left.isPressed ? -1.0f : 0.0f;
-                var rightValue = right.isPressed ? 1.0f : 0.0f;
-
-                return Process(new Vector2(leftValue + rightValue, upValue + downValue));
-            }
         }
 
         protected override void FinishSetup(InputControlSetup setup)
@@ -66,6 +39,29 @@ namespace ISX
             left = setup.GetControl<ButtonControl>(this, "left");
             right = setup.GetControl<ButtonControl>(this, "right");
             base.FinishSetup(setup);
+        }
+
+        protected override Vector2 ReadRawValueFrom(IntPtr statePtr)
+        {
+            var upIsPressed = up.ReadValueFrom(statePtr) >= up.pressPointOrDefault;
+            var downIsPressed = down.ReadValueFrom(statePtr) >= down.pressPointOrDefault;
+            var leftIsPressed = left.ReadValueFrom(statePtr) >= left.pressPointOrDefault;
+            var rightIsPressed = right.ReadValueFrom(statePtr) >= right.pressPointOrDefault;
+
+            var upValue = upIsPressed ? 1.0f : 0.0f;
+            var downValue = downIsPressed ? -1.0f : 0.0f;
+            var leftValue = leftIsPressed ? -1.0f : 0.0f;
+            var rightValue = rightIsPressed ? 1.0f : 0.0f;
+
+            var result = new Vector2(leftValue + rightValue, upValue + downValue);
+
+            // If press is diagonal, adjust coordinates to produce vector of length 1.
+            // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pos(0.707107)) is ~1.
+            const float diagonal = 0.707107f;
+            if (result.x != 0 && result.y != 0)
+                return new Vector2(result.x * diagonal, result.y * diagonal);
+
+            return result;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace ISX
         public float normalizeMin;
         public float normalizeMax;
 
-        private new float Process(float value)
+        private float Preprocess(float value)
         {
             if (clamp)
                 value = Mathf.Clamp(value, clampMin, clampMax);
@@ -27,7 +27,7 @@ namespace ISX
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax);
             if (invert)
                 value *= -1.0f;
-            return base.Process(value);
+            return value;
         }
 
         public AxisControl()
@@ -35,16 +35,14 @@ namespace ISX
             m_StateBlock.format = InputStateBlock.kTypeFloat;
         }
 
-        public override float value => Process(ReadFloatValueFrom(currentValuePtr));
-        public override float previous => Process(ReadFloatValueFrom(previousValuePtr));
-
-        // Helper to read a floating-point value from the given state. Automatically checks
+        // Read a floating-point value from the given state. Automatically checks
         // the state format of the control and performs conversions.
         // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
         //       or bitfield type.
-        protected unsafe float ReadFloatValueFrom(IntPtr valuePtr)
+        protected override unsafe float ReadRawValueFrom(IntPtr statePtr)
         {
             float value;
+            var valuePtr = statePtr + (int)m_StateBlock.byteOffset;
 
             var format = m_StateBlock.format;
             if (format == InputStateBlock.kTypeFloat)
@@ -74,7 +72,7 @@ namespace ISX
                 throw new Exception($"State format '{m_StateBlock.format}' is not supported as state for {GetType().Name}");
             }
 
-            return value;
+            return Preprocess(value);
         }
     }
 }

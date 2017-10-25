@@ -129,6 +129,7 @@ namespace ISX
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < m_ResolvedBindings.Count; ++i)
             {
+                //need to make sure that change monitors of combined bindings are in the right order
                 var controls = m_ResolvedBindings[i].controls;
                 for (var n = 0; n < controls.Count; ++n)
                     manager.AddStateChangeMonitor(controls[n], this, i);
@@ -186,6 +187,8 @@ namespace ISX
         // This should be a ReadOnlyArray<InputBinding> but we can't serialize that because
         // Unity can't serialize generic types. So we explode the structure here and turn
         // it into a ReadOnlyArray whenever needed.
+        // NOTE: When we are part of an action set, the set will null out m_Bindings for
+        //       serialization.
         [SerializeField] internal InputBinding[] m_Bindings;
         [SerializeField][HideInInspector] internal int m_BindingsStartIndex;
         [SerializeField][HideInInspector] internal int m_BindingsCount;
@@ -269,6 +272,9 @@ namespace ISX
         {
             Debug.Assert(triggerBindingIndex != -1);
             Debug.Assert(triggerModifierIndex != -1);
+
+            ////TODO: need to somehow make sure that performed and cancelled phase changes happen on the *same* binding&control
+            ////      as the start of the phase
 
             var modifiersForBinding = m_ResolvedBindings[triggerBindingIndex].modifiers;
             var currentModifierState = modifiersForBinding[triggerModifierIndex];
@@ -428,12 +434,13 @@ namespace ISX
             }
             else
             {
-                ////TODO: default should be to go to performed on press but only go back to waiting on release
                 // Default logic has no support for cancellations and won't ever go into started
                 // phase. Will go from waiting straight to performed and then straight to waiting
                 // again.
                 if (phase == Phase.Waiting && !isAtDefault)
+                {
                     ChangePhaseOfAction(Phase.Performed, control, -1, -1);
+                }
             }
         }
 
@@ -541,9 +548,16 @@ namespace ISX
                 m_BindingIndex = bindingIndex;
             }
 
-            public AddBindingSyntax CombinedWith()
+            public AddBindingSyntax CombinedWith(string binding, string modifiers = null)
             {
-                throw new NotImplementedException();
+                if (action.m_BindingsCount - 1 != m_BindingIndex)
+                    throw new InvalidOperationException("Must not add other bindings in-between calling AddBindings() and CombinedWith()");
+
+                var result = action.AddBinding(binding, modifiers);
+                action.m_Bindings[action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
+                    InputBinding.Flags.ThisAndPreviousCombine;
+
+                return result;
             }
         }
     }

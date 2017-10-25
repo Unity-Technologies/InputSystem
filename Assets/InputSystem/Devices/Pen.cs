@@ -52,6 +52,6 @@ namespace ISX
     [InputState(typeof(PenState))]
     public class Pen : Pointer
     {
-        public static Pen current { get; internal set; }
+        public new static Pen current { get; internal set; }
     }
 }

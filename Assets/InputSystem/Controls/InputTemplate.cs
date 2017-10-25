@@ -7,6 +7,8 @@ using UnityEngine;
 
 ////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
 
+////TODO: in Extras, add support for creating templates from Steam .vdf files
+
 namespace ISX
 {
     // A template lays out the composition of an input control.

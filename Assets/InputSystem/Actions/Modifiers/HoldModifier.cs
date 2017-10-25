@@ -8,7 +8,6 @@ namespace ISX
         public float durationOrDefault => duration > 0.0 ? duration : InputConfiguration.HoldTime;
 
         private double m_TimePressed;
-        private InputControl m_PressedControl;
 
         public void Process(ref InputAction.ModifierContext context)
         {
@@ -21,7 +20,6 @@ namespace ISX
             if (context.isWaiting && !context.controlHasDefaultValue)
             {
                 m_TimePressed = context.time;
-                m_PressedControl = context.control;
 
                 context.Started();
                 context.SetTimeout(durationOrDefault);
@@ -42,7 +40,6 @@ namespace ISX
         public void Reset()
         {
             m_TimePressed = 0;
-            m_PressedControl = null;
         }
     }
 }

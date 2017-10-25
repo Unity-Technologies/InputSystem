@@ -199,9 +199,11 @@ namespace ISX
                 if (control.bit != InputStateBlock.kInvalidOffset)
                     AddChild(item, $"Bit: {control.bit}", ref id);
                 if (control.sizeInBits != 0)
-                    AddChild(item, $"Size in bits: {control.sizeInBits}", ref id);
+                    AddChild(item, $"Size In Bits: {control.sizeInBits}", ref id);
+                if (!string.IsNullOrEmpty(control.useStateFrom))
+                    AddChild(item, $"Use State From: {control.useStateFrom}", ref id);
                 if (control.isAutoResetControl)
-                    AddChild(item, $"Auto-Reset: true", ref id);
+                    AddChild(item, "Auto-Reset: true", ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages), ref id);

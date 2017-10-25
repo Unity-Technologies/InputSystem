@@ -15,17 +15,14 @@ namespace ISX
             m_StateBlock.format = InputStateBlock.kTypeQuaternion;
         }
 
-        private unsafe Quaternion GetValue(IntPtr valuePtr)
+        protected override unsafe Quaternion ReadRawValueFrom(IntPtr statePtr)
         {
-            var values = (float*)currentValuePtr;
-            var x = values[0];
-            var y = values[1];
-            var z = values[2];
-            var w = values[3];
-            return Process(new Quaternion(x, y, z, w));
+            var valuePtr = (float*)(statePtr + (int)m_StateBlock.byteOffset);
+            var x = valuePtr[0];
+            var y = valuePtr[1];
+            var z = valuePtr[2];
+            var w = valuePtr[3];
+            return new Quaternion(x, y, z, w);
         }
-
-        public override Quaternion value => GetValue(currentValuePtr);
-        public override Quaternion previous => GetValue(previousValuePtr);
     }
 }

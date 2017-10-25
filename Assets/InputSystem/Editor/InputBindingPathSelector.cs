@@ -198,6 +198,10 @@ namespace ISX
                     if (control.isModifyingChildControlByPath)
                         continue;
 
+                    // Skip variants.
+                    if (!string.IsNullOrEmpty(control.variant) && control.variant.ToLower() != "default")
+                        continue;
+
                     var controlPath = prefix + control.name;
                     var child = new TreeViewItem
                     {

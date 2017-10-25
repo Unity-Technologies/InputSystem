@@ -95,11 +95,10 @@ namespace ISX
 
         protected internal InputStateBlock m_StateBlock;
 
-        protected internal IntPtr currentValuePtr =>
-        InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
-        protected internal IntPtr previousValuePtr =>
-        InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()) + (int)m_StateBlock.byteOffset;
-
+        protected internal IntPtr currentStatePtr =>
+        InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex());
+        protected internal IntPtr previousStatePtr =>
+        InputStateBuffers.GetBackBuffer(ResolveDeviceIndex());
 
         // This data is initialized by InputControlSetup.
         internal InternedString m_Name;
@@ -137,6 +136,7 @@ namespace ISX
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
+        ////TODO: pass state ptr *NOT* value ptr (it's confusing)
         // We don't allow custom default values for state so all zeros indicates
         // default states for us.
         // NOTE: The given argument should point directly to the value *not* to the
@@ -144,7 +144,7 @@ namespace ISX
         internal unsafe bool CheckStateIsAllZeros(IntPtr valuePtr = new IntPtr())
         {
             if (valuePtr == IntPtr.Zero)
-                valuePtr = currentValuePtr;
+                valuePtr = currentStatePtr + (int)m_StateBlock.byteOffset;
 
             // Bitfield value.
             if (m_StateBlock.sizeInBits % 8 != 0 || m_StateBlock.bitOffset != 0)
@@ -179,12 +179,65 @@ namespace ISX
     }
 
     // Helper to more quickly implement new control types.
+    // Adds processing stack.
     public abstract class InputControl<TValue> : InputControl
     {
-        public abstract TValue value { get; }
-        public abstract TValue previous { get; }
+        public TValue value => ReadValueFrom(currentStatePtr);
+        public TValue previous => ReadValueFrom(previousStatePtr);
 
         public override object valueAsObject => value;
+
+        // Read a control value directly from a state event.
+        //
+        // NOTE: Using this method not only ensures that format conversion is automatically taken care of
+        //       but also profits from the fact that remapping is already established in a control hierarchy
+        //       and reading from the right offsets is taken care of.
+        public unsafe TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        {
+            if (!inputEvent.valid)
+                throw new ArgumentNullException(nameof(inputEvent));
+            if (!inputEvent.IsA<StateEvent>() && !inputEvent.IsA<DeltaStateEvent>())
+                throw new ArgumentException("Event must be a state or delta state event", nameof(inputEvent));
+
+            ////TODO: support delta events
+            if (inputEvent.IsA<DeltaStateEvent>())
+                throw new NotImplementedException("Read control value from delta state events");
+
+            var stateEvent = StateEvent.From(inputEvent);
+
+            // Make sure we have a state event compatible with our device. The event doesn't
+            // have to be specifically for our device (we don't require device IDs to match) but
+            // the formats have to match and the size must be within range of what we're trying
+            // to read.
+            var stateFormat = stateEvent->stateFormat;
+            if (stateEvent->stateFormat != device.m_StateBlock.format)
+                throw new InvalidOperationException(
+                    $"Cannot read control '{path}' from StateEvent with format {stateFormat}; device '{device}' expects format {device.m_StateBlock.format}");
+
+            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
+            // We need to unsubtract those offsets here.
+            var deviceStateOffset = device.m_StateBlock.byteOffset;
+
+            var stateSizeInBytes = stateEvent->stateSizeInBytes;
+            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+                throw new Exception(
+                    $"StateEvent with format {stateFormat} and size {stateSizeInBytes} bytes provides less data than expected by control {path}");
+
+            var statePtr = stateEvent->state - (int)deviceStateOffset;
+            var value = ReadRawValueFrom(statePtr);
+
+            if (process)
+                value = Process(value);
+
+            return value;
+        }
+
+        public TValue ReadValueFrom(IntPtr statePtr)
+        {
+            return Process(ReadRawValueFrom(statePtr));
+        }
+
+        protected abstract TValue ReadRawValueFrom(IntPtr statePtr);
 
         protected TValue Process(TValue value)
         {

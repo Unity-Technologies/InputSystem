@@ -38,6 +38,7 @@ namespace ISX
         [InputControl(variant = "Lefty", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         public Vector2 rightStick;
 
+        ////REVIEW: shouldn't this be an axis? how do we make sure actions trigger only on crossing threshold?
         [InputControl(variant = "default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
         [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
         public float leftTrigger;
@@ -55,8 +56,8 @@ namespace ISX
             // IMPORTANT: Order has to match what is expected by DpadControl.
             DpadUp,
             DpadDown,
-            DpadRight,
             DpadLeft,
+            DpadRight,
 
             // Face buttons. We go with a north/south/east/west naming as that
             // clearly disambiguates where we expect the respective button to be.

@@ -10,6 +10,7 @@ namespace ISX
     public class ButtonControl : AxisControl
     {
         public float pressPoint;
+        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint;
 
         public ButtonControl()
         {

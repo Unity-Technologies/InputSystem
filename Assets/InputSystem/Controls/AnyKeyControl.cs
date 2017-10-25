@@ -7,9 +7,6 @@ namespace ISX
     // returns 1.0; otherwise it returns 0.0.
     public class AnyKeyControl : InputControl<float>
     {
-        public override float value => Process(GetValueFrom(currentValuePtr));
-        public override float previous => Process(GetValueFrom(previousValuePtr));
-
         public bool isPressed => value > 0.0f;
 
         public AnyKeyControl()
@@ -18,8 +15,9 @@ namespace ISX
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        protected float GetValueFrom(IntPtr valuePtr)
+        protected override float ReadRawValueFrom(IntPtr statePtr)
         {
+            var valuePtr = statePtr + (int)m_StateBlock.byteOffset;
             return CheckStateIsAllZeros(valuePtr) ? 0.0f : 1.0f;
         }
     }

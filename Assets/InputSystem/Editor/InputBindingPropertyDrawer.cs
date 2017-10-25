@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -16,7 +15,7 @@ namespace ISX
     [CustomPropertyDrawer(typeof(InputBinding))]
     public class InputBindingPropertyDrawer : PropertyDrawer
     {
-        private const int kPathLabelWidth = 200;
+        private const int kPathLabelWidth = 240;
         private const int kPickButtonWidth = 50;
         private const int kModifyButtonWidth = 50;
 
@@ -30,7 +29,7 @@ namespace ISX
 
             var path = pathProperty.stringValue;
             var modifiers = modifiersProperty.stringValue;
-            var flags = flagsProperty.intValue;
+            var flags = (InputBinding.Flags)flagsProperty.intValue;
 
             var pathContent = GetContentForPath(path, modifiers, flags);
 
@@ -54,40 +53,51 @@ namespace ISX
             EditorGUI.EndProperty();
         }
 
-        private GUIContent GetContentForPath(string path, string modifiers, int flags)
+        private GUIContent GetContentForPath(string path, string modifiers, InputBinding.Flags flags)
         {
             if (s_UsageRegex == null)
                 s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
             if (s_ControlRegex == null)
                 s_ControlRegex = new Regex("<([A-Za-z0-9]+)>/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
 
-            ////TODO: also show modifiers on string (e.g. "Hold Gamepad RightTrigger") (would be even nicer to have icons for them)
-            ////TODO: for linked binding, add something like "  & Gamepad ButtonSouth" or "  + Gamepad ButtonSouth"
-
             var text = path;
+
+            ////TODO: make this less GC heavy
 
             var usageMatch = s_UsageRegex.Match(path);
             if (usageMatch.Success)
             {
                 text = usageMatch.Groups[1].Value;
             }
-
-            var controlMatch = s_ControlRegex.Match(path);
-            if (controlMatch.Success)
+            else
             {
-                var device = controlMatch.Groups[1].Value;
-                var control = controlMatch.Groups[2].Value;
+                var controlMatch = s_ControlRegex.Match(path);
+                if (controlMatch.Success)
+                {
+                    var device = controlMatch.Groups[1].Value;
+                    var control = controlMatch.Groups[2].Value;
 
-                ////TODO: would be nice to print something like "Gamepad: A Button" instead of "Gamepad: A" (or whatever)
+                    ////TODO: would be nice to include template name to print something like "Gamepad A Button" instead of "Gamepad A" (or whatever)
 
-                text = $"{device} {control}";
+                    text = $"{device} {control}";
+                }
             }
 
+            ////REVIEW: would be nice to have icons for these
+
+            // Show modifiers.
             if (!string.IsNullOrEmpty(modifiers))
             {
                 var modifierList = InputTemplate.ParseNameAndParameterList(modifiers);
-                var modifierString = string.Join(" or ", modifierList.Select(x => x.name));
+                var modifierString = string.Join(" OR ", modifierList.Select(x => x.name));
                 text = $"{modifierString} {text}";
+            }
+
+            ////TODO: this looks ugly and not very obvious; find a better way
+            // Show if linked with previous binding.
+            if ((flags & InputBinding.Flags.ThisAndPreviousCombine) == InputBinding.Flags.ThisAndPreviousCombine)
+            {
+                text = "AND " + text;
             }
 
             return new GUIContent(text);
@@ -100,7 +110,7 @@ namespace ISX
         {
             public static GUIContent pick = new GUIContent("Pick");
             public static GUIContent modify = new GUIContent("Modify");
-            public static GUIContent combine = new GUIContent("Combines with next binding");
+            public static GUIContent combine = new GUIContent("Combines with previous binding");
             public static GUIContent modifiers = new GUIContent("Modifiers:");
             public static GUIContent addModifier = new GUIContent("Add:");
             public static GUIContent iconPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add new binding");
@@ -119,7 +129,6 @@ namespace ISX
             private const int kModifiersLabelHeight = 20;
             private const int kModifierLineHeight = 20;
 
-            private SerializedProperty m_BindingProperty;
             private SerializedProperty m_FlagsProperty;
             private SerializedProperty m_ModifiersProperty;
             private InputBinding.Flags m_Flags;
@@ -130,7 +139,6 @@ namespace ISX
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
-                m_BindingProperty = bindingProperty;
                 m_FlagsProperty = bindingProperty.FindPropertyRelative("flags");
                 m_ModifiersProperty = bindingProperty.FindPropertyRelative("modifiers");
                 m_Flags = (InputBinding.Flags)m_FlagsProperty.intValue;
@@ -143,7 +151,7 @@ namespace ISX
 
             public override void OnGUI(Rect rect)
             {
-                GUI.BeginScrollView(rect, m_ScrollPosition, rect);
+                m_ScrollPosition = GUI.BeginScrollView(rect, m_ScrollPosition, rect);
 
                 var combineToggleRect = rect;
                 combineToggleRect.x += kPaddingLeft;
@@ -151,16 +159,18 @@ namespace ISX
                 combineToggleRect.height = kCombineToggleHeight;
                 combineToggleRect.width -= kPaddingLeft;
 
-                // Combine-with-next flag.
-                var currentCombineSetting = (m_Flags & InputBinding.Flags.ThisAndNextCombine) ==
-                    InputBinding.Flags.ThisAndNextCombine;
+                ////TODO: disable toggle if property is first in list (bit tricky to find out from the SerializedProperty)
+
+                // Combine-with-previous flag.
+                var currentCombineSetting = (m_Flags & InputBinding.Flags.ThisAndPreviousCombine) ==
+                    InputBinding.Flags.ThisAndPreviousCombine;
                 var newCombineSetting = EditorGUI.ToggleLeft(combineToggleRect, Contents.combine, currentCombineSetting);
                 if (currentCombineSetting != newCombineSetting)
                 {
                     if (newCombineSetting)
-                        m_Flags |= InputBinding.Flags.ThisAndNextCombine;
+                        m_Flags |= InputBinding.Flags.ThisAndPreviousCombine;
                     else
-                        m_Flags &= ~InputBinding.Flags.ThisAndNextCombine;
+                        m_Flags &= ~InputBinding.Flags.ThisAndPreviousCombine;
 
                     m_FlagsProperty.intValue = (int)m_Flags;
                     m_FlagsProperty.serializedObject.ApplyModifiedProperties();

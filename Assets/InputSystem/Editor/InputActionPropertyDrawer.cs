@@ -9,7 +9,7 @@ namespace ISX
     {
         private const int kFoldoutHeight = 15;
         private const int kBindingHeight = 20;
-        private const int kBindingIndent = 10;
+        private const int kBindingIndent = 5;
 
         [SerializeField] private bool m_FoldedOut;
 
@@ -70,8 +70,8 @@ namespace ISX
                     }
 
                     var bindingRect = rect;
-                    bindingRect.x += minusButtonRect.width + 15;
-                    bindingRect.width -= minusButtonRect.width + 15;
+                    bindingRect.x += minusButtonRect.width + 5;
+                    bindingRect.width -= minusButtonRect.width + 5;
 
                     var currentBinding = bindingsArray.GetArrayElementAtIndex(i);
                     EditorGUI.PropertyField(bindingRect, currentBinding);

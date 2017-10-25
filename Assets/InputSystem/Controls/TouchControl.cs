@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     public class TouchControl : InputControl<Touch>
@@ -24,9 +26,6 @@ namespace ISX
 
         //needs to enforce layout/format
 
-        public override Touch value { get; }
-        public override Touch previous { get; }
-
         protected override void FinishSetup(InputControlSetup setup)
         {
             touchId = setup.GetControl<DiscreteControl>(this, "touchId");
@@ -37,6 +36,12 @@ namespace ISX
             phase = setup.GetControl<DiscreteControl>(this, "phase");
             displayIndex = setup.GetControl<DiscreteControl>(this, "displayIndex");
             base.FinishSetup(setup);
+        }
+
+        protected override unsafe Touch ReadRawValueFrom(IntPtr statePtr)
+        {
+            var valuePtr = (Touch*)(statePtr + (int)m_StateBlock.byteOffset);
+            return *valuePtr;
         }
     }
 }

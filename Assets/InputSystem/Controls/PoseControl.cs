@@ -1,3 +1,5 @@
+using System;
+
 namespace ISX
 {
     public class PoseControl : InputControl<Pose>
@@ -27,9 +29,6 @@ namespace ISX
             m_StateBlock.format = new FourCC('P', 'O', 'S', 'E');
         }
 
-        public override Pose value => Process(new Pose(position.value, rotation.value));
-        public override Pose previous => Process(new Pose(position.previous, rotation.previous));
-
         protected override void FinishSetup(InputControlSetup setup)
         {
             position = setup.GetControl<Vector3Control>(this, "position");
@@ -39,6 +38,11 @@ namespace ISX
             acceleration = setup.GetControl<Vector3Control>(this, "acceleration");
             angularAcceleration = setup.GetControl<Vector3Control>(this, "angularAcceleration");
             base.FinishSetup(setup);
+        }
+
+        protected override Pose ReadRawValueFrom(IntPtr statePtr)
+        {
+            return new Pose(position.ReadValueFrom(statePtr), rotation.ReadValueFrom(statePtr));
         }
     }
 }

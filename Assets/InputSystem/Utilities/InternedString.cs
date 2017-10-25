@@ -34,6 +34,22 @@ namespace ISX
             return m_StringLowerCase;
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj is InternedString)
+                return Equals((InternedString)obj);
+
+            var str = obj as string;
+            if (str != null)
+            {
+                if (m_StringLowerCase == null)
+                    return string.IsNullOrEmpty(str);
+                return str.ToLower() == m_StringLowerCase;
+            }
+
+            return false;
+        }
+
         public bool Equals(InternedString other)
         {
             return ReferenceEquals(m_StringLowerCase, other.m_StringLowerCase);

@@ -17,12 +17,12 @@ public class FunctionalTests
     {
         InputSystem.Save();
 
-        ////REVIEW: We probably need to prevent device discoveries and events
-        ////        that could happen on the native side from mucking with our
-        ////        test. We can't completely disconnect from native, though,
-        ////        as we need the event queue. Could have a mode where we
-        ////        don't send event discoveries and don't flush the background
-        ////        queue.
+        ////FIXME: ATM events fired by platform layers for mice and keyboard etc.
+        ////       interfere with tests; we need to isolate the system from them
+        ////       during testing (probably also from native device discoveries)
+        ////       Put a switch in native that blocks events except those coming
+        ////       in from C# through SendEvent and which supresses flushing device
+        ////       discoveries to managed
 
         // Put system in a blank state where it has all the templates but has
         // none of the native devices.
@@ -799,9 +799,81 @@ public class FunctionalTests
 
     [Test]
     [Category("Controls")]
-    public void TODO_Controls_DpadVectorsAreCircular()
+    public void Controls_CanQueryValueFromStateEvents()
     {
-        Assert.Fail();
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var receivedCalls = 0;
+        InputSystem.onEvent +=
+            eventPtr =>
+            {
+                ++receivedCalls;
+                Assert.That(gamepad.leftStick.ReadValueFrom(eventPtr), Is.EqualTo(Vector2.one));
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_DpadVectorsAreCircular()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        // Up.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+
+        // Left.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadLeft });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+
+        // Down.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+
+        // Down.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadRight });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight });
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
     }
 
     [Test]
@@ -2821,6 +2893,105 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
+    public void TODO_Actions_CanCombineBindings()
+    {
+        // Set up an action that requires the left trigger to be held when pressing the A button.
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(name: "Test");
+        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
+        action.Enable();
+
+        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        action.performed += ctx => performed.Add(ctx);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f});
+        InputSystem.Update();
+
+        Assert.That(performed, Is.Empty);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A});
+        InputSystem.Update();
+
+        Assert.That(performed, Has.Count.EqualTo(1));
+        // Last control in combination is considered the trigger control.
+        Assert.That(performed[0].control, Is.SameAs(gamepad.aButton));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CombinedBindingsTriggerIfControlsActivateAtSameTime()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(name: "Test");
+        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
+        action.Enable();
+
+        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        action.performed += ctx => performed.Add(ctx);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A});
+        InputSystem.Update();
+
+        Assert.That(performed, Has.Count.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CombinedBindingsDoNotTriggerIfControlsActivateInWrongOrder()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(name: "Test");
+        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
+        action.Enable();
+
+        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        action.performed += ctx => performed.Add(ctx);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState {buttons = 1 << (int)GamepadState.Button.A});
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A});
+        InputSystem.Update();
+
+        Assert.That(performed, Is.Empty);
+    }
+
+    // The ability to combine bindings and have modifiers on them is crucial to be able to perform
+    // most gestures as they usually require a button-like control that indicates whether a possible
+    // gesture has started and then a positional control of some kind that gives the motion data for
+    // the gesture.
+    [Test]
+    [Category("Action")]
+    public void TODO_Actions_CanCombineBindingsWithModifiers()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        // Tap or slow tap on A button when left trigger is held.
+        var action = new InputAction(name: "Test");
+        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth", modifiers: "tap,slowTap");
+        action.Enable();
+
+        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        action.performed += ctx => performed.Add(ctx);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadState.Button.A}, 0.0);
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputConfiguration.SlowTapTime + 0.1);
+        InputSystem.Update();
+
+        Assert.That(performed, Has.Count.EqualTo(1));
+        Assert.That(performed[0].modifier, Is.TypeOf<SlowTapModifier>());
+    }
+
+    [Test]
+    [Category("Actions")]
     public void TODO_Actions_CanPerformContinuousActionOnAxis()
     {
         //set up action that goes to a continuous axis instead of a button
@@ -2887,6 +3058,17 @@ public class FunctionalTests
         Assert.That(action1Performed, Is.EqualTo(1));
         Assert.That(action2Performed, Is.EqualTo(1));
         Assert.That(action3Performed, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_ButtonTriggersActionOnlyAfterCrossingPressThreshold()
+    {
+        // Axis controls trigger for every value change whereas buttons only trigger
+        // when crossing the press threshold.
+
+        //should this depend on the modifiers being used?
+        Assert.Fail();
     }
 
 #if UNITY_EDITOR

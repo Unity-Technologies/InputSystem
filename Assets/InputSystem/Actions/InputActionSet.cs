@@ -443,6 +443,7 @@ namespace ISX
             // The way we up their data, the sets won't serialize properly.
             Debug.Assert(m_SingletonAction == null, "Must not serialize internal arrays of singleton actions!");
 
+            ////TODO: will have to restore m_Bindings elsewhere to keep the set working
             // All actions in the set refer to our combined m_Bindings array. We don't
             // want to serialize that as part of each action so we null out all the
             // array references and re-establish them when the set comes back in from

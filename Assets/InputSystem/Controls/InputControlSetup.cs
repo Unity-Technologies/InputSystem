@@ -275,11 +275,11 @@ namespace ISX
                     if (string.IsNullOrEmpty(controlTemplate.useStateFrom))
                         continue;
 
-                    var child = TryGetControl(controlTemplate.name);
+                    var child = TryGetControl(control, controlTemplate.name);
                     Debug.Assert(child != null);
 
                     // Find the referenced control.
-                    var referencedControl = TryGetControl(controlTemplate.useStateFrom);
+                    var referencedControl = TryGetControl(control, controlTemplate.useStateFrom);
                     if (referencedControl == null)
                         throw new Exception(
                             $"Cannot find control '{controlTemplate.useStateFrom}' referenced in 'useStateFrom' of control '{controlTemplate.name}' in template '{template.name}'");
