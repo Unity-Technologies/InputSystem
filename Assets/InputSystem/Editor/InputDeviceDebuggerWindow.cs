@@ -101,11 +101,25 @@ namespace ISX
 
             GUILayout.EndHorizontal();
 
-            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
-            m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
-            var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
-            m_ControlTree.OnGUI(rect);
-            EditorGUILayout.EndScrollView();
+            ////TODO: detect if dynamic is disabled and fall back to fixed
+            var updateTypeToShow = EditorApplication.isPlaying ? InputUpdateType.Dynamic : InputUpdateType.Editor;
+
+            try
+            {
+                // Switch to buffers that we want to display in the control tree.
+                InputSystem.s_Manager.m_StateBuffers.SwitchTo(updateTypeToShow);
+
+                ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
+                m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
+                var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
+                m_ControlTree.OnGUI(rect);
+                EditorGUILayout.EndScrollView();
+            }
+            finally
+            {
+                // Switch back to editor buffers.
+                InputSystem.s_Manager.m_StateBuffers.SwitchTo(InputUpdateType.Editor);
+            }
         }
 
         private void DrawEventList()
