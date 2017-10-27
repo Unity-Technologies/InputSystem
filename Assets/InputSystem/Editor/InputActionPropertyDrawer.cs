@@ -2,6 +2,8 @@
 using UnityEditor;
 using UnityEngine;
 
+////TODO: support actions in action sets (only supports singleton actions ATM)
+
 namespace ISX
 {
     [CustomPropertyDrawer(typeof(InputAction))]
@@ -48,8 +50,9 @@ namespace ISX
             }
             else if (m_FoldedOut)
             {
-                var bindingsArray = property.FindPropertyRelative("m_Bindings");
-                var bindingsCount = bindingsArray.arraySize;
+                var bindingsArrayProperty = property.FindPropertyRelative("m_Bindings");
+                var bindingsCountProperty = property.FindPropertyRelative("m_BindingsCount");
+                var bindingsCount = bindingsArrayProperty.arraySize;
 
                 var rect = position;
                 rect.y += kFoldoutHeight + 2;
@@ -63,8 +66,9 @@ namespace ISX
                     minusButtonRect.width = Contents.iconMinus.image.width;
                     if (GUI.Button(minusButtonRect, Contents.iconMinus, GUIStyle.none))
                     {
-                        bindingsArray.DeleteArrayElementAtIndex(i);
-                        bindingsArray.serializedObject.ApplyModifiedProperties();
+                        bindingsArrayProperty.DeleteArrayElementAtIndex(i);
+                        bindingsCountProperty.intValue = bindingsCount - 1;
+                        bindingsArrayProperty.serializedObject.ApplyModifiedProperties();
                         EditorGUI.EndProperty();
                         return;
                     }
@@ -73,7 +77,7 @@ namespace ISX
                     bindingRect.x += minusButtonRect.width + 5;
                     bindingRect.width -= minusButtonRect.width + 5;
 
-                    var currentBinding = bindingsArray.GetArrayElementAtIndex(i);
+                    var currentBinding = bindingsArrayProperty.GetArrayElementAtIndex(i);
                     EditorGUI.PropertyField(bindingRect, currentBinding);
 
                     rect.y += kBindingHeight;
@@ -83,8 +87,9 @@ namespace ISX
                 rect.width = Contents.iconPlus.image.width;
                 if (GUI.Button(rect, Contents.iconPlus, GUIStyle.none))
                 {
-                    bindingsArray.InsertArrayElementAtIndex(bindingsCount);
-                    bindingsArray.serializedObject.ApplyModifiedProperties();
+                    bindingsArrayProperty.InsertArrayElementAtIndex(bindingsCount);
+                    bindingsCountProperty.intValue = bindingsCount + 1;
+                    bindingsArrayProperty.serializedObject.ApplyModifiedProperties();
                 }
             }
 

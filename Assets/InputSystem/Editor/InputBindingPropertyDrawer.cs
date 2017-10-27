@@ -63,6 +63,7 @@ namespace ISX
             var text = path;
 
             ////TODO: make this less GC heavy
+            ////TODO: prettify control names (e.g. "rightTrigger" should read "Right Trigger"); have explicit display names?
 
             var usageMatch = s_UsageRegex.Match(path);
             if (usageMatch.Success)
