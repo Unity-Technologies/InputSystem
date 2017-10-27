@@ -3,6 +3,8 @@ using UnityEngine;
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
 
+////TODO: survive domain reloads
+
 namespace ISX
 {
     ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas

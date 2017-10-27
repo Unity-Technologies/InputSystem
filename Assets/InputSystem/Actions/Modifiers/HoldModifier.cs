@@ -7,6 +7,10 @@ namespace ISX
         public float duration;
         public float durationOrDefault => duration > 0.0 ? duration : InputConfiguration.HoldTime;
 
+        // If true, the action will be performed repeatedly every 'duration'
+        // intervals for as long as a control is pressed.
+        public bool repeat;
+
         private double m_TimePressed;
 
         public void Process(ref InputAction.ModifierContext context)

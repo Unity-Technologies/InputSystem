@@ -436,6 +436,11 @@ namespace ISX
             if (!string.IsNullOrEmpty(attribute?.parameters))
                 parameters = ParseParameters(attribute.parameters);
 
+            // Determine processors.
+            NameAndParameters[] processors = null;
+            if (!string.IsNullOrEmpty(attribute?.processors))
+                processors = ParseNameAndParameterList(attribute.processors);
+
             // Determine whether to use state from another control.
             string useStateFrom = null;
             if (!string.IsNullOrEmpty(attribute?.useStateFrom))
@@ -457,6 +462,7 @@ namespace ISX
                 bit = bit,
                 sizeInBits = sizeInBits,
                 parameters = new ReadOnlyArray<ParameterValue>(parameters),
+                processors = new ReadOnlyArray<NameAndParameters>(processors),
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<string>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,

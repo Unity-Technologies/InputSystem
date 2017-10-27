@@ -21,7 +21,7 @@ public class PerformanceTests
     // Performing a full state update on 10 devices should take less than 0.01 ms.
     [Test]
     [Category("Performance")]
-    public void CanUpdate10GamepadsInLessThanPointZeroOneMilliseconds()
+    public void TODO_CanUpdate10GamepadsInLessThanPointZeroOneMilliseconds()
     {
         const int kNumGamepads = 10;
 

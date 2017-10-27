@@ -7,6 +7,11 @@ namespace ISX
         public float duration;
         public float durationOrDefault => duration > 0.0f ? duration : InputConfiguration.SlowTapTime;
 
+        // If this is non-zero, then if the control is held for longer than
+        // this time, the slow tap is not performed when the control is finally
+        // released.
+        public float expiresAfter;
+
         private double m_SlowTapStartTime;
 
         public void Process(ref InputAction.ModifierContext context)

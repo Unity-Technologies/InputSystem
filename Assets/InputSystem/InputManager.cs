@@ -1052,8 +1052,17 @@ namespace ISX
             {
 #endif
 
+            // In the editor, we need to decide where to route state. Whenever the game is playing and
+            // has focus, we route all input to play mode buffers. When the game is stopped or if any
+            // of the other editor windows has focus, we route input to edit mode buffers.
+            var gameIsPlayingAndHasFocus = true;
+#if UNITY_EDITOR
+            gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
+                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
+#endif
+
             ////REVIEW: which set of buffers should we have active when processing timeouts?
-            if (m_ActionTimeouts != null)
+            if (m_ActionTimeouts != null && gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
                 ProcessActionTimeouts();
 
             ////REVIEW: this will become obsolete when we actually turn off unneeded updates in native
@@ -1072,14 +1081,6 @@ namespace ISX
                 ++m_CurrentFixedUpdateCount;
             else if (updateType == NativeInputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
-
-            // In the editor, we need to decide where to route state. Whenever the game is playing and
-            // has focus, we route all input to play mode buffers. When the game is stopped or if any
-            // of the other editor windows has focus, we route input to edit mode buffers.
-#if UNITY_EDITOR
-            var gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
-                (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
-#endif
 
             // Before render updates work in a special way. For them, we only want specific devices (and
             // sometimes even just specific controls on those devices) to be updated. What native will do is
@@ -1199,6 +1200,7 @@ namespace ISX
                         // state, we can have multiple state events in the same frame yet still get reliable
                         // change notifications.
                         var haveSignalledMonitors =
+                            gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ////FIXME: this will look at the wrong front buffer if it's an editor update but game view is playing&focused
                             ProcessStateChangeMonitors(device.m_DeviceIndex, statePtr,
                                 InputStateBuffers.GetFrontBuffer(deviceIndex), stateSize, stateOffset);

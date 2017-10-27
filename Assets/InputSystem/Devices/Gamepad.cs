@@ -30,20 +30,20 @@ namespace ISX
         [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
         public uint buttons;
 
-        [InputControl(variant = "default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         public Vector2 leftStick;
 
-        [InputControl(variant = "default", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Default", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         public Vector2 rightStick;
 
         ////REVIEW: shouldn't this be an axis? how do we make sure actions trigger only on crossing threshold?
-        [InputControl(variant = "default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variant = "Default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
         [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
         public float leftTrigger;
 
-        [InputControl(variant = "default", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variant = "Default", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
         [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
         public float rightTrigger;
 

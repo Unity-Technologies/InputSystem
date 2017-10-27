@@ -1,9 +1,12 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngineInternal.Input;
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
@@ -413,6 +416,14 @@ public class FunctionalTests
     [Category("Templates")]
     public void TODO_Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
     {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanAddCustomTemplateFormat()
+    {
+        //Make it possible to add support for Steam VDF format externally
         Assert.Fail();
     }
 
@@ -3115,6 +3126,24 @@ public class FunctionalTests
         Assert.That(receivedOnEvent, Is.Zero);
         Assert.That(receivedOnDeviceChange, Is.Zero);
     }
+
+    ////TODO: the following tests have to be edit mode tests but it looks like putting them into
+    ////      Assembly-CSharp-Editor is the only way to mark them as such
+
+    ////REVIEW: support actions in the editor at all?
+    [UnityTest]
+    [Category("Editor")
+     public IEnumerator TODO_Editor_ActionSetUpInEditor_DoesNotTriggerInPlayMode()
+     {
+         throw new NotImplementedException();
+     }
+
+     [UnityTest]
+     [Category("Editor")]
+     public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
+     {
+         throw new NotImplementedException();
+     }
 
 #endif
 
