@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngineInternal.Input;
@@ -819,10 +818,10 @@ public class FunctionalTests
             eventPtr =>
             {
                 ++receivedCalls;
-                Assert.That(gamepad.leftStick.ReadValueFrom(eventPtr), Is.EqualTo(Vector2.one));
+                Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
             };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
@@ -989,23 +988,23 @@ public class FunctionalTests
 
         var oldState = new GamepadState
         {
-            leftStick = new Vector2(0.25f, 0.25f)
+            leftTrigger = 0.25f
         };
         var newState = new GamepadState
         {
-            leftStick = new Vector2(0.75f, 0.75f)
+            leftTrigger = 0.75f
         };
 
         InputSystem.QueueStateEvent(gamepad, oldState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.25f, 0.25f)));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.25f).Within(0.000001));
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.75f, 0.75f)));
-        Assert.That(gamepad.leftStick.previous, Is.EqualTo(new Vector2(0.25f, 0.25f)));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.25f).Within(0.00001));
     }
 
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
@@ -1019,7 +1018,7 @@ public class FunctionalTests
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var state = new GamepadState
         {
-            leftStick = new Vector2(0.25f, 0.25f)
+            leftTrigger = 0.25f
         };
 
         InputSystem.QueueStateEvent(gamepad, state);
@@ -1027,7 +1026,7 @@ public class FunctionalTests
 
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.25f, 0.25f)));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.25f).Within(0.000001));
     }
 
     // The state layout for a given device is not fixed. Even though Gamepad, for example, specifies
@@ -1477,15 +1476,15 @@ public class FunctionalTests
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(Vector2.one));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.234).Within(0.000001));
 
         InputSystem.QueueDisconnectEvent(gamepad);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(Vector2.zero));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.0f));
     }
 
     [Test]
@@ -1556,11 +1555,11 @@ public class FunctionalTests
         InputSystem.RemoveDevice(gamepad);
         InputSystem.AddDevice(gamepad);
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f});
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad));
-        Assert.That(gamepad.leftStick.value.x, Is.EqualTo(0.5f).Within(0.0000001));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5f).Within(0.0000001));
     }
 
     [Test]
@@ -1941,12 +1940,12 @@ public class FunctionalTests
         InputSystem.RegisterTemplate(deviceJson);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
-        var newState = new GamepadState { leftStick = new Vector2(0.123f, 0.456f) };
+        var newState = new GamepadState { leftTrigger = 0.123f };
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update(InputUpdateType.BeforeRender);
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(new Vector2(0.123f, 0.456f)));
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.123f).Within(0.000001));
     }
 
     [Test]
@@ -3003,11 +3002,42 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanPerformContinuousActionOnAxis()
+    public void TODO_Actions_CanPerformContinuousAction()
     {
-        //set up action that goes to a continuous axis instead of a button
-        //make sure we can respond to the value changes in a proper way
-        Assert.Fail();
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftStick", modifiers: "continuous");
+        action.Enable();
+
+        var started = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var cancelled = new System.Collections.Generic.List<InputAction.CallbackContext>();
+
+        action.started += ctx => performed.Add(ctx);
+        action.cancelled += ctx => performed.Add(ctx);
+        action.performed +=
+            ctx =>
+            {
+                performed.Add(ctx);
+                Assert.That(ctx.GetValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.456f)));
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.456f)});
+        InputSystem.Update();
+        InputSystem.Update();
+
+        Assert.That(started, Has.Count.EqualTo(1));
+        Assert.That(performed, Has.Count.EqualTo(2));
+        Assert.That(cancelled, Has.Count.Zero);
+
+        started.Clear();
+        performed.Clear();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(started, Has.Count.Zero);
+        Assert.That(performed, Has.Count.Zero);
+        Assert.That(cancelled, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -3132,18 +3162,18 @@ public class FunctionalTests
 
     ////REVIEW: support actions in the editor at all?
     [UnityTest]
-    [Category("Editor")
-     public IEnumerator TODO_Editor_ActionSetUpInEditor_DoesNotTriggerInPlayMode()
-     {
-         throw new NotImplementedException();
-     }
+    [Category("Editor")]
+    public IEnumerator TODO_Editor_ActionSetUpInEditor_DoesNotTriggerInPlayMode()
+    {
+        throw new NotImplementedException();
+    }
 
-     [UnityTest]
-     [Category("Editor")]
-     public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
-     {
-         throw new NotImplementedException();
-     }
+    [UnityTest]
+    [Category("Editor")]
+    public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
+    {
+        throw new NotImplementedException();
+    }
 
 #endif
 
