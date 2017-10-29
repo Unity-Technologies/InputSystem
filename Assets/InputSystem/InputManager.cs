@@ -782,6 +782,13 @@ namespace ISX
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         internal InputStateBuffers m_StateBuffers;
 
+        // We track dynamic and fixed updates to know when we need to flip device front and back buffers.
+        // Because events are only sent once, we may need to flip dynamic update buffers in fixed updates
+        // and fixed update buffers in dynamic updates as we have to update both front buffers simultaneously.
+        // We apply the following rules to track this:
+        // 1) There can be dynamic updates without fixed updates BUT
+        // 2) There cannot be fixed updates without dynamic updates AND
+        // 3) Fixed updates precede dynamic updates.
         private int m_CurrentDynamicUpdateCount;
         private int m_CurrentFixedUpdateCount;
 
@@ -1056,23 +1063,27 @@ namespace ISX
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
             // of the other editor windows has focus, we route input to edit mode buffers.
             var gameIsPlayingAndHasFocus = true;
+            var buffersToUseForUpdate = updateType;
 #if UNITY_EDITOR
             gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
                 (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
+
+            if (updateType == NativeInputUpdateType.Editor && gameIsPlayingAndHasFocus)
+            {
+                // For actions, it is important we have play mode buffers active when
+                // fire change notifications.
+                if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+                    buffersToUseForUpdate = NativeInputUpdateType.Dynamic;
+                else
+                    buffersToUseForUpdate = NativeInputUpdateType.Fixed;
+            }
 #endif
+
+            m_StateBuffers.SwitchTo((InputUpdateType)buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (m_ActionTimeouts != null && gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
                 ProcessActionTimeouts();
-
-            ////REVIEW: this will become obsolete when we actually turn off unneeded updates in native
-            // We *always* have to process events into the current state even if the given update isn't enabled.
-            // This is because the current state is for all updates and reflects the most up-to-date device states.
-
-            m_StateBuffers.SwitchTo((InputUpdateType)updateType);
-
-            if (eventCount <= 0)
-                return;
 
             var isBeforeRenderUpdate = false;
             if (updateType == NativeInputUpdateType.Dynamic)
@@ -1081,6 +1092,14 @@ namespace ISX
                 ++m_CurrentFixedUpdateCount;
             else if (updateType == NativeInputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
+
+            // Early out if there's no events to process.
+            if (eventCount <= 0)
+            {
+                if (buffersToUseForUpdate != updateType)
+                    m_StateBuffers.SwitchTo((InputUpdateType)updateType);
+                return;
+            }
 
             // Before render updates work in a special way. For them, we only want specific devices (and
             // sometimes even just specific controls on those devices) to be updated. What native will do is
@@ -1201,13 +1220,12 @@ namespace ISX
                         // change notifications.
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
-                            ////FIXME: this will look at the wrong front buffer if it's an editor update but game view is playing&focused
-                            ProcessStateChangeMonitors(device.m_DeviceIndex, statePtr,
+                            ProcessStateChangeMonitors(deviceIndex, statePtr,
                                 InputStateBuffers.GetFrontBuffer(deviceIndex), stateSize, stateOffset);
 
                         // Buffer flip.
                         var needToCopyFromBackBuffer = false;
-                        if (FlipBuffersForDeviceIfNecessary(device, updateType))
+                        if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
                         {
                             // In case of a delta state event we need to carry forward all state we're
                             // not updating. Instead of optimizing the copy here, we're just bringing the
@@ -1277,6 +1295,7 @@ namespace ISX
 
                         // Now that we've committed the new state to memory, if any of the change
                         // monitors fired, let the associated actions know.
+                        ////FIXME: this needs to happen with player buffers active
                         if (haveSignalledMonitors)
                             FireActionStateChangeNotifications(deviceIndex, currentEventTime);
 
@@ -1315,6 +1334,9 @@ namespace ISX
             }
 
             ////TODO: fire event that allows code to update state *from* state we just updated
+
+            if (buffersToUseForUpdate != updateType)
+                m_StateBuffers.SwitchTo((InputUpdateType)updateType);
 
 #if ENABLE_PROFILER
         }
@@ -1390,7 +1412,7 @@ namespace ISX
                     if (BitfieldHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
                         continue;
 
-                    if (BitfieldHelpers.ReadSingleBit(newState - offset, bitOffset) ==
+                    if (BitfieldHelpers.ReadSingleBit(newState + offset, bitOffset) ==
                         BitfieldHelpers.ReadSingleBit(oldState + offset, bitOffset))
                         continue;
                 }
@@ -1444,7 +1466,7 @@ namespace ISX
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
         // the given update type.
         // Returns true if there was a buffer flip.
-        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, NativeInputUpdateType updateType)
+        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, NativeInputUpdateType updateType, bool gameIsPlayingAndHasFocus)
         {
             if (updateType == NativeInputUpdateType.BeforeRender)
             {
@@ -1454,7 +1476,10 @@ namespace ISX
             }
 
 #if UNITY_EDITOR
-            if (updateType == NativeInputUpdateType.Editor)
+            // Updates go to the editor only if the game isn't playing or does not have focus.
+            // Otherwise we fall through to the logic that flips for the *next* dynamic and
+            // fixed updates.
+            if (updateType == NativeInputUpdateType.Editor && !gameIsPlayingAndHasFocus)
             {
                 // The editor doesn't really have a concept of frame-to-frame operation the
                 // same way the player does. So we simply flip buffers on a device whenever
@@ -1464,41 +1489,49 @@ namespace ISX
             }
 #endif
 
-            // See if this is the first fixed update this frame. If so, we flip both
-            // dynamic and fixed buffers if we haven't already for the device.
-            if (updateType == NativeInputUpdateType.Fixed &&
-                m_CurrentFixedUpdateCount == m_CurrentDynamicUpdateCount - 1 &&
-                device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
+            var flipped = false;
+
+            // If it is *NOT* a fixed update, we need to flip for the *next* coming fixed
+            // update if we haven't already.
+            if (updateType != NativeInputUpdateType.Fixed &&
+                device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount + 1)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-
-                device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
-                device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
-                return true;
+                device.m_CurrentFixedUpdateCount = m_CurrentFixedUpdateCount + 1;
+                flipped = true;
             }
 
-            // If it's a dynamic update, flip only if we haven't already in a fixed
-            // update. And only if dynamic updates are enabled. Flip only dynamic buffers.
+            // If it is *NOT* a dynamic update, we need to flip for the *next* coming
+            // dynamic update if we haven't already.
+            if (updateType != NativeInputUpdateType.Dynamic &&
+                device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount + 1)
+            {
+                m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+                device.m_CurrentDynamicUpdateCount = m_CurrentDynamicUpdateCount + 1;
+                flipped = true;
+            }
+
+            // If it *is* a fixed update and we haven't flipped for the current update
+            // yet, do it.
+            if (updateType == NativeInputUpdateType.Fixed &&
+                device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount)
+            {
+                m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+                device.m_CurrentFixedUpdateCount = m_CurrentFixedUpdateCount;
+                flipped = true;
+            }
+
+            // If it *is* a dynamic update and we haven't flipped for the current update
+            // yet, do it.
             if (updateType == NativeInputUpdateType.Dynamic &&
-                device.m_LastDynamicUpdate != m_CurrentDynamicUpdateCount)
+                device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_LastDynamicUpdate = m_CurrentDynamicUpdateCount;
-                return true;
+                device.m_CurrentDynamicUpdateCount = m_CurrentDynamicUpdateCount;
+                flipped = true;
             }
 
-            // Same for fixed updates.
-            if (updateType == NativeInputUpdateType.Fixed &&
-                device.m_LastFixedUpdate != m_CurrentFixedUpdateCount)
-            {
-                m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_LastFixedUpdate = m_CurrentFixedUpdateCount;
-                return true;
-            }
-
-            // Don't flip.
-            return false;
+            return flipped;
         }
 
         private void ResetDeviceState(InputDevice device)

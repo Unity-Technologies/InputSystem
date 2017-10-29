@@ -344,6 +344,13 @@ public class FunctionalTests
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("yeah").And.Property("template").EqualTo("Stick"));
     }
 
+    [Test]
+    [Category("Templates")]
+    public void TODO_Template_ReplacingDeviceTemplateWithTemplateUsingDifferentType_PreservesDeviceIdAndDescription()
+    {
+        Assert.Fail();
+    }
+
     // Want to ensure that if a state struct declares an "int" field, for example, and then
     // assigns it then Axis template (which has a default format of float), the AxisControl
     // comes out with an "INT" format and not a "FLT" format.
@@ -1005,6 +1012,40 @@ public class FunctionalTests
 
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f).Within(0.00001));
         Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.25f).Within(0.00001));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RunningMultipleFixedUpdates_FlipsDynamicUpdateBuffersOnlyOnFirstUpdate()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.25f });
+        InputSystem.Update(InputUpdateType.Fixed); // Dynamic: current=0.25, previous=0.0
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.75f });
+        InputSystem.Update(InputUpdateType.Fixed); // Dynamic: current=0.75, previous=0.0
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.previous, Is.Zero);
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RunningNoFixedUpdateInFrame_StillCapturesStateForNextFixedUpdate()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.75f });
+        InputSystem.Update(InputUpdateType.Fixed); // Fixed: current=0.75, previous=0.0
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.25f });
+        InputSystem.Update(InputUpdateType.Dynamic); // Fixed: current=0.25, previous=0.75
+        InputSystem.Update(InputUpdateType.Fixed); // Unchanged.
+
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.75).Within(0.000001));
     }
 
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
@@ -3155,6 +3196,29 @@ public class FunctionalTests
 
         Assert.That(receivedOnEvent, Is.Zero);
         Assert.That(receivedOnDeviceChange, Is.Zero);
+    }
+
+    // Editor updates are confusing in that they denote just another point in the
+    // application loop where we push out events. They do not mean that the events
+    // we send necessarily go to the editor state buffers.
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
+    {
+        InputConfiguration.LockInputToGame = true;
+
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.25f });
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.75f });
+        InputSystem.Update(InputUpdateType.Editor);
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.25).Within(0.000001));
     }
 
     ////TODO: the following tests have to be edit mode tests but it looks like putting them into

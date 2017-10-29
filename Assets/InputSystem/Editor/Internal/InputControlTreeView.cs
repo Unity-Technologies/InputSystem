@@ -58,7 +58,7 @@ namespace ISX
             columns[(int)ColumnId.Name] =
                 new MultiColumnHeaderState.Column
             {
-                width = 150,
+                width = 180,
                 minWidth = 60,
                 headerContent = new GUIContent("Name")
             };

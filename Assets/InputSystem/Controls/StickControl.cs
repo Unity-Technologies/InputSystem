@@ -4,6 +4,7 @@ namespace ISX
     // State-wise this is still just a Vector2.
     public class StickControl : Vector2Control
     {
+        ////REVIEW: should "useStateFrom" extend to parameters?
         [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=0,clampMax=1")]
         public ButtonControl up { get; private set; }
         [InputControl(useStateFrom = "y", parameters = "clamp,clampMin=-1,clampMax=0,invert")]

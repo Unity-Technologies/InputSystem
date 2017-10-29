@@ -47,8 +47,8 @@ namespace ISX
         public InputDevice()
         {
             m_DeviceIndex = kInvalidDeviceIndex;
-            m_LastDynamicUpdate = -1;
-            m_LastFixedUpdate = -1;
+            m_CurrentDynamicUpdateCount = -1;
+            m_CurrentFixedUpdateCount = -1;
         }
 
         [Flags]
@@ -65,9 +65,14 @@ namespace ISX
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 
+        // Time of last event we received.
         internal double m_LastUpdateTime;
-        internal int m_LastDynamicUpdate;
-        internal int m_LastFixedUpdate;
+
+        // The dynamic and fixed update count corresponding to the current
+        // front buffers that are active on the device. We use this to know
+        // when to flip buffers.
+        internal int m_CurrentDynamicUpdateCount;
+        internal int m_CurrentFixedUpdateCount;
 
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.
