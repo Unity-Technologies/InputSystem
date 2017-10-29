@@ -143,6 +143,7 @@ namespace ISX
             m_TriggerBindingIndex = -1;
             m_TriggerModifierIndex = -1;
             m_TriggerControl = null;
+            m_TriggerTime = 1.0;
         }
 
         public void Disable()
@@ -206,6 +207,7 @@ namespace ISX
         // State we keep for enabling/disabling. This is volatile and not put on disk.
         [NonSerialized] internal bool m_Enabled;
         [NonSerialized] private Phase m_CurrentPhase;
+        [NonSerialized] private double m_TriggerTime;
         [NonSerialized] private InputControl m_TriggerControl;
         [NonSerialized] private int m_TriggerBindingIndex;
         [NonSerialized] private int m_TriggerModifierIndex;
@@ -220,11 +222,12 @@ namespace ISX
         }
 
         // Perform a phase change on the action. Visible to observers.
-        private void ChangePhaseOfAction(Phase newPhase, InputControl triggerControl, int triggerBindingIndex, int triggerModifierIndex)
+        private void ChangePhaseOfAction(Phase newPhase, InputControl triggerControl, int triggerBindingIndex, int triggerModifierIndex, double triggerTime)
         {
             ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, triggerBindingIndex, triggerModifierIndex);
 
             m_CurrentPhase = newPhase;
+            m_TriggerTime = triggerTime;
             m_TriggerControl = triggerControl;
             m_TriggerBindingIndex = triggerBindingIndex;
             m_TriggerModifierIndex = triggerModifierIndex;
@@ -249,6 +252,7 @@ namespace ISX
             if (m_CurrentPhase == Phase.Waiting)
             {
                 m_TriggerControl = null;
+                m_TriggerTime = -1.0;
                 m_TriggerBindingIndex = -1;
                 m_TriggerModifierIndex = -1;
             }
@@ -270,7 +274,7 @@ namespace ISX
         // it comes first; then the TapModifier cancels because the button is held for too
         // long and the SlowTapModifier will get to drive the action next).
         private void ChangePhaseOfModifier(Phase newPhase, InputControl triggerControl, int triggerBindingIndex,
-            int triggerModifierIndex)
+            int triggerModifierIndex, double triggerTime)
         {
             Debug.Assert(triggerBindingIndex != -1);
             Debug.Assert(triggerModifierIndex != -1);
@@ -286,25 +290,28 @@ namespace ISX
             ThrowIfPhaseTransitionIsInvalid(currentModifierState.phase, newPhase, triggerBindingIndex, triggerModifierIndex);
             newModifierState.phase = newPhase;
             newModifierState.control = triggerControl;
+            if (newPhase == Phase.Started)
+                newModifierState.startTime = triggerTime;
             modifiersForBinding[triggerModifierIndex] = newModifierState;
 
             // See if it affects the phase of the action itself.
             if (m_CurrentPhase == Phase.Waiting)
             {
                 // We're the first modifier to go to the start phase.
-                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex);
+                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
             }
             else if (newPhase == Phase.Cancelled && m_TriggerModifierIndex == triggerModifierIndex)
             {
                 // We're cancelling but maybe there's another modifier ready
                 // to go into start phase.
 
-                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex);
+                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
 
                 for (var i = 0; i < modifiersForBinding.Count; ++i)
                     if (i != triggerModifierIndex && modifiersForBinding[i].phase == Phase.Started)
                     {
-                        ChangePhaseOfAction(Phase.Started, modifiersForBinding[i].control, triggerBindingIndex, i);
+                        ChangePhaseOfAction(Phase.Started, modifiersForBinding[i].control, triggerBindingIndex, i,
+                            triggerTime);
                         break;
                     }
             }
@@ -312,7 +319,7 @@ namespace ISX
             {
                 // Any other phase change goes to action if we're the modifier driving
                 // the current phase.
-                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex);
+                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
 
                 // We're the modifier driving the action and we performed the action,
                 // so reset any other modifier to waiting state.
@@ -339,8 +346,14 @@ namespace ISX
                 return;
 
             IInputActionModifier modifier = null;
+            var startTime = 0.0;
+
             if (m_TriggerModifierIndex != -1)
-                modifier = m_ResolvedBindings[m_TriggerBindingIndex].modifiers[m_TriggerModifierIndex].modifier;
+            {
+                var modifierState = m_ResolvedBindings[m_TriggerBindingIndex].modifiers[m_TriggerModifierIndex];
+                modifier = modifierState.modifier;
+                startTime = modifierState.startTime;
+            }
 
             // We store the relevant state directly on the context instead of looking it
             // up lazily on the action to shield the context from value changes. This prevents
@@ -349,7 +362,9 @@ namespace ISX
             {
                 m_Action = this,
                 m_Control = m_TriggerControl,
-                m_Modifier = modifier
+                m_Time = m_TriggerTime,
+                m_Modifier = modifier,
+                m_StartTime = startTime
             };
 
             listeners.firstValue(context);
@@ -441,7 +456,7 @@ namespace ISX
                 // again.
                 if (phase == Phase.Waiting && !isAtDefault)
                 {
-                    ChangePhaseOfAction(Phase.Performed, control, -1, -1);
+                    ChangePhaseOfAction(Phase.Performed, control, -1, -1, time);
                 }
             }
         }
@@ -495,17 +510,17 @@ namespace ISX
 
             public void Started()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Started, m_Control, m_BindingIndex, m_ModifierIndex);
+                m_Action.ChangePhaseOfModifier(Phase.Started, m_Control, m_BindingIndex, m_ModifierIndex, m_Time);
             }
 
             public void Performed()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Performed, m_Control, m_BindingIndex, m_ModifierIndex);
+                m_Action.ChangePhaseOfModifier(Phase.Performed, m_Control, m_BindingIndex, m_ModifierIndex, m_Time);
             }
 
             public void Cancelled()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Cancelled, m_Control, m_BindingIndex, m_ModifierIndex);
+                m_Action.ChangePhaseOfModifier(Phase.Cancelled, m_Control, m_BindingIndex, m_ModifierIndex, m_Time);
             }
 
             public void SetTimeout(double seconds)
@@ -528,6 +543,8 @@ namespace ISX
             internal InputAction m_Action;
             internal InputControl m_Control;
             internal IInputActionModifier m_Modifier;
+            internal double m_Time;
+            internal double m_StartTime;
 
             public InputAction action => m_Action;
             public InputControl control => m_Control;
@@ -537,6 +554,9 @@ namespace ISX
             {
                 return ((InputControl<TValue>)control).value;
             }
+
+            public double time => m_Time;
+            public double startTime => m_StartTime;
         }
 
         public struct AddBindingSyntax

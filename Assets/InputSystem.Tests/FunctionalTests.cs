@@ -3153,6 +3153,36 @@ public class FunctionalTests
         Assert.Fail();
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryStartAndPerformTime()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(binding: "/gamepad/leftTrigger", modifiers: "slowTap");
+        action.Enable();
+
+        var receivedStartTime = 0.0;
+        var receivedTime = 0.0;
+
+        action.performed +=
+            ctx =>
+            {
+                receivedStartTime = ctx.startTime;
+                receivedTime = ctx.time;
+            };
+
+        var startTime = 0.123;
+        var endTime = 0.123 + InputConfiguration.SlowTapTime + 1.0;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f}, startTime);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.0f}, endTime);
+        InputSystem.Update();
+
+        Assert.That(receivedStartTime, Is.EqualTo(startTime).Within(0.000001));
+        Assert.That(receivedTime, Is.EqualTo(endTime).Within(0.000001));
+    }
+
 #if UNITY_EDITOR
     [Test]
     [Category("Editor")]

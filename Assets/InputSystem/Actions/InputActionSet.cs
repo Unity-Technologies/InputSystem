@@ -75,6 +75,7 @@ namespace ISX
             public InputControl control;
             public InputAction.Phase phase;
             public Flags flags;
+            public double startTime;
 
             [Flags]
             public enum Flags
