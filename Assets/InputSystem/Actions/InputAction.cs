@@ -557,6 +557,7 @@ namespace ISX
 
             public double time => m_Time;
             public double startTime => m_StartTime;
+            public double duration => m_Time - m_StartTime;
         }
 
         public struct AddBindingSyntax

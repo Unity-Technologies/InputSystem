@@ -141,6 +141,9 @@ namespace ISX
             List<InputControl> matches)
         {
             var usages = device.m_UsagesForEachControl;
+            if (usages == null)
+                return null;
+
             var usageCount = usages.Length;
             var startIndex = indexInPath + 1;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);

@@ -7,9 +7,7 @@ namespace ISX
     ////REVIEW: I think it makes sense to switch this to a more compact format that doesn't store floats; after all in almost all
     ////        cases our source data on platforms is *not* floats. And users won't generally deal with GamepadState directly.
 
-    // Xbox-compatible gamepad state layout.
-    // Must be kept identical to layout used by native code.
-    // Native will send StateEvents with data matching this struct to update gamepads.
+    // Default gamepad state layout.
     [StructLayout(LayoutKind.Sequential)]
     public struct GamepadState : IInputStateTypeInfo
     {

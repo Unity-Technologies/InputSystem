@@ -103,9 +103,9 @@ namespace ISX
             remove { s_Manager.onDeviceChange -= value; }
         }
 
-        public static InputDevice AddDevice(string template)
+        public static InputDevice AddDevice(string template, string name = null)
         {
-            return s_Manager.AddDevice(template);
+            return s_Manager.AddDevice(template, name);
         }
 
         public static InputDevice AddDevice(InputDeviceDescription description)

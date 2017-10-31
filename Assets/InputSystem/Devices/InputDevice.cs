@@ -46,6 +46,7 @@ namespace ISX
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
         {
+            m_Id = kInvalidDeviceId;
             m_DeviceIndex = kInvalidDeviceIndex;
             m_CurrentDynamicUpdateCount = -1;
             m_CurrentFixedUpdateCount = -1;

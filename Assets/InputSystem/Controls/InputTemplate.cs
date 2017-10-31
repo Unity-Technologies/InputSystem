@@ -382,16 +382,6 @@ namespace ISX
                 template = InferTemplateFromValueType(valueType);
             }
 
-            // Determine format.
-            var format = new FourCC();
-            if (!string.IsNullOrEmpty(attribute?.format))
-                format = new FourCC(attribute.format);
-            else if (!isModifyingChildControlByPath)
-            {
-                var valueType = TypeHelpers.GetValueType(member);
-                format = InputStateBlock.GetPrimitiveFormatFromType(valueType);
-            }
-
             // Determine variant.
             string variant = null;
             if (!string.IsNullOrEmpty(attribute?.variant))
@@ -414,6 +404,16 @@ namespace ISX
             var sizeInBits = 0u;
             if (attribute != null)
                 sizeInBits = attribute.sizeInBits;
+
+            // Determine format.
+            var format = new FourCC();
+            if (!string.IsNullOrEmpty(attribute?.format))
+                format = new FourCC(attribute.format);
+            else if (!isModifyingChildControlByPath && bit == InputStateBlock.kInvalidOffset)
+            {
+                var valueType = TypeHelpers.GetValueType(member);
+                format = InputStateBlock.GetPrimitiveFormatFromType(valueType);
+            }
 
             // Determine aliases.
             string[] aliases = null;
@@ -825,7 +825,7 @@ namespace ISX
 
             public InputTemplate ToTemplate()
             {
-                // By default, the type of the template is determine from the first template
+                // By default, the type of the template is determined from the first template
                 // in its 'extend' property chain that has a type set. However, if the template
                 // extends nothing, we can't know what type to use for it so we default to
                 // InputDevice.

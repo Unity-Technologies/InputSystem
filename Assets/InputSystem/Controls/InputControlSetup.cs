@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace ISX
 {
-    // Turns a template into a control hiearchy.
+    // Turns a template into a control hierarchy.
     // Ultimately produces a device but can also be used to query the control setup described
     // by a template.
     // Can be used to create setups as well as to adjust them later.
@@ -183,7 +183,7 @@ namespace ISX
             // Look up template by name.
             var templateInstance = FindOrLoadTemplate(template);
 
-            // Create control hiearchy.
+            // Create control hierarchy.
             return AddControlRecursive(templateInstance, variant, name, parent, existingControl);
         }
 
@@ -208,7 +208,7 @@ namespace ISX
             }
 
             // If it's a device, perform some extra work specific to the control
-            // hiearchy root.
+            // hierarchy root.
             var controlAsDevice = control as InputDevice;
             if (controlAsDevice != null)
             {
@@ -266,7 +266,7 @@ namespace ISX
             // Come up with a layout for our state.
             ComputeStateLayout(control);
 
-            // Finally, if there we have child controls that take their state blocks from other
+            // Finally, if we have child controls that take their state blocks from other
             // controls, assign them their blocks now.
             if (haveChildrenUsingStateFromOtherControl)
             {
@@ -431,7 +431,7 @@ namespace ISX
             // Install child array on parent. We will later patch up the array
             // reference again as we finalize the hierarchy. However, the reference
             // will point to a valid child array all the same even while we are
-            // constructing the hiearchy.
+            // constructing the hierarchy.
             //
             // NOTE: It's important to do this *after* the loop above where we call AddControl for each child
             //       as each child may end up moving the m_ChildrenForEachControl array around.

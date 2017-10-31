@@ -746,7 +746,10 @@ namespace ISX
 
             NativeInputSystem.onUpdate = OnNativeUpdate;
             NativeInputSystem.onDeviceDiscovered = OnNativeDeviceDiscovered;
+
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
+            if (!m_NativeBeforeUpdateHooked && m_UpdateListeners.Count > 0)
+                NativeInputSystem.onBeforeUpdate = OnNativeBeforeUpdate;
         }
 
         // Bundles a template name and a device description.
@@ -764,23 +767,23 @@ namespace ISX
             public int deviceId;
         }
 
-        internal int m_TemplateSetupVersion;
-        private Dictionary<InternedString, Type> m_TemplateTypes;
-        private Dictionary<InternedString, string> m_TemplateStrings;
-        private Dictionary<InternedString, InternedString> m_BaseTemplateTable; // Maps a template name to its base template name.
-        private Dictionary<InternedString, Type> m_Processors;
-        private Dictionary<InternedString, Type> m_Modifiers;
+        [NonSerialized] internal int m_TemplateSetupVersion;
+        [NonSerialized] private Dictionary<InternedString, Type> m_TemplateTypes;
+        [NonSerialized] private Dictionary<InternedString, string> m_TemplateStrings;
+        [NonSerialized] private Dictionary<InternedString, InternedString> m_BaseTemplateTable; // Maps a template name to its base template name.
+        [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
+        [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
 
-        private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
-        private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
+        [NonSerialized] private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
+        [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
-        private InputDevice[] m_Devices;
-        private Dictionary<int, InputDevice> m_DevicesById;
-        private List<InputDevice> m_DevicesWithAutoResets;
+        [NonSerialized] private InputDevice[] m_Devices;
+        [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
+        [NonSerialized] private List<InputDevice> m_DevicesWithAutoResets;
 
-        private InputUpdateType m_CurrentUpdate;
-        private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
-        internal InputStateBuffers m_StateBuffers;
+        [NonSerialized] private InputUpdateType m_CurrentUpdate;
+        [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
+        [NonSerialized] internal InputStateBuffers m_StateBuffers;
 
         // We track dynamic and fixed updates to know when we need to flip device front and back buffers.
         // Because events are only sent once, we may need to flip dynamic update buffers in fixed updates
@@ -789,16 +792,16 @@ namespace ISX
         // 1) There can be dynamic updates without fixed updates BUT
         // 2) There cannot be fixed updates without dynamic updates AND
         // 3) Fixed updates precede dynamic updates.
-        private int m_CurrentDynamicUpdateCount;
-        private int m_CurrentFixedUpdateCount;
+        [NonSerialized] private int m_CurrentDynamicUpdateCount;
+        [NonSerialized] private int m_CurrentFixedUpdateCount;
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
-        private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        private InlinedArray<EventListener> m_EventListeners;
-        private InlinedArray<UpdateListener> m_UpdateListeners;
-        private bool m_NativeBeforeUpdateHooked;
+        [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
+        [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
+        [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
+        [NonSerialized] private bool m_NativeBeforeUpdateHooked;
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
@@ -828,9 +831,9 @@ namespace ISX
         ////TODO: optimize the lists away
         ////REVIEW: I think these can be organized smarter to make bookkeeping cheaper
         // Indices correspond with those in m_Devices.
-        private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
-        private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
-        private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
+        [NonSerialized] private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
+        [NonSerialized] private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
+        [NonSerialized] private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
 
         private struct ActionTimeout
         {
@@ -840,7 +843,7 @@ namespace ISX
             public int modifierIndex;
         }
 
-        private List<ActionTimeout> m_ActionTimeouts;
+        [NonSerialized] private List<ActionTimeout> m_ActionTimeouts;
 
         ////TODO: support combining monitors for bitfields
         internal void AddStateChangeMonitor(InputControl control, InputAction action, int bindingIndex)
@@ -1012,7 +1015,6 @@ namespace ISX
             var newBuffers = new InputStateBuffers();
             var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, devices);
 
-            ////TODO: this code will have to be extended when we allow device removals
             // Migrate state.
             newBuffers.MigrateAll(devices, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
 
@@ -1622,6 +1624,7 @@ namespace ISX
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
             public InputConfiguration.SerializedState configuration;
+            public InputUpdateType updateMask;
 
             // We want to preserve the event listeners across Save() and Restore() but not
             // across domain reloads. So we put them in here but don't serialize them (and
@@ -1688,7 +1691,8 @@ namespace ISX
                 buffers = m_StateBuffers,
                 configuration = InputConfiguration.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
-                eventListeners = m_EventListeners.Clone()
+                eventListeners = m_EventListeners.Clone(),
+                updateMask = m_UpdateMask
             };
 
             // We don't bring monitors along. InputActions and related classes are equipped
@@ -1713,6 +1717,7 @@ namespace ISX
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
             m_EventListeners = state.eventListeners;
+            m_UpdateMask = state.updateMask;
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);
@@ -1780,6 +1785,14 @@ namespace ISX
                 device.MakeCurrent();
                 devices[i] = device;
                 m_DevicesById[device.m_Id] = device;
+
+                var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
+                if (beforeUpdateCallbackReceiver != null)
+                {
+                    // Can't use onUpdate here as that will install the hook. Can't do that
+                    // during deserialization.
+                    m_UpdateListeners.Append(beforeUpdateCallbackReceiver.OnUpdate);
+                }
             }
             m_Devices = devices;
 

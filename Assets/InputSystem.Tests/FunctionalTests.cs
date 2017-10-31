@@ -420,6 +420,41 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
+    public void TODO_Templates_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
+    {
+        const string baseJson = @"
+            {
+                ""name"" : ""Base"",
+                ""controls"" : [
+                    { ""name"" : ""stick"", ""template"" : ""Stick"" }
+                ]
+            }
+        ";
+        // When modifying the state layout of the X and Y controls of a stick from outside,
+        // we also expect the up/down/left/right controls to get updated with the new state
+        // layout.
+        const string derivedJson = @"
+            {
+                ""name"" : ""Derived"",
+                ""extend"" : ""Base"",
+                ""controls"" : [
+                    { ""name"" : ""stick/x"", ""format"" : ""SHRT"", ""offset"" : 0 },
+                    { ""name"" : ""stick/y"", ""format"" : ""SHRT"", ""offset"" : 2 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(baseJson);
+        InputSystem.RegisterTemplate(derivedJson);
+
+        var setup = new InputControlSetup("Derived");
+        var stick = setup.GetControl<StickControl>("stick");
+
+        Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
+    }
+
+    [Test]
+    [Category("Templates")]
     public void TODO_Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
     {
         Assert.Fail();
@@ -1082,14 +1117,14 @@ public class FunctionalTests
     // weren't able to customize the state layout of a gamepad, we'd have to have code somewhere
     // along the way that takes the incoming HID data, interprets it to determine that it is in
     // fact coming from a gamepad HID, and re-arranges it into a GamepadState-compatible format
-    // (which requires knowledge of the specific layout used by the HID). By having flexibly state
+    // (which requires knowledge of the specific layout used by the HID). By having flexible state
     // layouts we can do this entirely through data using just templates.
     //
     // A template that customizes state layout can also "park" unused controls outside the block of
     // data that will actually be sent in via state events. Space for the unused controls will still
     // be allocated in the state buffers (since InputControls still refer to it) but InputManager
     // is okay with sending StateEvents that are shorter than the full state block of a device.
-    ////REVIEW: we might want to equip InputControls with the ability to be disabled (in which case the return default values)
+    ////REVIEW: we might want to equip InputControls with the ability to be disabled (in which case they return default values)
     [Test]
     [Category("State")]
     public void State_CanCustomizeStateLayoutOfDevice()
@@ -1122,8 +1157,7 @@ public class FunctionalTests
     [Category("Templates")]
     public void Templates_CanReformatAndResizeControlHierarchy()
     {
-        // Turn left stick into a 2D vector of shorts. Need to reformat the up/down/left/right
-        // axes along with X and Y.
+        // Turn left stick into a 2D vector of shorts.
         // NOTE: Child offsets are not absolute! They are relative to their parent.
         const string json = @"
             {
@@ -1325,7 +1359,7 @@ public class FunctionalTests
     // on OSX and MSGs on Windows), this can be very awkward to handle as it requires synchronizing with
     // input updates and can complicate state producer logic quite a bit.
     //
-    // So, instead of putting the burden on state producers, controls come with an auto-reset features
+    // So, instead of putting the burden on state producers, controls come with an auto-reset feature
     // that will automatically cause the system to clear memory of controls when needed.
     [Test]
     [Category("State")]
@@ -1446,7 +1480,7 @@ public class FunctionalTests
     [Category("Devices")]
     public void Devices_CanLookUpDeviceByTemplate()
     {
-        var device = InputSystem.AddDevice("Gamepad");
+        var device = InputSystem.AddDevice("Gamepad", "test"); // Give name to make sure we're not matching by name.
         var result = InputSystem.GetDevice("Gamepad");
 
         Assert.That(result, Is.SameAs(device));
@@ -1657,8 +1691,12 @@ public class FunctionalTests
 
         InputDevice device = null;
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
+
         Assert.That(InputSystem.GetControls($"/<{baseTemplate}>"), Has.Exactly(1).SameAs(device));
         Assert.That(device.name, Is.EqualTo(product));
+        Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
+        Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
+        Assert.That(device.description.product, Is.EqualTo(product));
     }
 
     [Test]
@@ -1691,19 +1729,6 @@ public class FunctionalTests
     public void TODO_Devices_TouchscreenCanFunctionAsPointer()
     {
         Assert.Fail();
-    }
-
-    struct CustomDeviceState : IInputStateTypeInfo
-    {
-        public static FourCC Type = new FourCC('C', 'U', 'S', 'T');
-
-        [InputControl(template = "Axis")]
-        public float axis;
-
-        public FourCC GetFormat()
-        {
-            return Type;
-        }
     }
 
     [Test]
@@ -2346,6 +2371,19 @@ public class FunctionalTests
         Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f).Within(0.000001));
     }
 
+    struct CustomDeviceState : IInputStateTypeInfo
+    {
+        public static FourCC Type = new FourCC('C', 'U', 'S', 'T');
+
+        [InputControl(template = "Axis")]
+        public float axis;
+
+        public FourCC GetFormat()
+        {
+            return Type;
+        }
+    }
+
     [InputState(typeof(CustomDeviceState))]
     class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
     {
@@ -2384,7 +2422,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_RemovingDeviceCleansUpUpdat3Callback()
+    public void Devices_RemovingDeviceCleansUpUpdateCallback()
     {
         InputSystem.RegisterTemplate<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");

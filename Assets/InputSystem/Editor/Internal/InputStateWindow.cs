@@ -11,6 +11,8 @@ using UnityEngine;
 
 ////TODO: allow setting a C# struct type that we can use to display the layout of the data
 
+////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
+
 namespace ISX
 {
     // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
