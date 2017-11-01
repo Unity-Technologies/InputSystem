@@ -1774,7 +1774,15 @@ namespace ISX
             for (var i = 0; i < deviceCount; ++i)
             {
                 var deviceState = state.devices[i];
-                var setup = new InputControlSetup(deviceState.template);
+
+                // See if we still have the template that the device used. Might have
+                // come from a type that was removed in the meantime. If so, just
+                // don't re-add the device.
+                var template = new InternedString(deviceState.template);
+                if (!m_TemplateTypes.ContainsKey(template) && !m_TemplateStrings.ContainsKey(template))
+                    continue;
+
+                var setup = new InputControlSetup(template);
                 var device = setup.Finish();
                 device.m_Name = new InternedString(deviceState.name);
                 device.m_Id = deviceState.deviceId;
@@ -1786,6 +1794,7 @@ namespace ISX
                 devices[i] = device;
                 m_DevicesById[device.m_Id] = device;
 
+                // Re-install update callback, if necessary.
                 var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
                 if (beforeUpdateCallbackReceiver != null)
                 {

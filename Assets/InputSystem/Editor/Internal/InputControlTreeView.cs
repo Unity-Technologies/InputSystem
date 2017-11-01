@@ -194,6 +194,7 @@ namespace ISX
                 case (int)ColumnId.Value:
                     if (stateBuffer != null)
                     {
+                        ////TODO: switch to ReadValueFrom
                         var text = ReadRawValueAsString(item.control);
                         if (text != null)
                             GUI.Label(cellRect, text);

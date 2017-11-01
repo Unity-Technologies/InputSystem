@@ -6,11 +6,6 @@ using UnityEngine;
 
 ////WIP: this is still very rough and shoddy
 
-//probably something like...
-//  one dimension is usage (may want to bring back InputUsage)
-//  the other dimension is template
-//  the third one is custom where the user can just enter a string
-
 namespace ISX
 {
     // Popup window that allows selecting controls to target in a binding. Will generate
@@ -22,9 +17,6 @@ namespace ISX
     // Usages are discovered from all templates that are registered with the system.
     public class InputBindingPathSelector : PopupWindowContent
     {
-        private string m_SearchString;
-        private SerializedProperty m_PathProperty;
-
         public InputBindingPathSelector(SerializedProperty pathProperty)
         {
             if (pathProperty == null)
@@ -43,6 +35,7 @@ namespace ISX
             var listRect = new Rect(rect.x, rect.y + toolbarRect.height, rect.width, rect.height - toolbarRect.height);
 
             m_PathTree.OnGUI(listRect);
+            m_FirstRenderCompleted = true;
         }
 
         private void DrawToolbar()
@@ -51,20 +44,25 @@ namespace ISX
             GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
 
             var searchRect = GUILayoutUtility.GetRect(GUIContent.none, Styles.toolbarSearchField, GUILayout.MinWidth(80));
-            m_SearchString = EditorGUI.TextField(searchRect, m_SearchString, Styles.toolbarSearchField);
+            GUI.SetNextControlName("SearchField");
+            m_PathTree.searchString = EditorGUI.TextField(searchRect, m_PathTree.searchString, Styles.toolbarSearchField);
+            if (!m_FirstRenderCompleted)
+                EditorGUI.FocusTextInControl("SearchField");
             if (GUILayout.Button(
                     GUIContent.none,
-                    m_SearchString == string.Empty ? Styles.toolbarSearchFieldCancelEmpty : Styles.toolbarSearchFieldCancel))
+                    m_PathTree.searchString == string.Empty ? Styles.toolbarSearchFieldCancelEmpty : Styles.toolbarSearchFieldCancel))
             {
-                m_SearchString = string.Empty;
+                m_PathTree.searchString = string.Empty;
                 EditorGUIUtility.keyboardControl = 0;
             }
 
             GUILayout.EndHorizontal();
         }
 
+        private SerializedProperty m_PathProperty;
         private PathTreeView m_PathTree;
         private TreeViewState m_PathTreeState;
+        private bool m_FirstRenderCompleted;
 
         private static class Styles
         {
@@ -136,13 +134,15 @@ namespace ISX
 
                 var id = 1;
                 var usageRoot = BuildTreeForUsages(ref id);
-                root.AddChild(usageRoot);
 
                 foreach (var template in EditorInputTemplateCache.allBaseDeviceTemplates)
                 {
                     var tree = BuildTreeForDevice(template, ref id);
                     root.AddChild(tree);
                 }
+
+                root.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                root.children.Insert(0, usageRoot);
 
                 return root;
             }

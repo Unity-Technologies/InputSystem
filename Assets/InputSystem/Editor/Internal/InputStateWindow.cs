@@ -36,12 +36,12 @@ namespace ISX
             m_Control = control;
 
             // Copy event data.
-            var eventSize = eventPtr.sizeInBytes;
-            var buffer = new byte[eventSize];
+            var stateEventPtr = StateEvent.From(eventPtr);
+            var stateSize = stateEventPtr->stateSizeInBytes;
+            var buffer = new byte[stateSize];
             fixed(byte* stateDataPtr = buffer)
             {
-                var stateEventPtr = StateEvent.From(eventPtr);
-                UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), stateEventPtr->state, eventSize);
+                UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), stateEventPtr->state, stateSize);
             }
             m_StateBuffers = new byte[1][];
             m_StateBuffers[0] = buffer;
