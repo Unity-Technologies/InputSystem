@@ -115,7 +115,7 @@ namespace ISX
                 StateAutomaticallyResetsBetweenFrames = 1 << 1,
             }
 
-            public string name; // Can be null/empty for "root" control but only one such control may exist.
+            public InternedString name;
             public InternedString template;
             public InternedString variant;
             public string useStateFrom;
@@ -453,7 +453,7 @@ namespace ISX
 
             return new ControlTemplate
             {
-                name = name,
+                name = new InternedString(name),
                 template = new InternedString(template),
                 variant = new InternedString(variant),
                 useStateFrom = useStateFrom,
@@ -920,7 +920,7 @@ namespace ISX
             {
                 var template = new ControlTemplate
                 {
-                    name = name,
+                    name = new InternedString(name),
                     template = new InternedString(this.template),
                     variant = new InternedString(variant),
                     offset = offset,
@@ -1016,6 +1016,15 @@ namespace ISX
         internal static Dictionary<InternedString, Type> s_TemplateTypes;
         internal static Dictionary<InternedString, string> s_TemplateStrings;
         internal static Dictionary<InternedString, InternedString> s_BaseTemplateTable;
+
+        // Return name of template at root of "extend" chain of given template.
+        internal static InternedString GetRootTemplateName(InternedString templateName)
+        {
+            InternedString baseTemplate;
+            while (s_BaseTemplateTable.TryGetValue(templateName, out baseTemplate))
+                templateName = baseTemplate;
+            return templateName;
+        }
 
         // Constructs InputTemplate instances and caches them.
         internal struct Cache

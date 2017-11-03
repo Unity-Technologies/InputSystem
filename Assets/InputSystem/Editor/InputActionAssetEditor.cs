@@ -17,6 +17,7 @@ namespace ISX.Editor
             //new groups can be added
 
 
+            ////FIXME: toolbar doesn't work well visually; switch to something else
             // Toolbar.
             DrawToolbarGUI();
 

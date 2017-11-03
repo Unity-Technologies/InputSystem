@@ -53,10 +53,6 @@ namespace ISX
                 if (!controlIsMatch)
                 {
                     var baseTemplate = control.m_Template;
-
-                    ////FIXME: get rid of garbage from ToLower() (I think the best solution is to just always lowercase
-                    ////       all template names; so, control.template would already be lowercased; downside is that this
-                    ////       makes the whole thing visible to the user)
                     while (InputTemplate.s_BaseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
                     {
                         controlIsMatch = MatchPathComponent(baseTemplate, path, ref indexInPath,

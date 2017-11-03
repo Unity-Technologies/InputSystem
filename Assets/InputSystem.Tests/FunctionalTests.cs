@@ -518,7 +518,6 @@ public class FunctionalTests
 
         Assert.That(device.template, Is.EqualTo("MyDevice"));
         Assert.That(device, Is.TypeOf<Gamepad>());
-        Assert.That(device.name, Is.EqualTo("Shtabble")); // Product name becomes device name.
     }
 
     [Test]
@@ -930,12 +929,19 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_DevicesGetNameFromTemplate()
+    public void Devices_DevicesGetNameFromBaseTemplate()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var json = @"
+            { ""name"" : ""MyDevice"",
+              ""extend"" : ""Gamepad"" }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("MyDevice");
         var device = setup.Finish();
 
-        Assert.That(device.name, Contains.Substring("Gamepad"));
+        Assert.That(device.name, Is.EqualTo("Gamepad"));
     }
 
     [Test]
@@ -1693,7 +1699,7 @@ public class FunctionalTests
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
 
         Assert.That(InputSystem.GetControls($"/<{baseTemplate}>"), Has.Exactly(1).SameAs(device));
-        Assert.That(device.name, Is.EqualTo(product));
+        Assert.That(device.name, Is.EqualTo(baseTemplate));
         Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
@@ -3435,7 +3441,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_WhenActionIsEnabled_CannotRestoreRemoveSpecificOverride()
+    public void Actions_WhenActionIsEnabled_CannotRemoveSpecificOverride()
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         var bindingOverride = new InputBindingOverride {binding = "/gamepad/rightTrigger"};

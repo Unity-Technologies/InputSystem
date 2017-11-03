@@ -410,9 +410,6 @@ namespace ISX
             device.m_Id = deviceId;
             device.m_Description = description;
 
-            if (!string.IsNullOrEmpty(description.product))
-                device.m_Name = new InternedString(description.product);
-
             AddDevice(device);
 
             return device;
@@ -477,7 +474,7 @@ namespace ISX
             if (template == null)
                 throw new ArgumentException("Cannot find template matching device description", nameof(description));
 
-            var device = AddDevice(template, description.product);
+            var device = AddDevice(template);
             device.m_Description = description;
 
             return device;
@@ -546,8 +543,8 @@ namespace ISX
             for (var i = 0; i < m_Devices.Length; ++i)
             {
                 var device = m_Devices[i];
-                if (device.name.ToLower() == nameOrTemplateLowerCase ||
-                    device.template.ToLower() == nameOrTemplateLowerCase)
+                if (device.m_Name.ToLower() == nameOrTemplateLowerCase ||
+                    device.m_Template.ToLower() == nameOrTemplateLowerCase)
                     return device;
             }
 
@@ -973,7 +970,7 @@ namespace ISX
                 return;
 
             var name = device.name;
-            var nameLowerCase = name.ToLower();
+            var nameLowerCase = device.m_Name.ToLower();
             var nameIsUnique = false;
             var namesTried = 0;
 

@@ -44,7 +44,7 @@ namespace ISX
             if (variant.IsEmpty())
                 variant = new InternedString("Default");
 
-            AddControl(template, variant, null, null, existingDevice);
+            AddControl(template, variant, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
         }
@@ -178,7 +178,7 @@ namespace ISX
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl AddControl(InternedString template, InternedString variant, string name, InputControl parent, InputControl existingControl)
+        private InputControl AddControl(InternedString template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
         {
             // Look up template by name.
             var templateInstance = FindOrLoadTemplate(template);
@@ -187,7 +187,7 @@ namespace ISX
             return AddControlRecursive(templateInstance, variant, name, parent, existingControl);
         }
 
-        private InputControl AddControlRecursive(InputTemplate template, InternedString variant, string name, InputControl parent, InputControl existingControl)
+        private InputControl AddControlRecursive(InputTemplate template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
         {
             InputControl control;
 
@@ -230,16 +230,17 @@ namespace ISX
 
                 if (template.m_UpdateBeforeRender == true)
                     m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
+
+                // Devices get their names from the topmost base templates.
+                if (name.IsEmpty())
+                    name = InputTemplate.GetRootTemplateName(template.name);
             }
 
             // Set common properties.
-            if (name == null)
-            {
+            if (name.IsEmpty())
                 name = template.name;
-            }
 
-            ////TODO: intern these strings directly on the templates
-            control.m_Name = new InternedString(name);
+            control.m_Name = name;
             control.m_Template = template.name;
             control.m_Variant = variant;
             control.m_Parent = parent;

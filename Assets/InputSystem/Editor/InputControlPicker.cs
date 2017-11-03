@@ -4,7 +4,8 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-////WIP: this is still very rough and shoddy
+////TODO: add means to pick specific device index or device role
+////      (toolbar button with a dropdown menu with "By Index" and "By Role" entries?)
 
 namespace ISX.Editor
 {
