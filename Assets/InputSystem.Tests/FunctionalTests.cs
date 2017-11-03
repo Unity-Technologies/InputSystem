@@ -3221,6 +3221,175 @@ public class FunctionalTests
         Assert.That(receivedTime, Is.EqualTo(endTime).Within(0.000001));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddSetsToAsset()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var set1 = new InputActionSet("set1");
+        var set2 = new InputActionSet("set2");
+
+        asset.AddActionSet(set1);
+        asset.AddActionSet(set2);
+
+        Assert.That(asset.actionSets, Has.Count.EqualTo(2));
+        Assert.That(asset.actionSets, Has.Exactly(1).SameAs(set1));
+        Assert.That(asset.actionSets, Has.Exactly(1).SameAs(set2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_SetsInAssetMustHaveName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var set = new InputActionSet();
+
+        Assert.That(() => asset.AddActionSet(set), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_SetsInAssetsMustHaveUniqueNames()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var set1 = new InputActionSet("same");
+        var set2 = new InputActionSet("same");
+
+        asset.AddActionSet(set1);
+        Assert.That(() => asset.AddActionSet(set2), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpSetInAssetByName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var set = new InputActionSet("test");
+        asset.AddActionSet(set);
+
+        Assert.That(asset.TryFindActionSet("test"), Is.SameAs(set));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRemoveActionSetFromAsset()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(new InputActionSet("test"));
+        asset.RemoveActionSet("test");
+
+        Assert.That(asset.actionSets, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPollActionForChange()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/rightTrigger", modifiers: "slowTap(duration=1)");
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1}, 0);
+        InputSystem.Update();
+
+        Assert.That(action.wasStarted);
+        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
+        Assert.That(action.lastTriggerTime, Is.EqualTo(0).Within(0.0000001));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0}, 2);
+        InputSystem.Update();
+
+        Assert.That(!action.wasStarted);
+        Assert.That(action.wasPerformed);
+        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
+        Assert.That(action.lastTriggerTime, Is.EqualTo(2).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanOverrideBindings()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
+        InputSystem.Update();
+
+        Assert.That(action.wasPerformed);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanOverrideBindings_AfterActionHasBeenEnabled()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.Enable();
+        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
+        InputSystem.Update();
+
+        Assert.That(action.wasPerformed);
+    }
+
+    // If there's multiple bindings on an action, we don't readily know which binding to apply
+    // an override to. We use groups to disambiguate the case.
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_OverridingRequiresGroups()
+    {
+        var action = new InputAction(name: "test");
+
+        action.AddBinding("/gamepad/leftTrigger", group: "a");
+        action.AddBinding("/gamepad/rightTrigger", group: "b");
+
+        Assert.That(() => action.ApplyOverride("/gamepad/buttonSouth"), Throws.InvalidOperationException);
+
+        action.ApplyOverride("/gamepad/buttonSouth", group: "a");
+
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_OverridingThrowsIfGroupIsAmbiguous()
+    {
+        var action = new InputAction(name: "test");
+
+        action.AddBinding("/gamepad/leftTrigger", group: "a");
+        action.AddBinding("/gamepad/rightTrigger", group: "a");
+
+        Assert.That(() => action.ApplyOverride("/gamepad/buttonSouth", group: "a"), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_AddingMultipleBindingsWithSameGroup_WillAppendNumberToGroup()//???
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRestoreDefaultsAfterOverridingBinding()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.Enable();
+        action.RemoveAllOverrides();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1});
+        InputSystem.Update();
+
+        Assert.That(action.wasPerformed);
+    }
+
 #if UNITY_EDITOR
     [Test]
     [Category("Editor")]
@@ -3238,6 +3407,9 @@ public class FunctionalTests
 
         InputSystem.Save();
         InputSystem.Reset();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
+
         InputSystem.Restore();
 
         Assert.That(InputSystem.devices,
@@ -3306,6 +3478,8 @@ public class FunctionalTests
     {
         throw new NotImplementedException();
     }
+
+    ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
 
 #endif
 

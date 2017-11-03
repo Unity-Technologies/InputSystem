@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Editor
 {
     // Multi-column TreeView that shows control tree of device.
     internal class InputControlTreeView : TreeView

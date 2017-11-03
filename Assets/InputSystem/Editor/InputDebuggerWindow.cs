@@ -7,7 +7,7 @@ using UnityEditor;
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
-namespace ISX
+namespace ISX.Editor
 {
     // Allows looking at input activity in the editor.
     // Can display either local input in editor or input activity in connected player or both.

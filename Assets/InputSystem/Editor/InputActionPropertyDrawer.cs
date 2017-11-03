@@ -4,7 +4,7 @@ using UnityEngine;
 
 ////TODO: support actions in action sets (only supports singleton actions ATM)
 
-namespace ISX
+namespace ISX.Editor
 {
     [CustomPropertyDrawer(typeof(InputAction))]
     public class InputActionPropertyDrawer : PropertyDrawer
@@ -115,6 +115,11 @@ namespace ISX
         {
             public static GUIContent iconPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add new binding");
             public static GUIContent iconMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove binding");
+        }
+
+        public static class Styles
+        {
+            public static GUIStyle box = "Box";
         }
     }
 }

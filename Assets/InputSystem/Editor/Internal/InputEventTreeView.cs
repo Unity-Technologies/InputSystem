@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Editor
 {
     // Multi-column TreeView that shows the events in a trace.
     internal class InputEventTreeView : TreeView

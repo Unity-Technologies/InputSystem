@@ -48,8 +48,6 @@ namespace ISX
         {
             m_Id = kInvalidDeviceId;
             m_DeviceIndex = kInvalidDeviceIndex;
-            m_CurrentDynamicUpdateCount = -1;
-            m_CurrentFixedUpdateCount = -1;
         }
 
         [Flags]
@@ -72,8 +70,8 @@ namespace ISX
         // The dynamic and fixed update count corresponding to the current
         // front buffers that are active on the device. We use this to know
         // when to flip buffers.
-        internal int m_CurrentDynamicUpdateCount;
-        internal int m_CurrentFixedUpdateCount;
+        internal uint m_CurrentDynamicUpdateCount;
+        internal uint m_CurrentFixedUpdateCount;
 
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.

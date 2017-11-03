@@ -1,10 +1,13 @@
 #if UNITY_EDITOR
+using ISX.Editor;
 using UnityEngine;
 
 namespace ISX
 {
     // A hidden object we put in the editor to bundle input system state
     // and help us survive domain relods.
+    // Player doesn't need this stuff because there's no domain reloads to
+    // survive.
     internal class InputSystemObject : ScriptableObject
     {
         public InputManager manager;

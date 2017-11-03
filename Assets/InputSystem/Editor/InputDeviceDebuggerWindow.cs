@@ -7,7 +7,7 @@ using UnityEngine;
 
 ////FIXME: doesn't survive domain reload correctly
 
-namespace ISX
+namespace ISX.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.

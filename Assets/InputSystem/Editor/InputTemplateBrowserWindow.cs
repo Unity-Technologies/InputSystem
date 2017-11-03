@@ -7,7 +7,7 @@ using UnityEngine;
 
 ////TODO: explore a way to add a toggle that switches between browsing merged and unmerged templates
 
-namespace ISX
+namespace ISX.Editor
 {
     // Allows browsing through all templates currently registered with the input system.
     //
@@ -58,6 +58,11 @@ namespace ISX
 
             m_TemplateTreeView = new TemplateTreeView(m_TemplateTreeViewState);
             EditorInputTemplateCache.onRefresh += m_TemplateTreeView.Reload;
+
+            // Expand controls, devices, and products toplevel items.
+            m_TemplateTreeView.SetExpanded(1, true);
+            m_TemplateTreeView.SetExpanded(2, true);
+            m_TemplateTreeView.SetExpanded(3, true);
         }
 
         [SerializeField] private TreeViewState m_TemplateTreeViewState;

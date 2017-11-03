@@ -1,9 +1,17 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
 
 ////TODO: survive domain reloads
+
+////REVIEW: callbacks may not be a good fit if we want to jobify the system; polling works better with that as we have a
+////        clear point where to put syncs on fences
+
+////TODO: allow individual bindings to be enabled/disabled
+
+////TODO: allow querying controls *without* requiring actions to be enabled
 
 namespace ISX
 {
@@ -25,6 +33,8 @@ namespace ISX
     //
     // NOTE: Actions are agnostic to update types. They trigger in whatever update detects
     //       a change in value.
+    //
+    // NOTE: Actions are not supported in edit mode.
     [Serializable]
     public class InputAction
         ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
@@ -44,12 +54,11 @@ namespace ISX
 
         public InputActionSet actionSet => isSingletonAction ? null : m_ActionSet;
 
-        ////TODO: add hasBeenPerformedThisFrame which compares a m_LastPerformedFrame to current frame counter (same for hasBeenStarted)
-
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devics set on action set)
 
-        public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings, m_BindingsStartIndex, m_BindingsCount);
+        public ReadOnlyArray<InputBinding> bindings =>
+        new ReadOnlyArray<InputBinding>(m_Bindings, m_BindingsStartIndex, m_BindingsCount);
 
         ////REVIEW: is this useful? control lists are per-binding, this munges them all together
         // The set of controls to which the bindings resolve. May change over time.
@@ -57,16 +66,25 @@ namespace ISX
         {
             get
             {
-                if (!m_Enabled)
+                ////REVIEW: just return an empty array?
+                if (!enabled)
                     throw new InvalidOperationException("Cannot list controls of action when the action is not enabled.");
                 return m_Controls;
             }
         }
 
         ////REVIEW: this would technically allow a GetValue<TValue>() method
-        public InputControl lastSource => m_TriggerControl;
+        ////REVIEW: expose this as a struct?
+        public InputControl lastTriggerControl => m_LastTrigger.control;
+        public double lastTriggerTime => m_LastTrigger.time;
+        //public InputBinding lastTriggerBinding
+        //public IInputActionModifier lastTriggerModifier
 
-        public bool enabled => m_Enabled;
+        public bool enabled
+        {
+            get { return m_Enabled; }
+            internal set { m_Enabled = value; }
+        }
 
         ////REVIEW: have single delegate that just gives you an InputAction and you get the control and phase from the action?
 
@@ -90,6 +108,10 @@ namespace ISX
             add { m_OnPerformed.Append(value); }
             remove { m_OnPerformed.Remove(value); }
         }
+
+        public bool wasPerformed => triggeredInCurrentUpdate && m_LastTrigger.phase == Phase.Performed;
+        public bool wasStarted => triggeredInCurrentUpdate && m_LastTrigger.phase == Phase.Started;
+        public bool wasCancelled => triggeredInCurrentUpdate && m_LastTrigger.phase == Phase.Cancelled;
 
         // Constructor we use for serialization and for actions that are part
         // of sets.
@@ -115,7 +137,7 @@ namespace ISX
 
         public void Enable()
         {
-            if (m_Enabled)
+            if (enabled)
                 return;
 
             if (m_ActionSet == null)
@@ -131,24 +153,20 @@ namespace ISX
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < m_ResolvedBindings.Count; ++i)
             {
-                //need to make sure that change monitors of combined bindings are in the right order
+                ////TODO: need to make sure that change monitors of combined bindings are in the right order
                 var controls = m_ResolvedBindings[i].controls;
                 for (var n = 0; n < controls.Count; ++n)
                     manager.AddStateChangeMonitor(controls[n], this, i);
             }
 
             // Done.
-            m_Enabled = true;
+            enabled = true;
             m_CurrentPhase = Phase.Waiting;
-            m_TriggerBindingIndex = -1;
-            m_TriggerModifierIndex = -1;
-            m_TriggerControl = null;
-            m_TriggerTime = 1.0;
         }
 
         public void Disable()
         {
-            if (!m_Enabled)
+            if (!enabled)
                 return;
 
             // Let set know.
@@ -163,17 +181,19 @@ namespace ISX
                     manager.RemoveStateChangeMonitor(controls[n], this);
             }
 
-            m_Enabled = false;
+            enabled = false;
+
             m_CurrentPhase = Phase.Disabled;
+            m_LastTrigger = new TriggerState();
         }
 
         ////REVIEW: what if this is called after the action has been enabled? throw?
-        public AddBindingSyntax AddBinding(string path, string modifiers = null)
+        public AddBindingSyntax AddBinding(string path, string modifiers = null, string group = null)
         {
             if (isSingletonAction)
             {
                 // Simple case. We're a singleton action and own m_Bindings.
-                var index = ArrayHelpers.Append(ref m_Bindings, new InputBinding {path = path, modifiers = modifiers});
+                var index = ArrayHelpers.Append(ref m_Bindings, new InputBinding {path = path, modifiers = modifiers, group = group});
                 ++m_BindingsCount;
                 return new AddBindingSyntax(this, index);
             }
@@ -183,6 +203,43 @@ namespace ISX
                 // by our m_ActionSet.
                 throw new NotImplementedException();
             }
+        }
+
+        public void ApplyOverride(string binding, string group = null)
+        {
+            ApplyOverride(new InputBindingOverride {binding = binding});
+        }
+
+        // Apply the given override to the action.
+        // NOTE: Ignores the action name in the override.
+        public void ApplyOverride(InputBindingOverride bindingOverride)
+        {
+            var bindingIndex = FindBindingIndexForOverride(bindingOverride);
+            if (bindingIndex == -1)
+                return;
+
+            m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
+
+            // Re-resolve bindings, if necessary.
+            if (enabled)
+                throw new NotImplementedException();
+        }
+
+        public void RemoveOverride(InputBindingOverride bindingOverride)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveAllOverrides()
+        {
+            throw new NotImplementedException();
+        }
+
+        // Add all overrides that have been applied to this action to the given list.
+        // Returns the number of overrides found.
+        public int GetOverrides(List<InputBindingOverride> overrides)
+        {
+            throw new NotImplementedException();
         }
 
         [SerializeField] private string m_Name;
@@ -196,6 +253,8 @@ namespace ISX
         [SerializeField][HideInInspector] internal int m_BindingsStartIndex;
         [SerializeField][HideInInspector] internal int m_BindingsCount;
 
+        [NonSerialized] private bool m_Enabled;
+
         // The action set that owns us.
         [NonSerialized] internal InputActionSet m_ActionSet;
 
@@ -205,20 +264,81 @@ namespace ISX
         [NonSerialized] private InlinedArray<InputActionListener> m_OnPerformed;
 
         // State we keep for enabling/disabling. This is volatile and not put on disk.
-        [NonSerialized] internal bool m_Enabled;
-        [NonSerialized] private Phase m_CurrentPhase;
-        [NonSerialized] private double m_TriggerTime;
-        [NonSerialized] private InputControl m_TriggerControl;
-        [NonSerialized] private int m_TriggerBindingIndex;
-        [NonSerialized] private int m_TriggerModifierIndex;
+        // NOTE: m_Controls and m_ResolvedBinding array are stored on InputActionSet.
         [NonSerialized] internal ReadOnlyArray<InputControl> m_Controls;
         [NonSerialized] internal ReadOnlyArray<InputActionSet.ResolvedBinding> m_ResolvedBindings;
 
+        // State releated to phase shifting and triggering of action.
+        // Most of this state we lazily reset as we have to keep it available for
+        // one frame but don't want to actively reset between frames.
+        [NonSerialized] private Phase m_CurrentPhase;
+        [NonSerialized] private TriggerState m_LastTrigger;
+
+        // Information about what triggered an action and how.
+        private struct TriggerState
+        {
+            public Phase phase;
+            public double time;
+            public InputControl control;
+            public int bindingIndex;
+            public int modifierIndex;
+            public uint dynamicUpdateCount;
+            public uint fixedUpdateCount;
+
+            public TriggerState(Phase phase, double time, InputControl control, int bindingIndex, int modifierIndex)
+            {
+                this.phase = phase;
+                this.time = time;
+                this.control = control;
+                this.bindingIndex = bindingIndex;
+                this.modifierIndex = modifierIndex;
+
+                ////REVIEW: move this logic into InputManager itself?
+                var manager = InputSystem.s_Manager;
+                if (manager.m_CurrentUpdate == InputUpdateType.Fixed)
+                {
+                    // We're in fixed update so for dynamic update, goes into upcoming one.
+                    dynamicUpdateCount = manager.m_CurrentDynamicUpdateCount + 1;
+                    fixedUpdateCount = manager.m_CurrentFixedUpdateCount;
+                }
+                else
+                {
+                    // We're in dynamic update so far fixed update, goes into upcoming one.
+                    dynamicUpdateCount = manager.m_CurrentDynamicUpdateCount;
+                    fixedUpdateCount = manager.m_CurrentFixedUpdateCount + 1;
+                }
+            }
+        }
+
         private bool isSingletonAction => m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this);
+
+        private bool triggeredInCurrentUpdate
+        {
+            get
+            {
+                var manager = InputSystem.s_Manager;
+                var currentUpdate = manager.m_CurrentUpdate;
+
+                if (currentUpdate == InputUpdateType.Dynamic)
+                    return manager.m_CurrentDynamicUpdateCount == m_LastTrigger.dynamicUpdateCount;
+
+                if (currentUpdate == InputUpdateType.Fixed)
+                    return manager.m_CurrentFixedUpdateCount == m_LastTrigger.fixedUpdateCount;
+
+                return false;
+            }
+        }
 
         private void CreateInternalActionSetForSingletonAction()
         {
             m_ActionSet = new InputActionSet {m_SingletonAction = this};
+        }
+
+        // Find the binding tha tthe given override addresses.
+        // Return -1 if no corresponding binding is found.
+        private int FindBindingIndexForOverride(InputBindingOverride bindingOverride)
+        {
+            throw new NotImplementedException();
         }
 
         // Perform a phase change on the action. Visible to observers.
@@ -227,11 +347,11 @@ namespace ISX
             ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, triggerBindingIndex, triggerModifierIndex);
 
             m_CurrentPhase = newPhase;
-            m_TriggerTime = triggerTime;
-            m_TriggerControl = triggerControl;
-            m_TriggerBindingIndex = triggerBindingIndex;
-            m_TriggerModifierIndex = triggerModifierIndex;
 
+            // Capture state of the phase change.
+            m_LastTrigger = new TriggerState(newPhase, triggerTime, triggerControl, triggerBindingIndex, triggerModifierIndex);
+
+            // Let listeners know.
             switch (newPhase)
             {
                 case Phase.Started:
@@ -247,14 +367,6 @@ namespace ISX
                     CallListeners(ref m_OnCancelled);
                     m_CurrentPhase = Phase.Waiting; // Go back to waiting after cancelling action.
                     break;
-            }
-
-            if (m_CurrentPhase == Phase.Waiting)
-            {
-                m_TriggerControl = null;
-                m_TriggerTime = -1.0;
-                m_TriggerBindingIndex = -1;
-                m_TriggerModifierIndex = -1;
             }
         }
 
@@ -300,7 +412,7 @@ namespace ISX
                 // We're the first modifier to go to the start phase.
                 ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
             }
-            else if (newPhase == Phase.Cancelled && m_TriggerModifierIndex == triggerModifierIndex)
+            else if (newPhase == Phase.Cancelled && m_LastTrigger.modifierIndex == triggerModifierIndex)
             {
                 // We're cancelling but maybe there's another modifier ready
                 // to go into start phase.
@@ -315,7 +427,7 @@ namespace ISX
                         break;
                     }
             }
-            else if (m_TriggerModifierIndex == triggerModifierIndex)
+            else if (m_LastTrigger.modifierIndex == triggerModifierIndex)
             {
                 // Any other phase change goes to action if we're the modifier driving
                 // the current phase.
@@ -340,7 +452,7 @@ namespace ISX
         private void CallListeners(ref InlinedArray<InputActionListener> listeners)
         {
             // Should always have a control that triggered the state change.
-            Debug.Assert(m_TriggerControl != null);
+            Debug.Assert(m_LastTrigger.control != null);
 
             if (listeners.firstValue == null)
                 return;
@@ -348,9 +460,9 @@ namespace ISX
             IInputActionModifier modifier = null;
             var startTime = 0.0;
 
-            if (m_TriggerModifierIndex != -1)
+            if (m_LastTrigger.modifierIndex != -1)
             {
-                var modifierState = m_ResolvedBindings[m_TriggerBindingIndex].modifiers[m_TriggerModifierIndex];
+                var modifierState = m_ResolvedBindings[m_LastTrigger.bindingIndex].modifiers[m_LastTrigger.modifierIndex];
                 modifier = modifierState.modifier;
                 startTime = modifierState.startTime;
             }
@@ -361,8 +473,8 @@ namespace ISX
             var context = new CallbackContext
             {
                 m_Action = this,
-                m_Control = m_TriggerControl,
-                m_Time = m_TriggerTime,
+                m_Control = m_LastTrigger.control,
+                m_Time = m_LastTrigger.time,
                 m_Modifier = modifier,
                 m_StartTime = startTime
             };
@@ -571,12 +683,12 @@ namespace ISX
                 m_BindingIndex = bindingIndex;
             }
 
-            public AddBindingSyntax CombinedWith(string binding, string modifiers = null)
+            public AddBindingSyntax CombinedWith(string binding, string modifiers = null, string group = null)
             {
                 if (action.m_BindingsCount - 1 != m_BindingIndex)
                     throw new InvalidOperationException("Must not add other bindings in-between calling AddBindings() and CombinedWith()");
 
-                var result = action.AddBinding(binding, modifiers);
+                var result = action.AddBinding(binding, modifiers: modifiers, group: group);
                 action.m_Bindings[action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
                     InputBinding.Flags.ThisAndPreviousCombine;
 

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ISX
+namespace ISX.Editor
 {
     // In the editor we need access to the InputTemplates registered with
     // the system in order to facilitate various UI features. Instead of

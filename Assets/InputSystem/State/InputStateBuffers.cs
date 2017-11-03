@@ -181,6 +181,7 @@ namespace ISX
             var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) == InputUpdateType.Dynamic;
             var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) == InputUpdateType.Fixed;
 
+            // Determine how much memory we need.
             var deviceCount = devices.Length;
             var mappingTableSizePerBuffer = deviceCount * sizeof(void*) * 2;
 

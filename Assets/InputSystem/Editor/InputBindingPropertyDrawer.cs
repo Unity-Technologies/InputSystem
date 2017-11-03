@@ -6,7 +6,7 @@ using UnityEngine;
 
 //make the selector for controls a popup window with a search function
 
-namespace ISX
+namespace ISX.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
     // presents an interface that allows to automatically construct the path
@@ -41,7 +41,7 @@ namespace ISX
             EditorGUI.LabelField(pathRect, pathContent);
             if (EditorGUI.DropdownButton(pathButtonRect, Contents.pick, FocusType.Keyboard))
             {
-                PopupWindow.Show(pathButtonRect, new InputBindingPathSelector(pathProperty));
+                PopupWindow.Show(pathButtonRect, new InputControlPicker(pathProperty));
             }
 
             ////TODO: I think this UI is crap but it'll do for now

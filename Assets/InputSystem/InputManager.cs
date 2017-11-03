@@ -624,7 +624,7 @@ namespace ISX
 
         public void Update()
         {
-            Update(m_CurrentUpdate);
+            Update(InputUpdateType.Dynamic);
         }
 
         public void Update(InputUpdateType updateType)
@@ -767,7 +767,9 @@ namespace ISX
             public int deviceId;
         }
 
+        // Used by EditorInputTemplateCache to determine whether its state is outdated.
         [NonSerialized] internal int m_TemplateSetupVersion;
+
         [NonSerialized] private Dictionary<InternedString, Type> m_TemplateTypes;
         [NonSerialized] private Dictionary<InternedString, string> m_TemplateStrings;
         [NonSerialized] private Dictionary<InternedString, InternedString> m_BaseTemplateTable; // Maps a template name to its base template name.
@@ -781,7 +783,7 @@ namespace ISX
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
         [NonSerialized] private List<InputDevice> m_DevicesWithAutoResets;
 
-        [NonSerialized] private InputUpdateType m_CurrentUpdate;
+        [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         [NonSerialized] internal InputStateBuffers m_StateBuffers;
 
@@ -792,8 +794,8 @@ namespace ISX
         // 1) There can be dynamic updates without fixed updates BUT
         // 2) There cannot be fixed updates without dynamic updates AND
         // 3) Fixed updates precede dynamic updates.
-        [NonSerialized] private int m_CurrentDynamicUpdateCount;
-        [NonSerialized] private int m_CurrentFixedUpdateCount;
+        [NonSerialized] internal uint m_CurrentDynamicUpdateCount;
+        [NonSerialized] internal uint m_CurrentFixedUpdateCount;
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
@@ -1051,10 +1053,6 @@ namespace ISX
         //       where in the Unity's application loop we got called from.
         private unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
         {
-            ////TODO: have new native callback that is triggered right *before* updates and allows managed devices
-            ////      to flush their state into the native event queue
-
-
 #if ENABLE_PROFILER
             Profiler.BeginSample("InputUpdate");
             try
@@ -1081,6 +1079,7 @@ namespace ISX
             }
 #endif
 
+            m_CurrentUpdate = (InputUpdateType)updateType;
             m_StateBuffers.SwitchTo((InputUpdateType)buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?

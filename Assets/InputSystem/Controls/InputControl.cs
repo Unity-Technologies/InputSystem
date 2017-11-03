@@ -54,7 +54,6 @@ namespace ISX
         public InputControl parent => m_Parent;
 
         // Immediate children.
-        // NOTE: This will only be populated when setup is finished.
         public ReadOnlyArray<InputControl> children => m_ChildrenReadOnly;
 
         // List of uses for this control. Gives meaning to the control such that you can, for example,
@@ -62,7 +61,6 @@ namespace ISX
         // button is also an example of why there are multiple possible usages of a button as a use may
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
-        // NOTE: This will only be populated when setup is finished.
         public ReadOnlyArray<InternedString> usages => m_UsagesReadOnly;
 
         // List of alternate names for the control.

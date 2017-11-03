@@ -13,7 +13,7 @@ using UnityEngine;
 
 ////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
 
-namespace ISX
+namespace ISX.Editor
 {
     // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
     internal class InputStateWindow : EditorWindow

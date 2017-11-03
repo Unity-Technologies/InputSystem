@@ -5,6 +5,7 @@ using UnityEngine;
 namespace ISX
 {
     // A set of input actions that can be enabled/disabled in bulk.
+    //
     // Also stores data for actions. All actions have to have an associated
     // action set. "Lose" actions constructed without a set will internally
     // create their own "set" to hold their data.
@@ -12,20 +13,6 @@ namespace ISX
     public class InputActionSet : ISerializationCallbackReceiver
     {
         public string name => m_Name;
-
-        // Optional backing asset. If this is set, the actions in the set
-        // are taken from the given JSON file. Otherwise, the actions are
-        // defined directly on the set and stored with the set wherever
-        // the set is serialized.
-        public TextAsset asset
-        {
-            get { return m_Asset; }
-            set
-            {
-                m_Asset = value;
-                ////TODO: reload
-            }
-        }
 
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
@@ -60,8 +47,39 @@ namespace ISX
             throw new NotImplementedException();
         }
 
+        //?????
+        public void EnableGroup(string group)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisableGroup(string group)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ApplyOverrides(IEnumerable<InputBindingOverride> overrides)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveOverrides(IEnumerable<InputBindingOverride> overrides)
+        {
+            throw new NotImplementedException();
+        }
+
+        // Restore all bindings on all actions in the set to their defaults.
+        public void RemoveAllOverrides()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetOverrides(List<InputBindingOverride> overrides)
+        {
+            throw new NotImplementedException();
+        }
+
         [SerializeField] private string m_Name;
-        [SerializeField] internal TextAsset m_Asset;
         [SerializeField] internal InputAction[] m_Actions;
 
         // Action sets that are created internally by singleton actions to hold their data
@@ -280,11 +298,11 @@ namespace ISX
                 set.m_PreviousInGlobalList = null;
                 set.m_EnabledActionsCount = 0;
                 if (set.m_SingletonAction != null)
-                    set.m_SingletonAction.m_Enabled = false;
+                    set.m_SingletonAction.enabled = false;
                 else
                 {
                     for (var i = 0; i < set.m_Actions.Length; ++i)
-                        set.m_Actions[i].m_Enabled = false;
+                        set.m_Actions[i].enabled = false;
                 }
 
                 set = next;
@@ -364,8 +382,23 @@ namespace ISX
         private struct ActionJson
         {
             public string name;
-            public string defaultBinding;
-            public string modifier;
+
+            // If the action only needs a single binding, don't force
+            // the user to declare an array.
+            public string binding;
+            public string modifiers;
+            public bool combineWithPrevious;
+
+            // Alternative, can specify multiple bindings.
+            public BindingJson[] bindings;
+        }
+
+        [Serializable]
+        public struct BindingJson
+        {
+            public string path;
+            public string modifiers;
+            public bool combineWithPrevious;
         }
 
         [Serializable]
@@ -409,6 +442,9 @@ namespace ISX
                 }
             }
 
+            if (parsedSets == null || parsedSets.Length == 0)
+                return Array.Empty<InputActionSet>();
+
             var sets = new InputActionSet[parsedSets.Length];
             for (var i = 0; i < parsedSets.Length; ++i)
             {
@@ -421,7 +457,7 @@ namespace ISX
                 for (var n = 0; n < parsedSet.actions.Length; ++n)
                 {
                     var parsedAction = parsedSet.actions[n];
-                    var action = new InputAction(parsedAction.name, parsedAction.defaultBinding, parsedAction.modifier);
+                    var action = new InputAction(parsedAction.name, parsedAction.binding, parsedAction.modifiers);
                     action.m_ActionSet = set;
                     actions[n] = action;
                 }

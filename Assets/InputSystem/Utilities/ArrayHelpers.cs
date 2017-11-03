@@ -10,11 +10,26 @@ namespace ISX
             if (array == null)
                 return false;
 
+            var comparer = EqualityComparer<TValue>.Default;
             for (var i = 0; i < array.Length; ++i)
-                if (EqualityComparer<TValue>.Default.Equals(array[i], value))
+                if (comparer.Equals(array[i], value))
                     return true;
 
             return false;
+        }
+
+        public static int IndexOf<TValue>(ref TValue[] array, TValue value)
+        {
+            if (array == null)
+                return -1;
+
+            var length = array.Length;
+            var comparer = EqualityComparer<TValue>.Default;
+            for (var i = 0; i < length; ++i)
+                if (comparer.Equals(array[i], value))
+                    return i;
+
+            return -1;
         }
 
         public static int Append<TValue>(ref TValue[] array, TValue value)
@@ -141,12 +156,22 @@ namespace ISX
 
         public static void Erase<TValue>(ref TValue[] array, int index)
         {
+            if (array == null)
+                return;
+
             var length = array.Length;
 
             if (index < length - 1)
                 Array.Copy(array, index + 1, array, index, length - index - 1);
 
             Array.Resize(ref array, length - 1);
+        }
+
+        public static void Erase<TValue>(ref TValue[] array, TValue value)
+        {
+            var index = IndexOf(ref array, value);
+            if (index != -1)
+                Erase(ref array, value);
         }
     }
 }
