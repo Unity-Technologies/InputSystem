@@ -207,8 +207,12 @@ namespace ISX
                 var binding = bindings[n];
                 var firstControl = controls.Count;
 
+                // Use override path but fall back to default path if no
+                // override set.
+                var path = binding.overridePath ?? binding.path;
+
                 // Look up controls.
-                var numControls = InputSystem.GetControls(binding.path, controls);
+                var numControls = InputSystem.GetControls(path, controls);
                 if (numControls == 0)
                     continue;
 

@@ -161,6 +161,15 @@ namespace ISX
 
             var length = array.Length;
 
+            if (index >= length)
+                throw new IndexOutOfRangeException();
+
+            if (index == 0 && length == 1)
+            {
+                array = null;
+                return;
+            }
+
             if (index < length - 1)
                 Array.Copy(array, index + 1, array, index, length - index - 1);
 
@@ -171,7 +180,7 @@ namespace ISX
         {
             var index = IndexOf(ref array, value);
             if (index != -1)
-                Erase(ref array, value);
+                Erase(ref array, index);
         }
     }
 }

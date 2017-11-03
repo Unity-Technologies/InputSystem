@@ -266,6 +266,8 @@ namespace ISX
 #if UNITY_EDITOR
             m_EditorUpdateBuffers = new DoubleBuffers();
 #endif
+
+            s_CurrentBuffers = new DoubleBuffers();
         }
 
         // Migrate state data for all devices from a previous set of buffers to the current set of buffers.

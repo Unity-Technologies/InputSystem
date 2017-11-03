@@ -496,17 +496,26 @@ namespace ISX
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             ArrayHelpers.Erase(ref m_Devices, deviceIndex);
-            var oldDeviceIndices = new int[m_Devices.Length];
-            for (var i = 0; i < m_Devices.Length; ++i)
-            {
-                oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
-                m_Devices[i].m_DeviceIndex = i;
-            }
-            m_DevicesById.Remove(device.id);
-            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
 
-            // Remove from state buffers.
-            ReallocateStateBuffers(oldDeviceIndices);
+            if (m_Devices != null)
+            {
+                var oldDeviceIndices = new int[m_Devices.Length];
+                for (var i = 0; i < m_Devices.Length; ++i)
+                {
+                    oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
+                    m_Devices[i].m_DeviceIndex = i;
+                }
+                m_DevicesById.Remove(device.id);
+                device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
+
+                // Remove from state buffers.
+                ReallocateStateBuffers(oldDeviceIndices);
+            }
+            else
+            {
+                // No more devices. Kill state buffers.
+                m_StateBuffers.FreeAll();
+            }
 
             // Unbake offset into global state buffers.
             device.BakeOffsetIntoStateBlockRecursive((uint)(-device.m_StateBlock.byteOffset));

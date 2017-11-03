@@ -3324,17 +3324,13 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanOverrideBindings_AfterActionHasBeenEnabled()
+    public void Actions_WhileActionIsEnabled_CannotApplyOverrides()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         action.Enable();
-        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
-        InputSystem.Update();
-
-        Assert.That(action.wasPerformed);
+        Assert.That(() => action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"}),
+            Throws.InvalidOperationException);
     }
 
     // If there's multiple bindings on an action, we don't readily know which binding to apply
@@ -3350,44 +3346,102 @@ public class FunctionalTests
 
         Assert.That(() => action.ApplyOverride("/gamepad/buttonSouth"), Throws.InvalidOperationException);
 
-        action.ApplyOverride("/gamepad/buttonSouth", group: "a");
+        action.ApplyOverride("/gamepad/buttonSouth", group: "b");
 
-        Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[0].overridePath, Is.Null);
     }
 
+    // We don't do anything smart when groups are ambiguous. It's a perfectly valid case to have
+    // multiple bindings in the same group but when you try to override and only give a group,
+    // only the first binding that uses the group is affected.
     [Test]
     [Category("Actions")]
-    public void Actions_OnActionWithMultipleBindings_OverridingThrowsIfGroupIsAmbiguous()
+    public void Actions_OnActionWithMultipleBindings_IfGroupIsAmbiguous_OverridesOnlyFirst()
     {
         var action = new InputAction(name: "test");
 
         action.AddBinding("/gamepad/leftTrigger", group: "a");
         action.AddBinding("/gamepad/rightTrigger", group: "a");
 
-        Assert.That(() => action.ApplyOverride("/gamepad/buttonSouth", group: "a"), Throws.InvalidOperationException);
+        action.ApplyOverride("/gamepad/buttonSouth", group: "a");
+
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[1].overridePath, Is.Null);
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_AddingMultipleBindingsWithSameGroup_WillAppendNumberToGroup()//???
+    public void Actions_OnActionWithMultipleBindingsWithSameGroup_CanTargetIndividualBindingsByIndex()
     {
-        Assert.Fail();
+        var action = new InputAction(name: "test");
+
+        action.AddBinding("/gamepad/leftTrigger", group: "a");
+        action.AddBinding("/gamepad/rightTrigger", group: "a");
+
+        action.ApplyOverride("/gamepad/buttonSouth", group: "a[1]");
+
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_CanRestoreDefaultsAfterOverridingBinding()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
-        action.Enable();
         action.RemoveAllOverrides();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1});
-        InputSystem.Update();
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+    }
 
-        Assert.That(action.wasPerformed);
+    [Test]
+    [Category("Actions")]
+    public void Actions_ApplyingNullOrEmptyOverride_IsSameAsRemovingOverride()
+    {
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+
+        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.ApplyOverride(new InputBindingOverride());
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+
+        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.ApplyOverride(new InputBindingOverride { binding = "" });
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenActionIsEnabled_CannotRemoveOverrides()
+    {
+        var action = new InputAction(name: "foo");
+        action.Enable();
+        Assert.That(() => action.RemoveAllOverrides(), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRestoreDefaultForSpecificOverride()
+    {
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var bindingOverride = new InputBindingOverride {binding = "/gamepad/rightTrigger"};
+
+        action.ApplyOverride(bindingOverride);
+        action.RemoveOverride(bindingOverride);
+
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenActionIsEnabled_CannotRestoreRemoveSpecificOverride()
+    {
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var bindingOverride = new InputBindingOverride {binding = "/gamepad/rightTrigger"};
+        action.ApplyOverride(bindingOverride);
+        action.Enable();
+        Assert.That(() => action.RemoveOverride(bindingOverride), Throws.InvalidOperationException);
     }
 
 #if UNITY_EDITOR

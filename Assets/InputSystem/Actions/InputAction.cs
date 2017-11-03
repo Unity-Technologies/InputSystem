@@ -207,32 +207,44 @@ namespace ISX
 
         public void ApplyOverride(string binding, string group = null)
         {
-            ApplyOverride(new InputBindingOverride {binding = binding});
+            ApplyOverride(new InputBindingOverride {binding = binding, group = group});
         }
 
         // Apply the given override to the action.
         // NOTE: Ignores the action name in the override.
+        // NOTE: Action must be disabled while applying overrides.
         public void ApplyOverride(InputBindingOverride bindingOverride)
         {
+            if (enabled)
+                throw new InvalidOperationException($"Cannot change overrides on action '{this}' while the action is enabled");
+
+            if (bindingOverride.binding == string.Empty)
+                bindingOverride.binding = null;
+
             var bindingIndex = FindBindingIndexForOverride(bindingOverride);
             if (bindingIndex == -1)
                 return;
 
             m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
-
-            // Re-resolve bindings, if necessary.
-            if (enabled)
-                throw new NotImplementedException();
         }
 
         public void RemoveOverride(InputBindingOverride bindingOverride)
         {
-            throw new NotImplementedException();
+            var undoBindingOverride = bindingOverride;
+            undoBindingOverride.binding = null;
+
+            // Simply apply but with a null binding.
+            ApplyOverride(undoBindingOverride);
         }
 
+        // Restore all bindings to their default paths.
         public void RemoveAllOverrides()
         {
-            throw new NotImplementedException();
+            if (enabled)
+                throw new InvalidOperationException($"Cannot removed overrides from action '{this}' while the action is enabled");
+
+            for (var i = 0; i < m_BindingsCount; ++i)
+                m_Bindings[m_BindingsStartIndex + i].overridePath = null;
         }
 
         // Add all overrides that have been applied to this action to the given list.
@@ -338,7 +350,42 @@ namespace ISX
         // Return -1 if no corresponding binding is found.
         private int FindBindingIndexForOverride(InputBindingOverride bindingOverride)
         {
-            throw new NotImplementedException();
+            var group = bindingOverride.group;
+            var haveGroup = !string.IsNullOrEmpty(group);
+
+            if (m_BindingsCount == 1)
+            {
+                // Simple case where we have only a single binding on the action.
+
+                if (!haveGroup ||
+                    string.Compare(m_Bindings[m_BindingsStartIndex].group, group,
+                        StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return 0;
+            }
+            else if (m_BindingsCount > 1)
+            {
+                // Trickier case where we need to select from a set of bindings.
+
+                if (!haveGroup)
+                    // Group is required to disambiguate.
+                    throw new InvalidOperationException(
+                        $"Action {this} has multiple bindings; overriding binding requires the use of binding groups so the action knows which binding to override. Set 'group' property on InputBindingOverride.");
+
+                int groupStringLength;
+                var indexInGroup = bindingOverride.GetIndexInGroup(out groupStringLength);
+                var currentIndexInGroup = 0;
+
+                for (var i = 0; i < m_BindingsCount; ++i)
+                    if (string.Compare(m_Bindings[m_BindingsStartIndex + i].group, 0, group, 0, groupStringLength, true) == 0)
+                    {
+                        if (currentIndexInGroup == indexInGroup)
+                            return i;
+
+                        ++currentIndexInGroup;
+                    }
+            }
+
+            return -1;
         }
 
         // Perform a phase change on the action. Visible to observers.
