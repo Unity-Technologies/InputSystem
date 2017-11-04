@@ -1,5 +1,7 @@
 using System;
 
+////REVIEW: rename "combinding" to "chaining"?
+
 namespace ISX
 {
     // A combination of a control path and modifiers.

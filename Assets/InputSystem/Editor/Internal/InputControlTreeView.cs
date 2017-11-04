@@ -165,7 +165,6 @@ namespace ISX.Editor
             switch (column)
             {
                 case (int)ColumnId.Name:
-                    cellRect.x += GetContentIndent(item);
                     args.rowRect = cellRect;
                     base.RowGUI(args);
                     break;

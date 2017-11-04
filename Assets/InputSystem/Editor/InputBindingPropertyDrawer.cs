@@ -4,24 +4,28 @@ using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
-//make the selector for controls a popup window with a search function
-
 namespace ISX.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
     // presents an interface that allows to automatically construct the path
     // strings. The user can still enter a plain string manually in the popup
     // window we display.
+    //
+    // Normally just renders a visualization of the binding. However, if the mouse
+    // is hovered over the binding, displays buttons to modify the binding.
     [CustomPropertyDrawer(typeof(InputBinding))]
     public class InputBindingPropertyDrawer : PropertyDrawer
     {
-        private const int kPathLabelWidth = 240;
         private const int kPickButtonWidth = 50;
         private const int kModifyButtonWidth = 50;
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            EditorGUI.BeginProperty(position, label, property);
+            EditorGUI.BeginProperty(rect, label, property);
+
+            ////FIXME: this does not work as expected...
+            // Find out if we should display our modification buttons.
+            var haveMouseOver = rect.Contains(Event.current.mousePosition);
 
             var pathProperty = property.FindPropertyRelative("path");
             var modifiersProperty = property.FindPropertyRelative("modifiers");
@@ -33,24 +37,36 @@ namespace ISX.Editor
 
             var pathContent = GetContentForPath(path, modifiers, flags);
 
-            var pathRect = new Rect(position.x, position.y, kPathLabelWidth, position.height);
-            var pathButtonRect = new Rect(position.x + kPathLabelWidth + 4, position.y, kPickButtonWidth, position.height);
-            var modifyButtonRect = new Rect(position.x + kPathLabelWidth + 4 + kPickButtonWidth + 4, position.y,
-                    kModifyButtonWidth, position.height);
+            //Debug.Log($"Rect: {rect} Mouse: {Event.current.mousePosition} Over: {haveMouseOver} Path: {pathContent.text}");
 
+            var pathRect = rect;
             EditorGUI.LabelField(pathRect, pathContent);
-            if (EditorGUI.DropdownButton(pathButtonRect, Contents.pick, FocusType.Keyboard))
-            {
-                PopupWindow.Show(pathButtonRect, new InputControlPicker(pathProperty));
-            }
 
-            ////TODO: I think this UI is crap but it'll do for now
-            if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
+            if (haveMouseOver)
             {
-                PopupWindow.Show(modifyButtonRect, new ModifyPopupWindow(property));
+                // We draw the buttons *over* the path as hover UIs.
+                var modifyButtonRect = new Rect(rect.x + rect.width - 4 - kModifyButtonWidth, rect.y, kModifyButtonWidth, rect.height);
+                var pathButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
+
+                if (EditorGUI.DropdownButton(pathButtonRect, Contents.pick, FocusType.Keyboard))
+                {
+                    PopupWindow.Show(pathButtonRect, new InputControlPicker(pathProperty));
+                }
+
+                if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
+                {
+                    PopupWindow.Show(modifyButtonRect, new ModifyPopupWindow(property));
+                }
             }
 
             EditorGUI.EndProperty();
+
+            ////REVIEW: this shouldn't be necessary if we can get mousemove events
+            ////REVIEW: is there a better solution than this?
+            // While we the mouse is on us, repaint continuously to make our
+            // hover effect work.
+            if (haveMouseOver)
+                EditorWindow.mouseOverWindow.Repaint();
         }
 
         private GUIContent GetContentForPath(string path, string modifiers, InputBinding.Flags flags)

@@ -20,7 +20,7 @@ namespace ISX
         }
 
         // Perform a search for controls starting with the given control as root and matching
-        // the given path from the given possition. Puts all matching controls on the list and
+        // the given path from the given position. Puts all matching controls on the list and
         // returns the number of controls that have been matched.
         //
         // Does not tap 'path' strings of controls so we don't create a bunch of

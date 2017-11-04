@@ -82,6 +82,13 @@ namespace ISX
         [SerializeField] private string m_Name;
         [SerializeField] internal InputAction[] m_Actions;
 
+        // These arrays hold data for all actions in the set. Each action will
+        // refer to a slice of the arrays.
+        [SerializeField] InputBinding[] m_Bindings;
+        [NonSerialized] internal InputControl[] m_Controls;
+        [NonSerialized] internal ModifierState[] m_Modifiers;
+        [NonSerialized] internal ResolvedBinding[] m_ResolvedBindings;
+
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
@@ -119,13 +126,6 @@ namespace ISX
             public ReadOnlyArray<InputControl> controls;
             public ReadWriteArray<ModifierState> modifiers;
         }
-
-        // These arrays hold data for all actions in the set. Each action will
-        // refer to a slice of the arrays.
-        [SerializeField] InputBinding[] m_Bindings;
-        [NonSerialized] internal InputControl[] m_Controls;
-        [NonSerialized] internal ModifierState[] m_Modifiers;
-        [NonSerialized] internal ResolvedBinding[] m_ResolvedBindings;
 
         // Resolve all bindings to their controls and also add any action modifiers
         // from the bindings. The best way is for this to happen once for each action

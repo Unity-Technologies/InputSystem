@@ -2,30 +2,27 @@
 using UnityEditor;
 using UnityEngine;
 
-////TODO: support actions in action sets (only supports singleton actions ATM)
-
 namespace ISX.Editor
 {
+    // Custom inspector support for InputActions.
+    //
+    // NOTE: This only supports singleton actions. It will not work correctly with actions
+    //       that are part of InputActionSets. InputActionSet has its own inspector support
+    //       that does not use this property drawer.
     [CustomPropertyDrawer(typeof(InputAction))]
     public class InputActionPropertyDrawer : PropertyDrawer
     {
         private const int kFoldoutHeight = 15;
-        private const int kBindingHeight = 20;
         private const int kBindingIndent = 5;
 
+        ////FIXME: this doesn't work correctly; folding state doesn't survive domain reloads
         [SerializeField] private bool m_FoldedOut;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var bindingsArray = property.FindPropertyRelative("m_Bindings");
-            var bindingsCount = bindingsArray.arraySize;
-
-            var height = kFoldoutHeight;
+            var height = (float)kFoldoutHeight;
             if (m_FoldedOut)
-            {
-                height += bindingsCount * kBindingHeight;
-                height += Contents.iconPlus.image.height + 2;
-            }
+                height += InputActionGUI.GetBindingsArrayHeight(property);
 
             return height;
         }
@@ -50,47 +47,11 @@ namespace ISX.Editor
             }
             else if (m_FoldedOut)
             {
-                var bindingsArrayProperty = property.FindPropertyRelative("m_Bindings");
-                var bindingsCountProperty = property.FindPropertyRelative("m_BindingsCount");
-                var bindingsCount = bindingsArrayProperty.arraySize;
+                position.y += kFoldoutHeight + 2;
+                position.x += kBindingIndent;
+                position.width -= kBindingIndent;
 
-                var rect = position;
-                rect.y += kFoldoutHeight + 2;
-                rect.x += kBindingIndent;
-                rect.height = kBindingHeight;
-                rect.width -= kBindingIndent;
-
-                for (var i = 0; i < bindingsCount; ++i)
-                {
-                    var minusButtonRect = rect;
-                    minusButtonRect.width = Contents.iconMinus.image.width;
-                    if (GUI.Button(minusButtonRect, Contents.iconMinus, GUIStyle.none))
-                    {
-                        bindingsArrayProperty.DeleteArrayElementAtIndex(i);
-                        bindingsCountProperty.intValue = bindingsCount - 1;
-                        bindingsArrayProperty.serializedObject.ApplyModifiedProperties();
-                        EditorGUI.EndProperty();
-                        return;
-                    }
-
-                    var bindingRect = rect;
-                    bindingRect.x += minusButtonRect.width + 5;
-                    bindingRect.width -= minusButtonRect.width + 5;
-
-                    var currentBinding = bindingsArrayProperty.GetArrayElementAtIndex(i);
-                    EditorGUI.PropertyField(bindingRect, currentBinding);
-
-                    rect.y += kBindingHeight;
-                }
-
-                rect.height = Contents.iconPlus.image.height;
-                rect.width = Contents.iconPlus.image.width;
-                if (GUI.Button(rect, Contents.iconPlus, GUIStyle.none))
-                {
-                    bindingsArrayProperty.InsertArrayElementAtIndex(bindingsCount);
-                    bindingsCountProperty.intValue = bindingsCount + 1;
-                    bindingsArrayProperty.serializedObject.ApplyModifiedProperties();
-                }
+                InputActionGUI.BindingsArray(position, property);
             }
 
             EditorGUI.EndProperty();
@@ -110,17 +71,6 @@ namespace ISX.Editor
             // Don't apply. Let's apply it as a side-effect whenever something about
             // the action in the UI is changed.
         }
-
-        public static class Contents
-        {
-            public static GUIContent iconPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add new binding");
-            public static GUIContent iconMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove binding");
-        }
-
-        public static class Styles
-        {
-            public static GUIStyle box = "Box";
-        }
     }
 }
-#endif
+#endif // UNITY_EDITOR

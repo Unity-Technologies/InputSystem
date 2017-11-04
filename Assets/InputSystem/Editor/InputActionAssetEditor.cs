@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace ISX.Editor
@@ -8,6 +10,27 @@ namespace ISX.Editor
     [CustomEditor(typeof(InputActionAsset))]
     public class InputActionAssetEditor : UnityEditor.Editor
     {
+        [NonSerialized] private int m_ActionSetCount;
+        [NonSerialized] private SerializedProperty m_ActionSetProperty;
+
+        public void OnEnable()
+        {
+            m_ActionSetProperty = serializedObject.FindProperty("m_ActionSets");
+            m_ActionSetCount = m_ActionSetProperty.arraySize;
+
+            if (m_ActionSetCount > 0)
+                InitializeActionTreeView();
+        }
+
+        protected override void OnHeaderGUI()
+        {
+        }
+
+        public override bool UseDefaultMargins()
+        {
+            return false;
+        }
+
         public override void OnInspectorGUI()
         {
             //one set after the other
@@ -16,24 +39,15 @@ namespace ISX.Editor
             //bindings can be filtered by their group
             //new groups can be added
 
-
-            ////FIXME: toolbar doesn't work well visually; switch to something else
             // Toolbar.
             DrawToolbarGUI();
 
-            ////REVIEW: draw as tree?
-            //// name column, binding column, group column?
-
-            // UI for each set.
+            // Action tree view.
             EditorGUILayout.BeginVertical();
-            var setArrayProperty = serializedObject.FindProperty("m_ActionSets");
-            var setCount = setArrayProperty.arraySize;
-            for (var i = 0; i < setCount; ++i)
-            {
-                var setProperty = setArrayProperty.GetArrayElementAtIndex(i);
-                DrawSetGUI(setProperty);
-            }
+            GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
+            var treeViewRect = GUILayoutUtility.GetLastRect();
+            m_ActionTreeView?.OnGUI(treeViewRect);
         }
 
         protected void DrawToolbarGUI()
@@ -45,22 +59,36 @@ namespace ISX.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        protected void DrawSetGUI(SerializedProperty setProperty)
-        {
-            var nameProperty = setProperty.FindPropertyRelative("m_Name");
-
-            EditorGUILayout.BeginVertical(Styles.box, GUILayout.ExpandWidth(true));
-            EditorGUILayout.PropertyField(nameProperty);
-            EditorGUILayout.EndVertical();
-        }
-
         protected void AddActionSet()
         {
-            var setArrayProperty = serializedObject.FindProperty("m_ActionSets");
-            var setCount = setArrayProperty.arraySize;
-            setArrayProperty.InsertArrayElementAtIndex(setCount);
+            var index = m_ActionSetCount;
+            ////FIXME: duplicates the last action set which is annoying; make it produce a clean action set with nothing in it
+            m_ActionSetProperty.InsertArrayElementAtIndex(index);
+            ++m_ActionSetCount;
+
+            ////TODO: assign unique name
+            var name = "default";
+            var nameProperty = m_ActionSetProperty.GetArrayElementAtIndex(index).FindPropertyRelative("m_Name");
+            nameProperty.stringValue = name;
+
             serializedObject.ApplyModifiedProperties();
+
+            if (m_ActionTreeView == null)
+                InitializeActionTreeView();
+            else
+                m_ActionTreeView.Reload();
         }
+
+        private void InitializeActionTreeView()
+        {
+            m_ActionTreeView = InputActionTreeView.Create(serializedObject.FindProperty("m_ActionSets"),
+                    ref m_ActionTreeViewState, ref m_ActionTreeViewHeaderState);
+        }
+
+        [SerializeField] private TreeViewState m_ActionTreeViewState;
+        [SerializeField] private MultiColumnHeaderState m_ActionTreeViewHeaderState;
+
+        [NonSerialized] private TreeView m_ActionTreeView;
 
         private static class Styles
         {
