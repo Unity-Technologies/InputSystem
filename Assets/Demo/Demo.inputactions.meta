@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: db628de0ec03d439ba806fdb7b2ef1cb
+ScriptedImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: e2fdc6edf8744b38b702a2a5ee3541b2, type: 3}
+  generateWrapperCode: 0
+  wrapperCodePath: 
