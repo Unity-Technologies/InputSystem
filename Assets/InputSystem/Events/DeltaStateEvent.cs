@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
 
+////TODO: use deltastateevents as basis for ActionEvent
+
 namespace ISX
 {
     // Partial state update for an input device.

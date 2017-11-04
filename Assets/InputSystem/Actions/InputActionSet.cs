@@ -9,6 +9,13 @@ namespace ISX
     // Also stores data for actions. All actions have to have an associated
     // action set. "Lose" actions constructed without a set will internally
     // create their own "set" to hold their data.
+    //
+    // A common usage pattern for action sets is to use them to group action
+    // "contexts". So one set could hold "menu" actions, for example, whereas
+    // another set holds "gameplay" actions. This kind of splitting can be
+    // made arbitrarily complex. Like, you could have separate "driving" and
+    // "walking" action sets, for example, that you enable and disable depending
+    // on whether the player is walking or driving around.
     [Serializable]
     public class InputActionSet : ISerializationCallbackReceiver
     {
@@ -23,10 +30,20 @@ namespace ISX
 
         public void AddAction(InputAction action)
         {
+            ////REVIEW: really verify all these things or just allow the user to set things up that may not work as expected in some circumstances?
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
+            if (action.enabled)
+                throw new InvalidOperationException($"Cannot move action '{action}' to set '{name}' while it is enabled");
+            if (string.IsNullOrEmpty(action.name))
+                throw new InvalidOperationException($"Cannot add unnamed actions to sets");
             if (action.m_ActionSet != null && action.m_ActionSet != this)
-                throw new InvalidOperationException($"Cannot add '{action.name}' to set '{name}' because it has already been added to set '{action.actionSet.name}'");
+                throw new InvalidOperationException($"Cannot move '{action}' to set '{name}' because it has already been added to set '{action.m_ActionSet.name}'");
+            if (GetAction(action.name) != null)
+                throw new InvalidOperationException($"Cannot add action with duplicate name '{action.name}' to set '{name}'");
+
+            ////TODO: if the action is a singleton action, make sure we alter its state appropriately and kill
+            ////      any internal set it may have created
 
             ArrayHelpers.Append(ref m_Actions, action);
             action.m_ActionSet = this;
@@ -34,7 +51,15 @@ namespace ISX
 
         public InputAction GetAction(string name)
         {
-            throw new NotImplementedException();
+            if (m_Actions != null)
+            {
+                var actionCount = m_Actions.Length;
+                for (var i = 0; i < actionCount; ++i)
+                    if (string.Compare(name, m_Actions[i].name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return m_Actions[i];
+            }
+
+            return null;
         }
 
         public void EnableAll()
@@ -383,99 +408,233 @@ namespace ISX
         }
 
         [Serializable]
-        private struct ActionJson
-        {
-            public string name;
-
-            // If the action only needs a single binding, don't force
-            // the user to declare an array.
-            public string binding;
-            public string modifiers;
-            public bool combineWithPrevious;
-
-            // Alternative, can specify multiple bindings.
-            public BindingJson[] bindings;
-        }
-
-        [Serializable]
         public struct BindingJson
         {
             public string path;
             public string modifiers;
-            public bool combineWithPrevious;
+            public string groups;
+            public bool combinesWithPrevious;
+
+            public InputBinding ToBinding()
+            {
+                return new InputBinding
+                {
+                    path = string.IsNullOrEmpty(path) ? null : path,
+                    modifiers = string.IsNullOrEmpty(modifiers) ? null : modifiers,
+                    group = string.IsNullOrEmpty(groups) ? null : groups,
+                    combinesWithPrevious = combinesWithPrevious
+                };
+            }
+
+            public static BindingJson FromBinding(InputBinding binding)
+            {
+                return new BindingJson
+                {
+                    path = binding.path,
+                    modifiers = binding.modifiers,
+                    groups = binding.group,
+                    combinesWithPrevious = binding.combinesWithPrevious
+                };
+            }
         }
 
         [Serializable]
-        private struct ActionSetJson
+        private struct ActionJson
         {
             public string name;
-            public ActionJson[] actions;
+            public BindingJson[] bindings;
+
+            // ToAction doesn't make sense because all bindings combine on the action set and
+            // thus need conversion logic that operates on the actions in bulk.
+
+            public static ActionJson FromAction(InputAction action)
+            {
+                var bindings = action.bindings;
+                var bindingsCount = bindings.Count;
+                var bindingsJson = new BindingJson[bindingsCount];
+
+                for (var i = 0; i < bindingsCount; ++i)
+                {
+                    bindingsJson[i] = BindingJson.FromBinding(bindings[i]);
+                }
+
+                return new ActionJson
+                {
+                    name = action.name,
+                    bindings = bindingsJson
+                };
+            }
         }
 
-        // JsonUtility can't deal with having an array or dictionary at the top so
-        // we have to wrap this in a struct.
+        // A JSON represention of one or more sets of actions.
+        // Contains a list of actions. Each action may specify the set it belongs to
+        // as part of its name ("set/action").
         [Serializable]
         private struct ActionFileJson
         {
-            public ActionSetJson[] sets;
+            public ActionJson[] actions;
+
+            public InputActionSet[] ToSets()
+            {
+                var sets = new List<InputActionSet>();
+
+                var actions = new List<List<InputAction>>();
+                var bindings = new List<List<InputBinding>>();
+
+                var actionCount = this.actions.Length;
+                for (var i = 0; i < actionCount; ++i)
+                {
+                    var jsonAction = this.actions[i];
+
+                    if (string.IsNullOrEmpty(jsonAction.name))
+                        throw new Exception($"Action number {i + 1} has no name");
+
+                    ////REVIEW: make sure all action names are unique?
+
+                    // Determine name of action set.
+                    string setName = null;
+                    string actionName = jsonAction.name;
+                    var indexOfFirstSlash = actionName.IndexOf('/');
+                    if (indexOfFirstSlash != -1)
+                    {
+                        setName = actionName.Substring(0, indexOfFirstSlash);
+                        actionName = actionName.Substring(indexOfFirstSlash + 1);
+
+                        if (string.IsNullOrEmpty(actionName))
+                            throw new Exception($"Invalid action name '{jsonAction.name}' (missing action name after '/')");
+                    }
+
+                    // Try to find existing set.
+                    InputActionSet set = null;
+                    var setIndex = 0;
+                    for (; setIndex < sets.Count; ++setIndex)
+                    {
+                        if (string.Compare(sets[setIndex].name, setName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            set = sets[setIndex];
+                            break;
+                        }
+                    }
+
+                    // Create new set if it's the first action in the set.
+                    if (set == null)
+                    {
+                        set = new InputActionSet(setName);
+                        sets.Add(set);
+                        actions.Add(new List<InputAction>());
+                        bindings.Add(new List<InputBinding>());
+                    }
+
+                    // Create action.
+                    var action = new InputAction(actionName);
+                    actions[setIndex].Add(action);
+
+                    // Add bindings.
+                    if (jsonAction.bindings != null)
+                    {
+                        var bindingsForSet = bindings[setIndex];
+                        var bindingsStartIndex = bindingsForSet.Count;
+
+                        for (var n = 0; n < jsonAction.bindings.Length; ++n)
+                        {
+                            var jsonBinding = jsonAction.bindings[n];
+                            var binding = jsonBinding.ToBinding();
+                            bindingsForSet.Add(binding);
+                        }
+
+                        action.m_BindingsCount = bindingsForSet.Count - bindingsStartIndex;
+                        action.m_BindingsStartIndex = bindingsStartIndex;
+                    }
+                }
+
+                // Finalize arrays.
+                for (var i = 0; i < sets.Count; ++i)
+                {
+                    var actionArray = actions[i].ToArray();
+                    var bindingArray = bindings[i].ToArray();
+
+                    sets[i].m_Actions = actionArray;
+                    sets[i].m_Bindings = bindingArray;
+
+                    // Install final binding arrays on actions.
+                    for (var n = 0; n < actionArray.Length; ++n)
+                        actionArray[n].m_Bindings = bindingArray;
+                }
+
+                return sets.ToArray();
+            }
+
+            public static ActionFileJson FromSet(InputActionSet set)
+            {
+                var actions = set.actions;
+                var actionCount = actions.Count;
+                var actionsJson = new ActionJson[actionCount];
+                var haveSetName = !string.IsNullOrEmpty(set.name);
+
+                for (var i = 0; i < actionCount; ++i)
+                {
+                    actionsJson[i] = ActionJson.FromAction(actions[i]);
+
+                    if (haveSetName)
+                        actionsJson[i].name = $"{set.name}/{actions[i].name}";
+                }
+
+                return new ActionFileJson
+                {
+                    actions = actionsJson
+                };
+            }
+
+            public static ActionFileJson FromSets(IEnumerable<InputActionSet> sets)
+            {
+                // Count total number of actions.
+                var actionCount = 0;
+                foreach (var set in sets)
+                    actionCount += set.actions.Count;
+
+                // Collect actions from all sets.
+                var actionsJson = new ActionJson[actionCount];
+                var actionIndex = 0;
+                foreach (var set in sets)
+                {
+                    var haveSetName = !string.IsNullOrEmpty(set.name);
+                    var actions = set.actions;
+
+                    for (var i = 0; i < actions.Count; ++i)
+                    {
+                        actionsJson[actionIndex] = ActionJson.FromAction(actions[i]);
+
+                        if (haveSetName)
+                            actionsJson[actionIndex].name = $"{set.name}/{actions[i].name}";
+
+                        ++actionIndex;
+                    }
+                }
+
+                return new ActionFileJson
+                {
+                    actions = actionsJson
+                };
+            }
         }
 
-        // Load one or more action sets from JSON. The given JSON string may
-        // either be a single set or may be an object with a property "sets"
-        // that contains an array of action sets.
+        // Load one or more action sets from JSON.
         public static InputActionSet[] FromJson(string json)
         {
-            ActionSetJson[] parsedSets;
+            var fileJson = JsonUtility.FromJson<ActionFileJson>(json);
+            return fileJson.ToSets();
+        }
 
-            // Allow JSON with either multiple sets or with just a single set.
-            try
-            {
-                var parsed = JsonUtility.FromJson<ActionFileJson>(json);
-                parsedSets = parsed.sets;
-            }
-            catch (Exception originalException)
-            {
-                try
-                {
-                    var alternate = JsonUtility.FromJson<ActionSetJson>(json);
-                    parsedSets = new[] {alternate};
-                }
-                catch (Exception)
-                {
-                    throw originalException;
-                }
-            }
-
-            if (parsedSets == null || parsedSets.Length == 0)
-                return Array.Empty<InputActionSet>();
-
-            var sets = new InputActionSet[parsedSets.Length];
-            for (var i = 0; i < parsedSets.Length; ++i)
-            {
-                var parsedSet = parsedSets[i];
-                var set = new InputActionSet(parsedSet.name);
-
-                var actionCount = parsedSet.actions.Length;
-                var actions = new InputAction[actionCount];
-
-                for (var n = 0; n < parsedSet.actions.Length; ++n)
-                {
-                    var parsedAction = parsedSet.actions[n];
-                    var action = new InputAction(parsedAction.name, parsedAction.binding, parsedAction.modifiers);
-                    action.m_ActionSet = set;
-                    actions[n] = action;
-                }
-
-                set.m_Actions = actions;
-                sets[i] = set;
-            }
-
-            return sets;
+        public static string ToJson(IEnumerable<InputActionSet> sets)
+        {
+            var fileJson = ActionFileJson.FromSets(sets);
+            return JsonUtility.ToJson(fileJson);
         }
 
         public string ToJson()
         {
-            throw new NotImplementedException();
+            var fileJson = ActionFileJson.FromSet(this);
+            return JsonUtility.ToJson(fileJson);
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

@@ -12,6 +12,7 @@ namespace ISX.Editor
     {
         [NonSerialized] private int m_ActionSetCount;
         [NonSerialized] private SerializedProperty m_ActionSetProperty;
+        [NonSerialized] internal Action m_ApplyAction;
 
         public void OnEnable()
         {
@@ -22,10 +23,19 @@ namespace ISX.Editor
                 InitializeActionTreeView();
         }
 
+        public void Reload()
+        {
+            m_ActionTreeView?.Reload();
+            Repaint();
+        }
+
+        // Disable the header that isn't providing a lot of value for us and somewhat
+        // doubles up with the header we already get from the importer itself.
         protected override void OnHeaderGUI()
         {
         }
 
+        // We want all the space we can get.
         public override bool UseDefaultMargins()
         {
             return false;
@@ -71,7 +81,7 @@ namespace ISX.Editor
             var nameProperty = m_ActionSetProperty.GetArrayElementAtIndex(index).FindPropertyRelative("m_Name");
             nameProperty.stringValue = name;
 
-            serializedObject.ApplyModifiedProperties();
+            Apply();
 
             if (m_ActionTreeView == null)
                 InitializeActionTreeView();
@@ -81,8 +91,14 @@ namespace ISX.Editor
 
         private void InitializeActionTreeView()
         {
-            m_ActionTreeView = InputActionTreeView.Create(serializedObject.FindProperty("m_ActionSets"),
+            m_ActionTreeView = InputActionTreeView.Create(serializedObject.FindProperty("m_ActionSets"), Apply,
                     ref m_ActionTreeViewState, ref m_ActionTreeViewHeaderState);
+        }
+
+        private void Apply()
+        {
+            serializedObject.ApplyModifiedProperties();
+            m_ApplyAction?.Invoke();
         }
 
         [SerializeField] private TreeViewState m_ActionTreeViewState;

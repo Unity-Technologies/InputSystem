@@ -34,7 +34,6 @@ namespace ISX.Editor
             var bindingsCount = bindingsArrayProperty.arraySize;
 
             rect.height = kBindingHeight;
-
             for (var i = 0; i < bindingsCount; ++i)
             {
                 // Draw minus icon.

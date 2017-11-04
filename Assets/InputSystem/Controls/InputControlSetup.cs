@@ -371,7 +371,15 @@ namespace ISX
                 }
 
                 // Create control.
-                var control = AddControl(controlTemplate.template, variant, controlTemplate.name, parent, existingControl);
+                InputControl control;
+                try { control = AddControl(controlTemplate.template, variant, controlTemplate.name, parent, existingControl); }
+                catch (InputTemplate.TemplateNotFoundException exception)
+                {
+                    // Throw better exception that gives more info.
+                    throw new Exception(
+                        $"Cannot find template '{exception.template}' used in control '{controlTemplate.name}' of template '{template.name}'",
+                        exception);
+                }
 
                 // Add to array.
                 m_Device.m_ChildrenForEachControl[childIndex] = control;

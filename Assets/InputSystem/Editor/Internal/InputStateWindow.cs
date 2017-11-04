@@ -128,7 +128,7 @@ namespace ISX.Editor
                 m_ShowRawBytes = true;
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawBytes, EditorStyles.toolbarButton,
+            m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawMemory, EditorStyles.toolbarButton,
                     GUILayout.Width(150));
 
             // If we have multiple state buffers to choose from, add dropdown that allows
@@ -269,7 +269,7 @@ namespace ISX.Editor
 
         private static class Contents
         {
-            public static GUIContent showRawBytes = new GUIContent("Display Raw Bytes");
+            public static GUIContent showRawMemory = new GUIContent("Display Raw Memory");
             public static GUIContent[] bufferChoices =
             {
                 new GUIContent("Dynamic Update (Current)"),

@@ -1026,6 +1026,16 @@ namespace ISX
             return templateName;
         }
 
+        internal class TemplateNotFoundException : Exception
+        {
+            public string template { get; private set; }
+            public TemplateNotFoundException(string name)
+                : base($"Cannot find template '{name}'")
+            {
+                template = name;
+            }
+        }
+
         // Constructs InputTemplate instances and caches them.
         internal struct Cache
         {
@@ -1077,7 +1087,7 @@ namespace ISX
                 }
 
                 // Nothing.
-                throw new Exception($"Cannot find input template called '{name}'");
+                throw new TemplateNotFoundException(name);
             }
         }
     }

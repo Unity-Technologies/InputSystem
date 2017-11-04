@@ -2735,25 +2735,97 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCreateActionSetFromJson()
+    public void Actions_CannotAddEnabledActionToSet()
     {
-        const string json = @"
-            {
-                ""sets"" : [
-                    {
-                        ""name"" : ""default"",
-                        ""actions"" : [ { ""name"" : ""jump"" } ]
-                    }
-                ]
-            }
-        ";
+        var set = new InputActionSet();
+        var action = new InputAction(binding: "/gamepad/leftStick");
+        action.Enable();
 
+        Assert.That(() => set.AddAction(action), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotAddUnnamedActionToSet()
+    {
+        var set = new InputActionSet();
+        Assert.That(() => set.AddAction(new InputAction(name: null)), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotAddTwoActionsWithTheSameNameToSet()
+    {
+        var set = new InputActionSet();
+        set.AddAction(new InputAction("action"));
+
+        Assert.That(() => set.AddAction(new InputAction("action")), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionInSet()
+    {
+        var set = new InputActionSet();
+        var action1 = new InputAction(name: "action1");
+        var action2 = new InputAction(name: "action2");
+
+        set.AddAction(action1);
+        set.AddAction(action2);
+
+        Assert.That(set.GetAction("action1"), Is.SameAs(action1));
+        Assert.That(set.GetAction("action2"), Is.SameAs(action2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanConvertActionSetToAndFromJson()
+    {
+        var set = new InputActionSet("test");
+        var action1 = new InputAction(name: "action1", binding: "/gamepad/leftStick");
+        var action2 = new InputAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
+        action1.AddBinding("/gamepad/rightStick", group: "group");
+
+        set.AddAction(action1);
+        set.AddAction(action2);
+
+        var json = set.ToJson();
         var sets = InputActionSet.FromJson(json);
 
         Assert.That(sets, Has.Length.EqualTo(1));
-        Assert.That(sets[0], Has.Property("name").EqualTo("default"));
-        Assert.That(sets[0].actions, Has.Count.EqualTo(1));
-        Assert.That(sets[0].actions, Has.Exactly(1).With.Property("name").EqualTo("jump"));
+        Assert.That(sets[0], Has.Property("name").EqualTo("test"));
+        Assert.That(sets[0].actions, Has.Count.EqualTo(2));
+        Assert.That(sets[0].actions[0].name, Is.EqualTo("action1"));
+        Assert.That(sets[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(sets[0].actions[0].bindings, Has.Count.EqualTo(2));
+        Assert.That(sets[0].actions[1].bindings, Has.Count.EqualTo(1));
+        Assert.That(sets[0].actions[0].bindings[0].group, Is.Null);
+        Assert.That(sets[0].actions[0].bindings[1].group, Is.EqualTo("group"));
+        Assert.That(sets[0].actions[0].bindings[0].modifiers, Is.Null);
+        Assert.That(sets[0].actions[0].bindings[1].modifiers, Is.Null);
+        Assert.That(sets[0].actions[1].bindings[0].group, Is.Null);
+        Assert.That(sets[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanConvertMultipleActionSetsToAndFromJson()
+    {
+        var set1 = new InputActionSet("set1");
+        var set2 = new InputActionSet("set2");
+
+        var action1 = new InputAction(name: "action1", binding: "/gamepad/leftStick");
+        var action2 = new InputAction(name: "action2", binding: "/gamepad/rightStick");
+
+        set1.AddAction(action1);
+        set2.AddAction(action2);
+
+        var json = InputActionSet.ToJson(new[] {set1, set2});
+        var sets = InputActionSet.FromJson(json);
+
+        Assert.That(sets, Has.Length.EqualTo(2));
+        Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("set1"));
+        Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("set2"));
     }
 
     [Test]

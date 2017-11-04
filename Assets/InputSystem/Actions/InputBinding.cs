@@ -30,6 +30,7 @@ namespace ISX
         // Example: "tap,slowTap(duration=1.2)"
         public string modifiers;
 
+        ////TODO: allow more than one group
         // Optional group name. This can be used, for example, to divide bindings into
         // control schemes. So, the binding for keyboard&mouse on an action would have
         // "keyboard&mouse" as its group, the binding for "touch" would have "touch as

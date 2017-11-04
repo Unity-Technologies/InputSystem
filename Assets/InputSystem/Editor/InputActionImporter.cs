@@ -3,6 +3,8 @@ using System.IO;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
+////REVIEW: simply call ".input" instead of ".inputactions"?
+
 namespace ISX.Editor
 {
     // Imports an InputActionAsset from JSON.

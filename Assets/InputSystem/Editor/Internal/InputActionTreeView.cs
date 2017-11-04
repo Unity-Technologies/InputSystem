@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -8,7 +9,7 @@ namespace ISX.Editor
     // A TreeView of one or more action sets.
     internal class InputActionTreeView : TreeView
     {
-        public static InputActionTreeView Create(SerializedProperty actionSetProperty, ref TreeViewState treeViewState, ref MultiColumnHeaderState headerViewState)
+        public static InputActionTreeView Create(SerializedProperty actionSetProperty, Action applyAction, ref TreeViewState treeViewState, ref MultiColumnHeaderState headerViewState)
         {
             if (treeViewState == null)
                 treeViewState = new TreeViewState();
@@ -19,14 +20,14 @@ namespace ISX.Editor
             headerViewState = newHeaderState;
 
             var header = new MultiColumnHeader(headerViewState);
-            return new InputActionTreeView(actionSetProperty, treeViewState, header);
+            return new InputActionTreeView(actionSetProperty, applyAction, treeViewState, header);
         }
 
         private enum ColumnId
         {
             Name,
             Binding,
-            Group,
+            Groups,
             COUNT
         }
 
@@ -48,23 +49,25 @@ namespace ISX.Editor
                 minWidth = 60,
                 headerContent = new GUIContent("Binding")
             };
-            columns[(int)ColumnId.Group] =
+            columns[(int)ColumnId.Groups] =
                 new MultiColumnHeaderState.Column
             {
                 width = 110,
                 minWidth = 60,
-                headerContent = new GUIContent("Group")
+                headerContent = new GUIContent("Groups")
             };
 
             return new MultiColumnHeaderState(columns);
         }
 
         private SerializedProperty m_ActionSetsProperty;
+        private Action m_ApplyAction;
 
-        protected InputActionTreeView(SerializedProperty actionSetsProperty, TreeViewState state, MultiColumnHeader multiColumnHeader)
+        protected InputActionTreeView(SerializedProperty actionSetsProperty, Action applyAction, TreeViewState state, MultiColumnHeader multiColumnHeader)
             : base(state, multiColumnHeader)
         {
             m_ActionSetsProperty = actionSetsProperty;
+            m_ApplyAction = applyAction;
             Reload();
         }
 
@@ -191,7 +194,10 @@ namespace ISX.Editor
                     {
                         ////FIXME: BindingsArray() ATM does not work correctly with non-singleton actions
                         if (InputActionGUI.BindingsArray(cellRect, actionItem.property))
+                        {
                             RefreshCustomRowHeights();
+                            m_ApplyAction();
+                        }
                     }
                     break;
             }
@@ -215,7 +221,7 @@ namespace ISX.Editor
                 var action = actions.GetArrayElementAtIndex(actionCount);
                 action.FindPropertyRelative("m_Name").stringValue = "action";
 
-                actions.serializedObject.ApplyModifiedProperties();
+                m_ApplyAction();
                 ////TODO: remember to initiate rename
                 Reload();
                 return;
@@ -285,7 +291,7 @@ namespace ISX.Editor
                 return;
 
             nameProperty.stringValue = args.newName;
-            nameProperty.serializedObject.ApplyModifiedProperties();
+            m_ApplyAction();
 
             item.displayName = args.newName;
         }

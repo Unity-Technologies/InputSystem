@@ -41,6 +41,9 @@ namespace ISX
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
+        ////TODO: add InputEventBuffer struct that uses NativeArray underneath
+        ////TODO: make InputEventTrace use NativeArray
+        ////TODO: introduce an alternative that consumes events in bulk
         public event EventListener onEvent
         {
             add { m_EventListeners.Append(value); }
@@ -493,6 +496,8 @@ namespace ISX
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             ArrayHelpers.Erase(ref m_Devices, deviceIndex);
+            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
+            m_DevicesById.Remove(device.id);
 
             if (m_Devices != null)
             {
@@ -502,8 +507,6 @@ namespace ISX
                     oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
                     m_Devices[i].m_DeviceIndex = i;
                 }
-                m_DevicesById.Remove(device.id);
-                device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
 
                 // Remove from state buffers.
                 ReallocateStateBuffers(oldDeviceIndices);
