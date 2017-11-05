@@ -1,5 +1,9 @@
 using UnityEngine;
 
+////REVIEW: this should really be called InputActionAsset but then InputActionAsset needs a different name
+////REVIEW: akin to this, also have an InputActionSetAsset/InputActionSetReference?
+////REVIEW: have this thing here at all? is this workflow really crucial?
+
 namespace ISX
 {
     // Object that represents a specific action in a specific action

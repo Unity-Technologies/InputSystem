@@ -25,6 +25,7 @@ namespace ISX.Editor
 
         public void Reload()
         {
+            serializedObject.Update();
             m_ActionTreeView?.Reload();
             Repaint();
         }

@@ -11,14 +11,17 @@ namespace ISX
     {
         public ReadOnlyArray<InputActionSet> actionSets => new ReadOnlyArray<InputActionSet>(m_ActionSets);
 
+        // Return a JSON representation of the asset.
         public string ToJson()
         {
             return InputActionSet.ToJson(m_ActionSets);
         }
 
-        public static InputActionAsset FromJson()
+        // Replace the contents of the asset with the action sets in the
+        // given JSON string.
+        public void FromJson(string json)
         {
-            throw new NotImplementedException();
+            m_ActionSets = InputActionSet.FromJson(json);
         }
 
         public void AddActionSet(InputActionSet set)

@@ -33,10 +33,11 @@ namespace ISX.Editor
             ctx.SetMainObject(asset);
 
             // Create subasset for each action.
-            var prefixActionNamesWithSetName = sets.Length != 1;
             for (var i = 0; i < sets.Length; ++i)
             {
                 var set = sets[i];
+                var haveSetName = !string.IsNullOrEmpty(set.name);
+
                 foreach (var action in set.actions)
                 {
                     var actionObject = ScriptableObject.CreateInstance<InputActionReference>();
@@ -46,9 +47,10 @@ namespace ISX.Editor
                     actionObject.m_ActionName = action.name;
 
                     var objectName = action.name;
-                    if (prefixActionNamesWithSetName)
-                        objectName = $"{set.name}_{action.name}";
+                    if (haveSetName)
+                        objectName = $"{set.name}/{action.name}";
 
+                    actionObject.name = objectName;
                     ctx.AddObjectToAsset(objectName, actionObject);
                 }
             }
