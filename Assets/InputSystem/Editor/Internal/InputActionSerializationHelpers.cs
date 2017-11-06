@@ -62,7 +62,16 @@ namespace ISX.Editor
             bindingIndex += bindingsStartIndex;
 
             bindingsArrayProperty.DeleteArrayElementAtIndex(bindingIndex);
-            bindingsCountProperty.intValue = bindingsCount - 1;
+
+            // Update countl
+            --bindingsCount;
+            bindingsCountProperty.intValue = bindingsCount;
+            if (bindingsCount == 0)
+            {
+                // We've removed the last binding on this action. Reset start index just
+                // to be safe.
+                bindingsStartIndexProperty.intValue = 0;
+            }
 
             if (actionSetProperty != null)
             {
@@ -84,6 +93,14 @@ namespace ISX.Editor
             var bindingsStartIndex = bindingsStartIndexProperty.intValue;
             var bindingsCount = bindingsCountProperty.intValue;
             var bindingIndex = bindingsStartIndex + bindingsCount;
+
+            // If this is the first binding, start appending at end of bindings array.
+            if (bindingsCount == 0)
+            {
+                bindingsStartIndex = bindingsArrayProperty.arraySize;
+                bindingsStartIndexProperty.intValue = bindingsStartIndex;
+                bindingIndex = bindingsStartIndex;
+            }
 
             bindingsArrayProperty.InsertArrayElementAtIndex(bindingIndex);
             bindingsCountProperty.intValue = bindingsCount + 1;
@@ -112,7 +129,7 @@ namespace ISX.Editor
                 var startIndexProperty = property.FindPropertyRelative("m_BindingsStartIndex");
                 var startIndex = startIndexProperty.intValue;
 
-                if (startIndex >= indexAfterWhichToAdjust)
+                if (startIndex > indexAfterWhichToAdjust)
                     startIndexProperty.intValue = startIndex + adjust;
             }
         }

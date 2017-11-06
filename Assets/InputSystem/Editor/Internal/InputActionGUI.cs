@@ -10,10 +10,12 @@ namespace ISX.Editor
     {
         private const int kBindingHeight = 20;
 
-        public static float GetBindingsArrayHeight(SerializedProperty actionProperty)
+        public static float GetBindingsArrayHeight(SerializedProperty actionProperty, SerializedProperty actionSetProperty = null)
         {
-            var bindingsArray = actionProperty.FindPropertyRelative("m_Bindings");
-            var bindingsCount = bindingsArray.arraySize;
+            var bindingsArrayProperty = actionSetProperty != null
+                ? actionSetProperty.FindPropertyRelative("m_Bindings")
+                : actionProperty.FindPropertyRelative("m_Bindings");
+            var bindingsCount = actionProperty.FindPropertyRelative("m_BindingsCount").intValue;
 
             return bindingsCount * kBindingHeight
                 + Contents.iconPlus.image.height + 2;
@@ -27,7 +29,9 @@ namespace ISX.Editor
         // Returns true if the plus or the minus button was pressed.
         public static bool BindingsArray(Rect rect, SerializedProperty actionProperty, SerializedProperty actionSetProperty = null)
         {
-            var bindingsArrayProperty = actionProperty.FindPropertyRelative("m_Bindings");
+            var bindingsArrayProperty = actionSetProperty != null
+                ? actionSetProperty.FindPropertyRelative("m_Bindings")
+                : actionProperty.FindPropertyRelative("m_Bindings");
             var bindingsCountProperty = actionProperty.FindPropertyRelative("m_BindingsCount");
             var bindingsStartIndexProperty = actionProperty.FindPropertyRelative("m_BindingsStartIndex");
 

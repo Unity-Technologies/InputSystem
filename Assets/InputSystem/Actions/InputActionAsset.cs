@@ -7,6 +7,11 @@ namespace ISX
     // Usually imported from JSON using InputActionImporter.
     // Names of each action set in the asset ust be unique.
     // Allows applying overrides in bulk to all sets in the asset.
+    //
+    // NOTE: You don't have to use action sets this way. InputActionAsset
+    //       is a ready-made way to use Unity's default serialization and
+    //       have action sets go into the asset database. However, you can
+    //       just as well have action sets directly as JSON in your game.
     public class InputActionAsset : ScriptableObject
     {
         public ReadOnlyArray<InputActionSet> actionSets => new ReadOnlyArray<InputActionSet>(m_ActionSets);

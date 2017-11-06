@@ -44,14 +44,14 @@ namespace ISX.Editor
             columns[(int)ColumnId.Name] =
                 new MultiColumnHeaderState.Column
             {
-                width = 190,
+                width = 160,
                 minWidth = 60,
                 headerContent = new GUIContent("Name")
             };
             columns[(int)ColumnId.Binding] =
                 new MultiColumnHeaderState.Column
             {
-                width = 250,
+                width = 280,
                 minWidth = 60,
                 headerContent = new GUIContent("Binding")
             };
@@ -177,7 +177,8 @@ namespace ISX.Editor
                 return rowHeight;
             }
 
-            return InputActionGUI.GetBindingsArrayHeight(actionItem.property);
+            var actionSetItem = (ActionSetItem)actionItem.parent;
+            return InputActionGUI.GetBindingsArrayHeight(actionItem.property, actionSetItem.property);
         }
 
         protected override void RowGUI(RowGUIArgs args)
@@ -200,8 +201,8 @@ namespace ISX.Editor
                     var actionItem = item as ActionItem;
                     if (actionItem != null)
                     {
-                        ////FIXME: BindingsArray() ATM does not work correctly with non-singleton actions
-                        if (InputActionGUI.BindingsArray(cellRect, actionItem.property, m_ActionSetsProperty))
+                        var actionSetItem = (ActionSetItem)actionItem.parent;
+                        if (InputActionGUI.BindingsArray(cellRect, actionItem.property, actionSetItem.property))
                         {
                             RefreshCustomRowHeights();
                             m_ApplyAction();
@@ -220,17 +221,11 @@ namespace ISX.Editor
             var addNewAction = item as AddNewActionItem;
             if (addNewAction != null)
             {
-                var actions = addNewAction.actionSetProperty.FindPropertyRelative("m_Actions");
-                var actionCount = actions.arraySize;
-
-                ////FIXME: duplicates all the data from the last action; it's annoying; make it produce a clean action with nothing on it
-                actions.InsertArrayElementAtIndex(actionCount);
-
-                var action = actions.GetArrayElementAtIndex(actionCount);
-                action.FindPropertyRelative("m_Name").stringValue = "action";
-
+                ////FIXME: for some reason, the item initially appears *before* other actions in the list and then later moves
+                var actionSetItem = (ActionSetItem)addNewAction.parent;
+                InputActionSerializationHelpers.AddAction(actionSetItem.property);
                 m_ApplyAction();
-                ////TODO: remember to initiate rename
+                ////TODO: initiate rename right away
                 Reload();
                 return;
             }

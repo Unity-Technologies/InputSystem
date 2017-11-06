@@ -7,6 +7,8 @@ using UnityEngine;
 
 ////TODO: replace "Apply" text on button with "Save"
 
+////TODO: create custom editor for InputActionReference which prevents modifying the references
+
 namespace ISX.Editor
 {
     // Custom editor that allows modifying importer settings for an InputActionImporter.
@@ -62,6 +64,7 @@ namespace ISX.Editor
             if (string.IsNullOrEmpty(assetPath))
                 return;
 
+            ////REVIEW: can we somehow get pretty-printed JSON instead of the compact form that JsonUtility writes?
             var newJson = GetAsset().ToJson();
             var existingJson = File.ReadAllText(assetPath);
 
