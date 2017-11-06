@@ -20,7 +20,13 @@ namespace ISX.Editor
             headerViewState = newHeaderState;
 
             var header = new MultiColumnHeader(headerViewState);
-            return new InputActionTreeView(actionSetProperty, applyAction, treeViewState, header);
+            var treeView = new InputActionTreeView(actionSetProperty, applyAction, treeViewState, header);
+
+            // Expand all action set items.
+            foreach (var item in treeView.rootItem.children)
+                treeView.SetExpanded(item.id, true);
+
+            return treeView;
         }
 
         private enum ColumnId
@@ -89,6 +95,7 @@ namespace ISX.Editor
                 {
                     var actionSet = m_ActionSetsProperty.GetArrayElementAtIndex(i);
                     var item = BuildActionSetItem(actionSet, ref id);
+                    item.actionSetIndex = i;
                     root.AddChild(item);
                 }
 
@@ -99,7 +106,7 @@ namespace ISX.Editor
             return root;
         }
 
-        private TreeViewItem BuildActionSetItem(SerializedProperty actionSet, ref int id)
+        private ActionSetItem BuildActionSetItem(SerializedProperty actionSet, ref int id)
         {
             var nameProperty = actionSet.FindPropertyRelative("m_Name");
 
@@ -122,6 +129,7 @@ namespace ISX.Editor
                 {
                     var action = actions.GetArrayElementAtIndex(i);
                     var childItem = BuildActionItem(action, ref id);
+                    childItem.actionIndex = i;
                     item.AddChild(childItem);
                 }
 
@@ -144,7 +152,7 @@ namespace ISX.Editor
             return item;
         }
 
-        private TreeViewItem BuildActionItem(SerializedProperty action, ref int id)
+        private ActionItem BuildActionItem(SerializedProperty action, ref int id)
         {
             var nameProperty = action.FindPropertyRelative("m_Name");
 
@@ -249,18 +257,29 @@ namespace ISX.Editor
             if (actionSetItem != null)
             {
                 var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Delete Action Set"), false, OnDeleteActionSet, actionSetItem);
+                menu.AddItem(new GUIContent("Delete Set"), false, OnDeleteActionSet, actionSetItem);
                 menu.ShowAsContext();
                 return;
             }
         }
 
-        private void OnDeleteAction(object actionItem)
+        // Context menu handler for "Delete Action".
+        private void OnDeleteAction(object actionItemObject)
         {
+            var actionItem = (ActionItem)actionItemObject;
+            var actionSetItem = (ActionSetItem)actionItem.parent;
+            InputActionSerializationHelpers.DeleteAction(actionSetItem.property, actionItem.actionIndex);
+            m_ApplyAction();
+            Reload();
         }
 
-        private void OnDeleteActionSet(object actionSetItem)
+        // Context menu handler for "Delete Set".
+        private void OnDeleteActionSet(object actionSetItemObject)
         {
+            var actionSetItem = (ActionSetItem)actionSetItemObject;
+            InputActionSerializationHelpers.DeleteActionSet(actionSetItem.property.serializedObject, actionSetItem.actionSetIndex);
+            m_ApplyAction();
+            Reload();
         }
 
 //        protected override Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
@@ -304,11 +323,13 @@ namespace ISX.Editor
         private class ActionItem : TreeViewItem
         {
             public SerializedProperty property;
+            public int actionIndex;
         }
 
         private class ActionSetItem : TreeViewItem
         {
             public SerializedProperty property;
+            public int actionSetIndex;
         }
 
         private class AddNewActionItem : TreeViewItem

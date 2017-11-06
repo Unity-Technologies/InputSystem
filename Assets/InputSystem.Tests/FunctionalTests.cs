@@ -58,7 +58,7 @@ public class FunctionalTests
     //     e) Events
     //     f) Actions
     //     g) Bindings
-    //     h) Other
+    //     h) Editor
 
     [Test]
     [Category("Templates")]
@@ -3635,7 +3635,60 @@ public class FunctionalTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_CanAddAndRemoveBindingOnActionInSetThroughSerialization()
+    public void Editor_InputAsset_CanAddAndRemoveActionSetThroughSerialization()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var obj = new SerializedObject(asset);
+
+        InputActionSerializationHelpers.AddActionSet(obj);
+        InputActionSerializationHelpers.AddActionSet(obj);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(asset.actionSets, Has.Count.EqualTo(2));
+        Assert.That(asset.actionSets[0].name, Is.Not.Null.Or.Empty);
+        Assert.That(asset.actionSets[1].name, Is.Not.Null.Or.Empty);
+        Assert.That(asset.actionSets[0].name, Is.Not.EqualTo(asset.actionSets[1].name));
+
+        var actionSet2Name = asset.actionSets[1].name;
+
+        InputActionSerializationHelpers.DeleteActionSet(obj, 0);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(asset.actionSets, Has.Count.EqualTo(1));
+        Assert.That(asset.actionSets[0].name, Is.EqualTo(actionSet2Name));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanAddAndRemoveActionThroughSerialization()
+    {
+        var set = new InputActionSet("set");
+        set.AddAction(name: "action", binding: "/gamepad/leftStick");
+        set.AddAction(name: "action1", binding: "/gamepad/rightStick");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set);
+
+        var obj = new SerializedObject(asset);
+        var setProperty = obj.FindProperty("m_ActionSets").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.AddAction(setProperty);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(asset.actionSets[0].actions, Has.Count.EqualTo(3));
+        Assert.That(asset.actionSets[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionSets[0].actions[2].bindings, Has.Count.Zero);
+
+        InputActionSerializationHelpers.DeleteAction(setProperty, 2);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(asset.actionSets[0].actions, Has.Count.EqualTo(2));
+        Assert.That(asset.actionSets[0].actions[0].name, Is.EqualTo("action"));
+        Assert.That(asset.actionSets[0].actions[1].name, Is.EqualTo("action1"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanAddAndRemoveBindingThroughSerialization()
     {
         var set = new InputActionSet("set");
         set.AddAction(name: "action1", binding: "/gamepad/leftStick");

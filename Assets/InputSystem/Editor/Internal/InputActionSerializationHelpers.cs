@@ -6,6 +6,49 @@ namespace ISX.Editor
     // Helpers for doctoring around in InputActions using SerializedProperties.
     internal static class InputActionSerializationHelpers
     {
+        public static void AddActionSet(SerializedObject asset)
+        {
+            var setArrayProperty = asset.FindProperty("m_ActionSets");
+            var setCount = setArrayProperty.arraySize;
+            var index = setCount;
+            var name = FindUniqueName(setArrayProperty, "default");
+
+            setArrayProperty.InsertArrayElementAtIndex(index);
+            var setProperty = setArrayProperty.GetArrayElementAtIndex(index);
+
+            setProperty.FindPropertyRelative("m_Name").stringValue = name;
+            setProperty.FindPropertyRelative("m_Actions").ClearArray();
+            setProperty.FindPropertyRelative("m_Bindings").ClearArray();
+        }
+
+        public static void DeleteActionSet(SerializedObject asset, int index)
+        {
+            var setArrayProperty = asset.FindProperty("m_ActionSets");
+            setArrayProperty.DeleteArrayElementAtIndex(index);
+        }
+
+        // Append a new action to the end of the set.
+        public static void AddAction(SerializedProperty actionSet)
+        {
+            var actionsArrayProperty = actionSet.FindPropertyRelative("m_Actions");
+            var actionsCount = actionsArrayProperty.arraySize;
+            var actionIndex = actionsCount;
+
+            var actionName = FindUniqueName(actionsArrayProperty, "action");
+
+            actionsArrayProperty.InsertArrayElementAtIndex(actionIndex);
+            var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
+            actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_BindingsCount").intValue = 0;
+            actionProperty.FindPropertyRelative("m_BindingsStartIndex").intValue = 0;
+        }
+
+        public static void DeleteAction(SerializedProperty actionSet, int actionIndex)
+        {
+            var actionsArrayProperty = actionSet.FindPropertyRelative("m_Actions");
+            actionsArrayProperty.DeleteArrayElementAtIndex(actionIndex);
+        }
+
         public static void RemoveBinding(SerializedProperty actionProperty, int bindingIndex, SerializedProperty actionSetProperty = null)
         {
             var bindingsArrayProperty = actionSetProperty != null
@@ -72,6 +115,38 @@ namespace ISX.Editor
                 if (startIndex >= indexAfterWhichToAdjust)
                     startIndexProperty.intValue = startIndex + adjust;
             }
+        }
+
+        private static string FindUniqueName(SerializedProperty arrayProperty, string baseName)
+        {
+            var result = baseName;
+            var lowerCase = baseName.ToLower();
+            var nameIsUnique = false;
+            var namesTried = 0;
+            var actionCount = arrayProperty.arraySize;
+
+            while (!nameIsUnique)
+            {
+                nameIsUnique = true;
+
+                for (var i = 0; i < actionCount; ++i)
+                {
+                    var elementProperty = arrayProperty.GetArrayElementAtIndex(i);
+                    var nameProperty = elementProperty.FindPropertyRelative("m_Name");
+                    var elementName = nameProperty.stringValue;
+
+                    if (elementName.ToLower() == lowerCase)
+                    {
+                        ++namesTried;
+                        result = $"{baseName}{namesTried}";
+                        lowerCase = result.ToLower();
+                        nameIsUnique = false;
+                        break;
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }

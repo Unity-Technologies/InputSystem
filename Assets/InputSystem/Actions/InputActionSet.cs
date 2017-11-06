@@ -644,18 +644,24 @@ namespace ISX
             // array references and re-establish them when the set comes back in from
             // serialization. We do want the index and length values from m_Bindings
             // in the actions, though.
-            for (var i = 0; i < m_Actions.Length; ++i)
-                m_Actions[i].m_Bindings = null;
+            if (m_Actions != null)
+            {
+                for (var i = 0; i < m_Actions.Length; ++i)
+                    m_Actions[i].m_Bindings = null;
+            }
         }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            // Re-establish links to m_Bindings and set.
-            for (var i = 0; i < m_Actions.Length; ++i)
+            if (m_Actions != null)
             {
-                var action = m_Actions[i];
-                action.m_Bindings = m_Bindings;
-                action.m_ActionSet = this;
+                // Re-establish links to m_Bindings and set.
+                for (var i = 0; i < m_Actions.Length; ++i)
+                {
+                    var action = m_Actions[i];
+                    action.m_Bindings = m_Bindings;
+                    action.m_ActionSet = this;
+                }
             }
         }
     }

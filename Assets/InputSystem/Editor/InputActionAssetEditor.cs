@@ -11,13 +11,13 @@ namespace ISX.Editor
     public class InputActionAssetEditor : UnityEditor.Editor
     {
         [NonSerialized] private int m_ActionSetCount;
-        [NonSerialized] private SerializedProperty m_ActionSetProperty;
+        [NonSerialized] private SerializedProperty m_ActionSetArrayProperty;
         [NonSerialized] internal Action m_ApplyAction;
 
         public void OnEnable()
         {
-            m_ActionSetProperty = serializedObject.FindProperty("m_ActionSets");
-            m_ActionSetCount = m_ActionSetProperty.arraySize;
+            m_ActionSetArrayProperty = serializedObject.FindProperty("m_ActionSets");
+            m_ActionSetCount = m_ActionSetArrayProperty.arraySize;
 
             if (m_ActionSetCount > 0)
                 InitializeActionTreeView();
@@ -64,6 +64,7 @@ namespace ISX.Editor
         protected void DrawToolbarGUI()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            ////REVIEW: should this work the same as adding actions and just have an "<Add Action Set...>" entry?
             if (GUILayout.Button(Contents.addNewSet, EditorStyles.toolbarButton))
                 AddActionSet();
             GUILayout.FlexibleSpace();
@@ -72,15 +73,8 @@ namespace ISX.Editor
 
         protected void AddActionSet()
         {
-            var index = m_ActionSetCount;
-            ////FIXME: duplicates the last action set which is annoying; make it produce a clean action set with nothing in it
-            m_ActionSetProperty.InsertArrayElementAtIndex(index);
+            InputActionSerializationHelpers.AddActionSet(serializedObject);
             ++m_ActionSetCount;
-
-            ////TODO: assign unique name
-            var name = "default";
-            var nameProperty = m_ActionSetProperty.GetArrayElementAtIndex(index).FindPropertyRelative("m_Name");
-            nameProperty.stringValue = name;
 
             Apply();
 
