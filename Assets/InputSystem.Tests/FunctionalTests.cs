@@ -8,6 +8,11 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngineInternal.Input;
 
+#if UNITY_EDITOR
+using ISX.Editor;
+using UnityEditor;
+#endif
+
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
 
 // These tests rely on the default template setup present in the code
@@ -2450,7 +2455,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddActionThatTargetsSingleControl()
+    public void Actions_CanTargetSingleControl()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
@@ -2463,7 +2468,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddActionThatTargetsMultipleControls()
+    public void Actions_CanTargetMultipleControls()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
@@ -2735,13 +2740,34 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotAddEnabledActionToSet()
+    public void Actions_CanAddActionsToSet()
     {
         var set = new InputActionSet();
-        var action = new InputAction(binding: "/gamepad/leftStick");
-        action.Enable();
 
-        Assert.That(() => set.AddAction(action), Throws.InvalidOperationException);
+        set.AddAction("action1");
+        set.AddAction("action2");
+
+        Assert.That(set.actions, Has.Count.EqualTo(2));
+        Assert.That(set.actions[0], Has.Property("name").EqualTo("action1"));
+        Assert.That(set.actions[1], Has.Property("name").EqualTo("action2"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddBindingsToActionsInSet()
+    {
+        var set = new InputActionSet();
+
+        var action1 = set.AddAction("action1");
+        var action2 = set.AddAction("action2");
+
+        action1.AddBinding("/gamepad/leftStick");
+        action2.AddBinding("/gamepad/rightStick");
+
+        Assert.That(action1.bindings, Has.Count.EqualTo(1));
+        Assert.That(action2.bindings, Has.Count.EqualTo(1));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(action2.bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
     }
 
     [Test]
@@ -2749,7 +2775,7 @@ public class FunctionalTests
     public void Actions_CannotAddUnnamedActionToSet()
     {
         var set = new InputActionSet();
-        Assert.That(() => set.AddAction(new InputAction(name: null)), Throws.InvalidOperationException);
+        Assert.That(() => set.AddAction(""), Throws.ArgumentException);
     }
 
     [Test]
@@ -2757,9 +2783,9 @@ public class FunctionalTests
     public void Actions_CannotAddTwoActionsWithTheSameNameToSet()
     {
         var set = new InputActionSet();
-        set.AddAction(new InputAction("action"));
+        set.AddAction("action");
 
-        Assert.That(() => set.AddAction(new InputAction("action")), Throws.InvalidOperationException);
+        Assert.That(() => set.AddAction("action"), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -2767,11 +2793,9 @@ public class FunctionalTests
     public void Actions_CanLookUpActionInSet()
     {
         var set = new InputActionSet();
-        var action1 = new InputAction(name: "action1");
-        var action2 = new InputAction(name: "action2");
 
-        set.AddAction(action1);
-        set.AddAction(action2);
+        var action1 = set.AddAction("action1");
+        var action2 = set.AddAction("action2");
 
         Assert.That(set.GetAction("action1"), Is.SameAs(action1));
         Assert.That(set.GetAction("action2"), Is.SameAs(action2));
@@ -2782,12 +2806,9 @@ public class FunctionalTests
     public void Actions_CanConvertActionSetToAndFromJson()
     {
         var set = new InputActionSet("test");
-        var action1 = new InputAction(name: "action1", binding: "/gamepad/leftStick");
-        var action2 = new InputAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
-        action1.AddBinding("/gamepad/rightStick", group: "group");
 
-        set.AddAction(action1);
-        set.AddAction(action2);
+        set.AddAction(name: "action1", binding: "/gamepad/leftStick").AddBinding("/gamepad/rightStick", groups: "group");
+        set.AddAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
 
         var json = set.ToJson();
         var sets = InputActionSet.FromJson(json);
@@ -2814,11 +2835,8 @@ public class FunctionalTests
         var set1 = new InputActionSet("set1");
         var set2 = new InputActionSet("set2");
 
-        var action1 = new InputAction(name: "action1", binding: "/gamepad/leftStick");
-        var action2 = new InputAction(name: "action2", binding: "/gamepad/rightStick");
-
-        set1.AddAction(action1);
-        set2.AddAction(action2);
+        set1.AddAction(name: "action1", binding: "/gamepad/leftStick");
+        set2.AddAction(name: "action2", binding: "/gamepad/rightStick");
 
         var json = InputActionSet.ToJson(new[] {set1, set2});
         var sets = InputActionSet.FromJson(json);
@@ -2856,6 +2874,28 @@ public class FunctionalTests
         Assert.That(deserializedAction.name, Is.EqualTo(action.name));
         Assert.That(deserializedAction.bindings, Has.Count.EqualTo(1));
         Assert.That(deserializedAction.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanSerializeActionSet()
+    {
+        var set = new InputActionSet("set");
+
+        set.AddAction("action1", binding: "/gamepad/leftStick");
+        set.AddAction("action2", binding: "/gamepad/rightStick");
+
+        var json = JsonUtility.ToJson(set);
+        var deserializedSet = JsonUtility.FromJson<InputActionSet>(json);
+
+        Assert.That(deserializedSet.name, Is.EqualTo("set"));
+        Assert.That(deserializedSet.actions, Has.Count.EqualTo(2));
+        Assert.That(deserializedSet.actions[0].name, Is.EqualTo("action1"));
+        Assert.That(deserializedSet.actions[1].name, Is.EqualTo("action2"));
+        Assert.That(deserializedSet.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(deserializedSet.actions[1].bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
+        Assert.That(deserializedSet.actions[0].actionSet, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[1].actionSet, Is.SameAs(deserializedSet));
     }
 
     [Test]
@@ -3391,7 +3431,7 @@ public class FunctionalTests
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/gamepad/leftTrigger");
-        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
         action.Enable();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
@@ -3407,7 +3447,7 @@ public class FunctionalTests
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         action.Enable();
 
-        Assert.That(() => action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"}),
+        Assert.That(() => action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"}),
             Throws.InvalidOperationException);
     }
 
@@ -3419,12 +3459,12 @@ public class FunctionalTests
     {
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftTrigger", group: "a");
-        action.AddBinding("/gamepad/rightTrigger", group: "b");
+        action.AddBinding("/gamepad/leftTrigger", groups: "a");
+        action.AddBinding("/gamepad/rightTrigger", groups: "b");
 
-        Assert.That(() => action.ApplyOverride("/gamepad/buttonSouth"), Throws.InvalidOperationException);
+        Assert.That(() => action.ApplyBindingOverride("/gamepad/buttonSouth"), Throws.InvalidOperationException);
 
-        action.ApplyOverride("/gamepad/buttonSouth", group: "b");
+        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "b");
 
         Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
         Assert.That(action.bindings[0].overridePath, Is.Null);
@@ -3439,10 +3479,10 @@ public class FunctionalTests
     {
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftTrigger", group: "a");
-        action.AddBinding("/gamepad/rightTrigger", group: "a");
+        action.AddBinding("/gamepad/leftTrigger", groups: "a");
+        action.AddBinding("/gamepad/rightTrigger", groups: "a");
 
-        action.ApplyOverride("/gamepad/buttonSouth", group: "a");
+        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a");
 
         Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
         Assert.That(action.bindings[1].overridePath, Is.Null);
@@ -3454,10 +3494,10 @@ public class FunctionalTests
     {
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftTrigger", group: "a");
-        action.AddBinding("/gamepad/rightTrigger", group: "a");
+        action.AddBinding("/gamepad/leftTrigger", groups: "a");
+        action.AddBinding("/gamepad/rightTrigger", groups: "a");
 
-        action.ApplyOverride("/gamepad/buttonSouth", group: "a[1]");
+        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a[1]");
 
         Assert.That(action.bindings[0].overridePath, Is.Null);
         Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
@@ -3468,8 +3508,8 @@ public class FunctionalTests
     public void Actions_CanRestoreDefaultsAfterOverridingBinding()
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
-        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
-        action.RemoveAllOverrides();
+        action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.RemoveAllBindingOverrides();
 
         Assert.That(action.bindings[0].overridePath, Is.Null);
     }
@@ -3480,12 +3520,12 @@ public class FunctionalTests
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
 
-        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
-        action.ApplyOverride(new InputBindingOverride());
+        action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.ApplyBindingOverride(new InputBindingOverride());
         Assert.That(action.bindings[0].overridePath, Is.Null);
 
-        action.ApplyOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
-        action.ApplyOverride(new InputBindingOverride { binding = "" });
+        action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.ApplyBindingOverride(new InputBindingOverride { binding = "" });
         Assert.That(action.bindings[0].overridePath, Is.Null);
     }
 
@@ -3495,7 +3535,7 @@ public class FunctionalTests
     {
         var action = new InputAction(name: "foo");
         action.Enable();
-        Assert.That(() => action.RemoveAllOverrides(), Throws.InvalidOperationException);
+        Assert.That(() => action.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -3505,8 +3545,8 @@ public class FunctionalTests
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         var bindingOverride = new InputBindingOverride {binding = "/gamepad/rightTrigger"};
 
-        action.ApplyOverride(bindingOverride);
-        action.RemoveOverride(bindingOverride);
+        action.ApplyBindingOverride(bindingOverride);
+        action.RemoveBindingOverride(bindingOverride);
 
         Assert.That(action.bindings[0].overridePath, Is.Null);
     }
@@ -3517,9 +3557,9 @@ public class FunctionalTests
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         var bindingOverride = new InputBindingOverride {binding = "/gamepad/rightTrigger"};
-        action.ApplyOverride(bindingOverride);
+        action.ApplyBindingOverride(bindingOverride);
         action.Enable();
-        Assert.That(() => action.RemoveOverride(bindingOverride), Throws.InvalidOperationException);
+        Assert.That(() => action.RemoveBindingOverride(bindingOverride), Throws.InvalidOperationException);
     }
 
 #if UNITY_EDITOR
@@ -3591,6 +3631,46 @@ public class FunctionalTests
 
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75).Within(0.000001));
         Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.25).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanAddAndRemoveBindingOnActionInSetThroughSerialization()
+    {
+        var set = new InputActionSet("set");
+        set.AddAction(name: "action1", binding: "/gamepad/leftStick");
+        set.AddAction(name: "action2", binding: "/gamepad/rightStick");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set);
+
+        var obj = new SerializedObject(asset);
+        var setProperty = obj.FindProperty("m_ActionSets").GetArrayElementAtIndex(0);
+        var action1Property = setProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.AppendBinding(action1Property, setProperty);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        // Sets and actions aren't UnityEngine.Objects so the modifications will not
+        // be in-place. Look up the actions after each apply.
+        var action1 = asset.actionSets[0].GetAction("action1");
+        var action2 = asset.actionSets[0].GetAction("action2");
+
+        Assert.That(action1.bindings, Has.Count.EqualTo(2));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(action1.bindings[1].path, Is.EqualTo(""));
+        Assert.That(action1.bindings[1].modifiers, Is.EqualTo(""));
+        Assert.That(action1.bindings[1].group, Is.EqualTo(""));
+        Assert.That(action2.bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
+
+        InputActionSerializationHelpers.RemoveBinding(action1Property, 1, setProperty);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        action1 = asset.actionSets[0].GetAction("action1");
+        action2 = asset.actionSets[0].GetAction("action2");
+
+        Assert.That(action1.bindings, Has.Count.EqualTo(1));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(action2.bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
     }
 
     ////TODO: the following tests have to be edit mode tests but it looks like putting them into

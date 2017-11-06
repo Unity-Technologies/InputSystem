@@ -14,6 +14,8 @@ namespace ISX.Editor
     // NOTE: This inspector has an unusual setup in that it not only modifies import settings
     //       but actually overwrites the source file on apply if there have been changes made to the
     //       action sets.
+    //
+    // NOTE: Depends on InputActionAssetEditor as the chosen editor for the imported asset.
     [CustomEditor(typeof(InputActionImporter))]
     public class InputActionImporterEditor : ScriptedImporterEditor
     {
@@ -87,9 +89,7 @@ namespace ISX.Editor
             // initialization here.
             if (!m_Initialized)
             {
-                var editor = assetEditor as InputActionAssetEditor;
-                if (editor != null)
-                    editor.m_ApplyAction = OnAssetModified;
+                GetAssetEditor().m_ApplyAction = OnAssetModified;
 
                 // Read current asset as backup.
                 if (m_Backup == null)

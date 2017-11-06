@@ -193,7 +193,7 @@ namespace ISX.Editor
                     if (actionItem != null)
                     {
                         ////FIXME: BindingsArray() ATM does not work correctly with non-singleton actions
-                        if (InputActionGUI.BindingsArray(cellRect, actionItem.property))
+                        if (InputActionGUI.BindingsArray(cellRect, actionItem.property, m_ActionSetsProperty))
                         {
                             RefreshCustomRowHeights();
                             m_ApplyAction();

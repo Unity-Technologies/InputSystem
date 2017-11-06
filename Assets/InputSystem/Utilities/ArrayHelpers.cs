@@ -70,6 +70,30 @@ namespace ISX
             return array.Length;
         }
 
+        public static void Insert<TValue>(ref TValue[] array, int index, TValue value)
+        {
+            if (array == null)
+            {
+                ////REVIEW: allow growing array to specific size by inserting at arbitrary index?
+                if (index != 0)
+                    throw new IndexOutOfRangeException();
+
+                array = new TValue[1];
+                array[0] = value;
+                return;
+            }
+
+            // Reallocate.
+            var oldLength = array.Length;
+            Array.Resize(ref array, oldLength + 1);
+
+            // Make room for element.
+            if (index != oldLength)
+                Array.Copy(array, index, array, index + 1, oldLength - index);
+
+            array[index] = value;
+        }
+
         // Adds 'count' entries to the array. Returns first index of newly added entries.
         public static int GrowBy<TValue>(ref TValue[] array, int count)
         {

@@ -11,7 +11,7 @@ namespace ISX
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 9)]
     public unsafe struct DeltaStateEvent : IInputEventTypeInfo
     {
-        public const int Type = 0x444C5441;
+        public const int Type = 0x444C5441; // 'DLTA'
 
         [FieldOffset(0)] public InputEvent baseEvent;
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;

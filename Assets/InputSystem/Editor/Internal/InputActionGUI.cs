@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ISX.Editor
 {
-    // Similar to EditorGUI, this is a static class implementation routines to draw and work
+    // Similar to EditorGUI, this is a static class implementing routines to draw and work
     // with common GUI elements related to InputActions.
     internal static class InputActionGUI
     {
@@ -21,29 +21,28 @@ namespace ISX.Editor
 
         ////REVIEW: can we make drag&drop working with this? (to re-order bindings)
 
-        ////TODO: make this work with non-singleton actions
-
         // Draws a GUI of stacked bindings. A minus icon on the left side of each binding
         // allows to remove the respective binding. A plus icon after the last binding
         // allows adding new bindings.
         // Returns true if the plus or the minus button was pressed.
-        public static bool BindingsArray(Rect rect, SerializedProperty actionProperty)
+        public static bool BindingsArray(Rect rect, SerializedProperty actionProperty, SerializedProperty actionSetProperty = null)
         {
             var bindingsArrayProperty = actionProperty.FindPropertyRelative("m_Bindings");
             var bindingsCountProperty = actionProperty.FindPropertyRelative("m_BindingsCount");
-            var bindingsCount = bindingsArrayProperty.arraySize;
+            var bindingsStartIndexProperty = actionProperty.FindPropertyRelative("m_BindingsStartIndex");
+
+            var bindingsCount = bindingsCountProperty.intValue;
+            var bindingsStartIndex = bindingsStartIndexProperty.intValue;
 
             rect.height = kBindingHeight;
             for (var i = 0; i < bindingsCount; ++i)
             {
-                // Draw minus icon.
+                // Button to remove binding.
                 var minusButtonRect = rect;
                 minusButtonRect.width = Contents.iconMinus.image.width;
                 if (GUI.Button(minusButtonRect, Contents.iconMinus, GUIStyle.none))
                 {
-                    bindingsArrayProperty.DeleteArrayElementAtIndex(i);
-                    bindingsCountProperty.intValue = bindingsCount - 1;
-                    bindingsArrayProperty.serializedObject.ApplyModifiedProperties();
+                    InputActionSerializationHelpers.RemoveBinding(actionProperty, i, actionSetProperty);
                     return true;
                 }
 
@@ -51,8 +50,8 @@ namespace ISX.Editor
                 bindingRect.x += minusButtonRect.width + 5;
                 bindingRect.width -= minusButtonRect.width + 5;
 
-                // Draw binding UI.
-                var currentBinding = bindingsArrayProperty.GetArrayElementAtIndex(i);
+                // UI for binding itself.
+                var currentBinding = bindingsArrayProperty.GetArrayElementAtIndex(bindingsStartIndex + i);
                 EditorGUI.PropertyField(bindingRect, currentBinding);
 
                 rect.y += kBindingHeight;
@@ -61,11 +60,10 @@ namespace ISX.Editor
             rect.height = Contents.iconPlus.image.height;
             rect.width = Contents.iconPlus.image.width;
 
+            // Button to add new binding.
             if (GUI.Button(rect, Contents.iconPlus, GUIStyle.none))
             {
-                bindingsArrayProperty.InsertArrayElementAtIndex(bindingsCount);
-                bindingsCountProperty.intValue = bindingsCount + 1;
-                bindingsArrayProperty.serializedObject.ApplyModifiedProperties();
+                InputActionSerializationHelpers.AppendBinding(actionProperty, actionSetProperty);
                 return true;
             }
 

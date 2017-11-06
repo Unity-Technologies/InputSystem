@@ -28,25 +28,21 @@ namespace ISX
             m_Name = name;
         }
 
-        public void AddAction(InputAction action)
+        public InputAction AddAction(string name, string binding = null, string modifiers = null, string groups = null)
         {
-            ////REVIEW: really verify all these things or just allow the user to set things up that may not work as expected in some circumstances?
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
-            if (action.enabled)
-                throw new InvalidOperationException($"Cannot move action '{action}' to set '{name}' while it is enabled");
-            if (string.IsNullOrEmpty(action.name))
-                throw new InvalidOperationException($"Cannot add unnamed actions to sets");
-            if (action.m_ActionSet != null && action.m_ActionSet != this)
-                throw new InvalidOperationException($"Cannot move '{action}' to set '{name}' because it has already been added to set '{action.m_ActionSet.name}'");
-            if (GetAction(action.name) != null)
-                throw new InvalidOperationException($"Cannot add action with duplicate name '{action.name}' to set '{name}'");
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Action must have name", nameof(name));
+            if (GetAction(name) != null)
+                throw new InvalidOperationException($"Cannot add action with duplicate name '{name}' to set '{this.name}'");
 
-            ////TODO: if the action is a singleton action, make sure we alter its state appropriately and kill
-            ////      any internal set it may have created
-
+            var action = new InputAction(name);
             ArrayHelpers.Append(ref m_Actions, action);
             action.m_ActionSet = this;
+
+            if (!string.IsNullOrEmpty(binding))
+                action.AddBinding(binding, modifiers: modifiers, groups: groups);
+
+            return action;
         }
 
         public InputAction GetAction(string name)
@@ -109,7 +105,7 @@ namespace ISX
 
         // These arrays hold data for all actions in the set. Each action will
         // refer to a slice of the arrays.
-        [SerializeField] InputBinding[] m_Bindings;
+        [SerializeField] internal InputBinding[] m_Bindings;
         [NonSerialized] internal InputControl[] m_Controls;
         [NonSerialized] internal ModifierState[] m_Modifiers;
         [NonSerialized] internal ResolvedBinding[] m_ResolvedBindings;
@@ -641,9 +637,8 @@ namespace ISX
         {
             // Action sets created internally for singleton actions are meant to be purely transient.
             // The way we up their data, the sets won't serialize properly.
-            Debug.Assert(m_SingletonAction == null, "Must not serialize internal arrays of singleton actions!");
+            Debug.Assert(m_SingletonAction == null, "Must not serialize internal sets of singleton actions!");
 
-            ////TODO: will have to restore m_Bindings elsewhere to keep the set working
             // All actions in the set refer to our combined m_Bindings array. We don't
             // want to serialize that as part of each action so we null out all the
             // array references and re-establish them when the set comes back in from
@@ -655,9 +650,13 @@ namespace ISX
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            // Re-establish links to m_Bindings.
+            // Re-establish links to m_Bindings and set.
             for (var i = 0; i < m_Actions.Length; ++i)
-                m_Actions[i].m_Bindings = m_Bindings;
+            {
+                var action = m_Actions[i];
+                action.m_Bindings = m_Bindings;
+                action.m_ActionSet = this;
+            }
         }
     }
 }

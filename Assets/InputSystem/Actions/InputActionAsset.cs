@@ -73,7 +73,7 @@ namespace ISX
             return null;
         }
 
-        ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllOverrides
+        ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllBindingOverrides
 
         [SerializeField] internal InputActionSet[] m_ActionSets;
     }

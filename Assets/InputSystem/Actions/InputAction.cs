@@ -13,6 +13,9 @@ using UnityEngine;
 
 ////TODO: allow querying controls *without* requiring actions to be enabled
 
+////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
+////      (this mechanism will likely come in handy for giving jobs access to actions)
+
 namespace ISX
 {
     ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas
@@ -57,8 +60,16 @@ namespace ISX
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devics set on action set)
 
-        public ReadOnlyArray<InputBinding> bindings =>
-        new ReadOnlyArray<InputBinding>(m_Bindings, m_BindingsStartIndex, m_BindingsCount);
+        public ReadOnlyArray<InputBinding> bindings
+        {
+            get
+            {
+                ////REVIEW: is there a better way to deal with the two different serializations? (singleton actions vs action sets)
+                if (m_Bindings == null && m_ActionSet != null)
+                    m_Bindings = m_ActionSet.m_Bindings;
+                return new ReadOnlyArray<InputBinding>(m_Bindings, m_BindingsStartIndex, m_BindingsCount);
+            }
+        }
 
         ////REVIEW: is this useful? control lists are per-binding, this munges them all together
         // The set of controls to which the bindings resolve. May change over time.
@@ -187,33 +198,81 @@ namespace ISX
             m_LastTrigger = new TriggerState();
         }
 
-        ////REVIEW: what if this is called after the action has been enabled? throw?
-        public AddBindingSyntax AddBinding(string path, string modifiers = null, string group = null)
+        // Add a new binding to the action. This works both with action that are part of
+        // action set as well as with actions that aren't.
+        // Returns a fluent-style syntax structure that allows performing additional modifications
+        // based on the new binding.
+        // NOTE: Actions must be disabled while altering their binding sets.
+        public AddBindingSyntax AddBinding(string path, string modifiers = null, string groups = null)
         {
+            if (enabled)
+                throw new InvalidOperationException($"Cannot add binding to action '{this}' while the action is enabled");
+
+            var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
+
+            var bindingIndex = 0;
             if (isSingletonAction)
             {
                 // Simple case. We're a singleton action and own m_Bindings.
-                var index = ArrayHelpers.Append(ref m_Bindings, new InputBinding {path = path, modifiers = modifiers, group = group});
-                ++m_BindingsCount;
-                return new AddBindingSyntax(this, index);
+                bindingIndex = ArrayHelpers.Append(ref m_Bindings, binding);
             }
             else
             {
                 // Less straightfoward case. We're part of an m_Bindings set owned
                 // by our m_ActionSet.
-                throw new NotImplementedException();
+                var set = m_ActionSet;
+                var actions = set.m_Actions;
+                var actionCount = actions.Length;
+
+                if (m_BindingsCount == 0 || m_BindingsStartIndex + m_BindingsCount == set.m_Bindings.Length)
+                {
+                    // This is either our first binding or we're at the end of our set's binding array which makes
+                    // it simpler. We just put our binding at the end of the set's bindings array.
+                    if (set.m_Bindings != null)
+                        bindingIndex = set.m_Bindings.Length;
+                    if (m_BindingsCount == 0)
+                        m_BindingsStartIndex = bindingIndex;
+                    ArrayHelpers.Append(ref set.m_Bindings, binding);
+                }
+                else
+                {
+                    // More involved case where we are sitting somewhere within the set's bindings array
+                    // and inserting new bindings will thus affect other actions in the set.
+                    bindingIndex = m_BindingsStartIndex + m_BindingsCount;
+                    ArrayHelpers.Insert(ref set.m_Bindings, bindingIndex, binding);
+
+                    // Shift binding start indices of all actions that come after us up by one.
+                    for (var i = 0; i < actionCount; ++i)
+                    {
+                        var action = actions[i];
+                        if (action.m_BindingsStartIndex >= bindingIndex)
+                            ++action.m_BindingsStartIndex;
+                    }
+                }
+
+                // Update all bindings array references on all actions in the set.
+                var bindingsArray = set.m_Bindings;
+                for (var i = 0; i < actionCount; ++i)
+                    actions[i].m_Bindings = bindingsArray;
             }
+
+            ++m_BindingsCount;
+            return new AddBindingSyntax(this, bindingIndex);
         }
 
-        public void ApplyOverride(string binding, string group = null)
+        ////TODO: support for removing bindings
+
+        public void ApplyBindingOverride(string binding, string group = null)
         {
-            ApplyOverride(new InputBindingOverride {binding = binding, group = group});
+            ApplyBindingOverride(new InputBindingOverride {binding = binding, group = group});
         }
 
         // Apply the given override to the action.
+        //
         // NOTE: Ignores the action name in the override.
         // NOTE: Action must be disabled while applying overrides.
-        public void ApplyOverride(InputBindingOverride bindingOverride)
+        // NOTE: If there's already an override on the respective binding, replaces the override.
+        public void ApplyBindingOverride(InputBindingOverride bindingOverride)
         {
             if (enabled)
                 throw new InvalidOperationException($"Cannot change overrides on action '{this}' while the action is enabled");
@@ -228,17 +287,17 @@ namespace ISX
             m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
         }
 
-        public void RemoveOverride(InputBindingOverride bindingOverride)
+        public void RemoveBindingOverride(InputBindingOverride bindingOverride)
         {
             var undoBindingOverride = bindingOverride;
             undoBindingOverride.binding = null;
 
             // Simply apply but with a null binding.
-            ApplyOverride(undoBindingOverride);
+            ApplyBindingOverride(undoBindingOverride);
         }
 
         // Restore all bindings to their default paths.
-        public void RemoveAllOverrides()
+        public void RemoveAllBindingOverrides()
         {
             if (enabled)
                 throw new InvalidOperationException($"Cannot removed overrides from action '{this}' while the action is enabled");
@@ -249,7 +308,7 @@ namespace ISX
 
         // Add all overrides that have been applied to this action to the given list.
         // Returns the number of overrides found.
-        public int GetOverrides(List<InputBindingOverride> overrides)
+        public int GetBindingOverrides(List<InputBindingOverride> overrides)
         {
             throw new NotImplementedException();
         }
@@ -259,8 +318,7 @@ namespace ISX
         // This should be a ReadOnlyArray<InputBinding> but we can't serialize that because
         // Unity can't serialize generic types. So we explode the structure here and turn
         // it into a ReadOnlyArray whenever needed.
-        // NOTE: When we are part of an action set, the set will null out m_Bindings for
-        //       serialization.
+        // NOTE: InputActionSet will null out this field for serialization
         [SerializeField] internal InputBinding[] m_Bindings;
         [SerializeField][HideInInspector] internal int m_BindingsStartIndex;
         [SerializeField][HideInInspector] internal int m_BindingsCount;
@@ -735,7 +793,7 @@ namespace ISX
                 if (action.m_BindingsCount - 1 != m_BindingIndex)
                     throw new InvalidOperationException("Must not add other bindings in-between calling AddBindings() and CombinedWith()");
 
-                var result = action.AddBinding(binding, modifiers: modifiers, group: group);
+                var result = action.AddBinding(binding, modifiers: modifiers, groups: group);
                 action.m_Bindings[action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
                     InputBinding.Flags.ThisAndPreviousCombine;
 

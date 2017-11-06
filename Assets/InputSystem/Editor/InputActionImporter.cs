@@ -15,7 +15,7 @@ namespace ISX.Editor
     {
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
-        ////TODO: code generator options
+        [SerializeField] internal string m_WrapperCodeNamespace;
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
@@ -24,7 +24,7 @@ namespace ISX.Editor
             var sets = InputActionSet.FromJson(text);
             ////TODO: catch errors
 
-            ////TODO: make sure set names are unique
+            ////TODO: make sure action names are unique
 
             // Create asset.
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -227,3 +228,4 @@ namespace ISX.Editor
         }
     }
 }
+#endif // UNITY_EDITOR

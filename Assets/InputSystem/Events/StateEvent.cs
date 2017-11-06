@@ -9,7 +9,7 @@ namespace ISX
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 5)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
-        public const int Type = 0x53544154;
+        public const int Type = 0x53544154; // 'STAT'
 
         [FieldOffset(0)] public InputEvent baseEvent;
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
