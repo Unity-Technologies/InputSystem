@@ -9,6 +9,8 @@ using UnityEngine;
 
 ////TODO: in Extras, add support for creating templates from Steam .vdf files
 
+////TODO: ensure that if a template sets a device description, it is indeed a device template
+
 namespace ISX
 {
     // A template lays out the composition of an input control.
@@ -1024,6 +1026,33 @@ namespace ISX
             while (s_BaseTemplateTable.TryGetValue(templateName, out baseTemplate))
                 templateName = baseTemplate;
             return templateName;
+        }
+
+        // Get the type which will be instantiated for the given template.
+        // Returns null if no template with the given name exists.
+        internal static Type GetControlTypeForTemplate(InternedString templateName)
+        {
+            // Try template strings.
+            while (s_TemplateStrings.ContainsKey(templateName))
+            {
+                InternedString baseTemplate;
+                if (s_BaseTemplateTable.TryGetValue(templateName, out baseTemplate))
+                {
+                    // Work our way up the inheritance chain.
+                    templateName = baseTemplate;
+                }
+                else
+                {
+                    // Template doesn't extend anything and ATM we don't support setting
+                    // types explicitly from JSON templates. So has to be InputDevice.
+                    return typeof(InputDevice);
+                }
+            }
+
+            // Try template types.
+            Type result;
+            s_TemplateTypes.TryGetValue(templateName, out result);
+            return result;
         }
 
         internal class TemplateNotFoundException : Exception

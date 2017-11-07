@@ -6,15 +6,14 @@ using UnityEngine;
 
 ////TODO: survive domain reloads
 
-////REVIEW: callbacks may not be a good fit if we want to jobify the system; polling works better with that as we have a
-////        clear point where to put syncs on fences
-
 ////TODO: allow individual bindings to be enabled/disabled
 
 ////TODO: allow querying controls *without* requiring actions to be enabled
 
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 ////      (this mechanism will likely come in handy for giving jobs access to actions)
+
+////TODO: event-based processing of input actions
 
 namespace ISX
 {
@@ -84,12 +83,12 @@ namespace ISX
             }
         }
 
-        ////REVIEW: this would technically allow a GetValue<TValue>() method
         ////REVIEW: expose this as a struct?
         public InputControl lastTriggerControl => m_LastTrigger.control;
         public double lastTriggerTime => m_LastTrigger.time;
-        //public InputBinding lastTriggerBinding
-        //public IInputActionModifier lastTriggerModifier
+        public double lastTriggerStartTime => 0;
+        public InputBinding lastTriggerBinding => GetBinding(m_LastTrigger.bindingIndex);
+        public IInputActionModifier lastTriggerModifier => GetModifier(m_LastTrigger.bindingIndex, m_LastTrigger.modifierIndex);
 
         public bool enabled
         {
@@ -345,7 +344,7 @@ namespace ISX
         [NonSerialized] private TriggerState m_LastTrigger;
 
         // Information about what triggered an action and how.
-        private struct TriggerState
+        internal struct TriggerState
         {
             public Phase phase;
             public double time;
@@ -355,14 +354,8 @@ namespace ISX
             public uint dynamicUpdateCount;
             public uint fixedUpdateCount;
 
-            public TriggerState(Phase phase, double time, InputControl control, int bindingIndex, int modifierIndex)
+            public void SetDynamicAndFixedUpdateCount()
             {
-                this.phase = phase;
-                this.time = time;
-                this.control = control;
-                this.bindingIndex = bindingIndex;
-                this.modifierIndex = modifierIndex;
-
                 ////REVIEW: move this logic into InputManager itself?
                 var manager = InputSystem.s_Manager;
                 if (manager.m_CurrentUpdate == InputUpdateType.Fixed)
@@ -447,14 +440,16 @@ namespace ISX
         }
 
         // Perform a phase change on the action. Visible to observers.
-        private void ChangePhaseOfAction(Phase newPhase, InputControl triggerControl, int triggerBindingIndex, int triggerModifierIndex, double triggerTime)
+        private void ChangePhaseOfAction(Phase newPhase, ref TriggerState trigger)
         {
-            ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, triggerBindingIndex, triggerModifierIndex);
+            ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
 
             m_CurrentPhase = newPhase;
 
-            // Capture state of the phase change.
-            m_LastTrigger = new TriggerState(newPhase, triggerTime, triggerControl, triggerBindingIndex, triggerModifierIndex);
+            // Store trigger info.
+            m_LastTrigger = trigger;
+            m_LastTrigger.phase = newPhase;
+            m_LastTrigger.SetDynamicAndFixedUpdateCount();
 
             // Let listeners know.
             switch (newPhase)
@@ -490,67 +485,73 @@ namespace ISX
         // SlowTapModifier both start and the TapModifier gets to drive the action because
         // it comes first; then the TapModifier cancels because the button is held for too
         // long and the SlowTapModifier will get to drive the action next).
-        private void ChangePhaseOfModifier(Phase newPhase, InputControl triggerControl, int triggerBindingIndex,
-            int triggerModifierIndex, double triggerTime)
+        private void ChangePhaseOfModifier(Phase newPhase, ref TriggerState trigger)
         {
-            Debug.Assert(triggerBindingIndex != -1);
-            Debug.Assert(triggerModifierIndex != -1);
+            Debug.Assert(trigger.bindingIndex != -1);
+            Debug.Assert(trigger.modifierIndex != -1);
 
             ////TODO: need to somehow make sure that performed and cancelled phase changes happen on the *same* binding&control
             ////      as the start of the phase
 
-            var modifiersForBinding = m_ResolvedBindings[triggerBindingIndex].modifiers;
-            var currentModifierState = modifiersForBinding[triggerModifierIndex];
+            var modifiersForBinding = m_ResolvedBindings[trigger.bindingIndex].modifiers;
+            var currentModifierState = modifiersForBinding[trigger.modifierIndex];
             var newModifierState = currentModifierState;
 
             // Update modifier state.
-            ThrowIfPhaseTransitionIsInvalid(currentModifierState.phase, newPhase, triggerBindingIndex, triggerModifierIndex);
+            ThrowIfPhaseTransitionIsInvalid(currentModifierState.phase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
             newModifierState.phase = newPhase;
-            newModifierState.control = triggerControl;
+            newModifierState.control = trigger.control;
             if (newPhase == Phase.Started)
-                newModifierState.startTime = triggerTime;
-            modifiersForBinding[triggerModifierIndex] = newModifierState;
+                newModifierState.startTime = trigger.time;
+            modifiersForBinding[trigger.modifierIndex] = newModifierState;
 
             // See if it affects the phase of the action itself.
             if (m_CurrentPhase == Phase.Waiting)
             {
                 // We're the first modifier to go to the start phase.
-                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
+                ChangePhaseOfAction(newPhase, ref trigger);
             }
-            else if (newPhase == Phase.Cancelled && m_LastTrigger.modifierIndex == triggerModifierIndex)
+            else if (newPhase == Phase.Cancelled && m_LastTrigger.modifierIndex == trigger.modifierIndex)
             {
                 // We're cancelling but maybe there's another modifier ready
                 // to go into start phase.
 
-                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
+                ChangePhaseOfAction(newPhase, ref trigger);
 
                 for (var i = 0; i < modifiersForBinding.Count; ++i)
-                    if (i != triggerModifierIndex && modifiersForBinding[i].phase == Phase.Started)
+                    if (i != trigger.modifierIndex && modifiersForBinding[i].phase == Phase.Started)
                     {
-                        ChangePhaseOfAction(Phase.Started, modifiersForBinding[i].control, triggerBindingIndex, i,
-                            triggerTime);
+                        var triggerForModifier = new TriggerState
+                        {
+                            phase = Phase.Started,
+                            control = modifiersForBinding[i].control,
+                            bindingIndex = trigger.bindingIndex,
+                            modifierIndex = i,
+                            time = trigger.time
+                        };
+                        ChangePhaseOfAction(Phase.Started, ref triggerForModifier);
                         break;
                     }
             }
-            else if (m_LastTrigger.modifierIndex == triggerModifierIndex)
+            else if (m_LastTrigger.modifierIndex == trigger.modifierIndex)
             {
                 // Any other phase change goes to action if we're the modifier driving
                 // the current phase.
-                ChangePhaseOfAction(newPhase, triggerControl, triggerBindingIndex, triggerModifierIndex, triggerTime);
+                ChangePhaseOfAction(newPhase, ref trigger);
 
                 // We're the modifier driving the action and we performed the action,
                 // so reset any other modifier to waiting state.
                 if (newPhase == Phase.Performed)
                 {
                     for (var i = 0; i < modifiersForBinding.Count; ++i)
-                        if (i != triggerBindingIndex)
-                            ResetModifier(triggerBindingIndex, i);
+                        if (i != trigger.bindingIndex)
+                            ResetModifier(trigger.bindingIndex, i);
                 }
             }
 
             // If the modifier performed or cancelled, go back to waiting.
             if (newPhase == Phase.Performed || newPhase == Phase.Cancelled)
-                ResetModifier(triggerBindingIndex, triggerModifierIndex);
+                ResetModifier(trigger.bindingIndex, trigger.modifierIndex);
         }
 
         // Notify observers that we have changed state.
@@ -605,6 +606,14 @@ namespace ISX
                     $"Cannot go from '{m_CurrentPhase}' to '{Phase.Cancelled}'; must be '{Phase.Started}' (action: {this}, modifier: {GetModifier(bindingIndex, modifierIndex)})");
         }
 
+        private InputBinding GetBinding(int bindingIndex)
+        {
+            if (bindingIndex == -1)
+                return new InputBinding();
+
+            return m_Bindings[m_BindingsStartIndex + bindingIndex];
+        }
+
         private IInputActionModifier GetModifier(int bindingIndex, int modifierIndex)
         {
             if (bindingIndex == -1)
@@ -649,19 +658,17 @@ namespace ISX
                 ModifierContext context;
 
                 context.m_Action = this;
-                context.m_Control = control;
-                context.m_Time = time;
+                context.m_Trigger = new TriggerState {control = control, time = time, bindingIndex = bindingIndex};
                 context.m_ControlIsAtDefaultValue = isAtDefault;
                 context.m_TimerHasExpired = false;
-                context.m_BindingIndex = bindingIndex;
 
                 for (var i = 0; i < modifiers.Count; ++i)
                 {
                     var state = modifiers[i];
                     var modifier = state.modifier;
 
-                    context.m_Phase = state.phase;
-                    context.m_ModifierIndex = i;
+                    context.m_Trigger.phase = state.phase;
+                    context.m_Trigger.modifierIndex = i;
 
                     modifier.Process(ref context);
                 }
@@ -673,7 +680,15 @@ namespace ISX
                 // again.
                 if (phase == Phase.Waiting && !isAtDefault)
                 {
-                    ChangePhaseOfAction(Phase.Performed, control, -1, -1, time);
+                    var trigger = new TriggerState
+                    {
+                        phase = Phase.Performed,
+                        control = control,
+                        modifierIndex = -1,
+                        bindingIndex = -1,
+                        time = time
+                    };
+                    ChangePhaseOfAction(Phase.Performed, ref trigger);
                 }
             }
         }
@@ -686,13 +701,17 @@ namespace ISX
             var modifierState = modifiersForBinding[modifierIndex];
 
             context.m_Action = this;
-            context.m_Time = time;
             context.m_ControlIsAtDefaultValue = false; ////REVIEW: how should this be handled?
             context.m_TimerHasExpired = true;
-            context.m_BindingIndex = bindingIndex;
-            context.m_ModifierIndex = modifierIndex;
-            context.m_Phase = modifierState.phase;
-            context.m_Control = modifierState.control;
+            context.m_Trigger =
+                new TriggerState
+            {
+                control = modifierState.control,
+                phase = modifierState.phase,
+                time = time,
+                bindingIndex = bindingIndex,
+                modifierIndex = modifierIndex
+            };
 
             modifierState.isTimerRunning = false;
             modifiersForBinding[modifierIndex] = modifierState;
@@ -707,18 +726,17 @@ namespace ISX
         {
             // These are all set by NotifyControlValueChanged.
             internal InputAction m_Action;
-            internal Phase m_Phase;
-            internal InputControl m_Control;
-            internal double m_Time;
+            internal TriggerState m_Trigger;
             internal bool m_ControlIsAtDefaultValue;
             internal bool m_TimerHasExpired;
-            internal int m_BindingIndex;
-            internal int m_ModifierIndex;
+
+            internal int bindingIndex => m_Trigger.bindingIndex;
+            internal int modifierIndex => m_Trigger.modifierIndex;
 
             public InputAction action => m_Action;
-            public InputControl control => m_Control;
-            public Phase phase => m_Phase;
-            public double time => m_Time;
+            public InputControl control => m_Trigger.control;
+            public Phase phase => m_Trigger.phase;
+            public double time => m_Trigger.time;
             public bool controlHasDefaultValue => m_ControlIsAtDefaultValue;
             public bool timerHasExpired => m_TimerHasExpired;
 
@@ -727,31 +745,31 @@ namespace ISX
 
             public void Started()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Started, m_Control, m_BindingIndex, m_ModifierIndex, m_Time);
+                m_Action.ChangePhaseOfModifier(Phase.Started, ref m_Trigger);
             }
 
             public void Performed()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Performed, m_Control, m_BindingIndex, m_ModifierIndex, m_Time);
+                m_Action.ChangePhaseOfModifier(Phase.Performed, ref m_Trigger);
             }
 
             public void Cancelled()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Cancelled, m_Control, m_BindingIndex, m_ModifierIndex, m_Time);
+                m_Action.ChangePhaseOfModifier(Phase.Cancelled, ref m_Trigger);
             }
 
             public void SetTimeout(double seconds)
             {
-                var modifiersForBinding = m_Action.m_ResolvedBindings[m_BindingIndex].modifiers;
-                var modifierState = modifiersForBinding[m_ModifierIndex];
+                var modifiersForBinding = m_Action.m_ResolvedBindings[bindingIndex].modifiers;
+                var modifierState = modifiersForBinding[modifierIndex];
                 if (modifierState.isTimerRunning)
                     throw new NotImplementedException("cancel current timer");
 
                 var manager = InputSystem.s_Manager;
-                manager.AddActionTimeout(m_Action, Time.time + seconds, m_BindingIndex, m_ModifierIndex);
+                manager.AddActionTimeout(m_Action, Time.time + seconds, bindingIndex, modifierIndex);
 
                 modifierState.isTimerRunning = true;
-                modifiersForBinding[m_ModifierIndex] = modifierState;
+                modifiersForBinding[modifierIndex] = modifierState;
             }
         }
 

@@ -246,11 +246,14 @@ namespace ISX
             // No, so try to match by device class. If we have a "Gamepad" template,
             // for example, a device that classifies itself as a "Gamepad" will match
             // that template.
+            //
+            // NOTE: Have to make sure here that we get a device template and not a
+            //       control template.
             if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
             {
                 var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
-                if (m_TemplateStrings.ContainsKey(deviceClassLowerCase) ||
-                    m_TemplateTypes.ContainsKey(deviceClassLowerCase))
+                var type = InputTemplate.GetControlTypeForTemplate(deviceClassLowerCase);
+                if (type != null && typeof(InputDevice).IsAssignableFrom(type))
                     return deviceDescription.deviceClass;
             }
 

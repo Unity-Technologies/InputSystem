@@ -63,7 +63,7 @@ namespace ISX.Editor
 
             bindingsArrayProperty.DeleteArrayElementAtIndex(bindingIndex);
 
-            // Update countl
+            // Update count.
             --bindingsCount;
             bindingsCountProperty.intValue = bindingsCount;
             if (bindingsCount == 0)
@@ -111,7 +111,7 @@ namespace ISX.Editor
             newActionProperty.FindPropertyRelative("modifiers").stringValue = string.Empty;
             newActionProperty.FindPropertyRelative("flags").intValue = 0;
 
-            if (actionSetProperty != null)
+            if (actionSetProperty != null && bindingIndex != 0) // If we're the first binding, don't adjust our own start index.
             {
                 // Adjust binding start indices of actions coming after us.
                 AdjustBindingStartOffsets(actionSetProperty, bindingIndex, 1);
@@ -126,10 +126,17 @@ namespace ISX.Editor
             for (var i = 0; i < actionsCount; ++i)
             {
                 var property = actionsArray.GetArrayElementAtIndex(i);
+
+                // Skip actions with no bindings.
+                var bindingsCount = property.FindPropertyRelative("m_BindingsCount").intValue;
+                if (bindingsCount == 0)
+                    continue;
+
+                // Adjust start index.
                 var startIndexProperty = property.FindPropertyRelative("m_BindingsStartIndex");
                 var startIndex = startIndexProperty.intValue;
 
-                if (startIndex > indexAfterWhichToAdjust)
+                if (startIndex >= indexAfterWhichToAdjust)
                     startIndexProperty.intValue = startIndex + adjust;
             }
         }

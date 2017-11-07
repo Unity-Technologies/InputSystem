@@ -235,6 +235,13 @@ namespace ISX
                 if (name.IsEmpty())
                     name = InputTemplate.GetRootTemplateName(template.name);
             }
+            else if (parent == null)
+            {
+                // Someone did "new InputControlSetup(...)" with a control template.
+                // We don't support creating control hierarchies without a device at the root.
+                throw new InvalidOperationException(
+                    $"Toplevel template used with InputControlSetup must be a device template; '{template.name}' is a control template");
+            }
 
             // Set common properties.
             if (name.IsEmpty())

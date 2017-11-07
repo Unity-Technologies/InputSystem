@@ -10,13 +10,9 @@ namespace ISX.Editor
     {
         private const int kBindingHeight = 20;
 
-        public static float GetBindingsArrayHeight(SerializedProperty actionProperty, SerializedProperty actionSetProperty = null)
+        public static float GetBindingsArrayHeight(SerializedProperty actionProperty)
         {
-            var bindingsArrayProperty = actionSetProperty != null
-                ? actionSetProperty.FindPropertyRelative("m_Bindings")
-                : actionProperty.FindPropertyRelative("m_Bindings");
             var bindingsCount = actionProperty.FindPropertyRelative("m_BindingsCount").intValue;
-
             return bindingsCount * kBindingHeight
                 + Contents.iconPlus.image.height + 2;
         }

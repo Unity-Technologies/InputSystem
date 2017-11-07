@@ -178,7 +178,7 @@ namespace ISX.Editor
             }
 
             var actionSetItem = (ActionSetItem)actionItem.parent;
-            return InputActionGUI.GetBindingsArrayHeight(actionItem.property, actionSetItem.property);
+            return InputActionGUI.GetBindingsArrayHeight(actionItem.property);
         }
 
         protected override void RowGUI(RowGUIArgs args)

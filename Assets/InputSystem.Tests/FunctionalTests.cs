@@ -121,6 +121,13 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
+    public void Templates_CannotUseControlTemplateAsToplevelTemplate()
+    {
+        Assert.That(() => new InputControlSetup("Button"), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Templates")]
     public void Templates_CanExtendControlInBaseTemplateUsingPath()
     {
         const string json = @"
@@ -1593,6 +1600,20 @@ public class FunctionalTests
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("template").EqualTo("CustomGamepad").And.TypeOf<Gamepad>());
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanMatchTemplateByDeviceClass()
+    {
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription {deviceClass = "Touchscreen"});
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
+
+        // Should not try to use a control template.
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription {deviceClass = "Touch"});
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -3415,6 +3436,9 @@ public class FunctionalTests
         Assert.That(action.wasStarted);
         Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
         Assert.That(action.lastTriggerTime, Is.EqualTo(0).Within(0.0000001));
+        Assert.That(action.lastTriggerStartTime, Is.EqualTo(0).Within(0.0000001));
+        Assert.That(action.lastTriggerModifier, Is.TypeOf<SlowTapModifier>());
+        Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0}, 2);
         InputSystem.Update();
@@ -3423,6 +3447,9 @@ public class FunctionalTests
         Assert.That(action.wasPerformed);
         Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
         Assert.That(action.lastTriggerTime, Is.EqualTo(2).Within(0.0000001));
+        Assert.That(action.lastTriggerStartTime, Is.EqualTo(0).Within(0.0000001));
+        Assert.That(action.lastTriggerModifier, Is.TypeOf<SlowTapModifier>());
+        Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
     }
 
     [Test]
