@@ -38,12 +38,28 @@ namespace ISX
     [InputState(typeof(TrackingState))]
     public abstract class TrackedDevice : InputDevice
     {
+        public PoseControl pose { get; private set; }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            pose = setup.GetControl<PoseControl>("pose");
+            base.FinishSetup(setup);
+        }
+
+        ////REVIEW: have current?
     }
 
     // A head tracking device.
     [InputState(typeof(HMDState))]
     public class HMD : TrackedDevice
     {
+        public static HMD current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -70,7 +86,18 @@ namespace ISX
         {
             base.MakeCurrent();
 
-            //check usages and set leftHand or rightHand (or none if none applies)
+            if (usages.Contains(CommonUsages.LeftHand))
+            {
+                leftHand = this;
+                if (ReferenceEquals(rightHand, this))
+                    rightHand = null;
+            }
+            else if (usages.Contains(CommonUsages.RightHand))
+            {
+                rightHand = this;
+                if (ReferenceEquals(leftHand, this))
+                    leftHand = null;
+            }
         }
     }
 }

@@ -1,11 +1,12 @@
 using System;
 
-////TODO: some kind of per-device callback which gives you an event buffer to fill and a return value
-////      which indicates whether there are more events; called when an update is performed
+////TODO: the entire control hierarchy should be a linear array; transition to that with InputData
 
 namespace ISX
 {
     // Input devices are the roots of control hierarchies.
+    // Unlike other controls, usages of InputDevices are allowed to be changed on the fly
+    // without requiring a change to the device template.
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;
@@ -80,7 +81,8 @@ namespace ISX
 
         // List of usages for all controls. Each control gets a slice of this array.
         // See 'InputControl.usages'.
-        // NOTE: The device's own usages are part of this array as well.
+        // NOTE: The device's own usages are part of this array as well. They are always
+        //       at the *end* of the array.
         internal InternedString[] m_UsagesForEachControl;
         internal InputControl[] m_UsageToControl;
 
@@ -95,5 +97,21 @@ namespace ISX
 
         // NOTE: We don't store processors in an combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
+
+        internal void SetUsage(InternedString usage)
+        {
+            // Make last entry in m_UsagesForEachControl be our device usage string.
+            var numControlUsages = m_UsageToControl?.Length ?? 0;
+            Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
+            m_UsagesForEachControl[numControlUsages] = usage;
+            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);
+
+            // Update controls to all point to new usage array.
+            if (m_UsageToControl != null)
+            {
+                for (var i = 0; i < m_UsageToControl.Length; ++i)
+                    m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
+            }
+        }
     }
 }

@@ -100,4 +100,18 @@ namespace ISX
             object IEnumerator.Current => Current;
         }
     }
+
+    // Extension methods for ReadOnlyArray that allow for optional functionality that
+    // may not work with all ReadOnlyArrays.
+    public static class ReadOnlyArrayExtensions
+    {
+        public static bool Contains<TValue>(this ReadOnlyArray<TValue> array, TValue value)
+            where TValue : IComparable<TValue>
+        {
+            for (var i = 0; i < array.m_Length; ++i)
+                if (array.m_Array[array.m_StartIndex + i].CompareTo(value) == 0)
+                    return true;
+            return false;
+        }
+    }
 }

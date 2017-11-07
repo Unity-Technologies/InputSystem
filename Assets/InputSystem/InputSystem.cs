@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ISX.Editor;
 using UnityEngine;
+
 #if UNITY_EDITOR
 using UnityEditor;
+using ISX.Editor;
 #endif
 
 // I'd like to call the DLLs UnityEngine.Input and UnityEngine.Input.Tests
@@ -160,6 +160,27 @@ namespace ISX
         }
 
         public static void SetUsage(InputDevice device, string usage)
+        {
+            SetUsage(device, new InternedString(usage));
+        }
+
+        // May generate garbage.
+        public static void SetUsage(InputDevice device, InternedString usage)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            device.SetUsage(usage);
+
+            // Usage may affect current device so update.
+            device.MakeCurrent();
+        }
+
+        public static void AddUsage(InputDevice device, InternedString usage)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static void RemoveUsage(InputDevice device, InternedString usage)
         {
             throw new NotImplementedException();
         }

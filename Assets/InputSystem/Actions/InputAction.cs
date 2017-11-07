@@ -86,7 +86,8 @@ namespace ISX
         ////REVIEW: expose this as a struct?
         public InputControl lastTriggerControl => m_LastTrigger.control;
         public double lastTriggerTime => m_LastTrigger.time;
-        public double lastTriggerStartTime => 0;
+        public double lastTriggerStartTime => m_LastTrigger.startTime;
+        public double lastTriggerDuration => m_LastTrigger.time - m_LastTrigger.startTime;
         public InputBinding lastTriggerBinding => GetBinding(m_LastTrigger.bindingIndex);
         public IInputActionModifier lastTriggerModifier => GetModifier(m_LastTrigger.bindingIndex, m_LastTrigger.modifierIndex);
 
@@ -348,13 +349,14 @@ namespace ISX
         {
             public Phase phase;
             public double time;
+            public double startTime;
             public InputControl control;
             public int bindingIndex;
             public int modifierIndex;
             public uint dynamicUpdateCount;
             public uint fixedUpdateCount;
 
-            public void SetDynamicAndFixedUpdateCount()
+            public void RememberCurrentUpdate()
             {
                 ////REVIEW: move this logic into InputManager itself?
                 var manager = InputSystem.s_Manager;
@@ -449,7 +451,7 @@ namespace ISX
             // Store trigger info.
             m_LastTrigger = trigger;
             m_LastTrigger.phase = newPhase;
-            m_LastTrigger.SetDynamicAndFixedUpdateCount();
+            m_LastTrigger.RememberCurrentUpdate();
 
             // Let listeners know.
             switch (newPhase)
@@ -668,6 +670,7 @@ namespace ISX
                     var modifier = state.modifier;
 
                     context.m_Trigger.phase = state.phase;
+                    context.m_Trigger.startTime = state.startTime;
                     context.m_Trigger.modifierIndex = i;
 
                     modifier.Process(ref context);
@@ -686,7 +689,8 @@ namespace ISX
                         control = control,
                         modifierIndex = -1,
                         bindingIndex = -1,
-                        time = time
+                        time = time,
+                        startTime = time
                     };
                     ChangePhaseOfAction(Phase.Performed, ref trigger);
                 }
@@ -737,6 +741,7 @@ namespace ISX
             public InputControl control => m_Trigger.control;
             public Phase phase => m_Trigger.phase;
             public double time => m_Trigger.time;
+            public double startTime => m_Trigger.startTime;
             public bool controlHasDefaultValue => m_ControlIsAtDefaultValue;
             public bool timerHasExpired => m_TimerHasExpired;
 
@@ -745,6 +750,7 @@ namespace ISX
 
             public void Started()
             {
+                m_Trigger.startTime = time;
                 m_Action.ChangePhaseOfModifier(Phase.Started, ref m_Trigger);
             }
 

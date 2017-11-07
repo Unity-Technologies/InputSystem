@@ -1,5 +1,8 @@
 using System;
 
+////TODO: instead of using string.Intern, put them in a custom table and allow passing them around as indices
+////      (this will probably also be useful for jobs)
+
 namespace ISX
 {
     // Wraps around a string to allow for faster case-insensitive

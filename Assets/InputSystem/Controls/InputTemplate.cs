@@ -164,12 +164,6 @@ namespace ISX
             }
         }
 
-        public struct DeviceUsage
-        {
-            public InternedString usage;
-            public InternedString variant;
-        }
-
         // Unique name of the template.
         // NOTE: Case-insensitive.
         public InternedString name => m_Name;
@@ -253,7 +247,6 @@ namespace ISX
         private string m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
         internal ControlTemplate[] m_Controls;
-        private DeviceUsage[] m_Usages;
         private InputDeviceDescription m_DeviceDescription;
 
         private InputTemplate(string name, Type type)
