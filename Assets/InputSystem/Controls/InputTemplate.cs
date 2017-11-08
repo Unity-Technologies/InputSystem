@@ -125,7 +125,7 @@ namespace ISX
             public string icon; ////TODO: fill this (also have InputControlSetup put it on the control)
             public ReadOnlyArray<ParameterValue> parameters;
             public ReadOnlyArray<InternedString> usages;
-            public ReadOnlyArray<string> aliases;
+            public ReadOnlyArray<InternedString> aliases;
             public ReadOnlyArray<NameAndParameters> processors;
             public uint offset;
             public uint bit;
@@ -411,9 +411,15 @@ namespace ISX
             }
 
             // Determine aliases.
-            string[] aliases = null;
+            InternedString[] aliases = null;
             if (attribute != null)
-                aliases = ArrayHelpers.Join(attribute.alias, attribute.aliases);
+            {
+                if (attribute.alias != null && attribute.aliases == null)
+                    aliases = new InternedString[1] { new InternedString(attribute.alias) };
+                else if (attribute.aliases != null)
+                    aliases = ArrayHelpers.Join(attribute.alias, attribute.aliases)?.Select(x => new InternedString(x))
+                        .ToArray();
+            }
 
             // Determine usages.
             InternedString[] usages = null;
@@ -459,7 +465,7 @@ namespace ISX
                 parameters = new ReadOnlyArray<ParameterValue>(parameters),
                 processors = new ReadOnlyArray<NameAndParameters>(processors),
                 usages = new ReadOnlyArray<InternedString>(usages),
-                aliases = new ReadOnlyArray<string>(aliases),
+                aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isAutoResetControl = autoReset
             };
@@ -745,10 +751,9 @@ namespace ISX
             else
                 result.sizeInBits = baseTemplate.sizeInBits;
 
-            result.aliases = new ReadOnlyArray<string>(
+            result.aliases = new ReadOnlyArray<InternedString>(
                     ArrayHelpers.Merge(derivedTemplate.aliases.m_Array,
-                        baseTemplate.aliases.m_Array,
-                        StringComparer.OrdinalIgnoreCase));
+                        baseTemplate.aliases.m_Array));
 
             result.usages = new ReadOnlyArray<InternedString>(
                     ArrayHelpers.Merge(derivedTemplate.usages.m_Array,

@@ -180,8 +180,8 @@ public class FunctionalTests
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo("square"));
-        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo("x"));
+        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo(new InternedString("square")));
+        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo(new InternedString("x")));
     }
 
     [Test]
@@ -3653,6 +3653,26 @@ public class FunctionalTests
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RestoringDeviceFromSave_RestoresRelevantDynamicConfiguration()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+        InputSystem.SetUsage(device, CommonUsages.LeftHand);
+        ////TODO: set variant
+
+        InputSystem.Save();
+        InputSystem.Reset();
+        InputSystem.Restore();
+
+        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+
+        Assert.That(newDevice.template, Is.EqualTo("Gamepad"));
+        Assert.That(newDevice.usages, Has.Count.EqualTo(1));
+        Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+        Assert.That(Gamepad.current, Is.SameAs(newDevice));
     }
 
     [Test]

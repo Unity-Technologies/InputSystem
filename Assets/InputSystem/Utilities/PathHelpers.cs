@@ -39,16 +39,21 @@ namespace ISX
         {
             var pathLength = path.Length;
 
-            // Try to get a match.
-            bool controlIsMatch;
+            // Try to get a match. A path spec has three components:
+            //    "<template>{usage}name"
+            // All are optional but at least one component must be present.
+            // Names can be aliases, too.
+
+            var controlIsMatch = true;
+
+            // Match by template.
             if (path[indexInPath] == '<')
             {
-                // Template name match.
                 ++indexInPath;
                 controlIsMatch =
                     MatchPathComponent(control.template, path, ref indexInPath, PathComponentType.Template);
 
-                // If the temlate isn't a match, walk up the base template
+                // If the template isn't a match, walk up the base template
                 // chain and match each base template.
                 if (!controlIsMatch)
                 {
@@ -62,7 +67,22 @@ namespace ISX
                     }
                 }
             }
-            else
+
+            // Match by usage.
+            if (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
+            {
+                ++indexInPath;
+
+                for (var i = 0; i < control.usages.Count; ++i)
+                {
+                    controlIsMatch = MatchPathComponent(control.usages[i], path, ref indexInPath, PathComponentType.Usage);
+                    if (controlIsMatch)
+                        break;
+                }
+            }
+
+            // Match by name.
+            if (indexInPath < pathLength && controlIsMatch && path[indexInPath] != '/')
             {
                 // Normal name match.
                 controlIsMatch = MatchPathComponent(control.name, path, ref indexInPath, PathComponentType.Name);

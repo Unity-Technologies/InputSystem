@@ -432,7 +432,7 @@ namespace ISX
                 {
                     var aliasCount = controlTemplate.aliases.Count;
                     var aliasIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlTemplate.aliases.m_Array);
-                    control.m_AliasesReadOnly = new ReadOnlyArray<string>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
+                    control.m_AliasesReadOnly = new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
                 }
 
                 // Set parameters.

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ISX
 {
+    // A collection of utility functions to work with arrays.
     public static class ArrayHelpers
     {
         public static bool Contains<TValue>(TValue[] array, TValue value)
@@ -45,6 +47,26 @@ namespace ISX
             Array.Resize(ref array, length + 1);
             array[length] = value;
             return length;
+        }
+
+        public static int Append<TValue>(ref TValue[] array, IEnumerable<TValue> values)
+        {
+            if (array == null)
+            {
+                array = values.ToArray();
+                return 0;
+            }
+
+            var oldLength = array.Length;
+            var valueCount = values.Count();
+
+            Array.Resize(ref array, oldLength + valueCount);
+
+            var index = oldLength;
+            foreach (var value in values)
+                array[index++] = value;
+
+            return oldLength;
         }
 
         // Append to an array that is considered immutable. This allows using 'values' as is

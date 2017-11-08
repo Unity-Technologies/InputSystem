@@ -1585,10 +1585,21 @@ namespace ISX
             // automatically takes effect.
             public string name;
             public string template;
+            public string[] usages;
             public int deviceId;
             public uint stateOffset;
             public InputDevice.Flags flags;
             public InputDeviceDescription description;
+
+            public void RestoreUsagesOnDevice(InputDevice device)
+            {
+                if (usages == null || usages.Length == 0)
+                    return;
+                var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
+                device.m_UsagesReadOnly =
+                    new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
+                device.UpdateUsageArraysOnControls();
+            }
         }
 
         [Serializable]
@@ -1681,6 +1692,7 @@ namespace ISX
                     name = device.name,
                     template = device.template,
                     deviceId = device.id,
+                    usages = device.usages.Select(x => x.ToString()).ToArray(),
                     stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
                     flags = device.m_Flags
@@ -1800,8 +1812,11 @@ namespace ISX
                 device.m_DeviceIndex = i;
                 device.m_Description = deviceState.description;
                 device.m_Flags = deviceState.flags;
+                deviceState.RestoreUsagesOnDevice(device);
+
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
                 device.MakeCurrent();
+
                 devices[i] = device;
                 m_DevicesById[device.m_Id] = device;
 

@@ -64,7 +64,7 @@ namespace ISX
         public ReadOnlyArray<InternedString> usages => m_UsagesReadOnly;
 
         // List of alternate names for the control.
-        public ReadOnlyArray<string> aliases => m_AliasesReadOnly;
+        public ReadOnlyArray<InternedString> aliases => m_AliasesReadOnly;
 
         // Information about where the control stores its state.
         public InputStateBlock stateBlock => m_StateBlock;
@@ -72,6 +72,15 @@ namespace ISX
         public override string ToString()
         {
             return $"{template}:{path}";
+        }
+
+        public TValue GetValue<TValue>()
+        {
+            var controlOfType = this as InputControl<TValue>;
+            if (controlOfType == null)
+                throw new InvalidCastException(
+                    $"Cannot query value of type '{typeof(TValue).Name}' from control of type '{this.GetType().Name}");
+            return controlOfType.value;
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -106,7 +115,7 @@ namespace ISX
         internal InputDevice m_Device;
         internal InputControl m_Parent;
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
-        internal ReadOnlyArray<string> m_AliasesReadOnly;
+        internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
 
         // This method exists only to not slap the internal modifier on all overrides of

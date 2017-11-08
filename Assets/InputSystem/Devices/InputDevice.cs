@@ -77,7 +77,7 @@ namespace ISX
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.
         // NOTE: The device's own aliases are part of this array as well.
-        internal string[] m_AliasesForEachControl;
+        internal InternedString[] m_AliasesForEachControl;
 
         // List of usages for all controls. Each control gets a slice of this array.
         // See 'InputControl.usages'.
@@ -107,11 +107,16 @@ namespace ISX
             m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);
 
             // Update controls to all point to new usage array.
-            if (m_UsageToControl != null)
-            {
-                for (var i = 0; i < m_UsageToControl.Length; ++i)
-                    m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
-            }
+            UpdateUsageArraysOnControls();
+        }
+
+        internal void UpdateUsageArraysOnControls()
+        {
+            if (m_UsageToControl == null)
+                return;
+
+            for (var i = 0; i < m_UsageToControl.Length; ++i)
+                m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
         }
     }
 }

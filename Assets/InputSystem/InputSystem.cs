@@ -164,6 +164,7 @@ namespace ISX
             SetUsage(device, new InternedString(usage));
         }
 
+        ////TDO: move to InputManager; emit onDeviceChange for device usage changes
         // May generate garbage.
         public static void SetUsage(InputDevice device, InternedString usage)
         {
