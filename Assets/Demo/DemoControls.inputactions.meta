@@ -7,3 +7,4 @@ ScriptedImporter:
   script: {fileID: 11500000, guid: e2fdc6edf8744b38b702a2a5ee3541b2, type: 3}
   generateWrapperCode: 0
   wrapperCodePath: 
+  wrapperCodeNamespace: 
