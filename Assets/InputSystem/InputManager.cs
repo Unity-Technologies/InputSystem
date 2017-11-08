@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 
+////TODO: merge InputManager into InputSystem and have InputSystemObject store SerializedState directly
+
 namespace ISX
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
@@ -386,6 +388,20 @@ namespace ISX
             //how can we do this efficiently without having to take the control's device out of the system?
 
             throw new NotImplementedException();
+        }
+
+        public void SetUsage(InputDevice device, InternedString usage)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            device.SetUsage(usage);
+
+            // Notify listeners.
+            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+
+            // Usage may affect current device so update.
+            device.MakeCurrent();
         }
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system

@@ -716,6 +716,28 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_ChangingUsageOfDevice_SendsDeviceChangeNotification()
+    {
+        var device = InputSystem.AddDevice("Gamepad");
+
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                receivedDevice = d;
+                receivedDeviceChange = c;
+            };
+
+        InputSystem.SetUsage(device, CommonUsages.LeftHand);
+
+        Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.UsageChanged));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanFindDeviceByUsage()
     {
         InputSystem.AddDevice("Gamepad");

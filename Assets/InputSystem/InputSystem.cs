@@ -164,16 +164,10 @@ namespace ISX
             SetUsage(device, new InternedString(usage));
         }
 
-        ////TDO: move to InputManager; emit onDeviceChange for device usage changes
         // May generate garbage.
         public static void SetUsage(InputDevice device, InternedString usage)
         {
-            if (device == null)
-                throw new ArgumentNullException(nameof(device));
-            device.SetUsage(usage);
-
-            // Usage may affect current device so update.
-            device.MakeCurrent();
+            s_Manager.SetUsage(device, usage);
         }
 
         public static void AddUsage(InputDevice device, InternedString usage)
