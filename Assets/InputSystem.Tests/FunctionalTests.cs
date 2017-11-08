@@ -699,7 +699,7 @@ public class FunctionalTests
     {
         var controller = InputSystem.AddDevice("XRController");
 
-        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
+        Assert.That(controller.usages, Has.Count.EqualTo(0));
 
         InputSystem.SetUsage(controller, CommonUsages.LeftHand);
 
@@ -920,6 +920,23 @@ public class FunctionalTests
         Assert.That(gamepad.leftStick.down.value, Is.EqualTo(0.5).Within(0.000001));
         Assert.That(gamepad.leftStick.right.value, Is.EqualTo(0.0).Within(0.000001));
         Assert.That(gamepad.leftStick.left.value, Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void TODO_Controls_MotorsCanWriteToState()
+    {
+        /*
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        gamepad.leftMotor.value = 0.5f;
+
+        InputSystem.QueueOutputEvent(...);
+
+        InputSystem.Update();
+        */
+
+        Assert.Fail();
     }
 
     [Test]
@@ -2581,7 +2598,7 @@ public class FunctionalTests
     {
         var action = new InputAction();
 
-        Assert.That(action.actionSet, Is.Null);
+        Assert.That(action.set, Is.Null);
     }
 
     ////REVIEW: not sure whether this is the best behavior
@@ -2610,7 +2627,7 @@ public class FunctionalTests
         var action = new InputAction();
         action.Enable(); // Force to create private action set.
 
-        Assert.That(action.actionSet, Is.Null);
+        Assert.That(action.set, Is.Null);
     }
 
     [Test]
@@ -2977,8 +2994,8 @@ public class FunctionalTests
         Assert.That(deserializedSet.actions[1].name, Is.EqualTo("action2"));
         Assert.That(deserializedSet.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(deserializedSet.actions[1].bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
-        Assert.That(deserializedSet.actions[0].actionSet, Is.SameAs(deserializedSet));
-        Assert.That(deserializedSet.actions[1].actionSet, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[0].set, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[1].set, Is.SameAs(deserializedSet));
     }
 
     [Test]
@@ -3486,7 +3503,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanPollActionForChange()
+    public void Actions_CanQueryLastTrigger()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/gamepad/rightTrigger", modifiers: "slowTap(duration=1)");
@@ -3495,7 +3512,6 @@ public class FunctionalTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1}, 2);
         InputSystem.Update();
 
-        Assert.That(action.wasStarted);
         Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
         Assert.That(action.lastTriggerTime, Is.EqualTo(2).Within(0.0000001));
         Assert.That(action.lastTriggerStartTime, Is.EqualTo(2).Within(0.0000001));
@@ -3505,8 +3521,6 @@ public class FunctionalTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0}, 4);
         InputSystem.Update();
 
-        Assert.That(!action.wasStarted);
-        Assert.That(action.wasPerformed);
         Assert.That(action.lastTriggerControl, Is.SameAs(gamepad.rightTrigger));
         Assert.That(action.lastTriggerTime, Is.EqualTo(4).Within(0.0000001));
         Assert.That(action.lastTriggerStartTime, Is.EqualTo(2).Within(0.0000001));
@@ -3523,10 +3537,13 @@ public class FunctionalTests
         action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
         action.Enable();
 
+        var wasPerformed = false;
+        action.performed += ctx => wasPerformed = true;
+
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
         InputSystem.Update();
 
-        Assert.That(action.wasPerformed);
+        Assert.That(wasPerformed);
     }
 
     [Test]

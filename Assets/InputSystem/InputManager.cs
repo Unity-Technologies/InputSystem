@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 
+////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
+
 ////TODO: merge InputManager into InputSystem and have InputSystemObject store SerializedState directly
 
 namespace ISX

@@ -25,7 +25,7 @@ namespace ISX
     // They sit on top of controls (and each single action may reference several controls
     // collectively) and monitor the system for change.
     //
-    // NOTE: Unlike InputControls, InputActions are not passive! They will actively perform
+    // NOTE: Unlike InputControls, InputActions are not passive. They will actively perform
     //       processing each frame they are active whereas InputControls just sit there as
     //       long as no one is asking them directly for a value.
     //
@@ -54,7 +54,7 @@ namespace ISX
 
         public Phase phase => m_CurrentPhase;
 
-        public InputActionSet actionSet => isSingletonAction ? null : m_ActionSet;
+        public InputActionSet set => isSingletonAction ? null : m_ActionSet;
 
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devics set on action set)
@@ -119,10 +119,6 @@ namespace ISX
             add { m_OnPerformed.Append(value); }
             remove { m_OnPerformed.Remove(value); }
         }
-
-        public bool wasPerformed => triggeredInCurrentUpdate && m_LastTrigger.phase == Phase.Performed;
-        public bool wasStarted => triggeredInCurrentUpdate && m_LastTrigger.phase == Phase.Started;
-        public bool wasCancelled => triggeredInCurrentUpdate && m_LastTrigger.phase == Phase.Cancelled;
 
         // Constructor we use for serialization and for actions that are part
         // of sets.
@@ -376,23 +372,6 @@ namespace ISX
         }
 
         private bool isSingletonAction => m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this);
-
-        private bool triggeredInCurrentUpdate
-        {
-            get
-            {
-                var manager = InputSystem.s_Manager;
-                var currentUpdate = manager.m_CurrentUpdate;
-
-                if (currentUpdate == InputUpdateType.Dynamic)
-                    return manager.m_CurrentDynamicUpdateCount == m_LastTrigger.dynamicUpdateCount;
-
-                if (currentUpdate == InputUpdateType.Fixed)
-                    return manager.m_CurrentFixedUpdateCount == m_LastTrigger.fixedUpdateCount;
-
-                return false;
-            }
-        }
 
         private void CreateInternalActionSetForSingletonAction()
         {

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -70,7 +71,7 @@ namespace ISX.Editor
             }
 
             ////FIXME: with ExpandHeight(false), editor still expands height for some reason....
-            EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(160));// GUILayout.ExpandHeight(false));
+            EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(170));// GUILayout.ExpandHeight(false));
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Template", m_Device.template);
             EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
@@ -80,6 +81,7 @@ namespace ISX.Editor
             EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
             EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
+            EditorGUILayout.LabelField("Usages: ", m_DeviceUsagesString);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -148,6 +150,7 @@ namespace ISX.Editor
             m_Device = device;
             m_DeviceId = device.id;
             m_DeviceIdString = device.id.ToString();
+            m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()));
 
             // Set up event trace. The default trace size of 1mb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
@@ -175,6 +178,7 @@ namespace ISX.Editor
         // fully come back to life as well.
         [NonSerialized] private InputDevice m_Device;
         [NonSerialized] private string m_DeviceIdString;
+        [NonSerialized] private string m_DeviceUsagesString;
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
 

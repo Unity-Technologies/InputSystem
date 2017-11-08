@@ -95,6 +95,11 @@ namespace ISX
         // between frames.
         internal InputStateBlock[] m_AutoResetStateBlocks;
 
+        ////TODO: output is still in the works
+        // Buffer that will receive state events for output generated from this device.
+        // May be shared with other devices.
+        internal InputEventBuffer m_OutputBuffer;
+
         // NOTE: We don't store processors in an combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
 

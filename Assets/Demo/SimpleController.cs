@@ -2,6 +2,10 @@ using System.Collections;
 using ISX;
 using UnityEngine;
 
+////TODO: transform from using action callbacks to using events
+////TODO: transform previous form that went to 'onEvent' to consuming events in bulk
+////TODO: transform from using lose actions to using action set
+
 public class SimpleController : MonoBehaviour
 {
     public float moveSpeed;
@@ -21,17 +25,6 @@ public class SimpleController : MonoBehaviour
 
     public void Awake()
     {
-        InputSystem.onEvent +=
-            eventPtr =>
-            {
-                if (eventPtr.IsA<StateEvent>())
-                {
-                    var gamepad = (Gamepad)null;
-
-                    var leftStick = gamepad.leftStick.ReadValueFrom(eventPtr);
-                }
-            };
-
         moveAction.performed += ctx => m_Move = ctx.GetValue<Vector2>();
         lookAction.performed += ctx => m_Look = ctx.GetValue<Vector2>();
 
@@ -87,14 +80,14 @@ public class SimpleController : MonoBehaviour
         Look(m_Look);
     }
 
-    public void Move(Vector2 direction)
+    private void Move(Vector2 direction)
     {
         var scaledMoveSpeed = moveSpeed * Time.deltaTime;
         var move = transform.TransformDirection(direction.x, 0, direction.y);
         transform.localPosition += move * scaledMoveSpeed;
     }
 
-    public void Look(Vector2 rotate)
+    private void Look(Vector2 rotate)
     {
         var scaledRoateSpeed = rotateSpeed * Time.deltaTime;
         m_Rotation.y += rotate.x * scaledRoateSpeed;
