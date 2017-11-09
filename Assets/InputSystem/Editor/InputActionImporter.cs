@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
+using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
@@ -52,6 +53,32 @@ namespace ISX.Editor
 
                     actionObject.name = objectName;
                     ctx.AddObjectToAsset(objectName, actionObject);
+                }
+            }
+
+            // Generate wrapper code, if enabled.
+            if (m_GenerateWrapperCode)
+            {
+                var wrapperFilePath = m_WrapperCodePath;
+                if (string.IsNullOrEmpty(wrapperFilePath))
+                {
+                    var assetPath = ctx.assetPath;
+                    var directory = Path.GetDirectoryName(assetPath);
+                    var fileName = Path.GetFileNameWithoutExtension(assetPath);
+                    wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
+                }
+
+                var options = new InputActionCodeGenerator.Options
+                {
+                    sourceAssetPath = ctx.assetPath,
+                    namespaceName = m_WrapperCodeNamespace,
+                    className = Path.GetFileNameWithoutExtension(ctx.assetPath)
+                };
+
+                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, sets, options))
+                {
+                    // Inform database that we modified a source asset *during* import.
+                    AssetDatabase.ImportAsset(wrapperFilePath);
                 }
             }
         }

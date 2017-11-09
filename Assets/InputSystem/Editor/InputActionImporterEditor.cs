@@ -104,6 +104,7 @@ namespace ISX.Editor
             // Look up properties on importer object.
             var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
             var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
+            var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
             // Add settings UI.
             EditorGUILayout.PropertyField(generateWapperCodeProperty);
@@ -111,6 +112,7 @@ namespace ISX.Editor
             {
                 ////REVIEW: any way to make this a file selector of sorts?
                 EditorGUILayout.PropertyField(wrapperCodePathProperty);
+                EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty);
             }
 
             ApplyRevertGUI();

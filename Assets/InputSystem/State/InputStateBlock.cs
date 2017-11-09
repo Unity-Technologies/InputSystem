@@ -27,7 +27,7 @@ namespace ISX
         public static FourCC kTypeFloat = new FourCC('F', 'L', 'T');
         public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
         public static FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
-        public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '2');
+        public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '3');
         public static FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
         public static FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
         public static FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');

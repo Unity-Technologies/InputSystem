@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ISX
@@ -76,6 +77,14 @@ namespace ISX
             }
 
             return null;
+        }
+
+        public InputActionSet FindActionSet(string name)
+        {
+            var set = TryFindActionSet(name);
+            if (set == null)
+                throw new KeyNotFoundException($"Could not find an action set called '{name}' in asset '{this}'");
+            return set;
         }
 
         ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllBindingOverrides

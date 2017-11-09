@@ -3107,6 +3107,12 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(TestModifier.s_GotInvoked, Is.True);
+
+        ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
+        ////        actions and readding devices we refresh all enabled actions. That means that when
+        ////        we restore, the action above will get refreshed and not find a 'test' modifier
+        ////        registered in the system. Should we force-disable all actions on Restore()?
+        action.Disable();
     }
 
     [Test]
@@ -3850,6 +3856,31 @@ public class FunctionalTests
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(action2.bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGenerateCodeWrapperForInputAsset()
+    {
+        var set1 = new InputActionSet("set1");
+        set1.AddAction(name: "action1", binding: "/gamepad/leftStick");
+        set1.AddAction(name: "action2", binding: "/gamepad/rightStick");
+        var set2 = new InputActionSet("set2");
+        set2.AddAction(name: "action1", binding: "/gamepad/buttonSouth");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set1);
+        asset.AddActionSet(set2);
+        asset.name = "MyControls";
+
+        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
+                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace"});
+
+        // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
+        // is just perform some textual verification. Once we have the newest Mono, this should
+        // use CSharpCodeProvider and at least parse if not compile and run the generated wrapper.
+
+        Assert.That(code, Contains.Substring("namespace MyNamespace"));
+        Assert.That(code, Contains.Substring("public class MyControls"));
     }
 
     ////TODO: the following tests have to be edit mode tests but it looks like putting them into

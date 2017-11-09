@@ -58,12 +58,12 @@ namespace ISX
             return null;
         }
 
-        public void EnableAll()
+        public void Enable()
         {
             throw new NotImplementedException();
         }
 
-        public void DisableAll()
+        public void Disable()
         {
             throw new NotImplementedException();
         }
