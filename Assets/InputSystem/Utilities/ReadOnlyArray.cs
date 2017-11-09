@@ -30,6 +30,15 @@ namespace ISX
             m_Length = length;
         }
 
+        public TValue[] ToArray()
+        {
+            if (m_Length == 0)
+                return null;
+            var result = new TValue[m_Length];
+            Array.Copy(m_Array, m_StartIndex, result, 0, m_Length);
+            return result;
+        }
+
         public IEnumerator<TValue> GetEnumerator()
         {
             return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);

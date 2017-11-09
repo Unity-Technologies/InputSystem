@@ -3067,6 +3067,36 @@ public class FunctionalTests
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.aButton));
     }
 
+    ////REVIEW: what's the bahavior we want here?
+    /*
+    [Test]
+    [Category("Actions")]
+    public void Actions_ControlsUpdateWhenDeviceIsDisconnectedAndReconnected()
+    {
+        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.Enable();
+
+        InputSystem.QueueDisconnectEvent(gamepad);
+        InputSystem.Update();
+
+        Assert.That(action.controls, Has.Count.Zero);
+
+        InputSystem.QueueConnectEvent(gamepad);
+        InputSystem.Update();
+
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_DoNotBindToDisconnectedDevices()
+    {
+        Assert.Fail();
+    }
+    */
+
     [Test]
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
@@ -3454,6 +3484,16 @@ public class FunctionalTests
         Assert.That(receivedTime, Is.EqualTo(endTime).Within(0.000001));
     }
 
+    // Make sure that if we target "*/{ActionAction}", for example, and the gamepad's A button
+    // goes down and starts the action, then whatever happens with the mouse's left button
+    // shouldn't matter until the gamepad's A button comes back up.
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_StartingOfActionCapturesControl()
+    {
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanAddSetsToAsset()
@@ -3702,6 +3742,66 @@ public class FunctionalTests
         Assert.That(set.enabled, Is.False);
         Assert.That(action1.enabled, Is.False);
         Assert.That(action2.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCloneAction()
+    {
+        var action = new InputAction(name: "action");
+        action.AddBinding("/gamepad/leftStick", modifiers: "tap", groups: "group");
+        action.AddBinding("/gamepad/rightStick");
+
+        var clone = action.Clone();
+
+        Assert.That(clone, Is.Not.SameAs(action));
+        Assert.That(clone.name, Is.EqualTo(action.name));
+        Assert.That(clone.bindings, Has.Count.EqualTo(action.bindings.Count));
+        Assert.That(clone.bindings[0].path, Is.EqualTo(action.bindings[0].path));
+        Assert.That(clone.bindings[0].modifiers, Is.EqualTo(action.bindings[0].modifiers));
+        Assert.That(clone.bindings[0].group, Is.EqualTo(action.bindings[0].group));
+        Assert.That(clone.bindings[1].path, Is.EqualTo(action.bindings[1].path));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CloningActionFromSet_ProducesSingletonAction()
+    {
+        var set = new InputActionSet("set");
+        var action = set.AddAction("action1");
+
+        var clone = action.Clone();
+
+        Assert.That(clone.set, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CloningEnabledAction_ProducesDisabledAction()
+    {
+        var action = new InputAction(binding: "/gamepad/leftStick");
+        action.Enable();
+
+        var clone = action.Clone();
+
+        Assert.That(clone.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCloneActionSets()
+    {
+        var set = new InputActionSet("set");
+        set.AddAction("action1", binding: "/gamepad/leftStick", modifiers: "tap");
+        set.AddAction("action2", binding: "/gamepad/rightStick", modifiers: "tap");
+
+        var clone = set.Clone();
+
+        Assert.That(clone, Is.Not.SameAs(set));
+        Assert.That(clone.name, Is.EqualTo(set.name));
+        Assert.That(clone.actions, Has.Count.EqualTo(set.actions.Count));
+        Assert.That(clone.actions[0].name, Is.EqualTo(set.actions[0].name));
+        Assert.That(clone.actions[1].name, Is.EqualTo(set.actions[1].name));
     }
 
 #if UNITY_EDITOR

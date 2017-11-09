@@ -38,7 +38,7 @@ namespace ISX
     //
     // NOTE: Actions are not supported in edit mode.
     [Serializable]
-    public class InputAction
+    public class InputAction : ICloneable
         ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
     {
         public enum Phase
@@ -309,6 +309,21 @@ namespace ISX
             throw new NotImplementedException();
         }
 
+        ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
+        // If you clone an action from a set, you get a singleton action in return.
+        public InputAction Clone()
+        {
+            var clone = new InputAction(name: m_Name);
+            clone.m_Bindings = bindings.ToArray();
+            clone.m_BindingsCount = m_BindingsCount;
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
+        }
+
         [SerializeField] private string m_Name;
 
         // This should be a ReadOnlyArray<InputBinding> but we can't serialize that because
@@ -508,7 +523,8 @@ namespace ISX
                             control = modifiersForBinding[i].control,
                             bindingIndex = trigger.bindingIndex,
                             modifierIndex = i,
-                            time = trigger.time
+                            time = trigger.time,
+                            startTime = modifiersForBinding[i].startTime
                         };
                         ChangePhaseOfAction(Phase.Started, ref triggerForModifier);
                         break;

@@ -17,7 +17,7 @@ namespace ISX
     // "walking" action sets, for example, that you enable and disable depending
     // on whether the player is walking or driving around.
     [Serializable]
-    public class InputActionSet : ISerializationCallbackReceiver
+    public class InputActionSet : ISerializationCallbackReceiver, ICloneable
     {
         public string name => m_Name;
 
@@ -122,6 +122,34 @@ namespace ISX
         public int GetOverrides(List<InputBindingOverride> overrides)
         {
             throw new NotImplementedException();
+        }
+
+        ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
+        public InputActionSet Clone()
+        {
+            // Internal action sets from singleton actions should not be visible outside of
+            // them. Cloning them is not allowed.
+            if (m_SingletonAction != null)
+                throw new InvalidOperationException(
+                    $"Cloning internal set of singleton action '{m_SingletonAction}' is not allowed");
+
+            var clone = new InputActionSet();
+            clone.m_Name = m_Name;
+
+            // Clone actions.
+            if (m_Actions != null && m_Actions.Length > 0)
+            {
+                clone.m_Actions = new InputAction[m_Actions.Length];
+                for (var i = 0; i < m_Actions.Length; ++i)
+                    clone.m_Actions[i] = m_Actions[i].Clone();
+            }
+
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         [SerializeField] private string m_Name;
