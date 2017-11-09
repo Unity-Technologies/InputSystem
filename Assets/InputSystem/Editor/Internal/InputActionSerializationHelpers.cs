@@ -95,7 +95,8 @@ namespace ISX.Editor
             var bindingIndex = bindingsStartIndex + bindingsCount;
 
             // If this is the first binding, start appending at end of bindings array.
-            if (bindingsCount == 0)
+            var appendToArray = bindingsCount == 0;
+            if (appendToArray)
             {
                 bindingsStartIndex = bindingsArrayProperty.arraySize;
                 bindingsStartIndexProperty.intValue = bindingsStartIndex;
@@ -111,7 +112,7 @@ namespace ISX.Editor
             newActionProperty.FindPropertyRelative("modifiers").stringValue = string.Empty;
             newActionProperty.FindPropertyRelative("flags").intValue = 0;
 
-            if (actionSetProperty != null && bindingIndex != 0) // If we're the first binding, don't adjust our own start index.
+            if (actionSetProperty != null && !appendToArray) // Nothing to adjust if we appended.
             {
                 // Adjust binding start indices of actions coming after us.
                 AdjustBindingStartOffsets(actionSetProperty, bindingIndex, 1);

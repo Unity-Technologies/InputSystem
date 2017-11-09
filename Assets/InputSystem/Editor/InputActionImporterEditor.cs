@@ -81,9 +81,16 @@ namespace ISX.Editor
         {
             base.ResetValues();
             m_AssetIsDirty = false;
-            if (m_Backup != null)
-                GetAsset().FromJson(m_Backup);
-            (assetEditor as InputActionAssetEditor)?.Reload();
+
+            // ResetValues() also gets called from the apply logic at a time
+            // when 'assetEditor' is null.
+            var actionEditor = assetEditor as InputActionAssetEditor;
+            if (actionEditor != null)
+            {
+                if (m_Backup != null)
+                    GetAsset().FromJson(m_Backup);
+                actionEditor.Reload();
+            }
         }
 
         public override void OnInspectorGUI()

@@ -1,1 +1,1 @@
-{"actions":[{"name":"gameplay/fire","bindings":[]},{"name":"gameplay/move","bindings":[]},{"name":"gameplay/look","bindings":[]}]}
+{"actions":[{"name":"gameplay/fire","bindings":[{"path":"*/{PrimaryAction}","modifiers":"Tap,SlowTap","groups":"","combinesWithPrevious":false}]},{"name":"gameplay/move","bindings":[{"path":"<Gamepad>/leftStick","modifiers":"","groups":"","combinesWithPrevious":false}]},{"name":"gameplay/look","bindings":[{"path":"<Gamepad>/rightStick","modifiers":"","groups":"","combinesWithPrevious":false}]}]}
