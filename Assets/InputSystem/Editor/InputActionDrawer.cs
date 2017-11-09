@@ -10,7 +10,7 @@ namespace ISX.Editor
     //       that are part of InputActionSets. InputActionSet has its own inspector support
     //       that does not use this property drawer.
     [CustomPropertyDrawer(typeof(InputAction))]
-    public class InputActionPropertyDrawer : PropertyDrawer
+    public class InputActionDrawer : PropertyDrawer
     {
         private const int kFoldoutHeight = 15;
         private const int kBindingIndent = 5;

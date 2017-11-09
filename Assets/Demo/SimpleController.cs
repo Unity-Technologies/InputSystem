@@ -13,9 +13,7 @@ public class SimpleController : MonoBehaviour
     public float burstSpeed;
     public GameObject projectile;
 
-    public InputAction moveAction;
-    public InputAction lookAction;
-    public InputAction fireAction;
+    public DemoControls controls;
 
     private Vector2 m_Move;
     private Vector2 m_Look;
@@ -25,10 +23,10 @@ public class SimpleController : MonoBehaviour
 
     public void Awake()
     {
-        moveAction.performed += ctx => m_Move = ctx.GetValue<Vector2>();
-        lookAction.performed += ctx => m_Look = ctx.GetValue<Vector2>();
+        controls.gameplay.move.performed += ctx => m_Move = ctx.GetValue<Vector2>();
+        controls.gameplay.look.performed += ctx => m_Look = ctx.GetValue<Vector2>();
 
-        fireAction.performed +=
+        controls.gameplay.fire.performed +=
             ctx =>
             {
                 if (ctx.modifier is SlowTapModifier)
@@ -41,13 +39,13 @@ public class SimpleController : MonoBehaviour
                 }
                 m_Charging = false;
             };
-        fireAction.started +=
+        controls.gameplay.fire.started +=
             ctx =>
             {
                 if (ctx.modifier is SlowTapModifier)
                     m_Charging = true;
             };
-        fireAction.cancelled +=
+        controls.gameplay.fire.cancelled +=
             ctx =>
             {
                 m_Charging = false;
@@ -56,16 +54,12 @@ public class SimpleController : MonoBehaviour
 
     public void OnEnable()
     {
-        moveAction.Enable();
-        lookAction.Enable();
-        fireAction.Enable();
+        controls.Enable();
     }
 
     public void OnDisable()
     {
-        moveAction.Disable();
-        lookAction.Disable();
-        fireAction.Disable();
+        controls.Disable();
     }
 
     public void OnGUI()

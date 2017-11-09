@@ -14,7 +14,7 @@ namespace ISX.Editor
     // Normally just renders a visualization of the binding. However, if the mouse
     // is hovered over the binding, displays buttons to modify the binding.
     [CustomPropertyDrawer(typeof(InputBinding))]
-    public class InputBindingPropertyDrawer : PropertyDrawer
+    public class InputBindingDrawer : PropertyDrawer
     {
         private const int kPickButtonWidth = 50;
         private const int kModifyButtonWidth = 50;

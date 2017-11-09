@@ -295,33 +295,8 @@ MonoBehaviour:
   rotateSpeed: 60
   burstSpeed: 10
   projectile: {fileID: 1050929111787496, guid: 10d52fac856bc411c8b30746a4f3bb05, type: 2}
-  moveAction:
-    m_Name: Move
-    m_Bindings:
-    - path: <Gamepad>/leftStick
-      modifiers: 
-      group: 
-      flags: 0
-    m_BindingsStartIndex: 0
-    m_BindingsCount: 1
-  lookAction:
-    m_Name: Look
-    m_Bindings:
-    - path: <Gamepad>/rightStick
-      modifiers: 
-      group: 
-      flags: 0
-    m_BindingsStartIndex: 0
-    m_BindingsCount: 1
-  fireAction:
-    m_Name: Fire
-    m_Bindings:
-    - path: '*/{PrimaryAction}'
-      modifiers: Tap,SlowTap
-      group: 
-      flags: 0
-    m_BindingsStartIndex: 0
-    m_BindingsCount: 1
+  controls:
+    m_Asset: {fileID: 11400000, guid: db628de0ec03d439ba806fdb7b2ef1cb, type: 3}
 --- !u!81 &919824550
 AudioListener:
   m_ObjectHideFlags: 0

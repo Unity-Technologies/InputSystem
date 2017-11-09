@@ -2897,8 +2897,8 @@ public class FunctionalTests
         var action1 = set.AddAction("action1");
         var action2 = set.AddAction("action2");
 
-        Assert.That(set.GetAction("action1"), Is.SameAs(action1));
-        Assert.That(set.GetAction("action2"), Is.SameAs(action2));
+        Assert.That(set.TryGetAction("action1"), Is.SameAs(action1));
+        Assert.That(set.TryGetAction("action2"), Is.SameAs(action2));
     }
 
     [Test]
@@ -3674,6 +3674,27 @@ public class FunctionalTests
         Assert.That(() => action.RemoveBindingOverride(bindingOverride), Throws.InvalidOperationException);
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanEnableAndDisableEntireSet()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1");
+        var action2 = set.AddAction("action2");
+
+        set.Enable();
+
+        Assert.That(set.enabled);
+        Assert.That(action1.enabled);
+        Assert.That(action2.enabled);
+
+        set.Disable();
+
+        Assert.That(set.enabled, Is.False);
+        Assert.That(action1.enabled, Is.False);
+        Assert.That(action2.enabled, Is.False);
+    }
+
 #if UNITY_EDITOR
     [Test]
     [Category("Editor")]
@@ -3837,8 +3858,8 @@ public class FunctionalTests
 
         // Sets and actions aren't UnityEngine.Objects so the modifications will not
         // be in-place. Look up the actions after each apply.
-        var action1 = asset.actionSets[0].GetAction("action1");
-        var action2 = asset.actionSets[0].GetAction("action2");
+        var action1 = asset.actionSets[0].TryGetAction("action1");
+        var action2 = asset.actionSets[0].TryGetAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(2));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -3850,8 +3871,8 @@ public class FunctionalTests
         InputActionSerializationHelpers.RemoveBinding(action1Property, 1, setProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        action1 = asset.actionSets[0].GetAction("action1");
-        action2 = asset.actionSets[0].GetAction("action2");
+        action1 = asset.actionSets[0].TryGetAction("action1");
+        action2 = asset.actionSets[0].TryGetAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));

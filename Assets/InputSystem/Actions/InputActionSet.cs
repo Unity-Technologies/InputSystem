@@ -21,6 +21,8 @@ namespace ISX
     {
         public string name => m_Name;
 
+        public bool enabled => m_EnabledActionsCount > 0;
+
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
         public InputActionSet(string name = null)
@@ -32,7 +34,7 @@ namespace ISX
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("Action must have name", nameof(name));
-            if (GetAction(name) != null)
+            if (TryGetAction(name) != null)
                 throw new InvalidOperationException($"Cannot add action with duplicate name '{name}' to set '{this.name}'");
 
             var action = new InputAction(name);
@@ -45,7 +47,7 @@ namespace ISX
             return action;
         }
 
-        public InputAction GetAction(string name)
+        public InputAction TryGetAction(string name)
         {
             if (m_Actions != null)
             {
@@ -58,14 +60,36 @@ namespace ISX
             return null;
         }
 
-        public void Enable()
+        public InputAction GetAction(string name)
         {
-            throw new NotImplementedException();
+            var action = TryGetAction(name);
+            if (action == null)
+                throw new KeyNotFoundException($"Could not find action '{name}' in set '{this.name}'");
+            return action;
         }
 
+        // Enable all the actions in the set.
+        public void Enable()
+        {
+            if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)
+                return;
+
+            for (var i = 0; i < m_Actions.Length; ++i)
+                m_Actions[i].Enable();
+
+            Debug.Assert(m_EnabledActionsCount == m_Actions.Length);
+        }
+
+        // Disable all the actions in the set.
         public void Disable()
         {
-            throw new NotImplementedException();
+            if (m_Actions == null || !enabled)
+                return;
+
+            for (var i = 0; i < m_Actions.Length; ++i)
+                m_Actions[i].Disable();
+
+            Debug.Assert(m_EnabledActionsCount == 0);
         }
 
         //?????
@@ -168,7 +192,9 @@ namespace ISX
 
             // Resolve all source paths.
             if (m_SingletonAction != null)
+            {
                 ResolveBindings(m_SingletonAction, ref controls, ref modifiers, ref resolvedBindings);
+            }
             else
             {
                 for (var i = 0; i < m_Actions.Length; ++i)
@@ -201,8 +227,12 @@ namespace ISX
             }
             else
             {
-                //indices in resolvedBindings and bindings should always match
-                throw new NotImplementedException();
+                for (var i = 0; i < m_Actions.Length; ++i)
+                {
+                    var action = m_Actions[i];
+                    action.m_Controls.m_Array = m_Controls;
+                    action.m_ResolvedBindings.m_Array = m_ResolvedBindings;
+                }
             }
         }
 
@@ -372,7 +402,7 @@ namespace ISX
             if (enable)
             {
                 ++m_EnabledActionsCount;
-                if (m_NextInGlobalList == null)
+                if (m_EnabledActionsCount == 1)
                 {
                     if (s_FirstSetInGlobalList != null)
                         s_FirstSetInGlobalList.m_PreviousInGlobalList = this;

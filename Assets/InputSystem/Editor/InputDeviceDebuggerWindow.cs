@@ -8,6 +8,8 @@ using UnityEngine;
 
 ////FIXME: doesn't survive domain reload correctly
 
+////TODO: this window should help diagnose problems in the event stream (e.g. ignored state events and why they were ignored)
+
 namespace ISX.Editor
 {
     // Shows status and activity of a single input device in a separate window.

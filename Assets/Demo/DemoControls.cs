@@ -1,5 +1,6 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Demo/DemoControls.inputactions'
 
+[System.Serializable]
 public class DemoControls : ISX.InputActionWrapper
 {
     private bool m_Initialized;
