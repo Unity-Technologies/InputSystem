@@ -142,6 +142,17 @@ namespace ISX
             m_CurrentPhase = Phase.Disabled;
         }
 
+        public override string ToString()
+        {
+            if (string.IsNullOrEmpty(m_Name))
+                return "<unnamed>";
+
+            if (m_ActionSet != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionSet.name))
+                return $"{m_ActionSet.name}/{m_Name}";
+
+            return m_Name;
+        }
+
         public void Enable()
         {
             if (enabled)
@@ -257,6 +268,18 @@ namespace ISX
         }
 
         ////TODO: support for removing bindings
+
+        public void ApplyBindingOverride(int bindingIndex, string path)
+        {
+            if (enabled)
+                throw new InvalidOperationException($"Cannot change overrides on action '{this}' while the action is enabled");
+
+            if (bindingIndex < 0 || bindingIndex > m_BindingsCount)
+                throw new IndexOutOfRangeException(
+                    $"Binding index {bindingIndex} is out of range for action '{this}' which has {m_BindingsCount} bindings");
+
+            m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = path;
+        }
 
         public void ApplyBindingOverride(string binding, string group = null)
         {

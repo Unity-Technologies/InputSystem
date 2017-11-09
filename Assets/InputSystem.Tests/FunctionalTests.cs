@@ -3723,6 +3723,46 @@ public class FunctionalTests
         Assert.That(() => action.RemoveBindingOverride(bindingOverride), Throws.InvalidOperationException);
     }
 
+    // The following functionality is meant in a way where you have a base action set that
+    // you then clone multiple times and put overrides on each of the clones to associate them
+    // with specific devices.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanOverrideBindingsWithControlsFromSpecificDevices()
+    {
+        // Action that matches leftStick on *any* gamepad in the system.
+        var action = new InputAction(binding: "/<gamepad>/leftStick");
+        action.AddBinding("/keyboard/enter"); // Add unrelated binding which should not be touched.
+
+        InputSystem.AddDevice("Gamepad");
+        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        // Add overrides to make bindings specific to #2 gamepad.
+        var numOverrides = action.OverrideMatchingBindingsWithSpecificControls(gamepad2);
+        action.Enable();
+
+        Assert.That(numOverrides, Is.EqualTo(1));
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls[0], Is.SameAs(gamepad2.leftStick));
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo(gamepad2.leftStick.path));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanOverrideBindingsWithControlsFromSpecificDevices_OnActionsInSet()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1", "/<keyboard>/enter");
+        var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        var numOverrides = set.OverrideMatchingBindingsWithSpecificControls(gamepad);
+
+        Assert.That(numOverrides, Is.EqualTo(1));
+        Assert.That(action1.bindings[0].overridePath, Is.Null);
+        Assert.That(action2.bindings[0].overridePath, Is.EqualTo(gamepad.aButton.path));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanEnableAndDisableEntireSet()

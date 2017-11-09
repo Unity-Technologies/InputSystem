@@ -92,6 +92,8 @@ namespace ISX
             Debug.Assert(m_EnabledActionsCount == 0);
         }
 
+        ////TODO: add static DisableAll method
+
         //?????
         public void EnableGroup(string group)
         {

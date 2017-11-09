@@ -16,6 +16,8 @@ namespace ISX
         // Return the first control that matches the given path.
         public static InputControl FindControl(InputControl control, string path, int indexInPath = 0)
         {
+            if (indexInPath == 0 && path[0] == '/')
+                ++indexInPath;
             return MatchControlsRecursive(control, path, indexInPath, null);
         }
 
@@ -30,6 +32,8 @@ namespace ISX
         public static int FindControls(InputControl control, string path, int indexInPath,
             List<InputControl> matches)
         {
+            if (indexInPath == 0 && path[0] == '/')
+                ++indexInPath;
             var countBefore = matches.Count;
             MatchControlsRecursive(control, path, indexInPath, matches);
             return matches.Count - countBefore;

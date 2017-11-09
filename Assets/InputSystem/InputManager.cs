@@ -365,16 +365,12 @@ namespace ISX
             if (m_Devices == null)
                 return 0;
 
-            var indexInPath = 0;
-            if (path[0] == '/')
-                ++indexInPath;
-
             var deviceCount = m_Devices.Length;
             var numMatches = 0;
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                numMatches += PathHelpers.FindControls(device, path, indexInPath, controls);
+                numMatches += PathHelpers.FindControls(device, path, 0, controls);
             }
 
             return numMatches;
