@@ -507,7 +507,7 @@ namespace ISX
                 var actions = new List<List<InputAction>>();
                 var bindings = new List<List<InputBinding>>();
 
-                var actionCount = this.actions.Length;
+                var actionCount = this.actions?.Length ?? 0;
                 for (var i = 0; i < actionCount; ++i)
                 {
                     var jsonAction = this.actions[i];

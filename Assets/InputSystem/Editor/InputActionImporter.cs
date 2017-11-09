@@ -1,17 +1,16 @@
 #if UNITY_EDITOR
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
-
-////REVIEW: simply call ".input" instead of ".inputactions"?
 
 namespace ISX.Editor
 {
     // Imports an InputActionAsset from JSON.
     // Can generate code wrappers for the contained action sets as a convenience.
     // Will not overwrite existing wrappers except if the generate code actually differs.
-    [ScriptedImporter(1, "inputactions")]
+    [ScriptedImporter(1, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
         [SerializeField] internal bool m_GenerateWrapperCode;

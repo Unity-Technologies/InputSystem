@@ -9,6 +9,9 @@ using UnityEngine;
 
 ////TODO: create custom editor for InputActionReference which prevents modifying the references
 
+////FIXME: because of how .inputactions are structured, an asset with just a set and no actions in it will come out
+////       as no set at all when deserialized and then cause exception in InputActionTreeView
+
 namespace ISX.Editor
 {
     // Custom editor that allows modifying importer settings for an InputActionImporter.

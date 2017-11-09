@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 
 namespace ISX.Editor
@@ -109,6 +111,17 @@ namespace ISX.Editor
         private static class Contents
         {
             public static GUIContent addNewSet = new GUIContent("Add New Set");
+        }
+
+        ////REVIEW: actually pre-populate with some stuff?
+        private const string kDefaultAssetTemplate = "{}";
+
+        // Add item to plop an .inputactions asset into the project.
+        [MenuItem("Assets/Create/Input Actions")]
+        public static void CreateInputAsset()
+        {
+            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.kExtension, kDefaultAssetTemplate,
+                EditorGUIUtility.FindTexture("UxmlScript Icon"));
         }
     }
 }

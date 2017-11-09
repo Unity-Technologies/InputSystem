@@ -2930,6 +2930,15 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ActionSetJsonCanBeEmpty()
+    {
+        var sets = InputActionSet.FromJson("{}");
+        Assert.That(sets, Is.Not.Null);
+        Assert.That(sets, Has.Length.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanConvertMultipleActionSetsToAndFromJson()
     {
         var set1 = new InputActionSet("set1");
