@@ -358,7 +358,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void Template_ReplacingDeviceTemplateWithTemplateUsingDifferentType_PreservesDeviceIdAndDescription()
+    public void Templates_ReplacingDeviceTemplateWithTemplateUsingDifferentType_PreservesDeviceIdAndDescription()
     {
         const string initialJson = @"
             {
@@ -389,6 +389,22 @@ public class FunctionalTests
 
         Assert.That(newDevice.id, Is.EqualTo(oldDeviceId));
         Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
+    }
+
+    private class MyButtonControl : ButtonControl
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        // Replace "Button" template.
+        InputSystem.RegisterTemplate<MyButtonControl>("Button");
+
+        Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
@@ -491,13 +507,6 @@ public class FunctionalTests
         var stick = setup.GetControl<StickControl>("stick");
 
         Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
-    }
-
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
-    {
-        Assert.Fail();
     }
 
     [Test]
@@ -1478,6 +1487,7 @@ public class FunctionalTests
         Assert.That(gamepad.aButton.value, Is.EqualTo(0.5f));
     }
 
+    ////REVIEW: don't do this; instead have event handlers hooked into onEvent and onUpdate perform the work
     // Controls like mouse deltas need to reset to zero when there is no activity on them in a frame.
     // This could be done by requiring the state producing code to always send appropriate state events
     // when necessary. However, for state producers that are hooked to event sources (like eg. NSEvents
@@ -1503,6 +1513,9 @@ public class FunctionalTests
                 ]
             }
         ";
+
+        //if there is a state event for pointer device X, update it to accumulate deltas
+        //before an update, reset the ... how? actions need to see the reset
 
         InputSystem.RegisterTemplate(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
@@ -4103,7 +4116,7 @@ public class FunctionalTests
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public ISX.ActionSet Clone()"));
+        Assert.That(code, Contains.Substring("public ISX.InputActionSet Clone()"));
     }
 
     ////TODO: the following tests have to be edit mode tests but it looks like putting them into

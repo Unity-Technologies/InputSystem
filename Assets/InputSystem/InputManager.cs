@@ -1065,6 +1065,7 @@ namespace ISX
 
         private void OnNativeBeforeUpdate(NativeInputUpdateType updateType)
         {
+            ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_UpdateListeners.Count; ++i)
                 m_UpdateListeners[i]((InputUpdateType)updateType);
         }

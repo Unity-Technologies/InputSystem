@@ -25,6 +25,7 @@ namespace ISX
 
         public int eventId => (int)(m_EventId & kIdMask);
 
+        ////TODO: kill device IDs
         public int deviceId
         {
             get { return m_DeviceId; }
