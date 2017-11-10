@@ -13,7 +13,7 @@ namespace ISX
     //       is a ready-made way to use Unity's default serialization and
     //       have action sets go into the asset database. However, you can
     //       just as well have action sets directly as JSON in your game.
-    public class InputActionAsset : ScriptableObject
+    public class InputActionAsset : ScriptableObject, ICloneable
     {
         ////REVIEW: simply call ".input" instead of ".inputactions"?
         public const string kExtension = "inputactions";
@@ -88,6 +88,20 @@ namespace ISX
             if (set == null)
                 throw new KeyNotFoundException($"Could not find an action set called '{name}' in asset '{this}'");
             return set;
+        }
+
+        public InputActionAsset Clone()
+        {
+            // Can't MemberwiseClone() ScriptableObject. Unfortunatly, Unity doesn't
+            // prevent the call. Result will be a duplicate wrapper object, though.
+            var clone = (InputActionAsset)CreateInstance(GetType());
+            clone.m_ActionSets = ArrayHelpers.Clone(m_ActionSets);
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            return Clone();
         }
 
         ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllBindingOverrides

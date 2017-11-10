@@ -228,5 +228,20 @@ namespace ISX
             if (index != -1)
                 Erase(ref array, index);
         }
+
+        public static TValue[] Clone<TValue>(TValue[] array)
+            where TValue : ICloneable
+        {
+            if (array == null)
+                return null;
+
+            var count = array.Length;
+            var result = new TValue[count];
+
+            for (var i = 0; i < count; ++i)
+                result[i] = (TValue)array[i].Clone();
+
+            return result;
+        }
     }
 }

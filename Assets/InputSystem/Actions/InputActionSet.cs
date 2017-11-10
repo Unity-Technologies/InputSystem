@@ -135,16 +135,11 @@ namespace ISX
                 throw new InvalidOperationException(
                     $"Cloning internal set of singleton action '{m_SingletonAction}' is not allowed");
 
-            var clone = new InputActionSet();
-            clone.m_Name = m_Name;
-
-            // Clone actions.
-            if (m_Actions != null && m_Actions.Length > 0)
+            var clone = new InputActionSet
             {
-                clone.m_Actions = new InputAction[m_Actions.Length];
-                for (var i = 0; i < m_Actions.Length; ++i)
-                    clone.m_Actions[i] = m_Actions[i].Clone();
-            }
+                m_Name = m_Name,
+                m_Actions = ArrayHelpers.Clone(m_Actions)
+            };
 
             return clone;
         }

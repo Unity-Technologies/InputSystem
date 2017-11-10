@@ -3738,7 +3738,7 @@ public class FunctionalTests
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         // Add overrides to make bindings specific to #2 gamepad.
-        var numOverrides = action.OverrideMatchingBindingsWithSpecificControls(gamepad2);
+        var numOverrides = action.ApplyOverridesUsingMatchingControls(gamepad2);
         action.Enable();
 
         Assert.That(numOverrides, Is.EqualTo(1));
@@ -3756,7 +3756,7 @@ public class FunctionalTests
         var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var numOverrides = set.OverrideMatchingBindingsWithSpecificControls(gamepad);
+        var numOverrides = set.ApplyOverridesUsingMatchingControls(gamepad);
 
         Assert.That(numOverrides, Is.EqualTo(1));
         Assert.That(action1.bindings[0].overridePath, Is.Null);
@@ -3832,16 +3832,40 @@ public class FunctionalTests
     public void Actions_CanCloneActionSets()
     {
         var set = new InputActionSet("set");
-        set.AddAction("action1", binding: "/gamepad/leftStick", modifiers: "tap");
-        set.AddAction("action2", binding: "/gamepad/rightStick", modifiers: "tap");
+        var action1 = set.AddAction("action1", binding: "/gamepad/leftStick", modifiers: "tap");
+        var action2 = set.AddAction("action2", binding: "/gamepad/rightStick", modifiers: "tap");
 
         var clone = set.Clone();
 
         Assert.That(clone, Is.Not.SameAs(set));
         Assert.That(clone.name, Is.EqualTo(set.name));
         Assert.That(clone.actions, Has.Count.EqualTo(set.actions.Count));
+        Assert.That(clone.actions, Has.None.SameAs(action1));
+        Assert.That(clone.actions, Has.None.SameAs(action2));
         Assert.That(clone.actions[0].name, Is.EqualTo(set.actions[0].name));
         Assert.That(clone.actions[1].name, Is.EqualTo(set.actions[1].name));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCloneActionAssets()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.name = "Asset";
+        var set1 = new InputActionSet("set1");
+        var set2 = new InputActionSet("set2");
+        asset.AddActionSet(set1);
+        asset.AddActionSet(set2);
+
+        var clone = asset.Clone();
+
+        Assert.That(clone, Is.Not.SameAs(asset));
+        Assert.That(clone.GetInstanceID(), Is.Not.EqualTo(asset.GetInstanceID()));
+        Assert.That(clone.actionSets, Has.Count.EqualTo(2));
+        Assert.That(clone.actionSets, Has.None.SameAs(set1));
+        Assert.That(clone.actionSets, Has.None.SameAs(set2));
+        Assert.That(clone.actionSets[0].name, Is.EqualTo("set1"));
+        Assert.That(clone.actionSets[1].name, Is.EqualTo("set2"));
     }
 
 #if UNITY_EDITOR
@@ -4051,6 +4075,7 @@ public class FunctionalTests
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
+        Assert.That(code, Contains.Substring("public ISX.ActionSet Clone()"));
     }
 
     ////TODO: the following tests have to be edit mode tests but it looks like putting them into

@@ -7,7 +7,7 @@ namespace ISX
     // Has a custom property drawer that allows dropping assets onto the
     // wrapper property.
     [Serializable]
-    public class InputActionWrapper
+    public class InputActionWrapper : ICloneable
     {
         public InputActionAsset asset => m_Asset;
 
@@ -23,6 +23,17 @@ namespace ISX
             var sets = asset.actionSets;
             for (var i = 0; i < sets.Count; ++i)
                 sets[i].Disable();
+        }
+
+        public InputActionWrapper Clone()
+        {
+            var clone = (InputActionWrapper)MemberwiseClone();
+            return clone;
+        }
+
+        object ICloneable.Clone()
+        {
+            throw new NotImplementedException();
         }
 
         [SerializeField] private InputActionAsset m_Asset;

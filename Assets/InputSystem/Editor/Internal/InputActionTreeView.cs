@@ -44,8 +44,9 @@ namespace ISX.Editor
             columns[(int)ColumnId.Name] =
                 new MultiColumnHeaderState.Column
             {
-                width = 160,
+                width = 120,
                 minWidth = 60,
+                autoResize = false,
                 headerContent = new GUIContent("Name")
             };
             columns[(int)ColumnId.Binding] =

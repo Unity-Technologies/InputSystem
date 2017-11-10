@@ -13,7 +13,6 @@ public class DemoControls : ISX.InputActionWrapper
         m_gameplay_look = m_gameplay.GetAction("look");
         m_Initialized = true;
     }
-
     // gameplay
     private ISX.InputActionSet m_gameplay;
     private ISX.InputAction m_gameplay_fire;
@@ -29,6 +28,7 @@ public class DemoControls : ISX.InputActionWrapper
         public ISX.InputActionSet Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
+        public ISX.InputActionSet Clone() { return Get().Clone(); }
         public static implicit operator ISX.InputActionSet(GameplayActions set) { return set.Get(); }
     }
     public GameplayActions @gameplay

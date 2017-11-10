@@ -9,6 +9,10 @@ using UnityEditor;
 
 ////TODO: only generate @something if @ is really needed
 
+////TODO: turn wrappers into structs, if possible (not sure how to make the property drawer stuff work with that)
+
+////TODO: generate Clone() methods (both on toplevel wrapper and on action set wrappers)
+
 namespace ISX.Editor
 {
     // Utility to generate code that makes it easier to work with action sets.
@@ -53,7 +57,6 @@ namespace ISX.Editor
                 writer.BeginBlock();
             }
 
-            ////REVIEW: make this a struct, too?
             // Begin class.
             writer.WriteLine("[System.Serializable]");
             writer.WriteLine($"public class {options.className} : ISX.InputActionWrapper");
@@ -104,6 +107,9 @@ namespace ISX.Editor
                 // Enable/disable methods.
                 writer.WriteLine($"public void Enable() {{ Get().Enable(); }}");
                 writer.WriteLine($"public void Disable() {{ Get().Disable(); }}");
+
+                // Clone method.
+                writer.WriteLine($"public ISX.InputActionSet Clone() {{ return Get().Clone(); }}");
 
                 // Implicit conversion operator.
                 writer.WriteLine($"public static implicit operator ISX.InputActionSet({setStructName} set) {{ return set.Get(); }}");

@@ -23,10 +23,6 @@ namespace ISX.Editor
         {
             EditorGUI.BeginProperty(rect, label, property);
 
-            ////FIXME: this does not work as expected...
-            // Find out if we should display our modification buttons.
-            var haveMouseOver = rect.Contains(Event.current.mousePosition);
-
             var pathProperty = property.FindPropertyRelative("path");
             var modifiersProperty = property.FindPropertyRelative("modifiers");
             var flagsProperty = property.FindPropertyRelative("flags");
@@ -37,36 +33,23 @@ namespace ISX.Editor
 
             var pathContent = GetContentForPath(path, modifiers, flags);
 
-            //Debug.Log($"Rect: {rect} Mouse: {Event.current.mousePosition} Over: {haveMouseOver} Path: {pathContent.text}");
+            var modifyButtonRect = new Rect(rect.x + rect.width - 4 - kModifyButtonWidth, rect.y, kModifyButtonWidth, rect.height);
+            var pathButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
+            var pathRect = new Rect(rect.x, rect.y, rect.width - pathButtonRect.x, rect.height);
 
-            var pathRect = rect;
             EditorGUI.LabelField(pathRect, pathContent);
 
-            if (haveMouseOver)
+            if (EditorGUI.DropdownButton(pathButtonRect, Contents.pick, FocusType.Keyboard))
             {
-                // We draw the buttons *over* the path as hover UIs.
-                var modifyButtonRect = new Rect(rect.x + rect.width - 4 - kModifyButtonWidth, rect.y, kModifyButtonWidth, rect.height);
-                var pathButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
+                PopupWindow.Show(pathButtonRect, new InputControlPicker(pathProperty));
+            }
 
-                if (EditorGUI.DropdownButton(pathButtonRect, Contents.pick, FocusType.Keyboard))
-                {
-                    PopupWindow.Show(pathButtonRect, new InputControlPicker(pathProperty));
-                }
-
-                if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
-                {
-                    PopupWindow.Show(modifyButtonRect, new ModifyPopupWindow(property));
-                }
+            if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
+            {
+                PopupWindow.Show(modifyButtonRect, new ModifyPopupWindow(property));
             }
 
             EditorGUI.EndProperty();
-
-            ////REVIEW: this shouldn't be necessary if we can get mousemove events
-            ////REVIEW: is there a better solution than this?
-            // While we the mouse is on us, repaint continuously to make our
-            // hover effect work.
-            if (haveMouseOver)
-                EditorWindow.mouseOverWindow.Repaint();
         }
 
         private GUIContent GetContentForPath(string path, string modifiers, InputBinding.Flags flags)

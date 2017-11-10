@@ -19,7 +19,7 @@ namespace ISX
         //           Another example is having two XRControllers and two action sets can be on either hand.
         //           At runtime you can dynamically override and re-override the bindings on the action sets
         //           to use them with the controllers as desired.
-        public static int OverrideMatchingBindingsWithSpecificControls(this InputAction action, InputControl control)
+        public static int ApplyOverridesUsingMatchingControls(this InputAction action, InputControl control)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -43,7 +43,7 @@ namespace ISX
             return numMatchingControls;
         }
 
-        public static int OverrideMatchingBindingsWithSpecificControls(this InputActionSet actionSet, InputControl control)
+        public static int ApplyOverridesUsingMatchingControls(this InputActionSet actionSet, InputControl control)
         {
             if (actionSet == null)
                 throw new ArgumentNullException(nameof(actionSet));
@@ -57,7 +57,7 @@ namespace ISX
             for (var i = 0; i < actionCount; ++i)
             {
                 var action = actions[i];
-                numMatchingControls = action.OverrideMatchingBindingsWithSpecificControls(control);
+                numMatchingControls = action.ApplyOverridesUsingMatchingControls(control);
             }
 
             return numMatchingControls;

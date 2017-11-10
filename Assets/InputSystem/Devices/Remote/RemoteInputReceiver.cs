@@ -1,20 +1,18 @@
-#if DEVELOPMENT_BUILD || UINTY_EDITOR
-using System;
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using UnityEngine;
 
 namespace ISX
 {
     // Makes input devices and activity from connected player visible in local
-    // input system in the editor. Remote devices appear like local devices.
+    // input system. Remote devices appear like local devices.
     // This means that remote devices are not just available for inspection but
-    // can deliver actual input inside the editor.
-    internal class RemoteInputConnection : ScriptableObject
+    // can deliver actual input to the local system.
+    internal class RemoteInputReceiver : ScriptableObject
     {
         public static void Initialize()
         {
         }
 
-        [Serializable]
         private struct RemoteInputDevice
         {
             public int remoteId; // Device ID in player.
