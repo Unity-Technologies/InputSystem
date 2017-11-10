@@ -13,6 +13,8 @@ using UnityEditor;
 
 ////TODO: generate Clone() methods (both on toplevel wrapper and on action set wrappers)
 
+////TODO: allow having an unnamed or default-named action set which spills actions directly into the toplevel wrapper
+
 namespace ISX.Editor
 {
     // Utility to generate code that makes it easier to work with action sets.

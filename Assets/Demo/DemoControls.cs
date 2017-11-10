@@ -13,6 +13,7 @@ public class DemoControls : ISX.InputActionWrapper
         m_gameplay_look = m_gameplay.GetAction("look");
         m_Initialized = true;
     }
+
     // gameplay
     private ISX.InputActionSet m_gameplay;
     private ISX.InputAction m_gameplay_fire;
