@@ -7,6 +7,8 @@ using UnityEditor;
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
+////REVIVEW: make device and/or action list a treeview?
+
 namespace ISX.Editor
 {
     // Allows looking at input activity in the editor.

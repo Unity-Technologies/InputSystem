@@ -228,6 +228,14 @@ namespace ISX
                 m_Device.m_UsagesForEachControl = null;
                 m_Device.m_UsageToControl = null;
 
+                // But we preserve IDs and descriptions of existing devices.
+                if (existingControl != null)
+                {
+                    var existingDevice = (InputDevice)existingControl;
+                    m_Device.m_Id = existingDevice.m_Id;
+                    m_Device.m_Description = existingDevice.m_Description;
+                }
+
                 if (template.m_UpdateBeforeRender == true)
                     m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
 

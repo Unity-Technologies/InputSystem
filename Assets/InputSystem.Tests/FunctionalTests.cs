@@ -358,9 +358,37 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Template_ReplacingDeviceTemplateWithTemplateUsingDifferentType_PreservesDeviceIdAndDescription()
+    public void Template_ReplacingDeviceTemplateWithTemplateUsingDifferentType_PreservesDeviceIdAndDescription()
     {
-        Assert.Fail();
+        const string initialJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : { ""product"" : ""Test"" }
+            }
+        ";
+
+        InputSystem.RegisterTemplate(initialJson);
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "Test"});
+        var oldDevice = InputSystem.devices.First(x => x.template == "MyDevice");
+
+        var oldDeviceId = oldDevice.id;
+        var oldDeviceDescription = oldDevice.description;
+
+        const string newJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Keyboard""
+            }
+        ";
+
+        InputSystem.RegisterTemplate(newJson);
+        Assert.That(InputSystem.devices, Has.Exactly(1).With.Property("template").EqualTo("MyDevice"));
+
+        var newDevice = InputSystem.devices.First(x => x.template == "MyDevice");
+
+        Assert.That(newDevice.id, Is.EqualTo(oldDeviceId));
+        Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
