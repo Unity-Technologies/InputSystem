@@ -1607,6 +1607,20 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_AddingDeviceDoesNotCauseExistingDevicesToForgetTheirState()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        InputSystem.AddDevice("Keyboard");
+
+        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
         var device = InputSystem.AddDevice("Gamepad");
@@ -4152,14 +4166,6 @@ public class FunctionalTests
     }
 
     [Test]
-    [Category("Devices")]
-    public void TODO_Devices_AddingANewDeviceDoesNotCauseExistingDevicesToForgetTheirState()
-    {
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
     [Category("State")]
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
@@ -4173,14 +4179,6 @@ public class FunctionalTests
     public void TODO_State_CanDisableFixedUpdates()
     {
         //make sure it reduces memory usage
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_CanSwitchTemplateOfExistingDevice()
-    {
         ////TODO
         Assert.Fail();
     }

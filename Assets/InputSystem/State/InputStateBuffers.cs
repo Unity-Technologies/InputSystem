@@ -314,7 +314,7 @@ namespace ISX
             }
         }
 
-        private unsafe void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
+        private void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
         {
             // Nothing to migrate if we no longer keep a buffer or the corresponding type.
             if (!newBuffer.valid)
@@ -340,6 +340,8 @@ namespace ISX
                 if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
                     continue;
 
+                ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
+
                 var oldDeviceIndex = oldDeviceIndices ? [i] ?? i;
                 var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
@@ -351,8 +353,8 @@ namespace ISX
                 var newBackPtr = newBuffer.GetBackBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
 
                 // Copy state.
-                UnsafeUtility.MemCpy(oldFrontPtr, newFrontPtr, numBytes);
-                UnsafeUtility.MemCpy(oldBackPtr, newBackPtr, numBytes);
+                UnsafeUtility.MemCpy(newFrontPtr, oldFrontPtr, numBytes);
+                UnsafeUtility.MemCpy(newBackPtr, oldBackPtr, numBytes);
             }
         }
 

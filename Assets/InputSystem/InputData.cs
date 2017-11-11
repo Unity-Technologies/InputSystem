@@ -75,6 +75,7 @@ namespace ISX
         // Templates that controls are instantiated from. One entry for each control in the system.
         private NativeArray<int> m_ControlTemplates;
 
+        ////REVIEW: allow an arbitrary number of event buffers and identify each one with a handle?
         // Input and output buffers for each device.
         // NOTE: Event buffers are fixed size though size can be determined on a per-device basis.
         private NativeArray<InputEventBuffer> m_InputBuffers;
