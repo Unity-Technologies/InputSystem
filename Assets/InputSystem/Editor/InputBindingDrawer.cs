@@ -35,7 +35,7 @@ namespace ISX.Editor
 
             var modifyButtonRect = new Rect(rect.x + rect.width - 4 - kModifyButtonWidth, rect.y, kModifyButtonWidth, rect.height);
             var pathButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
-            var pathRect = new Rect(rect.x, rect.y, rect.width - pathButtonRect.x, rect.height);
+            var pathRect = new Rect(rect.x, rect.y, pathButtonRect.x - rect.x, rect.height);
 
             EditorGUI.LabelField(pathRect, pathContent);
 
@@ -52,6 +52,7 @@ namespace ISX.Editor
             EditorGUI.EndProperty();
         }
 
+        ////TODO: move this out into a general routine that can take a path and construct a display name
         private GUIContent GetContentForPath(string path, string modifiers, InputBinding.Flags flags)
         {
             if (s_UsageRegex == null)
@@ -110,9 +111,8 @@ namespace ISX.Editor
         {
             public static GUIContent pick = new GUIContent("Pick");
             public static GUIContent modify = new GUIContent("Modify");
-            public static GUIContent combine = new GUIContent("Combines with previous binding");
+            public static GUIContent chain = new GUIContent("Forms chain with previous binding");
             public static GUIContent modifiers = new GUIContent("Modifiers:");
-            public static GUIContent addModifier = new GUIContent("Add:");
             public static GUIContent iconPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add new binding");
             public static GUIContent iconMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove binding");
         }
@@ -164,7 +164,7 @@ namespace ISX.Editor
                 // Combine-with-previous flag.
                 var currentCombineSetting = (m_Flags & InputBinding.Flags.ThisAndPreviousCombine) ==
                     InputBinding.Flags.ThisAndPreviousCombine;
-                var newCombineSetting = EditorGUI.ToggleLeft(combineToggleRect, Contents.combine, currentCombineSetting);
+                var newCombineSetting = EditorGUI.ToggleLeft(combineToggleRect, Contents.chain, currentCombineSetting);
                 if (currentCombineSetting != newCombineSetting)
                 {
                     if (newCombineSetting)
