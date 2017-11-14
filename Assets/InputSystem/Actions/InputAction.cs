@@ -648,14 +648,15 @@ namespace ISX
         // change and relays the binding index we gave it when we called AddStateChangeMonitor.
         internal void NotifyControlValueChanged(InputControl control, int bindingIndex, double time)
         {
-            var isAtDefault = control.CheckStateIsAllZeros();
-
             // If we have modifiers, let them do all the processing. The precense of a modifier
             // essentially bypasses the default phase progression logic of an action.
             var modifiers = m_ResolvedBindings[bindingIndex].modifiers;
             if (modifiers.Count > 0)
             {
                 ModifierContext context;
+
+                ////REVIEW: defer this check?
+                var isAtDefault = control.CheckStateIsAllZeros();
 
                 context.m_Action = this;
                 context.m_Trigger = new TriggerState {control = control, time = time, bindingIndex = bindingIndex};
@@ -679,19 +680,21 @@ namespace ISX
                 // Default logic has no support for cancellations and won't ever go into started
                 // phase. Will go from waiting straight to performed and then straight to waiting
                 // again.
-                if (phase == Phase.Waiting && !isAtDefault)
+                //
+                // Also, we perform the action on *any* value change. For buttons, this means that
+                // if you use the default logic without a modifier, the action will be performed
+                // both when you press and when you release the button.
+
+                var trigger = new TriggerState
                 {
-                    var trigger = new TriggerState
-                    {
-                        phase = Phase.Performed,
-                        control = control,
-                        modifierIndex = -1,
-                        bindingIndex = -1,
-                        time = time,
-                        startTime = time
-                    };
-                    ChangePhaseOfAction(Phase.Performed, ref trigger);
-                }
+                    phase = Phase.Performed,
+                    control = control,
+                    modifierIndex = -1,
+                    bindingIndex = -1,
+                    time = time,
+                    startTime = time
+                };
+                ChangePhaseOfAction(Phase.Performed, ref trigger);
             }
         }
 

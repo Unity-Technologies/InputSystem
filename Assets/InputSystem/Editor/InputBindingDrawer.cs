@@ -111,7 +111,7 @@ namespace ISX.Editor
         {
             public static GUIContent pick = new GUIContent("Pick");
             public static GUIContent modify = new GUIContent("Modify");
-            public static GUIContent chain = new GUIContent("Forms chain with previous binding");
+            public static GUIContent chain = new GUIContent("Chain with previous binding");
             public static GUIContent modifiers = new GUIContent("Modifiers:");
             public static GUIContent iconPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add new binding");
             public static GUIContent iconMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove binding");

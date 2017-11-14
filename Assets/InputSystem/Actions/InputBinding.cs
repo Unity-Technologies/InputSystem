@@ -56,7 +56,7 @@ namespace ISX
 
         public Flags flags;
 
-        public bool combinesWithPrevious
+        public bool chainWithPrevious
         {
             get { return (flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine; }
             set

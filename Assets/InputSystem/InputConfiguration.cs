@@ -14,7 +14,7 @@ namespace ISX
 
         // If a button is stored as anything but a bit, this is the threshold the value
         // of the button has to cross in order for the button to be considered pressed.
-        public static float ButtonPressPoint = 0.5f;
+        public static float ButtonPressPoint = 0.15f;
 
         // Before how long does a button have to be released for it to be considered a click?
         public static float TapTime = 0.2f;

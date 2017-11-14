@@ -381,6 +381,11 @@ namespace ISX
             return s_Manager.ListModifiers();
         }
 
+        public static void DisableAllEnabledActions()
+        {
+            InputActionSet.DisableAllEnabledActions();
+        }
+
         // Return a list of all the actions that are currently enabled in the system.
         public static List<InputAction> FindAllEnabledActions()
         {

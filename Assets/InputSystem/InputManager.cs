@@ -734,12 +734,12 @@ namespace ISX
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
             // Register action modifiers.
+            RegisterModifier("Press", typeof(PressModifier));
             RegisterModifier("Hold", typeof(HoldModifier));
             RegisterModifier("Tap", typeof(TapModifier));
             RegisterModifier("SlowTap", typeof(SlowTapModifier));
             RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
             RegisterModifier("Swipe", typeof(SwipeModifier));
-            RegisterModifier("DragAndDrop", typeof(DragAndDropModifier));
 
             BuiltinDeviceTemplates.RegisterTemplates(this);
 

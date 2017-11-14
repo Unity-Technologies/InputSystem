@@ -46,6 +46,12 @@ public class FunctionalTests
     [TearDown]
     public void TearDown()
     {
+        ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
+        ////        actions and readding devices we refresh all enabled actions. That means that when
+        ////        we restore, the action above will get refreshed and not find a 'test' modifier
+        ////        registered in the system. Should we force-disable all actions on Restore()?
+        InputSystem.DisableAllEnabledActions();
+
         InputSystem.Restore();
     }
 
@@ -1415,6 +1421,15 @@ public class FunctionalTests
         Assert.That(gamepad.dpad.right.stateBlock.byteOffset, Is.EqualTo(gamepad.dpad.stateBlock.byteOffset));
     }
 
+    // Using "offset = N" with an InputControlAttribute that doesn't specific a child path (or even then?)
+    // should add the base offset of the field itself.
+    [Test]
+    [Category("State")]
+    public void TODO_State_SpecifyingOffsetOnControlProperty_AddsBaseOffset()
+    {
+        Assert.Fail();
+    }
+
     [Test]
     [Category("State")]
     public void State_CanUpdateButtonState()
@@ -1436,22 +1451,22 @@ public class FunctionalTests
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.False);
-        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.False);
+        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
+        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.True);
-        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.False);
+        Assert.That(gamepad.bButton.wasJustPressed, Is.True);
+        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.False);
-        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.True);
+        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
+        Assert.That(gamepad.bButton.wasJustReleased, Is.True);
     }
 
     // The way we keep state does not allow observing the state change on the final
@@ -1471,8 +1486,8 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(gamepad.bButton.isPressed, Is.False);
-        Assert.That(gamepad.bButton.wasPressedThisFrame, Is.False);
-        Assert.That(gamepad.bButton.wasReleasedThisFrame, Is.False);
+        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
+        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
     }
 
     [Test]
@@ -2777,7 +2792,7 @@ public class FunctionalTests
     public void Actions_PressingAndReleasingButtonInSameFrame_StillTriggersAction()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-        var action = new InputAction(binding: "/<gamepad>/<button>");
+        var action = new InputAction(binding: "/<gamepad>/<button>", modifiers: "press");
 
         var receivedCalls = 0;
         action.performed +=
@@ -3107,7 +3122,8 @@ public class FunctionalTests
                 performedControl = ctx.control;
             };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f)});
+        var state = new GamepadState { leftStick = new Vector2(0.5f, 0.5f)};
+        InputSystem.QueueStateEvent(gamepad, state);
         InputSystem.Update();
 
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
@@ -3115,7 +3131,8 @@ public class FunctionalTests
 
         performedReceivedCalls = 0;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(0.5f, 0.5f)});
+        state.rightStick = new Vector2(0.5f, 0.5f);
+        InputSystem.QueueStateEvent(gamepad, state);
         InputSystem.Update();
 
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
@@ -3220,12 +3237,6 @@ public class FunctionalTests
         InputSystem.Update();
 
         Assert.That(TestModifier.s_GotInvoked, Is.True);
-
-        ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
-        ////        actions and readding devices we refresh all enabled actions. That means that when
-        ////        we restore, the action above will get refreshed and not find a 'test' modifier
-        ////        registered in the system. Should we force-disable all actions on Restore()?
-        action.Disable();
     }
 
     [Test]
@@ -3416,6 +3427,7 @@ public class FunctionalTests
         Assert.That(performed[0].modifier, Is.TypeOf<SlowTapModifier>());
     }
 
+    ////REVIEW: don't think this one makes sense to have
     [Test]
     [Category("Actions")]
     public void TODO_Actions_CanPerformContinuousAction()
@@ -3970,6 +3982,27 @@ public class FunctionalTests
         var referencedAction = reference.action;
 
         Assert.That(referencedAction, Is.SameAs(action2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAllEnabledActionsInOneGo()
+    {
+        var action1 = new InputAction(binding: "/gamepad/leftStick");
+        var action2 = new InputAction(binding: "/gamepad/rightStick");
+        var set = new InputActionSet();
+        var action3 = set.AddAction("action", "/gamepad/buttonSouth");
+
+        action1.Enable();
+        action2.Enable();
+        set.Enable();
+
+        InputSystem.DisableAllEnabledActions();
+
+        Assert.That(action1.enabled, Is.False);
+        Assert.That(action2.enabled, Is.False);
+        Assert.That(action3.enabled, Is.False);
+        Assert.That(set.enabled, Is.False);
     }
 
 #if UNITY_EDITOR

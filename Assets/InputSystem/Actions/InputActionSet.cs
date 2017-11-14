@@ -92,8 +92,6 @@ namespace ISX
             Debug.Assert(m_EnabledActionsCount == 0);
         }
 
-        ////TODO: add static DisableAll method
-
         //?????
         public void EnableGroup(string group)
         {
@@ -465,6 +463,22 @@ namespace ISX
                 set.ResolveBindings();
         }
 
+        internal static void DisableAllEnabledActions()
+        {
+            for (var set = s_FirstSetInGlobalList; set != null;)
+            {
+                var next = set.m_NextInGlobalList;
+
+                if (set.m_SingletonAction != null)
+                    set.m_SingletonAction.Disable();
+                else
+                    set.Disable();
+
+                set = next;
+            }
+            Debug.Assert(s_FirstSetInGlobalList == null);
+        }
+
         internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
         {
             if (enable)
@@ -507,7 +521,7 @@ namespace ISX
             public string path;
             public string modifiers;
             public string groups;
-            public bool combinesWithPrevious;
+            public bool chainWithPrevious;
 
             public InputBinding ToBinding()
             {
@@ -516,7 +530,7 @@ namespace ISX
                     path = string.IsNullOrEmpty(path) ? null : path,
                     modifiers = string.IsNullOrEmpty(modifiers) ? null : modifiers,
                     group = string.IsNullOrEmpty(groups) ? null : groups,
-                    combinesWithPrevious = combinesWithPrevious
+                    chainWithPrevious = chainWithPrevious
                 };
             }
 
@@ -527,7 +541,7 @@ namespace ISX
                     path = binding.path,
                     modifiers = binding.modifiers,
                     groups = binding.group,
-                    combinesWithPrevious = binding.combinesWithPrevious
+                    chainWithPrevious = binding.chainWithPrevious
                 };
             }
         }
