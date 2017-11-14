@@ -8,16 +8,52 @@ using UnityEngine;
 
 namespace ISX
 {
-    // Functions to deal with control path specs (like "/gamepad/*stick").
-    // Only two entry points: either find first control that matches path
-    // or find all controls that match a path.
-    internal static class PathHelpers
+    // Functions to working with control path specs (like "/gamepad/*stick").
+    // The thinking here is somewhat similar to System.IO.Path, i.e. have a range
+    // of static methods that perform various operations on paths.
+    public static class InputControlPath
     {
+        public static string TryGetDeviceTemplate(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static string TryGetControlTemplate(string path)
+        {
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+            var pathLength = path.Length;
+
+            var indexOfLastSlash = path.LastIndexOf('/');
+            if (indexOfLastSlash == -1)
+            {
+                // If there's no '/' at all in the path, it surely does not mention
+                // a control.
+                return null;
+            }
+
+            // Simplest case where control template is mentioned explicitly with '<..>'.
+            if (pathLength > indexOfLastSlash + 2 && path[indexOfLastSlash + 1] == '<' && path[pathLength - 1] == '>')
+            {
+                var templateNameStart = indexOfLastSlash + 2;
+                var templateNameLength = pathLength - templateNameStart - 1;
+                return path.Substring(templateNameStart, templateNameLength);
+            }
+
+            throw new NotImplementedException();
+        }
+
         // Return the first control that matches the given path.
         public static InputControl FindControl(InputControl control, string path, int indexInPath = 0)
         {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
+
             return MatchControlsRecursive(control, path, indexInPath, null);
         }
 
@@ -32,8 +68,14 @@ namespace ISX
         public static int FindControls(InputControl control, string path, int indexInPath,
             List<InputControl> matches)
         {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
+
             var countBefore = matches.Count;
             MatchControlsRecursive(control, path, indexInPath, matches);
             return matches.Count - countBefore;

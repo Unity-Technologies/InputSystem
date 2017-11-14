@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ISX
 {
@@ -12,7 +13,7 @@ namespace ISX
         //
         // Use case: Say you have a local co-op game and a single action set that represents the
         //           actions of any single player. To end up with action sets that are specific to
-        //           a certain player, you'd, for example, clone the action set four times, and then
+        //           a certain player, you could, for example, clone the action set four times, and then
         //           take four gamepad devices and use the methods here to have bindings be overridden
         //           on each set to refer to a specific gamepad instance.
         //
@@ -32,7 +33,7 @@ namespace ISX
 
             for (var i = 0; i < bindingsCount; ++i)
             {
-                var matchingControl = PathHelpers.FindControl(control, bindings[i].path);
+                var matchingControl = InputControlPath.FindControl(control, bindings[i].path);
                 if (matchingControl == null)
                     continue;
 
@@ -63,12 +64,30 @@ namespace ISX
             return numMatchingControls;
         }
 
-        public struct RebindOperation
+        // Base implementation for user rebinds. Can be derived from to customize rebinding
+        // behavior.
+        public class RebindOperation : IDisposable
         {
+            private InputAction m_Action;
+            private List<string> m_SuitableControlTemplates;
+
+            protected virtual void DetermineSuitableControlTemplates(List<string> result)
+            {
+            }
+
+            public void Start(InputAction action)
+            {
+            }
+
             // Manually cancel a pending rebind.
             public void Cancel()
             {
                 throw new NotImplementedException();
+            }
+
+            public virtual void Dispose()
+            {
+                GC.SuppressFinalize(this);
             }
         }
 
@@ -90,8 +109,14 @@ namespace ISX
         //       then only buttons will be considered. If it has bindings to both button
         //       and touch controls, on the other hand, then both button and touch controls
         //       will be listened for.
-        public static RebindOperation ListenForUserRebind(InputAction action, Action<bool, InputBindingOverride> callback, InputBinding? cancelBinding)
+        public static RebindOperation ListenForUserRebind(InputAction action, Action<InputBindingOverride> callback, List<string> suitableControlTemplates = null, InputAction cancelAction = null)
         {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            if (action.bindings.Count == 0)
+                throw new ArgumentException(
+                    $"For rebinding, action must have at least one existing binding (action: {action})", nameof(action));
+
             throw new NotImplementedException();
         }
     }

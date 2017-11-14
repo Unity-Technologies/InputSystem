@@ -92,7 +92,7 @@ public class SimpleController_v3 : MonoBehaviour
         transform.localEulerAngles = m_Rotation;
     }
 
-    IEnumerator BurstFire(int burstAmount)
+    private IEnumerator BurstFire(int burstAmount)
     {
         for (var i = 0; i < burstAmount; ++i)
         {
@@ -101,7 +101,7 @@ public class SimpleController_v3 : MonoBehaviour
         }
     }
 
-    void Fire()
+    private void Fire()
     {
         var transform = this.transform;
         var newProjectile = Instantiate(projectile);

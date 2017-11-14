@@ -78,13 +78,13 @@ namespace ISX
             for (var i = 0; i < childCount; ++i)
             {
                 var child = parent.m_ChildrenReadOnly[i];
-                var match = PathHelpers.FindControl(child, path);
+                var match = InputControlPath.FindControl(child, path);
                 if (match != null)
                     return match;
             }
 
             if (ReferenceEquals(parent, m_Device))
-                return PathHelpers.FindControl(m_Device, $"{m_Device.name}/{path}");
+                return InputControlPath.FindControl(m_Device, $"{m_Device.name}/{path}");
 
             return null;
         }

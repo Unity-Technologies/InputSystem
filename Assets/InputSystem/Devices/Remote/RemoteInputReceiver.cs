@@ -1,5 +1,7 @@
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
+using System;
 using UnityEngine;
+using UnityEngine.Networking.PlayerConnection;
 
 namespace ISX
 {
@@ -7,12 +9,39 @@ namespace ISX
     // input system. Remote devices appear like local devices.
     // This means that remote devices are not just available for inspection but
     // can deliver actual input to the local system.
-    internal class RemoteInputReceiver : ScriptableObject
+    [Serializable]
+    internal class RemoteInputReceiver
     {
-        public static void Initialize()
+        [SerializeField] private RemotePlayer[] m_RemotePlayers;
+
+        private void OnPlayerConnected(int playerId)
         {
         }
 
+        private void OnPlayerDisconnected(int playerId)
+        {
+        }
+
+        private void OnTemplateReceived(MessageEventArgs args)
+        {
+        }
+
+        private void OnDeviceChangeReceived(MessageEventArgs args)
+        {
+        }
+
+        private void OnInputReceived(MessageEventArgs args)
+        {
+        }
+
+        [Serializable]
+        private struct RemotePlayer
+        {
+            public int playerId;
+            public RemoteInputDevice[] devices;
+        }
+
+        [Serializable]
         private struct RemoteInputDevice
         {
             public int remoteId; // Device ID in player.
@@ -27,7 +56,6 @@ namespace ISX
             // with the name of the player to distinguish them from normal local
             // templates.
             public string templateName;
-            public string templateJson;
         }
     }
 }

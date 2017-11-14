@@ -40,7 +40,7 @@ namespace ISX
             if (string.IsNullOrEmpty(set.name))
                 throw new InvalidOperationException("Sets added to an input action asset must be named");
             ////REVIEW: some of the rules here seem stupid; just replace?
-            if (TryFindActionSet(set.name) != null)
+            if (TryGetActionSet(set.name) != null)
                 throw new InvalidOperationException($"An action set called '{set.name}' already exists in the asset");
 
             ArrayHelpers.Append(ref m_ActionSets, set);
@@ -59,12 +59,12 @@ namespace ISX
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
-            var set = TryFindActionSet(name);
+            var set = TryGetActionSet(name);
             if (set != null)
                 RemoveActionSet(set);
         }
 
-        public InputActionSet TryFindActionSet(string name)
+        public InputActionSet TryGetActionSet(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException(nameof(name));
@@ -82,9 +82,9 @@ namespace ISX
             return null;
         }
 
-        public InputActionSet FindActionSet(string name)
+        public InputActionSet GetActionSet(string name)
         {
-            var set = TryFindActionSet(name);
+            var set = TryGetActionSet(name);
             if (set == null)
                 throw new KeyNotFoundException($"Could not find an action set called '{name}' in asset '{this}'");
             return set;

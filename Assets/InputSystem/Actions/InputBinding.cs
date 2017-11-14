@@ -1,6 +1,6 @@
 using System;
 
-////REVIEW: rename "combinding" to "chaining"?
+////TODO: rename "combining" to "chaining"
 
 namespace ISX
 {
@@ -43,6 +43,15 @@ namespace ISX
         // NOTE: What a group represents is not proscribed by the system. If a group is
         //       meant to represent a specific device type or combination of device types,
         //       this can be implemented on top of the system.
+        //
+        //       One good use case for groups is to mark up bindings that have a certain
+        //       common meaning. Say, for example, you have a several binding chains
+        //       (maybe even across different action sets) where the first binding in the
+        //       chain always represents the same "modifier". Let's say it's the left
+        //       trigger on the gamepad and it'll swap between a primary set of bindings
+        //       on the four-button group on the gamepad and a secondary set. You could
+        //       mark up every single use of the modifier ...
+        ////REVIEW: this almost begs for a hierarchy of bindings...
         public string group;
 
         public Flags flags;

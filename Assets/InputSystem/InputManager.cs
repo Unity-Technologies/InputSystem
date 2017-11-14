@@ -370,7 +370,7 @@ namespace ISX
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                numMatches += PathHelpers.FindControls(device, path, 0, controls);
+                numMatches += InputControlPath.FindControls(device, path, 0, controls);
             }
 
             return numMatches;
@@ -1439,6 +1439,8 @@ namespace ISX
                     // Check if bit offset is out of range of state we have.
                     if (BitfieldHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
                         continue;
+
+                    //Debug.Log($"Bit {bitOffset} new={BitfieldHelpers.ReadSingleBit(newState+offset,bitOffset)} old={BitfieldHelpers.ReadSingleBit(oldState+offset, bitOffset)}");
 
                     if (BitfieldHelpers.ReadSingleBit(newState + offset, bitOffset) ==
                         BitfieldHelpers.ReadSingleBit(oldState + offset, bitOffset))

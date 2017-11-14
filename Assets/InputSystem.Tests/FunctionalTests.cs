@@ -57,8 +57,7 @@ public class FunctionalTests
     //     d) State
     //     e) Events
     //     f) Actions
-    //     g) Bindings
-    //     h) Editor
+    //     g) Editor
 
     [Test]
     [Category("Templates")]
@@ -515,6 +514,26 @@ public class FunctionalTests
     {
         //Make it possible to add support for Steam VDF format externally
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanGetControlTemplateFromControlPath()
+    {
+        // Control template mentioned explicitly.
+        Assert.That(InputControlPath.TryGetControlTemplate("*/<button>"), Is.EqualTo("button")); // Does not "correct" casing.
+        // Control template can be looked up from device template.
+        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/leftStick"), Is.EqualTo("Stick"));
+        // With multiple controls, only returns result if all controls use the same template.
+        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*Stick"), Is.EqualTo("Stick"));
+        // So this is null.
+        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*"), Is.Null);
+        // However, having a wildcard on the device path is taken to mean "all device templates" in this case.
+        Assert.That(InputControlPath.TryGetControlTemplate("/*/*Stick"), Is.EqualTo("Stick"));
+        // Will not look up from instanced devices at runtime so can't know device template from this path.
+        Assert.That(InputControlPath.TryGetControlTemplate("/gamepad/leftStick"), Is.Null);
+        // If only a device template is given, can't know control template.
+        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>"), Is.Null);
     }
 
     [Test]
@@ -3300,7 +3319,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanCombineBindings()
+    public void TODO_Actions_CanChainBindings()
     {
         // Set up an action that requires the left trigger to be held when pressing the A button.
 
@@ -3329,7 +3348,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CombinedBindingsTriggerIfControlsActivateAtSameTime()
+    public void TODO_Actions_ChainedBindingsTriggerIfControlsActivateAtSameTime()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -3349,7 +3368,7 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CombinedBindingsDoNotTriggerIfControlsActivateInWrongOrder()
+    public void TODO_Actions_ChainedBindingsDoNotTriggerIfControlsActivateInWrongOrder()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -3375,7 +3394,7 @@ public class FunctionalTests
     // the gesture.
     [Test]
     [Category("Action")]
-    public void TODO_Actions_CanCombineBindingsWithModifiers()
+    public void TODO_Actions_CanChainBindingsWithModifiers()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -3597,7 +3616,7 @@ public class FunctionalTests
         var set = new InputActionSet("test");
         asset.AddActionSet(set);
 
-        Assert.That(asset.TryFindActionSet("test"), Is.SameAs(set));
+        Assert.That(asset.TryGetActionSet("test"), Is.SameAs(set));
     }
 
     [Test]
@@ -3921,6 +3940,36 @@ public class FunctionalTests
         Assert.That(clone.actionSets, Has.None.SameAs(set2));
         Assert.That(clone.actionSets[0].name, Is.EqualTo("set1"));
         Assert.That(clone.actionSets[1].name, Is.EqualTo("set2"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanRebindToUserInput()
+    {
+        var action = new InputAction(binding: "/gamepad/leftStick");
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        //var rebind = InputActionRebinding.ListenForUserRebind(action,)
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanResolveActionReference()
+    {
+        var set = new InputActionSet("set");
+        set.AddAction("action1");
+        var action2 = set.AddAction("action2");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set);
+
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        reference.Set(asset, "set", "action2");
+
+        var referencedAction = reference.action;
+
+        Assert.That(referencedAction, Is.SameAs(action2));
     }
 
 #if UNITY_EDITOR

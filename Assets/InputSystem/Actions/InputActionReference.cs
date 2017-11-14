@@ -1,8 +1,7 @@
+using System;
 using UnityEngine;
 
-////REVIEW: this should really be called InputActionAsset but then InputActionAsset needs a different name
-////REVIEW: akin to this, also have an InputActionSetAsset/InputActionSetReference?
-////REVIEW: have this thing here at all? is this workflow really crucial?
+////REVIEW: akin to this, also have an InputActionSetReference? :(
 
 namespace ISX
 {
@@ -10,15 +9,56 @@ namespace ISX
     // set *without* containing the action. This is useful for passing
     // around references to actions as objects.
     //
-    // Example: put an InputActionReference field on your MonoBehaviour and
+    // Example: Put an InputActionReference field on your MonoBehaviour and
     //          then drop an action from an .inputaction asset onto your
     //          MonoBehaviour in the inspector.
+    //
+    // NOTE: InputActionReferences are named-based and will break if either
+    //       the action set or the action itself is renamed.
     public class InputActionReference : ScriptableObject
     {
         [SerializeField] internal InputActionAsset m_Asset;
 
-        ////FIXME: this is unstable... if either is renamed, the reference is borked; use GUID instead?
         [SerializeField] internal string m_SetName;
         [SerializeField] internal string m_ActionName;
+
+        [NonSerialized] private InputAction m_Action;
+
+        public InputAction action
+        {
+            get
+            {
+                if (m_Action == null)
+                {
+                    if (m_Asset == null)
+                        return null;
+
+                    var set = m_Asset.GetActionSet(m_SetName);
+                    m_Action = set.GetAction(m_ActionName);
+                }
+
+                return m_Action;
+            }
+        }
+
+        public void Set(InputActionAsset asset, string set, string action)
+        {
+            if (string.IsNullOrEmpty(set))
+                throw new ArgumentException(nameof(set));
+            if (string.IsNullOrEmpty(action))
+                throw new ArgumentException(nameof(action));
+
+            m_Asset = asset;
+            m_SetName = set;
+            m_ActionName = action;
+        }
+
+        public override string ToString()
+        {
+            if (m_Asset != null)
+                return $"{m_Action.name}:{m_SetName}/{m_ActionName}";
+
+            return base.ToString();
+        }
     }
 }

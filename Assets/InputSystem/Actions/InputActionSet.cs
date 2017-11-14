@@ -168,14 +168,13 @@ namespace ISX
         {
             public IInputActionModifier modifier;
             public InputControl control;
-            public InputAction.Phase phase;
             public Flags flags;
             public double startTime;
 
             [Flags]
             public enum Flags
             {
-                TimerRunning = 1 << 0,
+                TimerRunning = 1 << 8, // Reserve first 8 bits for phase.
             }
 
             public bool isTimerRunning
@@ -189,14 +188,56 @@ namespace ISX
                         flags &= ~Flags.TimerRunning;
                 }
             }
+
+            public InputAction.Phase phase
+            {
+                // We store the phase in the low 8 bits of the flags field.
+                get { return (InputAction.Phase)((int)flags & 0xf); }
+                set { flags = (Flags)(((uint)flags & 0xfffffff0) | (uint)value); }
+            }
         }
 
         internal struct ResolvedBinding
         {
+            [Flags]
+            public enum Flags
+            {
+                ChainsWithNext = 1 << 0,
+                EndOfChain = 1 << 1,
+            }
+
             public ReadOnlyArray<InputControl> controls;
             public ReadWriteArray<ModifierState> modifiers;
+            public Flags flags;
+
+            public bool chainsWithNext
+            {
+                get { return (flags & Flags.ChainsWithNext) == Flags.ChainsWithNext; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.ChainsWithNext;
+                    else
+                        flags &= ~Flags.ChainsWithNext;
+                }
+            }
+
+            public bool isEndOfChain
+            {
+                get { return (flags & Flags.EndOfChain) == Flags.EndOfChain; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.EndOfChain;
+                    else
+                        flags &= ~Flags.EndOfChain;
+                }
+            }
+
+            public bool isPartOfChain => chainsWithNext || isEndOfChain;
         }
 
+        ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
         // Resolve all bindings to their controls and also add any action modifiers
         // from the bindings. The best way is for this to happen once for each action
         // set at the beginning of the game and to then enable and disable the sets
@@ -208,7 +249,9 @@ namespace ISX
             if (m_Actions == null && m_SingletonAction == null)
                 return;
 
-            ////REVIEW: cache and reuse these?
+            ////TODO: this codepath must be changed to not allocate! Must be possible to do .Enable() and Disable()
+            ////      all the time during gameplay and not end up causing GC
+
             // We lazily allocate these as needed. No point allocating arrays
             // we don't use.
             List<InputControl> controls = null;

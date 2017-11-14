@@ -71,7 +71,7 @@ namespace ISX.Editor
             foreach (var set in sets)
             {
                 writer.WriteLine($"// {set.name}");
-                writer.WriteLine($"m_{set.name} = asset.FindActionSet(\"{set.name}\");");
+                writer.WriteLine($"m_{set.name} = asset.GetActionSet(\"{set.name}\");");
                 foreach (var action in set.actions)
                     writer.WriteLine($"m_{set.name}_{action.name} = m_{set.name}.GetAction(\"{action.name}\");");
             }

@@ -4,7 +4,6 @@ using UnityEngine;
 
 ////TODO: transform from using action callbacks to using events
 ////TODO: transform previous form that went to 'onEvent' to consuming events in bulk
-////TODO: transform from using lose actions to using action set
 
 public class SimpleController : MonoBehaviour
 {
@@ -89,7 +88,7 @@ public class SimpleController : MonoBehaviour
         transform.localEulerAngles = m_Rotation;
     }
 
-    IEnumerator BurstFire(int burstAmount)
+    private IEnumerator BurstFire(int burstAmount)
     {
         for (var i = 0; i < burstAmount; ++i)
         {
@@ -98,7 +97,7 @@ public class SimpleController : MonoBehaviour
         }
     }
 
-    void Fire()
+    private void Fire()
     {
         var transform = this.transform;
         var newProjectile = Instantiate(projectile);

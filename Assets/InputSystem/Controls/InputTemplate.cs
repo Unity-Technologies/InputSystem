@@ -725,7 +725,7 @@ namespace ISX
             var result = new ControlTemplate();
 
             result.name = derivedTemplate.name;
-            Debug.Assert(derivedTemplate.name != null);
+            Debug.Assert(!derivedTemplate.name.IsEmpty());
 
             result.template = derivedTemplate.template.IsEmpty() ? baseTemplate.template : derivedTemplate.template;
             result.variant = derivedTemplate.variant.IsEmpty() ? baseTemplate.variant : derivedTemplate.variant;

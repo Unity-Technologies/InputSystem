@@ -387,26 +387,6 @@ namespace ISX
             public InputControl control;
             public int bindingIndex;
             public int modifierIndex;
-            public uint dynamicUpdateCount;
-            public uint fixedUpdateCount;
-
-            public void RememberCurrentUpdate()
-            {
-                ////REVIEW: move this logic into InputManager itself?
-                var manager = InputSystem.s_Manager;
-                if (manager.m_CurrentUpdate == InputUpdateType.Fixed)
-                {
-                    // We're in fixed update so for dynamic update, goes into upcoming one.
-                    dynamicUpdateCount = manager.m_CurrentDynamicUpdateCount + 1;
-                    fixedUpdateCount = manager.m_CurrentFixedUpdateCount;
-                }
-                else
-                {
-                    // We're in dynamic update so far fixed update, goes into upcoming one.
-                    dynamicUpdateCount = manager.m_CurrentDynamicUpdateCount;
-                    fixedUpdateCount = manager.m_CurrentFixedUpdateCount + 1;
-                }
-            }
         }
 
         private bool isSingletonAction => m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this);
@@ -468,7 +448,6 @@ namespace ISX
             // Store trigger info.
             m_LastTrigger = trigger;
             m_LastTrigger.phase = newPhase;
-            m_LastTrigger.RememberCurrentUpdate();
 
             // Let listeners know.
             switch (newPhase)
@@ -509,7 +488,7 @@ namespace ISX
             Debug.Assert(trigger.bindingIndex != -1);
             Debug.Assert(trigger.modifierIndex != -1);
 
-            ////TODO: need to somehow make sure that performed and cancelled phase changes happen on the *same* binding&control
+            ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
             ////      as the start of the phase
 
             var modifiersForBinding = m_ResolvedBindings[trigger.bindingIndex].modifiers;
@@ -572,6 +551,7 @@ namespace ISX
             // If the modifier performed or cancelled, go back to waiting.
             if (newPhase == Phase.Performed || newPhase == Phase.Cancelled)
                 ResetModifier(trigger.bindingIndex, trigger.modifierIndex);
+            ////TODO: reset entire chain
         }
 
         // Notify observers that we have changed state.
