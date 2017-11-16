@@ -2,9 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 
-////TODO: make this survive a domain reload properly; not sure how to get PropertyDrawers to serialize for a domain reload
-////      (just making them [Serializable] does nothing)
-
 namespace ISX.Editor
 {
     // Custom inspector support for InputActions.
@@ -18,13 +15,12 @@ namespace ISX.Editor
         private const int kFoldoutHeight = 15;
         private const int kBindingIndent = 5;
 
-        private bool m_FoldedOut;
         private InputBindingListView m_BindingListView;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var height = (float)kFoldoutHeight;
-            if (m_FoldedOut)
+            if (property.isExpanded)
             {
                 if (m_BindingListView == null)
                     m_BindingListView = new InputBindingListView(property);
@@ -44,15 +40,15 @@ namespace ISX.Editor
             var foldoutRect = position;
             foldoutRect.height = kFoldoutHeight;
 
-            var nowFoldedOut = EditorGUI.Foldout(foldoutRect, m_FoldedOut, label);
-            if (nowFoldedOut != m_FoldedOut)
+            var nowFoldedOut = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
+            if (nowFoldedOut != property.isExpanded)
             {
-                m_FoldedOut = nowFoldedOut;
+                property.isExpanded = nowFoldedOut;
 
                 // Awkwardly force a repaint.
                 property.serializedObject.Update();
             }
-            else if (m_FoldedOut)
+            else if (property.isExpanded)
             {
                 position.y += kFoldoutHeight + 2;
                 position.x += kBindingIndent;
