@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -77,14 +76,12 @@ namespace ISX.Editor
         {
             private InputControlPicker m_Parent;
 
-            private struct Item
+            private class Item : TreeViewItem
             {
                 public string usage;
                 public string device;
                 public string control;
-            };
-
-            private List<Item> m_Items;
+            }
 
             public PathTreeView(TreeViewState state, InputControlPicker parent)
                 : base(state)
@@ -93,14 +90,34 @@ namespace ISX.Editor
                 Reload();
             }
 
+            protected override void RowGUI(RowGUIArgs args)
+            {
+                // If we're searching ATM, display the full path of controls. It's confusing to see
+                // two "leftButton" controls show up in the list and now know where they are coming from.
+                if (hasSearch)
+                {
+                    var item = args.item as Item;
+                    if (item != null && item.control != null)
+                    {
+                        var indent = GetContentIndent(item);
+                        var rect = args.rowRect;
+                        rect.x += indent;
+                        rect.width -= indent;
+                        EditorGUI.LabelField(rect, $"{item.device}/{item.control}");
+                        return;
+                    }
+                }
+
+                base.RowGUI(args);
+            }
+
             // When an item is double-clicked, form a path from the item and store it
             // in the path property. Then close the popup window.
             protected override void DoubleClickedItem(int id)
             {
-                if (id > 0 && id <= m_Items.Count)
+                var item = FindItem(id, rootItem) as Item;
+                if (item != null)
                 {
-                    var item = m_Items[id - 1];
-
                     String path = null;
                     if (item.usage != null)
                         path = $"*/{{{item.usage}}}";
@@ -121,8 +138,6 @@ namespace ISX.Editor
 
             protected override TreeViewItem BuildRoot()
             {
-                m_Items = new List<Item>();
-
                 var root = new TreeViewItem
                 {
                     displayName = "Root",
@@ -157,19 +172,18 @@ namespace ISX.Editor
                     id = id++,
                     depth = 0
                 };
-                m_Items.Add(new Item());
 
                 ////TODO: filter out usages for output controls
 
                 foreach (var usage in EditorInputTemplateCache.allUsages)
                 {
-                    var child = new TreeViewItem
+                    var child = new Item
                     {
                         id = id++,
                         depth = 1,
-                        displayName = usage.Key
+                        displayName = usage.Key,
+                        usage = usage.Key
                     };
-                    m_Items.Add(new Item { usage = usage.Key });
 
                     usageRoot.AddChild(child);
                 }
@@ -179,13 +193,13 @@ namespace ISX.Editor
 
             private TreeViewItem BuildTreeForDevice(InputTemplate template, ref int id)
             {
-                var deviceRoot = new TreeViewItem
+                var deviceRoot = new Item
                 {
                     displayName = template.name,
                     id = id++,
-                    depth = 0
+                    depth = 0,
+                    device = template.name
                 };
-                m_Items.Add(new Item { device = template.name });
 
                 BuildControlsRecursive(deviceRoot, template, string.Empty, ref id);
 
@@ -205,13 +219,14 @@ namespace ISX.Editor
                         continue;
 
                     var controlPath = prefix + control.name;
-                    var child = new TreeViewItem
+                    var child = new Item
                     {
                         id = id++,
                         depth = 1,
-                        displayName = controlPath
+                        displayName = controlPath,
+                        device = parent.displayName, ////REVIEW: this seems pointless
+                        control = controlPath
                     };
-                    m_Items.Add(new Item { device = parent.displayName, control = controlPath });
 
                     var childTemplate = EditorInputTemplateCache.TryGetTemplate(control.template);
                     if (childTemplate != null)
