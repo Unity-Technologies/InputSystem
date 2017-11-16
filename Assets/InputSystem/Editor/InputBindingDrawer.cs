@@ -34,16 +34,22 @@ namespace ISX.Editor
             var pathContent = GetContentForPath(path, modifiers, flags);
 
             var modifyButtonRect = new Rect(rect.x + rect.width - 4 - kModifyButtonWidth, rect.y, kModifyButtonWidth, rect.height);
-            var pathButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
-            var pathRect = new Rect(rect.x, rect.y, pathButtonRect.x - rect.x, rect.height);
+            var pickButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
+            var pathRect = new Rect(rect.x, rect.y, pickButtonRect.x - rect.x, rect.height);
+
+            ////TODO: center the buttons properly vertically
+            modifyButtonRect.y += 2;
+            pickButtonRect.y += 2;
 
             EditorGUI.LabelField(pathRect, pathContent);
 
-            if (EditorGUI.DropdownButton(pathButtonRect, Contents.pick, FocusType.Keyboard))
+            // Pick button.
+            if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
-                PopupWindow.Show(pathButtonRect, new InputControlPicker(pathProperty));
+                PopupWindow.Show(pickButtonRect, new InputControlPicker(pathProperty));
             }
 
+            // Modify button.
             if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
             {
                 PopupWindow.Show(modifyButtonRect, new ModifyPopupWindow(property));

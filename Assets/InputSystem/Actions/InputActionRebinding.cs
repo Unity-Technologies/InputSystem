@@ -64,25 +64,39 @@ namespace ISX
             return numMatchingControls;
         }
 
-        // Base implementation for user rebinds. Can be derived from to customize rebinding
-        // behavior.
+        // Base implementation for user rebinds. Can be derived from to customize rebinding behavior.
+        //
+        // The best control to bind to may not be the very first control that matches selection by
+        // control type. For example, when the user wants to bind to a specific axis on the left stick
+        // on the gamepad, it's not enough to just grab the first axis that actuated. With the sticks
+        // being as noisy as they are, we want to filter for the control that dominates input. For that,
+        // it adds robustness to not just wait for input in the very first frame but rather listen for
+        // input for a while after the first relevant input and then decide which the dominate axis was.
+        // This way we can reliably filter out noise from other sticks, too.
         public class RebindOperation : IDisposable
         {
-            private InputAction m_Action;
+            private InputAction m_ActionToRebind;
+            private string m_GroupsToRebind;
+
+            private InputAction m_CancelAction;
+            private InputAction m_RebindAction;
+
             private List<string> m_SuitableControlTemplates;
+
+            private int m_NumInputUpdatesToAggregate;
+            private int m_NumInputUpdatesReceived;
 
             protected virtual void DetermineSuitableControlTemplates(List<string> result)
             {
             }
 
-            public void Start(InputAction action)
+            public void Start(InputAction actionToRebind, string groupsToRebind = null)
             {
             }
 
             // Manually cancel a pending rebind.
             public void Cancel()
             {
-                throw new NotImplementedException();
             }
 
             public virtual void Dispose()
@@ -109,7 +123,7 @@ namespace ISX
         //       then only buttons will be considered. If it has bindings to both button
         //       and touch controls, on the other hand, then both button and touch controls
         //       will be listened for.
-        public static RebindOperation ListenForUserRebind(InputAction action, Action<InputBindingOverride> callback, List<string> suitableControlTemplates = null, InputAction cancelAction = null)
+        public static RebindOperation PerformUserRebind(InputAction action, InputAction cancel = null)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -117,6 +131,16 @@ namespace ISX
                 throw new ArgumentException(
                     $"For rebinding, action must have at least one existing binding (action: {action})", nameof(action));
 
+            throw new NotImplementedException();
+        }
+
+        public static RebindOperation PerformUserRebind(InputAction action, InputControl cancel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static RebindOperation PerformUserRebind(InputAction action, string cancel)
+        {
             throw new NotImplementedException();
         }
     }

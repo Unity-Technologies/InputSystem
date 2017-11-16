@@ -250,6 +250,8 @@ namespace ISX
         private string[] m_OverridesTemplates;
         internal ControlTemplate[] m_Controls;
         private InputDeviceDescription m_DeviceDescription;
+        internal string m_DisplayName;
+        internal string m_ImageName;
 
         private InputTemplate(string name, Type type)
         {
@@ -818,7 +820,9 @@ namespace ISX
             public string[] overrides;
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
-            public string[] usages;
+            public string[] usages;////TODO: this isn't implemented
+            public string displayName;
+            public string imageName;
             public DeviceDescriptorJson device;
             public ControlTemplateJson[] controls;
 
@@ -839,6 +843,8 @@ namespace ISX
                 var template = new InputTemplate(name, type);
                 template.m_ExtendsTemplate = new InternedString(extend);
                 template.m_DeviceDescription = device.ToDescriptor();
+                template.m_DisplayName = displayName;
+                template.m_ImageName = imageName;
                 if (!string.IsNullOrEmpty(format))
                     template.m_Format = new FourCC(format);
 
@@ -907,6 +913,10 @@ namespace ISX
             public string[] usages;
             public string parameters;
             public string processors;
+            public string displayName;
+            public string imageName;
+
+            ////TODO: drop this
             public bool autoReset;
 
             // ReSharper restore MemberCanBePrivate.Local
@@ -925,6 +935,8 @@ namespace ISX
                     name = new InternedString(name),
                     template = new InternedString(this.template),
                     variant = new InternedString(variant),
+                    displayName = displayName,
+                    imageName = imageName,
                     offset = offset,
                     useStateFrom = useStateFrom,
                     bit = bit,

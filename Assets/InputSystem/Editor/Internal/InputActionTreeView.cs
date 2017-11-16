@@ -32,7 +32,7 @@ namespace ISX.Editor
         private enum ColumnId
         {
             Name,
-            Binding,
+            Bindings,
             Groups,
             COUNT
         }
@@ -49,12 +49,12 @@ namespace ISX.Editor
                 autoResize = false,
                 headerContent = new GUIContent("Name")
             };
-            columns[(int)ColumnId.Binding] =
+            columns[(int)ColumnId.Bindings] =
                 new MultiColumnHeaderState.Column
             {
                 width = 280,
                 minWidth = 60,
-                headerContent = new GUIContent("Binding")
+                headerContent = new GUIContent("Bindings")
             };
             columns[(int)ColumnId.Groups] =
                 new MultiColumnHeaderState.Column
@@ -178,8 +178,26 @@ namespace ISX.Editor
                 return rowHeight;
             }
 
-            var actionSetItem = (ActionSetItem)actionItem.parent;
-            return InputActionGUI.GetBindingsArrayHeight(actionItem.property);
+            InitializeBindingListView(actionItem);
+
+            return actionItem.bindingListView.GetHeight();
+        }
+
+        private void InitializeBindingListView(ActionItem item)
+        {
+            if (item.bindingListView != null)
+                return;
+
+            var actionSetItem = (ActionSetItem)item.parent;
+            item.bindingListView =
+                new InputBindingListView(item.property, actionSetItem.property, displayHeader: false);
+
+            item.bindingListView.onChangedCallback =
+                (list) =>
+                {
+                    RefreshCustomRowHeights();
+                    m_ApplyAction();
+                };
         }
 
         protected override void RowGUI(RowGUIArgs args)
@@ -198,16 +216,12 @@ namespace ISX.Editor
                     args.rowRect = cellRect;
                     base.RowGUI(args);
                     break;
-                case (int)ColumnId.Binding:
+                case (int)ColumnId.Bindings:
                     var actionItem = item as ActionItem;
                     if (actionItem != null)
                     {
-                        var actionSetItem = (ActionSetItem)actionItem.parent;
-                        if (InputActionGUI.BindingsArray(cellRect, actionItem.property, actionSetItem.property))
-                        {
-                            RefreshCustomRowHeights();
-                            m_ApplyAction();
-                        }
+                        InitializeBindingListView(actionItem);
+                        actionItem.bindingListView.DoList(cellRect);
                     }
                     break;
             }
@@ -320,6 +334,7 @@ namespace ISX.Editor
         {
             public SerializedProperty property;
             public int actionIndex;
+            public InputBindingListView bindingListView;
         }
 
         private class ActionSetItem : TreeViewItem

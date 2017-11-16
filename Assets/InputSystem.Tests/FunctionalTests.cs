@@ -592,6 +592,22 @@ public class FunctionalTests
     }
 
     [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanQueryImageAndDisplayNameFromControl()
+    {
+        var json = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""controls"" : [ { ""name"" : ""MyControl"",  } ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        Assert.Fail();
+    }
+
+    [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromTemplate()
     {
@@ -4005,12 +4021,14 @@ public class FunctionalTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanRebindToUserInput()
+    public void TODO_Actions_CanRebindFromUserInput()
     {
         var action = new InputAction(binding: "/gamepad/leftStick");
         var gamepad = InputSystem.AddDevice("Gamepad");
 
-        //var rebind = InputActionRebinding.ListenForUserRebind(action,)
+        using (var rebind = InputActionRebinding.PerformUserRebind(action))
+        {
+        }
 
         Assert.Fail();
     }

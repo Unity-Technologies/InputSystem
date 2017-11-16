@@ -24,6 +24,10 @@ namespace ISX
         public uint bit = InputStateBlock.kInvalidOffset;
         public uint offset = InputStateBlock.kInvalidOffset;
         public uint sizeInBits;
+        public string displayName;
+        public string imageName;
+
+        ////TODO: these should go on the chopping block
         public bool autoReset;
         public bool accumulate;
     }
