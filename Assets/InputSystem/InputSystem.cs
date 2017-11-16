@@ -61,9 +61,10 @@ namespace ISX
             throw new NotImplementedException();
         }
 
-        public static InputTemplate LoadTemplate(string name)
+        public static InputTemplate TryLoadTemplate(string name)
         {
-            throw new NotImplementedException();
+            ////FIXME: this will intern the name even if the operation fails
+            return InputTemplate.TryLoadTemplate(new InternedString(name));
         }
 
         #endregion

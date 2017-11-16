@@ -2,6 +2,7 @@ using System;
 
 ////TODO: instead of using string.Intern, put them in a custom table and allow passing them around as indices
 ////      (this will probably also be useful for jobs)
+////      when this is implemented, also allow interning directly from Substrings
 
 namespace ISX
 {
@@ -11,6 +12,8 @@ namespace ISX
     {
         private readonly string m_StringOriginalCase;
         private readonly string m_StringLowerCase;
+
+        public int length => m_StringLowerCase?.Length ?? 0;
 
         public InternedString(string text)
         {
@@ -83,6 +86,26 @@ namespace ISX
         public static bool operator!=(InternedString a, InternedString b)
         {
             return !a.Equals(b);
+        }
+
+        public static bool operator==(InternedString a, string b)
+        {
+            return string.Compare(a.m_StringLowerCase, b, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        public static bool operator!=(InternedString a, string b)
+        {
+            return string.Compare(a.m_StringLowerCase, b, StringComparison.OrdinalIgnoreCase) != 0;
+        }
+
+        public static bool operator==(string a, InternedString b)
+        {
+            return string.Compare(a, b.m_StringLowerCase, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        public static bool operator!=(string a, InternedString b)
+        {
+            return string.Compare(a, b.m_StringLowerCase, StringComparison.OrdinalIgnoreCase) != 0;
         }
 
         public static implicit operator string(InternedString str)

@@ -120,7 +120,7 @@ namespace ISX.Editor
             EditorGUILayout.PropertyField(generateWapperCodeProperty);
             if (generateWapperCodeProperty.boolValue)
             {
-                ////REVIEW: any way to make this a file selector of sorts?
+                ////TODO: tie a file selector to this
                 EditorGUILayout.PropertyField(wrapperCodePathProperty);
                 EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty);
             }

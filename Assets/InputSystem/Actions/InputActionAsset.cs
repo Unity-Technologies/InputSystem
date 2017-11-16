@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+////TODO: add hierarchical set of binding overrides to asset
+
 namespace ISX
 {
     // An asset containing one or more action sets.

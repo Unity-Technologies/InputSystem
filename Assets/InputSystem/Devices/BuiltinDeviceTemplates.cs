@@ -1,3 +1,8 @@
+////TODO: add XboxGamepad template as base template
+
+////REVIEW: there should be some system that can manage device profiles (which include a template and
+////        any associated imagery) which also makes sure that things go in the right build automatically
+
 namespace ISX
 {
     ////TODO: make sure the editor always has *all* templates from all platforms

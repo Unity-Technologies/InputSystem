@@ -1,10 +1,15 @@
 #if UNITY_EDITOR
 using System;
-using System.IO;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
+
+////REVIEW: Ideally we'd have a view that can be switched dynamically between going by action and going by device/controls.
+////        The second view would ideally look something like Steam's binding overlay where you see a graphical representation
+////        of the device and can just assign actions. This would also make it much easier to deal with controls that act as
+////        as modifiers; this could simply be displayed as layers of actions on the controller.
+////        Also, ideally the InputActionAsset importer inspector stuff would also allow creating binding overrides from the UI
+////        such that you can create multiple binding profiles and each gets stored on disk as well (maybe in the same asset?)
 
 namespace ISX.Editor
 {

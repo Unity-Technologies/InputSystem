@@ -19,6 +19,8 @@ namespace ISX.Editor
 
         ////REVIEW: can we make drag&drop working with this? (to re-order bindings)
 
+        ////TODO: switch this to ReorderableList
+
         // Draws a GUI of stacked bindings. A minus icon on the left side of each binding
         // allows to remove the respective binding. A plus icon after the last binding
         // allows adding new bindings.

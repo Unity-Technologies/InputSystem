@@ -65,6 +65,10 @@ namespace ISX.Editor
             ////TODO: make this less GC heavy
             ////TODO: prettify control names (e.g. "rightTrigger" should read "Right Trigger"); have explicit display names?
 
+            ////REVIEW: This stuff here should really be based on general display functionality for controls
+            ////        which should be available to game code in just the same way for on-screen display
+            ////        purposes
+
             var usageMatch = s_UsageRegex.Match(path);
             if (usageMatch.Success)
             {

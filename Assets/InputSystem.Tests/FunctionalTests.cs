@@ -524,22 +524,71 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanGetControlTemplateFromControlPath()
+    public void Templates_CanGetControlTemplateFromControlPath()
     {
+        InputSystem.AddDevice("gamepad"); // Just to make sure we don't use this.
+
         // Control template mentioned explicitly.
         Assert.That(InputControlPath.TryGetControlTemplate("*/<button>"), Is.EqualTo("button")); // Does not "correct" casing.
         // Control template can be looked up from device template.
         Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/leftStick"), Is.EqualTo("Stick"));
         // With multiple controls, only returns result if all controls use the same template.
         Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*Stick"), Is.EqualTo("Stick"));
-        // So this is null.
-        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*"), Is.Null);
+        // Except if we match all controls on the device in which case it's taken to mean "any template goes".
+        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*"), Is.EqualTo("*"));
+        ////TODO
         // However, having a wildcard on the device path is taken to mean "all device templates" in this case.
-        Assert.That(InputControlPath.TryGetControlTemplate("/*/*Stick"), Is.EqualTo("Stick"));
+        //Assert.That(InputControlPath.TryGetControlTemplate("/*/*Stick"), Is.EqualTo("Stick"));
+        // Can determine template used by child control.
+        Assert.That(InputControlPath.TryGetControlTemplate("<gamepad>/leftStick/x"), Is.EqualTo("Axis"));
+        // Can determine template from control with usage.
+        Assert.That(InputControlPath.TryGetControlTemplate("<gamepad>/{PrimaryAction}"), Is.EqualTo("Button"));
         // Will not look up from instanced devices at runtime so can't know device template from this path.
         Assert.That(InputControlPath.TryGetControlTemplate("/gamepad/leftStick"), Is.Null);
         // If only a device template is given, can't know control template.
         Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>"), Is.Null);
+
+        ////TODO: make sure we can find templates from control template modifying child paths
+        ////TODO: make sure that finding by usage can look arbitrarily deep into the hierarchy
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanGetDeviceTemplateFromControlPath()
+    {
+        InputSystem.AddDevice("gamepad"); // Just to make sure we don't use this.
+
+        Assert.That(InputControlPath.TryGetDeviceTemplate("<gamepad>/leftStick"), Is.EqualTo("gamepad"));
+        Assert.That(InputControlPath.TryGetDeviceTemplate("/<gamepad>"), Is.EqualTo("gamepad"));
+        Assert.That(InputControlPath.TryGetDeviceTemplate("/*/*Stick"), Is.EqualTo("*"));
+        Assert.That(InputControlPath.TryGetDeviceTemplate("/*"), Is.EqualTo("*"));
+        Assert.That(InputControlPath.TryGetDeviceTemplate("/gamepad/leftStick"), Is.Null);
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanLoadTemplate()
+    {
+        var json = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""controls"" : [ { ""name"" : ""MyControl"" } ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var jsonTemplate = InputSystem.TryLoadTemplate("MyTemplate");
+
+        Assert.That(jsonTemplate, Is.Not.Null);
+        Assert.That(jsonTemplate.name, Is.EqualTo(new InternedString("MyTemplate")));
+        Assert.That(jsonTemplate.controls, Has.Count.EqualTo(1));
+        Assert.That(jsonTemplate.controls[0].name, Is.EqualTo(new InternedString("MyControl")));
+
+        var gamepadTemplate = InputSystem.TryLoadTemplate("Gamepad");
+
+        Assert.That(gamepadTemplate, Is.Not.Null);
+        Assert.That(gamepadTemplate.name, Is.EqualTo(new InternedString("Gamepad")));
     }
 
     [Test]
