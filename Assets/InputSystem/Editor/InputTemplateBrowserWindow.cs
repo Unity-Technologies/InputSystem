@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -125,7 +126,28 @@ namespace ISX.Editor
                     {
                         ////REVIEW: should this split by base device templates derived device templates instead?
                         if (!template.deviceDescription.empty)
-                            products.AddChild(item);
+                        {
+                            var rootBaseTemplateName = InputTemplate.GetRootTemplateName(template.name).ToString();
+                            if (string.IsNullOrEmpty(rootBaseTemplateName))
+                                rootBaseTemplateName = "Other";
+                            else
+                                rootBaseTemplateName += "s";
+
+                            var group = products.children?.FirstOrDefault(x => x.displayName == rootBaseTemplateName);
+                            if (group == null)
+                            {
+                                group = new TreeViewItem
+                                {
+                                    id = id++,
+                                    depth = 1,
+                                    displayName = rootBaseTemplateName
+                                };
+                                products.AddChild(group);
+                            }
+
+                            ++item.depth;
+                            group.AddChild(item);
+                        }
                         else
                             devices.AddChild(item);
                     }
