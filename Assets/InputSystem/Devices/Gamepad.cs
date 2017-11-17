@@ -2,6 +2,9 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+// use case: audio on GP (ps4 mic)
+// use case: player ID and change on same GP
+
 namespace ISX
 {
     ////REVIEW: I think it makes sense to switch this to a more compact format that doesn't store floats; after all in almost all

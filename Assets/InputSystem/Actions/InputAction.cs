@@ -15,6 +15,9 @@ using UnityEngine;
 
 ////TODO: event-based processing of input actions
 
+////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
+////      a single start cycle
+
 namespace ISX
 {
     ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas

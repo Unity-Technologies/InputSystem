@@ -11,6 +11,9 @@ using UnityEngine;
 ////        Also, ideally the InputActionAsset importer inspector stuff would also allow creating binding overrides from the UI
 ////        such that you can create multiple binding profiles and each gets stored on disk as well (maybe in the same asset?)
 
+////FIXME: ATM there is a bug in the ScriptedImporter feature where if you edit the .inputactions asset outside of Unity,
+////       it will correctly re-import but the InputActionAssetEditor will not refresh
+
 namespace ISX.Editor
 {
     // Custom inspector that allows modifying action sets in InputActionAssets.

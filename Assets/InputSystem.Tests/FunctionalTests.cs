@@ -518,8 +518,27 @@ public class FunctionalTests
     [Category("Templates")]
     public void TODO_Templates_CanAddCustomTemplateFormat()
     {
-        //Make it possible to add support for Steam VDF format externally
-        Assert.Fail();
+        var testTemplate = new InputTemplate.Builder().Build();
+
+        // Can register custom template constructors. Can use this to construct templates
+        // any arbitrary which way.
+        InputSystem.RegisterTemplate(() => testTemplate, "MyTemplate");
+
+        var result = InputSystem.TryLoadTemplate("MyTemplate");
+
+        Assert.That(result, Is.SameAs(testTemplate));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanTurnTemplateIntoJson()
+    {
+        var template = InputSystem.TryLoadTemplate("Gamepad");
+        var json = template.ToJson();
+        var deserializedTemplate = InputTemplate.FromJson(json);
+
+        Assert.That(deserializedTemplate.name, Is.EqualTo(template.name));
+        Assert.That(deserializedTemplate.controls, Has.Count.EqualTo(template.controls.Count));
     }
 
     [Test]
@@ -603,6 +622,16 @@ public class FunctionalTests
         ";
 
         InputSystem.RegisterTemplate(json);
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanConstructTemplateFromHIDDescriptor()
+    {
+        var descriptor = @"
+        ";
 
         Assert.Fail();
     }

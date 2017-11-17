@@ -51,6 +51,12 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
+        // Require name for templates that use a non-default format.
+        public static void RegisterTemplate(Func<InputTemplate> constructor, string name, string baseTemplate = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
         {
             return s_Manager.TryFindMatchingTemplate(deviceDescription);

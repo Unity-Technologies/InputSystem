@@ -2,7 +2,7 @@
 namespace ISX
 {
     // Mirrors all input data over the local PlayerConnection.
-    internal class RemoteInputSender
+    internal class RemoteInputInPlayer
     {
     }
 }

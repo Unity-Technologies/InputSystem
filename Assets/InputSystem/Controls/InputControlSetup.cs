@@ -217,7 +217,7 @@ namespace ISX
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
-                m_Device.m_StateBlock.format = template.format;
+                m_Device.m_StateBlock.format = template.stateFormat;
 
                 // If we have an existing device, we'll start the various control arrays
                 // from scratch. Note that all the controls still refer to the existing

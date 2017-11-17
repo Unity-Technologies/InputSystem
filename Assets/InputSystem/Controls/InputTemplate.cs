@@ -125,9 +125,9 @@ namespace ISX
             public string useStateFrom;
             public string displayName;
             public string imageName;
-            public ReadOnlyArray<ParameterValue> parameters;
             public ReadOnlyArray<InternedString> usages;
             public ReadOnlyArray<InternedString> aliases;
+            public ReadOnlyArray<ParameterValue> parameters;
             public ReadOnlyArray<NameAndParameters> processors;
             public uint offset;
             public uint bit;
@@ -172,7 +172,7 @@ namespace ISX
 
         public Type type => m_Type;
 
-        public FourCC format => m_Format;
+        public FourCC stateFormat => m_StateFormat;
 
         public string extendsTemplate => m_ExtendsTemplate;
 
@@ -186,9 +186,17 @@ namespace ISX
         public bool isDeviceTemplate => typeof(InputDevice).IsAssignableFrom(m_Type);
         public bool isControlTemplate => !isDeviceTemplate;
 
-        public string ToJson()
+        // Build a template programmatically. Primarily for use by template constructors
+        // registered with the system.
+        public struct Builder
         {
-            throw new NotImplementedException();
+            public string name;
+            public Type type;
+
+            public InputTemplate Build()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         // Uses reflection to construct a template from the given type.
@@ -230,13 +238,19 @@ namespace ISX
             // Create template object.
             var template = new InputTemplate(name, type);
             template.m_Controls = controlTemplates.ToArray();
-            template.m_Format = format;
+            template.m_StateFormat = format;
 
             return template;
         }
 
+        public string ToJson()
+        {
+            var template = TemplateJson.FromTemplate(this);
+            return JsonUtility.ToJson(template);
+        }
+
         // Constructs a template from the given JSON source.
-        public static InputTemplate FromJson(string name, string json)
+        public static InputTemplate FromJson(string json)
         {
             var templateJson = JsonUtility.FromJson<TemplateJson>(json);
             return templateJson.ToTemplate();
@@ -244,14 +258,14 @@ namespace ISX
 
         private InternedString m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
-        internal FourCC m_Format;
+        internal FourCC m_StateFormat;
         internal bool? m_UpdateBeforeRender;
         private InternedString m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
         internal ControlTemplate[] m_Controls;
         private InputDeviceDescription m_DeviceDescription;
         internal string m_DisplayName;
-        internal string m_ImageName;
+        internal string m_ImageName;////REVIEW: extend this to denote an arbitrary asset name?
 
         private InputTemplate(string name, Type type)
         {
@@ -637,8 +651,8 @@ namespace ISX
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
-            if (m_Format == new FourCC())
-                m_Format = other.m_Format;
+            if (m_StateFormat == new FourCC())
+                m_StateFormat = other.m_StateFormat;
 
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
@@ -803,7 +817,7 @@ namespace ISX
         {
             public string name;
             public string extend;
-            public DeviceDescriptorJson device;
+            public DeviceDescriptionJson device;
         }
 
         [Serializable]
@@ -823,7 +837,7 @@ namespace ISX
             public string[] usages;////TODO: this isn't implemented
             public string displayName;
             public string imageName;
-            public DeviceDescriptorJson device;
+            public DeviceDescriptionJson device;
             public ControlTemplateJson[] controls;
 
             // ReSharper restore MemberCanBePrivate.Local
@@ -846,7 +860,7 @@ namespace ISX
                 template.m_DisplayName = displayName;
                 template.m_ImageName = imageName;
                 if (!string.IsNullOrEmpty(format))
-                    template.m_Format = new FourCC(format);
+                    template.m_StateFormat = new FourCC(format);
 
                 if (!string.IsNullOrEmpty(beforeRender))
                 {
@@ -887,6 +901,19 @@ namespace ISX
 
                 return template;
             }
+
+            public static TemplateJson FromTemplate(InputTemplate template)
+            {
+                return new TemplateJson
+                {
+                    name = template.m_Name,
+                    displayName = template.m_DisplayName,
+                    imageName = template.m_ImageName,
+                    extend = template.m_ExtendsTemplate,
+                    device = DeviceDescriptionJson.FromDescription(template.m_DeviceDescription),
+                    controls = ControlTemplateJson.FromControlTemplates(template.m_Controls)
+                };
+            }
         }
 
         // This is a class instead of a struct so that we can assign 'offset' a custom
@@ -905,12 +932,14 @@ namespace ISX
             public string template;
             public string variant;
             public string usage; // Convenince to not have to create array for single usage.
+            public string alias; // Same.
             public string useStateFrom;
             public uint offset;
             public uint bit;
             public uint sizeInBits;
             public string format;
             public string[] usages;
+            public string[] aliases;
             public string parameters;
             public string processors;
             public string displayName;
@@ -958,6 +987,16 @@ namespace ISX
                     template.usages = new ReadOnlyArray<InternedString>(usagesList.Select(x => new InternedString(x)).ToArray());
                 }
 
+                if (!string.IsNullOrEmpty(alias) || aliases != null)
+                {
+                    var aliasesList = new List<string>();
+                    if (!string.IsNullOrEmpty(alias))
+                        aliasesList.Add(alias);
+                    if (aliases != null)
+                        aliasesList.AddRange(aliases);
+                    template.aliases = new ReadOnlyArray<InternedString>(aliasesList.Select(x => new InternedString(x)).ToArray());
+                }
+
                 if (!string.IsNullOrEmpty(parameters))
                     template.parameters = new ReadOnlyArray<ParameterValue>(ParseParameters(parameters));
 
@@ -966,10 +1005,42 @@ namespace ISX
 
                 return template;
             }
+
+            public static ControlTemplateJson[] FromControlTemplates(ControlTemplate[] templates)
+            {
+                if (templates == null)
+                    return null;
+
+                var count = templates.Length;
+                var result = new ControlTemplateJson[count];
+
+                for (var i = 0; i < count; ++i)
+                {
+                    var template = templates[i];
+                    result[i] = new ControlTemplateJson
+                    {
+                        name = template.name,
+                        template = template.template,
+                        variant = template.variant,
+                        displayName = template.displayName,
+                        imageName = template.imageName,
+                        bit = template.bit,
+                        offset = template.offset,
+                        sizeInBits = template.sizeInBits,
+                        format = template.format.ToString(),
+                        parameters = string.Join(",", template.parameters.Select(x => x.ToString())),
+                        processors = string.Join(",", template.processors.Select(x => x.ToString())),
+                        usages = template.usages.Select(x => x.ToString()).ToArray(),
+                        aliases = template.aliases.Select(x => x.ToString()).ToArray()
+                    };
+                }
+
+                return result;
+            }
         }
 
         [Serializable]
-        private struct DeviceDescriptorJson
+        private struct DeviceDescriptionJson
         {
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
@@ -989,6 +1060,18 @@ namespace ISX
 
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore CS0649
+
+            public static DeviceDescriptionJson FromDescription(InputDeviceDescription description)
+            {
+                return new DeviceDescriptionJson
+                {
+                    @interface = description.interfaceName,
+                    deviceClass = description.deviceClass,
+                    manufacturer = description.manufacturer,
+                    product = description.product,
+                    version = description.version
+                };
+            }
 
             public InputDeviceDescription ToDescriptor()
             {
@@ -1018,10 +1101,13 @@ namespace ISX
                     if (string.IsNullOrEmpty(part))
                         return null;
 
-                    return $"({part})";
+                    return $"{part}";
                 }
 
-                return "$regex|({part})";
+                if (regex[regex.Length - 1] != ')')
+                    return $"({regex})|({part}";
+
+                return $"{regex}|({part})";
             }
         }
 
@@ -1039,7 +1125,8 @@ namespace ISX
             string json;
             if (s_TemplateStrings.TryGetValue(name, out json))
             {
-                var template = FromJson(name, json);
+                var template = FromJson(json);
+                template.m_Name = name;
                 if (table != null)
                     table[name] = template;
 

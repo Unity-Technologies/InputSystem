@@ -3,6 +3,8 @@ using System;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
+////REVIEW: Ideally, the editor should also be able to *send* input to the player
+
 namespace ISX
 {
     // Makes input devices and activity from connected player visible in local
@@ -10,7 +12,7 @@ namespace ISX
     // This means that remote devices are not just available for inspection but
     // can deliver actual input to the local system.
     [Serializable]
-    internal class RemoteInputReceiver
+    internal class RemoteInputInEditor
     {
         [SerializeField] private RemotePlayer[] m_RemotePlayers;
 

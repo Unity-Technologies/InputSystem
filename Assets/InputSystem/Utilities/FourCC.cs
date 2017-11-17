@@ -38,8 +38,8 @@ namespace ISX
 
         public override string ToString()
         {
-            return string.Format("'{0}{1}{2}{3}'",
-                (char)(m_Code >> 24), (char)((m_Code & 0xff0000) >> 16), (char)((m_Code & 0xff00) >> 8), (char)(m_Code & 0xff));
+            return
+                $"{(char)(m_Code>>24)}{(char)((m_Code&0xff0000)>>16)}{(char)((m_Code&0xff00)>>8)}{(char)(m_Code&0xff)}";
         }
     }
 }

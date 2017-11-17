@@ -56,7 +56,7 @@ namespace ISX
         {
             Connected = 1 << 0,
             UpdateBeforeRender = 1 << 1,
-            HasAutoResetControls = 1 << 2,
+            HasAutoResetControls = 1 << 2,////TODO: remove
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
         }
 

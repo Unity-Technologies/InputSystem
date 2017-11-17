@@ -175,8 +175,8 @@ namespace ISX.Editor
                 AddChild(item, $"Type: {template.type.Name}", ref id);
                 if (!string.IsNullOrEmpty(template.extendsTemplate))
                     AddChild(item, $"Extends: {template.extendsTemplate}", ref id);
-                if (template.format != 0)
-                    AddChild(item, $"Format: {template.format}", ref id);
+                if (template.stateFormat != 0)
+                    AddChild(item, $"Format: {template.stateFormat}", ref id);
                 if (template.m_UpdateBeforeRender != null)
                 {
                     var value = template.m_UpdateBeforeRender.Value ? "Update" : "Disabled";
