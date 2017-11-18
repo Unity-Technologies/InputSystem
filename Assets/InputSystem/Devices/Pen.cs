@@ -53,5 +53,11 @@ namespace ISX
     public class Pen : Pointer
     {
         public new static Pen current { get; internal set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
     }
 }

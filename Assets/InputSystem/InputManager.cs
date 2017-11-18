@@ -778,6 +778,7 @@ namespace ISX
 
             // Register templates.
             RegisterTemplate("Button", typeof(ButtonControl)); // Controls.
+            RegisterTemplate("Key", typeof(KeyControl));
             RegisterTemplate("Axis", typeof(AxisControl));
             RegisterTemplate("Analog", typeof(AxisControl));
             RegisterTemplate("Digital", typeof(DiscreteControl));

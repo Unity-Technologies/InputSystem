@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
+using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace ISX.Editor
@@ -122,9 +124,7 @@ namespace ISX.Editor
             public static GUIContent pick = new GUIContent("Pick");
             public static GUIContent modify = new GUIContent("Modify");
             public static GUIContent chain = new GUIContent("Chain with previous binding");
-            public static GUIContent modifiers = new GUIContent("Modifiers:");
-            public static GUIContent iconPlus = EditorGUIUtility.IconContent("Toolbar Plus", "Add new binding");
-            public static GUIContent iconMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove binding");
+            public static GUIContent modifiers = new GUIContent("Modifiers");
         }
 
         // This will most likely go away but for now it provides a way to customize an InputBinding
@@ -132,12 +132,8 @@ namespace ISX.Editor
         private class ModifyPopupWindow : PopupWindowContent
         {
             private const int kPaddingTop = 10;
-            private const int kPaddingLeft = 5;
+            private const int kPaddingLeftRight = 5;
             private const int kCombineToggleHeight = 20;
-            private const int kAddModifierButtonWidth = 80;
-            private const int kAddModifierButtonHeight = 20;
-            private const int kModifiersLabelHeight = 20;
-            private const int kModifierLineHeight = 20;
 
             private SerializedProperty m_FlagsProperty;
             private SerializedProperty m_ModifiersProperty;
@@ -146,6 +142,7 @@ namespace ISX.Editor
             private Vector2 m_ScrollPosition;
             private GUIContent[] m_ModifierChoices;
             private int m_SelectedModifier;
+            private ReorderableList m_ModifierListView;
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
@@ -157,24 +154,38 @@ namespace ISX.Editor
                 var modifierString = m_ModifiersProperty.stringValue;
                 if (!string.IsNullOrEmpty(modifierString))
                     m_Modifiers = InputTemplate.ParseNameAndParameterList(modifierString);
+                else
+                    m_Modifiers = Array.Empty<InputTemplate.NameAndParameters>();
+
+                InitializeModifierListView();
             }
+
+            ////TODO: close with escape
 
             public override void OnGUI(Rect rect)
             {
                 m_ScrollPosition = GUI.BeginScrollView(rect, m_ScrollPosition, rect);
 
-                var combineToggleRect = rect;
-                combineToggleRect.x += kPaddingLeft;
-                combineToggleRect.y += kPaddingTop;
-                combineToggleRect.height = kCombineToggleHeight;
-                combineToggleRect.width -= kPaddingLeft;
+                // Modifiers section.
+                var modifierListRect = rect;
+                modifierListRect.x += kPaddingLeftRight;
+                modifierListRect.y += kPaddingTop;
+                modifierListRect.width -= kPaddingLeftRight * 2;
+                modifierListRect.height = m_ModifierListView.GetHeight();
+                m_ModifierListView.DoList(modifierListRect);
+
+                ////TODO: draw box around following section
+
+                // Chaining toggle.
+                var chainingToggleRect = modifierListRect;
+                chainingToggleRect.y += modifierListRect.height + 5;
+                chainingToggleRect.height = kCombineToggleHeight;
 
                 ////TODO: disable toggle if property is first in list (bit tricky to find out from the SerializedProperty)
 
-                // Combine-with-previous flag.
                 var currentCombineSetting = (m_Flags & InputBinding.Flags.ThisAndPreviousCombine) ==
                     InputBinding.Flags.ThisAndPreviousCombine;
-                var newCombineSetting = EditorGUI.ToggleLeft(combineToggleRect, Contents.chain, currentCombineSetting);
+                var newCombineSetting = EditorGUI.ToggleLeft(chainingToggleRect, Contents.chain, currentCombineSetting);
                 if (currentCombineSetting != newCombineSetting)
                 {
                     if (newCombineSetting)
@@ -186,66 +197,14 @@ namespace ISX.Editor
                     m_FlagsProperty.serializedObject.ApplyModifiedProperties();
                 }
 
-                // Modifiers section.
-                var modifiersLabelRect = combineToggleRect;
-                modifiersLabelRect.y += kCombineToggleHeight;
-                modifiersLabelRect.height = kModifiersLabelHeight;
-
-                GUI.Label(modifiersLabelRect, Contents.modifiers, EditorStyles.boldLabel);
-
-                var nextModifierRect = modifiersLabelRect;
-                nextModifierRect.width = combineToggleRect.width;
-                nextModifierRect.height = kModifierLineHeight;
-                nextModifierRect.x += 10;
-                nextModifierRect.y += kModifiersLabelHeight;
-
-                if (m_Modifiers != null)
-                {
-                    for (var i = 0; i < m_Modifiers.Length; ++i)
-                    {
-                        var name = m_Modifiers[i].name;
-
-                        ////TODO: parameters
-
-                        var labelRect = nextModifierRect;
-                        labelRect.width = kAddModifierButtonWidth;
-                        GUI.Label(labelRect, name);
-
-                        var minusButtonRect = labelRect;
-                        minusButtonRect.x += minusButtonRect.width + 3;
-                        minusButtonRect.width = Contents.iconMinus.image.width;
-                        minusButtonRect.height = Contents.iconMinus.image.height;
-
-                        if (GUI.Button(minusButtonRect, Contents.iconMinus, GUIStyle.none))
-                        {
-                            ArrayHelpers.Erase(ref m_Modifiers, i);
-                            ApplyModifiers();
-                            return;
-                        }
-
-                        nextModifierRect.y += kModifierLineHeight;
-                    }
-                }
-
-                var addModifierRect = nextModifierRect;
-                addModifierRect.height = kAddModifierButtonHeight;
-                addModifierRect.width = kAddModifierButtonWidth;
-
-                var plusModifierRect = addModifierRect;
-                plusModifierRect.x += kAddModifierButtonWidth + 3;
-                plusModifierRect.width = Contents.iconPlus.image.width;
-                plusModifierRect.height = Contents.iconPlus.image.height;
-
-                // UI to add new modifier to binding.
-                m_SelectedModifier = EditorGUI.Popup(addModifierRect, m_SelectedModifier, m_ModifierChoices);
-                if (GUI.Button(plusModifierRect, Contents.iconPlus, GUIStyle.none))
-                {
-                    ArrayHelpers.Append(ref m_Modifiers,
-                        new InputTemplate.NameAndParameters {name = m_ModifierChoices[m_SelectedModifier].text});
-                    ApplyModifiers();
-                }
-
                 GUI.EndScrollView();
+            }
+
+            private void AddModifier(object modifierNameString)
+            {
+                ArrayHelpers.Append(ref m_Modifiers,
+                    new InputTemplate.NameAndParameters {name = (string)modifierNameString});
+                ApplyModifiers();
             }
 
             private void ApplyModifiers()
@@ -253,6 +212,37 @@ namespace ISX.Editor
                 var modifiers = string.Join(",", m_Modifiers.Select(x => x.ToString()));
                 m_ModifiersProperty.stringValue = modifiers;
                 m_ModifiersProperty.serializedObject.ApplyModifiedProperties();
+                InitializeModifierListView();
+            }
+
+            private void InitializeModifierListView()
+            {
+                m_ModifierListView = new ReorderableList(m_Modifiers, typeof(InputTemplate.NameAndParameters));
+
+                m_ModifierListView.drawHeaderCallback =
+                    (rect) => EditorGUI.LabelField(rect, Contents.modifiers);
+
+                m_ModifierListView.drawElementCallback =
+                    (rect, index, isActive, isFocused) =>
+                    {
+                        EditorGUI.LabelField(rect, m_Modifiers[index].name);
+                    };
+
+                m_ModifierListView.onAddDropdownCallback =
+                    (rect, list) =>
+                    {
+                        var menu = new GenericMenu();
+                        for (var i = 0; i < m_ModifierChoices.Length; ++i)
+                            menu.AddItem(m_ModifierChoices[i], false, AddModifier, m_ModifierChoices[i].text);
+                        menu.ShowAsContext();
+                    };
+
+                m_ModifierListView.onRemoveCallback =
+                    (list) =>
+                    {
+                        ArrayHelpers.Erase(ref m_Modifiers, list.index);
+                        ApplyModifiers();
+                    };
             }
         }
     }

@@ -1,10 +1,9 @@
-////TODO: switch Keyboard over to using this instead of ButtonControl directly
+////TODO: expose key information
+
 namespace ISX
 {
     public class KeyControl : ButtonControl
     {
-        //expose stuff like symbol info
-
         public int scanCode => 0;
     }
 }

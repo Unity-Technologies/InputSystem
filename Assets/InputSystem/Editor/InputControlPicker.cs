@@ -154,6 +154,10 @@ namespace ISX.Editor
 
                 foreach (var template in EditorInputTemplateCache.allBaseDeviceTemplates)
                 {
+                    // Skip templates that don't have any controls (like the "HID" template).
+                    if (template.controls.Count == 0)
+                        continue;
+
                     var tree = BuildTreeForDevice(template, ref id);
                     root.AddChild(tree);
                 }

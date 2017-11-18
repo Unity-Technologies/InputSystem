@@ -62,20 +62,22 @@ namespace ISX
             public HIDElementDescriptor[] elements;
         }
 
-        internal static void InitializeHIDSupport()
+        internal static void InitializeHIDSupport(InputManager manager)
         {
             throw new NotImplementedException();
         }
 
-        internal static void OnDeviceDiscovered(InputDeviceDescription description, string json, string matchedTemplate)
+        internal static string OnDeviceDiscovered(InputDeviceDescription description, string matchedTemplate)
         {
             // If the system found a matching template, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedTemplate))
-                return;
+                return null;
 
             // If the device isn't a HID, we're not interested.
             if (description.interfaceName != kHIDInterface)
-                return;
+                return null;
+
+            return null;
         }
     }
 }

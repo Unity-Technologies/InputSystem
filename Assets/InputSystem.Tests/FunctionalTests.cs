@@ -1912,7 +1912,7 @@ public class FunctionalTests
     // this callback to generate a template on the fly.
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanGenerateTemplatesOnDeviceDiscovery()
+    public void TODO_Devices_CanDetermineWhichTemplateIsChosenOnDeviceDiscovery()
     {
         Assert.Fail();
     }

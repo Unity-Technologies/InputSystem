@@ -145,6 +145,12 @@ namespace ISX
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        public static event Func<InputDeviceDescription, string, string> onDeviceDiscovered
+        {
+            add { throw new NotImplementedException(); }
+            remove { throw new NotImplementedException(); }
+        }
+
         public static InputDevice AddDevice(string template, string name = null)
         {
             return s_Manager.AddDevice(template, name);
