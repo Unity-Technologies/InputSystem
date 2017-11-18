@@ -1992,6 +1992,46 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanCreateGenericJoystick()
+    {
+        var json = @"
+            {
+                ""name"" : ""MyJoystick"",
+                ""extend"" : ""Joystick"",
+                ""controls"" : [
+                    { ""name"" : ""button1"", ""template"" : ""Button"" },
+                    { ""name"" : ""button2"", ""template"" : ""Button"" },
+                    { ""name"" : ""axis1"", ""template"" : ""Axis"" },
+                    { ""name"" : ""axis2"", ""template"" : ""Axis"" },
+                    { ""name"" : ""discrete"", ""template"" : ""Digital"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = InputSystem.AddDevice("MyJoystick");
+
+        Assert.That(device, Is.TypeOf<Joystick>());
+        Assert.That(Joystick.current, Is.SameAs(device));
+
+        var joystick = (Joystick)device;
+
+        Assert.That(joystick.axes, Has.Count.EqualTo(4)); // Includes stick.
+        Assert.That(joystick.buttons, Has.Count.EqualTo(3)); // Includes trigger.
+        Assert.That(joystick.trigger.name, Is.EqualTo("trigger"));
+        Assert.That(joystick.stick.name, Is.EqualTo("stick"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanCreateGenericHID()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_CanQueryKeyCodeInformationFromKeyboard()
     {
         //set up callback equivalent to what native does to query per-key control data
@@ -2008,6 +2048,7 @@ public class FunctionalTests
     [TestCase("Touchscreen")]
     [TestCase("HMD")]
     [TestCase("XRController")]
+    [TestCase("Joystick")]
     public void Devices_CanCreateDevice(string template)
     {
         var device = InputSystem.AddDevice(template);

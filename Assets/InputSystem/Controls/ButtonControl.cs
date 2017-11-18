@@ -1,3 +1,5 @@
+////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
+
 namespace ISX
 {
     // An axis that has a trigger point beyond which it is considered to be pressed.

@@ -797,6 +797,7 @@ namespace ISX
             RegisterTemplate("Motor", typeof(MotorControl));
 
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
+            RegisterTemplate("Joystick", typeof(Joystick));
             RegisterTemplate("Keyboard", typeof(Keyboard));
             RegisterTemplate("Pointer", typeof(Pointer));
             RegisterTemplate("Mouse", typeof(Mouse));

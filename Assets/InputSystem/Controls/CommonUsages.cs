@@ -11,7 +11,7 @@ namespace ISX
         public static InternedString Back = new InternedString("Back");
         public static InternedString Forward = new InternedString("Forward");
         public static InternedString Menu = new InternedString("Menu");
-        public static InternedString Submit = new InternedString("Submit");
+        public static InternedString Submit = new InternedString("Submit");////REVIEW: Call 'accept'?
         public static InternedString Cancel = new InternedString("Cancel");
         public static InternedString Previous = new InternedString("Previous");
         public static InternedString Next = new InternedString("Next");
@@ -20,6 +20,7 @@ namespace ISX
         public static InternedString Pressure = new InternedString("Pressure");
         public static InternedString Position = new InternedString("Position");
         public static InternedString Orientation = new InternedString("Orientation");
+        public static InternedString Hatswitch = new InternedString("Hatswitch");
 
         // Rotation around single, fixed axis.
         // Example: twist on joystick or twist of pen (few pens support that).
