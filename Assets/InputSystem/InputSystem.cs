@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -51,11 +53,43 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
-        // Require name for templates that use a non-default format.
-        public static void RegisterTemplate(Func<InputTemplate> constructor, string name, string baseTemplate = null)
+        // Register a constructor that delivers an InputTemplate instance on demand.
+        //
+        // The given expression must be a lambda expression solely comprised of a method call with
+        // no arguments. Can be static or instance method call. If it is an instance method, the
+        // instance object must be serializable.
+        //
+        // The reason for these restrictions and for not taking an arbitrary delegate is that we
+        // need to be able to persist the template constructor between domain reloads.
+        //
+        // NOTE: The template that is being constructed must not vary over time (except between
+        //       domain reloads).
+        public static void RegisterTemplateConstructor(Expression<Func<InputTemplate>> constructor, string name,
+            string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
         {
-            throw new NotImplementedException();
+            if (constructor == null)
+                throw new ArgumentNullException(nameof(constructor));
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name));
+
+            // Grab method and (optional) instance from lambda expression.
+            var methodCall = constructor.Body as MethodCallExpression;
+            if (methodCall == null)
+                throw new ArgumentException(
+                    $"Body of template constructor must be a method call (is a {constructor.Body.NodeType} instead)",
+                    nameof(constructor));
+
+            var method = methodCall.Method;
+            var instance = methodCall.Object.NodeType == ExpressionType.Constant
+                ? ((ConstantExpression)methodCall.Object).Value
+                : Expression.Lambda(methodCall.Object).Compile().DynamicInvoke();
+
+            // Register.
+            s_Manager.RegisterTemplateConstructor(method, instance, name, baseTemplate: baseTemplate,
+                deviceDescription: deviceDescription);
         }
+
+        //public static void RegisterTemplateMethod<T>(string )
 
         public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
         {

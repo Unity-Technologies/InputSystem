@@ -1,9 +1,14 @@
 using System;
+using System.Collections.Generic;
 
-////TODO: allow control hierarchies to target arbitrary memory (like state events) to read out control data
+////TODO: add ability to get and to set configuration on a control (probably just key/value pairs)
+
+////TODO: remove the distinction between input and output controls; allow every InputControl to write values
 
 namespace ISX
 {
+    using Configuration = KeyValuePair<InternedString, PrimitiveValue>;
+
     // A typed and named value.
     // Actual value is stored in central state storage managed by InputSystem.
     // Controls form hierarchies and can be looked with paths.
@@ -81,6 +86,17 @@ namespace ISX
                 throw new InvalidCastException(
                     $"Cannot query value of type '{typeof(TValue).Name}' from control of type '{this.GetType().Name}");
             return controlOfType.value;
+        }
+
+        ////REVIEW: where would this go? what about configuration events?
+        public ReadOnlyArray<Configuration> GetConfiguration()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetConfiguration(ReadOnlyArray<Configuration> configuration)
+        {
+            throw new NotImplementedException();
         }
 
         // Constructor for devices which are assigned names once plugged

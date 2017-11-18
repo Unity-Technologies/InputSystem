@@ -1,4 +1,4 @@
-////TODO: allow variant to be attached to modifiers
+////TODO: rename to IInputActionGesture (and "modifier" to "gesture" in general)
 
 namespace ISX
 {

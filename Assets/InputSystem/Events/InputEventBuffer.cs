@@ -11,6 +11,11 @@
 
 ////REVIEW: turn the core of InputEventTrace into InputEventBuffer?
 
+//solve threading with indirection
+//one fixed size buffer of N events of size T
+//fixed array of event points used as ring buffer
+//threaded freelist
+
 namespace ISX
 {
     // A buffer containing InputEvents.

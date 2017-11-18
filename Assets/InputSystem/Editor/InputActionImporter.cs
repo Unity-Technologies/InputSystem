@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
@@ -9,7 +8,7 @@ namespace ISX.Editor
 {
     // Imports an InputActionAsset from JSON.
     // Can generate code wrappers for the contained action sets as a convenience.
-    // Will not overwrite existing wrappers except if the generate code actually differs.
+    // Will not overwrite existing wrappers except if the generated code actually differs.
     [ScriptedImporter(1, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {

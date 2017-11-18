@@ -34,6 +34,9 @@ namespace ISX
     // editor, we don't keep them around beyond device creation.
     public class InputTemplate
     {
+        // String that is used to separate names from namespaces in template names.
+        public const string kNamespaceQualifier = "::";
+
         public enum ParameterType
         {
             Boolean,
@@ -103,11 +106,6 @@ namespace ISX
                 return $"name({parameterString})";
             }
         }
-
-        ////TODO: need to figure out how to handle the root control; ATM the ControlTemplates always represent children
-        ////      and you can't really set any properties on the root control
-        ////      (the existing way works fine normal control templates but doesn't allow devices to make use of
-        ////      what's offered to any other type control)
 
         // Specifies the composition of an input control.
         public struct ControlTemplate
@@ -193,9 +191,22 @@ namespace ISX
             public string name;
             public Type type;
 
+            public Builder WithName(string name)
+            {
+                this.name = name;
+                return this;
+            }
+
             public InputTemplate Build()
             {
-                throw new NotImplementedException();
+                if (string.IsNullOrEmpty(name))
+                    throw new InvalidOperationException("No name has been set on the template");
+
+                var template = new InputTemplate(new InternedString(name), type);
+
+                ////TODO: controls
+
+                return template;
             }
         }
 
@@ -910,8 +921,9 @@ namespace ISX
                     displayName = template.m_DisplayName,
                     imageName = template.m_ImageName,
                     extend = template.m_ExtendsTemplate,
+                    format = template.stateFormat.ToString(),
                     device = DeviceDescriptionJson.FromDescription(template.m_DeviceDescription),
-                    controls = ControlTemplateJson.FromControlTemplates(template.m_Controls)
+                    controls = ControlTemplateJson.FromControlTemplates(template.m_Controls),
                 };
             }
         }
@@ -1115,17 +1127,42 @@ namespace ISX
         // These dictionaries are owned and managed by InputManager.
         internal static Dictionary<InternedString, Type> s_TemplateTypes;
         internal static Dictionary<InternedString, string> s_TemplateStrings;
+        internal static Dictionary<InternedString, Constructor> s_TemplateConstructors;
         internal static Dictionary<InternedString, InternedString> s_BaseTemplateTable;
 
-        internal static InputTemplate TryLoadTemplate(InternedString name, Dictionary<InternedString, InputTemplate> table = null)
+        internal struct Constructor
         {
+            public MethodInfo method;
+            public object instance;
+        }
+
+        private static InputTemplate TryLoadTemplateInternal(InternedString name)
+        {
+            // Check constructors.
+            Constructor constructor;
+            if (s_TemplateConstructors.TryGetValue(name, out constructor))
+                return (InputTemplate)constructor.method.Invoke(constructor.instance, null);
+
             // See if we have a string template for it. These
             // always take precedence over ones from type so that we can
             // override what's in the code using data.
             string json;
             if (s_TemplateStrings.TryGetValue(name, out json))
+                return FromJson(json);
+
+            // No, but maybe we have a type template for it.
+            Type type;
+            if (s_TemplateTypes.TryGetValue(name, out type))
+                return FromType(name, type);
+
+            return null;
+        }
+
+        internal static InputTemplate TryLoadTemplate(InternedString name, Dictionary<InternedString, InputTemplate> table = null)
+        {
+            var template = TryLoadTemplateInternal(name);
+            if (template != null)
             {
-                var template = FromJson(json);
                 template.m_Name = name;
                 if (table != null)
                     table[name] = template;
@@ -1140,21 +1177,9 @@ namespace ISX
                         throw new TemplateNotFoundException($"Cannot find base template '{template.m_ExtendsTemplate}' of template '{name}'");
                     template.MergeTemplate(superTemplate);
                 }
-
-                return template;
             }
 
-            // No, but maybe we have a type template for it.
-            Type type;
-            if (s_TemplateTypes.TryGetValue(name, out type))
-            {
-                var template = FromType(name, type);
-                if (table != null)
-                    table[name] = template;
-                return template;
-            }
-
-            return null;
+            return template;
         }
 
         // Return name of template at root of "extend" chain of given template.

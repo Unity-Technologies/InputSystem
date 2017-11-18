@@ -5,6 +5,8 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
+////FIXME: why is size of memory for state event smaller than for device?
+
 ////TODO: find way to automatically dock the state windows next to their InputDeviceDebuggerWindows
 ////      (probably needs an extension to the editor UI APIs as the only programmatic docking controls
 ////      seem to be through GetWindow)

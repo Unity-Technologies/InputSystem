@@ -117,7 +117,7 @@ namespace ISX.Editor
             var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
             // Add settings UI.
-            EditorGUILayout.PropertyField(generateWapperCodeProperty);
+            EditorGUILayout.PropertyField(generateWapperCodeProperty, Contents.generateWrapperCode);
             if (generateWapperCodeProperty.boolValue)
             {
                 ////TODO: tie a file selector to this
@@ -137,6 +137,11 @@ namespace ISX.Editor
         {
             m_AssetIsDirty = true;
             Repaint();
+        }
+
+        private static class Contents
+        {
+            public static GUIContent generateWrapperCode = new GUIContent("Generate C# Wrapper Class");
         }
     }
 }

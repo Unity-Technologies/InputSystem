@@ -516,17 +516,40 @@ public class FunctionalTests
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanAddCustomTemplateFormat()
+    public void Templates_CanBuildTemplatesInCode()
     {
-        var testTemplate = new InputTemplate.Builder().Build();
+        var builder = new InputTemplate.Builder();
 
-        // Can register custom template constructors. Can use this to construct templates
-        // any arbitrary which way.
-        InputSystem.RegisterTemplate(() => testTemplate, "MyTemplate");
+        builder.name = "MyTemplate";
+        builder.type = typeof(Gamepad);
+
+        var template = builder.Build();
+
+        Assert.That(template.name, Is.EqualTo(new InternedString("MyTemplate")));
+        Assert.That(template.type, Is.SameAs(typeof(Gamepad)));
+    }
+
+    [Serializable]
+    private class MyTemplateConstructor
+    {
+        public InputTemplate template = new InputTemplate.Builder().WithName("MyTemplate").Build();
+        public InputTemplate DoIt()
+        {
+            return template;
+        }
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanAddCustomTemplateConstructor()
+    {
+        var constructor = new MyTemplateConstructor();
+
+        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), "MyTemplate");
 
         var result = InputSystem.TryLoadTemplate("MyTemplate");
 
-        Assert.That(result, Is.SameAs(testTemplate));
+        Assert.That(result, Is.SameAs(constructor.template));
     }
 
     [Test]
@@ -539,6 +562,7 @@ public class FunctionalTests
 
         Assert.That(deserializedTemplate.name, Is.EqualTo(template.name));
         Assert.That(deserializedTemplate.controls, Has.Count.EqualTo(template.controls.Count));
+        Assert.That(deserializedTemplate.stateFormat, Is.EqualTo(template.stateFormat));
     }
 
     [Test]
@@ -1878,6 +1902,21 @@ public class FunctionalTests
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
     }
 
+    // For some devices, we need to discover their setup at runtime and cannot create templates
+    // in advance. HID joysticks are one such case. We want to be able to turn any HID joystick
+    // into a Joystick device and accurately represent all the axes and buttons the device
+    // actually has. If we couldn't make up templates on the fly, we would have to have a fallback
+    // joystick template that simply has N buttons and M axes.
+    //
+    // So, instead we have a callback that tells us when a device has been discovered. We can use
+    // this callback to generate a template on the fly.
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanGenerateTemplatesOnDeviceDiscovery()
+    {
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanBeRemoved()
@@ -1948,6 +1987,14 @@ public class FunctionalTests
     [Category("Devices")]
     public void TODO_Devices_AllGamepadListRefreshesWhenGamepadIsAdded()
     {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanQueryKeyCodeInformationFromKeyboard()
+    {
+        //set up callback equivalent to what native does to query per-key control data
         Assert.Fail();
     }
 
