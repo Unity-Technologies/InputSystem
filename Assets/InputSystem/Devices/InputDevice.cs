@@ -15,7 +15,7 @@ namespace ISX
 
         public InputDeviceDescription description => m_Description;
 
-        ////REVIEW: move to descriptor?
+        ////TODO: this needs to become part of the device's configuration
         // Systems that support multiple concurrent player inputs on the same system, the available
         // player inputs are usually numbered. For example, on a console the gamepads slots on the system
         // will be numbered and associated with gamepads. This number corresponds to the system assigned
@@ -25,6 +25,13 @@ namespace ISX
         // Whether the device is currently connected.
         // If you want to listen for state changes, hook into InputManager.onDeviceChange.
         public bool connected => (m_Flags & Flags.Connected) == Flags.Connected;
+
+        // Whether the device is mirrored from a remote input system and not actually present
+        // as a "real" device in the local system.
+        public bool remote => (m_Flags & Flags.Remote) == Flags.Remote;
+
+        // Whether the device comes from the native Unity runtime.
+        public bool native => (m_Flags & Flags.Native) == Flags.Native;
 
         public bool updateBeforeRender => (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender;
 
@@ -58,6 +65,7 @@ namespace ISX
             UpdateBeforeRender = 1 << 1,
             HasAutoResetControls = 1 << 2,////TODO: remove
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 4, // It's a device created from data surfaced by NativeInputSystem.
         }
 
         internal Flags m_Flags;
@@ -101,7 +109,7 @@ namespace ISX
         // May be shared with other devices.
         internal InputEventBuffer m_OutputBuffer;
 
-        // NOTE: We don't store processors in an combined array the same way we do for
+        // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
 
         internal void SetUsage(InternedString usage)

@@ -22,6 +22,8 @@ namespace ISX
         // hand controller.
         UsageChanged,
 
-        VariantChanged
+        VariantChanged,
+
+        ConfigurationChanged
     }
 }

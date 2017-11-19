@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
+using ISX.Remote;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -64,6 +65,7 @@ public class FunctionalTests
     //     e) Events
     //     f) Actions
     //     g) Editor
+    //     h) Remote
 
     [Test]
     [Category("Templates")]
@@ -2407,7 +2409,7 @@ public class FunctionalTests
             {
                 ++receivedCalls;
                 Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
-                Assert.That(inputEvent.device, Is.SameAs(device));
+                Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
             };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
@@ -4187,6 +4189,75 @@ public class FunctionalTests
         Assert.That(action2.enabled, Is.False);
         Assert.That(action3.enabled, Is.False);
         Assert.That(set.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_CanConnectTwoInputSystemsOverNetwork()
+    {
+        // Add some data to the local input system.
+        InputSystem.AddDevice("Gamepad");
+        InputSystem.RegisterTemplate(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
+        var localGamepad = (Gamepad)InputSystem.AddDevice("MyGamepad");
+
+        // Now create another input system instance and connect it
+        // to our "local" instance.
+        // NOTE: This relies on internal APIs. We want remoting as such to be available
+        //       entirely from user land but having multiple input systems in the same
+        //       application isn't something that we necessarily want to expose (we do
+        //       have global state so it can easily lead to surprising results).
+        // NOTE: This second system is *NOT* connected to NativeInputSystem. Running
+        //       updates on it, for example, won't do anything.
+        var secondInputSystem = new InputManager();
+        secondInputSystem.InitializeData();
+
+        var local = InputSystem.remote;
+        var remote = new InputRemoting(secondInputSystem, senderId: 1);
+
+        // We wire the two directly into each other effectively making function calls
+        // our "network transport layer". In a real networking situation, we'd effectively
+        // have an RPC-like mechanism sitting in-between.
+        local.Subscribe(remote);
+        remote.Subscribe(local);
+
+        local.StartSending();
+
+        var remoteGamepadTemplate = $"{InputRemoting.kRemoteTemplateNamespacePrefix}0::{localGamepad.template}";
+
+        // Make sure that our "remote" system now has the data we initially
+        // set up on the local system.
+        Assert.That(secondInputSystem.devices,
+            Has.Exactly(1).With.Property("template").EqualTo(remoteGamepadTemplate));
+        Assert.That(secondInputSystem.devices, Has.Exactly(2).TypeOf<Gamepad>());
+        Assert.That(secondInputSystem.devices, Has.All.With.Property("remote").True);
+
+        // Send state event to local gamepad.
+        InputSystem.QueueStateEvent(localGamepad, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        // Have second system install its state buffers. Remember that state isn't stored
+        // on the controls so querying controls on remoteGamepad for their values would read
+        // state that is actually owned by the "real" local input system.
+        secondInputSystem.m_StateBuffers.SwitchTo(InputUpdateType.Dynamic);
+
+        var remoteGamepad = (Gamepad)secondInputSystem.devices.First(x => x.template == remoteGamepadTemplate);
+
+        //if secondInputSystem isn't connected to native updates, this won't ever work....
+        Assert.That(remoteGamepad.leftTrigger.value, Is.EqualTo(0.5).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void TODO_Remote_AddingDeviceWhileRemoting_WillSendDeviceToRemote()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void TODO_Remote_RegisteringTemplateWhileRemoting_WillSendTemplateToRemote()
+    {
+        Assert.Fail();
     }
 
 #if UNITY_EDITOR

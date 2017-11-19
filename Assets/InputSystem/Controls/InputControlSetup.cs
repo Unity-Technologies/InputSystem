@@ -26,12 +26,14 @@ namespace ISX
     public class InputControlSetup
     {
         // We use this constructor when we create devices in batches.
-        internal InputControlSetup()
+        internal InputControlSetup(InputTemplate.Collection templates)
         {
+            m_TemplateCache.templates = templates;
         }
 
         public InputControlSetup(string template, InputDevice existingDevice = null, string variant = null)
         {
+            m_TemplateCache.templates = InputTemplate.s_Templates;
             Setup(new InternedString(template), existingDevice, new InternedString(variant));
         }
 
@@ -241,7 +243,14 @@ namespace ISX
 
                 // Devices get their names from the topmost base templates.
                 if (name.IsEmpty())
-                    name = InputTemplate.GetRootTemplateName(template.name);
+                {
+                    name = InputTemplate.s_Templates.GetRootTemplateName(template.name);
+
+                    // If there's a namespace in the template name, snip it out.
+                    var indexOfLastColon = name.ToString().LastIndexOf(':');
+                    if (indexOfLastColon != -1)
+                        name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
+                }
             }
             else if (parent == null)
             {

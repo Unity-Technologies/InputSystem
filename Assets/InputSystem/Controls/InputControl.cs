@@ -89,12 +89,16 @@ namespace ISX
         }
 
         ////REVIEW: where would this go? what about configuration events?
-        public ReadOnlyArray<Configuration> GetConfiguration()
+        public virtual ReadOnlyArray<Configuration> GetConfiguration()
         {
+            //For device:
+            //  If native device (have flag on control), call through to NativeInputSystem.GetDeviceConfiguration
+            //For controls:
+            //  Same but need to find way to identify the control on the device
             throw new NotImplementedException();
         }
 
-        public void SetConfiguration(ReadOnlyArray<Configuration> configuration)
+        public virtual void SetConfiguration(ReadOnlyArray<Configuration> configuration)
         {
             throw new NotImplementedException();
         }

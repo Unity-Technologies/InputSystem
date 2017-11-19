@@ -127,7 +127,7 @@ namespace ISX.Editor
                         ////REVIEW: should this split by base device templates derived device templates instead?
                         if (!template.deviceDescription.empty)
                         {
-                            var rootBaseTemplateName = InputTemplate.GetRootTemplateName(template.name).ToString();
+                            var rootBaseTemplateName = InputTemplate.s_Templates.GetRootTemplateName(template.name).ToString();
                             if (string.IsNullOrEmpty(rootBaseTemplateName))
                                 rootBaseTemplateName = "Other";
                             else

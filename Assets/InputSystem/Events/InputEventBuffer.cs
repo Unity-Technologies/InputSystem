@@ -16,6 +16,9 @@
 //fixed array of event points used as ring buffer
 //threaded freelist
 
+//have two structs: InputEventBuffer which is a plain memory buffer containing InputEvents and InputEventQueue which
+//                  implements threaded queueing and dequeuing on fixed size buffers
+
 namespace ISX
 {
     // A buffer containing InputEvents.

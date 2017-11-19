@@ -7,11 +7,7 @@ using UnityEngine;
 
 ////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
 
-////TODO: in Extras, add support for creating templates from Steam .vdf files
-
 ////TODO: ensure that if a template sets a device description, it is indeed a device template
-
-////TODO: add namespaces to templates to make dynamic generation safe
 
 namespace ISX
 {
@@ -848,6 +844,7 @@ namespace ISX
             public string[] usages;////TODO: this isn't implemented
             public string displayName;
             public string imageName;
+            public string type; // This is mostly for when we turn arbitrary InputTemplates into JSON; less for templates *coming* from JSON.
             public DeviceDescriptionJson device;
             public ControlTemplateJson[] controls;
 
@@ -861,7 +858,20 @@ namespace ISX
                 // extends nothing, we can't know what type to use for it so we default to
                 // InputDevice.
                 Type type = null;
-                if (string.IsNullOrEmpty(extend))
+                if (!string.IsNullOrEmpty(this.type))
+                {
+                    type = Type.GetType(this.type, false);
+                    if (type == null)
+                    {
+                        Debug.Log($"Cannot find type '{this.type}' used by template '{name}'; falling back to using InputDevice");
+                        type = typeof(InputDevice);
+                    }
+                    else if (!typeof(InputControl).IsAssignableFrom(type))
+                    {
+                        throw new Exception($"'{this.type}' used by template '{name}' is not an InputControl");
+                    }
+                }
+                else if (string.IsNullOrEmpty(extend))
                     type = typeof(InputDevice);
 
                 // Create template.
@@ -918,6 +928,7 @@ namespace ISX
                 return new TemplateJson
                 {
                     name = template.m_Name,
+                    type = template.type.AssemblyQualifiedName,
                     displayName = template.m_DisplayName,
                     imageName = template.m_ImageName,
                     extend = template.m_ExtendsTemplate,
@@ -1124,98 +1135,117 @@ namespace ISX
         }
 
 
-        // These dictionaries are owned and managed by InputManager.
-        internal static Dictionary<InternedString, Type> s_TemplateTypes;
-        internal static Dictionary<InternedString, string> s_TemplateStrings;
-        internal static Dictionary<InternedString, Constructor> s_TemplateConstructors;
-        internal static Dictionary<InternedString, InternedString> s_BaseTemplateTable;
+        internal struct Collection
+        {
+            public Dictionary<InternedString, Type> templateTypes;
+            public Dictionary<InternedString, string> templateStrings;
+            public Dictionary<InternedString, Constructor> templateConstructors;
+            public Dictionary<InternedString, InternedString> baseTemplateTable;
+
+            public void Allocate()
+            {
+                templateTypes = new Dictionary<InternedString, Type>();
+                templateStrings = new Dictionary<InternedString, string>();
+                templateConstructors = new Dictionary<InternedString, Constructor>();
+                baseTemplateTable = new Dictionary<InternedString, InternedString>();
+            }
+
+            public bool HasTemplate(InternedString name)
+            {
+                return templateTypes.ContainsKey(name) || templateStrings.ContainsKey(name) ||
+                    templateConstructors.ContainsKey(name);
+            }
+
+            private InputTemplate TryLoadTemplateInternal(InternedString name)
+            {
+                // Check constructors.
+                Constructor constructor;
+                if (templateConstructors.TryGetValue(name, out constructor))
+                    return (InputTemplate)constructor.method.Invoke(constructor.instance, null);
+
+                // See if we have a string template for it. These
+                // always take precedence over ones from type so that we can
+                // override what's in the code using data.
+                string json;
+                if (templateStrings.TryGetValue(name, out json))
+                    return FromJson(json);
+
+                // No, but maybe we have a type template for it.
+                Type type;
+                if (templateTypes.TryGetValue(name, out type))
+                    return FromType(name, type);
+
+                return null;
+            }
+
+            public InputTemplate TryLoadTemplate(InternedString name, Dictionary<InternedString, InputTemplate> table = null)
+            {
+                var template = TryLoadTemplateInternal(name);
+                if (template != null)
+                {
+                    template.m_Name = name;
+                    if (table != null)
+                        table[name] = template;
+
+                    // If the template extends another template, we need to merge the
+                    // base template into the final template.
+                    if (!template.m_ExtendsTemplate.IsEmpty())
+                    {
+                        ////TODO: catch cycles
+                        var superTemplate = TryLoadTemplate(template.m_ExtendsTemplate, table);
+                        if (superTemplate == null)
+                            throw new TemplateNotFoundException($"Cannot find base template '{template.m_ExtendsTemplate}' of template '{name}'");
+                        template.MergeTemplate(superTemplate);
+                    }
+                }
+
+                return template;
+            }
+
+            // Return name of template at root of "extend" chain of given template.
+            public InternedString GetRootTemplateName(InternedString templateName)
+            {
+                InternedString baseTemplate;
+                while (baseTemplateTable.TryGetValue(templateName, out baseTemplate))
+                    templateName = baseTemplate;
+                return templateName;
+            }
+
+            // Get the type which will be instantiated for the given template.
+            // Returns null if no template with the given name exists.
+            public Type GetControlTypeForTemplate(InternedString templateName)
+            {
+                // Try template strings.
+                while (templateStrings.ContainsKey(templateName))
+                {
+                    InternedString baseTemplate;
+                    if (baseTemplateTable.TryGetValue(templateName, out baseTemplate))
+                    {
+                        // Work our way up the inheritance chain.
+                        templateName = baseTemplate;
+                    }
+                    else
+                    {
+                        // Template doesn't extend anything and ATM we don't support setting
+                        // types explicitly from JSON templates. So has to be InputDevice.
+                        return typeof(InputDevice);
+                    }
+                }
+
+                // Try template types.
+                Type result;
+                templateTypes.TryGetValue(templateName, out result);
+                return result;
+            }
+        }
+
+        // This collection is owned and managed by InputManager.
+        internal static Collection s_Templates;
 
         internal struct Constructor
         {
             public MethodInfo method;
             public object instance;
-        }
-
-        private static InputTemplate TryLoadTemplateInternal(InternedString name)
-        {
-            // Check constructors.
-            Constructor constructor;
-            if (s_TemplateConstructors.TryGetValue(name, out constructor))
-                return (InputTemplate)constructor.method.Invoke(constructor.instance, null);
-
-            // See if we have a string template for it. These
-            // always take precedence over ones from type so that we can
-            // override what's in the code using data.
-            string json;
-            if (s_TemplateStrings.TryGetValue(name, out json))
-                return FromJson(json);
-
-            // No, but maybe we have a type template for it.
-            Type type;
-            if (s_TemplateTypes.TryGetValue(name, out type))
-                return FromType(name, type);
-
-            return null;
-        }
-
-        internal static InputTemplate TryLoadTemplate(InternedString name, Dictionary<InternedString, InputTemplate> table = null)
-        {
-            var template = TryLoadTemplateInternal(name);
-            if (template != null)
-            {
-                template.m_Name = name;
-                if (table != null)
-                    table[name] = template;
-
-                // If the template extends another template, we need to merge the
-                // base template into the final template.
-                if (!template.m_ExtendsTemplate.IsEmpty())
-                {
-                    ////TODO: catch cycles
-                    var superTemplate = TryLoadTemplate(template.m_ExtendsTemplate, table);
-                    if (superTemplate == null)
-                        throw new TemplateNotFoundException($"Cannot find base template '{template.m_ExtendsTemplate}' of template '{name}'");
-                    template.MergeTemplate(superTemplate);
-                }
-            }
-
-            return template;
-        }
-
-        // Return name of template at root of "extend" chain of given template.
-        internal static InternedString GetRootTemplateName(InternedString templateName)
-        {
-            InternedString baseTemplate;
-            while (s_BaseTemplateTable.TryGetValue(templateName, out baseTemplate))
-                templateName = baseTemplate;
-            return templateName;
-        }
-
-        // Get the type which will be instantiated for the given template.
-        // Returns null if no template with the given name exists.
-        internal static Type GetControlTypeForTemplate(InternedString templateName)
-        {
-            // Try template strings.
-            while (s_TemplateStrings.ContainsKey(templateName))
-            {
-                InternedString baseTemplate;
-                if (s_BaseTemplateTable.TryGetValue(templateName, out baseTemplate))
-                {
-                    // Work our way up the inheritance chain.
-                    templateName = baseTemplate;
-                }
-                else
-                {
-                    // Template doesn't extend anything and ATM we don't support setting
-                    // types explicitly from JSON templates. So has to be InputDevice.
-                    return typeof(InputDevice);
-                }
-            }
-
-            // Try template types.
-            Type result;
-            s_TemplateTypes.TryGetValue(templateName, out result);
-            return result;
         }
 
         internal class TemplateNotFoundException : Exception
@@ -1231,13 +1261,11 @@ namespace ISX
         // Constructs InputTemplate instances and caches them.
         internal struct Cache
         {
+            public Collection templates;
             public Dictionary<InternedString, InputTemplate> table;
 
             public InputTemplate FindOrLoadTemplate(string name)
             {
-                Debug.Assert(s_TemplateTypes != null);
-                Debug.Assert(s_TemplateStrings != null);
-
                 var internedName = new InternedString(name);
 
                 // See if we have it cached.
@@ -1248,7 +1276,7 @@ namespace ISX
                 if (table == null)
                     table = new Dictionary<InternedString, InputTemplate>();
 
-                template = TryLoadTemplate(internedName, table);
+                template = templates.TryLoadTemplate(internedName, table);
                 if (template != null)
                     return template;
 

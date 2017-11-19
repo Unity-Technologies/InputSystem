@@ -116,7 +116,7 @@ namespace ISX
             ////TODO: add a static InputTemplate.Cache instance that we look up templates from and flush the cache every frame
 
             // Load template.
-            var template = InputTemplate.TryLoadTemplate(new InternedString(templateName));
+            var template = InputTemplate.s_Templates.TryLoadTemplate(new InternedString(templateName));
             if (template == null)
                 return null;
 
@@ -322,7 +322,7 @@ namespace ISX
                 if (!controlIsMatch)
                 {
                     var baseTemplate = control.m_Template;
-                    while (InputTemplate.s_BaseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
+                    while (InputTemplate.s_Templates.baseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
                     {
                         controlIsMatch = MatchPathComponent(baseTemplate, path, ref indexInPath,
                                 PathComponentType.Template);

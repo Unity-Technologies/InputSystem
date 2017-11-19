@@ -20,6 +20,8 @@ namespace ISX
         public string product;
         public string serial;
         public string version;
+        // An optional JSON string listing device-specific capabilities.
+        // Example: For HIDs, this will be the HID descriptor.
         public string capabilities;
 
         public bool empty => string.IsNullOrEmpty(interfaceName) &&

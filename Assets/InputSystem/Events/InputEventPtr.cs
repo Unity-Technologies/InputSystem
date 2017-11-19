@@ -17,6 +17,11 @@ namespace ISX
             m_EventPtr = eventPtr;
         }
 
+        public InputEventPtr(IntPtr eventPtr)
+            : this((InputEvent*)eventPtr)
+        {
+        }
+
         public bool valid => m_EventPtr != null;
 
         public bool handled
@@ -81,41 +86,9 @@ namespace ISX
             }
         }
 
-        public InputDevice device
-        {
-            get
-            {
-                if (!valid)
-                    return null;
-                return InputSystem.TryGetDeviceById(m_EventPtr->deviceId);
-            }
-            set
-            {
-                if (!valid)
-                    throw new NullReferenceException();
-                m_EventPtr->deviceId = device.id;
-            }
-        }
+        public double time => valid ? m_EventPtr->time : 0.0;
 
-        public double time
-        {
-            get
-            {
-                if (!valid)
-                    return 0.0;
-                return m_EventPtr->time;
-            }
-        }
-
-        public IntPtr data
-        {
-            get
-            {
-                if (!valid)
-                    return IntPtr.Zero;
-                return new IntPtr(m_EventPtr);
-            }
-        }
+        public IntPtr data => new IntPtr(m_EventPtr);
 
         public bool IsA<TOtherEvent>()
             where TOtherEvent : struct, IInputEventTypeInfo
@@ -125,6 +98,15 @@ namespace ISX
 
             var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
             return m_EventPtr->type == otherEventTypeCode;
+        }
+
+        // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.
+        public InputEventPtr Next()
+        {
+            if (!valid)
+                return new InputEventPtr();
+
+            return new InputEventPtr(new IntPtr(m_EventPtr) + sizeInBytes);
         }
 
         public override string ToString()

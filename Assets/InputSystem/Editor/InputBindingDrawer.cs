@@ -149,7 +149,10 @@ namespace ISX.Editor
                 m_FlagsProperty = bindingProperty.FindPropertyRelative("flags");
                 m_ModifiersProperty = bindingProperty.FindPropertyRelative("modifiers");
                 m_Flags = (InputBinding.Flags)m_FlagsProperty.intValue;
-                m_ModifierChoices = InputSystem.ListModifiers().Select(x => new GUIContent(x)).ToArray();
+
+                var modifiers = InputSystem.ListModifiers().ToList();
+                modifiers.Sort();
+                m_ModifierChoices = modifiers.Select(x => new GUIContent(x)).ToArray();
 
                 var modifierString = m_ModifiersProperty.stringValue;
                 if (!string.IsNullOrEmpty(modifierString))
@@ -225,6 +228,7 @@ namespace ISX.Editor
                 m_ModifierListView.drawElementCallback =
                     (rect, index, isActive, isFocused) =>
                     {
+                        ////TODO: parameters
                         EditorGUI.LabelField(rect, m_Modifiers[index].name);
                     };
 

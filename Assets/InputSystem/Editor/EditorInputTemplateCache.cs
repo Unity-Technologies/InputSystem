@@ -79,6 +79,7 @@ namespace ISX.Editor
             var templateNames = new List<string>();
             manager.ListTemplates(templateNames);
 
+            s_Cache.templates = manager.m_Templates;
             for (var i = 0; i < templateNames.Count; ++i)
             {
                 var template = s_Cache.FindOrLoadTemplate(templateNames[i]);

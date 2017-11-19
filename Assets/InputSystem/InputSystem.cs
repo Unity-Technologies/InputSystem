@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
+using ISX.Remote;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -104,7 +104,7 @@ namespace ISX
         public static InputTemplate TryLoadTemplate(string name)
         {
             ////FIXME: this will intern the name even if the operation fails
-            return InputTemplate.TryLoadTemplate(new InternedString(name));
+            return s_Manager.TryLoadTemplate(new InternedString(name));
         }
 
         #endregion
@@ -452,7 +452,23 @@ namespace ISX
 
         #endregion
 
+        #region Remoting
+
+        ////TODO: this will have to survive domain reloads
+        public static InputRemoting remote
+        {
+            get
+            {
+                if (s_Remote == null && s_Manager != null)
+                    s_Remote = new InputRemoting(s_Manager);
+                return s_Remote;
+            }
+        }
+
+        #endregion
+
         internal static InputManager s_Manager;
+        internal static InputRemoting s_Remote;
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
