@@ -292,6 +292,66 @@ public class FunctionalTests
         Assert.That(template, Is.EqualTo("MyDevice"));
     }
 
+    // If a template only specifies an interface in its descriptor, it is considered
+    // a fallback for when there is no more specific template that is able to match
+    // by product.
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanHaveTemplateFallbackForInterface()
+    {
+        const string fallbackJson = @"
+            {
+                ""name"" : ""FallbackTemplate"",
+                ""device"" : {
+                    ""interface"" : ""MyInterface""
+                }
+            }
+        ";
+        const string productJson = @"
+            {
+                ""name"" : ""ProductTemplate"",
+                ""device"" : {
+                    ""interface"" : ""MyInterface"",
+                    ""product"" : ""MyProduct""
+                }
+            }
+        ";
+
+        InputSystem.RegisterTemplate(fallbackJson);
+        InputSystem.RegisterTemplate(productJson);
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_WhenTwoTemplatesConflict_LastOneRegisteredWins()
+    {
+        const string firstTemplate = @"
+            {
+                ""name"" : ""FirstTemplate"",
+                ""device"" : {
+                    ""product"" : ""MyProduct""
+                }
+            }
+        ";
+        const string secondTemplate = @"
+            {
+                ""name"" : ""SecondTemplate"",
+                ""device"" : {
+                    ""product"" : ""MyProduct""
+                }
+            }
+        ";
+
+        InputSystem.RegisterTemplate(firstTemplate);
+        InputSystem.RegisterTemplate(secondTemplate);
+
+        var template = InputSystem.TryFindMatchingTemplate(new InputDeviceDescription {product = "MyProduct"});
+
+        Assert.That(template, Is.EqualTo("SecondTemplate"));
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_AddingTwoControlsWithSameName_WillCauseException()
@@ -2041,9 +2101,58 @@ public class FunctionalTests
     }
 
     #if UNITY_STANDALONE || UNITY_EDITOR
+
+    // HID tests.
+
     [Test]
     [Category("Devices")]
     public void TODO_Devices_CanCreateGenericHID()
+    {
+        // Construct a HID descriptor for a bogus multi-axis controller.
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usageId = (int)HID.GenericDesktop.MultiAxisController,
+            usagePageId = (int)HID.UsagePage.GenericDesktop,
+            elements = new[]
+            {
+                // 16bit X and Y axes.
+                new HID.HIDElementDescriptor { usageId = (int)HID.GenericDesktop.X, usagePageId = (int)HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
+                new HID.HIDElementDescriptor { usageId = (int)HID.GenericDesktop.Y, usagePageId = (int)HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
+                // 1bit primary and secondary buttons.
+                new HID.HIDElementDescriptor { usageId = (int)HID.Button.Primary, usagePageId = (int)HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
+                new HID.HIDElementDescriptor { usageId = (int)HID.Button.Secondary, usagePageId = (int)HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
+            }
+        };
+
+        InputSystem.ReportAvailableDevice(
+            new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            product = "MyHIDThing",
+            capabilities = JsonUtility.ToJson(hidDescriptor)
+        });
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+
+        var device = InputSystem.devices[0];
+        Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
+        Assert.That(device.children, Has.Count.EqualTo(4));
+        Assert.That(InputControlPath.FindControl(device, "x"), Is.TypeOf<AxisControl>());
+        Assert.That(InputControlPath.FindControl(device, "y"), Is.TypeOf<AxisControl>());
+        Assert.That(InputControlPath.FindControl(device, "button1"), Is.TypeOf<ButtonControl>());
+        Assert.That(InputControlPath.FindControl(device, "button2"), Is.TypeOf<AxisControl>());
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()
     {
         Assert.Fail();
     }
@@ -4265,9 +4374,37 @@ public class FunctionalTests
 
     [Test]
     [Category("Remote")]
-    public void TODO_Remote_AddingDeviceWhileRemoting_WillSendDeviceToRemote()
+    public void Remote_ChangingDevicesWhileRemoting_WillSendChangesToRemote()
     {
-        Assert.Fail();
+        var secondInputSystem = new InputManager();
+        secondInputSystem.InitializeData();
+
+        var local = InputSystem.remote;
+        var remote = new InputRemoting(secondInputSystem, senderId: 1);
+
+        local.Subscribe(remote);
+        remote.Subscribe(local);
+
+        local.StartSending();
+
+        // Add device.
+        var localGamepad = InputSystem.AddDevice("Gamepad");
+
+        Assert.That(secondInputSystem.devices, Has.Count.EqualTo(1));
+        var remoteGamepad = secondInputSystem.devices[0];
+        Assert.That(remoteGamepad, Is.TypeOf<Gamepad>());
+        Assert.That(remoteGamepad.remote, Is.True);
+        Assert.That(remoteGamepad.template, Contains.Substring("Gamepad"));
+
+        // Change usage.
+        InputSystem.SetUsage(localGamepad, CommonUsages.LeftHand);
+        Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+
+        // Connect and disconnect are events so no need to test those.
+
+        // Remove device.
+        InputSystem.RemoveDevice(localGamepad);
+        Assert.That(secondInputSystem.devices, Has.Count.Zero);
     }
 
     [Test]

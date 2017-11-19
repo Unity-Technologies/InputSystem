@@ -820,6 +820,8 @@ namespace ISX
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
             RegisterTemplate("HMD", typeof(HMD));
             RegisterTemplate("XRController", typeof(XRController));
+            RegisterTemplate("Accelerometer", typeof(Accelerometer));
+            RegisterTemplate("Gyroscope", typeof(Gyroscope));
 
             #if UNITY_STANDALONE || UNITY_EDITOR
             RegisterTemplate("HID", typeof(HID)); // Acts as a base template only; has no controls by itself.

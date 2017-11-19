@@ -110,6 +110,7 @@ namespace ISX
         }
     }
 
+    // Xbox-style gamepad.
     [InputState(typeof(GamepadState))]
     public class Gamepad : InputDevice
     {
@@ -186,5 +187,19 @@ namespace ISX
 
             base.FinishSetup(setup);
         }
+    }
+
+    public struct DualShockGamepadState
+    {
+    }
+
+    [InputState(typeof(DualShockGamepadState))]
+    public class DualShockGamepad : Gamepad
+    {
+        public Vector3Control gyro { get; private set; }
+        public Vector3Control accelerometer { get; private set; }
+        public ColorControl lightbar { get; private set; }
+        public AudioControl speaker { get; private set; }
+        //two-point touchpad
     }
 }

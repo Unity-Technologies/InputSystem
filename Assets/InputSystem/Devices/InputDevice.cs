@@ -30,6 +30,7 @@ namespace ISX
         // as a "real" device in the local system.
         public bool remote => (m_Flags & Flags.Remote) == Flags.Remote;
 
+        ////REVIEW: is this one really worth the code?
         // Whether the device comes from the native Unity runtime.
         public bool native => (m_Flags & Flags.Native) == Flags.Native;
 

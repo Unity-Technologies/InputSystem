@@ -50,7 +50,7 @@ namespace ISX
         public ReadOnlyArray<ButtonControl> buttons => new ReadOnlyArray<ButtonControl>(m_Buttons);
         public ReadOnlyArray<AxisControl> axes => new ReadOnlyArray<AxisControl>(m_Axes);
 
-        public static Joystick current { get; private set; }
+        public static Joystick current { get; internal set; }
 
         protected override void FinishSetup(InputControlSetup setup)
         {

@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
 
 namespace ISX.Remote
@@ -12,4 +11,3 @@ namespace ISX.Remote
         public static readonly Guid kGuid = new Guid("34d9b47f923142ff847c0d1f8b0554d9");
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

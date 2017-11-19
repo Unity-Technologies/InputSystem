@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngineInternal.Input;
@@ -15,6 +16,10 @@ namespace ISX.Remote
     // i.e. the InputManager on either end can mirror its templates, devices, and events over
     // to the other end. This permits streaming input not just from the player to the editor but
     // also feeding input from the editor back into the player.
+    //
+    // Remoting sits entirely on top of the input system as an optional piece of functionality.
+    // In development players and the editor, we enable it automatically but in non-development
+    // players it has to be explicitly requested by the user.
     public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
         public const string kRemoteTemplateNamespacePrefix = "remote";
@@ -26,6 +31,9 @@ namespace ISX.Remote
             NewTemplate,
             NewDevice,
             NewEvents,
+            RemoveDevice,
+            RemoveTemplate,
+            ChangeUsage,
         }
 
         public struct Message
@@ -50,13 +58,24 @@ namespace ISX.Remote
 
         public void StartSending()
         {
+            if (m_IsSending)
+                return;
+
             ////TODO: send events in bulk rather than one-by-one
             m_LocalManager.onEvent += SendEvent;
+            m_LocalManager.onDeviceChange += SendDeviceChange;
+
+            m_IsSending = true;
         }
 
         public void StopSending()
         {
+            if (!m_IsSending)
+                return;
+
             m_LocalManager.onEvent -= SendEvent;
+
+            m_IsSending = false;
         }
 
         void IObserver<Message>.OnNext(Message msg)
@@ -71,6 +90,12 @@ namespace ISX.Remote
                     break;
                 case MessageType.NewEvents:
                     NewEventsMsg.Process(this, msg);
+                    break;
+                case MessageType.ChangeUsage:
+                    ChangeUsageMsg.Process(this, msg);
+                    break;
+                case MessageType.RemoveDevice:
+                    RemoveDeviceMsg.Process(this, msg);
                     break;
             }
         }
@@ -153,10 +178,37 @@ namespace ISX.Remote
                 return;
 
             var message = NewEventsMsg.Create(this, eventPtr.data, 1);
+            SendToAll(message);
+        }
 
-            // Send to all observers.
+        private void SendDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (m_Subscribers == null)
+                return;
+
+            Message msg;
+            switch (change)
+            {
+                case InputDeviceChange.Added:
+                    msg = NewDeviceMsg.Create(this, device);
+                    break;
+                case InputDeviceChange.Removed:
+                    msg = RemoveDeviceMsg.Create(this, device);
+                    break;
+                case InputDeviceChange.UsageChanged:
+                    msg = ChangeUsageMsg.Create(this, device);
+                    break;
+                default:
+                    return;
+            }
+
+            SendToAll(msg);
+        }
+
+        private void SendToAll(Message msg)
+        {
             foreach (var subscriber in m_Subscribers)
-                subscriber.observer.OnNext(message);
+                subscriber.observer.OnNext(msg);
         }
 
         ////TODO: with C#7 this should be a ref return
@@ -180,16 +232,37 @@ namespace ISX.Remote
             return ArrayHelpers.Append(ref m_Senders, sender);
         }
 
+        private int FindLocalDeviceId(int remoteDeviceId, int senderIndex)
+        {
+            var localDevices = m_Senders[senderIndex].devices;
+            var numLocalDevices = localDevices.Length;
+
+            for (var i = 0; i < numLocalDevices; ++i)
+            {
+                if (localDevices[i].remoteId == remoteDeviceId)
+                    return localDevices[i].localId;
+            }
+
+            return InputDevice.kInvalidDeviceId;
+        }
+
+        private InputDevice TryGetDeviceByRemoteId(int remoteDeviceId, int senderIndex)
+        {
+            var localId = FindLocalDeviceId(remoteDeviceId, senderIndex);
+            return m_LocalManager.TryGetDeviceById(localId);
+        }
+
         private int m_SenderId; // Our unique ID in the network of senders and receivers.
         private InputManager m_LocalManager; // Input system we mirror input from and to.
         private Subscriber[] m_Subscribers; // Receivers we send input to.
         private RemoteSender[] m_Senders; // Senders we receive input from.
+        private bool m_IsSending;
 
         // Data we keep about a unique sender that we receive input data
         // from. We keep track of the templates and devices we added to
         // the local system.
         [Serializable]
-        private struct RemoteSender
+        internal struct RemoteSender
         {
             public int senderId;
             public string templateNamespace;
@@ -198,7 +271,7 @@ namespace ISX.Remote
         }
 
         [Serializable]
-        private struct RemoteInputDevice
+        internal struct RemoteInputDevice
         {
             public int remoteId; // Device ID used by sender.
             public int localId; // Device ID used by us in local system.
@@ -216,7 +289,7 @@ namespace ISX.Remote
             public string templateName;
         }
 
-        private class Subscriber : IDisposable
+        internal class Subscriber : IDisposable
         {
             public InputRemoting owner;
             public IObserver<Message> observer;
@@ -289,10 +362,7 @@ namespace ISX.Remote
             public static void Process(InputRemoting receiver, Message msg)
             {
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
-
-                // Deserialize.
-                var json = Encoding.UTF8.GetString(msg.data);
-                var data = JsonUtility.FromJson<Data>(json);
+                var data = DeserializeData<Data>(msg.data);
 
                 // Create device.
                 var template = $"{receiver.m_Senders[senderIndex].templateNamespace}::{data.template}";
@@ -367,24 +437,18 @@ namespace ISX.Remote
                     var eventCount = 0;
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
                     var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
-                    var localDevices = receiver.m_Senders[senderIndex].devices;
-                    var numLocalDevices = localDevices.Length;
 
                     while (eventPtr.data.ToInt64() < dataEndPtr.ToInt64())
                     {
                         // Patch up device ID to refer to local device and send event.
                         var remoteDeviceId = eventPtr.deviceId;
-                        var localDeviceId = InputDevice.kInvalidDeviceId;
-                        for (var i = 0; i < numLocalDevices; ++i)
+                        var localDeviceId = receiver.FindLocalDeviceId(remoteDeviceId, senderIndex);
+                        eventPtr.deviceId = localDeviceId;
+
+                        if (localDeviceId != InputDevice.kInvalidDeviceId && isConnectedToNative)
                         {
-                            if (localDevices[i].remoteId == remoteDeviceId)
-                            {
-                                eventPtr.deviceId = localDevices[i].localId;
-                                if (isConnectedToNative)
-                                    ////TODO: add API to send events in bulk rather than one by one
-                                    NativeInputSystem.SendInput(eventPtr.data);
-                                break;
-                            }
+                            ////TODO: add API to send events in bulk rather than one by one
+                            NativeInputSystem.SendInput(eventPtr.data);
                         }
 
                         ++eventCount;
@@ -396,5 +460,116 @@ namespace ISX.Remote
                 }
             }
         }
+
+        private static class ChangeUsageMsg
+        {
+            [Serializable]
+            public struct Data
+            {
+                public int deviceId;
+                public string[] usages;
+            }
+
+            public static Message Create(InputRemoting sender, InputDevice device)
+            {
+                var data = new Data
+                {
+                    deviceId = device.id,
+                    usages = device.usages.Select(x => x.ToString()).ToArray()
+                };
+
+                return new Message
+                {
+                    sender = sender.m_SenderId,
+                    type = MessageType.ChangeUsage,
+                    data = SerializeData(data)
+                };
+            }
+
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                var data = DeserializeData<Data>(msg.data);
+
+                var device = receiver.TryGetDeviceByRemoteId(data.deviceId, senderIndex);
+                if (device != null)
+                {
+                    ////TODO: clearing usages and setting multiple usages
+
+                    if (data.usages.Length == 1)
+                        receiver.m_LocalManager.SetUsage(device, new InternedString(data.usages[0]));
+                }
+            }
+        }
+
+        private static class RemoveDeviceMsg
+        {
+            public static Message Create(InputRemoting sender, InputDevice device)
+            {
+                return new Message
+                {
+                    sender = sender.m_SenderId,
+                    type = MessageType.RemoveDevice,
+                    data = BitConverter.GetBytes(device.id)
+                };
+            }
+
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                var remoteDeviceId = BitConverter.ToInt32(msg.data, 0);
+
+                var device = receiver.TryGetDeviceByRemoteId(remoteDeviceId, senderIndex);
+                if (device != null)
+                    receiver.m_LocalManager.RemoveDevice(device);
+            }
+        }
+
+        private static byte[] SerializeData<TData>(TData data)
+        {
+            var json = JsonUtility.ToJson(data);
+            return Encoding.UTF8.GetBytes(json);
+        }
+
+        private static TData DeserializeData<TData>(byte[] data)
+        {
+            var json = Encoding.UTF8.GetString(data);
+            return JsonUtility.FromJson<TData>(json);
+        }
+
+        // Domain reload survival. Kept separate as making the entire class [Serializable]
+        // would signal the wrong thing to users as it's part of the public API.
+#if UNITY_EDITOR
+        // State we want to take across domain reloads. We can only take some of the
+        // state across. Subscriptions will be lost and have to be manually restored.
+        [Serializable]
+        internal struct SerializedState
+        {
+            public int senderId;
+            public RemoteSender[] senders;
+
+            // We can't take these across domain reloads but we want to take them across
+            // InputSystem.Save/Restore.
+            [NonSerialized] public Subscriber[] subscribers;
+        }
+
+        internal SerializedState SaveState()
+        {
+            return new SerializedState
+            {
+                senderId = m_SenderId,
+                senders = m_Senders,
+                subscribers = m_Subscribers
+            };
+        }
+
+        internal void RestoreState(SerializedState state, InputManager manager)
+        {
+            m_LocalManager = manager;
+            m_SenderId = state.senderId;
+            m_Senders = state.senders;
+        }
+
+#endif
     }
 }

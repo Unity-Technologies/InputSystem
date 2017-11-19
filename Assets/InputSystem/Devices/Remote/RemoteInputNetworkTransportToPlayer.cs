@@ -1,15 +1,14 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
 using UnityEngine.Networking.PlayerConnection;
 
 namespace ISX.Remote
 {
-    // Makes input devices and activity from connected player visible in local
-    // input system. Remote devices appear like local devices.
-    // This means that remote devices are not just available for inspection but
-    // can deliver actual input to the local system.
+    // Transports input remoting messages from and to players. Can be used to
+    // make input on either side fully available on the other side. I.e. player
+    // input can be fully debugged in the editor and editor input can conversely
+    // be fed into the player.
     [Serializable]
-    internal class RemoteInputNetworkTransportToPlayer
+    internal class RemoteInputNetworkTransportToPlayer : IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
     {
         private void OnPlayerConnected(int playerId)
         {
@@ -30,6 +29,42 @@ namespace ISX.Remote
         private void OnInputReceived(MessageEventArgs args)
         {
         }
+
+        void IObserver<InputRemoting.Message>.OnNext(InputRemoting.Message value)
+        {
+        }
+
+        void IObserver<InputRemoting.Message>.OnError(Exception error)
+        {
+        }
+
+        void IObserver<InputRemoting.Message>.OnCompleted()
+        {
+        }
+
+        public IDisposable Subscribe(IObserver<InputRemoting.Message> observer)
+        {
+            var subscriber = new Subscriber {owner = this, observer = observer};
+            ArrayHelpers.Append(ref m_Subscribers, subscriber);
+            return subscriber;
+        }
+
+        [NonSerialized] private Subscriber[] m_Subscribers;
+
+        [Serializable]
+        private class Player
+        {
+            public int playerId;
+        }
+
+        private class Subscriber : IDisposable
+        {
+            public RemoteInputNetworkTransportToPlayer owner;
+            public IObserver<InputRemoting.Message> observer;
+
+            public void Dispose()
+            {
+            }
+        }
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

@@ -53,7 +53,7 @@ namespace ISX
     [InputState(typeof(HMDState))]
     public class HMD : TrackedDevice
     {
-        public static HMD current { get; private set; }
+        public static HMD current { get; internal set; }
 
         public override void MakeCurrent()
         {
@@ -79,8 +79,8 @@ namespace ISX
     [InputState(typeof(XRControllerState))]
     public class XRController : TrackedDevice
     {
-        public static XRController leftHand { get; private set; }
-        public static XRController rightHand { get; private set; }
+        public static XRController leftHand { get; internal set; }
+        public static XRController rightHand { get; internal set; }
 
         public override void MakeCurrent()
         {

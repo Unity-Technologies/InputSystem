@@ -454,13 +454,18 @@ namespace ISX
 
         #region Remoting
 
-        ////TODO: this will have to survive domain reloads
         public static InputRemoting remote
         {
             get
             {
                 if (s_Remote == null && s_Manager != null)
+                {
+                    #if UNITY_EDITOR
+                    s_Remote = s_SystemObject.remote;
+                    #else
                     s_Remote = new InputRemoting(s_Manager);
+                    #endif
+                }
                 return s_Remote;
             }
         }
@@ -475,7 +480,7 @@ namespace ISX
 
 #if UNITY_EDITOR
         private static bool s_Initialized;
-        private static InputSystemObject m_SystemObject;
+        private static InputSystemObject s_SystemObject;
 
         static InputSystem()
         {
@@ -492,9 +497,10 @@ namespace ISX
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
-                m_SystemObject = existingSystemObjects[0];
-                s_Manager = m_SystemObject.manager;
-                s_Manager.InstallGlobals();
+                s_SystemObject = existingSystemObjects[0];
+                s_SystemObject.ReviveAfterDomainReload();
+                s_Manager = s_SystemObject.manager;
+                s_Remote = s_SystemObject.remote;
                 InputDebuggerWindow.ReviveAfterDomainReload();
             }
             else
@@ -509,10 +515,11 @@ namespace ISX
 
         internal static void Reset()
         {
-            if (m_SystemObject != null)
-                UnityEngine.Object.DestroyImmediate(m_SystemObject);
-            m_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
-            s_Manager = m_SystemObject.manager;
+            if (s_SystemObject != null)
+                UnityEngine.Object.DestroyImmediate(s_SystemObject);
+            s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
+            s_Manager = s_SystemObject.manager;
+            s_Remote = s_SystemObject.remote;
         }
 
         // We don't want play mode modifications to templates and controls to seep
@@ -537,6 +544,8 @@ namespace ISX
 
         private static List<InputManager.SerializedState> s_SerializedStateStack;
 
+        ////REVIEW: what should we do with the remote here?
+
         internal static void Save()
         {
             if (s_SerializedStateStack == null)
@@ -556,12 +565,25 @@ namespace ISX
         }
 
 #else
+        #if DEVELOPMENT_BUILD
+        private static RemoteInputNetworkTransportToEditor s_RemoteEditorConnection;
+        #endif
+
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void InitializeInPlayer()
         {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
-            m_Manager = new InputManager();
+            s_Manager = new InputManager();
+
+            // Automatically enable remoting in development players.
+            #if DEVELOPMENT_BUILD
+            s_Remote = new InputRemoting(s_Manager);
+            s_RemoteEditorConnection = new RemoteInputNetworkTransportToEditor();
+            s_Remote.Subscribe(s_RemoteEditorConnection);
+            s_RemoteEditorConnection.Subscribe(s_Remote);
+            s_Remote.StartSending();
+            #endif
         }
 
 #endif
