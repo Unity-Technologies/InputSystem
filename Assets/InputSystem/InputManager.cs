@@ -210,7 +210,7 @@ namespace ISX
 
                 if (description.Matches(m_AvailableDevices[i].description))
                 {
-                    AddDevice(template, deviceId, description);
+                    AddDevice(template, deviceId, description, m_AvailableDevices[i].isNative);
                 }
             }
         }
@@ -492,7 +492,7 @@ namespace ISX
         }
 
         // Add device with a forced ID. Used when creating devices reported to us by native.
-        private InputDevice AddDevice(string template, int deviceId, InputDeviceDescription description)
+        private InputDevice AddDevice(string template, int deviceId, InputDeviceDescription description, bool isNative)
         {
             var setup = new InputControlSetup(m_Templates);
             setup.Setup(new InternedString(template), null, new InternedString());
@@ -500,6 +500,9 @@ namespace ISX
 
             device.m_Id = deviceId;
             device.m_Description = description;
+
+            if (isNative)
+                device.m_Flags |= InputDevice.Flags.Native;
 
             AddDevice(device);
 
@@ -694,20 +697,21 @@ namespace ISX
             ReportAvailableDevice(description, deviceId);
         }
 
-        private void ReportAvailableDevice(InputDeviceDescription description, int deviceId)
+        private void ReportAvailableDevice(InputDeviceDescription description, int deviceId, bool isNative = false)
         {
             // Remember it.
             m_AvailableDevices.Add(new AvailableDevice
             {
                 description = description,
-                deviceId = deviceId
+                deviceId = deviceId,
+                isNative = true
             });
 
             // Try to turn it into a device instance.
             var template = TryFindMatchingTemplate(description);
             if (template != null)
             {
-                AddDevice(template, deviceId, description);
+                AddDevice(template, deviceId, description, isNative);
             }
         }
 
@@ -868,6 +872,7 @@ namespace ISX
         {
             public InputDeviceDescription description;
             public int deviceId;
+            public bool isNative;
         }
 
         // Used by EditorInputTemplateCache to determine whether its state is outdated.
@@ -1135,7 +1140,7 @@ namespace ISX
             var description = InputDeviceDescription.FromJson(deviceInfo.deviceDescriptor);
 
             // Report it.
-            ReportAvailableDevice(description, deviceInfo.deviceId);
+            ReportAvailableDevice(description, deviceInfo.deviceId, isNative: true);
         }
 
         private void OnNativeBeforeUpdate(NativeInputUpdateType updateType)

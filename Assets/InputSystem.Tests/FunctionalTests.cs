@@ -1974,6 +1974,21 @@ public class FunctionalTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_NativeDevicesAreFlaggedAsSuch()
+    {
+        var description = new InputDeviceDescription {deviceClass = "Gamepad"};
+        var deviceId = NativeInputSystem.ReportNewInputDevice(description.ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.TryGetDeviceById(deviceId);
+
+        Assert.That(device, Is.Not.Null);
+        Assert.That(device.native, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
     {
         var gamepad1 = InputSystem.AddDevice("Gamepad");
@@ -2025,12 +2040,15 @@ public class FunctionalTests
         Assert.That(joystick.stick.name, Is.EqualTo("stick"));
     }
 
+    #if UNITY_STANDALONE || UNITY_EDITOR
     [Test]
     [Category("Devices")]
     public void TODO_Devices_CanCreateGenericHID()
     {
         Assert.Fail();
     }
+
+    #endif
 
     [Test]
     [Category("Devices")]
@@ -4242,7 +4260,6 @@ public class FunctionalTests
 
         var remoteGamepad = (Gamepad)secondInputSystem.devices.First(x => x.template == remoteGamepadTemplate);
 
-        //if secondInputSystem isn't connected to native updates, this won't ever work....
         Assert.That(remoteGamepad.leftTrigger.value, Is.EqualTo(0.5).Within(0.0000001));
     }
 

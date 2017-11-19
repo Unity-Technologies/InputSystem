@@ -70,6 +70,21 @@ namespace ISX
             return true;
         }
 
+        public string ToJson()
+        {
+            var data = new DeviceDescriptionJson
+            {
+                @interface = interfaceName,
+                type = deviceClass,
+                product = product,
+                manufacturer = manufacturer,
+                serial = serial,
+                version = version,
+                capabilities = capabilities
+            };
+            return JsonUtility.ToJson(data);
+        }
+
         public static InputDeviceDescription FromJson(string json)
         {
             var data = JsonUtility.FromJson<DeviceDescriptionJson>(json);
@@ -86,6 +101,7 @@ namespace ISX
             };
         }
 
+        ////FIXME: this format differs from the one used in templates; we should only have one format
         private struct DeviceDescriptionJson
         {
             public string @interface;
