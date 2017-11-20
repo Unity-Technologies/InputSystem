@@ -1,3 +1,5 @@
+////TODO: move this out into plugins
+
 ////TODO: add XboxGamepad template as base template
 
 ////REVIEW: there should be some system that can manage device profiles (which include a template and

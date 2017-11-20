@@ -15,47 +15,12 @@ using UnityEditor;
 #endif
 
 ////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
+////      (when running in player, make sure that remoting is *off*)
 
 // These tests rely on the default template setup present in the code
 // of the system (e.g. they make assumptions about Gamepad is set up).
-public class FunctionalTests
+public class FunctionalTests : InputTestsBase
 {
-    [SetUp]
-    public void Setup()
-    {
-        InputSystem.Save();
-
-        ////FIXME: ATM events fired by platform layers for mice and keyboard etc.
-        ////       interfere with tests; we need to isolate the system from them
-        ////       during testing (probably also from native device discoveries)
-        ////       Put a switch in native that blocks events except those coming
-        ////       in from C# through SendEvent and which supresses flushing device
-        ////       discoveries to managed
-
-        // Put system in a blank state where it has all the templates but has
-        // none of the native devices.
-        InputSystem.Reset();
-
-        // Make sure we're not affected by the user giving focus away from the
-        // game view.
-        InputConfiguration.LockInputToGame = true;
-
-        if (InputSystem.devices.Count > 0)
-            Assert.Fail("Input system should not have devices after reset");
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
-        ////        actions and readding devices we refresh all enabled actions. That means that when
-        ////        we restore, the action above will get refreshed and not find a 'test' modifier
-        ////        registered in the system. Should we force-disable all actions on Restore()?
-        InputSystem.DisableAllEnabledActions();
-
-        InputSystem.Restore();
-    }
-
     // The test categories give the feature area associated with the test:
     //
     //     a) Controls
@@ -2100,65 +2065,6 @@ public class FunctionalTests
         Assert.That(joystick.stick.name, Is.EqualTo("stick"));
     }
 
-    #if UNITY_STANDALONE || UNITY_EDITOR
-
-    // HID tests.
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_CanCreateGenericHID()
-    {
-        // Construct a HID descriptor for a bogus multi-axis controller.
-        var hidDescriptor = new HID.HIDDeviceDescriptor
-        {
-            usageId = (int)HID.GenericDesktop.MultiAxisController,
-            usagePageId = (int)HID.UsagePage.GenericDesktop,
-            elements = new[]
-            {
-                // 16bit X and Y axes.
-                new HID.HIDElementDescriptor { usageId = (int)HID.GenericDesktop.X, usagePageId = (int)HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
-                new HID.HIDElementDescriptor { usageId = (int)HID.GenericDesktop.Y, usagePageId = (int)HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
-                // 1bit primary and secondary buttons.
-                new HID.HIDElementDescriptor { usageId = (int)HID.Button.Primary, usagePageId = (int)HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
-                new HID.HIDElementDescriptor { usageId = (int)HID.Button.Secondary, usagePageId = (int)HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
-            }
-        };
-
-        InputSystem.ReportAvailableDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            product = "MyHIDThing",
-            capabilities = JsonUtility.ToJson(hidDescriptor)
-        });
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-
-        var device = InputSystem.devices[0];
-        Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
-        Assert.That(device.children, Has.Count.EqualTo(4));
-        Assert.That(InputControlPath.FindControl(device, "x"), Is.TypeOf<AxisControl>());
-        Assert.That(InputControlPath.FindControl(device, "y"), Is.TypeOf<AxisControl>());
-        Assert.That(InputControlPath.FindControl(device, "button1"), Is.TypeOf<ButtonControl>());
-        Assert.That(InputControlPath.FindControl(device, "button2"), Is.TypeOf<AxisControl>());
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()
-    {
-        Assert.Fail();
-    }
-
-    #endif
-
     [Test]
     [Category("Devices")]
     public void TODO_Devices_CanQueryKeyCodeInformationFromKeyboard()
@@ -3715,7 +3621,7 @@ public class FunctionalTests
     // gesture has started and then a positional control of some kind that gives the motion data for
     // the gesture.
     [Test]
-    [Category("Action")]
+    [Category("Actions")]
     public void TODO_Actions_CanChainBindingsWithModifiers()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");

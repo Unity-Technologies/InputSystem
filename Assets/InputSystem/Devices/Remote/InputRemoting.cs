@@ -33,7 +33,7 @@ namespace ISX.Remote
             NewEvents,
             RemoveDevice,
             RemoveTemplate,
-            ChangeUsage,
+            ChangeUsages,
         }
 
         public struct Message
@@ -91,7 +91,7 @@ namespace ISX.Remote
                 case MessageType.NewEvents:
                     NewEventsMsg.Process(this, msg);
                     break;
-                case MessageType.ChangeUsage:
+                case MessageType.ChangeUsages:
                     ChangeUsageMsg.Process(this, msg);
                     break;
                 case MessageType.RemoveDevice:
@@ -481,7 +481,7 @@ namespace ISX.Remote
                 return new Message
                 {
                     sender = sender.m_SenderId,
-                    type = MessageType.ChangeUsage,
+                    type = MessageType.ChangeUsages,
                     data = SerializeData(data)
                 };
             }

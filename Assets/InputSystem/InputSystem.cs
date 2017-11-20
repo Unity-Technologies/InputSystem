@@ -576,6 +576,7 @@ namespace ISX
             // instances.
             s_Manager = new InputManager();
 
+            ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
             #if DEVELOPMENT_BUILD
             s_Remote = new InputRemoting(s_Manager);

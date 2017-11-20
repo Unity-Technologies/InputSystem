@@ -9,6 +9,8 @@ using UnityEngine;
 
 ////TODO: ensure that if a template sets a device description, it is indeed a device template
 
+////TODO: array support
+
 namespace ISX
 {
     // A template lays out the composition of an input control.

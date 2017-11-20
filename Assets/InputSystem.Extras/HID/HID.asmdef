@@ -1,0 +1,8 @@
+﻿{
+    "name": "InputSystemHID",
+    "references": [
+        "InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

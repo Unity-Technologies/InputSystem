@@ -1,7 +1,6 @@
-#if UNITY_STANDALONE || UNITY_EDITOR // ATM we only use HID on desktop.
 using System;
 
-namespace ISX
+namespace ISX.HID
 {
     // A generic HID device.
     //
@@ -16,15 +15,6 @@ namespace ISX
         // The HID device descriptor as received from the device driver.
         public HIDDeviceDescriptor hidDescriptor => new HIDDeviceDescriptor();
 
-        internal static void InitializeHIDSupport(InputManager manager)
-        {
-            throw new NotImplementedException();
-        }
-
-        ////REVIEW: ideally this would work with just InputControlSetup and not just when doing AddDevice in InputManager
-        ////        In fact, I think the whole extension point here is wrong. This should be about template
-        ////        extensibility!
-        ////        Turn "template constructor" mechanism into "template generator" mechanism?
         internal static string OnDeviceDiscovered(InputDeviceDescription description, string matchedTemplate)
         {
             // If the system found a matching template, there's nothing for us to do.
@@ -241,5 +231,3 @@ namespace ISX
         }
     }
 }
-
-#endif // UNITY_STANDALONE || UNITY_EDITOR

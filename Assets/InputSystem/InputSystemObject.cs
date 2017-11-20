@@ -14,7 +14,7 @@ namespace ISX
     {
         [SerializeField] public InputManager manager;
         [NonSerialized] public InputRemoting remote;
-        [SerializeField] public RemoteInputNetworkTransportToPlayer playerConnections;
+        [SerializeField] public RemoteInputPlayerConnection playerConnections;
 
         [SerializeField] private InputRemoting.SerializedState m_RemotingState;
 
@@ -26,7 +26,7 @@ namespace ISX
             manager.Initialize();
 
             // In the editor, we always set up for remoting.
-            playerConnections = new RemoteInputNetworkTransportToPlayer();
+            playerConnections = new RemoteInputPlayerConnection();
             SetUpRemoting();
         }
 
