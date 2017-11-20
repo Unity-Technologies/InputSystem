@@ -188,6 +188,67 @@ namespace ISX
         {
             public string name;
             public Type type;
+            public FourCC stateFormat;
+            public string extendsTemplate;
+            public InputDeviceDescription deviceDescription;
+
+            private int m_ControlCount;
+            private ControlTemplate[] m_Controls;
+
+            public struct ControlBuilder
+            {
+                internal ControlTemplate[] controls;
+                internal int index;
+
+                public ControlBuilder WithTemplate(string template)
+                {
+                    controls[index].template = new InternedString(template);
+                    return this;
+                }
+
+                public ControlBuilder WithFormat(FourCC format)
+                {
+                    controls[index].format = format;
+                    return this;
+                }
+
+                public ControlBuilder WithFormat(string format)
+                {
+                    return WithFormat(new FourCC(format));
+                }
+
+                public ControlBuilder WithOffset(uint offset)
+                {
+                    controls[index].offset = offset;
+                    return this;
+                }
+
+                public ControlBuilder WithUsages(InternedString[] usages)
+                {
+                    controls[index].usages = new ReadOnlyArray<InternedString>(usages);
+                    return this;
+                }
+
+                public ControlBuilder WithUsages(IEnumerable<string> usages)
+                {
+                    controls[index].usages =
+                        new ReadOnlyArray<InternedString>(usages.Select(x => new InternedString(x)).ToArray());
+                    return this;
+                }
+            }
+
+            // This invalidates the ControlBuilders from previous calls! (our array may move)
+            public ControlBuilder AddControl(string name)
+            {
+                var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
+                        new ControlTemplate {name = new InternedString(name)});
+
+                return new ControlBuilder
+                {
+                    controls = m_Controls,
+                    index = index
+                };
+            }
 
             public Builder WithName(string name)
             {
@@ -197,12 +258,23 @@ namespace ISX
 
             public InputTemplate Build()
             {
-                if (string.IsNullOrEmpty(name))
-                    throw new InvalidOperationException("No name has been set on the template");
+                ControlTemplate[] controls = null;
+                if (m_ControlCount > 0)
+                {
+                    controls = new ControlTemplate[m_ControlCount];
+                    Array.Copy(m_Controls, controls, m_ControlCount);
+                }
 
-                var template = new InputTemplate(new InternedString(name), type);
-
-                ////TODO: controls
+                // Allow template to be unnamed. The system will automatically set the
+                // name that the template has been registered under.
+                var template =
+                    new InputTemplate(new InternedString(name), type ?? typeof(InputDevice))
+                {
+                    m_StateFormat = stateFormat,
+                    m_ExtendsTemplate = new InternedString(extendsTemplate),
+                    m_DeviceDescription = deviceDescription,
+                    m_Controls = controls
+                };
 
                 return template;
             }

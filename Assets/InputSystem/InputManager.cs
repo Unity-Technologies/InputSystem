@@ -49,6 +49,7 @@ namespace ISX
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
+        ////TODO: rename to onDeviceFindTemplate
         public event DeviceDiscoveredListener onDeviceDiscovered
         {
             add { m_DeviceDiscoveredListeners.Append(value); }

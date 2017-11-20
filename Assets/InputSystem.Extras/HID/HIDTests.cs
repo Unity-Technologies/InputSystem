@@ -15,7 +15,7 @@ namespace ISX.HID
 
         [Test]
         [Category("Devices")]
-        public void TODO_Devices_CanCreateGenericHID()
+        public void Devices_CanCreateGenericHID()
         {
             // Construct a HID descriptor for a bogus multi-axis controller.
             var hidDescriptor = new HID.HIDDeviceDescriptor
@@ -46,10 +46,12 @@ namespace ISX.HID
             var device = InputSystem.devices[0];
             Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
             Assert.That(device.children, Has.Count.EqualTo(4));
-            Assert.That(InputControlPath.FindControl(device, "x"), Is.TypeOf<AxisControl>());
-            Assert.That(InputControlPath.FindControl(device, "y"), Is.TypeOf<AxisControl>());
-            Assert.That(InputControlPath.FindControl(device, "button1"), Is.TypeOf<ButtonControl>());
-            Assert.That(InputControlPath.FindControl(device, "button2"), Is.TypeOf<AxisControl>());
+            Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("X").And.TypeOf<AxisControl>());
+            Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Y").And.TypeOf<AxisControl>());
+            Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
+            Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
+
+            ////TODO: test sending events against HIDs to make sure we get the control offsets right
         }
 
         [Test]

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace ISX.HID
 {
@@ -11,9 +12,10 @@ namespace ISX.HID
     public class HID : InputDevice
     {
         public const string kHIDInterface = "HID";
+        public const string kHIDNamespace = "HID";
 
         // The HID device descriptor as received from the device driver.
-        public HIDDeviceDescriptor hidDescriptor => new HIDDeviceDescriptor();
+        public HIDDeviceDescriptor hidDescriptor => new HIDDeviceDescriptor();////TODO: parse on demand from description.capabilities
 
         internal static string OnDeviceDiscovered(InputDeviceDescription description, string matchedTemplate)
         {
@@ -25,9 +27,97 @@ namespace ISX.HID
             if (description.interfaceName != kHIDInterface)
                 return null;
 
-            ////TODO: register template constructor
+            // We require *some* product name to be supplied.
+            if (string.IsNullOrEmpty(description.product))
+                return null;
 
-            return null;
+            // If the description doesn't come with a HID descriptor, we're not
+            // interested either.
+            if (string.IsNullOrEmpty(description.capabilities))
+                return null;
+
+            // Try to parse the HID descriptor.
+            HIDDeviceDescriptor hidDeviceDescriptor;
+            try
+            {
+                hidDeviceDescriptor = JsonUtility.FromJson<HIDDeviceDescriptor>(description.capabilities);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+
+            // Determine if there's any usable elements on the device.
+            var hasUsableElements = false;
+            if (hidDeviceDescriptor.elements != null)
+            {
+                foreach (var element in hidDeviceDescriptor.elements)
+                    if (element.DetermineTemplate() != null)
+                    {
+                        hasUsableElements = true;
+                        break;
+                    }
+            }
+
+            if (!hasUsableElements)
+                return null;
+
+            // Determine base template.
+            var baseTemplate = "HID";
+            if (hidDeviceDescriptor.usagePageId == (int)UsagePage.GenericDesktop)
+            {
+                if (hidDeviceDescriptor.usageId == (int)GenericDesktop.Joystick)
+                    baseTemplate = "Joystick";
+                else if (hidDeviceDescriptor.usageId == (int)GenericDesktop.Gamepad)
+                    baseTemplate = "Gamepad";
+            }
+
+            ////TODO: make sure we don't produce name conflicts on the template name
+
+            // Register template constructor that will turn the HID descriptor into an
+            // InputTemplate instance.
+            var templateName = $"{kHIDNamespace}::{description.product}";
+            var template = new HIDTemplate {descriptor = hidDeviceDescriptor};
+            InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, description);
+
+            return templateName;
+        }
+
+        [Serializable]
+        private class HIDTemplate
+        {
+            public HIDDeviceDescriptor descriptor;
+
+            public InputTemplate Build()
+            {
+                var builder = new InputTemplate.Builder
+                {
+                    type = typeof(HID)
+                };
+
+                // Process HID descriptor.
+                var offset = 0u;
+                foreach (var element in descriptor.elements)
+                {
+                    var template = element.DetermineTemplate();
+                    if (template != null)
+                    {
+                        var control =
+                            builder.AddControl(element.DetermineName())
+                            .WithTemplate(template)
+                            .WithOffset(offset)
+                            .WithFormat(element.DetermineFormat());
+
+                        element.SetUsage(control);
+                    }
+
+                    ////TODO: align bit groups properly; probably need to support collections for that
+                    if (element.reportType == HIDReportType.Input)
+                        offset += (uint)element.reportSizeInBits;
+                }
+
+                return builder.Build();
+            }
         }
 
         // NOTE: Must match HIDReportType in native.
@@ -62,6 +152,69 @@ namespace ISX.HID
             public bool isRelative;
             public bool isVirtual;
             public bool isWrapping;
+
+            internal string DetermineName()
+            {
+                if (!string.IsNullOrEmpty(name))
+                    return name;
+
+                switch (usagePageId)
+                {
+                    case (int)UsagePage.Button:
+                        return $"button{usageId}";
+                    case (int)UsagePage.GenericDesktop:
+                        return ((GenericDesktop)usageId).ToString();
+                }
+
+                return null;
+            }
+
+            internal string DetermineTemplate()
+            {
+                ////TODO: support output elements
+                if (reportType != HIDReportType.Input)
+                    return null;
+
+                switch (usagePageId)
+                {
+                    case (int)UsagePage.Button:
+                        return "Button";
+                    case (int)UsagePage.GenericDesktop:
+                        switch (usageId)
+                        {
+                            case (int)GenericDesktop.X:
+                            case (int)GenericDesktop.Y:
+                            case (int)GenericDesktop.Z:
+                            case (int)GenericDesktop.Rx:
+                            case (int)GenericDesktop.Ry:
+                            case (int)GenericDesktop.Rz:
+                                return "Axis";
+                        }
+                        break;
+                }
+
+                return null;
+            }
+
+            internal FourCC DetermineFormat()
+            {
+                ////TODO: do this properly instead of this nonsense; we need to look at the format that the usage+usagePage actually stands for
+                switch (reportSizeInBits)
+                {
+                    case 1: return InputStateBlock.kTypeBit;
+                    case 8: return InputStateBlock.kTypeByte;
+                    case 16: return InputStateBlock.kTypeShort;
+                    case 32: return InputStateBlock.kTypeInt;
+                }
+
+                return new FourCC();
+            }
+
+            internal void SetUsage(InputTemplate.Builder.ControlBuilder control)
+            {
+                if (usagePageId == (int)UsagePage.Button && usageId == 0)
+                    control.WithUsages(new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction});
+            }
         }
 
         // NOTE: Must match up with the serialized representation of HIDInputDeviceDescriptor in native.

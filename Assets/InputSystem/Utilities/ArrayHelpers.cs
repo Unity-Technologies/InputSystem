@@ -92,6 +92,30 @@ namespace ISX
             return array.Length;
         }
 
+        public static int AppendWithCapacity<TValue>(ref TValue[] array, ref int count, TValue value, int capacityIncrement = 10)
+        {
+            if (array == null)
+            {
+                array = new TValue[capacityIncrement];
+                array[0] = value;
+                ++count;
+                return 0;
+            }
+
+            var capacity = array.Length;
+            if (capacity == count)
+            {
+                capacity += capacityIncrement;
+                Array.Resize(ref array, capacity);
+            }
+
+            var index = count;
+            array[index] = value;
+            ++count;
+
+            return index;
+        }
+
         public static void Insert<TValue>(ref TValue[] array, int index, TValue value)
         {
             if (array == null)
