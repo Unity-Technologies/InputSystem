@@ -64,12 +64,18 @@ namespace ISX.HID
 
             // Determine base template.
             var baseTemplate = "HID";
-            if (hidDeviceDescriptor.usagePageId == (int)UsagePage.GenericDesktop)
+            if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
-                if (hidDeviceDescriptor.usageId == (int)GenericDesktop.Joystick)
+                if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
                     baseTemplate = "Joystick";
-                else if (hidDeviceDescriptor.usageId == (int)GenericDesktop.Gamepad)
+                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
                     baseTemplate = "Gamepad";
+                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Mouse)
+                    baseTemplate = "Mouse";
+                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Pointer)
+                    baseTemplate = "Pointer";
+                else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Keyboard)
+                    baseTemplate = "Keyboard";
             }
 
             ////TODO: make sure we don't produce name conflicts on the template name
@@ -94,6 +100,8 @@ namespace ISX.HID
                 {
                     type = typeof(HID)
                 };
+
+                ////TODO: for joysticks, set up stick from X and Y
 
                 // Process HID descriptor.
                 var offset = 0u;
@@ -133,8 +141,8 @@ namespace ISX.HID
         public struct HIDElementDescriptor
         {
             public string name;
-            public int usageId;
-            public int usagePageId;
+            public int usage;
+            public UsagePage usagePage;
             public int unit;
             public int unitExponent;
             public int logicalMin;
@@ -158,12 +166,12 @@ namespace ISX.HID
                 if (!string.IsNullOrEmpty(name))
                     return name;
 
-                switch (usagePageId)
+                switch (usagePage)
                 {
-                    case (int)UsagePage.Button:
-                        return $"button{usageId}";
-                    case (int)UsagePage.GenericDesktop:
-                        return ((GenericDesktop)usageId).ToString();
+                    case UsagePage.Button:
+                        return $"button{usage}";
+                    case UsagePage.GenericDesktop:
+                        return ((GenericDesktop)usage).ToString();
                 }
 
                 return null;
@@ -175,12 +183,12 @@ namespace ISX.HID
                 if (reportType != HIDReportType.Input)
                     return null;
 
-                switch (usagePageId)
+                switch (usagePage)
                 {
-                    case (int)UsagePage.Button:
+                    case UsagePage.Button:
                         return "Button";
-                    case (int)UsagePage.GenericDesktop:
-                        switch (usageId)
+                    case UsagePage.GenericDesktop:
+                        switch (usage)
                         {
                             case (int)GenericDesktop.X:
                             case (int)GenericDesktop.Y:
@@ -212,7 +220,7 @@ namespace ISX.HID
 
             internal void SetUsage(InputTemplate.Builder.ControlBuilder control)
             {
-                if (usagePageId == (int)UsagePage.Button && usageId == 0)
+                if (usagePage == UsagePage.Button && usage == 0)
                     control.WithUsages(new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction});
             }
         }
@@ -223,8 +231,8 @@ namespace ISX.HID
         {
             public int vendorId;
             public int productId;
-            public int usageId;
-            public int usagePageId;
+            public int usage;
+            public UsagePage usagePage;
             public HIDElementDescriptor[] elements;
         }
 

@@ -20,16 +20,16 @@ namespace ISX.HID
             // Construct a HID descriptor for a bogus multi-axis controller.
             var hidDescriptor = new HID.HIDDeviceDescriptor
             {
-                usageId = (int)HID.GenericDesktop.MultiAxisController,
-                usagePageId = (int)HID.UsagePage.GenericDesktop,
+                usage = (int)HID.GenericDesktop.MultiAxisController,
+                usagePage = HID.UsagePage.GenericDesktop,
                 elements = new[]
                 {
                     // 16bit X and Y axes.
-                    new HID.HIDElementDescriptor { usageId = (int)HID.GenericDesktop.X, usagePageId = (int)HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
-                    new HID.HIDElementDescriptor { usageId = (int)HID.GenericDesktop.Y, usagePageId = (int)HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
                     // 1bit primary and secondary buttons.
-                    new HID.HIDElementDescriptor { usageId = (int)HID.Button.Primary, usagePageId = (int)HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
-                    new HID.HIDElementDescriptor { usageId = (int)HID.Button.Secondary, usagePageId = (int)HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.Button.Primary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.Button.Secondary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
                 }
             };
 
