@@ -147,8 +147,8 @@ namespace ISX
 
         public static event Func<InputDeviceDescription, string, string> onDeviceDiscovered
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add { s_Manager.onDeviceDiscovered += value; }
+            remove { s_Manager.onDeviceDiscovered -= value; }
         }
 
         public static InputDevice AddDevice(string template, string name = null)

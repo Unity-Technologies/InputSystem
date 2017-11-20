@@ -8,5 +8,6 @@ namespace ISX
     // in the build for the current build target.
     public class InputDeviceDatabaseAsset : ScriptableObject
     {
+        public const string kExtension = "inputdevices";
     }
 }

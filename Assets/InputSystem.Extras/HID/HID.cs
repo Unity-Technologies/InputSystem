@@ -25,6 +25,8 @@ namespace ISX.HID
             if (description.interfaceName != kHIDInterface)
                 return null;
 
+            ////TODO: register template constructor
+
             return null;
         }
 

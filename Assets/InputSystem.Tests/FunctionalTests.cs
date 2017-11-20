@@ -257,6 +257,18 @@ public class FunctionalTests : InputTestsBase
         Assert.That(template, Is.EqualTo("MyDevice"));
     }
 
+    [Test]
+    [Category("Template")]
+    public void Templates_CanOverrideTemplateMatchesForDiscoveredDevices()
+    {
+        InputSystem.onDeviceDiscovered +=
+            (description, templateMatch) => "Keyboard";
+
+        var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
+
+        Assert.That(device, Is.TypeOf<Keyboard>());
+    }
+
     // If a template only specifies an interface in its descriptor, it is considered
     // a fallback for when there is no more specific template that is able to match
     // by product.

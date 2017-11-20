@@ -6,7 +6,7 @@ namespace ISX
     public abstract class InputTestsBase
     {
         [SetUp]
-        public void Setup()
+        public virtual void Setup()
         {
             InputSystem.Save();
 
@@ -30,7 +30,7 @@ namespace ISX
         }
 
         [TearDown]
-        public void TearDown()
+        public virtual void TearDown()
         {
             ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
             ////        actions and readding devices we refresh all enabled actions. That means that when

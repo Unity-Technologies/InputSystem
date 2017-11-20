@@ -1,4 +1,4 @@
-////TODO: move this out into plugins
+////TODO: move this out into plugins and kill this file
 
 ////TODO: add XboxGamepad template as base template
 

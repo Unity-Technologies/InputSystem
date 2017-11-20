@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 namespace ISX.Editor
 {
     // Generates a wrapper around an InputDeviceDatabaseAsset which automatically
@@ -6,3 +7,4 @@ namespace ISX.Editor
     {
     }
 }
+#endif // UNITY_EDITOR

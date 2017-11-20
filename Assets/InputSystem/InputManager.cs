@@ -15,7 +15,7 @@ using UnityEngineInternal.Input;
 namespace ISX
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using DeviceDiscoveredListener = Action<InputDeviceDescription, string, string>;
+    using DeviceDiscoveredListener = Func<InputDeviceDescription, string, string>;
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
@@ -51,8 +51,8 @@ namespace ISX
 
         public event DeviceDiscoveredListener onDeviceDiscovered
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add { m_DeviceDiscoveredListeners.Append(value); }
+            remove { m_DeviceDiscoveredListeners.Remove(value); }
         }
 
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
@@ -564,11 +564,32 @@ namespace ISX
 
         public InputDevice AddDevice(InputDeviceDescription description)
         {
-            var template = TryFindMatchingTemplate(description);
-            if (template == null)
-                throw new ArgumentException("Cannot find template matching device description", nameof(description));
+            return AddDevice(description, throwIfNoTemplateFound: true);
+        }
 
-            var device = AddDevice(template);
+        public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoTemplateFound, int deviceId = InputDevice.kInvalidDeviceId, bool isNative = false)
+        {
+            var template = TryFindMatchingTemplate(description);
+
+            // Give listeners a shot to select/create a template.
+            for (var i = 0; i < m_DeviceDiscoveredListeners.Count; ++i)
+            {
+                var newTemplate = m_DeviceDiscoveredListeners[i](description, template);
+                if (!string.IsNullOrEmpty(newTemplate))
+                {
+                    template = newTemplate;
+                    break;
+                }
+            }
+
+            if (template == null)
+            {
+                if (throwIfNoTemplateFound)
+                    throw new ArgumentException("Cannot find template matching device description", nameof(description));
+                return null;
+            }
+
+            var device = AddDevice(template, deviceId, description, isNative);
             device.m_Description = description;
 
             return device;
@@ -708,11 +729,7 @@ namespace ISX
             });
 
             // Try to turn it into a device instance.
-            var template = TryFindMatchingTemplate(description);
-            if (template != null)
-            {
-                AddDevice(template, deviceId, description, isNative);
-            }
+            AddDevice(description, throwIfNoTemplateFound: false, deviceId: deviceId, isNative: isNative);
         }
 
         public void QueueEvent<TEvent>(ref TEvent inputEvent)
@@ -905,6 +922,7 @@ namespace ISX
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
+        [NonSerialized] private InlinedArray<DeviceDiscoveredListener> m_DeviceDiscoveredListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
@@ -1758,6 +1776,7 @@ namespace ISX
             // across domain reloads. So we put them in here but don't serialize them (and
             // can't either except if we make them UnityEvents).
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
+            [NonSerialized] public InlinedArray<DeviceDiscoveredListener> deviceDiscoveredListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
         }
 
@@ -1835,6 +1854,7 @@ namespace ISX
                 buffers = m_StateBuffers,
                 configuration = InputConfiguration.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
+                deviceDiscoveredListeners = m_DeviceDiscoveredListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
                 updateMask = m_UpdateMask
             };
@@ -1854,6 +1874,7 @@ namespace ISX
             m_Devices = null;
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
+            m_DeviceDiscoveredListeners = state.deviceDiscoveredListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
 

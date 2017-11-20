@@ -120,17 +120,6 @@ namespace ISX.Editor
         {
             public static GUIContent addNewSet = new GUIContent("Add New Set");
         }
-
-        ////REVIEW: actually pre-populate with some stuff?
-        private const string kDefaultAssetTemplate = "{}";
-
-        // Add item to plop an .inputactions asset into the project.
-        [MenuItem("Assets/Create/Input Actions")]
-        public static void CreateInputAsset()
-        {
-            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.kExtension, kDefaultAssetTemplate,
-                EditorGUIUtility.FindTexture("UxmlScript Icon"));
-        }
     }
 }
 #endif // UNITY_EDITOR

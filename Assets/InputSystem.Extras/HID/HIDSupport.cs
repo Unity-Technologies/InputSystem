@@ -22,6 +22,7 @@ namespace ISX.HID
         public static void Initialize()
         {
             InputSystem.RegisterTemplate<HID>();
+            InputSystem.onDeviceDiscovered += HID.OnDeviceDiscovered;
         }
     }
 }

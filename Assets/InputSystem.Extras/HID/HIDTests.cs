@@ -5,6 +5,14 @@ namespace ISX.HID
 {
     public class HIDTests : InputTestsBase
     {
+        public override void Setup()
+        {
+            base.Setup();
+
+            ////TODO: the system should do that automatically for us
+            HIDSupport.Initialize();
+        }
+
         [Test]
         [Category("Devices")]
         public void TODO_Devices_CanCreateGenericHID()

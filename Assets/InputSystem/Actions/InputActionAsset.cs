@@ -17,7 +17,6 @@ namespace ISX
     //       just as well have action sets directly as JSON in your game.
     public class InputActionAsset : ScriptableObject, ICloneable
     {
-        ////REVIEW: simply call ".input" instead of ".inputactions"?
         public const string kExtension = "inputactions";
 
         public ReadOnlyArray<InputActionSet> actionSets => new ReadOnlyArray<InputActionSet>(m_ActionSets);
