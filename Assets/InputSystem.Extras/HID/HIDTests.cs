@@ -2,7 +2,7 @@ using NUnit.Framework;
 
 namespace ISX.HID
 {
-    public class HIDTests : InputTestsBase
+    public class HIDTests : InputTestFixture
     {
         public override void Setup()
         {

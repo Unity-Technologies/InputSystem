@@ -1,0 +1,22 @@
+var NAVTREEINDEX0 =
+{
+"annotated.html":[1,0],
+"class_i_s_x_1_1_input_system.html":[1,0,0,0],
+"class_i_s_x_1_1_input_test_fixture.html":[1,0,0,1],
+"classes.html":[1,1],
+"hierarchy.html":[1,2],
+"index.html":[],
+"namespace_i_s_x.html":[0,0,0],
+"namespace_i_s_x.html":[1,0,0],
+"namespace_i_s_x_1_1_dual_shock.html":[0,0,0,0],
+"namespace_i_s_x_1_1_editor.html":[0,0,0,1],
+"namespace_i_s_x_1_1_flightsticks.html":[0,0,0,2],
+"namespace_i_s_x_1_1_h_i_d.html":[0,0,0,3],
+"namespace_i_s_x_1_1_remote.html":[0,0,0,4],
+"namespace_i_s_x_1_1_steam.html":[0,0,0,5],
+"namespace_i_s_x_1_1_steering_wheels.html":[0,0,0,6],
+"namespace_i_s_x_1_1_v_r.html":[0,0,0,7],
+"namespace_i_s_x_1_1_x_input.html":[0,0,0,8],
+"namespaces.html":[0,0],
+"pages.html":[]
+};

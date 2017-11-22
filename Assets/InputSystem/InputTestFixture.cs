@@ -3,8 +3,36 @@ using NUnit.Framework;
 
 namespace ISX
 {
-    // A base test fixture to use for writing input tests.
-    public abstract class InputTestsBase
+    /// <summary>
+    /// A test fixture for writing tests that use the input system. Can be derived from
+    /// or simply instantiated from another test fixture.
+    /// </summary>
+    /// <remarks>
+    /// The fixture will put the input system into a known state where it has only the
+    /// built-in set of basic templates and no devices. The state of the system before
+    /// starting a test is recorded and restored when the test finishes.
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// public class MyTests : InputTestFixture
+    /// {
+    ///     public override void Setup()
+    ///     {
+    ///         base.Setup();
+    ///
+    ///         InputSystem.RegisterTemplate<MyDevice>();
+    ///     }
+    ///
+    ///     [Test]
+    ///     public void CanCreateMyDevice()
+    ///     {
+    ///         InputSystem.AddDevice("MyDevice");
+    ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<MyDevice>());
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    public class InputTestFixture
     {
         [SetUp]
         public virtual void Setup()

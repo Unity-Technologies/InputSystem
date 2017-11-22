@@ -23,7 +23,7 @@ using UnityEditor;
 
 // These tests rely on the default template setup present in the code
 // of the system (e.g. they make assumptions about Gamepad is set up).
-public class FunctionalTests : InputTestsBase
+public class FunctionalTests : InputTestFixture
 {
     // The test categories give the feature area associated with the test:
     //
