@@ -17,7 +17,7 @@ namespace ISX.HID
         // The HID device descriptor as received from the device driver.
         public HIDDeviceDescriptor hidDescriptor => new HIDDeviceDescriptor();////TODO: parse on demand from description.capabilities
 
-        internal static string OnDeviceDiscovered(InputDeviceDescription description, string matchedTemplate)
+        internal static string OnFindTemplateForDevice(InputDeviceDescription description, string matchedTemplate)
         {
             // If the system found a matching template, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedTemplate))
@@ -40,10 +40,11 @@ namespace ISX.HID
             HIDDeviceDescriptor hidDeviceDescriptor;
             try
             {
-                hidDeviceDescriptor = JsonUtility.FromJson<HIDDeviceDescriptor>(description.capabilities);
+                hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(description.capabilities);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
+                Debug.Log($"Could not parse HID descriptor (exception: {exception}");
                 return null;
             }
 
@@ -66,6 +67,7 @@ namespace ISX.HID
             var baseTemplate = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
+                ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
                 if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
                     baseTemplate = "Joystick";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
@@ -98,7 +100,8 @@ namespace ISX.HID
             {
                 var builder = new InputTemplate.Builder
                 {
-                    type = typeof(HID)
+                    type = typeof(HID),
+                    stateFormat = new FourCC('H', 'I', 'D')
                 };
 
                 ////TODO: for joysticks, set up stick from X and Y
@@ -113,8 +116,10 @@ namespace ISX.HID
                         var control =
                             builder.AddControl(element.DetermineName())
                             .WithTemplate(template)
-                            .WithOffset(offset)
+                            .WithOffset(offset) ////FIXME: offset is in bits; handle bit addressing correctly
                             .WithFormat(element.DetermineFormat());
+
+                        ////TODO: configure axis parameters from min/max limits
 
                         element.SetUsage(control);
                     }
@@ -183,6 +188,8 @@ namespace ISX.HID
                 if (reportType != HIDReportType.Input)
                     return null;
 
+                ////TODO: deal with arrays
+
                 switch (usagePage)
                 {
                     case UsagePage.Button:
@@ -234,6 +241,16 @@ namespace ISX.HID
             public int usage;
             public UsagePage usagePage;
             public HIDElementDescriptor[] elements;
+
+            public string ToJson()
+            {
+                return JsonUtility.ToJson(this);
+            }
+
+            public static HIDDeviceDescriptor FromJson(string json)
+            {
+                return JsonUtility.FromJson<HIDDeviceDescriptor>(json);
+            }
         }
 
         public enum UsagePage

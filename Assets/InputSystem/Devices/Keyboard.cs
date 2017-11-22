@@ -105,7 +105,7 @@ namespace ISX
         [InputControl(name = "AnyKey", template = "AnyKey", sizeInBits = kSizeInBits)]
         [InputControl(name = "Escape", template = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "Space", template = "Key", bit = (int)Key.Space)]
-        [InputControl(name = "Enter", template = "Key", usage = "Submit", bit = (int)Key.Enter)]
+        [InputControl(name = "Enter", template = "Key", usage = "Accept", bit = (int)Key.Enter)]
         [InputControl(name = "Tab", template = "Key", bit = (int)Key.Tab)]
         [InputControl(name = "Backtick", template = "Key", bit = (int)Key.Backtick)]
         [InputControl(name = "Semicolon", template = "Key", bit = (int)Key.Semicolon)]

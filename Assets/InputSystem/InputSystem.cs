@@ -8,6 +8,8 @@ using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 using ISX.Editor;
+#else
+using UnityEngine.Networking.PlayerConnection;
 #endif
 
 // I'd like to call the DLLs UnityEngine.Input and UnityEngine.Input.Tests
@@ -26,7 +28,9 @@ using ISX.Editor;
 
 namespace ISX
 {
-    // The primary API for the input system.
+    /// <summary>
+    /// This is the central API for the input system.
+    /// </summary>
     // Takes care of the singletons we need and presents a sanitized API.
 #if UNITY_EDITOR
     [InitializeOnLoad]
@@ -145,10 +149,10 @@ namespace ISX
             remove { s_Manager.onDeviceChange -= value; }
         }
 
-        public static event Func<InputDeviceDescription, string, string> onDeviceDiscovered
+        public static event Func<InputDeviceDescription, string, string> onFindTemplateForDevice
         {
-            add { s_Manager.onDeviceDiscovered += value; }
-            remove { s_Manager.onDeviceDiscovered -= value; }
+            add { s_Manager.onFindTemplateForDevice += value; }
+            remove { s_Manager.onFindTemplateForDevice -= value; }
         }
 
         public static InputDevice AddDevice(string template, string name = null)
@@ -454,7 +458,7 @@ namespace ISX
 
         #region Remoting
 
-        public static InputRemoting remote
+        public static InputRemoting remoting
         {
             get
             {
@@ -475,13 +479,10 @@ namespace ISX
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
 
+
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
-
-#if UNITY_EDITOR
         private static bool s_Initialized;
-        private static InputSystemObject s_SystemObject;
-
         static InputSystem()
         {
             // Unity's InitializeOnLoad force-executes static class constructors without
@@ -494,6 +495,20 @@ namespace ISX
             if (s_Initialized)
                 return;
 
+            #if UNITY_EDITOR
+            InitializeInEditor();
+            #else
+            InitializeInPlayer();
+            #endif
+
+            s_Initialized = true;
+        }
+
+#if UNITY_EDITOR
+        private static InputSystemObject s_SystemObject;
+
+        private static void InitializeInEditor()
+        {
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
             if (existingSystemObjects != null && existingSystemObjects.Length > 0)
             {
@@ -509,17 +524,6 @@ namespace ISX
             }
 
             EditorApplication.playModeStateChanged += OnPlayModeChange;
-
-            s_Initialized = true;
-        }
-
-        internal static void Reset()
-        {
-            if (s_SystemObject != null)
-                UnityEngine.Object.DestroyImmediate(s_SystemObject);
-            s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
-            s_Manager = s_SystemObject.manager;
-            s_Remote = s_SystemObject.remote;
         }
 
         // We don't want play mode modifications to templates and controls to seep
@@ -542,6 +546,58 @@ namespace ISX
             }
         }
 
+#else
+        #if DEVELOPMENT_BUILD
+        private static RemoteInputPlayerConnection s_RemoteEditorConnection;
+        #endif
+
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
+        public static void InitializeInPlayer()
+        {
+            if (s_Initialized)
+                return;
+
+            // No domain reloads in the player so we don't need to look for existing
+            // instances.
+            s_Manager = new InputManager();
+            s_Manager.Initialize();
+
+            ////TODO: put this behind a switch so that it is off by default
+            // Automatically enable remoting in development players.
+            #if DEVELOPMENT_BUILD
+            s_Remote = new InputRemoting(s_Manager);
+            s_RemoteEditorConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+            s_RemoteEditorConnection.Connect(PlayerConnection.instance);
+            s_Remote.Subscribe(s_RemoteEditorConnection);
+            s_RemoteEditorConnection.Subscribe(s_Remote);
+            s_Remote.StartSending();
+            #endif
+
+            s_Initialized = true;
+        }
+
+#endif // UNITY_EDITOR
+
+        // For testing, we want the ability to push/pop system state even in the player.
+        // However, we don't want it in release players.
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        internal static void Reset()
+        {
+            #if UNITY_EDITOR
+            if (s_SystemObject != null)
+                UnityEngine.Object.DestroyImmediate(s_SystemObject);
+            s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
+            s_Manager = s_SystemObject.manager;
+            s_Remote = s_SystemObject.remote;
+            #else
+            if (s_Manager != null)
+                s_Manager.Destroy();
+            ////TODO: reset remote
+            s_Initialized = false;
+            InitializeInPlayer();
+            #endif
+        }
+
         private static List<InputManager.SerializedState> s_SerializedStateStack;
 
         ////REVIEW: what should we do with the remote here?
@@ -562,29 +618,6 @@ namespace ISX
                 s_Manager.InstallGlobals();
                 s_SerializedStateStack.RemoveAt(index);
             }
-        }
-
-#else
-        #if DEVELOPMENT_BUILD
-        private static RemoteInputNetworkTransportToEditor s_RemoteEditorConnection;
-        #endif
-
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
-        public static void InitializeInPlayer()
-        {
-            // No domain reloads in the player so we don't need to look for existing
-            // instances.
-            s_Manager = new InputManager();
-
-            ////TODO: put this behind a switch so that it is off by default
-            // Automatically enable remoting in development players.
-            #if DEVELOPMENT_BUILD
-            s_Remote = new InputRemoting(s_Manager);
-            s_RemoteEditorConnection = new RemoteInputNetworkTransportToEditor();
-            s_Remote.Subscribe(s_RemoteEditorConnection);
-            s_RemoteEditorConnection.Subscribe(s_Remote);
-            s_Remote.StartSending();
-            #endif
         }
 
 #endif

@@ -1,3 +1,4 @@
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using NUnit.Framework;
 
 namespace ISX
@@ -21,9 +22,11 @@ namespace ISX
             // none of the native devices.
             InputSystem.Reset();
 
+            #if UNITY_EDITOR
             // Make sure we're not affected by the user giving focus away from the
             // game view.
             InputConfiguration.LockInputToGame = true;
+            #endif
 
             if (InputSystem.devices.Count > 0)
                 Assert.Fail("Input system should not have devices after reset");
@@ -42,3 +45,4 @@ namespace ISX
         }
     }
 }
+#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

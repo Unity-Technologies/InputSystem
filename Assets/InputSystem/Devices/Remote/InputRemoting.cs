@@ -5,8 +5,6 @@ using System.Text;
 using UnityEngine;
 using UnityEngineInternal.Input;
 
-////TODO: survive domain reloads
-
 ////TODO: reuse memory allocated for messages instead of allocating separately for each message
 
 namespace ISX.Remote
@@ -66,6 +64,8 @@ namespace ISX.Remote
             m_LocalManager.onDeviceChange += SendDeviceChange;
 
             m_IsSending = true;
+
+            SendAllCurrentDataToAllSubscribers();
         }
 
         public void StopSending()
@@ -74,6 +74,7 @@ namespace ISX.Remote
                 return;
 
             m_LocalManager.onEvent -= SendEvent;
+            m_LocalManager.onDeviceChange -= SendDeviceChange;
 
             m_IsSending = false;
         }
@@ -82,6 +83,10 @@ namespace ISX.Remote
         {
             switch (msg.type)
             {
+                case MessageType.Connect:
+                    break;
+                case MessageType.Disconnect:
+                    break;
                 case MessageType.NewTemplate:
                     NewTemplateMsg.Process(this, msg);
                     break;
@@ -116,10 +121,29 @@ namespace ISX.Remote
             var subscriber = new Subscriber {owner = this, observer = observer};
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
 
-            SendAllTemplatesTo(subscriber);
-            SendAllDevicesTo(subscriber);
+            if (m_IsSending)
+                SendAllCurrentDataToSubscriber(subscriber);
+
+            ////REVIEW: Send connect?
 
             return subscriber;
+        }
+
+        // Let all subscribers know about all devices and templates that m_LocalManager has.
+        private void SendAllCurrentDataToAllSubscribers()
+        {
+            if (m_Subscribers == null)
+                return;
+
+            foreach (var subscriber in m_Subscribers)
+                SendAllCurrentDataToSubscriber(subscriber);
+        }
+
+        // Let the given subscriber know about all devices and templates that m_LocalManager has.
+        private void SendAllCurrentDataToSubscriber(Subscriber subscriber)
+        {
+            SendAllTemplatesTo(subscriber);
+            SendAllDevicesTo(subscriber);
         }
 
         private void SendAllTemplatesTo(Subscriber subscriber)
@@ -184,6 +208,10 @@ namespace ISX.Remote
         private void SendDeviceChange(InputDevice device, InputDeviceChange change)
         {
             if (m_Subscribers == null)
+                return;
+
+            // Don't mirror remoted devices to other remotes.
+            if (device.remote)
                 return;
 
             Message msg;
@@ -340,6 +368,8 @@ namespace ISX.Remote
 
             public static Message Create(InputRemoting sender, InputDevice device)
             {
+                Debug.Assert(!device.remote, "Device being sent to remotes should be a local devices, not a remote one");
+
                 var data = new Data
                 {
                     name = device.name,

@@ -14,7 +14,7 @@ namespace ISX
     {
         [SerializeField] public InputManager manager;
         [NonSerialized] public InputRemoting remote;
-        [SerializeField] public RemoteInputPlayerConnection playerConnections;
+        [SerializeField] public RemoteInputPlayerConnection playerConnection;
 
         [SerializeField] private InputRemoting.SerializedState m_RemotingState;
 
@@ -26,7 +26,6 @@ namespace ISX
             manager.Initialize();
 
             // In the editor, we always set up for remoting.
-            playerConnections = new RemoteInputPlayerConnection();
             SetUpRemoting();
         }
 
@@ -40,8 +39,12 @@ namespace ISX
         {
             remote = new InputRemoting(manager, m_RemotingState.senderId);
             remote.RestoreState(m_RemotingState, manager);
-            remote.Subscribe(playerConnections); // Feed messages from players into editor.
-            playerConnections.Subscribe(remote); // Feed messages from editor into players.
+
+            if (playerConnection == null)
+                playerConnection = CreateInstance<RemoteInputPlayerConnection>();
+
+            remote.Subscribe(playerConnection); // Feed messages from players into editor.
+            playerConnection.Subscribe(remote); // Feed messages from editor into players.
 
             // We don't enable sending on the editor's remote by default.
             // By default, the editor acts as a receiver only.

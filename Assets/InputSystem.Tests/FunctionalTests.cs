@@ -1,11 +1,15 @@
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
 using ISX.Remote;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.TestTools;
 using UnityEngineInternal.Input;
 
@@ -261,7 +265,7 @@ public class FunctionalTests : InputTestsBase
     [Category("Template")]
     public void Templates_CanOverrideTemplateMatchesForDiscoveredDevices()
     {
-        InputSystem.onDeviceDiscovered +=
+        InputSystem.onFindTemplateForDevice +=
             (description, templateMatch) => "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
@@ -3510,9 +3514,9 @@ public class FunctionalTests : InputTestsBase
                 modifiers: "tap(duration=0.1),slowTap(duration=0.5)");
         action.Enable();
 
-        var started = new System.Collections.Generic.List<InputAction.CallbackContext>();
-        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
-        var cancelled = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var started = new List<InputAction.CallbackContext>();
+        var performed = new List<InputAction.CallbackContext>();
+        var cancelled = new List<InputAction.CallbackContext>();
 
         action.started += ctx => started.Add(ctx);
         action.performed += ctx => performed.Add(ctx);
@@ -3569,7 +3573,7 @@ public class FunctionalTests : InputTestsBase
         action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
         action.Enable();
 
-        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var performed = new List<InputAction.CallbackContext>();
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f});
@@ -3596,7 +3600,7 @@ public class FunctionalTests : InputTestsBase
         action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
         action.Enable();
 
-        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var performed = new List<InputAction.CallbackContext>();
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad,
@@ -3616,7 +3620,7 @@ public class FunctionalTests : InputTestsBase
         action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
         action.Enable();
 
-        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var performed = new List<InputAction.CallbackContext>();
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad,
@@ -3643,7 +3647,7 @@ public class FunctionalTests : InputTestsBase
         action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth", modifiers: "tap,slowTap");
         action.Enable();
 
-        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var performed = new List<InputAction.CallbackContext>();
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad,
@@ -3665,9 +3669,9 @@ public class FunctionalTests : InputTestsBase
         var action = new InputAction(binding: "/gamepad/leftStick", modifiers: "continuous");
         action.Enable();
 
-        var started = new System.Collections.Generic.List<InputAction.CallbackContext>();
-        var performed = new System.Collections.Generic.List<InputAction.CallbackContext>();
-        var cancelled = new System.Collections.Generic.List<InputAction.CallbackContext>();
+        var started = new List<InputAction.CallbackContext>();
+        var performed = new List<InputAction.CallbackContext>();
+        var cancelled = new List<InputAction.CallbackContext>();
 
         action.started += ctx => performed.Add(ctx);
         action.cancelled += ctx => performed.Add(ctx);
@@ -4256,7 +4260,7 @@ public class FunctionalTests : InputTestsBase
         var secondInputSystem = new InputManager();
         secondInputSystem.InitializeData();
 
-        var local = InputSystem.remote;
+        var local = InputSystem.remoting;
         var remote = new InputRemoting(secondInputSystem, senderId: 1);
 
         // We wire the two directly into each other effectively making function calls
@@ -4297,7 +4301,7 @@ public class FunctionalTests : InputTestsBase
         var secondInputSystem = new InputManager();
         secondInputSystem.InitializeData();
 
-        var local = InputSystem.remote;
+        var local = InputSystem.remoting;
         var remote = new InputRemoting(secondInputSystem, senderId: 1);
 
         local.Subscribe(remote);
@@ -4330,6 +4334,142 @@ public class FunctionalTests : InputTestsBase
     public void TODO_Remote_RegisteringTemplateWhileRemoting_WillSendTemplateToRemote()
     {
         Assert.Fail();
+    }
+
+    // If we have more than two players connected, for example, and we add a template from player A
+    // to the system, we don't want to send the template to player B in turn. I.e. all data mirrored
+    // from remotes should stay local.
+    [Test]
+    [Category("Remote")]
+    public void TODO_Remote_WithMultipleRemotesConnected_DoesNotDuplicateDataFromOneRemoteToOtherRemotes()
+    {
+        Assert.Fail();
+    }
+
+    // PlayerConnection isn't connected in the editor and EditorConnection isn't connected
+    // in players so we can't really test actual transport in just the application itself.
+    // This will act as an IEditorPlayerConnection that immediately makes the FakePlayerConnection
+    // on the other end receive messages.
+    class FakePlayerConnection : IEditorPlayerConnection
+    {
+        public int playerId;
+        // The fake connection acting as the socket on the opposite end of us.
+        public FakePlayerConnection otherEnd;
+
+        public void Register(Guid messageId, UnityAction<MessageEventArgs> callback)
+        {
+            MessageEvent msgEvent;
+            if (!m_MessageListeners.TryGetValue(messageId, out msgEvent))
+            {
+                msgEvent = new MessageEvent();
+                m_MessageListeners[messageId] = msgEvent;
+            }
+
+            msgEvent.AddListener(callback);
+        }
+
+        public void Unregister(Guid messageId, UnityAction<MessageEventArgs> callback)
+        {
+            m_MessageListeners[messageId].RemoveListener(callback);
+        }
+
+        public void DisconnectAll()
+        {
+            m_MessageListeners.Clear();
+            m_ConnectionListeners.RemoveAllListeners();
+            m_DisconnectionListeners.RemoveAllListeners();
+        }
+
+        public void RegisterConnection(UnityAction<int> callback)
+        {
+            m_ConnectionListeners.AddListener(callback);
+        }
+
+        public void RegisterDisconnection(UnityAction<int> callback)
+        {
+            m_DisconnectionListeners.AddListener(callback);
+        }
+
+        public void Receive(Guid messageId, byte[] data)
+        {
+            MessageEvent msgEvent;
+            if (m_MessageListeners.TryGetValue(messageId, out msgEvent))
+                msgEvent.Invoke(new MessageEventArgs {playerId = playerId, data = data});
+        }
+
+        public void Send(Guid messageId, byte[] data)
+        {
+            otherEnd.Receive(messageId, data);
+        }
+
+        private Dictionary<Guid, MessageEvent> m_MessageListeners = new Dictionary<Guid, MessageEvent>();
+        private ConnectEvent m_ConnectionListeners = new ConnectEvent();
+        private ConnectEvent m_DisconnectionListeners = new ConnectEvent();
+        private class MessageEvent : UnityEvent<MessageEventArgs>
+        {
+        }
+        private class ConnectEvent : UnityEvent<int>
+        {
+        }
+    }
+
+    public class RemoteTestObserver : IObserver<InputRemoting.Message>
+    {
+        public List<InputRemoting.Message> messages = new List<InputRemoting.Message>();
+
+        public void OnNext(InputRemoting.Message msg)
+        {
+            messages.Add(msg);
+        }
+
+        public void OnError(Exception error)
+        {
+        }
+
+        public void OnCompleted()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
+    {
+        var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+        var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+
+        connectionToEditor.name = "ConnectionToEditor";
+        connectionToPlayer.name = "ConnectionToPlayer";
+
+        var fakeEditorConnection = new FakePlayerConnection {playerId = 0};
+        var fakePlayerConnection = new FakePlayerConnection {playerId = 1};
+
+        fakeEditorConnection.otherEnd = fakePlayerConnection;
+        fakePlayerConnection.otherEnd = fakeEditorConnection;
+
+        var observer = new RemoteTestObserver();
+
+        // In the Unity API, "PlayerConnection" is the connection to the editor
+        // and "EditorConnection" is the connection to the player. Seems counter-intuitive.
+        connectionToEditor.Connect(fakePlayerConnection);
+        connectionToPlayer.Connect(fakeEditorConnection);
+
+        // Connect the local remote on the player side.
+        InputSystem.remoting.Subscribe(connectionToEditor);
+        InputSystem.remoting.StartSending();
+
+        connectionToPlayer.Subscribe(observer);
+
+        var device = InputSystem.AddDevice("Gamepad");
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+        InputSystem.RemoveDevice(device);
+
+        ////TODO: make sure that we also get the connection sequence right and send our initial templates and devices
+        Assert.That(observer.messages, Has.Count.EqualTo(3));
+        Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
+        Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
+        Assert.That(observer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
     }
 
 #if UNITY_EDITOR
@@ -4680,3 +4820,4 @@ public class FunctionalTests : InputTestsBase
         Assert.Fail();
     }
 }
+#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

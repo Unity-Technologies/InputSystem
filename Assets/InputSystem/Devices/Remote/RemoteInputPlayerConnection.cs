@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
 namespace ISX.Remote
@@ -7,8 +8,12 @@ namespace ISX.Remote
     // make input on either side fully available on the other side. I.e. player
     // input can be fully debugged in the editor and editor input can conversely
     // be fed into the player.
+    //
+    // NOTE: The Unity EditorConnection/PlayerConnection mechanism requires this to
+    //       be a ScriptableObject as it will register every listeners as a persistent
+    //       one.
     [Serializable]
-    internal class RemoteInputPlayerConnection : IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
+    internal class RemoteInputPlayerConnection : ScriptableObject, IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
     {
         public static readonly Guid kNewDeviceMsg = new Guid("fcd9651ded40425995dfa6aeb78f1f1c");
         public static readonly Guid kNewTemplateMsg = new Guid("fccfec2b7369466d88502a9dd38505f4");
@@ -25,7 +30,11 @@ namespace ISX.Remote
                 throw new InvalidOperationException("Already connected");
             }
 
+            // If there's already connections on the given IEditorPlayerConnection,
+            // calling RegisterConnection() will invoke the given callback for every
+            // already existing connection.
             connection.RegisterConnection(OnConnected);
+
             connection.RegisterDisconnection(OnDisconnected);
 
             connection.Register(kNewDeviceMsg, OnNewDevice);
@@ -33,34 +42,83 @@ namespace ISX.Remote
             connection.Register(kNewEventsMsg, OnNewEvents);
             connection.Register(kRemoveDeviceMsg, OnRemoveDevice);
             connection.Register(kChangeUsagesMsg, OnChangeUsages);
+
+            m_Connection = connection;
+        }
+
+        public IDisposable Subscribe(IObserver<InputRemoting.Message> observer)
+        {
+            var subscriber = new Subscriber {owner = this, observer = observer};
+            ArrayHelpers.Append(ref m_Subscribers, subscriber);
+
+            if (m_ConnectedIds != null)
+            {
+                foreach (var id in m_ConnectedIds)
+                    observer.OnNext(new InputRemoting.Message { type = InputRemoting.MessageType.Connect, sender = id });
+            }
+
+            return subscriber;
         }
 
         private void OnConnected(int id)
         {
+            if (m_ConnectedIds != null && ArrayHelpers.Contains(m_ConnectedIds, id))
+                return;
+
+            ArrayHelpers.Append(ref m_ConnectedIds, id);
+
+            SendToSubscribers(InputRemoting.MessageType.Connect, new MessageEventArgs {playerId = id});
         }
 
         private void OnDisconnected(int id)
         {
+            if (m_ConnectedIds == null || !ArrayHelpers.Contains(m_ConnectedIds, id))
+                return;
+
+            ArrayHelpers.Erase(ref m_ConnectedIds, id);
+
+            SendToSubscribers(InputRemoting.MessageType.Disconnect, new MessageEventArgs {playerId = id});
         }
 
         private void OnNewDevice(MessageEventArgs args)
         {
+            SendToSubscribers(InputRemoting.MessageType.NewDevice, args);
         }
 
         private void OnNewTemplate(MessageEventArgs args)
         {
+            SendToSubscribers(InputRemoting.MessageType.NewTemplate, args);
         }
 
         private void OnNewEvents(MessageEventArgs args)
         {
+            SendToSubscribers(InputRemoting.MessageType.NewEvents, args);
         }
 
         private void OnRemoveDevice(MessageEventArgs args)
         {
+            SendToSubscribers(InputRemoting.MessageType.RemoveDevice, args);
         }
 
         private void OnChangeUsages(MessageEventArgs args)
         {
+            SendToSubscribers(InputRemoting.MessageType.ChangeUsages, args);
+        }
+
+        private void SendToSubscribers(InputRemoting.MessageType type, MessageEventArgs args)
+        {
+            if (m_Subscribers == null)
+                return;
+
+            var msg = new InputRemoting.Message
+            {
+                sender = args.playerId,
+                type = type,
+                data = args.data
+            };
+
+            for (var i = 0; i < m_Subscribers.Length; ++i)
+                m_Subscribers[i].observer.OnNext(msg);
         }
 
         void IObserver<InputRemoting.Message>.OnNext(InputRemoting.Message msg)
@@ -96,21 +154,9 @@ namespace ISX.Remote
         {
         }
 
-        public IDisposable Subscribe(IObserver<InputRemoting.Message> observer)
-        {
-            var subscriber = new Subscriber {owner = this, observer = observer};
-            ArrayHelpers.Append(ref m_Subscribers, subscriber);
-            return subscriber;
-        }
-
         [NonSerialized] private IEditorPlayerConnection m_Connection;
         [NonSerialized] private Subscriber[] m_Subscribers;
-
-        [Serializable]
-        private class Player
-        {
-            public int playerId;
-        }
+        [SerializeField] private int[] m_ConnectedIds;
 
         private class Subscriber : IDisposable
         {
@@ -119,6 +165,7 @@ namespace ISX.Remote
 
             public void Dispose()
             {
+                ArrayHelpers.Erase(ref owner.m_Subscribers, this);
             }
         }
     }

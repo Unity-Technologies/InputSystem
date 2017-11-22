@@ -6,7 +6,7 @@ using System;
 
 namespace ISX
 {
-    public class InputPluginAttribute : Attribute
+    public class InputModuleAttribute : Attribute
     {
     }
 }

@@ -6,8 +6,13 @@ namespace ISX
     // input device-related assets in the project go into the build. The
     // imported asset corresponds to only the assets that get included
     // in the build for the current build target.
-    public class InputDeviceDatabaseAsset : ScriptableObject
+    public class InputDeviceDatabaseAsset : ScriptableObject, IInputModuleManager
     {
         public const string kExtension = "inputdevices";
+
+        public void Initialize()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

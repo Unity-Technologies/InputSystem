@@ -15,6 +15,7 @@ namespace ISX
 
         public InputDeviceDescription description => m_Description;
 
+        ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
         ////TODO: this needs to become part of the device's configuration
         // Systems that support multiple concurrent player inputs on the same system, the available
         // player inputs are usually numbered. For example, on a console the gamepads slots on the system

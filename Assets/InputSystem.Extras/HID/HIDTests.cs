@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using UnityEngine;
 
 namespace ISX.HID
 {
@@ -9,7 +8,6 @@ namespace ISX.HID
         {
             base.Setup();
 
-            ////TODO: the system should do that automatically for us
             HIDSupport.Initialize();
         }
 
@@ -38,7 +36,7 @@ namespace ISX.HID
             {
                 interfaceName = HID.kHIDInterface,
                 product = "MyHIDThing",
-                capabilities = JsonUtility.ToJson(hidDescriptor)
+                capabilities = hidDescriptor.ToJson()
             });
 
             Assert.That(InputSystem.devices, Has.Count.EqualTo(1));

@@ -100,6 +100,7 @@ namespace ISX
 
         public virtual void SetConfiguration(ReadOnlyArray<Configuration> configuration)
         {
+            //For native API, instead of sending actual string names for keys, CRC the keys and use ints for communication
             throw new NotImplementedException();
         }
 

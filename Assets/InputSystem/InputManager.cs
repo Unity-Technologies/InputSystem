@@ -15,7 +15,7 @@ using UnityEngineInternal.Input;
 namespace ISX
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using DeviceDiscoveredListener = Func<InputDeviceDescription, string, string>;
+    using DeviceFindTemplateListener = Func<InputDeviceDescription, string, string>;
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
@@ -49,11 +49,10 @@ namespace ISX
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
-        ////TODO: rename to onDeviceFindTemplate
-        public event DeviceDiscoveredListener onDeviceDiscovered
+        public event DeviceFindTemplateListener onFindTemplateForDevice
         {
-            add { m_DeviceDiscoveredListeners.Append(value); }
-            remove { m_DeviceDiscoveredListeners.Remove(value); }
+            add { m_DeviceFindTemplateListeners.Append(value); }
+            remove { m_DeviceFindTemplateListeners.Remove(value); }
         }
 
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
@@ -573,9 +572,9 @@ namespace ISX
             var template = TryFindMatchingTemplate(description);
 
             // Give listeners a shot to select/create a template.
-            for (var i = 0; i < m_DeviceDiscoveredListeners.Count; ++i)
+            for (var i = 0; i < m_DeviceFindTemplateListeners.Count; ++i)
             {
-                var newTemplate = m_DeviceDiscoveredListeners[i](description, template);
+                var newTemplate = m_DeviceFindTemplateListeners[i](description, template);
                 if (!string.IsNullOrEmpty(newTemplate))
                 {
                     template = newTemplate;
@@ -923,7 +922,7 @@ namespace ISX
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        [NonSerialized] private InlinedArray<DeviceDiscoveredListener> m_DeviceDiscoveredListeners;
+        [NonSerialized] private InlinedArray<DeviceFindTemplateListener> m_DeviceFindTemplateListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
@@ -1685,8 +1684,12 @@ namespace ISX
 #endif
         }
 
-        // Domain reload survival logic.
-#if UNITY_EDITOR
+        // Domain reload survival logic. Also used for pushing and popping input system
+        // state for testing.
+
+        // Stuff everything that we want to survive a domain reload into
+        // a m_SerializedState.
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         [Serializable]
         internal struct DeviceState
         {
@@ -1777,7 +1780,7 @@ namespace ISX
             // across domain reloads. So we put them in here but don't serialize them (and
             // can't either except if we make them UnityEvents).
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
-            [NonSerialized] public InlinedArray<DeviceDiscoveredListener> deviceDiscoveredListeners;
+            [NonSerialized] public InlinedArray<DeviceFindTemplateListener> deviceDiscoveredListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
         }
 
@@ -1855,7 +1858,7 @@ namespace ISX
                 buffers = m_StateBuffers,
                 configuration = InputConfiguration.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
-                deviceDiscoveredListeners = m_DeviceDiscoveredListeners.Clone(),
+                deviceDiscoveredListeners = m_DeviceFindTemplateListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
                 updateMask = m_UpdateMask
             };
@@ -1875,7 +1878,7 @@ namespace ISX
             m_Devices = null;
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
-            m_DeviceDiscoveredListeners = state.deviceDiscoveredListeners;
+            m_DeviceFindTemplateListeners = state.deviceDiscoveredListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
 
@@ -2011,6 +2014,8 @@ namespace ISX
             }
             m_Devices = devices;
 
+            ////TODO: retry to make sense of available devices that we couldn't make sense of before; maybe we have a template now
+
             // At the moment, there's no support for taking state across domain reloads
             // as we don't have support ATM for taking state across format changes.
             m_StateBuffers.FreeAll();
@@ -2020,8 +2025,8 @@ namespace ISX
 
         [SerializeField] private SerializedState m_SerializedState;
 
-        // Stuff everything that we want to survive a domain reload into
-        // a m_SerializedState.
+#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             m_SerializedState = SaveState();

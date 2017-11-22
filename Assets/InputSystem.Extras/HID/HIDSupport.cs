@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ISX.HID
 {
-    [InputPlugin]
+    [InputModule]
     public static class HIDSupport
     {
         public static string description =>
@@ -22,7 +22,7 @@ namespace ISX.HID
         public static void Initialize()
         {
             InputSystem.RegisterTemplate<HID>();
-            InputSystem.onDeviceDiscovered += HID.OnDeviceDiscovered;
+            InputSystem.onFindTemplateForDevice += HID.OnFindTemplateForDevice;
         }
     }
 }
