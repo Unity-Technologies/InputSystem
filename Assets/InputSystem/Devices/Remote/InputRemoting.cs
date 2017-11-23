@@ -19,6 +19,9 @@ namespace ISX
     /// Remoting sits entirely on top of the input system as an optional piece of functionality.
     /// In development players and the editor, we enable it automatically but in non-development
     /// players it has to be explicitly requested by the user.
+    /// 
+    /// To see devices and input from players in the editor, open the Input Debugger through
+    /// "Windows >> Input Debugger".
     /// </remarks>
     /// <seealso cref="InputSystem.remoting"/>
     /// \todo Reuse memory allocated for messages instead of allocating separately for each message.
