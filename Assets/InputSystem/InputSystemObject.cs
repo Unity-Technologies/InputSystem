@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using ISX.Editor;
-using ISX.Remote;
+using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
 
 namespace ISX
@@ -37,7 +37,7 @@ namespace ISX
 
         private void SetUpRemoting()
         {
-            remote = new InputRemoting(manager, m_RemotingState.senderId);
+            remote = new InputRemoting(manager);
             remote.RestoreState(m_RemotingState, manager);
 
             if (playerConnection == null)
@@ -45,6 +45,8 @@ namespace ISX
 
             remote.Subscribe(playerConnection); // Feed messages from players into editor.
             playerConnection.Subscribe(remote); // Feed messages from editor into players.
+
+            playerConnection.Bind(EditorConnection.instance, false);
 
             // We don't enable sending on the editor's remote by default.
             // By default, the editor acts as a receiver only.

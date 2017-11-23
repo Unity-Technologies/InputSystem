@@ -1,6 +1,8 @@
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
 using NUnit.Framework;
 
+////TODO: when running tests in players, make sure that remoting is turned off
+
 namespace ISX
 {
     /// <summary>
@@ -34,6 +36,15 @@ namespace ISX
     /// </example>
     public class InputTestFixture
     {
+        /// <summary>
+        /// Put InputSystem into a known state where it only has a basic set of
+        /// templates and does not have any input devices.
+        /// </summary>
+        /// <remarks>
+        /// If you derive your own test fixture directly from InputTestFixture, this
+        /// method will automatically be called. If you embed InputTestFixture into
+        /// your fixture, you have to explicitly call this method yourself.
+        /// </remarks>
         [SetUp]
         public virtual void Setup()
         {

@@ -10,7 +10,10 @@ namespace ISX
     ////REVIEW: I think it makes sense to switch this to a more compact format that doesn't store floats; after all in almost all
     ////        cases our source data on platforms is *not* floats. And users won't generally deal with GamepadState directly.
 
-    // Default gamepad state layout.
+    /// <summary>
+    /// Default state layout gamepads.
+    /// </summary>
+    /// <seealso cref="Gamepad"/>
     [StructLayout(LayoutKind.Sequential)]
     public struct GamepadState : IInputStateTypeInfo
     {
@@ -110,7 +113,11 @@ namespace ISX
         }
     }
 
-    // Xbox-style gamepad.
+    /// <summary>
+    /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
+    /// two shoulder buttons, and two menu buttons.
+    /// </summary>
+    /// <seealso cref="GamepadState"/>
     [InputState(typeof(GamepadState))]
     public class Gamepad : InputDevice
     {

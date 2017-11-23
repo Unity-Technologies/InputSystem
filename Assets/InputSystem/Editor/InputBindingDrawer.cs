@@ -244,7 +244,7 @@ namespace ISX.Editor
                 m_ModifierListView.onRemoveCallback =
                     (list) =>
                     {
-                        ArrayHelpers.Erase(ref m_Modifiers, list.index);
+                        ArrayHelpers.EraseAt(ref m_Modifiers, list.index);
                         ApplyModifiers();
                     };
             }

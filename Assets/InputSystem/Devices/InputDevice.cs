@@ -1,12 +1,18 @@
 using System;
 
-////TODO: the entire control hierarchy should be a linear array; transition to that with InputData
-
 namespace ISX
 {
-    // Input devices are the roots of control hierarchies.
-    // Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    // without requiring a change to the device template.
+    /// <summary>
+    /// The root of a control hierarchy.
+    /// </summary>
+    /// <remarks>
+    /// Input devices act as the container for control hierarchies. Every hierarchy has to have
+    /// a device at the root. Devices cannot occur inside of hierarchies.
+    ///
+    /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
+    /// without requiring a change to the device template.
+    /// </remarks>
+    /// \todo The entire control hierarchy should be a linear array; transition to that with InputData.
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;

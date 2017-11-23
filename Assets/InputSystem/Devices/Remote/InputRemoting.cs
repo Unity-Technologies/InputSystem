@@ -5,23 +5,31 @@ using System.Text;
 using UnityEngine;
 using UnityEngineInternal.Input;
 
-////TODO: reuse memory allocated for messages instead of allocating separately for each message
-
-namespace ISX.Remote
+namespace ISX
 {
-    // Makes the activity and data of an InputManager observable in message form.
-    // Can act as both the sender and receiver of these message so the flow is fully bidirectional,
-    // i.e. the InputManager on either end can mirror its templates, devices, and events over
-    // to the other end. This permits streaming input not just from the player to the editor but
-    // also feeding input from the editor back into the player.
-    //
-    // Remoting sits entirely on top of the input system as an optional piece of functionality.
-    // In development players and the editor, we enable it automatically but in non-development
-    // players it has to be explicitly requested by the user.
+    /// <summary>
+    /// Makes the activity and data of an InputManager observable in message form.
+    /// </summary>
+    /// <remarks>
+    /// Can act as both the sender and receiver of these message so the flow is fully bidirectional,
+    /// i.e. the InputManager on either end can mirror its templates, devices, and events over
+    /// to the other end. This permits streaming input not just from the player to the editor but
+    /// also feeding input from the editor back into the player.
+    ///
+    /// Remoting sits entirely on top of the input system as an optional piece of functionality.
+    /// In development players and the editor, we enable it automatically but in non-development
+    /// players it has to be explicitly requested by the user.
+    /// </remarks>
+    /// <seealso cref="InputSystem.remoting"/>
+    /// \todo Reuse memory allocated for messages instead of allocating separately for each message.
+    /// \todo Inteface to determine what to mirror from the local manager to the remote system.
     public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
         public const string kRemoteTemplateNamespacePrefix = "remote";
 
+        /// <summary>
+        /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
+        /// </summary>
         public enum MessageType
         {
             Connect,
@@ -34,49 +42,74 @@ namespace ISX.Remote
             ChangeUsages,
         }
 
+        /// <summary>
+        /// A message exchanged between two InputRemoting instances.
+        /// </summary>
         public struct Message
         {
-            public int sender;
+            /// <summary>
+            /// For messages coming in, numeric ID of the sender of the message. For messages
+            /// going out, numeric ID of the targeted receiver of the message.
+            /// </summary>
+            public int participantId;
             public MessageType type;
             public byte[] data;
         }
 
-        ////TODO: interface to determine what to mirror from m_Manager to the remote system
+        public bool sending
+        {
+            get { return (m_Flags & Flags.Sending) == Flags.Sending; }
+            private set
+            {
+                if (value)
+                    m_Flags |= Flags.Sending;
+                else
+                    m_Flags &= ~Flags.Sending;
+            }
+        }
 
-        internal InputRemoting(InputManager manager, int senderId = 0)
+        internal InputRemoting(InputManager manager, bool startSendingOnConnect = false)
         {
             if (manager == null)
                 throw new ArgumentNullException(nameof(manager));
 
             m_LocalManager = manager;
-            m_SenderId = senderId;
+
+            if (startSendingOnConnect)
+                m_Flags |= Flags.StartSendingOnConnect;
 
             //when listening for newly added templates, must filter out ones we've added from remote
         }
 
+        /// <summary>
+        /// Start sending messages for data and activity in the local input system
+        /// to observers.
+        /// </summary>
+        /// <seealso cref="sending"/>
+        /// <seealso cref="StopSending"/>
         public void StartSending()
         {
-            if (m_IsSending)
+            if (sending)
                 return;
 
             ////TODO: send events in bulk rather than one-by-one
             m_LocalManager.onEvent += SendEvent;
             m_LocalManager.onDeviceChange += SendDeviceChange;
 
-            m_IsSending = true;
+            sending = true;
 
-            SendAllCurrentDataToAllSubscribers();
+            SendAllCurrentData();
         }
 
         public void StopSending()
         {
-            if (!m_IsSending)
+            if (!sending)
                 return;
 
             m_LocalManager.onEvent -= SendEvent;
             m_LocalManager.onDeviceChange -= SendDeviceChange;
 
-            m_IsSending = false;
+            sending = false;
         }
 
         void IObserver<Message>.OnNext(Message msg)
@@ -84,8 +117,10 @@ namespace ISX.Remote
             switch (msg.type)
             {
                 case MessageType.Connect:
+                    ConnectMsg.Process(this, msg);
                     break;
                 case MessageType.Disconnect:
+                    DisconnectMsg.Process(this, msg);
                     break;
                 case MessageType.NewTemplate:
                     NewTemplateMsg.Process(this, msg);
@@ -121,41 +156,25 @@ namespace ISX.Remote
             var subscriber = new Subscriber {owner = this, observer = observer};
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
 
-            if (m_IsSending)
-                SendAllCurrentDataToSubscriber(subscriber);
-
-            ////REVIEW: Send connect?
-
             return subscriber;
         }
 
-        // Let all subscribers know about all devices and templates that m_LocalManager has.
-        private void SendAllCurrentDataToAllSubscribers()
+        private void SendAllCurrentData(int recipientId = 0)
         {
-            if (m_Subscribers == null)
-                return;
-
-            foreach (var subscriber in m_Subscribers)
-                SendAllCurrentDataToSubscriber(subscriber);
+            SendAllTemplates();
+            SendAllDevices();
         }
 
-        // Let the given subscriber know about all devices and templates that m_LocalManager has.
-        private void SendAllCurrentDataToSubscriber(Subscriber subscriber)
-        {
-            SendAllTemplatesTo(subscriber);
-            SendAllDevicesTo(subscriber);
-        }
-
-        private void SendAllTemplatesTo(Subscriber subscriber)
+        private void SendAllTemplates()
         {
             var allTemplates = new List<string>();
             m_LocalManager.ListTemplates(allTemplates);
 
             foreach (var templateName in allTemplates)
-                SendTemplateTo(subscriber, templateName);
+                SendTemplate(templateName);
         }
 
-        private void SendTemplateTo(Subscriber subscriber, string templateName)
+        private void SendTemplate(string templateName)
         {
             // Try to load the template. Ignore the template if it couldn't
             // be loaded.
@@ -172,20 +191,20 @@ namespace ISX.Remote
 
             // Send it.
             var message = NewTemplateMsg.Create(this, template);
-            subscriber.observer.OnNext(message);
+            Send(message);
         }
 
-        private void SendAllDevicesTo(Subscriber subscriber)
+        private void SendAllDevices()
         {
             var devices = m_LocalManager.devices;
             foreach (var device in devices)
-                SendDeviceTo(subscriber, device);
+                SendDevice(device);
         }
 
-        private void SendDeviceTo(Subscriber subscriber, InputDevice device)
+        private void SendDevice(InputDevice device)
         {
             var message = NewDeviceMsg.Create(this, device);
-            subscriber.observer.OnNext(message);
+            Send(message);
         }
 
         private void SendEvent(InputEventPtr eventPtr)
@@ -202,7 +221,7 @@ namespace ISX.Remote
                 return;
 
             var message = NewEventsMsg.Create(this, eventPtr.data, 1);
-            SendToAll(message);
+            Send(message);
         }
 
         private void SendDeviceChange(InputDevice device, InputDeviceChange change)
@@ -230,10 +249,10 @@ namespace ISX.Remote
                     return;
             }
 
-            SendToAll(msg);
+            Send(msg);
         }
 
-        private void SendToAll(Message msg)
+        private void Send(Message msg)
         {
             foreach (var subscriber in m_Subscribers)
                 subscriber.observer.OnNext(msg);
@@ -280,11 +299,17 @@ namespace ISX.Remote
             return m_LocalManager.TryGetDeviceById(localId);
         }
 
-        private int m_SenderId; // Our unique ID in the network of senders and receivers.
+        private Flags m_Flags;
         private InputManager m_LocalManager; // Input system we mirror input from and to.
         private Subscriber[] m_Subscribers; // Receivers we send input to.
         private RemoteSender[] m_Senders; // Senders we receive input from.
-        private bool m_IsSending;
+
+        [Flags]
+        private enum Flags
+        {
+            Sending = 1 << 0,
+            StartSendingOnConnect = 1 << 1
+        }
 
         // Data we keep about a unique sender that we receive input data
         // from. We keep track of the templates and devices we added to
@@ -327,6 +352,39 @@ namespace ISX.Remote
             }
         }
 
+        private static class ConnectMsg
+        {
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                if (receiver.sending)
+                    receiver.SendAllCurrentData(msg.participantId);
+                else if ((receiver.m_Flags & Flags.StartSendingOnConnect) == Flags.StartSendingOnConnect)
+                    receiver.StartSending();
+            }
+        }
+
+        private static class DisconnectMsg
+        {
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
+
+                // Remove devices added by remote.
+                foreach (var remoteDevice in receiver.m_Senders[senderIndex].devices)
+                {
+                    var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
+                    if (device != null)
+                        receiver.m_LocalManager.RemoveDevice(device);
+                }
+
+                ////TODO: remove templates added by remote
+
+                ArrayHelpers.EraseAt(ref receiver.m_Senders, senderIndex);
+
+                ////TODO: stop sending if last remote disconnects and StartSendingOnConnect is active
+            }
+        }
+
         // Tell remote input system that there's a new template.
         private static class NewTemplateMsg
         {
@@ -337,7 +395,6 @@ namespace ISX.Remote
 
                 return new Message
                 {
-                    sender = sender.m_SenderId,
                     type = MessageType.NewTemplate,
                     data = bytes
                 };
@@ -346,7 +403,7 @@ namespace ISX.Remote
             public static void Process(InputRemoting receiver, Message msg)
             {
                 var json = Encoding.UTF8.GetString(msg.data);
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var @namespace = receiver.m_Senders[senderIndex].templateNamespace;
 
                 receiver.m_LocalManager.RegisterTemplate(json, @namespace: @namespace);
@@ -383,7 +440,6 @@ namespace ISX.Remote
 
                 return new Message
                 {
-                    sender = sender.m_SenderId,
                     type = MessageType.NewDevice,
                     data = bytes
                 };
@@ -391,7 +447,7 @@ namespace ISX.Remote
 
             public static void Process(InputRemoting receiver, Message msg)
             {
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var data = DeserializeData<Data>(msg.data);
 
                 // Create device.
@@ -399,7 +455,7 @@ namespace ISX.Remote
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(template);
+                    device = receiver.m_LocalManager.AddDevice(template, $"Remote{msg.participantId}::{data.name}");
                 }
                 catch (Exception exception)
                 {
@@ -447,7 +503,6 @@ namespace ISX.Remote
                 // Done.
                 return new Message
                 {
-                    sender = sender.m_SenderId,
                     type = MessageType.NewEvents,
                     data = data
                 };
@@ -466,7 +521,7 @@ namespace ISX.Remote
                     var dataEndPtr = new IntPtr(dataPtr) + msg.data.Length;
                     var eventCount = 0;
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
-                    var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                    var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
 
                     while (eventPtr.data.ToInt64() < dataEndPtr.ToInt64())
                     {
@@ -510,7 +565,6 @@ namespace ISX.Remote
 
                 return new Message
                 {
-                    sender = sender.m_SenderId,
                     type = MessageType.ChangeUsages,
                     data = SerializeData(data)
                 };
@@ -518,7 +572,7 @@ namespace ISX.Remote
 
             public static void Process(InputRemoting receiver, Message msg)
             {
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var data = DeserializeData<Data>(msg.data);
 
                 var device = receiver.TryGetDeviceByRemoteId(data.deviceId, senderIndex);
@@ -538,7 +592,6 @@ namespace ISX.Remote
             {
                 return new Message
                 {
-                    sender = sender.m_SenderId,
                     type = MessageType.RemoveDevice,
                     data = BitConverter.GetBytes(device.id)
                 };
@@ -546,7 +599,7 @@ namespace ISX.Remote
 
             public static void Process(InputRemoting receiver, Message msg)
             {
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.sender);
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var remoteDeviceId = BitConverter.ToInt32(msg.data, 0);
 
                 var device = receiver.TryGetDeviceByRemoteId(remoteDeviceId, senderIndex);
@@ -587,7 +640,6 @@ namespace ISX.Remote
         {
             return new SerializedState
             {
-                senderId = m_SenderId,
                 senders = m_Senders,
                 subscribers = m_Subscribers
             };
@@ -596,7 +648,6 @@ namespace ISX.Remote
         internal void RestoreState(SerializedState state, InputManager manager)
         {
             m_LocalManager = manager;
-            m_SenderId = state.senderId;
             m_Senders = state.senders;
         }
 

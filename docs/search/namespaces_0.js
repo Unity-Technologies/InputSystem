@@ -5,7 +5,6 @@ var searchData=
   ['flightsticks',['Flightsticks',['../namespace_i_s_x_1_1_flightsticks.html',1,'ISX']]],
   ['hid',['HID',['../namespace_i_s_x_1_1_h_i_d.html',1,'ISX']]],
   ['isx',['ISX',['../namespace_i_s_x.html',1,'']]],
-  ['remote',['Remote',['../namespace_i_s_x_1_1_remote.html',1,'ISX']]],
   ['steam',['Steam',['../namespace_i_s_x_1_1_steam.html',1,'ISX']]],
   ['steeringwheels',['SteeringWheels',['../namespace_i_s_x_1_1_steering_wheels.html',1,'ISX']]],
   ['vr',['VR',['../namespace_i_s_x_1_1_v_r.html',1,'ISX']]],

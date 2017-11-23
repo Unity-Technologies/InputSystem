@@ -116,7 +116,7 @@ namespace ISX
             return index;
         }
 
-        public static void Insert<TValue>(ref TValue[] array, int index, TValue value)
+        public static void InsertAt<TValue>(ref TValue[] array, int index, TValue value)
         {
             if (array == null)
             {
@@ -224,7 +224,7 @@ namespace ISX
             return merged.ToArray();
         }
 
-        public static void Erase<TValue>(ref TValue[] array, int index)
+        public static void EraseAt<TValue>(ref TValue[] array, int index)
         {
             if (array == null)
                 return;
@@ -250,7 +250,7 @@ namespace ISX
         {
             var index = IndexOf(ref array, value);
             if (index != -1)
-                Erase(ref array, index);
+                EraseAt(ref array, index);
         }
 
         public static TValue[] Clone<TValue>(TValue[] array)

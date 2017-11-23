@@ -249,7 +249,7 @@ namespace ISX
                     // More involved case where we are sitting somewhere within the set's bindings array
                     // and inserting new bindings will thus affect other actions in the set.
                     bindingIndex = m_BindingsStartIndex + m_BindingsCount;
-                    ArrayHelpers.Insert(ref set.m_Bindings, bindingIndex, binding);
+                    ArrayHelpers.InsertAt(ref set.m_Bindings, bindingIndex, binding);
 
                     // Shift binding start indices of all actions that come after us up by one.
                     for (var i = 0; i < actionCount; ++i)

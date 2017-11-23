@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ISX;
-using ISX.Remote;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
@@ -17,9 +16,6 @@ using UnityEngineInternal.Input;
 using ISX.Editor;
 using UnityEditor;
 #endif
-
-////TODO: make work in player (ATM we rely on the domain reload logic; probably want to include that in debug players, too)
-////      (when running in player, make sure that remoting is *off*)
 
 // These tests rely on the default template setup present in the code
 // of the system (e.g. they make assumptions about Gamepad is set up).
@@ -4261,7 +4257,7 @@ public class FunctionalTests : InputTestFixture
         secondInputSystem.InitializeData();
 
         var local = InputSystem.remoting;
-        var remote = new InputRemoting(secondInputSystem, senderId: 1);
+        var remote = new InputRemoting(secondInputSystem);
 
         // We wire the two directly into each other effectively making function calls
         // our "network transport layer". In a real networking situation, we'd effectively
@@ -4302,7 +4298,7 @@ public class FunctionalTests : InputTestFixture
         secondInputSystem.InitializeData();
 
         var local = InputSystem.remoting;
-        var remote = new InputRemoting(secondInputSystem, senderId: 1);
+        var remote = new InputRemoting(secondInputSystem);
 
         local.Subscribe(remote);
         remote.Subscribe(local);
@@ -4322,7 +4318,7 @@ public class FunctionalTests : InputTestFixture
         InputSystem.SetUsage(localGamepad, CommonUsages.LeftHand);
         Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
 
-        // Connect and disconnect are events so no need to test those.
+        // Bind and disconnect are events so no need to test those.
 
         // Remove device.
         InputSystem.RemoveDevice(localGamepad);
@@ -4451,10 +4447,10 @@ public class FunctionalTests : InputTestFixture
 
         // In the Unity API, "PlayerConnection" is the connection to the editor
         // and "EditorConnection" is the connection to the player. Seems counter-intuitive.
-        connectionToEditor.Connect(fakePlayerConnection);
-        connectionToPlayer.Connect(fakeEditorConnection);
+        connectionToEditor.Bind(fakePlayerConnection, true);
+        connectionToPlayer.Bind(fakeEditorConnection, true);
 
-        // Connect the local remote on the player side.
+        // Bind the local remote on the player side.
         InputSystem.remoting.Subscribe(connectionToEditor);
         InputSystem.remoting.StartSending();
 

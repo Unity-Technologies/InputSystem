@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using ISX.Remote;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -29,7 +28,7 @@ using UnityEngine.Networking.PlayerConnection;
 namespace ISX
 {
     /// <summary>
-    /// This is the central API for the input system.
+    /// This is the central hub for the input system.
     /// </summary>
     // Takes care of the singletons we need and presents a sanitized API.
 #if UNITY_EDITOR
@@ -458,6 +457,14 @@ namespace ISX
 
         #region Remoting
 
+        /// <summary>
+        /// The local InputRemoting instance which can mirror local input to a remote
+        /// input system or can make input in a remote system available locally.
+        /// </summary>
+        /// <remarks>
+        /// In the editor, this is always initialized. In players, this will be null
+        /// if remoting is disabled (which it is by default in release players).
+        /// </remarks>
         public static InputRemoting remoting
         {
             get
@@ -466,8 +473,6 @@ namespace ISX
                 {
                     #if UNITY_EDITOR
                     s_Remote = s_SystemObject.remote;
-                    #else
-                    s_Remote = new InputRemoting(s_Manager);
                     #endif
                 }
                 return s_Remote;
@@ -478,7 +483,6 @@ namespace ISX
 
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
-
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
@@ -548,7 +552,7 @@ namespace ISX
 
 #else
         #if DEVELOPMENT_BUILD
-        private static RemoteInputPlayerConnection s_RemoteEditorConnection;
+        private static RemoteInputPlayerConnection s_ConnectionToEditor;
         #endif
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -565,12 +569,11 @@ namespace ISX
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
             #if DEVELOPMENT_BUILD
-            s_Remote = new InputRemoting(s_Manager);
-            s_RemoteEditorConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
-            s_RemoteEditorConnection.Connect(PlayerConnection.instance);
-            s_Remote.Subscribe(s_RemoteEditorConnection);
-            s_RemoteEditorConnection.Subscribe(s_Remote);
-            s_Remote.StartSending();
+            s_ConnectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+            s_Remote = new InputRemoting(s_Manager, startSendingOnConnect: true);
+            s_Remote.Subscribe(s_ConnectionToEditor);
+            s_ConnectionToEditor.Subscribe(s_Remote);
+            s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
             #endif
 
             s_Initialized = true;

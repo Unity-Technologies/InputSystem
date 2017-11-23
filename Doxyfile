@@ -32,13 +32,13 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = InputSystem
+PROJECT_NAME           = "Input System"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 
+PROJECT_NUMBER         = v0.1
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -301,7 +301,7 @@ EXTENSION_MAPPING      = cs=C#
 # case of backward compatibilities issues.
 # The default value is: YES.
 
-MARKDOWN_SUPPORT       = YES
+MARKDOWN_SUPPORT       = NO
 
 # When the TOC_INCLUDE_HEADINGS tag is set to a non-zero value, all headings up
 # to that level are automatically included in the table of contents, even if
@@ -563,7 +563,7 @@ FORCE_LOCAL_INCLUDES   = NO
 # documentation for inline members.
 # The default value is: YES.
 
-INLINE_INFO            = YES
+INLINE_INFO            = NO
 
 # If the SORT_MEMBER_DOCS tag is set to YES then doxygen will sort the
 # (detailed) documentation of file and class members alphabetically by member
@@ -1088,7 +1088,7 @@ GENERATE_HTML          = YES
 # The default directory is: html.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_OUTPUT            = docs
+HTML_OUTPUT            = Docs
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for each
 # generated HTML page (for example: .htm, .php, .asp).

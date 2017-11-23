@@ -607,7 +607,7 @@ namespace ISX
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
-            ArrayHelpers.Erase(ref m_Devices, deviceIndex);
+            ArrayHelpers.EraseAt(ref m_Devices, deviceIndex);
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
             m_DevicesById.Remove(device.id);
 

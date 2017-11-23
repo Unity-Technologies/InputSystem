@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
-namespace ISX.Remote
+namespace ISX
 {
     // Transports input remoting messages from and to players. Can be used to
     // make input on either side fully available on the other side. I.e. player
@@ -21,18 +21,19 @@ namespace ISX.Remote
         public static readonly Guid kRemoveDeviceMsg = new Guid("e5e299b2d9e44255b8990bb71af8922d");
         public static readonly Guid kChangeUsagesMsg = new Guid("b9fe706dfc854d7ca109a5e38d7db730");
 
-        public void Connect(IEditorPlayerConnection connection)
+        public void Bind(IEditorPlayerConnection connection, bool isConnected)
         {
             if (m_Connection != null)
             {
                 if (m_Connection == connection)
                     return;
-                throw new InvalidOperationException("Already connected");
+                throw new InvalidOperationException("Already bound to an IEditorPlayerConnection");
             }
 
             // If there's already connections on the given IEditorPlayerConnection,
             // calling RegisterConnection() will invoke the given callback for every
-            // already existing connection.
+            // already existing connection. However, it seems to do so only in the
+            // editor which is why we do the 'isConnected' dance below.
             connection.RegisterConnection(OnConnected);
 
             connection.RegisterDisconnection(OnDisconnected);
@@ -44,6 +45,9 @@ namespace ISX.Remote
             connection.Register(kChangeUsagesMsg, OnChangeUsages);
 
             m_Connection = connection;
+
+            if (isConnected)
+                OnConnected(0);
         }
 
         public IDisposable Subscribe(IObserver<InputRemoting.Message> observer)
@@ -54,7 +58,7 @@ namespace ISX.Remote
             if (m_ConnectedIds != null)
             {
                 foreach (var id in m_ConnectedIds)
-                    observer.OnNext(new InputRemoting.Message { type = InputRemoting.MessageType.Connect, sender = id });
+                    observer.OnNext(new InputRemoting.Message { type = InputRemoting.MessageType.Connect, participantId = id });
             }
 
             return subscriber;
@@ -75,7 +79,7 @@ namespace ISX.Remote
             if (m_ConnectedIds == null || !ArrayHelpers.Contains(m_ConnectedIds, id))
                 return;
 
-            ArrayHelpers.Erase(ref m_ConnectedIds, id);
+            ArrayHelpers.EraseAt(ref m_ConnectedIds, id);
 
             SendToSubscribers(InputRemoting.MessageType.Disconnect, new MessageEventArgs {playerId = id});
         }
@@ -112,7 +116,7 @@ namespace ISX.Remote
 
             var msg = new InputRemoting.Message
             {
-                sender = args.playerId,
+                participantId = args.playerId,
                 type = type,
                 data = args.data
             };
@@ -125,6 +129,9 @@ namespace ISX.Remote
         {
             if (m_Connection == null)
                 return;
+
+            ////TODO: this should really be sending to a specific player in the editor (can't
+            ////      do that through the IEditorPlayerConnection interface though)
 
             switch (msg.type)
             {
