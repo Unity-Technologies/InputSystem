@@ -675,6 +675,90 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanRemoveTemplate()
+    {
+        var json = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = InputSystem.AddDevice("MyTemplate");
+
+        Assert.That(InputSystem.ListTemplates(), Has.Exactly(1).EqualTo("MyTemplate"));
+        Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(device));
+
+        InputSystem.RemoveTemplate("MyTemplate");
+
+        Assert.That(InputSystem.ListTemplates(), Has.None.EqualTo("MyTemplate"));
+        Assert.That(InputSystem.devices, Has.None.SameAs(device));
+        Assert.That(InputSystem.devices, Has.None.With.Property("template").EqualTo("MyTemplate"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_ChangingTemplates_SendsNotifications()
+    {
+        InputTemplateChange? receivedChange = null;
+        string receivedTemplate = null;
+
+        InputSystem.onTemplateChange +=
+            (template, change) =>
+            {
+                receivedChange = change;
+                receivedTemplate = template;
+            };
+
+        const string jsonV1 = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        // Add template.
+        InputSystem.RegisterTemplate(jsonV1);
+
+        Assert.That(receivedChange, Is.EqualTo(InputTemplateChange.Added));
+        Assert.That(receivedTemplate, Is.EqualTo("MyTemplate"));
+
+        const string jsonV2 = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""extend"" : ""Keyboard""
+            }
+        ";
+
+        receivedChange = null;
+        receivedTemplate = null;
+
+        // Change template.
+        InputSystem.RegisterTemplate(jsonV2);
+
+        Assert.That(receivedChange, Is.EqualTo(InputTemplateChange.Replaced));
+        Assert.That(receivedTemplate, Is.EqualTo("MyTemplate"));
+
+        receivedChange = null;
+        receivedTemplate = null;
+
+        // RemoveTemplate.
+        InputSystem.RemoveTemplate("MyTemplate");
+
+        Assert.That(receivedChange, Is.EqualTo(InputTemplateChange.Removed));
+        Assert.That(receivedTemplate, Is.EqualTo("MyTemplate"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_RemovingTemplates_RemovesAllTemplatesBasedOnIt()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Templates")]
     public void TODO_Templates_CanQueryImageAndDisplayNameFromControl()
     {
         var json = @"
@@ -4327,9 +4411,50 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Remote")]
-    public void TODO_Remote_RegisteringTemplateWhileRemoting_WillSendTemplateToRemote()
+    public void Remote_ChangingTemplatesWhileRemoting_WillSendChangesToRemote()
     {
-        Assert.Fail();
+        var secondInputSystem = new InputManager();
+        secondInputSystem.InitializeData();
+
+        var local = InputSystem.remoting;
+        var remote = new InputRemoting(secondInputSystem);
+
+        local.Subscribe(remote);
+        remote.Subscribe(local);
+
+        local.StartSending();
+
+        const string jsonV1 = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        // Add template.
+        InputSystem.RegisterTemplate(jsonV1);
+
+        var template = secondInputSystem.TryLoadTemplate(new InternedString("remote0::MyTemplate"));
+        Assert.That(template, Is.Not.Null);
+        Assert.That(template.extendsTemplate, Is.EqualTo("Gamepad"));
+
+        const string jsonV2 = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""extend"" : ""Keyboard""
+            }
+        ";
+
+        // Change template.
+        InputSystem.RegisterTemplate(jsonV2);
+
+        template = secondInputSystem.TryLoadTemplate(new InternedString("remote0::MyTemplate"));
+        Assert.That(template.extendsTemplate, Is.EqualTo("Keyboard"));
+
+        // Remove template.
+        InputSystem.RemoveTemplate("MyTemplate");
+
+        Assert.That(secondInputSystem.TryLoadTemplate(new InternedString("remote0::MyTemplate")), Is.Null);
     }
 
     // If we have more than two players connected, for example, and we add a template from player A
@@ -4462,10 +4587,13 @@ public class FunctionalTests : InputTestFixture
         InputSystem.RemoveDevice(device);
 
         ////TODO: make sure that we also get the connection sequence right and send our initial templates and devices
-        Assert.That(observer.messages, Has.Count.EqualTo(3));
-        Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
-        Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
-        Assert.That(observer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
+        Assert.That(observer.messages, Has.Count.EqualTo(4));
+        Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
+        Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
+        Assert.That(observer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
+        Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
+
+        ////TODO: test disconnection
     }
 
 #if UNITY_EDITOR

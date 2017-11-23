@@ -38,6 +38,12 @@ namespace ISX
     {
         #region Templates
 
+        public static event Action<string, InputTemplateChange> onTemplateChange
+        {
+            add { s_Manager.onTemplateChange += value; }
+            remove { s_Manager.onTemplateChange -= value; }
+        }
+
         public static void RegisterTemplate(Type type, string name = null)
         {
             if (name == null)
@@ -92,6 +98,11 @@ namespace ISX
                 deviceDescription: deviceDescription);
         }
 
+        public static void RemoveTemplate(string name)
+        {
+            s_Manager.RemoveTemplate(name);
+        }
+
         //public static void RegisterTemplateMethod<T>(string )
 
         public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
@@ -99,9 +110,16 @@ namespace ISX
             return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
-        public static IEnumerable<string> ListTemplates()
+        public static List<string> ListTemplates()
         {
-            throw new NotImplementedException();
+            var list = new List<string>();
+            s_Manager.ListTemplates(list);
+            return list;
+        }
+
+        public static int ListTemplates(List<string> list)
+        {
+            return s_Manager.ListTemplates(list);
         }
 
         public static InputTemplate TryLoadTemplate(string name)

@@ -19,7 +19,7 @@ namespace ISX
     /// Remoting sits entirely on top of the input system as an optional piece of functionality.
     /// In development players and the editor, we enable it automatically but in non-development
     /// players it has to be explicitly requested by the user.
-    /// 
+    ///
     /// To see devices and input from players in the editor, open the Input Debugger through
     /// "Windows >> Input Debugger".
     /// </remarks>
@@ -98,6 +98,7 @@ namespace ISX
             ////TODO: send events in bulk rather than one-by-one
             m_LocalManager.onEvent += SendEvent;
             m_LocalManager.onDeviceChange += SendDeviceChange;
+            m_LocalManager.onTemplateChange += SendTemplateChange;
 
             sending = true;
 
@@ -111,6 +112,7 @@ namespace ISX
 
             m_LocalManager.onEvent -= SendEvent;
             m_LocalManager.onDeviceChange -= SendDeviceChange;
+            m_LocalManager.onTemplateChange -= SendTemplateChange;
 
             sending = false;
         }
@@ -127,6 +129,9 @@ namespace ISX
                     break;
                 case MessageType.NewTemplate:
                     NewTemplateMsg.Process(this, msg);
+                    break;
+                case MessageType.RemoveTemplate:
+                    RemoveTemplateMsg.Process(this, msg);
                     break;
                 case MessageType.NewDevice:
                     NewDeviceMsg.Process(this, msg);
@@ -179,22 +184,9 @@ namespace ISX
 
         private void SendTemplate(string templateName)
         {
-            // Try to load the template. Ignore the template if it couldn't
-            // be loaded.
-            InputTemplate template;
-            try
-            {
-                template = m_LocalManager.TryLoadTemplate(new InternedString(templateName));
-            }
-            catch (Exception exception)
-            {
-                Debug.Log($"Could not load template '{templateName}'; not sending to remote listeners (exception: {exception})");
-                return;
-            }
-
-            // Send it.
-            var message = NewTemplateMsg.Create(this, template);
-            Send(message);
+            var message = NewTemplateMsg.Create(this, templateName);
+            if (message != null)
+                Send(message.Value);
         }
 
         private void SendAllDevices()
@@ -247,6 +239,35 @@ namespace ISX
                     break;
                 case InputDeviceChange.UsageChanged:
                     msg = ChangeUsageMsg.Create(this, device);
+                    break;
+                default:
+                    return;
+            }
+
+            Send(msg);
+        }
+
+        private void SendTemplateChange(string template, InputTemplateChange change)
+        {
+            if (m_Subscribers == null)
+                return;
+
+            // Don't mirror remoted templates to other remotes.
+            if (template.StartsWith(kRemoteTemplateNamespacePrefix))
+                return;
+
+            Message msg;
+            switch (change)
+            {
+                case InputTemplateChange.Added:
+                case InputTemplateChange.Replaced:
+                    var message = NewTemplateMsg.Create(this, template);
+                    if (message == null)
+                        return;
+                    msg = message.Value;
+                    break;
+                case InputTemplateChange.Removed:
+                    msg = RemoveTemplateMsg.Create(this, template);
                     break;
                 default:
                     return;
@@ -391,8 +412,21 @@ namespace ISX
         // Tell remote input system that there's a new template.
         private static class NewTemplateMsg
         {
-            public static Message Create(InputRemoting sender, InputTemplate template)
+            public static Message? Create(InputRemoting sender, string templateName)
             {
+                // Try to load the template. Ignore the template if it couldn't
+                // be loaded.
+                InputTemplate template;
+                try
+                {
+                    template = sender.m_LocalManager.TryLoadTemplate(new InternedString(templateName));
+                }
+                catch (Exception exception)
+                {
+                    Debug.Log($"Could not load template '{templateName}'; not sending to remote listeners (exception: {exception})");
+                    return null;
+                }
+
                 var json = template.ToJson();
                 var bytes = Encoding.UTF8.GetBytes(json);
 
@@ -411,6 +445,28 @@ namespace ISX
 
                 receiver.m_LocalManager.RegisterTemplate(json, @namespace: @namespace);
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].templates, json);
+            }
+        }
+
+        private static class RemoveTemplateMsg
+        {
+            public static Message Create(InputRemoting sender, string templateName)
+            {
+                var bytes = Encoding.UTF8.GetBytes(templateName);
+                return new Message
+                {
+                    type = MessageType.RemoveTemplate,
+                    data = bytes
+                };
+            }
+
+            public static void Process(InputRemoting receiver, Message msg)
+            {
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
+                var @namespace = receiver.m_Senders[senderIndex].templateNamespace;
+
+                var templateName = Encoding.UTF8.GetString(msg.data);
+                receiver.m_LocalManager.RemoveTemplate(templateName, @namespace: @namespace);
             }
         }
 

@@ -16,6 +16,7 @@ namespace ISX
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using DeviceFindTemplateListener = Func<InputDeviceDescription, string, string>;
+    using TemplateChangeListener = Action<string, InputTemplateChange>;
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
@@ -55,6 +56,12 @@ namespace ISX
             remove { m_DeviceFindTemplateListeners.Remove(value); }
         }
 
+        public event TemplateChangeListener onTemplateChange
+        {
+            add { m_TemplateChangeListeners.Append(value); }
+            remove { m_TemplateChangeListeners.Remove(value); }
+        }
+
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
         ////TODO: make InputEventTrace use NativeArray
         ////TODO: introduce an alternative that consumes events in bulk
@@ -78,6 +85,9 @@ namespace ISX
             remove { m_UpdateListeners.Remove(value); }
         }
 
+        ////TODO: when registering a template that exists as a template of a different type (type vs string vs constructor),
+        ////      remove the existing registration
+
         // Add a template constructed from a type.
         // If a template with the same name already exists, the new template
         // takes its place.
@@ -95,17 +105,17 @@ namespace ISX
                 throw new ArgumentException("Types used as templates have to be InputControls are InputDevices",
                     nameof(type));
 
+            var internedName = new InternedString(name);
+            var isReplacement = HaveTemplate(internedName);
+
             // All we do is enter the type into a map. We don't construct an InputTemplate
             // from it until we actually need it in an InputControlSetup to create a device.
             // This not only avoids us creating a bunch of objects on the managed heap but
             // also avoids us laboriously constructing a VRController template, for example,
             // in a game that never uses VR.
-            var internedName = new InternedString(name);
             m_Templates.templateTypes[internedName] = type;
-            ++m_TemplateSetupVersion;
 
-            // Re-create any devices using the template.
-            RecreateDevicesUsingTemplate(internedName, isDeviceTemplate);
+            PerformTemplatePostRegistration(internedName, null, null, isReplacement, isKnownToBeDeviceTemplate: isDeviceTemplate);
         }
 
         // Add a template constructed from a JSON string.
@@ -135,20 +145,13 @@ namespace ISX
             if (@namespace != null)
                 name = $"{@namespace}::{name}";
 
-            // Add it to our records.
             var internedName = new InternedString(name);
+            var isReplacement = HaveTemplate(internedName);
+
+            // Add it to our records.
             m_Templates.templateStrings[internedName] = json;
-            if (!string.IsNullOrEmpty(baseTemplate))
-                m_Templates.baseTemplateTable[internedName] = new InternedString(baseTemplate);
-            ++m_TemplateSetupVersion;
 
-            // Re-create any devices using the template.
-            RecreateDevicesUsingTemplate(internedName);
-
-            // If the template has a device description, see if it allows us
-            // to make sense of any device we couldn't make sense of so far.
-            if (!deviceDescription.empty)
-                AddSupportedDevice(deviceDescription, internedName);
+            PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement);
         }
 
         public void RegisterTemplateConstructor(MethodInfo method, object instance, string name,
@@ -175,21 +178,38 @@ namespace ISX
                         nameof(instance));
             }
 
-            if (baseTemplate == string.Empty)
-                baseTemplate = null;
-
             var internedName = new InternedString(name);
+            var isReplacement = HaveTemplate(internedName);
+
             m_Templates.templateConstructors[internedName] = new InputTemplate.Constructor
             {
                 method = method,
                 instance = instance
             };
 
-            if (baseTemplate != null)
-                m_Templates.baseTemplateTable[internedName] = new InternedString(baseTemplate);
+            PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement);
+        }
 
-            if (deviceDescription != null)
-                AddSupportedDevice(deviceDescription.Value, internedName);
+        private void PerformTemplatePostRegistration(InternedString name, string baseTemplate,
+            InputDeviceDescription? deviceDescription, bool isReplacement, bool isKnownToBeDeviceTemplate = false)
+        {
+            ++m_TemplateSetupVersion;
+
+            if (!string.IsNullOrEmpty(baseTemplate))
+                m_Templates.baseTemplateTable[name] = new InternedString(baseTemplate);
+
+            // If the template has a device description, see if it allows us
+            // to make sense of any device we couldn't make sense of so far.
+            if (deviceDescription != null && !deviceDescription.Value.empty)
+                AddSupportedDevice(deviceDescription.Value, name);
+
+            // Re-create any devices using the template.
+            RecreateDevicesUsingTemplate(name, isKnownToBeDeviceTemplate: isKnownToBeDeviceTemplate);
+
+            // Let listeners know.
+            var change = isReplacement ? InputTemplateChange.Replaced : InputTemplateChange.Added;
+            for (var i = 0; i < m_TemplateChangeListeners.Count; ++i)
+                m_TemplateChangeListeners[i](name.ToString(), change);
         }
 
         private void AddSupportedDevice(InputDeviceDescription description, InternedString template)
@@ -295,6 +315,44 @@ namespace ISX
             return false;
         }
 
+        public void RemoveTemplate(string name, string @namespace = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException(nameof(name));
+
+            if (@namespace != null)
+                name = $"{@namespace}::{name}";
+
+            var internedName = new InternedString(name);
+
+            // Remove all devices using the template.
+            for (var i = 0; m_Devices != null && i < m_Devices.Length;)
+            {
+                var device = m_Devices[i];
+                if (IsControlOrChildUsingTemplateRecursive(device, internedName))
+                {
+                    RemoveDevice(device);
+                }
+                else
+                {
+                    ++i;
+                }
+            }
+
+            // Remove template record.
+            m_Templates.templateTypes.Remove(internedName);
+            m_Templates.templateStrings.Remove(internedName);
+            m_Templates.templateConstructors.Remove(internedName);
+            m_Templates.baseTemplateTable.Remove(internedName);
+
+            ////TODO: check all template inheritance chain for whether they are based on the template and if so
+            ////      remove those templates, too
+
+            // Let listeners know.
+            for (var i = 0; i < m_TemplateChangeListeners.Count; ++i)
+                m_TemplateChangeListeners[i](name, InputTemplateChange.Removed);
+        }
+
         public InputTemplate TryLoadTemplate(InternedString name)
         {
             return m_Templates.TryLoadTemplate(name);
@@ -327,6 +385,13 @@ namespace ISX
             }
 
             return null;
+        }
+
+        private bool HaveTemplate(InternedString name)
+        {
+            return m_Templates.templateTypes.ContainsKey(name) ||
+                m_Templates.templateStrings.ContainsKey(name) ||
+                m_Templates.templateConstructors.ContainsKey(name);
         }
 
         public int ListTemplates(List<string> templates)
@@ -923,6 +988,7 @@ namespace ISX
         // registrations what will lead to all kinds of misbehavior.
         [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
         [NonSerialized] private InlinedArray<DeviceFindTemplateListener> m_DeviceFindTemplateListeners;
+        [NonSerialized] private InlinedArray<TemplateChangeListener> m_TemplateChangeListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
@@ -1781,6 +1847,7 @@ namespace ISX
             // can't either except if we make them UnityEvents).
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
             [NonSerialized] public InlinedArray<DeviceFindTemplateListener> deviceDiscoveredListeners;
+            [NonSerialized] public InlinedArray<TemplateChangeListener> templateChangeListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
         }
 
@@ -1859,6 +1926,7 @@ namespace ISX
                 configuration = InputConfiguration.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
                 deviceDiscoveredListeners = m_DeviceFindTemplateListeners.Clone(),
+                templateChangeListeners = m_TemplateChangeListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
                 updateMask = m_UpdateMask
             };
@@ -1879,6 +1947,7 @@ namespace ISX
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
             m_DeviceFindTemplateListeners = state.deviceDiscoveredListeners;
+            m_TemplateChangeListeners = state.templateChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
 
