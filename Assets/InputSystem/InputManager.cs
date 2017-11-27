@@ -6,6 +6,10 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
 
 ////TODO: merge InputManager into InputSystem and have InputSystemObject store SerializedState directly
@@ -31,7 +35,10 @@ namespace ISX
         : ISerializationCallbackReceiver
 #endif
     {
-        public ReadOnlyArray<InputDevice> devices => new ReadOnlyArray<InputDevice>(m_Devices);
+        public ReadOnlyArray<InputDevice> devices
+        {
+            get { return new ReadOnlyArray<InputDevice>(m_Devices); }
+        }
 
         public InputUpdateType updateMask
         {
@@ -94,16 +101,16 @@ namespace ISX
         public void RegisterTemplate(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
             if (type == null)
-                throw new ArgumentNullException(nameof(type));
+                throw new ArgumentNullException("type");
 
             var isDeviceTemplate = typeof(InputDevice).IsAssignableFrom(type);
             var isControlTemplate = typeof(InputControl).IsAssignableFrom(type);
 
             if (!isDeviceTemplate && !isControlTemplate)
                 throw new ArgumentException("Types used as templates have to be InputControls are InputDevices",
-                    nameof(type));
+                    "type");
 
             var internedName = new InternedString(name);
             var isReplacement = HaveTemplate(internedName);
@@ -122,7 +129,7 @@ namespace ISX
         public void RegisterTemplate(string json, string name = null, string @namespace = null)
         {
             if (string.IsNullOrEmpty(json))
-                throw new ArgumentException(nameof(json));
+                throw new ArgumentException("json");
 
             ////REVIEW: as long as no one has instantiated the template, the base template information is kinda pointless
 
@@ -138,12 +145,12 @@ namespace ISX
 
                 // Make sure we have a name.
                 if (string.IsNullOrEmpty(name))
-                    throw new ArgumentException($"Template name has not been given and is not set in JSON template",
-                        nameof(name));
+                    throw new ArgumentException("Template name has not been given and is not set in JSON template",
+                        "name");
             }
 
             if (@namespace != null)
-                name = $"{@namespace}::{name}";
+                name = string.Format("{0}::{1}", @namespace, name);
 
             var internedName = new InternedString(name);
             var isReplacement = HaveTemplate(internedName);
@@ -158,24 +165,26 @@ namespace ISX
             string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
         {
             if (method == null)
-                throw new ArgumentNullException(nameof(method));
+                throw new ArgumentNullException("method");
             if (method.IsGenericMethod)
-                throw new ArgumentException($"Method must not be generic ({method})", nameof(method));
+                throw new ArgumentException(string.Format("Method must not be generic ({0})", method), "method");
             if (method.GetParameters().Length > 0)
-                throw new ArgumentException($"Method must not take arguments ({method})", nameof(method));
+                throw new ArgumentException(string.Format("Method must not take arguments ({0})", method), "method");
             if (!typeof(InputTemplate).IsAssignableFrom(method.ReturnType))
-                throw new ArgumentException($"Method msut return InputTemplate ({method})", nameof(method));
+                throw new ArgumentException(string.Format("Method msut return InputTemplate ({0})", method), "method");
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
 
             // If we have an instance, make sure it is [Serializable].
             if (instance != null)
             {
                 var type = instance.GetType();
-                if (type.GetCustomAttribute<SerializableAttribute>() == null)
+                if (type.GetCustomAttribute<SerializableAttribute>(true) == null)
                     throw new ArgumentException(
-                        $"Instance used with {method} to construct a template must be [Serializable] but {type} is not",
-                        nameof(instance));
+                        string.Format(
+                            "Instance used with {0} to construct a template must be [Serializable] but {1} is not",
+                            method, type),
+                        "instance");
             }
 
             var internedName = new InternedString(name);
@@ -318,10 +327,10 @@ namespace ISX
         public void RemoveTemplate(string name, string @namespace = null)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
 
             if (@namespace != null)
-                name = $"{@namespace}::{name}";
+                name = string.Format("{0}::{1}", @namespace, name);
 
             var internedName = new InternedString(name);
 
@@ -397,7 +406,7 @@ namespace ISX
         public int ListTemplates(List<string> templates)
         {
             if (templates == null)
-                throw new ArgumentNullException(nameof(templates));
+                throw new ArgumentNullException("templates");
 
             var countBefore = templates.Count;
 
@@ -413,9 +422,9 @@ namespace ISX
         public void RegisterProcessor(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
             if (type == null)
-                throw new ArgumentNullException(nameof(type));
+                throw new ArgumentNullException("type");
 
             ////REVIEW: probably good to typecheck here but it would require dealing with generic type stuff
 
@@ -426,7 +435,7 @@ namespace ISX
         public Type TryGetProcessor(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
 
             Type type;
             var internedName = new InternedString(name);
@@ -438,9 +447,9 @@ namespace ISX
         public void RegisterModifier(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
             if (type == null)
-                throw new ArgumentNullException(nameof(type));
+                throw new ArgumentNullException("type");
 
             var internedName = new InternedString(name);
             m_Modifiers[internedName] = type;
@@ -449,7 +458,7 @@ namespace ISX
         public Type TryGetModifier(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
 
             Type type;
             var internedName = new InternedString(name);
@@ -492,7 +501,7 @@ namespace ISX
             if (string.IsNullOrEmpty(path))
                 return 0;
             if (controls == null)
-                throw new ArgumentNullException(nameof(controls));
+                throw new ArgumentNullException("controls");
             if (m_Devices == null)
                 return 0;
 
@@ -510,7 +519,7 @@ namespace ISX
         public void SetVariant(InputControl control, string variant)
         {
             if (control == null)
-                throw new ArgumentNullException(nameof(control));
+                throw new ArgumentNullException("control");
             if (string.IsNullOrEmpty(variant))
                 variant = "Default";
 
@@ -522,7 +531,7 @@ namespace ISX
         public void SetUsage(InputDevice device, InternedString usage)
         {
             if (device == null)
-                throw new ArgumentNullException(nameof(device));
+                throw new ArgumentNullException("device");
             device.SetUsage(usage);
 
             // Notify listeners.
@@ -540,7 +549,7 @@ namespace ISX
         public InputDevice AddDevice(string template, string name = null)
         {
             if (string.IsNullOrEmpty(template))
-                throw new ArgumentException(nameof(template));
+                throw new ArgumentException("template");
 
             var internedTemplateName = new InternedString(template);
 
@@ -577,9 +586,9 @@ namespace ISX
         public void AddDevice(InputDevice device)
         {
             if (device == null)
-                throw new ArgumentNullException(nameof(device));
+                throw new ArgumentNullException("device");
             if (string.IsNullOrEmpty(device.template))
-                throw new ArgumentException("Device has no associated template", nameof(device));
+                throw new ArgumentException("Device has no associated template", "device");
 
             // Ignore if the same device gets added multiple times.
             if (ArrayHelpers.Contains(m_Devices, device))
@@ -650,7 +659,7 @@ namespace ISX
             if (template == null)
             {
                 if (throwIfNoTemplateFound)
-                    throw new ArgumentException("Cannot find template matching device description", nameof(description));
+                    throw new ArgumentException("Cannot find template matching device description", "description");
                 return null;
             }
 
@@ -664,7 +673,7 @@ namespace ISX
         public void RemoveDevice(InputDevice device)
         {
             if (device == null)
-                throw new ArgumentNullException(nameof(device));
+                throw new ArgumentNullException("device");
 
             // If device has not been added, ignore.
             if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
@@ -713,7 +722,7 @@ namespace ISX
         public InputDevice TryGetDevice(string nameOrTemplate)
         {
             if (string.IsNullOrEmpty(nameOrTemplate))
-                throw new ArgumentException(nameof(nameOrTemplate));
+                throw new ArgumentException("nameOrTemplate");
 
             if (m_Devices == null)
                 return null;
@@ -735,7 +744,7 @@ namespace ISX
         {
             var device = TryGetDevice(nameOrTemplate);
             if (device == null)
-                throw new Exception($"Cannot find device with name or template '{nameOrTemplate}'");
+                throw new Exception(string.Format("Cannot find device with name or template '{0}'", nameOrTemplate));
 
             return device;
         }
@@ -753,7 +762,7 @@ namespace ISX
         public int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
         {
             if (descriptions == null)
-                throw new ArgumentNullException(nameof(descriptions));
+                throw new ArgumentNullException("descriptions");
 
             var numFound = 0;
             for (var i = 0; i < m_AvailableDevices.Count; ++i)
@@ -777,7 +786,7 @@ namespace ISX
                 string.IsNullOrEmpty(description.deviceClass))
                 throw new ArgumentException(
                     "Description must have at least one of 'product', 'manufacturer', or 'deviceClass'",
-                    nameof(description));
+                    "description");
 
             var deviceId = NativeInputSystem.AllocateDeviceId();
             ReportAvailableDevice(description, deviceId);
@@ -1164,7 +1173,7 @@ namespace ISX
                     if (m_Devices[i].name.ToLower() == nameLowerCase)
                     {
                         ++namesTried;
-                        name = $"{device.name}{namesTried}";
+                        name = string.Format("{0}{1}", device.name, namesTried);
                         nameLowerCase = name.ToLower();
                         nameIsUnique = false;
                         break;
@@ -1186,7 +1195,8 @@ namespace ISX
                 var existingDeviceWithId = TryGetDeviceById(device.id);
                 if (existingDeviceWithId != null)
                     throw new Exception(
-                        $"Duplicate device ID {device.id} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
+                        string.Format("Duplicate device ID {0} detected for devices '{1}' and '{2}'", device.id,
+                            device.name, existingDeviceWithId.name));
             }
             else
             {
@@ -1435,12 +1445,12 @@ namespace ISX
 
                             if (needToCopyFromBackBuffer)
                                 UnsafeUtility.MemCpy(
-                                    buffer + (int)device.m_StateBlock.byteOffset,
-                                    m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex) +
-                                    (int)device.m_StateBlock.byteOffset,
+                                    new IntPtr(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
+                                    new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
+                                        (int)device.m_StateBlock.byteOffset),
                                     device.m_StateBlock.alignedSizeInBytes);
 
-                            UnsafeUtility.MemCpy(buffer + (int)deviceStateOffset, statePtr, stateSize);
+                            UnsafeUtility.MemCpy(new IntPtr(buffer.ToInt64() + (int)deviceStateOffset), statePtr, stateSize);
                         }
                         else
 #endif
@@ -1458,12 +1468,12 @@ namespace ISX
 
                                 if (needToCopyFromBackBuffer)
                                     UnsafeUtility.MemCpy(
-                                        buffer + (int)device.m_StateBlock.byteOffset,
-                                        m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex) +
-                                        (int)device.m_StateBlock.byteOffset,
+                                        new IntPtr(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
+                                        new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
+                                            (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy(buffer + (int)deviceStateOffset, statePtr, stateSize);
+                                UnsafeUtility.MemCpy(new IntPtr(buffer.ToInt64() + (int)deviceStateOffset), statePtr, stateSize);
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
@@ -1472,12 +1482,12 @@ namespace ISX
 
                                 if (needToCopyFromBackBuffer)
                                     UnsafeUtility.MemCpy(
-                                        buffer + (int)device.m_StateBlock.byteOffset,
-                                        m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex) +
-                                        (int)device.m_StateBlock.byteOffset,
+                                        new IntPtr(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
+                                        new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
+                                            (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy(buffer + (int)deviceStateOffset, statePtr, stateSize);
+                                UnsafeUtility.MemCpy(new IntPtr(buffer.ToInt64() + (int)deviceStateOffset), statePtr, stateSize);
                             }
                         }
 
@@ -1573,8 +1583,8 @@ namespace ISX
             // them repeatedly.
             if (newStateOffset != 0)
             {
-                newState -= (int)newStateOffset;
-                oldState += (int)newStateOffset;
+                newState = new IntPtr(newState.ToInt64() - newStateOffset);
+                oldState = new IntPtr(oldState.ToInt64() + newStateOffset);
             }
 
             for (var i = 0; i < numMonitors; ++i)
@@ -1604,8 +1614,8 @@ namespace ISX
 
                     //Debug.Log($"Bit {bitOffset} new={BitfieldHelpers.ReadSingleBit(newState+offset,bitOffset)} old={BitfieldHelpers.ReadSingleBit(oldState+offset, bitOffset)}");
 
-                    if (BitfieldHelpers.ReadSingleBit(newState + offset, bitOffset) ==
-                        BitfieldHelpers.ReadSingleBit(oldState + offset, bitOffset))
+                    if (BitfieldHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
+                        BitfieldHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
                         continue;
                 }
                 else
@@ -1616,7 +1626,7 @@ namespace ISX
                     if (offset - newStateOffset + sizeInBytes > newStateSize)
                         continue;
 
-                    if (UnsafeUtility.MemCmp(newState + offset, oldState + offset, (int)sizeInBytes) == 0)
+                    if (UnsafeUtility.MemCmp(new IntPtr(newState.ToInt64() + offset), new IntPtr(oldState.ToInt64() + offset), (int)sizeInBytes) == 0)
                         continue;
                 }
 
@@ -1734,19 +1744,19 @@ namespace ISX
 
             if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
             {
-                UnsafeUtility.MemClear(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex) + offset, sizeInBytes);
-                UnsafeUtility.MemClear(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex) + offset, sizeInBytes);
+                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
             }
 
             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
             {
-                UnsafeUtility.MemClear(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex) + offset, sizeInBytes);
-                UnsafeUtility.MemClear(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex) + offset, sizeInBytes);
+                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
             }
 
 #if UNITY_EDITOR
-            UnsafeUtility.MemClear(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex) + offset, sizeInBytes);
-            UnsafeUtility.MemClear(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex) + offset, sizeInBytes);
+            UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+            UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
 #endif
         }
 
@@ -1891,7 +1901,7 @@ namespace ISX
                 };
 
             // Devices.
-            var deviceCount = m_Devices?.Length ?? 0;
+            var deviceCount = m_Devices != null ? m_Devices.Length : 0;
             var deviceArray = new DeviceState[deviceCount];
             for (i = 0; i < deviceCount; ++i)
             {
@@ -1969,7 +1979,8 @@ namespace ISX
                 if (type != null)
                     m_Templates.templateTypes[name] = type;
                 else
-                    Debug.Log($"Input template '{template.name}' has been removed (type '{template.typeNameOrJson}' cannot be found)");
+                    Debug.Log(string.Format("Input template '{0}' has been removed (type '{1}' cannot be found)",
+                            template.name, template.typeNameOrJson));
             }
 
             // Template strings.
@@ -1991,7 +2002,8 @@ namespace ISX
                 var type = Type.GetType(template.typeName, false);
                 if (type == null)
                 {
-                    Debug.Log($"Template constructor '{name}' has been removed (type '{template.typeName}' cannot be found)");
+                    Debug.Log(string.Format("Template constructor '{0}' has been removed (type '{1}' cannot be found)",
+                            name, template.typeName));
                     continue;
                 }
 
@@ -2026,7 +2038,8 @@ namespace ISX
                 if (type != null)
                     m_Processors[name] = type;
                 else
-                    Debug.Log($"Input processor '{processor.name}' has been removed (type '{processor.typeName}' cannot be found)");
+                    Debug.Log(string.Format("Input processor '{0}' has been removed (type '{1}' cannot be found)",
+                            processor.name, processor.typeName));
             }
 
             // Modifiers.
@@ -2039,7 +2052,8 @@ namespace ISX
                 if (type != null)
                     m_Modifiers[name] = Type.GetType(modifier.typeName, true);
                 else
-                    Debug.Log($"Input action modifier '{modifier.name}' has been removed (type '{modifier.typeName}' cannot be found)");
+                    Debug.Log(string.Format("Input action modifier '{0}' has been removed (type '{1}' cannot be found)",
+                            modifier.name, modifier.typeName));
             }
 
             // Re-create devices.

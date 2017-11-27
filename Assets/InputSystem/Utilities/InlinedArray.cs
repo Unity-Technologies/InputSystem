@@ -50,7 +50,7 @@ namespace ISX
             return new InlinedArray<TValue>
             {
                 firstValue = firstValue,
-                additionalValues = (TValue[])additionalValues?.Clone()
+                additionalValues = additionalValues != null ? (TValue[])additionalValues.Clone() : null
             };
         }
 

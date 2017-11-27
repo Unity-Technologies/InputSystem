@@ -52,7 +52,11 @@ namespace ISX.Editor
                     s_RefreshListeners = new List<Action>();
                 s_RefreshListeners.Add(value);
             }
-            remove { s_RefreshListeners?.Remove(value); }
+            remove
+            {
+                if (s_RefreshListeners != null)
+                    s_RefreshListeners.Remove(value);
+            }
         }
 
         public static InputTemplate TryGetTemplate(string name)
@@ -63,7 +67,8 @@ namespace ISX.Editor
         internal static void Clear()
         {
             s_TemplateSetupVersion = 0;
-            s_Cache.table?.Clear();
+            if (s_Cache.table != null)
+                s_Cache.table.Clear();
             s_Usages.Clear();
         }
 

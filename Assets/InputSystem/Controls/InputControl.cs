@@ -1,22 +1,54 @@
 using System;
 using System.Collections.Generic;
 
-////TODO: add ability to get and to set configuration on a control (probably just key/value pairs)
-
-////TODO: remove the distinction between input and output controls; allow every InputControl to write values
+////FIXME: doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
 
 namespace ISX
 {
     using Configuration = KeyValuePair<InternedString, PrimitiveValue>;
 
-    // A typed and named value.
-    // Actual value is stored in central state storage managed by InputSystem.
-    // Controls form hierarchies and can be looked with paths.
-    // Can have usages that give meaning to the control.
+    /// <summary>
+    /// A typed and named value in a hierarchy of controls.
+    /// </summary>
+    /// <remarks>
+    /// Controls do not actually store values. Instead, every control receives an InputStateBlock
+    /// which, after the control's device has been added to the system, is used to read out values
+    /// from the device's backing store.
+    ///
+    /// Controls can have children which in turn may have children. At the root of the child
+    /// hierarchy is always an InputDevice (which themselves are InputControls).
+    ///
+    /// Controls can be looked up by their path (see <see cref="InputControlSetup.GetControl"/> and
+    /// <see cref="InputControlPath.FindControl"/>).
+    ///
+    /// Each control must have a unique name within its parent (see <see cref="name"/>). Multiple
+    /// names can be assigned to controls using aliases (see <see cref="aliases"/>). Name lookup
+    /// is case-insensitive.
+    ///
+    /// In addition to names, a control may have usages associated with it (see <see cref="usages"/>).
+    /// A usage indicates how a control is meant to be used. For example, a button can be assigned
+    /// the "PrimaryAction" usage to indicate it is the primary action button the device. Within a
+    /// device, usages have to be unique. See CommonUsages for a list of standardized usages.
+    /// </remarks>
+    /// <seealso cref="InputDevice"/>
+    /// \todo Add ability to get and to set configuration on a control (probably just key/value pairs)
+    /// \todo Remove the distinction between input and output controls; allow every InputControl to write values
     public abstract class InputControl
     {
-        // Final name part of the path.
-        public string name => m_Name;
+        /// <summary>
+        /// The name of the control, i.e. the final name part in its path.
+        /// </summary>
+        /// <remarks>
+        /// Names of controls must be unique within the context of their parent.
+        ///
+        /// Lookup of names is case-insensitive.
+        /// </remarks>
+        /// <seealso cref="path"/>
+        /// <seealso cref="aliases"/>
+        public string name
+        {
+            get { return m_Name; }
+        }
 
         ////TODO: include icon-related info from control template
 
@@ -29,9 +61,9 @@ namespace ISX
                 if (m_Path == null)
                 {
                     if (m_Parent != null)
-                        m_Path = $"{m_Parent.path}/{m_Name}";
+                        m_Path = string.Format("{0}/{1}", m_Parent.path, m_Name);
                     else
-                        m_Path = $"/{m_Name}";
+                        m_Path = string.Format("/{0}", m_Name);
                 }
                 return m_Path;
             }
@@ -40,43 +72,70 @@ namespace ISX
         // Template the control is based on.
         // We store the name rather than reference the InputTemplate as we want
         // to avoid allocating those objects except where necessary.
-        public string template => m_Template;
+        public string template
+        {
+            get { return m_Template; }
+        }
 
         // Variant of the template or "default".
         // Example: "Lefty" when using the "Lefty" gamepad layout.
-        public string variant => m_Variant;
+        public string variant
+        {
+            get { return m_Variant; }
+        }
 
         ////TODO: setting value (will it also go through the processor stack?)
 
         // Current value as boxed object.
         // NOTE: Calling this will cause garbage.
-        public virtual object valueAsObject => null;
+        public virtual object valueAsObject
+        {
+            get { return null; }
+        }
 
         // Root of the control hierarchy.
-        public InputDevice device => m_Device;
+        public InputDevice device
+        {
+            get { return m_Device; }
+        }
 
         // Immediate parent.
-        public InputControl parent => m_Parent;
+        public InputControl parent
+        {
+            get { return m_Parent; }
+        }
 
         // Immediate children.
-        public ReadOnlyArray<InputControl> children => m_ChildrenReadOnly;
+        public ReadOnlyArray<InputControl> children
+        {
+            get { return m_ChildrenReadOnly; }
+        }
 
         // List of uses for this control. Gives meaning to the control such that you can, for example,
         // find a button on a device to use as the "back" button regardless of what it is named. The "back"
         // button is also an example of why there are multiple possible usages of a button as a use may
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
-        public ReadOnlyArray<InternedString> usages => m_UsagesReadOnly;
+        public ReadOnlyArray<InternedString> usages
+        {
+            get { return m_UsagesReadOnly; }
+        }
 
         // List of alternate names for the control.
-        public ReadOnlyArray<InternedString> aliases => m_AliasesReadOnly;
+        public ReadOnlyArray<InternedString> aliases
+        {
+            get { return m_AliasesReadOnly; }
+        }
 
         // Information about where the control stores its state.
-        public InputStateBlock stateBlock => m_StateBlock;
+        public InputStateBlock stateBlock
+        {
+            get { return m_StateBlock; }
+        }
 
         public override string ToString()
         {
-            return $"{template}:{path}";
+            return string.Format("{0}:{1}", template, path);
         }
 
         public TValue GetValue<TValue>()
@@ -84,7 +143,8 @@ namespace ISX
             var controlOfType = this as InputControl<TValue>;
             if (controlOfType == null)
                 throw new InvalidCastException(
-                    $"Cannot query value of type '{typeof(TValue).Name}' from control of type '{this.GetType().Name}");
+                    string.Format("Cannot query value of type '{0}' from control of type '{1}", typeof(TValue).Name,
+                        this.GetType().Name));
             return controlOfType.value;
         }
 
@@ -123,10 +183,15 @@ namespace ISX
 
         protected internal InputStateBlock m_StateBlock;
 
-        protected internal IntPtr currentStatePtr =>
-        InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex());
-        protected internal IntPtr previousStatePtr =>
-        InputStateBuffers.GetBackBuffer(ResolveDeviceIndex());
+        protected internal IntPtr currentStatePtr
+        {
+            get { return InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()); }
+        }
+
+        protected internal IntPtr previousStatePtr
+        {
+            get { return InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()); }
+        }
 
         // This data is initialized by InputControlSetup.
         internal InternedString m_Name;
@@ -153,7 +218,7 @@ namespace ISX
         {
             if (this is InputDevice)
                 return path;
-            return $"{this.path}/{path}";
+            return string.Format("{0}/{1}", this.path, path);
         }
 
         internal void BakeOffsetIntoStateBlockRecursive(uint offset)
@@ -172,7 +237,7 @@ namespace ISX
         internal unsafe bool CheckStateIsAllZeros(IntPtr valuePtr = new IntPtr())
         {
             if (valuePtr == IntPtr.Zero)
-                valuePtr = currentStatePtr + (int)m_StateBlock.byteOffset;
+                valuePtr = new IntPtr(currentStatePtr.ToInt64() + (int)m_StateBlock.byteOffset);
 
             // Bitfield value.
             if (m_StateBlock.sizeInBits % 8 != 0 || m_StateBlock.bitOffset != 0)
@@ -197,7 +262,8 @@ namespace ISX
         {
             var deviceIndex = m_Device.m_DeviceIndex;
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new InvalidOperationException($"Cannot query value of control '{path}' before '{device.name}' has been added to system!");
+                throw new InvalidOperationException(string.Format(
+                        "Cannot query value of control '{0}' before '{1}' has been added to system!", path, device.name));
             return deviceIndex;
         }
 
@@ -210,10 +276,20 @@ namespace ISX
     // Adds processing stack.
     public abstract class InputControl<TValue> : InputControl
     {
-        public TValue value => ReadValueFrom(currentStatePtr);
-        public TValue previous => ReadValueFrom(previousStatePtr);
+        public TValue value
+        {
+            get { return ReadValueFrom(currentStatePtr); }
+        }
 
-        public override object valueAsObject => value;
+        public TValue previous
+        {
+            get { return ReadValueFrom(previousStatePtr); }
+        }
+
+        public override object valueAsObject
+        {
+            get { return value; }
+        }
 
         // Read a control value directly from a state event.
         //
@@ -223,9 +299,9 @@ namespace ISX
         public unsafe TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
         {
             if (!inputEvent.valid)
-                throw new ArgumentNullException(nameof(inputEvent));
+                throw new ArgumentNullException("inputEvent");
             if (!inputEvent.IsA<StateEvent>() && !inputEvent.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", nameof(inputEvent));
+                throw new ArgumentException("Event must be a state or delta state event", "inputEvent");
 
             ////TODO: support delta events
             if (inputEvent.IsA<DeltaStateEvent>())
@@ -240,7 +316,9 @@ namespace ISX
             var stateFormat = stateEvent->stateFormat;
             if (stateEvent->stateFormat != device.m_StateBlock.format)
                 throw new InvalidOperationException(
-                    $"Cannot read control '{path}' from StateEvent with format {stateFormat}; device '{device}' expects format {device.m_StateBlock.format}");
+                    string.Format(
+                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
+                        path, stateFormat, device, device.m_StateBlock.format));
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
@@ -249,9 +327,11 @@ namespace ISX
             var stateSizeInBytes = stateEvent->stateSizeInBytes;
             if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 throw new Exception(
-                    $"StateEvent with format {stateFormat} and size {stateSizeInBytes} bytes provides less data than expected by control {path}");
+                    string.Format(
+                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
+                        stateFormat, stateSizeInBytes, path));
 
-            var statePtr = stateEvent->state - (int)deviceStateOffset;
+            var statePtr = new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
             var value = ReadRawValueFrom(statePtr);
 
             if (process)
@@ -306,10 +386,14 @@ namespace ISX
         {
             var processorOfType = processor as IInputProcessor<TValue>;
             if (processorOfType == null)
-                throw new Exception($"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'");
+                throw new Exception(string.Format("Cannot add processor of type '{0}' to control of type '{1}'",
+                        processor.GetType().Name, GetType().Name));
             m_ProcessorStack.Append(processorOfType);
         }
 
-        internal IInputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
+        internal IInputProcessor<TValue>[] processors
+        {
+            get { return m_ProcessorStack.ToArray(); }
+        }
     }
 }

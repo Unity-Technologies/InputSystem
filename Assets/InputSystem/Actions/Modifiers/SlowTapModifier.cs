@@ -6,7 +6,10 @@ namespace ISX
     {
         public float duration;
         ////REVIEW: this seems stupid; shouldn't a slow tap just be anything that takes longer than TapTime?
-        public float durationOrDefault => duration > 0.0f ? duration : InputConfiguration.SlowTapTime;
+        public float durationOrDefault
+        {
+            get { return duration > 0.0f ? duration : InputConfiguration.SlowTapTime; }
+        }
 
         // If this is non-zero, then if the control is held for longer than
         // this time, the slow tap is not performed when the control is finally

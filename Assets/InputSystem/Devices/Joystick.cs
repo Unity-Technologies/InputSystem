@@ -6,7 +6,10 @@ namespace ISX
 {
     public struct JoystickState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('J', 'O', 'Y');
+        public static FourCC kFormat
+        {
+            get { return new FourCC('J', 'O', 'Y'); }
+        }
 
         [InputControl(name = "hat", template = "Dpad", usage = "Hatswitch")]
         [InputControl(name = "trigger", template = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
@@ -47,8 +50,15 @@ namespace ISX
 
         ////REVIEW: are these really useful?
         // List of all buttons and axes on the joystick.
-        public ReadOnlyArray<ButtonControl> buttons => new ReadOnlyArray<ButtonControl>(m_Buttons);
-        public ReadOnlyArray<AxisControl> axes => new ReadOnlyArray<AxisControl>(m_Axes);
+        public ReadOnlyArray<ButtonControl> buttons
+        {
+            get { return new ReadOnlyArray<ButtonControl>(m_Buttons); }
+        }
+
+        public ReadOnlyArray<AxisControl> axes
+        {
+            get { return new ReadOnlyArray<AxisControl>(m_Axes); }
+        }
 
         public static Joystick current { get; internal set; }
 

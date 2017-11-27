@@ -2,6 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 namespace ISX
 {
     // Read-only access to an array. Additionally allows to expose only
@@ -49,7 +53,10 @@ namespace ISX
             return GetEnumerator();
         }
 
-        public int Count => m_Length;
+        public int Count
+        {
+            get { return m_Length; }
+        }
 
         public TValue this[int index]
         {
@@ -106,7 +113,10 @@ namespace ISX
                 }
             }
 
-            object IEnumerator.Current => Current;
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
         }
     }
 

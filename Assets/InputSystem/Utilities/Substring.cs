@@ -99,8 +99,15 @@ namespace ISX
             return new Substring(s);
         }
 
-        public int length => m_Length;
-        public int index => m_Index;
+        public int length
+        {
+            get { return m_Length; }
+        }
+
+        public int index
+        {
+            get { return m_Index; }
+        }
 
         public char this[int index]
         {

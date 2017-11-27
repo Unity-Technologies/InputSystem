@@ -23,9 +23,9 @@ namespace ISX
         public static int ApplyOverridesUsingMatchingControls(this InputAction action, InputControl control)
         {
             if (action == null)
-                throw new ArgumentNullException(nameof(action));
+                throw new ArgumentNullException("action");
             if (control == null)
-                throw new ArgumentNullException(nameof(control));
+                throw new ArgumentNullException("control");
 
             var bindings = action.bindings;
             var bindingsCount = bindings.Count;
@@ -47,9 +47,9 @@ namespace ISX
         public static int ApplyOverridesUsingMatchingControls(this InputActionSet actionSet, InputControl control)
         {
             if (actionSet == null)
-                throw new ArgumentNullException(nameof(actionSet));
+                throw new ArgumentNullException("actionSet");
             if (control == null)
-                throw new ArgumentNullException(nameof(control));
+                throw new ArgumentNullException("control");
 
             var actions = actionSet.actions;
             var actionCount = actions.Count;
@@ -126,10 +126,11 @@ namespace ISX
         public static RebindOperation PerformUserRebind(InputAction action, InputAction cancel = null)
         {
             if (action == null)
-                throw new ArgumentNullException(nameof(action));
+                throw new ArgumentNullException("action");
             if (action.bindings.Count == 0)
                 throw new ArgumentException(
-                    $"For rebinding, action must have at least one existing binding (action: {action})", nameof(action));
+                    string.Format("For rebinding, action must have at least one existing binding (action: {0})",
+                        action), "action");
 
             throw new NotImplementedException();
         }

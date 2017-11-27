@@ -2,6 +2,10 @@ using System;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 namespace ISX
 {
     // Transports input remoting messages from and to players. Can be used to

@@ -71,7 +71,7 @@ namespace ISX.Editor
                 var buffer = new byte[stateSize];
                 fixed(byte* stateDataPtr = buffer)
                 {
-                    UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), deviceState + (int)stateOffset, stateSize);
+                    UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), new IntPtr(deviceState.ToInt64() + (int)stateOffset), stateSize);
                 }
                 m_StateBuffers[i] = buffer;
 

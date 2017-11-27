@@ -36,7 +36,8 @@ namespace ISX.Editor
         public void Reload()
         {
             serializedObject.Update();
-            m_ActionTreeView?.Reload();
+            if (m_ActionTreeView != null)
+                m_ActionTreeView.Reload();
             Repaint();
         }
 
@@ -68,7 +69,8 @@ namespace ISX.Editor
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
             var treeViewRect = GUILayoutUtility.GetLastRect();
-            m_ActionTreeView?.OnGUI(treeViewRect);
+            if (m_ActionTreeView != null)
+                m_ActionTreeView.OnGUI(treeViewRect);
         }
 
         protected void DrawToolbarGUI()
@@ -103,7 +105,8 @@ namespace ISX.Editor
         private void Apply()
         {
             serializedObject.ApplyModifiedProperties();
-            m_ApplyAction?.Invoke();
+            if (m_ApplyAction != null)
+                m_ApplyAction.Invoke();
         }
 
         [SerializeField] private TreeViewState m_ActionTreeViewState;

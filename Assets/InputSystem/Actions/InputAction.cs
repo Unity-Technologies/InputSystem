@@ -53,11 +53,20 @@ namespace ISX
             Cancelled
         }
 
-        public string name => m_Name;
+        public string name
+        {
+            get { return m_Name; }
+        }
 
-        public Phase phase => m_CurrentPhase;
+        public Phase phase
+        {
+            get { return m_CurrentPhase; }
+        }
 
-        public InputActionSet set => isSingletonAction ? null : m_ActionSet;
+        public InputActionSet set
+        {
+            get { return isSingletonAction ? null : m_ActionSet; }
+        }
 
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devics set on action set)
@@ -87,12 +96,35 @@ namespace ISX
         }
 
         ////REVIEW: expose this as a struct?
-        public InputControl lastTriggerControl => m_LastTrigger.control;
-        public double lastTriggerTime => m_LastTrigger.time;
-        public double lastTriggerStartTime => m_LastTrigger.startTime;
-        public double lastTriggerDuration => m_LastTrigger.time - m_LastTrigger.startTime;
-        public InputBinding lastTriggerBinding => GetBinding(m_LastTrigger.bindingIndex);
-        public IInputActionModifier lastTriggerModifier => GetModifier(m_LastTrigger.bindingIndex, m_LastTrigger.modifierIndex);
+        public InputControl lastTriggerControl
+        {
+            get { return m_LastTrigger.control; }
+        }
+
+        public double lastTriggerTime
+        {
+            get { return m_LastTrigger.time; }
+        }
+
+        public double lastTriggerStartTime
+        {
+            get { return m_LastTrigger.startTime; }
+        }
+
+        public double lastTriggerDuration
+        {
+            get { return m_LastTrigger.time - m_LastTrigger.startTime; }
+        }
+
+        public InputBinding lastTriggerBinding
+        {
+            get { return GetBinding(m_LastTrigger.bindingIndex); }
+        }
+
+        public IInputActionModifier lastTriggerModifier
+        {
+            get { return GetModifier(m_LastTrigger.bindingIndex, m_LastTrigger.modifierIndex); }
+        }
 
         public bool enabled
         {
@@ -133,7 +165,7 @@ namespace ISX
         public InputAction(string name = null, string binding = null, string modifiers = null)
         {
             if (binding == null && modifiers != null)
-                throw new ArgumentException("Cannot have modifier without binding", nameof(modifiers));
+                throw new ArgumentException("Cannot have modifier without binding", "modifiers");
 
             m_Name = name;
             if (binding != null)
@@ -151,7 +183,7 @@ namespace ISX
                 return "<unnamed>";
 
             if (m_ActionSet != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionSet.name))
-                return $"{m_ActionSet.name}/{m_Name}";
+                return string.Format("{0}/{1}", m_ActionSet.name, m_Name);
 
             return m_Name;
         }
@@ -216,7 +248,8 @@ namespace ISX
         public AddBindingSyntax AddBinding(string path, string modifiers = null, string groups = null)
         {
             if (enabled)
-                throw new InvalidOperationException($"Cannot add binding to action '{this}' while the action is enabled");
+                throw new InvalidOperationException(
+                    string.Format("Cannot add binding to action '{0}' while the action is enabled", this));
 
             var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
 
@@ -275,11 +308,13 @@ namespace ISX
         public void ApplyBindingOverride(int bindingIndex, string path)
         {
             if (enabled)
-                throw new InvalidOperationException($"Cannot change overrides on action '{this}' while the action is enabled");
+                throw new InvalidOperationException(
+                    string.Format("Cannot change overrides on action '{0}' while the action is enabled", this));
 
             if (bindingIndex < 0 || bindingIndex > m_BindingsCount)
                 throw new IndexOutOfRangeException(
-                    $"Binding index {bindingIndex} is out of range for action '{this}' which has {m_BindingsCount} bindings");
+                    string.Format("Binding index {0} is out of range for action '{1}' which has {2} bindings",
+                        bindingIndex, this, m_BindingsCount));
 
             m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = path;
         }
@@ -297,7 +332,8 @@ namespace ISX
         public void ApplyBindingOverride(InputBindingOverride bindingOverride)
         {
             if (enabled)
-                throw new InvalidOperationException($"Cannot change overrides on action '{this}' while the action is enabled");
+                throw new InvalidOperationException(
+                    string.Format("Cannot change overrides on action '{0}' while the action is enabled", this));
 
             if (bindingOverride.binding == string.Empty)
                 bindingOverride.binding = null;
@@ -322,7 +358,8 @@ namespace ISX
         public void RemoveAllBindingOverrides()
         {
             if (enabled)
-                throw new InvalidOperationException($"Cannot removed overrides from action '{this}' while the action is enabled");
+                throw new InvalidOperationException(
+                    string.Format("Cannot removed overrides from action '{0}' while the action is enabled", this));
 
             for (var i = 0; i < m_BindingsCount; ++i)
                 m_Bindings[m_BindingsStartIndex + i].overridePath = null;
@@ -392,7 +429,10 @@ namespace ISX
             public int modifierIndex;
         }
 
-        private bool isSingletonAction => m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this);
+        private bool isSingletonAction
+        {
+            get { return m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this); }
+        }
 
         private void CreateInternalActionSetForSingletonAction()
         {
@@ -422,7 +462,9 @@ namespace ISX
                 if (!haveGroup)
                     // Group is required to disambiguate.
                     throw new InvalidOperationException(
-                        $"Action {this} has multiple bindings; overriding binding requires the use of binding groups so the action knows which binding to override. Set 'group' property on InputBindingOverride.");
+                        string.Format(
+                            "Action {0} has multiple bindings; overriding binding requires the use of binding groups so the action knows which binding to override. Set 'group' property on InputBindingOverride.",
+                            this));
 
                 int groupStringLength;
                 var indexInGroup = bindingOverride.GetIndexInGroup(out groupStringLength);
@@ -600,13 +642,17 @@ namespace ISX
         {
             if (newPhase == Phase.Started && currentPhase != Phase.Waiting)
                 throw new InvalidOperationException(
-                    $"Cannot go from '{m_CurrentPhase}' to '{Phase.Started}'; must be '{Phase.Waiting}' (action: {this}, modifier: {GetModifier(bindingIndex, modifierIndex)})");
+                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
+                        m_CurrentPhase, Phase.Started, Phase.Waiting, this, GetModifier(bindingIndex, modifierIndex)));
             if (newPhase == Phase.Performed && currentPhase != Phase.Waiting && currentPhase != Phase.Started)
                 throw new InvalidOperationException(
-                    $"Cannot go from '{m_CurrentPhase}' to '{Phase.Performed}'; must be '{Phase.Waiting}' or '{Phase.Started}' (action: {this}, modifier: {GetModifier(bindingIndex, modifierIndex)})");
+                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' or '{3}' (action: {4}, modifier: {5})",
+                        m_CurrentPhase, Phase.Performed, Phase.Waiting, Phase.Started, this,
+                        GetModifier(bindingIndex, modifierIndex)));
             if (newPhase == Phase.Cancelled && currentPhase != Phase.Started)
                 throw new InvalidOperationException(
-                    $"Cannot go from '{m_CurrentPhase}' to '{Phase.Cancelled}'; must be '{Phase.Started}' (action: {this}, modifier: {GetModifier(bindingIndex, modifierIndex)})");
+                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
+                        m_CurrentPhase, Phase.Cancelled, Phase.Started, this, GetModifier(bindingIndex, modifierIndex)));
         }
 
         private InputBinding GetBinding(int bindingIndex)
@@ -738,19 +784,60 @@ namespace ISX
             internal bool m_ControlIsAtDefaultValue;
             internal bool m_TimerHasExpired;
 
-            internal int bindingIndex => m_Trigger.bindingIndex;
-            internal int modifierIndex => m_Trigger.modifierIndex;
+            internal int bindingIndex
+            {
+                get { return m_Trigger.bindingIndex; }
+            }
 
-            public InputAction action => m_Action;
-            public InputControl control => m_Trigger.control;
-            public Phase phase => m_Trigger.phase;
-            public double time => m_Trigger.time;
-            public double startTime => m_Trigger.startTime;
-            public bool controlHasDefaultValue => m_ControlIsAtDefaultValue;
-            public bool timerHasExpired => m_TimerHasExpired;
+            internal int modifierIndex
+            {
+                get { return m_Trigger.modifierIndex; }
+            }
 
-            public bool isWaiting => phase == Phase.Waiting;
-            public bool isStarted => phase == Phase.Started;
+            public InputAction action
+            {
+                get { return m_Action; }
+            }
+
+            public InputControl control
+            {
+                get { return m_Trigger.control; }
+            }
+
+            public Phase phase
+            {
+                get { return m_Trigger.phase; }
+            }
+
+            public double time
+            {
+                get { return m_Trigger.time; }
+            }
+
+            public double startTime
+            {
+                get { return m_Trigger.startTime; }
+            }
+
+            public bool controlHasDefaultValue
+            {
+                get { return m_ControlIsAtDefaultValue; }
+            }
+
+            public bool timerHasExpired
+            {
+                get { return m_TimerHasExpired; }
+            }
+
+            public bool isWaiting
+            {
+                get { return phase == Phase.Waiting; }
+            }
+
+            public bool isStarted
+            {
+                get { return phase == Phase.Started; }
+            }
 
             public void Started()
             {
@@ -791,18 +878,40 @@ namespace ISX
             internal double m_Time;
             internal double m_StartTime;
 
-            public InputAction action => m_Action;
-            public InputControl control => m_Control;
-            public IInputActionModifier modifier => m_Modifier;
+            public InputAction action
+            {
+                get { return m_Action; }
+            }
+
+            public InputControl control
+            {
+                get { return m_Control; }
+            }
+
+            public IInputActionModifier modifier
+            {
+                get { return m_Modifier; }
+            }
 
             public TValue GetValue<TValue>()
             {
                 return ((InputControl<TValue>)control).value;
             }
 
-            public double time => m_Time;
-            public double startTime => m_StartTime;
-            public double duration => m_Time - m_StartTime;
+            public double time
+            {
+                get { return m_Time; }
+            }
+
+            public double startTime
+            {
+                get { return m_StartTime; }
+            }
+
+            public double duration
+            {
+                get { return m_Time - m_StartTime; }
+            }
         }
 
         public struct AddBindingSyntax

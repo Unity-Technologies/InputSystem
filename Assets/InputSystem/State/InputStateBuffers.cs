@@ -87,7 +87,10 @@ namespace ISX
             // has its buffers swapped individually with SwapDeviceBuffers().
             public void** deviceToBufferMapping;
 
-            public bool valid => deviceToBufferMapping != null;
+            public bool valid
+            {
+                get { return deviceToBufferMapping != null; }
+            }
 
             public void SetFrontBuffer(int deviceIndex, IntPtr ptr)
             {
@@ -235,9 +238,9 @@ namespace ISX
         private unsafe DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, ref IntPtr bufferPtr, int sizePerBuffer, int mappingTableSizePerBuffer)
         {
             var front = bufferPtr;
-            var back = bufferPtr + sizePerBuffer;
-            var mappings = (void**)(bufferPtr + sizePerBuffer * 2).ToPointer();  // Put mapping table at end.
-            bufferPtr += sizePerBuffer * 2 + mappingTableSizePerBuffer;
+            var back = new IntPtr(bufferPtr.ToInt64() + sizePerBuffer);
+            var mappings = (void**)new IntPtr(bufferPtr.ToInt64() + sizePerBuffer * 2).ToPointer();  // Put mapping table at end.
+            bufferPtr = new IntPtr(bufferPtr.ToInt64() + sizePerBuffer * 2 + mappingTableSizePerBuffer);
 
             var buffers = new DoubleBuffers {deviceToBufferMapping = mappings};
 
@@ -330,7 +333,7 @@ namespace ISX
 
             // Migrate every device that has allocated state blocks.
             var newDeviceCount = devices.Length;
-            var oldDeviceCount = oldDeviceIndices?.Length ?? newDeviceCount;
+            var oldDeviceCount = oldDeviceIndices != null ? oldDeviceIndices.Length : newDeviceCount;
             for (var i = 0; i < newDeviceCount && i < oldDeviceCount; ++i)
             {
                 var device = devices[i];
@@ -342,15 +345,15 @@ namespace ISX
 
                 ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
 
-                var oldDeviceIndex = oldDeviceIndices ? [i] ?? i;
+                var oldDeviceIndex = oldDeviceIndices != null ? oldDeviceIndices[i] : i;
                 var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
 
-                var oldFrontPtr = oldBuffer.GetFrontBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset;
-                var oldBackPtr = oldBuffer.GetBackBuffer(oldDeviceIndex) + (int)device.m_StateBlock.byteOffset;
+                var oldFrontPtr = new IntPtr(oldBuffer.GetFrontBuffer(oldDeviceIndex).ToInt64() + (int)device.m_StateBlock.byteOffset);
+                var oldBackPtr = new IntPtr(oldBuffer.GetBackBuffer(oldDeviceIndex).ToInt64() + (int)device.m_StateBlock.byteOffset);
 
-                var newFrontPtr = newBuffer.GetFrontBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
-                var newBackPtr = newBuffer.GetBackBuffer(newDeviceIndex) + (int)newStateBlockOffsets[i];
+                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(newDeviceIndex).ToInt64() + (int)newStateBlockOffsets[i]);
+                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(newDeviceIndex).ToInt64() + (int)newStateBlockOffsets[i]);
 
                 // Copy state.
                 UnsafeUtility.MemCpy(newFrontPtr, oldFrontPtr, numBytes);
@@ -376,7 +379,7 @@ namespace ISX
                 var size = devices[i].m_StateBlock.alignedSizeInBytes;
                 ////REVIEW: what should we do about this case? silently accept it and just give the device the current offset?
                 if (size == 0)
-                    throw new Exception($"Device '{devices[i]}' has a zero-size state buffer");
+                    throw new Exception(string.Format("Device '{0}' has a zero-size state buffer", devices[i]));
                 sizeInBytes += size;
                 result[i] = currentOffset;
                 currentOffset += (uint)size;

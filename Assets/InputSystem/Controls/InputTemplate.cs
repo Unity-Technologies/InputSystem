@@ -5,6 +5,10 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 ////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
 
 ////TODO: ensure that if a template sets a device description, it is indeed a device template
@@ -13,23 +17,29 @@ using UnityEngine;
 
 namespace ISX
 {
-    // A template lays out the composition of an input control.
-    //
-    // Can be created in two ways:
-    //
-    //  1) Loaded from JSON.
-    //  2) Constructed through reflection from InputControls classes.
-    //
-    // Once constructed, templates are immutable (but you can always
-    // replace a registered template in the system and it will affect
-    // everything constructed from the template).
-    //
-    // Templates can be for arbitrary control rigs or for entire
-    // devices. Device templates can use the 'deviceDescriptor' field
-    // to specify regexs that are to match against compatible devices.
-    //
-    // InputTemplate objects are considered temporaries. Except in the
-    // editor, we don't keep them around beyond device creation.
+    /// <summary>
+    /// A template lays out the composition of an input control.
+    /// </summary>
+    /// <remarks>
+    /// Templates can be created in three ways:
+    ///
+    /// <list type="number">
+    /// <item><description>Loaded from JSON.</description></item>
+    /// <item><description>Constructed through reflection from InputControls classes.</description></item>
+    /// <item><description>Through template constructors using InputTemplate.Builder.</description></item>
+    /// </list>
+    ///
+    /// Once constructed, templates are immutable (but you can always
+    /// replace a registered template in the system and it will affect
+    /// everything constructed from the template).
+    ///
+    /// Templates can be for arbitrary control rigs or for entire
+    /// devices. Device templates can use the 'deviceDescriptor' field
+    /// to specify regexs that are to match against compatible devices.
+    ///
+    /// InputTemplate objects are considered temporaries. Except in the
+    /// editor, we don't keep them around beyond device creation.
+    /// </remarks>
     public class InputTemplate
     {
         // String that is used to separate names from namespaces in template names.
@@ -77,13 +87,13 @@ namespace ISX
                         case ParameterType.Boolean:
                             if (*((bool*)ptr))
                                 return name;
-                            return $"{name}=false";
+                            return string.Format("{0}=false", name);
                         case ParameterType.Integer:
                             var intValue = *((int*)ptr);
-                            return $"{name}={intValue}";
+                            return string.Format("{0}={1}", name, intValue);
                         case ParameterType.Float:
                             var floatValue = *((float*)ptr);
-                            return $"{name}={floatValue}";
+                            return string.Format("{0}={1}", name, floatValue);
                     }
                 }
 
@@ -100,8 +110,8 @@ namespace ISX
             {
                 if (parameters.Count == 0)
                     return name;
-                var parameterString = string.Join(",", parameters.Select(x => x.ToString()));
-                return $"name({parameterString})";
+                var parameterString = string.Join(",", parameters.Select(x => x.ToString()).ToArray());
+                return string.Format("name({0})", parameterString);
             }
         }
 
@@ -164,26 +174,54 @@ namespace ISX
 
         // Unique name of the template.
         // NOTE: Case-insensitive.
-        public InternedString name => m_Name;
+        public InternedString name
+        {
+            get { return m_Name; }
+        }
 
-        public Type type => m_Type;
+        public Type type
+        {
+            get { return m_Type; }
+        }
 
-        public FourCC stateFormat => m_StateFormat;
+        public FourCC stateFormat
+        {
+            get { return m_StateFormat; }
+        }
 
-        public string extendsTemplate => m_ExtendsTemplate;
+        public string extendsTemplate
+        {
+            get { return m_ExtendsTemplate; }
+        }
 
         // Unlike in a normal device descriptor, the strings in this descriptor are
         // regular expressions which can be used to match against the strings of an
         // actual device descriptor.
-        public InputDeviceDescription deviceDescription => m_DeviceDescription;
+        public InputDeviceDescription deviceDescription
+        {
+            get { return m_DeviceDescription; }
+        }
 
-        public ReadOnlyArray<ControlTemplate> controls => new ReadOnlyArray<ControlTemplate>(m_Controls);
+        public ReadOnlyArray<ControlTemplate> controls
+        {
+            get { return new ReadOnlyArray<ControlTemplate>(m_Controls); }
+        }
 
-        public bool isDeviceTemplate => typeof(InputDevice).IsAssignableFrom(m_Type);
-        public bool isControlTemplate => !isDeviceTemplate;
+        public bool isDeviceTemplate
+        {
+            get { return typeof(InputDevice).IsAssignableFrom(m_Type); }
+        }
 
-        // Build a template programmatically. Primarily for use by template constructors
-        // registered with the system.
+        public bool isControlTemplate
+        {
+            get { return !isDeviceTemplate; }
+        }
+
+        /// <summary>
+        /// Build a template programmatically. Primarily for use by template constructors
+        /// registered with the system.
+        /// </summary>
+        /// <seealso cref="InputSystem.RegisterTemplateConstructor"/>
         public struct Builder
         {
             public string name;
@@ -293,7 +331,7 @@ namespace ISX
             var format = new FourCC();
             if (typeof(InputDevice).IsAssignableFrom(type))
             {
-                var stateAttribute = type.GetCustomAttribute<InputStateAttribute>();
+                var stateAttribute = type.GetCustomAttribute<InputStateAttribute>(true);
                 if (stateAttribute != null)
                 {
                     isDeviceWithStateAttribute = true;
@@ -420,7 +458,7 @@ namespace ISX
 
                 // Look for InputControlAttributes. If they aren't there, the member has to be
                 // of an InputControl-derived value type.
-                var attributes = member.GetCustomAttributes<InputControlAttribute>().ToArray();
+                var attributes = member.GetCustomAttributes<InputControlAttribute>(false).ToArray();
                 if (attributes.Length == 0)
                 {
                     if (valueType == null || !typeof(InputControl).IsAssignableFrom(valueType))
@@ -462,14 +500,14 @@ namespace ISX
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
             // Determine name.
-            var name = attribute?.name;
+            var name = attribute != null ? attribute.name : null;
             if (string.IsNullOrEmpty(name))
                 name = member.Name;
 
             var isModifyingChildControlByPath = name.IndexOf('/') != -1;
 
             // Determine template.
-            var template = attribute?.template;
+            var template = attribute != null ? attribute.template : null;
             if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath)
             {
                 var valueType = TypeHelpers.GetValueType(member);
@@ -478,7 +516,7 @@ namespace ISX
 
             // Determine variant.
             string variant = null;
-            if (!string.IsNullOrEmpty(attribute?.variant))
+            if (attribute != null && !string.IsNullOrEmpty(attribute.variant))
                 variant = attribute.variant;
 
             // Determine offset.
@@ -501,7 +539,7 @@ namespace ISX
 
             // Determine format.
             var format = new FourCC();
-            if (!string.IsNullOrEmpty(attribute?.format))
+            if (attribute != null && !string.IsNullOrEmpty(attribute.format))
                 format = new FourCC(attribute.format);
             else if (!isModifyingChildControlByPath && bit == InputStateBlock.kInvalidOffset)
             {
@@ -513,37 +551,33 @@ namespace ISX
             InternedString[] aliases = null;
             if (attribute != null)
             {
-                if (attribute.alias != null && attribute.aliases == null)
-                    aliases = new InternedString[1] { new InternedString(attribute.alias) };
-                else if (attribute.aliases != null)
-                    aliases = ArrayHelpers.Join(attribute.alias, attribute.aliases)?.Select(x => new InternedString(x))
-                        .ToArray();
+                var joined = ArrayHelpers.Join(attribute.alias, attribute.aliases);
+                if (joined != null)
+                    aliases = joined.Select(x => new InternedString(x)).ToArray();
             }
 
             // Determine usages.
             InternedString[] usages = null;
             if (attribute != null)
             {
-                if (attribute.usage != null && attribute.usages == null)
-                    usages = new InternedString[1] { new InternedString(attribute.usage) };
-                else if (attribute.usages != null)
-                    usages = ArrayHelpers.Join(attribute.usage, attribute.usages)?.Select(x => new InternedString(x))
-                        .ToArray();
+                var joined = ArrayHelpers.Join(attribute.usage, attribute.usages);
+                if (joined != null)
+                    usages = joined.Select(x => new InternedString(x)).ToArray();
             }
 
             // Determine parameters.
             ParameterValue[] parameters = null;
-            if (!string.IsNullOrEmpty(attribute?.parameters))
+            if (attribute != null && !string.IsNullOrEmpty(attribute.parameters))
                 parameters = ParseParameters(attribute.parameters);
 
             // Determine processors.
             NameAndParameters[] processors = null;
-            if (!string.IsNullOrEmpty(attribute?.processors))
+            if (attribute != null && !string.IsNullOrEmpty(attribute.processors))
                 processors = ParseNameAndParameterList(attribute.processors);
 
             // Determine whether to use state from another control.
             string useStateFrom = null;
-            if (!string.IsNullOrEmpty(attribute?.useStateFrom))
+            if (attribute != null && !string.IsNullOrEmpty(attribute.useStateFrom))
                 useStateFrom = attribute.useStateFrom;
 
             // Determine whether state automatically resets.
@@ -597,7 +631,7 @@ namespace ISX
                     ++index;
                 }
                 if (index - nameStart == 0)
-                    throw new Exception($"Expecting name at position {nameStart} in '{text}'");
+                    throw new Exception(string.Format("Expecting name at position {0} in '{1}'", nameStart, text));
                 var name = text.Substring(nameStart, index - nameStart);
 
                 // Skip whitespace.
@@ -611,7 +645,8 @@ namespace ISX
                     ++index;
                     var closeParenIndex = text.IndexOf(')', index);
                     if (closeParenIndex == -1)
-                        throw new Exception($"Expecting ')' after '(' at position {index} in '{text}'");
+                        throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
+                                text));
 
                     var parameterString = text.Substring(index, closeParenIndex - index);
                     parameters = ParseParameters(parameterString);
@@ -773,7 +808,7 @@ namespace ISX
                         var isTargetingVariants = false;
                         foreach (var variant in baseControlVariants)
                         {
-                            var key = $"{pair.Key}@{variant}";
+                            var key = string.Format("{0}@{1}", pair.Key, variant);
                             if (baseControlTable.TryGetValue(key, out baseControlTemplate))
                             {
                                 var mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
@@ -811,8 +846,9 @@ namespace ISX
                 if (!controlTemplates[i].variant.IsEmpty())
                 {
                     var variant = controlTemplates[i].variant.ToLower();
-                    key = $"{key}@{variant}";
-                    variants?.Add(variant);
+                    key = string.Format("{0}@{1}", key, variant);
+                    if (variants != null)
+                        variants.Add(variant);
                 }
                 table[key] = controlTemplates[i];
             }
@@ -882,7 +918,7 @@ namespace ISX
             foreach (var existing in controlTemplates)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
                     existing.variant == controlTemplate.variant)
-                    throw new Exception($"Duplicate control '{name}' in template '{templateName}'");
+                    throw new Exception(string.Format("Duplicate control '{0}' in template '{1}'", name, templateName));
         }
 
         internal static string ParseHeaderFromJson(string json, out InputDeviceDescription deviceDescription, out string baseTemplate)
@@ -937,12 +973,15 @@ namespace ISX
                     type = Type.GetType(this.type, false);
                     if (type == null)
                     {
-                        Debug.Log($"Cannot find type '{this.type}' used by template '{name}'; falling back to using InputDevice");
+                        Debug.Log(string.Format(
+                                "Cannot find type '{0}' used by template '{1}'; falling back to using InputDevice",
+                                this.type, name));
                         type = typeof(InputDevice);
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
-                        throw new Exception($"'{this.type}' used by template '{name}' is not an InputControl");
+                        throw new Exception(string.Format("'{0}' used by template '{1}' is not an InputControl",
+                                this.type, name));
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
@@ -965,7 +1004,7 @@ namespace ISX
                     else if (beforeRenderLowerCase == "update")
                         template.m_UpdateBeforeRender = true;
                     else
-                        throw new Exception($"Invalid beforeRender setting '{beforeRender}'");
+                        throw new Exception(string.Format("Invalid beforeRender setting '{0}'", beforeRender));
                 }
 
                 // Add overrides.
@@ -986,7 +1025,7 @@ namespace ISX
                     foreach (var control in controls)
                     {
                         if (string.IsNullOrEmpty(control.name))
-                            throw new Exception($"Control with no name in template '{name}");
+                            throw new Exception(string.Format("Control with no name in template '{0}", name));
                         var controlTemplate = control.ToTemplate();
                         ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, template.name);
                         controlTemplates.Add(controlTemplate);
@@ -1125,8 +1164,8 @@ namespace ISX
                         offset = template.offset,
                         sizeInBits = template.sizeInBits,
                         format = template.format.ToString(),
-                        parameters = string.Join(",", template.parameters.Select(x => x.ToString())),
-                        processors = string.Join(",", template.processors.Select(x => x.ToString())),
+                        parameters = string.Join(",", template.parameters.Select(x => x.ToString()).ToArray()),
+                        processors = string.Join(",", template.processors.Select(x => x.ToString()).ToArray()),
                         usages = template.usages.Select(x => x.ToString()).ToArray(),
                         aliases = template.aliases.Select(x => x.ToString()).ToArray()
                     };
@@ -1198,13 +1237,13 @@ namespace ISX
                     if (string.IsNullOrEmpty(part))
                         return null;
 
-                    return $"{part}";
+                    return part;
                 }
 
                 if (regex[regex.Length - 1] != ')')
-                    return $"({regex})|({part}";
+                    return string.Format("({0})|({1}", regex, part);
 
-                return $"{regex}|({part})";
+                return string.Format("{0}|({1})", regex, part);
             }
         }
 
@@ -1268,7 +1307,8 @@ namespace ISX
                         ////TODO: catch cycles
                         var superTemplate = TryLoadTemplate(template.m_ExtendsTemplate, table);
                         if (superTemplate == null)
-                            throw new TemplateNotFoundException($"Cannot find base template '{template.m_ExtendsTemplate}' of template '{name}'");
+                            throw new TemplateNotFoundException(string.Format(
+                                    "Cannot find base template '{0}' of template '{1}'", template.m_ExtendsTemplate, name));
                         template.MergeTemplate(superTemplate);
                     }
                 }
@@ -1326,7 +1366,7 @@ namespace ISX
         {
             public string template { get; private set; }
             public TemplateNotFoundException(string name)
-                : base($"Cannot find template '{name}'")
+                : base(string.Format("Cannot find template '{0}'", name))
             {
                 template = name;
             }

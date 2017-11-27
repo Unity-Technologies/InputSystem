@@ -17,6 +17,10 @@ using ISX.Editor;
 using UnityEditor;
 #endif
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 // These tests rely on the default template setup present in the code
 // of the system (e.g. they make assumptions about Gamepad is set up).
 public class FunctionalTests : InputTestFixture
@@ -1345,9 +1349,9 @@ public class FunctionalTests : InputTestFixture
         var setup = new InputControlSetup("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
-        Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(Marshal.SizeOf<GamepadState>() * 8));
-        Assert.That(gamepad.leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("leftStick").ToInt32()));
-        Assert.That(gamepad.dpad.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf<GamepadState>("buttons").ToInt32()));
+        Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>() * 8));
+        Assert.That(gamepad.leftStick.stateBlock.byteOffset, Is.EqualTo(UnsafeUtility.OffsetOf<GamepadState>("leftStick")));
+        Assert.That(gamepad.dpad.stateBlock.byteOffset, Is.EqualTo(UnsafeUtility.OffsetOf<GamepadState>("buttons")));
     }
 
     [Test]
@@ -1358,8 +1362,8 @@ public class FunctionalTests : InputTestFixture
         var rightMotor = setup.GetControl("rightMotor");
         setup.Finish();
 
-        var outputOffset = Marshal.OffsetOf<GamepadState>("motors").ToInt32();
-        var rightMotorOffset = outputOffset + Marshal.OffsetOf<GamepadOutputState>("rightMotor").ToInt32();
+        var outputOffset = UnsafeUtility.OffsetOf<GamepadState>("motors");
+        var rightMotorOffset = outputOffset + UnsafeUtility.OffsetOf<GamepadOutputState>("rightMotor");
 
         Assert.That(rightMotor.stateBlock.byteOffset, Is.EqualTo(rightMotorOffset));
     }
@@ -1384,7 +1388,7 @@ public class FunctionalTests : InputTestFixture
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
 
-        var leftStickOffset = Marshal.OffsetOf<GamepadState>("leftStick").ToInt32();
+        var leftStickOffset = UnsafeUtility.OffsetOf<GamepadState>("leftStick");
         var leftStickXOffset = leftStickOffset;
         var leftStickYOffset = leftStickOffset + 4;
 
@@ -1399,7 +1403,7 @@ public class FunctionalTests : InputTestFixture
         InputSystem.AddDevice("Gamepad");
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var leftStickOffset = Marshal.OffsetOf<GamepadState>("leftStick").ToInt32();
+        var leftStickOffset = UnsafeUtility.OffsetOf<GamepadState>("leftStick");
         var leftStickXOffset = leftStickOffset;
         var leftStickYOffset = leftStickOffset + 4;
 
@@ -1416,7 +1420,7 @@ public class FunctionalTests : InputTestFixture
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
-        var sizeofGamepadState = Marshal.SizeOf<GamepadState>();
+        var sizeofGamepadState = UnsafeUtility.SizeOf<GamepadState>();
 
         Assert.That(gamepad1.stateBlock.byteOffset, Is.EqualTo(0));
         Assert.That(gamepad2.stateBlock.byteOffset, Is.EqualTo(gamepad1.stateBlock.byteOffset + sizeofGamepadState));
@@ -2205,7 +2209,7 @@ public class FunctionalTests : InputTestFixture
         InputDevice device = null;
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
 
-        Assert.That(InputSystem.GetControls($"/<{baseTemplate}>"), Has.Exactly(1).SameAs(device));
+        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", baseTemplate)), Has.Exactly(1).SameAs(device));
         Assert.That(device.name, Is.EqualTo(baseTemplate));
         Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
@@ -4351,7 +4355,8 @@ public class FunctionalTests : InputTestFixture
 
         local.StartSending();
 
-        var remoteGamepadTemplate = $"{InputRemoting.kRemoteTemplateNamespacePrefix}0::{localGamepad.template}";
+        var remoteGamepadTemplate =
+            string.Format("{0}0::{1}", InputRemoting.kRemoteTemplateNamespacePrefix, localGamepad.template);
 
         // Make sure that our "remote" system now has the data we initially
         // set up on the local system.

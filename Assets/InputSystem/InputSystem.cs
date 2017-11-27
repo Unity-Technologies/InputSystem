@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -77,16 +78,17 @@ namespace ISX
             string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
         {
             if (constructor == null)
-                throw new ArgumentNullException(nameof(constructor));
+                throw new ArgumentNullException("constructor");
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
 
             // Grab method and (optional) instance from lambda expression.
             var methodCall = constructor.Body as MethodCallExpression;
             if (methodCall == null)
                 throw new ArgumentException(
-                    $"Body of template constructor must be a method call (is a {constructor.Body.NodeType} instead)",
-                    nameof(constructor));
+                    string.Format("Body of template constructor must be a method call (is a {0} instead)",
+                        constructor.Body.NodeType),
+                    "constructor");
 
             var method = methodCall.Method;
             var instance = methodCall.Object.NodeType == ExpressionType.Constant
@@ -158,7 +160,10 @@ namespace ISX
 
         #region Devices
 
-        public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
+        public static ReadOnlyArray<InputDevice> devices
+        {
+            get { return s_Manager.devices; }
+        }
 
         public static event Action<InputDevice, InputDeviceChange> onDeviceChange
         {
@@ -290,20 +295,22 @@ namespace ISX
             where TState : struct, IInputStateTypeInfo
         {
             if (device == null)
-                throw new ArgumentNullException(nameof(device));
+                throw new ArgumentNullException("device");
 
             // Make sure device is actually in the system.
             if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
-                    $"Cannot queue state event device '{device}' because device has not been added to system");
+                    string.Format("Cannot queue state event device '{0}' because device has not been added to system",
+                        device));
 
             ////REVIEW: does it make more sense to go off the 'stateBlock' on the device and let that determine size?
 
             var stateSize = UnsafeUtility.SizeOf<TState>();
             if (stateSize > StateEventBuffer.kMaxSize)
                 throw new ArgumentException(
-                    $"Size of '{typeof(TState).Name}' exceeds maximum supported state size of {StateEventBuffer.kMaxSize}",
-                    nameof(state));
+                    string.Format("Size of '{0}' exceeds maximum supported state size of {1}", typeof(TState).Name,
+                        StateEventBuffer.kMaxSize),
+                    "state");
             var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
 
             if (time < 0)
@@ -336,16 +343,19 @@ namespace ISX
             where TDelta : struct
         {
             if (control == null)
-                throw new ArgumentNullException(nameof(control));
+                throw new ArgumentNullException("control");
 
             if (control.stateBlock.bitOffset != 0)
-                throw new InvalidOperationException($"Cannot send delta state events against bitfield controls: {control}");
+                throw new InvalidOperationException(
+                    string.Format("Cannot send delta state events against bitfield controls: {0}", control));
 
             // Make sure device is actually in the system.
             var device = control.device;
             if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
-                    $"Cannot queue state event for control '{control}' on device '{device}' because device has not been added to system");
+                    string.Format(
+                        "Cannot queue state event for control '{0}' on device '{1}' because device has not been added to system",
+                        control, device));
 
             if (time < 0)
                 time = Time.time;
@@ -353,8 +363,9 @@ namespace ISX
             var deltaSize = UnsafeUtility.SizeOf<TDelta>();
             if (deltaSize > DeltaStateEventBuffer.kMaxSize)
                 throw new ArgumentException(
-                    $"Size of state delta '{typeof(TDelta).Name}' exceeds maximum supported state size of {DeltaStateEventBuffer.kMaxSize}",
-                    nameof(delta));
+                    string.Format("Size of state delta '{0}' exceeds maximum supported state size of {1}",
+                        typeof(TDelta).Name, DeltaStateEventBuffer.kMaxSize),
+                    "delta");
 
             ////TODO: recognize a matching C# representation of a state format and convert to what we expect for trivial cases
             if (deltaSize != control.stateBlock.alignedSizeInBytes)
@@ -382,7 +393,7 @@ namespace ISX
         public static void QueueDisconnectEvent(InputDevice device, double time = -1)
         {
             if (device == null)
-                throw new ArgumentNullException(nameof(device));
+                throw new ArgumentNullException("device");
             if (device.id == InputDevice.kInvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
@@ -396,7 +407,7 @@ namespace ISX
         public static void QueueConnectEvent(InputDevice device, double time = -1)
         {
             if (device == null)
-                throw new ArgumentNullException(nameof(device));
+                throw new ArgumentNullException("device");
             if (device.id == InputDevice.kInvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
@@ -467,8 +478,28 @@ namespace ISX
         public static int FindAllEnabledActions(List<InputAction> actions)
         {
             if (actions == null)
-                throw new ArgumentNullException(nameof(actions));
+                throw new ArgumentNullException("actions");
             return InputActionSet.FindEnabledActions(actions);
+        }
+
+        #endregion
+
+        #region Plugins
+
+        private static IInputPlugin[] s_Plugins;
+
+        public static void RegisterPlugin(IInputPlugin plugin)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void IntializeModules()
+        {
+        }
+
+        private static List<MethodInfo> ScanForInitializeMethods()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

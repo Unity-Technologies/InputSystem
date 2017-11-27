@@ -32,7 +32,10 @@ namespace ISX
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public uint stateOffset;
         [FieldOffset(InputEvent.kBaseEventSize + 8)] public fixed byte stateData[1]; // Variable-sized.
 
-        public int stateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8);
+        public int stateSizeInBytes
+        {
+            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8); }
+        }
 
         public IntPtr state
         {
@@ -48,12 +51,35 @@ namespace ISX
         // Action-specific fields are appended *after* the device state in the event.
         // This way we can use ActionEvent everywhere a DeltaStateEvent is expected.
 
-        public int actionIndex => *(int*)(actionData + (int)ActionDataOffset.ActionIndex);
-        public int bindingIndex => *(int*)(actionData + (int)ActionDataOffset.BindingIndex);
-        public int modifierIndex => *(int*)(actionData + (int)ActionDataOffset.ModifierIndex);
-        public double startTime => *(double*)(actionData + (int)ActionDataOffset.StartTime);
-        public double endTime => *(double*)(actionData + (int)ActionDataOffset.EndTime);
-        public InputAction.Phase phase => (InputAction.Phase)(*(int*)(actionData + (int)ActionDataOffset.Phase));
+        public int actionIndex
+        {
+            get { return *(int*)new IntPtr(actionData.ToInt64() + (int)ActionDataOffset.ActionIndex); }
+        }
+
+        public int bindingIndex
+        {
+            get { return *(int*)new IntPtr(actionData.ToInt64() + (int)ActionDataOffset.BindingIndex); }
+        }
+
+        public int modifierIndex
+        {
+            get { return *(int*)new IntPtr(actionData.ToInt64() + (int)ActionDataOffset.ModifierIndex); }
+        }
+
+        public double startTime
+        {
+            get { return *(double*)new IntPtr(actionData.ToInt64() + (int)ActionDataOffset.StartTime); }
+        }
+
+        public double endTime
+        {
+            get { return *(double*)new IntPtr(actionData.ToInt64() + (int)ActionDataOffset.EndTime); }
+        }
+
+        public InputAction.Phase phase
+        {
+            get { return (InputAction.Phase)(*(int*)new IntPtr(actionData.ToInt64() + (int)ActionDataOffset.Phase)); }
+        }
 
         ////TODO: give all currently enabled actions indices
 
@@ -62,7 +88,10 @@ namespace ISX
             return Type;
         }
 
-        internal IntPtr actionData => state + stateSizeInBytes;
+        internal IntPtr actionData
+        {
+            get { return new IntPtr(state.ToInt64() + stateSizeInBytes); }
+        }
 
         internal enum ActionDataOffset
         {

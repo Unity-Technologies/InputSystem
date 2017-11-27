@@ -10,8 +10,15 @@ namespace ISX
         public float min;
         public float max;
 
-        public float minOrDefault => min == 0.0f ? InputConfiguration.DeadzoneMin : min;
-        public float maxOrDefault => max == 0.0f ? InputConfiguration.DeadzoneMax : max;
+        public float minOrDefault
+        {
+            get { return min == 0.0f ? InputConfiguration.DeadzoneMin : min; }
+        }
+
+        public float maxOrDefault
+        {
+            get { return max == 0.0f ? InputConfiguration.DeadzoneMax : max; }
+        }
 
         public Vector2 Process(Vector2 vector)
         {

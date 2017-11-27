@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 
 namespace ISX.Editor
@@ -163,7 +164,7 @@ namespace ISX.Editor
                     if (elementName.ToLower() == lowerCase)
                     {
                         ++namesTried;
-                        result = $"{baseName}{namesTried}";
+                        result = string.Format("{0}{1}", baseName, namesTried);
                         lowerCase = result.ToLower();
                         nameIsUnique = false;
                         break;

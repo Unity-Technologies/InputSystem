@@ -44,7 +44,7 @@ namespace ISX
         public static string TryGetDeviceTemplate(string path)
         {
             if (path == null)
-                throw new ArgumentNullException(nameof(path));
+                throw new ArgumentNullException("path");
 
             var parser = new PathParser(path);
             if (!parser.MoveToNextComponent())
@@ -69,7 +69,7 @@ namespace ISX
         public static string TryGetControlTemplate(string path)
         {
             if (path == null)
-                throw new ArgumentNullException(nameof(path));
+                throw new ArgumentNullException("path");
             var pathLength = path.Length;
 
             var indexOfLastSlash = path.LastIndexOf('/');
@@ -261,9 +261,9 @@ namespace ISX
         public static InputControl FindControl(InputControl control, string path, int indexInPath = 0)
         {
             if (control == null)
-                throw new ArgumentNullException(nameof(control));
+                throw new ArgumentNullException("control");
             if (path == null)
-                throw new ArgumentNullException(nameof(path));
+                throw new ArgumentNullException("path");
 
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
@@ -285,9 +285,9 @@ namespace ISX
             List<InputControl> matches)
         {
             if (control == null)
-                throw new ArgumentNullException(nameof(control));
+                throw new ArgumentNullException("control");
             if (path == null)
-                throw new ArgumentNullException(nameof(path));
+                throw new ArgumentNullException("path");
 
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
@@ -432,7 +432,7 @@ namespace ISX
             Debug.Assert(path[indexInPath] == '{');
             ++indexInPath;
             if (indexInPath == pathLength)
-                throw new Exception($"Invalid path spec '{path}'; trailing '{{'");
+                throw new Exception(string.Format("Invalid path spec '{0}'; trailing '{{'", path));
 
             InputControl lastMatch = null;
 
@@ -617,8 +617,15 @@ namespace ISX
             public Substring usage;
             public Substring name;
 
-            public bool isWildcard => name == kWildcard;
-            public bool isDoubleWildcard => name == kDoubleWildcard;
+            public bool isWildcard
+            {
+                get { return name == kWildcard; }
+            }
+
+            public bool isDoubleWildcard
+            {
+                get { return name == kDoubleWildcard; }
+            }
         }
 
         // NOTE: Must not allocate!
@@ -630,7 +637,10 @@ namespace ISX
             public int rightIndexInPath; // Points either to a '/' character or one past the end of the path string.
             public ParsedPathComponent current;
 
-            public bool isAtEnd => rightIndexInPath == length;
+            public bool isAtEnd
+            {
+                get { return rightIndexInPath == length; }
+            }
 
             public PathParser(string path)
             {

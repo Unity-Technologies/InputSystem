@@ -22,7 +22,10 @@ namespace ISX
         {
         }
 
-        public bool valid => m_EventPtr != null;
+        public bool valid
+        {
+            get { return m_EventPtr != null; }
+        }
 
         public bool handled
         {
@@ -86,9 +89,15 @@ namespace ISX
             }
         }
 
-        public double time => valid ? m_EventPtr->time : 0.0;
+        public double time
+        {
+            get { return valid ? m_EventPtr->time : 0.0; }
+        }
 
-        public IntPtr data => new IntPtr(m_EventPtr);
+        public IntPtr data
+        {
+            get { return new IntPtr(m_EventPtr); }
+        }
 
         public bool IsA<TOtherEvent>()
             where TOtherEvent : struct, IInputEventTypeInfo
@@ -106,7 +115,7 @@ namespace ISX
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr(new IntPtr(m_EventPtr) + sizeInBytes);
+            return new InputEventPtr(new IntPtr(new IntPtr(m_EventPtr).ToInt64() + sizeInBytes));
         }
 
         public override string ToString()

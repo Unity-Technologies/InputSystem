@@ -40,7 +40,7 @@ namespace ISX
 
         protected override unsafe Touch ReadRawValueFrom(IntPtr statePtr)
         {
-            var valuePtr = (Touch*)(statePtr + (int)m_StateBlock.byteOffset);
+            var valuePtr = (Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *valuePtr;
         }
     }

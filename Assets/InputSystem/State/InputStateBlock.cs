@@ -127,7 +127,10 @@ namespace ISX
             }
         }
 
-        public bool isBitfield => sizeInBits % 8 != 0;
+        public bool isBitfield
+        {
+            get { return sizeInBits % 8 != 0; }
+        }
 
         [Flags]
         private enum Flags
@@ -137,6 +140,9 @@ namespace ISX
 
         private Flags m_Flags;
 
-        internal int alignedSizeInBytes => (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0);
+        internal int alignedSizeInBytes
+        {
+            get { return (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0); }
+        }
     }
 }

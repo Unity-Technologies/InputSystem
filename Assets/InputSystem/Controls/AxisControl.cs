@@ -42,7 +42,7 @@ namespace ISX
         protected override unsafe float ReadRawValueFrom(IntPtr statePtr)
         {
             float value;
-            var valuePtr = statePtr + (int)m_StateBlock.byteOffset;
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
 
             var format = m_StateBlock.format;
             if (format == InputStateBlock.kTypeFloat)
@@ -69,7 +69,8 @@ namespace ISX
             }
             else
             {
-                throw new Exception($"State format '{m_StateBlock.format}' is not supported as state for {GetType().Name}");
+                throw new Exception(string.Format("State format '{0}' is not supported as state for {1}",
+                        m_StateBlock.format, GetType().Name));
             }
 
             return Preprocess(value);

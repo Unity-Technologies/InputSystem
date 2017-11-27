@@ -133,7 +133,7 @@ namespace ISX.Editor
                             else
                                 rootBaseTemplateName += "s";
 
-                            var group = products.children?.FirstOrDefault(x => x.displayName == rootBaseTemplateName);
+                            var group = products.children != null ? products.children.FirstOrDefault(x => x.displayName == rootBaseTemplateName) : null;
                             if (group == null)
                             {
                                 group = new TreeViewItem
@@ -172,27 +172,30 @@ namespace ISX.Editor
                 };
 
                 // Header.
-                AddChild(item, $"Type: {template.type.Name}", ref id);
+                AddChild(item, string.Format("Type: {0}", template.type.Name), ref id);
                 if (!string.IsNullOrEmpty(template.extendsTemplate))
-                    AddChild(item, $"Extends: {template.extendsTemplate}", ref id);
+                    AddChild(item, string.Format("Extends: {0}", template.extendsTemplate), ref id);
                 if (template.stateFormat != 0)
-                    AddChild(item, $"Format: {template.stateFormat}", ref id);
+                    AddChild(item, string.Format("Format: {0}", template.stateFormat), ref id);
                 if (template.m_UpdateBeforeRender != null)
                 {
                     var value = template.m_UpdateBeforeRender.Value ? "Update" : "Disabled";
-                    AddChild(item, $"Before Render: {value}", ref id);
+                    AddChild(item, string.Format("Before Render: {0}", value), ref id);
                 }
                 if (!template.deviceDescription.empty)
                 {
                     var deviceDescription = AddChild(item, "Device Description", ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.deviceClass))
-                        AddChild(deviceDescription, $"Device Class: {template.deviceDescription.deviceClass}", ref id);
+                        AddChild(deviceDescription,
+                            string.Format("Device Class: {0}", template.deviceDescription.deviceClass), ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.interfaceName))
-                        AddChild(deviceDescription, $"Interface: {template.deviceDescription.interfaceName}", ref id);
+                        AddChild(deviceDescription,
+                            string.Format("Interface: {0}", template.deviceDescription.interfaceName), ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.product))
-                        AddChild(deviceDescription, $"Product: {template.deviceDescription.product}", ref id);
+                        AddChild(deviceDescription, string.Format("Product: {0}", template.deviceDescription.product), ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.manufacturer))
-                        AddChild(deviceDescription, $"Manufacturer: {template.deviceDescription.manufacturer}", ref id);
+                        AddChild(deviceDescription,
+                            string.Format("Manufacturer: {0}", template.deviceDescription.manufacturer), ref id);
                 }
 
                 // Controls.
@@ -210,32 +213,33 @@ namespace ISX.Editor
 
             private void BuildItem(InputTemplate.ControlTemplate control, TreeViewItem parent, ref int id)
             {
-                var item = AddChild(parent, control.variant.IsEmpty() ? control.name : $"{control.name} ({control.variant})", ref id);
+                var item = AddChild(parent, control.variant.IsEmpty() ? control.name : string.Format("{0} ({1})",
+                            control.name, control.variant), ref id);
 
                 ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control templates into the control they modify
 
                 ////TODO: allow clicking this field to jump to the template
                 if (!control.template.IsEmpty())
-                    AddChild(item, $"Template: {control.template}", ref id);
+                    AddChild(item, string.Format("Template: {0}", control.template), ref id);
                 if (!control.variant.IsEmpty())
-                    AddChild(item, $"Variant: {control.variant}", ref id);
+                    AddChild(item, string.Format("Variant: {0}", control.variant), ref id);
                 if (control.format != 0)
-                    AddChild(item, $"Format: {control.format}", ref id);
+                    AddChild(item, string.Format("Format: {0}", control.format), ref id);
                 if (control.offset != InputStateBlock.kInvalidOffset)
-                    AddChild(item, $"Offset: {control.offset}", ref id);
+                    AddChild(item, string.Format("Offset: {0}", control.offset), ref id);
                 if (control.bit != InputStateBlock.kInvalidOffset)
-                    AddChild(item, $"Bit: {control.bit}", ref id);
+                    AddChild(item, string.Format("Bit: {0}", control.bit), ref id);
                 if (control.sizeInBits != 0)
-                    AddChild(item, $"Size In Bits: {control.sizeInBits}", ref id);
+                    AddChild(item, string.Format("Size In Bits: {0}", control.sizeInBits), ref id);
                 if (!string.IsNullOrEmpty(control.useStateFrom))
-                    AddChild(item, $"Use State From: {control.useStateFrom}", ref id);
+                    AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
                 if (control.isAutoResetControl)
                     AddChild(item, "Auto-Reset: true", ref id);
 
                 if (control.usages.Count > 0)
-                    AddChild(item, "Usages: " + string.Join(", ", control.usages), ref id);
+                    AddChild(item, "Usages: " + string.Join(", ", control.usages.Select(x => x.ToString()).ToArray()), ref id);
                 if (control.aliases.Count > 0)
-                    AddChild(item, "Aliases: " + string.Join(", ", control.aliases), ref id);
+                    AddChild(item, "Aliases: " + string.Join(", ", control.aliases.Select(x => x.ToString()).ToArray()), ref id);
 
                 if (control.parameters.Count > 0)
                 {

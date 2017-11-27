@@ -24,13 +24,19 @@ namespace ISX
         // Example: For HIDs, this will be the HID descriptor.
         public string capabilities;
 
-        public bool empty => string.IsNullOrEmpty(interfaceName) &&
-        string.IsNullOrEmpty(deviceClass) &&
-        string.IsNullOrEmpty(manufacturer) &&
-        string.IsNullOrEmpty(product) &&
-        string.IsNullOrEmpty(serial) &&
-        string.IsNullOrEmpty(version) &&
-        string.IsNullOrEmpty(capabilities);
+        public bool empty
+        {
+            get
+            {
+                return string.IsNullOrEmpty(interfaceName) &&
+                    string.IsNullOrEmpty(deviceClass) &&
+                    string.IsNullOrEmpty(manufacturer) &&
+                    string.IsNullOrEmpty(product) &&
+                    string.IsNullOrEmpty(serial) &&
+                    string.IsNullOrEmpty(version) &&
+                    string.IsNullOrEmpty(capabilities);
+            }
+        }
 
         public override string ToString()
         {
@@ -38,7 +44,7 @@ namespace ISX
             var haveManufacturer = !string.IsNullOrEmpty(manufacturer);
 
             if (haveProduct && haveManufacturer)
-                return $"{manufacturer} {product}";
+                return string.Format("{0} {1}", manufacturer, product);
             if (haveProduct)
                 return product;
 

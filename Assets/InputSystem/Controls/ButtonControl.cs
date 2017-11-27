@@ -12,7 +12,10 @@ namespace ISX
     public class ButtonControl : AxisControl
     {
         public float pressPoint;
-        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint;
+        public float pressPointOrDefault
+        {
+            get { return pressPoint > 0.0f ? pressPoint : InputConfiguration.ButtonPressPoint; }
+        }
 
         public ButtonControl()
         {
@@ -28,8 +31,19 @@ namespace ISX
         }
 
         ////REVIEW: this may have to go into value itself; otherwise actions will trigger on the slightest value change
-        public bool isPressed => IsValueConsideredPressed(value);
-        public bool wasJustPressed => IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous);
-        public bool wasJustReleased => !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous);
+        public bool isPressed
+        {
+            get { return IsValueConsideredPressed(value); }
+        }
+
+        public bool wasJustPressed
+        {
+            get { return IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous); }
+        }
+
+        public bool wasJustReleased
+        {
+            get { return !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous); }
+        }
     }
 }

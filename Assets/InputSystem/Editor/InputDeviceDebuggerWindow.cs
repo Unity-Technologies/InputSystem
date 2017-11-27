@@ -55,7 +55,8 @@ namespace ISX.Editor
         {
             RemoveFromList();
 
-            m_EventTrace?.Dispose();
+            if (m_EventTrace != null)
+                m_EventTrace.Dispose();
             InputSystem.onDeviceChange -= OnDeviceChange;
         }
 
@@ -155,7 +156,7 @@ namespace ISX.Editor
             m_Device = device;
             m_DeviceId = device.id;
             m_DeviceIdString = device.id.ToString();
-            m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()));
+            m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
             // Set up event trace. The default trace size of 1mb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
@@ -208,7 +209,8 @@ namespace ISX.Editor
 
         private void RemoveFromList()
         {
-            s_OpenDebuggerWindows?.Remove(this);
+            if (s_OpenDebuggerWindows != null)
+                s_OpenDebuggerWindows.Remove(this);
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)

@@ -71,6 +71,9 @@ namespace ISX
                 Assert.Fail("Input system should not have devices after reset");
         }
 
+        /// <summary>
+        /// Restore the state of the input system it had when the test was started.
+        /// </summary>
         [TearDown]
         public virtual void TearDown()
         {

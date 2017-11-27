@@ -9,7 +9,10 @@ namespace ISX
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct MouseState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
+        public static FourCC kFormat
+        {
+            get { return new FourCC('M', 'O', 'U', 'S'); }
+        }
 
         [InputControl(usage = "Point")]
         [FieldOffset(0)]

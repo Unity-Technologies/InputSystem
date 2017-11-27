@@ -19,7 +19,10 @@ namespace ISX
         public const int kMaxDeviceId = 256;
         internal const int kInvalidDeviceIndex = -1;
 
-        public InputDeviceDescription description => m_Description;
+        public InputDeviceDescription description
+        {
+            get { return m_Description; }
+        }
 
         ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
         ////TODO: this needs to become part of the device's configuration
@@ -27,28 +30,49 @@ namespace ISX
         // player inputs are usually numbered. For example, on a console the gamepads slots on the system
         // will be numbered and associated with gamepads. This number corresponds to the system assigned
         // player index for the device.
-        public int playerId => m_PlayerId;
+        public int playerId
+        {
+            get { return m_PlayerId; }
+        }
 
         // Whether the device is currently connected.
         // If you want to listen for state changes, hook into InputManager.onDeviceChange.
-        public bool connected => (m_Flags & Flags.Connected) == Flags.Connected;
+        public bool connected
+        {
+            get { return (m_Flags & Flags.Connected) == Flags.Connected; }
+        }
 
         // Whether the device is mirrored from a remote input system and not actually present
         // as a "real" device in the local system.
-        public bool remote => (m_Flags & Flags.Remote) == Flags.Remote;
+        public bool remote
+        {
+            get { return (m_Flags & Flags.Remote) == Flags.Remote; }
+        }
 
         ////REVIEW: is this one really worth the code?
         // Whether the device comes from the native Unity runtime.
-        public bool native => (m_Flags & Flags.Native) == Flags.Native;
+        public bool native
+        {
+            get { return (m_Flags & Flags.Native) == Flags.Native; }
+        }
 
-        public bool updateBeforeRender => (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender;
+        public bool updateBeforeRender
+        {
+            get { return (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender; }
+        }
 
         // Every registered device in the system gets a unique numeric ID.
         // For native devices, this is assigned by the underlying runtime.
-        public int id => m_Id;
+        public int id
+        {
+            get { return m_Id; }
+        }
 
         // Timestamp of last state event used to update the device.
-        public double lastUpdateTime => m_LastUpdateTime;
+        public double lastUpdateTime
+        {
+            get { return m_LastUpdateTime; }
+        }
 
         // Make this the current device of its type.
         // Use this to set static properties that give fast access to the latest device used of a given
@@ -123,7 +147,7 @@ namespace ISX
         internal void SetUsage(InternedString usage)
         {
             // Make last entry in m_UsagesForEachControl be our device usage string.
-            var numControlUsages = m_UsageToControl?.Length ?? 0;
+            var numControlUsages = m_UsageToControl != null ? m_UsageToControl.Length : 0;
             Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
             m_UsagesForEachControl[numControlUsages] = usage;
             m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);

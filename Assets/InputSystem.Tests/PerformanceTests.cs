@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using ISX;
 using NUnit.Framework;
@@ -42,7 +43,7 @@ public class PerformanceTests
         var totalTime = endTime - startTime;
 
         Assert.That(totalTime, Is.LessThan(0.01 / 1000.0));
-        Debug.Log($"{MethodBase.GetCurrentMethod().Name}: {totalTime*1000}ms");
+        Debug.Log(string.Format("{0}: {1}ms", MethodBase.GetCurrentMethod().Name, totalTime * 1000));
     }
 
     ////TODO: same test but with several actions listening on each gamepad

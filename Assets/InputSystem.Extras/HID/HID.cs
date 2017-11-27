@@ -3,19 +3,25 @@ using UnityEngine;
 
 namespace ISX.HID
 {
-    // A generic HID device.
-    //
-    // This class represents a best effort to mirror the control setup of a HID
-    // discovered in the system. It is used only as a fallback where we cannot
-    // match the device to a specific product we know of. Wherever possible we
-    // construct more specific device representations such as Gamepad.
+    /// <summary>
+    /// A generic HID input device.
+    /// </summary>
+    /// <remarks>
+    /// This class represents a best effort to mirror the control setup of a HID
+    /// discovered in the system. It is used only as a fallback where we cannot
+    /// match the device to a specific product we know of. Wherever possible we
+    /// construct more specific device representations such as Gamepad.
+    /// </remarks>
     public class HID : InputDevice
     {
         public const string kHIDInterface = "HID";
         public const string kHIDNamespace = "HID";
 
         // The HID device descriptor as received from the device driver.
-        public HIDDeviceDescriptor hidDescriptor => new HIDDeviceDescriptor();////TODO: parse on demand from description.capabilities
+        public HIDDeviceDescriptor hidDescriptor
+        {
+            get { return new HIDDeviceDescriptor(); }
+        }
 
         internal static string OnFindTemplateForDevice(InputDeviceDescription description, string matchedTemplate)
         {
@@ -44,7 +50,7 @@ namespace ISX.HID
             }
             catch (Exception exception)
             {
-                Debug.Log($"Could not parse HID descriptor (exception: {exception}");
+                Debug.Log(string.Format("Could not parse HID descriptor (exception: {0}", exception));
                 return null;
             }
 
@@ -84,7 +90,7 @@ namespace ISX.HID
 
             // Register template constructor that will turn the HID descriptor into an
             // InputTemplate instance.
-            var templateName = $"{kHIDNamespace}::{description.product}";
+            var templateName = string.Format("{0}::{1}", kHIDNamespace, description.product);
             var template = new HIDTemplate {descriptor = hidDeviceDescriptor};
             InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, description);
 
@@ -174,7 +180,7 @@ namespace ISX.HID
                 switch (usagePage)
                 {
                     case UsagePage.Button:
-                        return $"button{usage}";
+                        return string.Format("button{0}", usage);
                     case UsagePage.GenericDesktop:
                         return ((GenericDesktop)usage).ToString();
                 }

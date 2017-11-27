@@ -19,11 +19,20 @@ namespace ISX
     [Serializable]
     public class InputActionSet : ISerializationCallbackReceiver, ICloneable
     {
-        public string name => m_Name;
+        public string name
+        {
+            get { return m_Name; }
+        }
 
-        public bool enabled => m_EnabledActionsCount > 0;
+        public bool enabled
+        {
+            get { return m_EnabledActionsCount > 0; }
+        }
 
-        public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
+        public ReadOnlyArray<InputAction> actions
+        {
+            get { return new ReadOnlyArray<InputAction>(m_Actions); }
+        }
 
         public InputActionSet(string name = null)
         {
@@ -33,9 +42,10 @@ namespace ISX
         public InputAction AddAction(string name, string binding = null, string modifiers = null, string groups = null)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Action must have name", nameof(name));
+                throw new ArgumentException("Action must have name", "name");
             if (TryGetAction(name) != null)
-                throw new InvalidOperationException($"Cannot add action with duplicate name '{name}' to set '{this.name}'");
+                throw new InvalidOperationException(
+                    string.Format("Cannot add action with duplicate name '{0}' to set '{1}'", name, this.name));
 
             var action = new InputAction(name);
             ArrayHelpers.Append(ref m_Actions, action);
@@ -64,7 +74,8 @@ namespace ISX
         {
             var action = TryGetAction(name);
             if (action == null)
-                throw new KeyNotFoundException($"Could not find action '{name}' in set '{this.name}'");
+                throw new KeyNotFoundException(string.Format("Could not find action '{0}' in set '{1}'", name,
+                        this.name));
             return action;
         }
 
@@ -131,7 +142,7 @@ namespace ISX
             // them. Cloning them is not allowed.
             if (m_SingletonAction != null)
                 throw new InvalidOperationException(
-                    $"Cloning internal set of singleton action '{m_SingletonAction}' is not allowed");
+                    string.Format("Cloning internal set of singleton action '{0}' is not allowed", m_SingletonAction));
 
             var clone = new InputActionSet
             {
@@ -232,7 +243,10 @@ namespace ISX
                 }
             }
 
-            public bool isPartOfChain => chainsWithNext || isEndOfChain;
+            public bool isPartOfChain
+            {
+                get { return chainsWithNext || isEndOfChain; }
+            }
         }
 
         ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
@@ -364,7 +378,7 @@ namespace ISX
             ////        moving the logic to a shared place.
             ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
 
-            var firstModifierIndex = modifiers?.Count ?? 0;
+            var firstModifierIndex = modifiers != null ? modifiers.Count : 0;
 
             ////TODO: get rid of the extra array allocations here
             var list = InputTemplate.ParseNameAndParameterList(modifierString);
@@ -373,12 +387,14 @@ namespace ISX
                 // Look up modifier.
                 var type = InputSystem.TryGetModifier(list[i].name);
                 if (type == null)
-                    throw new Exception($"No modifier with name '{list[i].name}' (mentioned in '{modifierString}') has been registered");
+                    throw new Exception(string.Format(
+                            "No modifier with name '{0}' (mentioned in '{1}') has been registered", list[i].name,
+                            modifierString));
 
                 // Instantiate it.
                 var modifier = Activator.CreateInstance(type) as IInputActionModifier;
                 if (modifier == null)
-                    throw new Exception($"Modifier '{list[i].name}' is not an IInputActionModifier");
+                    throw new Exception(string.Format("Modifier '{0}' is not an IInputActionModifier", list[i].name));
 
                 // Pass parameters to it.
                 InputControlSetup.SetParameters(modifier, list[i].parameters);
@@ -589,13 +605,13 @@ namespace ISX
                 var actions = new List<List<InputAction>>();
                 var bindings = new List<List<InputBinding>>();
 
-                var actionCount = this.actions?.Length ?? 0;
+                var actionCount = this.actions != null ? this.actions.Length : 0;
                 for (var i = 0; i < actionCount; ++i)
                 {
                     var jsonAction = this.actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
-                        throw new Exception($"Action number {i + 1} has no name");
+                        throw new Exception(string.Format("Action number {0} has no name", i + 1));
 
                     ////REVIEW: make sure all action names are unique?
 
@@ -609,7 +625,8 @@ namespace ISX
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
-                            throw new Exception($"Invalid action name '{jsonAction.name}' (missing action name after '/')");
+                            throw new Exception(string.Format(
+                                    "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
                     }
 
                     // Try to find existing set.
@@ -684,7 +701,7 @@ namespace ISX
                     actionsJson[i] = ActionJson.FromAction(actions[i]);
 
                     if (haveSetName)
-                        actionsJson[i].name = $"{set.name}/{actions[i].name}";
+                        actionsJson[i].name = string.Format("{0}/{1}", set.name, actions[i].name);
                 }
 
                 return new ActionFileJson
@@ -713,7 +730,7 @@ namespace ISX
                         actionsJson[actionIndex] = ActionJson.FromAction(actions[i]);
 
                         if (haveSetName)
-                            actionsJson[actionIndex].name = $"{set.name}/{actions[i].name}";
+                            actionsJson[actionIndex].name = string.Format("{0}/{1}", set.name, actions[i].name);
 
                         ++actionIndex;
                     }

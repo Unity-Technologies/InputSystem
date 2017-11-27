@@ -23,7 +23,10 @@ namespace ISX
             set { m_DeviceId = value; }
         }
 
-        public bool enabled => m_Enabled;
+        public bool enabled
+        {
+            get { return m_Enabled; }
+        }
 
         public event Action<InputEventPtr> onEvent
         {
@@ -84,8 +87,8 @@ namespace ISX
 
             // Otherwise feel our way forward.
 
-            var nextEvent = current.data + current.sizeInBytes;
-            var endOfBuffer = m_EventBuffer + m_EventBufferSize;
+            var nextEvent = new IntPtr(current.data.ToInt64() + current.sizeInBytes);
+            var endOfBuffer = new IntPtr(m_EventBuffer.ToInt64() + m_EventBufferSize);
 
             // If we've run into our tail, there's no more events.
             if (nextEvent.ToInt64() == m_EventBufferTail.ToInt64())
@@ -184,14 +187,14 @@ namespace ISX
                 // First event in buffer.
                 buffer = m_EventBuffer;
                 m_EventBufferHead = m_EventBuffer;
-                m_EventBufferTail = buffer + eventSize;
+                m_EventBufferTail = new IntPtr(buffer.ToInt64() + eventSize);
             }
             else
             {
-                var newTail = m_EventBufferTail + eventSize;
+                var newTail = new IntPtr(m_EventBufferTail.ToInt64() + eventSize);
 
                 var newTailOvertakesHead = newTail.ToInt64() > m_EventBufferHead.ToInt64() && m_EventBufferHead != m_EventBuffer;
-                var newTailGoesPastEndOfBuffer = newTail.ToInt64() > (m_EventBuffer + m_EventBufferSize).ToInt64();
+                var newTailGoesPastEndOfBuffer = newTail.ToInt64() > (m_EventBuffer.ToInt64() + m_EventBufferSize);
 
                 // If tail goes out of bounds, go back to beginning of buffer.
                 if (newTailGoesPastEndOfBuffer)
@@ -203,7 +206,7 @@ namespace ISX
                         UnsafeUtility.MemClear(m_EventBufferTail, InputEvent.kBaseEventSize);
 
                     m_EventBufferTail = m_EventBuffer;
-                    newTail = m_EventBuffer + eventSize;
+                    newTail = new IntPtr(m_EventBuffer.ToInt64() + eventSize);
 
                     // Recheck whether we're overtaking head.
                     newTailOvertakesHead = newTail.ToInt64() > m_EventBufferHead.ToInt64();
@@ -276,8 +279,15 @@ namespace ISX
                 m_Current = new InputEventPtr();
             }
 
-            public InputEventPtr Current => m_Current;
-            object IEnumerator.Current => Current;
+            public InputEventPtr Current
+            {
+                get { return m_Current; }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
         }
     }
 }

@@ -15,7 +15,10 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('P', 'T', 'R');
+        public static FourCC kFormat
+        {
+            get { return new FourCC('P', 'T', 'R'); }
+        }
 
         [InputControl(template = "Digital")]
         public uint pointerId;

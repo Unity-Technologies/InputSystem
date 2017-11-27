@@ -12,7 +12,7 @@ namespace ISX
 
         protected override unsafe int ReadRawValueFrom(IntPtr statePtr)
         {
-            var valuePtr = statePtr + (int)m_StateBlock.byteOffset;
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *(int*)valuePtr;
         }
     }

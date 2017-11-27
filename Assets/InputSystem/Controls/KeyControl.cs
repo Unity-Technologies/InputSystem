@@ -7,6 +7,9 @@ namespace ISX
 {
     public class KeyControl : ButtonControl
     {
-        public int scanCode => 0;
+        public int scanCode
+        {
+            get { return 0; }
+        }
     }
 }

@@ -21,8 +21,12 @@
 
 namespace ISX
 {
-    // A buffer containing InputEvents.
-    // Stored in unmanaged memory. Safe to pass to jobs.
+    /// <summary>
+    /// A buffer containing InputEvents.
+    /// </summary>
+    /// <remarks>
+    /// Stored in unmanaged memory. Safe to pass to jobs.
+    /// </remarks>
     public struct InputEventBuffer
     {
     }

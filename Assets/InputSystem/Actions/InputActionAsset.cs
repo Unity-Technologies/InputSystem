@@ -19,7 +19,10 @@ namespace ISX
     {
         public const string kExtension = "inputactions";
 
-        public ReadOnlyArray<InputActionSet> actionSets => new ReadOnlyArray<InputActionSet>(m_ActionSets);
+        public ReadOnlyArray<InputActionSet> actionSets
+        {
+            get { return new ReadOnlyArray<InputActionSet>(m_ActionSets); }
+        }
 
         // Return a JSON representation of the asset.
         public string ToJson()
@@ -37,12 +40,13 @@ namespace ISX
         public void AddActionSet(InputActionSet set)
         {
             if (set == null)
-                throw new ArgumentNullException(nameof(set));
+                throw new ArgumentNullException("set");
             if (string.IsNullOrEmpty(set.name))
                 throw new InvalidOperationException("Sets added to an input action asset must be named");
             ////REVIEW: some of the rules here seem stupid; just replace?
             if (TryGetActionSet(set.name) != null)
-                throw new InvalidOperationException($"An action set called '{set.name}' already exists in the asset");
+                throw new InvalidOperationException(
+                    string.Format("An action set called '{0}' already exists in the asset", set.name));
 
             ArrayHelpers.Append(ref m_ActionSets, set);
         }
@@ -50,7 +54,7 @@ namespace ISX
         public void RemoveActionSet(InputActionSet set)
         {
             if (set == null)
-                throw new ArgumentNullException(nameof(set));
+                throw new ArgumentNullException("set");
 
             ArrayHelpers.Erase(ref m_ActionSets, set);
         }
@@ -58,7 +62,7 @@ namespace ISX
         public void RemoveActionSet(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
+                throw new ArgumentNullException("name");
 
             var set = TryGetActionSet(name);
             if (set != null)
@@ -68,7 +72,7 @@ namespace ISX
         public InputActionSet TryGetActionSet(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException(nameof(name));
+                throw new ArgumentException("name");
 
             if (m_ActionSets == null)
                 return null;
@@ -87,7 +91,8 @@ namespace ISX
         {
             var set = TryGetActionSet(name);
             if (set == null)
-                throw new KeyNotFoundException($"Could not find an action set called '{name}' in asset '{this}'");
+                throw new KeyNotFoundException(string.Format("Could not find an action set called '{0}' in asset '{1}'",
+                        name, this));
             return set;
         }
 

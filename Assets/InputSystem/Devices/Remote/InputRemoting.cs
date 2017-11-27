@@ -5,6 +5,10 @@ using System.Text;
 using UnityEngine;
 using UnityEngineInternal.Input;
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 namespace ISX
 {
     /// <summary>
@@ -74,7 +78,7 @@ namespace ISX
         internal InputRemoting(InputManager manager, bool startSendingOnConnect = false)
         {
             if (manager == null)
-                throw new ArgumentNullException(nameof(manager));
+                throw new ArgumentNullException("manager");
 
             m_LocalManager = manager;
 
@@ -159,7 +163,7 @@ namespace ISX
         public IDisposable Subscribe(IObserver<Message> observer)
         {
             if (observer == null)
-                throw new ArgumentNullException(nameof(observer));
+                throw new ArgumentNullException("observer");
 
             var subscriber = new Subscriber {owner = this, observer = observer};
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
@@ -298,7 +302,7 @@ namespace ISX
             var sender = new RemoteSender
             {
                 senderId = senderId,
-                templateNamespace = $"{kRemoteTemplateNamespacePrefix}{senderId}"
+                templateNamespace = string.Format("{0}{1}", kRemoteTemplateNamespacePrefix, senderId)
             };
             return ArrayHelpers.Append(ref m_Senders, sender);
         }
@@ -423,7 +427,9 @@ namespace ISX
                 }
                 catch (Exception exception)
                 {
-                    Debug.Log($"Could not load template '{templateName}'; not sending to remote listeners (exception: {exception})");
+                    Debug.Log(string.Format(
+                            "Could not load template '{0}'; not sending to remote listeners (exception: {1})", templateName,
+                            exception));
                     return null;
                 }
 
@@ -510,16 +516,20 @@ namespace ISX
                 var data = DeserializeData<Data>(msg.data);
 
                 // Create device.
-                var template = $"{receiver.m_Senders[senderIndex].templateNamespace}::{data.template}";
+                var template = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].templateNamespace,
+                        data.template);
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(template, $"Remote{msg.participantId}::{data.name}");
+                    device = receiver.m_LocalManager.AddDevice(template,
+                            string.Format("Remote{0}::{1}", msg.participantId, data.name));
                 }
                 catch (Exception exception)
                 {
                     Debug.Log(
-                        $"Could not create remote device '{data.description}' with template '{data.template}' locally (exception: {exception})");
+                        string.Format(
+                            "Could not create remote device '{0}' with template '{1}' locally (exception: {2})",
+                            data.description, data.template, exception));
                     return;
                 }
                 device.m_Description = data.description;
@@ -577,7 +587,7 @@ namespace ISX
 
                 fixed(byte* dataPtr = msg.data)
                 {
-                    var dataEndPtr = new IntPtr(dataPtr) + msg.data.Length;
+                    var dataEndPtr = new IntPtr(dataPtr + msg.data.Length);
                     var eventCount = 0;
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
                     var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);

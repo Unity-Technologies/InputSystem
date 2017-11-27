@@ -41,7 +41,8 @@ namespace ISX
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
-                    $"Cannot modify control setup of existing device {existingDevice} while added to system.");
+                    string.Format("Cannot modify control setup of existing device {0} while added to system.",
+                        existingDevice));
 
             if (variant.IsEmpty())
                 variant = new InternedString("Default");
@@ -68,7 +69,7 @@ namespace ISX
         public InputControl TryGetControl(InputControl parent, string path)
         {
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentException(nameof(path));
+                throw new ArgumentException("path");
 
             if (m_Device == null)
                 return null;
@@ -86,7 +87,7 @@ namespace ISX
             }
 
             if (ReferenceEquals(parent, m_Device))
-                return InputControlPath.FindControl(m_Device, $"{m_Device.name}/{path}");
+                return InputControlPath.FindControl(m_Device, string.Format("{0}/{1}", m_Device.name, path));
 
             return null;
         }
@@ -102,7 +103,9 @@ namespace ISX
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception($"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
+                throw new Exception(string.Format(
+                        "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
+                        typeof(TControl).Name, control.GetType().Name));
 
             return controlOfType;
         }
@@ -113,7 +116,7 @@ namespace ISX
         {
             var control = TryGetControl(parent, path);
             if (control == null)
-                throw new Exception($"Cannot find input control '{parent.MakeChildPath(path)}'");
+                throw new Exception(string.Format("Cannot find input control '{0}'", parent.MakeChildPath(path)));
             return control;
         }
 
@@ -124,7 +127,9 @@ namespace ISX
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception($"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
+                throw new Exception(string.Format(
+                        "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
+                        typeof(TControl).Name, control.GetType().Name));
 
             return controlOfType;
         }
@@ -133,7 +138,7 @@ namespace ISX
         {
             var control = TryGetControl(path);
             if (control == null)
-                throw new Exception($"Cannot find input control '{path}'");
+                throw new Exception(string.Format("Cannot find input control '{0}'", path));
             return control;
         }
 
@@ -147,7 +152,7 @@ namespace ISX
         {
             var control = TryGetControl<TControl>(path);
             if (control == null)
-                throw new Exception($"Cannot find input control '{path}'");
+                throw new Exception(string.Format("Cannot find input control '{0}'", path));
             return control;
         }
 
@@ -160,7 +165,9 @@ namespace ISX
 
             var controlOfType = control as TControl;
             if (controlOfType == null)
-                throw new Exception($"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
+                throw new Exception(string.Format(
+                        "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
+                        typeof(TControl).Name, control.GetType().Name));
 
             return controlOfType;
         }
@@ -205,7 +212,8 @@ namespace ISX
                 control = controlObject as InputControl;
                 if (control == null)
                 {
-                    throw new Exception($"Type '{template.type.Name}' referenced by template '{template.name}' is not an InputControl");
+                    throw new Exception(string.Format("Type '{0}' referenced by template '{1}' is not an InputControl",
+                            template.type.Name, template.name));
                 }
             }
 
@@ -215,7 +223,9 @@ namespace ISX
             if (controlAsDevice != null)
             {
                 if (parent != null)
-                    throw new Exception($"Cannot instantiate device template '{template.name}' as child of '{parent.path}'; devices must be added at root");
+                    throw new Exception(string.Format(
+                            "Cannot instantiate device template '{0}' as child of '{1}'; devices must be added at root",
+                            template.name, parent.path));
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
@@ -257,7 +267,9 @@ namespace ISX
                 // Someone did "new InputControlSetup(...)" with a control template.
                 // We don't support creating control hierarchies without a device at the root.
                 throw new InvalidOperationException(
-                    $"Toplevel template used with InputControlSetup must be a device template; '{template.name}' is a control template");
+                    string.Format(
+                        "Toplevel template used with InputControlSetup must be a device template; '{0}' is a control template",
+                        template.name));
             }
 
             // Set common properties.
@@ -279,7 +291,8 @@ namespace ISX
                 // actually reuse the existing control (and thus control.m_ChildrenReadOnly will
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
-                AddChildControls(template, variant, control, existingControl?.m_ChildrenReadOnly,
+                AddChildControls(template, variant, control,
+                    existingControl != null ? existingControl.m_ChildrenReadOnly : (ReadOnlyArray<InputControl>?)null,
                     ref haveChildrenUsingStateFromOtherControl);
             }
             catch
@@ -307,7 +320,9 @@ namespace ISX
                     var referencedControl = TryGetControl(control, controlTemplate.useStateFrom);
                     if (referencedControl == null)
                         throw new Exception(
-                            $"Cannot find control '{controlTemplate.useStateFrom}' referenced in 'useStateFrom' of control '{controlTemplate.name}' in template '{template.name}'");
+                            string.Format(
+                                "Cannot find control '{0}' referenced in 'useStateFrom' of control '{1}' in template '{2}'",
+                                controlTemplate.useStateFrom, controlTemplate.name, template.name));
 
                     // Copy its state settings.
                     child.m_StateBlock = referencedControl.m_StateBlock;
@@ -375,7 +390,8 @@ namespace ISX
 
                 ////REVIEW: can we check this in InputTemplate instead?
                 if (string.IsNullOrEmpty(controlTemplate.template))
-                    throw new Exception($"Template has not been set on control '{controlTemplate.name}' in '{template.name}'");
+                    throw new Exception(string.Format("Template has not been set on control '{0}' in '{1}'",
+                            controlTemplate.name, template.name));
 
                 // See if we have an existing control that we might be able to re-use.
                 InputControl existingControl = null;
@@ -401,7 +417,8 @@ namespace ISX
                 {
                     // Throw better exception that gives more info.
                     throw new Exception(
-                        $"Cannot find template '{exception.template}' used in control '{controlTemplate.name}' of template '{template.name}'",
+                        string.Format("Cannot find template '{0}' used in control '{1}' of template '{2}'",
+                            exception.template, controlTemplate.name, template.name),
                         exception);
                 }
 
@@ -483,7 +500,8 @@ namespace ISX
                     var child = TryGetControl(parent, controlTemplate.name);
                     if (child == null)
                         throw new Exception(
-                            $"Cannot find control '{controlTemplate.name}' in template '{template.name}'");
+                            string.Format("Cannot find control '{0}' in template '{1}'", controlTemplate.name,
+                                template.name));
 
                     // Controls layout themselves as we come back up the hierarchy. However, when we
                     // apply layout modifications reaching *into* the hierarchy, we need to retrigger
@@ -541,7 +559,8 @@ namespace ISX
                 var type = InputProcessor.TryGet(name);
                 if (type == null)
                     throw new Exception(
-                        $"Cannot find processor '{name}' referenced by control '{controlTemplate.name}' in template '{templateName}'");
+                        string.Format("Cannot find processor '{0}' referenced by control '{1}' in template '{2}'", name,
+                            controlTemplate.name, templateName));
 
                 var processor = Activator.CreateInstance(type);
 
@@ -562,7 +581,8 @@ namespace ISX
 
                 var field = objectType.GetField(parameter.name);
                 if (field == null)
-                    throw new Exception($"Cannot find public field {parameter.name} in {objectType.Name} (referenced by parameter)");
+                    throw new Exception(string.Format("Cannot find public field {0} in {1} (referenced by parameter)",
+                            parameter.name, objectType.Name));
 
                 ////REVIEW: can we do this without boxing?
 
@@ -621,7 +641,9 @@ namespace ISX
             if (control.m_StateBlock.sizeInBits == 0 && children.Count == 0)
             {
                 throw new Exception(
-                    $"Control '{control.path}' with template '{control.template}' has no size set but has no children to compute size from");
+                    string.Format(
+                        "Control '{0}' with template '{1}' has no size set but has no children to compute size from",
+                        control.path, control.template));
             }
 
             // If there's no children, our job is done.
@@ -642,7 +664,8 @@ namespace ISX
                 // Make sure the child has a valid size set on it.
                 var childSizeInBits = child.m_StateBlock.sizeInBits;
                 if (childSizeInBits == 0)
-                    throw new Exception($"Child '{child.name}' of '{control.name}' has no size set!");
+                    throw new Exception(
+                        string.Format("Child '{0}' of '{1}' has no size set!", child.name, control.name));
 
                 // Skip children that don't have fixed offsets.
                 if (child.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)

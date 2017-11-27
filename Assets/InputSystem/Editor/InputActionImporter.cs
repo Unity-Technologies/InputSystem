@@ -47,7 +47,7 @@ namespace ISX.Editor
 
                     var objectName = action.name;
                     if (haveSetName)
-                        objectName = $"{set.name}/{action.name}";
+                        objectName = string.Format("{0}/{1}", set.name, action.name);
 
                     actionObject.name = objectName;
                     ctx.AddObjectToAsset(objectName, actionObject);

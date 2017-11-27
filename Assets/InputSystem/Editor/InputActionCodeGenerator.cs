@@ -49,19 +49,19 @@ namespace ISX.Editor
             };
 
             // Header.
-            writer.WriteLine($"// GENERATED AUTOMATICALLY FROM '{options.sourceAssetPath}'\n");
+            writer.WriteLine(string.Format("// GENERATED AUTOMATICALLY FROM '{0}'\n", options.sourceAssetPath));
 
             // Begin namespace.
             var haveNamespace = !string.IsNullOrEmpty(options.namespaceName);
             if (haveNamespace)
             {
-                writer.WriteLine($"namespace {options.namespaceName}");
+                writer.WriteLine(string.Format("namespace {0}", options.namespaceName));
                 writer.BeginBlock();
             }
 
             // Begin class.
             writer.WriteLine("[System.Serializable]");
-            writer.WriteLine($"public class {options.className} : ISX.InputActionWrapper");
+            writer.WriteLine(string.Format("public class {0} : ISX.InputActionWrapper", options.className));
             writer.BeginBlock();
 
             // Initialize method.
@@ -70,10 +70,11 @@ namespace ISX.Editor
             writer.BeginBlock();
             foreach (var set in sets)
             {
-                writer.WriteLine($"// {set.name}");
-                writer.WriteLine($"m_{set.name} = asset.GetActionSet(\"{set.name}\");");
+                writer.WriteLine(string.Format("// {0}", set.name));
+                writer.WriteLine(string.Format("m_{0} = asset.GetActionSet(\"{1}\");", set.name, set.name));
                 foreach (var action in set.actions)
-                    writer.WriteLine($"m_{set.name}_{action.name} = m_{set.name}.GetAction(\"{action.name}\");");
+                    writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", set.name, action.name,
+                            set.name, action.name));
             }
             writer.WriteLine("m_Initialized = true;");
             writer.EndBlock();
@@ -81,51 +82,57 @@ namespace ISX.Editor
             // Action set accessors.
             foreach (var set in sets)
             {
-                writer.WriteLine($"// {set.name}");
+                writer.WriteLine(string.Format("// {0}", set.name));
                 var setStructName = MakeTypeName(set.name, "Actions");
 
                 // Caching field for action set.
-                writer.WriteLine($"private ISX.InputActionSet m_{set.name};");
+                writer.WriteLine(string.Format("private ISX.InputActionSet m_{0};", set.name));
 
                 // Caching fields for all actions.
                 foreach (var action in set.actions)
-                    writer.WriteLine($"private ISX.InputAction m_{set.name}_{action.name};");
+                    writer.WriteLine(string.Format("private ISX.InputAction m_{0}_{1};", set.name, action.name));
 
                 // Struct wrapping access to action set.
-                writer.WriteLine($"public struct {setStructName}");
+                writer.WriteLine(string.Format("public struct {0}", setStructName));
                 writer.BeginBlock();
 
                 // Constructor.
-                writer.WriteLine($"private {options.className} m_Wrapper;");
-                writer.WriteLine($"public {setStructName}({options.className} wrapper) {{ m_Wrapper = wrapper; }}");
+                writer.WriteLine(string.Format("private {0} m_Wrapper;", options.className));
+                writer.WriteLine(string.Format("public {0}({1} wrapper) {{ m_Wrapper = wrapper; }}", setStructName,
+                        options.className));
 
                 // Getter for each action.
                 foreach (var action in set.actions)
-                    writer.WriteLine($"public ISX.InputAction @{action.name} {{ get {{ return m_Wrapper.m_{set.name}_{action.name}; }} }}");
+                    writer.WriteLine(string.Format(
+                            "public ISX.InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", action.name,
+                            set.name, action.name));
 
                 // Action set getter.
-                writer.WriteLine($"public ISX.InputActionSet Get() {{ return m_Wrapper.m_{set.name}; }}");
+                writer.WriteLine(string.Format("public ISX.InputActionSet Get() {{ return m_Wrapper.m_{0}; }}",
+                        set.name));
 
                 // Enable/disable methods.
-                writer.WriteLine($"public void Enable() {{ Get().Enable(); }}");
-                writer.WriteLine($"public void Disable() {{ Get().Disable(); }}");
+                writer.WriteLine("public void Enable() { Get().Enable(); }");
+                writer.WriteLine("public void Disable() { Get().Disable(); }");
 
                 // Clone method.
-                writer.WriteLine($"public ISX.InputActionSet Clone() {{ return Get().Clone(); }}");
+                writer.WriteLine("public ISX.InputActionSet Clone() { return Get().Clone(); }");
 
                 // Implicit conversion operator.
-                writer.WriteLine($"public static implicit operator ISX.InputActionSet({setStructName} set) {{ return set.Get(); }}");
+                writer.WriteLine(string.Format(
+                        "public static implicit operator ISX.InputActionSet({0} set) {{ return set.Get(); }}",
+                        setStructName));
 
                 writer.EndBlock();
 
                 // Getter for instance of struct.
-                writer.WriteLine($"public {setStructName} @{set.name}");
+                writer.WriteLine(string.Format("public {0} @{1}", setStructName, set.name));
                 writer.BeginBlock();
 
-                writer.WriteLine($"get");
+                writer.WriteLine("get");
                 writer.BeginBlock();
                 writer.WriteLine("if (!m_Initialized) Initialize();");
-                writer.WriteLine($"return new {setStructName}(this);");
+                writer.WriteLine(string.Format("return new {0}(this);", setStructName));
                 writer.EndBlock();
 
                 writer.EndBlock();
@@ -181,7 +188,7 @@ namespace ISX.Editor
         {
             if (char.IsLower(name[0]))
                 name = char.ToUpper(name[0]).ToString() + name.Substring(1);
-            return $"{name}{suffix}";
+            return string.Format("{0}{1}", name, suffix);
         }
 
         // Updates the given file with wrapper code generated for the given action sets.

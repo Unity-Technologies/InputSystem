@@ -52,7 +52,8 @@ namespace ISX.Editor
 
         private void RemoveFromList()
         {
-            s_OpenDebuggerWindows?.Remove(this);
+            if (s_OpenDebuggerWindows != null)
+                s_OpenDebuggerWindows.Remove(this);
         }
     }
 }

@@ -2,6 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 namespace ISX
 {
     // Variation of ReadOnlyArray that has the slicing ability but
@@ -44,7 +48,10 @@ namespace ISX
             return GetEnumerator();
         }
 
-        public int Count => m_Length;
+        public int Count
+        {
+            get { return m_Length; }
+        }
 
         public TValue this[int index]
         {

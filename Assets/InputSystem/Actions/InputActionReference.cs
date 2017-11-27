@@ -44,9 +44,9 @@ namespace ISX
         public void Set(InputActionAsset asset, string set, string action)
         {
             if (string.IsNullOrEmpty(set))
-                throw new ArgumentException(nameof(set));
+                throw new ArgumentException("set");
             if (string.IsNullOrEmpty(action))
-                throw new ArgumentException(nameof(action));
+                throw new ArgumentException("action");
 
             m_Asset = asset;
             m_SetName = set;
@@ -56,7 +56,7 @@ namespace ISX
         public override string ToString()
         {
             if (m_Asset != null)
-                return $"{m_Action.name}:{m_SetName}/{m_ActionName}";
+                return string.Format("{0}:{1}/{2}", m_Action.name, m_SetName, m_ActionName);
 
             return base.ToString();
         }

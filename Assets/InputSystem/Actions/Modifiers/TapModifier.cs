@@ -5,7 +5,10 @@ namespace ISX
     public class TapModifier : IInputActionModifier
     {
         public float duration;
-        public float durationOrDefault => duration > 0.0 ? duration : InputConfiguration.TapTime;
+        public float durationOrDefault
+        {
+            get { return duration > 0.0 ? duration : InputConfiguration.TapTime; }
+        }
 
         private double m_TapStartTime;
 

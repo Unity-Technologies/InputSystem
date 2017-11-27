@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['dualshock',['DualShock',['../namespace_i_s_x_1_1_dual_shock.html',1,'ISX']]],
-  ['editor',['Editor',['../namespace_i_s_x_1_1_editor.html',1,'ISX']]],
-  ['flightsticks',['Flightsticks',['../namespace_i_s_x_1_1_flightsticks.html',1,'ISX']]],
-  ['hid',['HID',['../namespace_i_s_x_1_1_h_i_d.html',1,'ISX']]],
-  ['isx',['ISX',['../namespace_i_s_x.html',1,'']]],
-  ['steam',['Steam',['../namespace_i_s_x_1_1_steam.html',1,'ISX']]],
-  ['steeringwheels',['SteeringWheels',['../namespace_i_s_x_1_1_steering_wheels.html',1,'ISX']]],
-  ['vr',['VR',['../namespace_i_s_x_1_1_v_r.html',1,'ISX']]],
-  ['xinput',['XInput',['../namespace_i_s_x_1_1_x_input.html',1,'ISX']]]
+  ['dualshock',['DualShock',['../namespaceISX_1_1DualShock.html',1,'ISX']]],
+  ['editor',['Editor',['../namespaceISX_1_1Editor.html',1,'ISX']]],
+  ['flightsticks',['Flightsticks',['../namespaceISX_1_1Flightsticks.html',1,'ISX']]],
+  ['hid',['HID',['../namespaceISX_1_1HID.html',1,'ISX']]],
+  ['isx',['ISX',['../namespaceISX.html',1,'']]],
+  ['steam',['Steam',['../namespaceISX_1_1Steam.html',1,'ISX']]],
+  ['steeringwheels',['SteeringWheels',['../namespaceISX_1_1SteeringWheels.html',1,'ISX']]],
+  ['vr',['VR',['../namespaceISX_1_1VR.html',1,'ISX']]],
+  ['xinput',['XInput',['../namespaceISX_1_1XInput.html',1,'ISX']]]
 ];

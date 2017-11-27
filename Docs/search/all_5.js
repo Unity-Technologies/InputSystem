@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['setup',['Setup',['../class_i_s_x_1_1_input_test_fixture.html#ad8df73510739278c5c0e2023d43b4dae',1,'ISX::InputTestFixture']]],
-  ['startsending',['StartSending',['../class_i_s_x_1_1_input_remoting.html#a59211d2990d4fdf60423b8c2c820cc15',1,'ISX::InputRemoting']]]
+  ['message',['Message',['../structISX_1_1InputRemoting_1_1Message.html',1,'ISX::InputRemoting']]],
+  ['messagetype',['MessageType',['../classISX_1_1InputRemoting.html#a67a9a0f806eabe3bbc217639bf6d4042',1,'ISX::InputRemoting']]]
 ];

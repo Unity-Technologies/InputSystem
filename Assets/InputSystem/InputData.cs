@@ -49,10 +49,16 @@ namespace ISX
         }
 
         // How many controls in total are in the system?
-        public static int controlCount => 0;
+        public static int controlCount
+        {
+            get { return 0; }
+        }
 
         // How many devices in total are in the system?
-        public static int deviceCount => 0;
+        public static int deviceCount
+        {
+            get { return 0; }
+        }
 
         ////REVIEW: how should strings be handled in this system? store these externally? Use InternedString and a system-specific table?
         private string[] m_Names;

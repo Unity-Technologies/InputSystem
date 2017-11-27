@@ -98,7 +98,11 @@ namespace ISX
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
+        public static FourCC kFormat
+        {
+            get { return new FourCC('K', 'E', 'Y', 'S'); }
+        }
+
         public const int kSizeInBytes = ((int)Key.Count) / 8 + (((int)Key.Count) % 8 > 0 ? 1 : 0);
         public const int kSizeInBits = kSizeInBytes * 8;
 

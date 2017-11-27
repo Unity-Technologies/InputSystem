@@ -10,7 +10,10 @@ namespace ISX
     [StructLayout(LayoutKind.Explicit, Size = 360)]
     public struct TouchscreenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
+        public static FourCC kFormat
+        {
+            get { return new FourCC('T', 'S', 'C', 'R'); }
+        }
 
         public const int kMaxTouches = 10;
 

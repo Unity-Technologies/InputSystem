@@ -21,7 +21,7 @@ namespace ISX.Editor
         public InputControlPicker(SerializedProperty pathProperty)
         {
             if (pathProperty == null)
-                throw new ArgumentNullException(nameof(pathProperty));
+                throw new ArgumentNullException("pathProperty");
             m_PathProperty = pathProperty;
 
             m_PathTreeState = new TreeViewState();
@@ -103,7 +103,7 @@ namespace ISX.Editor
                         var rect = args.rowRect;
                         rect.x += indent;
                         rect.width -= indent;
-                        EditorGUI.LabelField(rect, $"{item.device}/{item.control}");
+                        EditorGUI.LabelField(rect, string.Format("{0}/{1}", item.device, item.control));
                         return;
                     }
                 }
@@ -120,11 +120,11 @@ namespace ISX.Editor
                 {
                     String path = null;
                     if (item.usage != null)
-                        path = $"*/{{{item.usage}}}";
+                        path = string.Format("*/{{{0}}}", item.usage);
                     else if (item.device != null && item.control != null)
-                        path = $"<{item.device}>/{item.control}";
+                        path = string.Format("<{0}>/{1}", item.device, item.control);
                     else if (item.device != null)
-                        path = $"<{item.device}>";
+                        path = string.Format("<{0}>", item.device);
 
                     if (path != null)
                     {
@@ -241,8 +241,9 @@ namespace ISX.Editor
                     parent.AddChild(child);
                 }
 
-                parent.children?.Sort((a, b) =>
-                    string.Compare(a.displayName, b.displayName, StringComparison.Ordinal));
+                if (parent.children != null)
+                    parent.children.Sort((a, b) =>
+                        string.Compare(a.displayName, b.displayName, StringComparison.Ordinal));
             }
         }
     }

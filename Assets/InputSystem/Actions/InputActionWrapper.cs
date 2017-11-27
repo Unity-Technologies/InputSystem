@@ -9,7 +9,10 @@ namespace ISX
     [Serializable]
     public class InputActionWrapper : ICloneable
     {
-        public InputActionAsset asset => m_Asset;
+        public InputActionAsset asset
+        {
+            get { return m_Asset; }
+        }
 
         public void Enable()
         {

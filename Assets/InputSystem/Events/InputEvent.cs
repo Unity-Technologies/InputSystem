@@ -2,8 +2,10 @@ using System.Runtime.InteropServices;
 
 namespace ISX
 {
-    // A chunk of memory signaling a data transfer in the input system.
-    // This has to be layout compatible with native events.
+    /// <summary>
+    /// A chunk of memory signaling a data transfer in the input system.
+    /// </summary>
+    // NOTE: This has to be layout compatible with native events.
     [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
     public struct InputEvent : IInputEventTypeInfo
     {
@@ -20,10 +22,33 @@ namespace ISX
         ////REVIEW: does this really need to be a double? float would save us a 4 bytes
         [FieldOffset(12)] private double m_Time;
 
-        public FourCC type => m_Type;
-        public int sizeInBytes => m_SizeInBytes;
+        public FourCC type
+        {
+            get { return m_Type; }
+        }
 
-        public int eventId => (int)(m_EventId & kIdMask);
+        /// <summary>
+        /// Total size of the event in bytes.
+        /// </summary>
+        /// <remarks>
+        /// Events are variable-size structs. This field denotes the total size of the event
+        /// as stored in memory.
+        /// </remarks>
+        public int sizeInBytes
+        {
+            get { return m_SizeInBytes; }
+        }
+
+        /// <summary>
+        /// Unique serial ID of the event.
+        /// </summary>
+        /// <remarks>
+        /// Events are assigned running IDs when they are put on an event queue.
+        /// </remarks>
+        public int eventId
+        {
+            get { return (int)(m_EventId & kIdMask); }
+        }
 
         ////TODO: kill device IDs
         public int deviceId
@@ -65,7 +90,8 @@ namespace ISX
 
         public override string ToString()
         {
-            return $"id={eventId} type={type} device={deviceId} size={sizeInBytes} time={time}";
+            return string.Format("id={0} type={1} device={2} size={3} time={4}",
+                eventId, type, deviceId, sizeInBytes, time);
         }
 
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)

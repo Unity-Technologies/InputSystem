@@ -92,7 +92,7 @@ namespace ISX.Editor
 
                     ////TODO: would be nice to include template name to print something like "Gamepad A Button" instead of "Gamepad A" (or whatever)
 
-                    text = $"{device} {control}";
+                    text = string.Format("{0} {1}", device, control);
                 }
             }
 
@@ -102,8 +102,8 @@ namespace ISX.Editor
             if (!string.IsNullOrEmpty(modifiers))
             {
                 var modifierList = InputTemplate.ParseNameAndParameterList(modifiers);
-                var modifierString = string.Join(" OR ", modifierList.Select(x => x.name));
-                text = $"{modifierString} {text}";
+                var modifierString = string.Join(" OR ", modifierList.Select(x => x.name).ToArray());
+                text = string.Format("{0} {1}", modifierString, text);
             }
 
             ////TODO: this looks ugly and not very obvious; find a better way
@@ -158,7 +158,7 @@ namespace ISX.Editor
                 if (!string.IsNullOrEmpty(modifierString))
                     m_Modifiers = InputTemplate.ParseNameAndParameterList(modifierString);
                 else
-                    m_Modifiers = Array.Empty<InputTemplate.NameAndParameters>();
+                    m_Modifiers = new InputTemplate.NameAndParameters[0]; //Array.Empty<InputTemplate.NameAndParameters>();
 
                 InitializeModifierListView();
             }
@@ -212,7 +212,7 @@ namespace ISX.Editor
 
             private void ApplyModifiers()
             {
-                var modifiers = string.Join(",", m_Modifiers.Select(x => x.ToString()));
+                var modifiers = string.Join(",", m_Modifiers.Select(x => x.ToString()).ToArray());
                 m_ModifiersProperty.stringValue = modifiers;
                 m_ModifiersProperty.serializedObject.ApplyModifiedProperties();
                 InitializeModifierListView();

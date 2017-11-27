@@ -15,7 +15,10 @@ namespace ISX
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public fixed byte stateData[1]; // Variable-sized.
 
-        public int stateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4);
+        public int stateSizeInBytes
+        {
+            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4); }
+        }
 
         public IntPtr state
         {
@@ -42,9 +45,10 @@ namespace ISX
         public static StateEvent* From(InputEventPtr ptr)
         {
             if (!ptr.valid)
-                throw new ArgumentNullException(nameof(ptr));
+                throw new ArgumentNullException("ptr");
             if (!ptr.IsA<StateEvent>())
-                throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into StateEvent");
+                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into StateEvent",
+                        ptr.type));
 
             return (StateEvent*)ptr.data;
         }

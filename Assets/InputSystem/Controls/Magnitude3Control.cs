@@ -18,7 +18,7 @@ namespace ISX
 
         protected override unsafe float ReadRawValueFrom(IntPtr statePtr)
         {
-            var valuePtr = (float*)(statePtr + (int)m_StateBlock.byteOffset);
+            var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             var x = valuePtr[0];
             var y = valuePtr[1];
             var z = valuePtr[2];
