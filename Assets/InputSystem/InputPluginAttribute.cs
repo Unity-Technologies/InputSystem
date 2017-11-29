@@ -6,7 +6,8 @@ using UnityEngine;
 namespace ISX
 {
     /// <summary>
-    /// Marks a class that initializes an input plugin.
+    /// Marks a class that as an input plugin which registers additional functionality with
+    /// the input system.
     /// </summary>
     /// <remarks>
     /// The class should be static and should have a <c>public static void Initialize()</c>
@@ -20,6 +21,7 @@ namespace ISX
     ///     public static void Initialize()
     ///     {
     ///         InputSystem.RegisterTemplate<MyDevice>();
+    ///         InputSystem.AddDevice("MyDevice");
     ///     }
     /// }
     /// </code>

@@ -5,6 +5,7 @@ var searchData=
   ['flightsticks',['Flightsticks',['../namespaceISX_1_1Flightsticks.html',1,'ISX']]],
   ['hid',['HID',['../namespaceISX_1_1HID.html',1,'ISX']]],
   ['isx',['ISX',['../namespaceISX.html',1,'']]],
+  ['net35compatibility',['Net35Compatibility',['../namespaceISX_1_1Net35Compatibility.html',1,'ISX']]],
   ['steam',['Steam',['../namespaceISX_1_1Steam.html',1,'ISX']]],
   ['steeringwheels',['SteeringWheels',['../namespaceISX_1_1SteeringWheels.html',1,'ISX']]],
   ['vr',['VR',['../namespaceISX_1_1VR.html',1,'ISX']]],

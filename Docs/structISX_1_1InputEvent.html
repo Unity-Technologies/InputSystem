@@ -151,8 +151,8 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Total size of the event in bytes. </p>
-<p>Events are variable-size structs. This field denotes the total size of the event as stored in memory. </p>
-
+<p>Events are variable-size structs. This field denotes the total size of the event as stored in memory. This includes the full size of this struct and not just the "payload" of the event. </p>
+<p>Store event in private buffer: </p><div class="fragment"><div class="line">unsafe byte[] CopyEventData(InputEventPtr eventPtr)</div><div class="line">{</div><div class="line">    var <a class="code" href="structISX_1_1InputEvent.html#a3d4c607e13a7c604eb5a21b5a5529924">sizeInBytes</a> = eventPtr.sizeInBytes;</div><div class="line">    var buffer = <span class="keyword">new</span> byte[<a class="code" href="structISX_1_1InputEvent.html#a3d4c607e13a7c604eb5a21b5a5529924">sizeInBytes</a>];</div><div class="line">    fixed (byte* bufferPtr = buffer)</div><div class="line">    {</div><div class="line">        UnsafeUtility.MemCpy(<span class="keyword">new</span> IntPtr(bufferPtr), eventPtr.data, sizeInBytes);</div><div class="line">    }</div><div class="line">    <span class="keywordflow">return</span> buffer;</div><div class="line">}</div></div><!-- fragment --> 
 </div>
 </div>
 </div><!-- contents -->

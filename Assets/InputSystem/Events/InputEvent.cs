@@ -32,8 +32,24 @@ namespace ISX
         /// </summary>
         /// <remarks>
         /// Events are variable-size structs. This field denotes the total size of the event
-        /// as stored in memory.
+        /// as stored in memory. This includes the full size of this struct and not just the
+        /// "payload" of the event.
         /// </remarks>
+        /// <example>
+        /// Store event in private buffer:
+        /// <code>
+        /// unsafe byte[] CopyEventData(InputEventPtr eventPtr)
+        /// {
+        ///     var sizeInBytes = eventPtr.sizeInBytes;
+        ///     var buffer = new byte[sizeInBytes];
+        ///     fixed (byte* bufferPtr = buffer)
+        ///     {
+        ///         UnsafeUtility.MemCpy(new IntPtr(bufferPtr), eventPtr.data, sizeInBytes);
+        ///     }
+        ///     return buffer;
+        /// }
+        /// </code>
+        /// </example>
         public int sizeInBytes
         {
             get { return m_SizeInBytes; }

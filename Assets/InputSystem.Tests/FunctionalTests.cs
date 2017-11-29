@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
 using UnityEngine;
@@ -35,6 +34,7 @@ public class FunctionalTests : InputTestFixture
     //     f) Actions
     //     g) Editor
     //     h) Remote
+    //     i) Plugins
 
     [Test]
     [Category("Templates")]
@@ -4599,6 +4599,80 @@ public class FunctionalTests : InputTestFixture
         Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
 
         ////TODO: test disconnection
+    }
+
+    // This is nested but should still be found by the type scanning.
+    [InputPlugin]
+    public static class TestPlugin
+    {
+        public static bool s_Initialized;
+        public static void Initialize()
+        {
+            s_Initialized = true;
+        }
+    }
+
+    // The plugin system is designed to provide a sensible (though not necessarily desirable) default -- initialize
+    // whatever we can find in the assemblies present in the system -- but to allow completely suppressing default
+    // behavior and have custom plugin management take control. It is targeted at a workflow where zero-setup provides
+    // sensible behavior out of the box while allowing users to explicitly take control and determine what gets
+    // shipped and enabled in a player.
+    [Test]
+    [Category("Plugins")]
+    public void Plugins_WhenNoPluginManagerIsRegistered_AutomaticallyInitializesPluginsInAllLoadedAssemblies()
+    {
+        // InputTestFixture installs a dummy plugin manager so we need
+        // to get rid of that.
+        InputSystem.Reset();
+
+        TestPlugin.s_Initialized = false;
+        InputSystem.s_Manager.InitializePlugins();
+        Assert.That(TestPlugin.s_Initialized, Is.True);
+    }
+
+    public class TestPluginManager : IInputPluginManager
+    {
+        public bool initialized;
+        public void InitializePlugins()
+        {
+            initialized = true;
+        }
+    }
+
+    [Test]
+    [Category("Plugins")]
+    public void Plugins_WhenAtLeastOnePluginManagerIsRegistered_LeavesPluginInitializationToManager()
+    {
+        var manager = new TestPluginManager();
+        InputSystem.RegisterPluginManager(manager);
+
+        InputSystem.s_Manager.InitializePlugins();
+
+        Assert.That(manager.initialized, Is.True);
+    }
+
+    // We need to give opportunity for InputSystem.RegisterPluginManager() being called before we attempt
+    // to initialize plugins. This means we cannot run plugin initialization directly as part of normal
+    // input system initialization. What we do instead is defer plugin initialization until we get the
+    // first callback from NativeInputSystem.
+    [Test]
+    [Category("Plugins")]
+    public void Plugins_AreInitializedOnFirstUpdate()
+    {
+        TestPlugin.s_Initialized = false;
+
+        // The way the Unity test runner executes [SetUp] it seems that will
+        // go back to native code in-between SetUp and running the actual test code.
+        // This means there will be native input updates happening in-between.
+        // Reset the system into a clean state (which also gets rid of the
+        // DummyInputPluginMananager installed by InputTestFixture).
+        InputSystem.Reset();
+
+        Assert.That(TestPlugin.s_Initialized, Is.False);
+
+        InputSystem.Update();
+
+        Assert.That(TestPlugin.s_Initialized, Is.True);
     }
 
 #if UNITY_EDITOR

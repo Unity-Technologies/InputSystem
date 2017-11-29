@@ -61,6 +61,10 @@ namespace ISX
             // none of the native devices.
             InputSystem.Reset();
 
+            // Install dummy plugin manager to get rid of default logic scanning
+            // for [InputPlugins].
+            InputSystem.RegisterPluginManager(new DummyInputPluginManager());
+
             #if UNITY_EDITOR
             // Make sure we're not affected by the user giving focus away from the
             // game view.
@@ -84,6 +88,16 @@ namespace ISX
             InputSystem.DisableAllEnabledActions();
 
             InputSystem.Restore();
+        }
+
+        // Dummy plugin manager we install to suppress the default logic of crawling through the code
+        // looking for [InputPlugins]. Since plugin managers are additive, this won't interfer with
+        // tests registering their own plugin managers.
+        private class DummyInputPluginManager : IInputPluginManager
+        {
+            public void InitializePlugins()
+            {
+            }
         }
     }
 }

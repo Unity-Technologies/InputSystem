@@ -82,7 +82,7 @@ namespace ISX
         {
             add
             {
-                if (!m_NativeBeforeUpdateHooked)
+                if (!m_NativeBeforeUpdateHooked && m_GlobalsInstalled)
                 {
                     NativeInputSystem.onBeforeUpdate = OnNativeBeforeUpdate;
                     m_NativeBeforeUpdateHooked = true;
@@ -806,6 +806,87 @@ namespace ISX
             AddDevice(description, throwIfNoTemplateFound: false, deviceId: deviceId, isNative: isNative);
         }
 
+        public void RegisterPluginManager(IInputPluginManager manager)
+        {
+            if (manager == null)
+                throw new ArgumentNullException("manager");
+            m_PluginManagers.Append(manager);
+        }
+
+        internal void InitializePlugins()
+        {
+            // If we have plugin managers, let them drive all our plugin initialization.
+            if (m_PluginManagers.Count > 0)
+            {
+                for (var i = 0; i < m_PluginManagers.Count; ++i)
+                    m_PluginManagers[i].InitializePlugins();
+
+                ////REVIEW: flush list?
+            }
+            else
+            {
+                // Fall back to scanning for all [InputPlugin]s in the system and calling
+                // their Initialize() methods if they are compatible with the current
+                // runtime platform.
+                var initMethods = ScanForPluginInitializeMethods();
+                foreach (var method in initMethods)
+                    method.Invoke(null, null);
+            }
+
+            m_PluginsInitialized = true;
+        }
+
+        // NOTE: This is a fallback path! Proper setup should have a plugin manager in place
+        //       that does not perform scanning but rather knows which plugins to initialize
+        //       and where they are.
+        private static List<MethodInfo> ScanForPluginInitializeMethods()
+        {
+            var currentPlatform = Application.platform;
+            var result = new List<MethodInfo>();
+
+            // Crawl through all public types in all loaded assemblies.
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+#if NET_4_0
+                foreach (var type in assembly.DefinedTypes)
+#else
+                Type[] types = null;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    continue;
+                }
+                foreach (var type in assembly.GetTypes())
+#endif
+                {
+                    var pluginAttribute = type.GetCustomAttribute<InputPluginAttribute>(false);
+                    if (pluginAttribute == null)
+                        continue;
+
+                    // Skip if platform doesn't match.
+                    if (pluginAttribute.supportedPlatforms != null
+                        && !ArrayHelpers.Contains(pluginAttribute.supportedPlatforms, currentPlatform))
+                        continue;
+
+                    // Look up Initialize() method.
+                    var initializeMethod = type.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    if (initializeMethod == null)
+                        Debug.LogError(string.Format(
+                                "[InputPlugin] %s has no public static Initialize() method; skipping", type.Name));
+                    else if (initializeMethod.GetParameters().Length != 0)
+                        Debug.LogError(string.Format(
+                                "[InputPlugin] %s's Initialize() should not take parameters; skipping", type.Name));
+                    else
+                        result.Add(initializeMethod);
+                }
+            }
+
+            return result;
+        }
+
         public void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
@@ -849,17 +930,16 @@ namespace ISX
 
         internal void Destroy()
         {
-            if (ReferenceEquals(InputTemplate.s_Templates.templateTypes, m_Templates.templateTypes))
+            if (m_GlobalsInstalled)
+            {
                 InputTemplate.s_Templates = new InputTemplate.Collection();
-            if (ReferenceEquals(InputProcessor.s_Processors, m_Processors))
                 InputProcessor.s_Processors = null;
-
-            if (NativeInputSystem.onUpdate == OnNativeUpdate)
                 NativeInputSystem.onUpdate = null;
-            if (NativeInputSystem.onDeviceDiscovered == OnNativeDeviceDiscovered)
                 NativeInputSystem.onDeviceDiscovered = null;
-            if (NativeInputSystem.onBeforeUpdate == OnNativeBeforeUpdate)
                 NativeInputSystem.onBeforeUpdate = null;
+
+                m_GlobalsInstalled = false;
+            }
         }
 
         internal void InitializeData()
@@ -946,6 +1026,8 @@ namespace ISX
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (!m_NativeBeforeUpdateHooked && m_UpdateListeners.Count > 0)
                 NativeInputSystem.onBeforeUpdate = OnNativeBeforeUpdate;
+
+            m_GlobalsInstalled = true;
         }
 
         // Bundles a template name and a device description.
@@ -1002,6 +1084,10 @@ namespace ISX
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
 
+        [NonSerialized] private bool m_GlobalsInstalled;
+        [NonSerialized] private bool m_PluginsInitialized;
+        [NonSerialized] private InlinedArray<IInputPluginManager> m_PluginManagers;
+
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
 
@@ -1044,6 +1130,7 @@ namespace ISX
 
         [NonSerialized] private List<ActionTimeout> m_ActionTimeouts;
 
+        ////TODO: move this out into a generic mechanism that produces change events
         ////TODO: support combining monitors for bitfields
         internal void AddStateChangeMonitor(InputControl control, InputAction action, int bindingIndex)
         {
@@ -1228,6 +1315,9 @@ namespace ISX
 
         private void OnNativeDeviceDiscovered(NativeInputDeviceInfo deviceInfo)
         {
+            if (!m_PluginsInitialized)
+                InitializePlugins();
+
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceInfo.deviceDescriptor);
 
@@ -1237,6 +1327,9 @@ namespace ISX
 
         private void OnNativeBeforeUpdate(NativeInputUpdateType updateType)
         {
+            if (!m_PluginsInitialized)
+                InitializePlugins();
+
             ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_UpdateListeners.Count; ++i)
                 m_UpdateListeners[i]((InputUpdateType)updateType);
@@ -1257,6 +1350,12 @@ namespace ISX
             try
             {
 #endif
+
+            // First callback from native should initialize plugins. We don't know which callback (device
+            // discovery, before-update (which is only hooked if there's before-update listeners) or
+            // update) we will get first so we have the initialization check on all paths.
+            if (!m_PluginsInitialized)
+                InitializePlugins();
 
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
@@ -1859,6 +1958,9 @@ namespace ISX
             [NonSerialized] public InlinedArray<DeviceFindTemplateListener> deviceDiscoveredListeners;
             [NonSerialized] public InlinedArray<TemplateChangeListener> templateChangeListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
+
+            [NonSerialized] public InlinedArray<IInputPluginManager> pluginManagers;
+            [NonSerialized] public bool pluginsInitialized;
         }
 
         internal SerializedState SaveState()
@@ -1938,6 +2040,8 @@ namespace ISX
                 deviceDiscoveredListeners = m_DeviceFindTemplateListeners.Clone(),
                 templateChangeListeners = m_TemplateChangeListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
+                pluginManagers = m_PluginManagers.Clone(),
+                pluginsInitialized = m_PluginsInitialized,
                 updateMask = m_UpdateMask
             };
 
@@ -1959,6 +2063,8 @@ namespace ISX
             m_DeviceFindTemplateListeners = state.deviceDiscoveredListeners;
             m_TemplateChangeListeners = state.templateChangeListeners;
             m_EventListeners = state.eventListeners;
+            m_PluginManagers = state.pluginManagers;
+            m_PluginsInitialized = state.pluginsInitialized;
             m_UpdateMask = state.updateMask;
 
             InitializeData();

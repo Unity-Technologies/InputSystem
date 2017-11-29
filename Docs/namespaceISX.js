@@ -3,6 +3,7 @@ var namespaceISX =
     [ "HID", "namespaceISX_1_1HID.html", "namespaceISX_1_1HID" ],
     [ "Gamepad", "classISX_1_1Gamepad.html", null ],
     [ "GamepadState", "structISX_1_1GamepadState.html", null ],
+    [ "IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "InputControl", "classISX_1_1InputControl.html", null ],
     [ "InputDevice", "classISX_1_1InputDevice.html", null ],
     [ "InputEvent", "structISX_1_1InputEvent.html", "structISX_1_1InputEvent" ],

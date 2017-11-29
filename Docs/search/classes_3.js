@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['iinputpluginmanager',['IInputPluginManager',['../interfaceISX_1_1IInputPluginManager.html',1,'ISX']]],
   ['inputcontrol',['InputControl',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrol_3c_20audiobuffer_20_3e',['InputControl&lt; AudioBuffer &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrol_3c_20color_20_3e',['InputControl&lt; Color &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],

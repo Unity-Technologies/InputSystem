@@ -12,6 +12,10 @@ using ISX.Editor;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
+#if !NET_4_0
+using ISX.Net35Compatibility;
+#endif
+
 // I'd like to call the DLLs UnityEngine.Input and UnityEngine.Input.Tests
 // but the .asmdef mechanism doesn't seem to work properly when there's periods
 // in the name of the .asmdef file and it also doesn't seem to work correctly
@@ -486,20 +490,9 @@ namespace ISX
 
         #region Plugins
 
-        private static IInputPlugin[] s_Plugins;
-
-        public static void RegisterPlugin(IInputPlugin plugin)
+        public static void RegisterPluginManager(IInputPluginManager manager)
         {
-            throw new NotImplementedException();
-        }
-
-        private static void IntializeModules()
-        {
-        }
-
-        private static List<MethodInfo> ScanForInitializeMethods()
-        {
-            throw new NotImplementedException();
+            s_Manager.RegisterPluginManager(manager);
         }
 
         #endregion
@@ -535,26 +528,13 @@ namespace ISX
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
-        private static bool s_Initialized;
         static InputSystem()
         {
-            // Unity's InitializeOnLoad force-executes static class constructors without
-            // checking if they have already been executed (violating C# semantics). So
-            // if someone calls into InputSystem before Unity has gone through its InitializeOnLoad
-            // sequence, we will see two executions of the class constructor for a single
-            // domain load. We catch this with s_Initialized (which will reset on domain
-            // reloads).
-
-            if (s_Initialized)
-                return;
-
             #if UNITY_EDITOR
             InitializeInEditor();
             #else
             InitializeInPlayer();
             #endif
-
-            s_Initialized = true;
         }
 
 #if UNITY_EDITOR

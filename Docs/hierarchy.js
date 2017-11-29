@@ -3,6 +3,7 @@ var hierarchy =
     [ "ISX.InputTemplate.Builder", "structISX_1_1InputTemplate_1_1Builder.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],
     [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
+    [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "ISX.InputControl", "classISX_1_1InputControl.html", [
       [ "ISX.InputDevice", "classISX_1_1InputDevice.html", [
         [ "ISX.Gamepad", "classISX_1_1Gamepad.html", null ],
