@@ -87,12 +87,12 @@ $(document).ready(function(){initNavTree('classISX_1_1InputPluginAttribute.html'
 </div><!--header-->
 <div class="contents">
 
-<p>Marks a class that initializes an input plugin.  
+<p>Marks a class that as an input plugin which registers additional functionality with the input system.  
  <a href="classISX_1_1InputPluginAttribute.html#details">More...</a></p>
 
 <p>Inherits Attribute.</p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Marks a class that initializes an input plugin. </p>
+<div class="textblock"><p>Marks a class that as an input plugin which registers additional functionality with the input system. </p>
 <p>The class should be static and should have a <code>public static void Initialize()</code> method which performs any registration/initialization steps necessary for the module. </p>
 <div class="fragment"><div class="line">[InputPlugin]</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class </span>MyDeviceSupport</div><div class="line">{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keywordtype">void</span> Initialize()</div><div class="line">    {</div><div class="line">        InputSystem.RegisterTemplate&lt;MyDevice&gt;();</div><div class="line">        InputSystem.AddDevice(<span class="stringliteral">&quot;MyDevice&quot;</span>);</div><div class="line">    }</div><div class="line">}</div></div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- doc-content -->

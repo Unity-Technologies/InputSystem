@@ -1,4 +1,4 @@
-using UnityEngine.Collections;
+using Unity.Collections;
 
 ////WIP: This is non-functional ATM; transitioning to this system will likely be gradual
 ////     The goal here is to keep the class-based API intact but make it a pure frontend for the data kept in here

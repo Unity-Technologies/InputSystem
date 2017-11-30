@@ -30,21 +30,17 @@ namespace ISX.Editor
         [SerializeField] private string m_Backup;
         [NonSerialized] private bool m_Initialized;
 
-        protected InputActionAssetEditor GetAssetEditor()
-        {
-            if (assetEditor == null)
-                throw new InvalidOperationException("Asset editor has not yet been initialized");
-
-            var editor = assetEditor as InputActionAssetEditor;
-            if (editor == null)
-                throw new InvalidOperationException("Asset editor is not an InputActionAssetEditor");
-
-            return editor;
-        }
-
         protected InputActionAsset GetAsset()
         {
-            return (InputActionAsset)GetAssetEditor().target;
+            var asset = (InputActionAsset)assetTarget;
+            if (asset == null)
+                throw new InvalidOperationException("Asset editor has not been initialized yet");
+            return asset;
+        }
+
+        protected InputActionAssetEditor GetAssetEditor()
+        {
+            return InputActionAssetEditor.FindFor(GetAsset());
         }
 
         protected string GetAssetPath()
@@ -86,13 +82,16 @@ namespace ISX.Editor
             m_AssetIsDirty = false;
 
             // ResetValues() also gets called from the apply logic at a time
-            // when 'assetEditor' is null.
-            var actionEditor = assetEditor as InputActionAssetEditor;
-            if (actionEditor != null)
+            // when the asset editor isn't set up yet.
+            var assetObject = (InputActionAsset)assetTarget;
+            if (assetObject != null)
             {
                 if (m_Backup != null)
-                    GetAsset().FromJson(m_Backup);
-                actionEditor.Reload();
+                    assetObject.LoadFromJson(m_Backup);
+
+                var editor = InputActionAssetEditor.FindFor(assetObject);
+                if (editor != null)
+                    editor.Reload();
             }
         }
 

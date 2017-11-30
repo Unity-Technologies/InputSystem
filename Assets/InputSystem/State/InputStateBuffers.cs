@@ -1,6 +1,7 @@
 using System;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Collections;
 
 namespace ISX
 {
@@ -67,8 +68,8 @@ namespace ISX
         ////      actually, if we really reset on mode change, can't we just keep a single set buffers?
 
 
-        public int sizePerBuffer;
-        public int totalSize;
+        public uint sizePerBuffer;
+        public uint totalSize;
 
         // Secretely we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
@@ -186,7 +187,7 @@ namespace ISX
 
             // Determine how much memory we need.
             var deviceCount = devices.Length;
-            var mappingTableSizePerBuffer = deviceCount * sizeof(void*) * 2;
+            var mappingTableSizePerBuffer = (uint)(deviceCount * sizeof(void*) * 2);
 
             if (isDynamicUpdateEnabled)
             {
@@ -235,7 +236,7 @@ namespace ISX
             return newDeviceOffsets;
         }
 
-        private unsafe DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, ref IntPtr bufferPtr, int sizePerBuffer, int mappingTableSizePerBuffer)
+        private unsafe DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, ref IntPtr bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
         {
             var front = bufferPtr;
             var back = new IntPtr(bufferPtr.ToInt64() + sizePerBuffer);
@@ -364,7 +365,7 @@ namespace ISX
         // Compute the total size of we need for a single state buffer to encompass
         // all devices we have and also linearly assign offsets to all the devices
         // within such a buffer.
-        private static int ComputeSizeOfSingleBufferAndOffsetForEachDevice(InputDevice[] devices, ref uint[] offsets)
+        private static uint ComputeSizeOfSingleBufferAndOffsetForEachDevice(InputDevice[] devices, ref uint[] offsets)
         {
             if (devices == null)
                 return 0;
@@ -372,7 +373,7 @@ namespace ISX
             var deviceCount = devices.Length;
             var result = new uint[deviceCount];
             var currentOffset = 0u;
-            var sizeInBytes = 0;
+            var sizeInBytes = 0u;
 
             for (var i = 0; i < devices.Length; ++i)
             {

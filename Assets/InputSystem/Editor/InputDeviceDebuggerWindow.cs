@@ -162,7 +162,7 @@ namespace ISX.Editor
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace = new InputEventTrace(device.stateBlock.alignedSizeInBytes * 64) {deviceId = device.id};
+                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * 64) {deviceId = device.id};
             m_EventTrace.onEvent += _ =>
                 {
                     ////FIXME: this is very inefficient

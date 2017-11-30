@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ISX;
 using NUnit.Framework;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking.PlayerConnection;
@@ -2749,14 +2750,14 @@ public class FunctionalTests : InputTestFixture
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState), StateEvent.From(events[0])->state,
-                    UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                    (ulong)UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
             Assert.That(events[1].deviceId, Is.EqualTo(device.id));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState), StateEvent.From(events[1])->state,
-                    UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                    (ulong)UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
     }
 

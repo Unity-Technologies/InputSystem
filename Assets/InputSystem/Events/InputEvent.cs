@@ -50,7 +50,7 @@ namespace ISX
         /// }
         /// </code>
         /// </example>
-        public int sizeInBytes
+        public uint sizeInBytes
         {
             get { return m_SizeInBytes; }
         }

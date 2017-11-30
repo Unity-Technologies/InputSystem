@@ -140,9 +140,9 @@ namespace ISX
 
         private Flags m_Flags;
 
-        internal int alignedSizeInBytes
+        internal uint alignedSizeInBytes
         {
-            get { return (int)(sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0); }
+            get { return (uint)((sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0)); }
         }
     }
 }

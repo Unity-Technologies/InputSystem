@@ -63,7 +63,7 @@ namespace ISX
             }
         }
 
-        public int sizeInBytes
+        public uint sizeInBytes
         {
             get
             {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
@@ -1478,7 +1479,7 @@ namespace ISX
                         var deviceIndex = device.m_DeviceIndex;
                         var stateBlock = device.m_StateBlock;
                         var stateOffset = 0u;
-                        int stateSize;
+                        uint stateSize;
                         IntPtr statePtr;
                         FourCC stateFormat;
 
@@ -1659,7 +1660,7 @@ namespace ISX
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
         //       'newStateOffset' must give the offset into the full state and 'newStateSize' must
         //       give the size of memory slice to be updated.
-        private bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, int newStateSize, uint newStateOffset)
+        private bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, uint newStateSize, uint newStateOffset)
         {
             if (m_StateChangeMonitorListeners == null)
                 return false;
@@ -1725,7 +1726,7 @@ namespace ISX
                     if (offset - newStateOffset + sizeInBytes > newStateSize)
                         continue;
 
-                    if (UnsafeUtility.MemCmp(new IntPtr(newState.ToInt64() + offset), new IntPtr(oldState.ToInt64() + offset), (int)sizeInBytes) == 0)
+                    if (UnsafeUtility.MemCmp(new IntPtr(newState.ToInt64() + offset), new IntPtr(oldState.ToInt64() + offset), sizeInBytes) == 0)
                         continue;
                 }
 

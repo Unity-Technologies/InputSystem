@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngineInternal.Input;
 
@@ -553,7 +554,7 @@ namespace ISX
             public static unsafe Message Create(InputRemoting sender, IntPtr events, int eventCount)
             {
                 // Find total size of event buffer we need.
-                var totalSize = 0;
+                var totalSize = 0u;
                 var eventPtr = new InputEventPtr(events);
                 for (var i = 0; i < eventCount; ++i, eventPtr = eventPtr.Next())
                 {

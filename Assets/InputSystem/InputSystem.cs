@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -309,7 +309,7 @@ namespace ISX
 
             ////REVIEW: does it make more sense to go off the 'stateBlock' on the device and let that determine size?
 
-            var stateSize = UnsafeUtility.SizeOf<TState>();
+            var stateSize = (uint)UnsafeUtility.SizeOf<TState>();
             if (stateSize > StateEventBuffer.kMaxSize)
                 throw new ArgumentException(
                     string.Format("Size of '{0}' exceeds maximum supported state size of {1}", typeof(TState).Name,
@@ -324,15 +324,12 @@ namespace ISX
             eventBuffer.stateEvent =
                 new StateEvent
             {
-                baseEvent = new InputEvent(StateEvent.Type, eventSize, device.id, time),
+                baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.id, time),
                 stateFormat = state.GetFormat()
             };
 
-
-            fixed(byte* ptr = eventBuffer.stateEvent.stateData)
-            {
-                UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref state), stateSize);
-            }
+            var ptr = eventBuffer.stateEvent.stateData;
+            UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref state), stateSize);
 
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
@@ -364,7 +361,7 @@ namespace ISX
             if (time < 0)
                 time = Time.time;
 
-            var deltaSize = UnsafeUtility.SizeOf<TDelta>();
+            var deltaSize = (uint)UnsafeUtility.SizeOf<TDelta>();
             if (deltaSize > DeltaStateEventBuffer.kMaxSize)
                 throw new ArgumentException(
                     string.Format("Size of state delta '{0}' exceeds maximum supported state size of {1}",
@@ -381,15 +378,13 @@ namespace ISX
             eventBuffer.stateEvent =
                 new DeltaStateEvent
             {
-                baseEvent = new InputEvent(DeltaStateEvent.Type, eventSize, device.id, time),
+                baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.id, time),
                 stateFormat = device.stateBlock.format,
                 stateOffset = control.m_StateBlock.byteOffset
             };
 
-            fixed(byte* ptr = eventBuffer.stateEvent.stateData)
-            {
-                UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref delta), deltaSize);
-            }
+            var ptr = eventBuffer.stateEvent.stateData;
+            UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref delta), deltaSize);
 
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -24,6 +25,19 @@ namespace ISX.Editor
         [NonSerialized] private SerializedProperty m_ActionSetArrayProperty;
         [NonSerialized] internal Action m_ApplyAction;
 
+        private static List<InputActionAssetEditor> s_EnabledEditors;
+
+        internal static InputActionAssetEditor FindFor(InputActionAsset asset)
+        {
+            if (s_EnabledEditors != null)
+            {
+                foreach (var editor in s_EnabledEditors)
+                    if (editor.target == asset)
+                        return editor;
+            }
+            return null;
+        }
+
         public void OnEnable()
         {
             m_ActionSetArrayProperty = serializedObject.FindProperty("m_ActionSets");
@@ -31,6 +45,16 @@ namespace ISX.Editor
 
             if (m_ActionSetCount > 0)
                 InitializeActionTreeView();
+
+            if (s_EnabledEditors == null)
+                s_EnabledEditors = new List<InputActionAssetEditor>();
+            s_EnabledEditors.Add(this);
+        }
+
+        public void OnDisable()
+        {
+            if (s_EnabledEditors != null)
+                s_EnabledEditors.Remove(this);
         }
 
         public void Reload()

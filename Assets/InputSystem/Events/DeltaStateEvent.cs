@@ -18,9 +18,9 @@ namespace ISX
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public uint stateOffset;
         [FieldOffset(InputEvent.kBaseEventSize + 8)] public fixed byte stateData[1]; // Variable-sized.
 
-        public int stateSizeInBytes
+        public uint stateSizeInBytes
         {
-            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8); }
+            get { return (uint)(baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8)); }
         }
 
         public IntPtr state

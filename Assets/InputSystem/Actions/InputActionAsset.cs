@@ -32,7 +32,7 @@ namespace ISX
 
         // Replace the contents of the asset with the action sets in the
         // given JSON string.
-        public void FromJson(string json)
+        public void LoadFromJson(string json)
         {
             m_ActionSets = InputActionSet.FromJson(json);
         }

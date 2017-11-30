@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Collections;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 
@@ -39,7 +40,7 @@ namespace ISX
         // it is enabled.
         public InputEventTrace(int bufferSize = kDefaultBufferSize)
         {
-            m_EventBufferSize = bufferSize;
+            m_EventBufferSize = (uint)bufferSize;
         }
 
         public void Clear()
@@ -141,7 +142,7 @@ namespace ISX
 
         // Buffer for storing event trace. Allocated in native so that we can survive a
         // domain reload without losing event traces.
-        [SerializeField] private int m_EventBufferSize;
+        [SerializeField] private uint m_EventBufferSize;
         [SerializeField] private IntPtr m_EventBuffer;
         [SerializeField] private IntPtr m_EventBufferHead;
         [SerializeField] private IntPtr m_EventBufferTail;
@@ -173,7 +174,7 @@ namespace ISX
             if (m_EventBuffer == IntPtr.Zero)
                 return;
 
-            var eventSize = inputEvent.sizeInBytes;
+            var eventSize = (uint)inputEvent.sizeInBytes;
             var eventData = inputEvent.data;
 
             // Make sure we can fit the event at all.

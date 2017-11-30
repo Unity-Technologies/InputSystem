@@ -1,6 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace ISX
 {
@@ -15,9 +15,9 @@ namespace ISX
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public fixed byte stateData[1]; // Variable-sized.
 
-        public int stateSizeInBytes
+        public uint stateSizeInBytes
         {
-            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4); }
+            get { return (uint)(baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4)); }
         }
 
         public IntPtr state
