@@ -5,8 +5,13 @@ namespace ISX
 {
     // IMPORTANT: Must match with PenInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 36)]
-    public struct PenState
+    public struct PenState : IInputStateTypeInfo
     {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('P', 'E', 'N'); }
+        }
+
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
         public Vector2 position;
@@ -27,13 +32,14 @@ namespace ISX
         [FieldOffset(28)]
         public float twist;
 
-        [InputControl(name = "phase", template = "Digital", sizeInBits = 4)]
-        [InputControl(name = "leftButton", template = "Button", bit = (int)Button.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        [InputControl(name = "rightButton", template = "Button", bit = (int)Button.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
-        [InputControl(name = "middleButton", template = "Button", bit = (int)Button.Middle)]
+        [InputControl(name = "tip", template = "Button", bit = (int)Button.Tip, alias = "button")]
+        [InputControl(name = "eraser", template = "Button", bit = (int)Button.Eraser)]
+        [InputControl(name = "barrelFirst", template = "Button", bit = (int)Button.BarrelFirst, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "barrelSecond", template = "Button", bit = (int)Button.BarrelSecond, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
         // "Park" unused controls.
         [InputControl(name = "radius", template = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "pointerId", template = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
+        [InputControl(name = "phase", template = "Digital", offset = InputStateBlock.kInvalidOffset)] ////TODO: this should be used
         [FieldOffset(32)]
         public ushort buttons;
 
@@ -43,9 +49,15 @@ namespace ISX
 
         public enum Button
         {
-            Left = 4,
-            Right = 5,
-            Middle = 6,
+            Tip,
+            Eraser,
+            BarrelFirst,
+            BarrelSecond
+        }
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
         }
     }
 

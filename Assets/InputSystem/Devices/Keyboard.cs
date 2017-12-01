@@ -5,13 +5,18 @@ using Unity.Collections.LowLevel.Unsafe;
 namespace ISX
 {
     // Named according to the US keyboard layout which is our reference layout.
+    //
+    // NOTE: Has to match up with 'KeyboardInputState::KeyCode' in native.
     public enum Key
     {
+        None,
+
         // Printable keys.
         Space,
         Enter,
         Tab,
         Backtick,
+        Quote,
         Semicolon,
         Comma,
         Period,
@@ -63,8 +68,18 @@ namespace ISX
         RightShift,
         LeftAlt,
         RightAlt,
+        AltGr = RightAlt,
         LeftCtrl,
         RightCtrl,
+        LeftMeta,
+        RightMeta,
+        LeftWindows = LeftMeta,
+        RightWindows = RightMeta,
+        LeftApple = LeftMeta,
+        RightApple = RightMeta,
+        LeftCommand = LeftMeta,
+        RightCommand = RightMeta,
+        ContextMenu,
         Escape,
         LeftArrow,
         RightArrow,
@@ -76,10 +91,20 @@ namespace ISX
         Home,
         End,
         Insert,
-        Erase,
+        Delete,
+        CapsLock,
+        NumLock,
+        PrintScreen,
+        ScrollLock,
+        Pause,
 
         // Numpad.
         NumpadEnter,
+        NumpadDivide,
+        NumpadMultiply,
+        NumpadPlus,
+        NumpadMinus,
+        NumpadPeriod,
         Numpad0,
         Numpad1,
         Numpad2,
@@ -90,6 +115,19 @@ namespace ISX
         Numpad7,
         Numpad8,
         Numpad9,
+
+        F1,
+        F2,
+        F3,
+        F4,
+        F5,
+        F6,
+        F7,
+        F8,
+        F9,
+        F10,
+        F11,
+        F12,
 
         Count
     }
@@ -103,7 +141,9 @@ namespace ISX
             get { return new FourCC('K', 'E', 'Y', 'S'); }
         }
 
-        public const int kSizeInBytes = ((int)Key.Count) / 8 + (((int)Key.Count) % 8 > 0 ? 1 : 0);
+        // Number of keys rounded up to nearest size of 4.
+        private const int kSizeInBytesUnrounded = ((int)Key.Count) / 8 + (((int)Key.Count) % 8 > 0 ? 1 : 0);
+        public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
         public const int kSizeInBits = kSizeInBytes * 8;
 
         [InputControl(name = "AnyKey", template = "AnyKey", sizeInBits = kSizeInBits)]
@@ -164,17 +204,30 @@ namespace ISX
         [InputControl(name = "LeftShift", template = "Key", usage = "Modifier", bit = (int)Key.LeftShift)]
         [InputControl(name = "RightShift", template = "Key", usage = "Modifier", bit = (int)Key.RightShift)]
         [InputControl(name = "LeftAlt", template = "Key", usage = "Modifier", bit = (int)Key.LeftAlt)]
-        [InputControl(name = "RightAlt", template = "Key", usage = "Modifier", bit = (int)Key.RightAlt)]
+        [InputControl(name = "RightAlt", template = "Key", usage = "Modifier", bit = (int)Key.RightAlt, alias = "AltGr")]
         [InputControl(name = "LeftCtrl", template = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl)]
         [InputControl(name = "RightCtrl", template = "Key", usage = "Modifier", bit = (int)Key.RightCtrl)]
+        [InputControl(name = "LeftMeta", template = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
+        [InputControl(name = "RightMeta", template = "Key", usage = "Modifier", bit = (int)Key.RightCtrl, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
+        [InputControl(name = "ContextMenu", template = "Key", usage = "Modifier", bit = (int)Key.ContextMenu)]
         [InputControl(name = "Backspace", template = "Key", bit = (int)Key.Backspace)]
         [InputControl(name = "PageDown", template = "Key", bit = (int)Key.PageDown)]
         [InputControl(name = "PageUp", template = "Key", bit = (int)Key.PageUp)]
         [InputControl(name = "Home", template = "Key", bit = (int)Key.Home)]
         [InputControl(name = "End", template = "Key", bit = (int)Key.End)]
         [InputControl(name = "Insert", template = "Key", bit = (int)Key.Insert)]
-        [InputControl(name = "Erase", template = "Key", bit = (int)Key.Erase)]
+        [InputControl(name = "Delete", template = "Key", bit = (int)Key.Delete)]
+        [InputControl(name = "CapsLock", template = "Key", bit = (int)Key.CapsLock)]
+        [InputControl(name = "NumLock", template = "Key", bit = (int)Key.NumLock)]
+        [InputControl(name = "PrintScreen", template = "Key", bit = (int)Key.PrintScreen)]
+        [InputControl(name = "ScrollLock", template = "Key", bit = (int)Key.ScrollLock)]
+        [InputControl(name = "Pause", template = "Key", bit = (int)Key.Pause)]
         [InputControl(name = "NumpadEnter", template = "Key", bit = (int)Key.NumpadEnter)]
+        [InputControl(name = "NumpadDivide", template = "Key", bit = (int)Key.NumpadDivide)]
+        [InputControl(name = "NumpadMultiply", template = "Key", bit = (int)Key.NumpadMultiply)]
+        [InputControl(name = "NumpadPlus", template = "Key", bit = (int)Key.NumpadPlus)]
+        [InputControl(name = "NumpadMinus", template = "Key", bit = (int)Key.NumpadMinus)]
+        [InputControl(name = "NumpadPeriod", template = "Key", bit = (int)Key.NumpadPeriod)]
         [InputControl(name = "Numpad1", template = "Key", bit = (int)Key.Numpad1)]
         [InputControl(name = "Numpad2", template = "Key", bit = (int)Key.Numpad2)]
         [InputControl(name = "Numpad3", template = "Key", bit = (int)Key.Numpad3)]
@@ -185,6 +238,18 @@ namespace ISX
         [InputControl(name = "Numpad8", template = "Key", bit = (int)Key.Numpad8)]
         [InputControl(name = "Numpad9", template = "Key", bit = (int)Key.Numpad9)]
         [InputControl(name = "Numpad0", template = "Key", bit = (int)Key.Numpad0)]
+        [InputControl(name = "F1", template = "Key", bit = (int)Key.F1)]
+        [InputControl(name = "F2", template = "Key", bit = (int)Key.F2)]
+        [InputControl(name = "F3", template = "Key", bit = (int)Key.F3)]
+        [InputControl(name = "F4", template = "Key", bit = (int)Key.F4)]
+        [InputControl(name = "F5", template = "Key", bit = (int)Key.F5)]
+        [InputControl(name = "F6", template = "Key", bit = (int)Key.F6)]
+        [InputControl(name = "F7", template = "Key", bit = (int)Key.F7)]
+        [InputControl(name = "F8", template = "Key", bit = (int)Key.F8)]
+        [InputControl(name = "F9", template = "Key", bit = (int)Key.F9)]
+        [InputControl(name = "F10", template = "Key", bit = (int)Key.F10)]
+        [InputControl(name = "F11", template = "Key", bit = (int)Key.F11)]
+        [InputControl(name = "F12", template = "Key", bit = (int)Key.F12)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
@@ -270,6 +335,14 @@ namespace ISX
         public KeyControl rightAlt { get; private set; }
         public KeyControl leftCtrl { get; private set; }
         public KeyControl rightCtrl { get; private set; }
+        public KeyControl leftMeta { get; private set; }
+        public KeyControl rightMeta { get; private set; }
+        public KeyControl leftWindows { get; private set; }
+        public KeyControl rightWindows { get; private set; }
+        public KeyControl leftApple { get; private set; }
+        public KeyControl rightApple { get; private set; }
+        public KeyControl leftCommand { get; private set; }
+        public KeyControl rightCommand { get; private set; }
         public KeyControl escape { get; private set; }
         public KeyControl leftArrow { get; private set; }
         public KeyControl rightArrow { get; private set; }
@@ -281,8 +354,17 @@ namespace ISX
         public KeyControl home { get; private set; }
         public KeyControl end { get; private set; }
         public KeyControl insert { get; private set; }
-        public KeyControl erase { get; private set; }
+        public KeyControl delete { get; private set; }
+        public KeyControl capsLock { get; private set; }
+        public KeyControl scrollLock { get; private set; }
+        public KeyControl numLock { get; private set; }
+        public KeyControl pause { get; private set; }
         public KeyControl numpadEnter { get; private set; }
+        public KeyControl numpadDivide { get; private set; }
+        public KeyControl numpadMultiply { get; private set; }
+        public KeyControl numpadMinus { get; private set; }
+        public KeyControl numpadPlus { get; private set; }
+        public KeyControl numpadPeriod { get; private set; }
         public KeyControl numpad0 { get; private set; }
         public KeyControl numpad1 { get; private set; }
         public KeyControl numpad2 { get; private set; }
@@ -293,6 +375,18 @@ namespace ISX
         public KeyControl numpad7 { get; private set; }
         public KeyControl numpad8 { get; private set; }
         public KeyControl numpad9 { get; private set; }
+        public KeyControl f1 { get; private set; }
+        public KeyControl f2 { get; private set; }
+        public KeyControl f3 { get; private set; }
+        public KeyControl f4 { get; private set; }
+        public KeyControl f5 { get; private set; }
+        public KeyControl f6 { get; private set; }
+        public KeyControl f7 { get; private set; }
+        public KeyControl f8 { get; private set; }
+        public KeyControl f9 { get; private set; }
+        public KeyControl f10 { get; private set; }
+        public KeyControl f11 { get; private set; }
+        public KeyControl f12 { get; private set; }
 
         public static Keyboard current { get; internal set; }
 
@@ -360,6 +454,14 @@ namespace ISX
             rightAlt = setup.GetControl<KeyControl>("RightAlt");
             leftCtrl = setup.GetControl<KeyControl>("LeftCtrl");
             rightCtrl = setup.GetControl<KeyControl>("RightCtrl");
+            leftMeta = setup.GetControl<KeyControl>("LeftMeta");
+            rightMeta = setup.GetControl<KeyControl>("RightMeta");
+            leftWindows = setup.GetControl<KeyControl>("LeftWindows");
+            rightWindows = setup.GetControl<KeyControl>("RightWindows");
+            leftApple = setup.GetControl<KeyControl>("LeftApple");
+            rightApple = setup.GetControl<KeyControl>("RightApple");
+            leftCommand = setup.GetControl<KeyControl>("LeftCommand");
+            rightCommand = setup.GetControl<KeyControl>("RightCommand");
             escape = setup.GetControl<KeyControl>("Escape");
             leftArrow = setup.GetControl<KeyControl>("LeftArrow");
             rightArrow = setup.GetControl<KeyControl>("RightArrow");
@@ -371,8 +473,13 @@ namespace ISX
             home = setup.GetControl<KeyControl>("Home");
             end = setup.GetControl<KeyControl>("End");
             insert = setup.GetControl<KeyControl>("Insert");
-            erase = setup.GetControl<KeyControl>("Erase");
+            delete = setup.GetControl<KeyControl>("Delete");
             numpadEnter = setup.GetControl<KeyControl>("NumpadEnter");
+            numpadDivide = setup.GetControl<KeyControl>("NumpadDivide");
+            numpadMultiply = setup.GetControl<KeyControl>("NumpadMultiply");
+            numpadPlus = setup.GetControl<KeyControl>("NumpadPlus");
+            numpadMinus = setup.GetControl<KeyControl>("NumpadMinus");
+            numpadPeriod = setup.GetControl<KeyControl>("NumpadPeriod");
             numpad0 = setup.GetControl<KeyControl>("Numpad0");
             numpad1 = setup.GetControl<KeyControl>("Numpad1");
             numpad2 = setup.GetControl<KeyControl>("Numpad2");
@@ -383,6 +490,22 @@ namespace ISX
             numpad7 = setup.GetControl<KeyControl>("Numpad7");
             numpad8 = setup.GetControl<KeyControl>("Numpad8");
             numpad9 = setup.GetControl<KeyControl>("Numpad9");
+            f1 = setup.GetControl<KeyControl>("F1");
+            f2 = setup.GetControl<KeyControl>("F2");
+            f3 = setup.GetControl<KeyControl>("F3");
+            f4 = setup.GetControl<KeyControl>("F4");
+            f5 = setup.GetControl<KeyControl>("F5");
+            f6 = setup.GetControl<KeyControl>("F6");
+            f7 = setup.GetControl<KeyControl>("F7");
+            f8 = setup.GetControl<KeyControl>("F8");
+            f9 = setup.GetControl<KeyControl>("F9");
+            f10 = setup.GetControl<KeyControl>("F10");
+            f11 = setup.GetControl<KeyControl>("F11");
+            f12 = setup.GetControl<KeyControl>("F12");
+            capsLock = setup.GetControl<KeyControl>("CapsLock");
+            numLock = setup.GetControl<KeyControl>("NumLock");
+            scrollLock = setup.GetControl<KeyControl>("ScrollLock");
+            pause = setup.GetControl<KeyControl>("Pause");
 
             base.FinishSetup(setup);
         }

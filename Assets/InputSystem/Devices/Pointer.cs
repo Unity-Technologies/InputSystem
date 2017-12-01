@@ -3,12 +3,13 @@ using UnityEngine;
 
 namespace ISX
 {
+    ////REVIEW: does it really make sense to have this at the pointer level
     public enum PointerPhase
     {
         None,
         Began,
         Move,
-        Finished,
+        Ended,
         Canceled
     }
 
