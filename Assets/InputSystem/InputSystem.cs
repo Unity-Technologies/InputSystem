@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using ISX.LowLevel;
 
 #if UNITY_EDITOR
 using UnityEditor;

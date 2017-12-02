@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 ////        from monitors set up in the system. These can then be consumed by other systems -- with
 ////        the action system being one consumer.
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Phase change of an action.
     //

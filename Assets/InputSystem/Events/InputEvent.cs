@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// A chunk of memory signaling a data transfer in the input system.

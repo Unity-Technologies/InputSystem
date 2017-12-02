@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// An InputEventBuffer that can be concurrently written to and read from in FIFO order.
@@ -15,6 +15,12 @@ namespace ISX
     ///
     /// Memory for event queues is allocated on the native heap and queues can be written to
     /// and read from both in C++ and in C#.
+    ///
+    /// Writing to a queue can be done by multiple producers concurrently but only one consumer
+    /// may read from the queue at a time. Reading events will copy them out into a separate
+    /// buffer which is not thread-safe and can only be accessed by a single thread at a time.
+    /// If this is otherwise guaranteed, it is valid for the actual consumer thread to vary
+    /// over time, though.
     /// </remarks>
     public struct InputEventQueue
     {
@@ -31,7 +37,7 @@ namespace ISX
             throw new NotImplementedException();
         }
 
-        public InputEventPtr TryReadNextEvent()
+        public InputEventPtr TryReadNextEvent(ref InputEventBuffer buffer)
         {
             throw new NotImplementedException();
         }

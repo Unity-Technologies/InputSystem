@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Full state update for an input device.
     // Variable-size event.

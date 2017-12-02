@@ -15,7 +15,7 @@ namespace ISX
         Space,
         Enter,
         Tab,
-        Backtick,
+        Backquote,
         Quote,
         Semicolon,
         Comma,
@@ -99,12 +99,18 @@ namespace ISX
         Pause,
 
         // Numpad.
+        // NOTE: Numpad layout follows the 18-key numpad layout. Some PC keyboards
+        //       have a 17-key numpad layout where the plus key is an elongated key
+        //       like the numpad enter key. Be aware that in those layouts the positions
+        //       of some of the operator keys are also different. However, we stay
+        //       layout neutral here, too, and always use the 18-key blueprint.
         NumpadEnter,
         NumpadDivide,
         NumpadMultiply,
         NumpadPlus,
         NumpadMinus,
         NumpadPeriod,
+        NumpadEquals,
         Numpad0,
         Numpad1,
         Numpad2,
@@ -129,6 +135,14 @@ namespace ISX
         F11,
         F12,
 
+        // Extra keys that a keyboard may have. We make no guarantees about where
+        // they end up on the keyboard (if they are present).
+        OEM1,
+        OEM2,
+        OEM3,
+        OEM4,
+        OEM5,
+
         Count
     }
 
@@ -151,7 +165,8 @@ namespace ISX
         [InputControl(name = "Space", template = "Key", bit = (int)Key.Space)]
         [InputControl(name = "Enter", template = "Key", usage = "Accept", bit = (int)Key.Enter)]
         [InputControl(name = "Tab", template = "Key", bit = (int)Key.Tab)]
-        [InputControl(name = "Backtick", template = "Key", bit = (int)Key.Backtick)]
+        [InputControl(name = "Backquote", template = "Key", bit = (int)Key.Backquote)]
+        [InputControl(name = "Quote", template = "Key", bit = (int)Key.Quote)]
         [InputControl(name = "Semicolon", template = "Key", bit = (int)Key.Semicolon)]
         [InputControl(name = "Comma", template = "Key", bit = (int)Key.Comma)]
         [InputControl(name = "Period", template = "Key", bit = (int)Key.Period)]
@@ -207,8 +222,8 @@ namespace ISX
         [InputControl(name = "RightAlt", template = "Key", usage = "Modifier", bit = (int)Key.RightAlt, alias = "AltGr")]
         [InputControl(name = "LeftCtrl", template = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl)]
         [InputControl(name = "RightCtrl", template = "Key", usage = "Modifier", bit = (int)Key.RightCtrl)]
-        [InputControl(name = "LeftMeta", template = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
-        [InputControl(name = "RightMeta", template = "Key", usage = "Modifier", bit = (int)Key.RightCtrl, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
+        [InputControl(name = "LeftMeta", template = "Key", usage = "Modifier", bit = (int)Key.LeftMeta, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
+        [InputControl(name = "RightMeta", template = "Key", usage = "Modifier", bit = (int)Key.RightMeta, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
         [InputControl(name = "ContextMenu", template = "Key", usage = "Modifier", bit = (int)Key.ContextMenu)]
         [InputControl(name = "Backspace", template = "Key", bit = (int)Key.Backspace)]
         [InputControl(name = "PageDown", template = "Key", bit = (int)Key.PageDown)]
@@ -228,6 +243,7 @@ namespace ISX
         [InputControl(name = "NumpadPlus", template = "Key", bit = (int)Key.NumpadPlus)]
         [InputControl(name = "NumpadMinus", template = "Key", bit = (int)Key.NumpadMinus)]
         [InputControl(name = "NumpadPeriod", template = "Key", bit = (int)Key.NumpadPeriod)]
+        [InputControl(name = "NumpadEquals", template = "Key", bit = (int)Key.NumpadEquals)]
         [InputControl(name = "Numpad1", template = "Key", bit = (int)Key.Numpad1)]
         [InputControl(name = "Numpad2", template = "Key", bit = (int)Key.Numpad2)]
         [InputControl(name = "Numpad3", template = "Key", bit = (int)Key.Numpad3)]
@@ -250,6 +266,11 @@ namespace ISX
         [InputControl(name = "F10", template = "Key", bit = (int)Key.F10)]
         [InputControl(name = "F11", template = "Key", bit = (int)Key.F11)]
         [InputControl(name = "F12", template = "Key", bit = (int)Key.F12)]
+        [InputControl(name = "OEM1", template = "Key", bit = (int)Key.OEM1)]
+        [InputControl(name = "OEM2", template = "Key", bit = (int)Key.OEM2)]
+        [InputControl(name = "OEM3", template = "Key", bit = (int)Key.OEM3)]
+        [InputControl(name = "OEM4", template = "Key", bit = (int)Key.OEM4)]
+        [InputControl(name = "OEM5", template = "Key", bit = (int)Key.OEM5)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
@@ -283,7 +304,8 @@ namespace ISX
         public KeyControl space { get; private set; }
         public KeyControl enter { get; private set; }
         public KeyControl tab { get; private set; }
-        public KeyControl backtick { get; private set; }
+        public KeyControl backquote { get; private set; }
+        public KeyControl quote { get; private set; }
         public KeyControl semicolon { get; private set; }
         public KeyControl comma { get; private set; }
         public KeyControl period { get; private set; }
@@ -365,6 +387,7 @@ namespace ISX
         public KeyControl numpadMinus { get; private set; }
         public KeyControl numpadPlus { get; private set; }
         public KeyControl numpadPeriod { get; private set; }
+        public KeyControl numpadEquals { get; private set; }
         public KeyControl numpad0 { get; private set; }
         public KeyControl numpad1 { get; private set; }
         public KeyControl numpad2 { get; private set; }
@@ -402,7 +425,8 @@ namespace ISX
             space = setup.GetControl<KeyControl>("Space");
             enter = setup.GetControl<KeyControl>("Enter");
             tab = setup.GetControl<KeyControl>("Tab");
-            backtick = setup.GetControl<KeyControl>("Backtick");
+            backquote = setup.GetControl<KeyControl>("Backquote");
+            quote = setup.GetControl<KeyControl>("Quote");
             semicolon = setup.GetControl<KeyControl>("Semicolon");
             comma = setup.GetControl<KeyControl>("Comma");
             period = setup.GetControl<KeyControl>("Period");
@@ -480,6 +504,7 @@ namespace ISX
             numpadPlus = setup.GetControl<KeyControl>("NumpadPlus");
             numpadMinus = setup.GetControl<KeyControl>("NumpadMinus");
             numpadPeriod = setup.GetControl<KeyControl>("NumpadPeriod");
+            numpadEquals = setup.GetControl<KeyControl>("NumpadEquals");
             numpad0 = setup.GetControl<KeyControl>("Numpad0");
             numpad1 = setup.GetControl<KeyControl>("Numpad1");
             numpad2 = setup.GetControl<KeyControl>("Numpad2");

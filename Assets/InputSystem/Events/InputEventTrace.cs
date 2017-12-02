@@ -7,7 +7,7 @@ using UnityEngine;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Helper to simplify recording events. Can record events for a specific device
     // or all events coming in.

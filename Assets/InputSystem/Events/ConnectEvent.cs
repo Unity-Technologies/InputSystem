@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Input device got re-connected after a disconnect.
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]

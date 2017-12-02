@@ -5,6 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using ISX.LowLevel;
 
 ////TODO: find way to automatically dock the state windows next to their InputDeviceDebuggerWindows
 ////      (probably needs an extension to the editor UI APIs as the only programmatic docking controls

@@ -1,6 +1,6 @@
 using System;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Pointer to an InputEvent. Makes it easier to work with InputEvents and hides
     // the unsafe operations necessary to work with events.

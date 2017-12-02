@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sizeinbytes',['sizeInBytes',['../structISX_1_1InputEvent.html#a3d4c607e13a7c604eb5a21b5a5529924',1,'ISX::InputEvent']]]
+  ['sizeinbytes',['sizeInBytes',['../structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144',1,'ISX::LowLevel::InputEvent']]]
 ];

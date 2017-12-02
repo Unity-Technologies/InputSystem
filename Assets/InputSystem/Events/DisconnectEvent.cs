@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Input device got disconnected.
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]

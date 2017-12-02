@@ -141,6 +141,9 @@ namespace ISX.Editor
                     children.Add(childItem);
                 }
 
+                // Sort children by name.
+                children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+
                 item.children = children;
             }
 

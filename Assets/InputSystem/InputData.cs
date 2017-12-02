@@ -6,7 +6,7 @@ using Unity.Collections;
 
 ////TODO: provide a way by which the system can be stripped down to just this (i.e. have the higher-level part never initialize)
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Struct-only representation of input system data.
     // This is how the input system works underneath. Exposed classes are wrappers around functionality

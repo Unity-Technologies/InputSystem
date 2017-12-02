@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using ISX.LowLevel;
 
 ////FIXME: doesn't survive domain reload correctly
 

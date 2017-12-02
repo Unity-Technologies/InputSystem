@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 ////TODO: use deltastateevents as basis for ActionEvent
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Partial state update for an input device.
     // Avoids having to send a full state memory snapshot when only a small
