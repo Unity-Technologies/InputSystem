@@ -535,6 +535,12 @@ namespace ISX
             base.FinishSetup(setup);
         }
 
+        public override void OnTextInput(char character)
+        {
+            for (var i = 0; i < m_TextInputListeners.Count; ++i)
+                m_TextInputListeners[i](character);
+        }
+
         internal InlinedArray<Action<char>> m_TextInputListeners;
     }
 }

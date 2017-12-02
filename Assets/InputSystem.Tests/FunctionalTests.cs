@@ -2232,6 +2232,24 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanGetTextInputFromKeyboard()
+    {
+        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+
+        var textReceived = "";
+        keyboard.onTextInput += ch => textReceived += ch;
+
+        InputSystem.QueueTextEvent(keyboard, 'a');
+        InputSystem.QueueTextEvent(keyboard, 'b');
+        InputSystem.QueueTextEvent(keyboard, 'c');
+
+        InputSystem.Update();
+
+        Assert.That(textReceived, Is.EqualTo("abc"));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanPerformHorizontalAndVerticalScrollWithMouse()
     {
         var mouse = (Mouse)InputSystem.AddDevice("Mouse");

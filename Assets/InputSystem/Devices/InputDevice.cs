@@ -1,6 +1,14 @@
 using System;
 using ISX.LowLevel;
 
+//device callbacks:
+//  - update/poll
+//  - read data
+//  - write data
+//  - text input
+//  - make current
+//  - reset current
+
 namespace ISX
 {
     /// <summary>
@@ -81,6 +89,10 @@ namespace ISX
         // This functionality is sort of like a 'pwd' for the semantic paths but one where there can
         // be multiple current working directories, one for each type.
         public virtual void MakeCurrent()
+        {
+        }
+
+        public virtual void OnTextInput(char character)
         {
         }
 

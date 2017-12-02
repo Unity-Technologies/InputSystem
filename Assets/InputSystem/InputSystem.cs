@@ -418,6 +418,20 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
+        public static void QueueTextEvent(InputDevice device, char character, double time = -1)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+            if (device.id == InputDevice.kInvalidDeviceId)
+                throw new InvalidOperationException("Device has not been added");
+
+            if (time < 0)
+                time = Time.time;
+
+            var inputEvent = TextEvent.Create(device.id, character, time);
+            s_Manager.QueueEvent(ref inputEvent);
+        }
+
         ////REVIEW: should we actually expose the Update() methods or should these be internal?
         public static void Update()
         {

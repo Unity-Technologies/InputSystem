@@ -1620,6 +1620,12 @@ namespace ISX
                                 m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
                         }
                         break;
+
+                    case TextEvent.Type:
+                        var textEventPtr = (TextEvent*)currentEventPtr;
+                        ////TODO: handle UTF-32 to UTF-16 conversion properly
+                        device.OnTextInput((char)textEventPtr->character);
+                        break;
                 }
 
                 // Mark as processed.
