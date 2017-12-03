@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['write',['Write',['../structISX_1_1LowLevel_1_1InputEventBuffer.html#a75fc1ee9282a35f927ee51ae0fdf1110',1,'ISX::LowLevel::InputEventBuffer']]]
+  ['usagechanged',['UsageChanged',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3',1,'ISX']]]
 ];

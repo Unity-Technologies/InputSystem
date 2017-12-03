@@ -1,6 +1,7 @@
 var hierarchy =
 [
     [ "ISX.InputTemplate.Builder", "structISX_1_1InputTemplate_1_1Builder.html", null ],
+    [ "ISX.LowLevel.ConfigChangeEvent", "structISX_1_1LowLevel_1_1ConfigChangeEvent.html", null ],
     [ "ISX.LowLevel.ConnectEvent", "structISX_1_1LowLevel_1_1ConnectEvent.html", null ],
     [ "ISX.InputTemplate.ControlTemplate", "structISX_1_1InputTemplate_1_1ControlTemplate.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],

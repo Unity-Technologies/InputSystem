@@ -298,6 +298,13 @@ namespace ISX
     /// </summary>
     /// <remarks>
     /// Keyboards allow for both individual button input as well as text input.
+    ///
+    /// Be aware that identification of keys in the system is layout-agnostic. For example, the
+    /// key referred to as the "a" key is always the key to the right of Caps Lock regardless of
+    /// where the current keyboard layout actually puts the "a" character (if it even has any).
+    /// To find what is actually behind a key according to the current keyboard layout, use
+    /// <see cref="KeyControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
+    /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
     [InputState(typeof(KeyboardState))]
     public class Keyboard : InputDevice
@@ -313,6 +320,18 @@ namespace ISX
             remove { m_TextInputListeners.Remove(value); }
         }
 
+        /// <summary>
+        /// The name of the layout currently used by the keyboard.
+        /// </summary>
+        /// <remarks>
+        /// Note that keyboard layout names are platform-specific.
+        ///
+        /// The value of this property reflects the currently used layout and thus changes
+        /// whenever the layout of the system or the one for the application is changed.
+        ///
+        /// To determine what a key represents in the current layout, use <see cref="KeyControl.displayName"/>,
+        /// <see cref="KeyControl.shiftDisplayName"/>, and <see cref="KeyControl.altDisplayName"/>.
+        /// </remarks>
         public string layout
         {
             get
@@ -323,13 +342,47 @@ namespace ISX
             protected set { m_LayoutName = value; }
         }
 
+        /// <summary>
+        /// A synthetic button control that is considered pressed if any key on the keyboard is pressed.
+        /// </summary>
         public AnyKeyControl any { get; private set; }
+
+        /// <summary>
+        /// The space key.
+        /// </summary>
         public KeyControl space { get; private set; }
+
+        /// <summary>
+        /// The enter/return key.
+        /// </summary>
+        /// <remarks>
+        /// This key is distinct from the enter key on the numpad which is <see cref="numpadEnter"/>.
+        /// </remarks>
         public KeyControl enter { get; private set; }
+
+        /// <summary>
+        /// The tab key.
+        /// </summary>
         public KeyControl tab { get; private set; }
+
+        /// <summary>
+        /// The backquote key. The leftmost key in the row of digits. Directly above tab.
+        /// </summary>
         public KeyControl backquote { get; private set; }
+
+        /// <summary>
+        /// The quote key. The key immediately to the left of the enter/return key.
+        /// </summary>
         public KeyControl quote { get; private set; }
+
+        /// <summary>
+        /// The semicolon key. The key immediately to the left of the quote key.
+        /// </summary>
         public KeyControl semicolon { get; private set; }
+
+        /// <summary>
+        /// The comma key. Third key to the left of the right shift key.
+        /// </summary>
         public KeyControl comma { get; private set; }
         public KeyControl period { get; private set; }
         public KeyControl slash { get; private set; }

@@ -7,14 +7,12 @@ using UnityEngine;
 
 namespace ISX
 {
-    ////REVIEW: I think it makes sense to switch this to a more compact format that doesn't store floats; after all in almost all
-    ////        cases our source data on platforms is *not* floats. And users won't generally deal with GamepadState directly.
-
     /// <summary>
-    /// Default state layout gamepads.
+    /// Default state layout for gamepads.
     /// </summary>
     /// <seealso cref="Gamepad"/>
-    [StructLayout(LayoutKind.Sequential)]
+    // NOTE: Must match GamepadInputState in native.
+    [StructLayout(LayoutKind.Explicit, Size = 36)]
     public struct GamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat
@@ -22,6 +20,10 @@ namespace ISX
             get { return new FourCC('G', 'P', 'A', 'D'); }
         }
 
+        /// <summary>
+        /// Button bit mask.
+        /// </summary>
+        /// <seealso cref="Button"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", template = "Dpad", usage = "Hatswitch")]
         [InputControl(name = "buttonSouth", template = "Button", bit = (uint)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
@@ -35,25 +37,43 @@ namespace ISX
         ////REVIEW: seems like these two should get less ambiguous names as well
         [InputControl(name = "start", template = "Button", bit = (uint)Button.Start, usage = "Menu")]
         [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
+        [FieldOffset(0)]
         public uint buttons;
 
+        /// <summary>
+        /// Left stick position.
+        /// </summary>
         [InputControl(variant = "Default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [FieldOffset(4)]
         public Vector2 leftStick;
 
+        /// <summary>
+        /// Right stick position.
+        /// </summary>
         [InputControl(variant = "Default", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [FieldOffset(12)]
         public Vector2 rightStick;
 
-        ////REVIEW: shouldn't this be an axis? how do we make sure actions trigger only on crossing threshold?
+        /// <summary>
+        /// Position of the left trigger.
+        /// </summary>
         [InputControl(variant = "Default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
         [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [FieldOffset(20)]
         public float leftTrigger;
 
+        /// <summary>
+        /// Position of the right trigger.
+        /// </summary>
         [InputControl(variant = "Default", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
         [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [FieldOffset(24)]
         public float rightTrigger;
 
+        ////TODO: this needs to go out of here and be stored separately
+        [FieldOffset(28)]
         public GamepadOutputState motors;
 
         public enum Button

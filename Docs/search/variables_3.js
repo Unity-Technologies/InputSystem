@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['participantid',['participantId',['../structISX_1_1InputRemoting_1_1Message.html#a3436cb56d043290d5749f037f7402aa2',1,'ISX::InputRemoting::Message']]]
+  ['leftstick',['leftStick',['../structISX_1_1GamepadState.html#a51e37e94bbf3838c0ffcd0391220158d',1,'ISX::GamepadState']]],
+  ['lefttrigger',['leftTrigger',['../structISX_1_1GamepadState.html#a7d01d15c0e9043d91a5755cc40e1bb11',1,'ISX::GamepadState']]]
 ];

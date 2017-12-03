@@ -42,7 +42,7 @@ namespace ISX
         }
 
         /// <summary>
-        /// Display name for key when used in combination with shift key.
+        /// Display name for key when used in combination with the shift key.
         /// </summary>
         public string shiftDisplayName
         {
@@ -54,7 +54,7 @@ namespace ISX
         }
 
         /// <summary>
-        /// Display name for key when used in combination with alt key.
+        /// Display name for key when used in combination with the alt key.
         /// </summary>
         public string altDisplayName
         {
@@ -70,6 +70,8 @@ namespace ISX
             // Wipe our last cached set of data (if any).
             displayName = null;
             m_ScanCode = 0;
+            m_AltDisplayName = null;
+            m_ShiftDisplayName = null;
 
             const int kMaxBufferSize = 256;
 

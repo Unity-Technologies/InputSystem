@@ -109,6 +109,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a18d3a4551ab679910e7aca01bcda7ea2"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2">MakeCurrent</a> ()</td></tr>
 <tr class="memdesc:a18d3a4551ab679910e7aca01bcda7ea2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make this the current device of its type.  <a href="#a18d3a4551ab679910e7aca01bcda7ea2">More...</a><br /></td></tr>
 <tr class="separator:a18d3a4551ab679910e7aca01bcda7ea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae2b9de06e3b712861a6eccf423a22861"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ae2b9de06e3b712861a6eccf423a22861">OnConfigChange</a> ()</td></tr>
+<tr class="memdesc:ae2b9de06e3b712861a6eccf423a22861"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by the system when the configuration of the device has changed.  <a href="#ae2b9de06e3b712861a6eccf423a22861">More...</a><br /></td></tr>
+<tr class="separator:ae2b9de06e3b712861a6eccf423a22861"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -121,9 +124,6 @@ Properties</h2></td></tr>
 <tr class="memitem:acdf24e99a5e11a380c117896ff30b520"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#acdf24e99a5e11a380c117896ff30b520">lastUpdateTime</a><code> [get]</code></td></tr>
 <tr class="memdesc:acdf24e99a5e11a380c117896ff30b520"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timestamp of last state event used to update the device.  <a href="#acdf24e99a5e11a380c117896ff30b520">More...</a><br /></td></tr>
 <tr class="separator:acdf24e99a5e11a380c117896ff30b520"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00849d4372b89aa379a1b9526ac578fa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a00849d4372b89aa379a1b9526ac578fa">configurationSequenceNumber</a><code> [get]</code></td></tr>
-<tr class="memdesc:a00849d4372b89aa379a1b9526ac578fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">A running numeric identifier for the device's current configuration.  <a href="#a00849d4372b89aa379a1b9526ac578fa">More...</a><br /></td></tr>
-<tr class="separator:a00849d4372b89aa379a1b9526ac578fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>The root of a control hierarchy. </p>
@@ -163,9 +163,8 @@ Properties</h2></td></tr>
 
 </div>
 </div>
-<h2 class="groupheader">Property Documentation</h2>
-<a id="a00849d4372b89aa379a1b9526ac578fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00849d4372b89aa379a1b9526ac578fa">&#9670;&nbsp;</a></span>configurationSequenceNumber</h2>
+<a id="ae2b9de06e3b712861a6eccf423a22861"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae2b9de06e3b712861a6eccf423a22861">&#9670;&nbsp;</a></span>OnConfigChange()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -174,21 +173,25 @@ Properties</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int ISX.InputDevice.configurationSequenceNumber</td>
+          <td class="memname">virtual void ISX.InputDevice.OnConfigChange </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>A running numeric identifier for the device's current configuration. </p>
-<p>The configuration of an input device may change over time. A keyboard, for example, may change its keyboard layout multiple times while the application is running. As fetching configuration from a device isn't cheap, it makes sense to cache configuration data once it has been fetched. This, however, requires knowing when the data is no longer valid. The running sequence number helps with that. If the configuration sequence number stored with cached data is no longer the same as the sequence number on the device, cached configuration should be refreshed. </p>
+<p>Called by the system when the configuration of the device has changed. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structISX_1_1LowLevel_1_1ConfigChangeEvent.html" title="Indicates that the configuration of a device has changed. ">LowLevel.ConfigChangeEvent</a></dd></dl>
 
 </div>
 </div>
+<h2 class="groupheader">Property Documentation</h2>
 <a id="acdf24e99a5e11a380c117896ff30b520"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acdf24e99a5e11a380c117896ff30b520">&#9670;&nbsp;</a></span>lastUpdateTime</h2>
 
