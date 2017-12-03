@@ -5,8 +5,12 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace ISX
 {
-    // Named according to the US keyboard layout which is our reference layout.
-    //
+    /// <summary>
+    /// Enumeration of key codes.
+    /// </summary>
+    /// <remarks>
+    /// Named according to the US keyboard layout which is our reference layout.
+    /// </remarks>
     // NOTE: Has to match up with 'KeyboardInputState::KeyCode' in native.
     // NOTE: In the keyboard code, we depend on the order of the keys in the various keyboard blocks.
     public enum Key
@@ -496,6 +500,11 @@ namespace ISX
 
         public static Keyboard current { get; internal set; }
 
+        /// <summary>
+        /// Look up a key control by its key code.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <exception cref="ArgumentException">The given <see cref="key"/> is not valid.</exception>
         public KeyControl this[Key key]
         {
             get
@@ -642,7 +651,7 @@ namespace ISX
                     case Key.OEM5: return oem5;
                 }
 
-                throw new ArgumentOutOfRangeException("key");
+                throw new ArgumentException("key");
             }
         }
 

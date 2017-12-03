@@ -124,8 +124,8 @@ namespace ISX
             // in a game that never uses VR.
             m_Templates.templateTypes[internedName] = type;
 
-            ////FIXME: this relies on initialization order
-            ////       also, means we have to rescan on domain reload; not convinced adding this features is the right thing
+            ////TODO: make this independent of initialization order
+            ////TODO: re-scan base type information after domain reloads
 
             // Walk class hierarchy all the way up to InputControl to see
             // if there's another type that's been registered as a template.
@@ -1652,6 +1652,8 @@ namespace ISX
 
                     case ConfigChangeEvent.Type:
                         device.OnConfigChange();
+                        for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                            m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
                         break;
                 }
 

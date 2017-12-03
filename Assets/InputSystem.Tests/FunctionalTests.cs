@@ -1989,14 +1989,14 @@ public class FunctionalTests : InputTestFixture
 
         var receivedCalls = 0;
         InputDevice receivedDevice = null;
-        InputDeviceChange? receiveDeviceChange = null;
+        InputDeviceChange? receivedDeviceChange = null;
 
         InputSystem.onDeviceChange +=
             (d, c) =>
             {
                 ++receivedCalls;
                 receivedDevice = d;
-                receiveDeviceChange = c;
+                receivedDeviceChange = c;
             };
 
         InputSystem.QueueDisconnectEvent(device);
@@ -2004,19 +2004,19 @@ public class FunctionalTests : InputTestFixture
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(device));
-        Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Disconnected));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.Disconnected));
         Assert.That(device.connected, Is.False);
 
         receivedCalls = 0;
         receivedDevice = null;
-        receiveDeviceChange = null;
+        receivedDeviceChange = null;
 
         InputSystem.QueueConnectEvent(device);
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(device));
-        Assert.That(receiveDeviceChange, Is.EqualTo(InputDeviceChange.Connected));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.Connected));
         Assert.That(device.connected, Is.True);
     }
 
@@ -2035,6 +2035,32 @@ public class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.0f));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingConfigurationOfDeviceTriggersNotification()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                ++receivedCalls;
+                receivedDevice = d;
+                receivedDeviceChange = c;
+            };
+
+        InputSystem.QueueConfigChangeEvent(gamepad);
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.ConfigurationChanged));
     }
 
     [Test]

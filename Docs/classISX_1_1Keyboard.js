@@ -10,5 +10,6 @@ var classISX_1_1Keyboard =
     [ "quote", "classISX_1_1Keyboard.html#a7dcd1541ac535eb169bc17afe10dfaf0", null ],
     [ "semicolon", "classISX_1_1Keyboard.html#ac4c1c852a6c2f3661911732c58b98504", null ],
     [ "space", "classISX_1_1Keyboard.html#a2345c9059d074db7ef1b346efb10d908", null ],
-    [ "tab", "classISX_1_1Keyboard.html#ae068e27e21f50a3495fbed603411f8f2", null ]
+    [ "tab", "classISX_1_1Keyboard.html#ae068e27e21f50a3495fbed603411f8f2", null ],
+    [ "this[Key key]", "classISX_1_1Keyboard.html#ae053ebaa165a7aa645c3585b57353073", null ]
 ];

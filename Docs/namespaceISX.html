@@ -148,6 +148,9 @@ Enumerations</h2></td></tr>
  }<tr class="memdesc:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates what type of change related to an input device occurred.  <a href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38873005ef32f511b64aa2a8c06bd89b"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceISX.html#a38873005ef32f511b64aa2a8c06bd89b">Key</a> <tr class="memdesc:a38873005ef32f511b64aa2a8c06bd89b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of key codes.  <a href="namespaceISX.html#a38873005ef32f511b64aa2a8c06bd89b">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:a38873005ef32f511b64aa2a8c06bd89b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a id="a664a08fa4bdc226c4fecddb3f350d6a1"></a>
@@ -180,9 +183,10 @@ Enumerations</h2></td></tr>
 <dl class="section see"><dt>See also</dt><dd>InputSystem.RemoveDevice</dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7"></a>Connected&#160;</td><td class="fielddoc"><p>A previously added device was re-connected after having been disconnected. </p>
-<dl class="section see"><dt>See also</dt><dd>ConnectEvent</dd></dl>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structISX_1_1LowLevel_1_1ConnectEvent.html" title="Signals that a device got re-connected after a disconnect. ">LowLevel.ConnectEvent</a>, InputSystem.QueueConnectEvent</dd></dl>
 </td></tr>
-<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0"></a>Disconnected&#160;</td><td class="fielddoc"><dl class="section see"><dt>See also</dt><dd>DisconnectEvent</dd></dl>
+<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0"></a>Disconnected&#160;</td><td class="fielddoc"><p>A previously added device was disconnected but remains added to the system. </p>
+<dl class="section see"><dt>See also</dt><dd>LowLevel.DisconnectEvent, InputSystem.QueueDisconnectEvent</dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3"></a>UsageChanged&#160;</td><td class="fielddoc"><p>The usages on a device have changed. </p>
 <p>This may signal, for example, that what was the right hand XR controller before is now the left hand controller. </p>
@@ -190,8 +194,34 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5"></a>ConfigurationChanged&#160;</td><td class="fielddoc"><p>The configuration of a device has changed. </p>
 <p>This may signal, for example, that the layout used by the keyboard has changed or that, on a console, a gamepad has changed which player ID(s) it is assigned to. </p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="structISX_1_1LowLevel_1_1ConfigChangeEvent.html" title="Indicates that the configuration of a device has changed. ">LowLevel.ConfigChangeEvent</a>, InputSystem.QueueConfigChangeEvent</dd></dl>
 </td></tr>
 </table>
+
+</div>
+</div>
+<a id="a38873005ef32f511b64aa2a8c06bd89b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38873005ef32f511b64aa2a8c06bd89b">&#9670;&nbsp;</a></span>Key</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespaceISX.html#a38873005ef32f511b64aa2a8c06bd89b">ISX.Key</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Enumeration of key codes. </p>
+<p>Named according to the US keyboard layout which is our reference layout. </p>
 
 </div>
 </div>
