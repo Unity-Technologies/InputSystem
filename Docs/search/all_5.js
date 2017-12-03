@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['message',['Message',['../structISX_1_1InputRemoting_1_1Message.html',1,'ISX::InputRemoting']]],
-  ['messagetype',['MessageType',['../classISX_1_1InputRemoting.html#a67a9a0f806eabe3bbc217639bf6d4042',1,'ISX::InputRemoting']]]
+  ['gamepad',['Gamepad',['../classISX_1_1Gamepad.html',1,'ISX']]],
+  ['gamepadstate',['GamepadState',['../structISX_1_1GamepadState.html',1,'ISX']]]
 ];

@@ -50,17 +50,17 @@ namespace ISX
             remove { s_Manager.onTemplateChange -= value; }
         }
 
-        public static void RegisterTemplate(Type type, string name = null)
+        public static void RegisterTemplate(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
         {
             if (name == null)
                 name = type.Name;
 
-            s_Manager.RegisterTemplate(name, type);
+            s_Manager.RegisterTemplate(name, type, deviceDescription);
         }
 
-        public static void RegisterTemplate<T>(string name = null)
+        public static void RegisterTemplate<T>(string name = null, InputDeviceDescription? deviceDescription = null)
         {
-            RegisterTemplate(typeof(T), name);
+            RegisterTemplate(typeof(T), name, deviceDescription);
         }
 
         public static void RegisterTemplate(string json, string name = null)
@@ -418,6 +418,20 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
+        public static void QueueConfigChangeEvent(InputDevice device, double time = -1)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+            if (device.id == InputDevice.kInvalidDeviceId)
+                throw new InvalidOperationException("Device has not been added");
+
+            if (time < 0)
+                time = Time.time;
+
+            var inputEvent = ConfigChangeEvent.Create(device.id, time);
+            s_Manager.QueueEvent(ref inputEvent);
+        }
+
         public static void QueueTextEvent(InputDevice device, char character, double time = -1)
         {
             if (device == null)
@@ -595,11 +609,15 @@ namespace ISX
         #endif
 
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
-        public static void InitializeInPlayer()
+        private static void RunInitializeInPlayer()
         {
-            if (s_Initialized)
-                return;
+            // We only need this method to ensure that the class constructor is run. It
+            // may have already run if someone was calling into InputSystem from other
+            // initialization code.
+        }
 
+        private static void InitializeInPlayer()
+        {
             // No domain reloads in the player so we don't need to look for existing
             // instances.
             s_Manager = new InputManager();
@@ -614,8 +632,6 @@ namespace ISX
             s_ConnectionToEditor.Subscribe(s_Remote);
             s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
             #endif
-
-            s_Initialized = true;
         }
 
 #endif // UNITY_EDITOR
@@ -635,7 +651,6 @@ namespace ISX
             if (s_Manager != null)
                 s_Manager.Destroy();
             ////TODO: reset remote
-            s_Initialized = false;
             InitializeInPlayer();
             #endif
         }

@@ -115,7 +115,9 @@ namespace ISX
             }
         }
 
-        // Specifies the composition of an input control.
+        /// <summary>
+        /// Specification for the composition of a direct or indirect child control.
+        /// </summary>
         public struct ControlTemplate
         {
             [Flags]
@@ -125,12 +127,33 @@ namespace ISX
                 StateAutomaticallyResetsBetweenFrames = 1 << 1,
             }
 
+            /// <summary>
+            /// Name of the control.
+            /// </summary>
+            /// <remarks>
+            /// This may also be a path. This can be used to reach
+            /// inside another template and modify properties of a control inside
+            /// of it. An example for this is adding a "leftStick" control using the
+            /// Stick template and then adding two control templates that refer to
+            /// "leftStick/x" and "leftStick/y" respectively to modify the state
+            /// format used by the stick.
+            ///
+            /// This field is required.
+            /// </remarks>
+            /// <seealso cref="isModifyingChildControlByPath"/>
             public InternedString name;
+
             public InternedString template;
             public InternedString variant;
             public string useStateFrom;
+
+            /// <summary>
+            /// Optional display name of the control.
+            /// </summary>
+            /// <seealso cref="InputControl.displayName"/>
             public string displayName;
-            public string imageName;
+
+            public string resourceName;
             public ReadOnlyArray<InternedString> usages;
             public ReadOnlyArray<InternedString> aliases;
             public ReadOnlyArray<ParameterValue> parameters;
@@ -384,7 +407,7 @@ namespace ISX
         internal ControlTemplate[] m_Controls;
         private InputDeviceDescription m_DeviceDescription;
         internal string m_DisplayName;
-        internal string m_ImageName;////REVIEW: extend this to denote an arbitrary asset name?
+        internal string m_ResourceName;
 
         private InputTemplate(string name, Type type)
         {
@@ -770,6 +793,11 @@ namespace ISX
             if (m_StateFormat == new FourCC())
                 m_StateFormat = other.m_StateFormat;
 
+            if (string.IsNullOrEmpty(m_DisplayName))
+                m_DisplayName = other.m_DisplayName;
+            if (string.IsNullOrEmpty(m_ResourceName))
+                m_ResourceName = other.m_ResourceName;
+
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
             else
@@ -908,6 +936,16 @@ namespace ISX
             else
                 throw new NotImplementedException("merging processors");
 
+            if (!string.IsNullOrEmpty(derivedTemplate.displayName))
+                result.displayName = derivedTemplate.displayName;
+            else
+                result.displayName = baseTemplate.displayName;
+
+            if (!string.IsNullOrEmpty(derivedTemplate.resourceName))
+                result.resourceName = derivedTemplate.resourceName;
+            else
+                result.resourceName = baseTemplate.resourceName;
+
             return result;
         }
 
@@ -953,7 +991,7 @@ namespace ISX
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string[] usages;////TODO: this isn't implemented
             public string displayName;
-            public string imageName;
+            public string resourceName;
             public string type; // This is mostly for when we turn arbitrary InputTemplates into JSON; less for templates *coming* from JSON.
             public DeviceDescriptionJson device;
             public ControlTemplateJson[] controls;
@@ -992,7 +1030,7 @@ namespace ISX
                 template.m_ExtendsTemplate = new InternedString(extend);
                 template.m_DeviceDescription = device.ToDescriptor();
                 template.m_DisplayName = displayName;
-                template.m_ImageName = imageName;
+                template.m_ResourceName = resourceName;
                 if (!string.IsNullOrEmpty(format))
                     template.m_StateFormat = new FourCC(format);
 
@@ -1043,7 +1081,7 @@ namespace ISX
                     name = template.m_Name,
                     type = template.type.AssemblyQualifiedName,
                     displayName = template.m_DisplayName,
-                    imageName = template.m_ImageName,
+                    resourceName = template.m_ResourceName,
                     extend = template.m_ExtendsTemplate,
                     format = template.stateFormat.ToString(),
                     device = DeviceDescriptionJson.FromDescription(template.m_DeviceDescription),
@@ -1079,7 +1117,7 @@ namespace ISX
             public string parameters;
             public string processors;
             public string displayName;
-            public string imageName;
+            public string resourceName;
 
             ////TODO: drop this
             public bool autoReset;
@@ -1101,7 +1139,7 @@ namespace ISX
                     template = new InternedString(this.template),
                     variant = new InternedString(variant),
                     displayName = displayName,
-                    imageName = imageName,
+                    resourceName = resourceName,
                     offset = offset,
                     useStateFrom = useStateFrom,
                     bit = bit,
@@ -1159,7 +1197,7 @@ namespace ISX
                         template = template.template,
                         variant = template.variant,
                         displayName = template.displayName,
-                        imageName = template.imageName,
+                        resourceName = template.resourceName,
                         bit = template.bit,
                         offset = template.offset,
                         sizeInBits = template.sizeInBits,
@@ -1302,14 +1340,19 @@ namespace ISX
 
                     // If the template extends another template, we need to merge the
                     // base template into the final template.
-                    if (!template.m_ExtendsTemplate.IsEmpty())
+                    // NOTE: We go through the baseTemplateTable here instead of looking at
+                    //       the extendsTemplate property so as to make this work for all types
+                    //       of templates (FromType() does not set the property, for example).
+                    var baseTemplateName = new InternedString();
+                    if (baseTemplateTable.TryGetValue(name, out baseTemplateName))
                     {
                         ////TODO: catch cycles
-                        var superTemplate = TryLoadTemplate(template.m_ExtendsTemplate, table);
-                        if (superTemplate == null)
+                        var baseTemplate = TryLoadTemplate(baseTemplateName, table);
+                        if (baseTemplate == null)
                             throw new TemplateNotFoundException(string.Format(
-                                    "Cannot find base template '{0}' of template '{1}'", template.m_ExtendsTemplate, name));
-                        template.MergeTemplate(superTemplate);
+                                    "Cannot find base template '{0}' of template '{1}'", baseTemplateName, name));
+                        template.MergeTemplate(baseTemplate);
+                        template.m_ExtendsTemplate = baseTemplateName;
                     }
                 }
 

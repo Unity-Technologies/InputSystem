@@ -604,7 +604,7 @@ namespace ISX
                         if (localDeviceId != InputDevice.kInvalidDeviceId && isConnectedToNative)
                         {
                             ////TODO: add API to send events in bulk rather than one by one
-                            NativeInputSystem.SendInput(eventPtr.data);
+                            NativeInputSystem.QueueInputEvent(eventPtr.data);
                         }
 
                         ++eventCount;

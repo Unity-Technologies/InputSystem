@@ -457,6 +457,17 @@ public class FunctionalTests : InputTestFixture
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
+    [Test]
+    [Category("Templates")]
+    public void Templates_RegisteringTemplateType_UsesBaseTypeAsBaseTemplate()
+    {
+        // The Mouse class uses the Pointer class as its base class.
+        // So the Mouse template should extend the Pointer template.
+
+        var mouseTemplate = InputSystem.TryLoadTemplate("Mouse");
+        Assert.That(mouseTemplate.extendsTemplate, Is.EqualTo("Pointer"));
+    }
+
     // Want to ensure that if a state struct declares an "int" field, for example, and then
     // assigns it then Axis template (which has a default format of float), the AxisControl
     // comes out with an "INT" format and not a "FLT" format.
@@ -557,6 +568,37 @@ public class FunctionalTests : InputTestFixture
         var stick = setup.GetControl<StickControl>("stick");
 
         Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanSpecifyDisplayNameForControl()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""extend"" : ""Gamepad"",
+                ""displayName"" : ""Test Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick"",
+                        ""displayName"" : ""Primary Stick""
+                    },
+                    {
+                        ""name"" : ""leftStick/x"",
+                        ""displayName"" : ""Horizontal""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = (Gamepad) new InputControlSetup("MyTemplate").Finish();
+
+        Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
+        Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
+        Assert.That(device.leftStick.x.displayName, Is.EqualTo("Horizontal"));
     }
 
     [Test]
@@ -2116,6 +2158,19 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_DisplayNameDefaultsToProductName()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad",
+            product = "Product Name"
+        });
+
+        Assert.That(device.displayName, Is.EqualTo("Product Name"));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
     {
         var gamepad1 = InputSystem.AddDevice("Gamepad");
@@ -2246,6 +2301,129 @@ public class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(textReceived, Is.EqualTo("abc"));
+    }
+
+    // Getting key information relies on InputDevice.ReadData() to read configuration
+    // data. This method punches through to native for native devices but has to be
+    // implemented in subclasses for scripted devices. As we don't have a native keyboard
+    // in tests, we need to provide an implementation here.
+    class TestKeyboard : Keyboard
+    {
+        public string currentLayoutName = "default";
+
+        public override unsafe int ReadData(FourCC type, IntPtr buffer, int sizeInBytes)
+        {
+            if (type == KeyControl.KeyConfigCode)
+            {
+                if (sizeInBytes < sizeof(int) * 4)
+                    return 0;
+
+                var scanCode = 0x02;
+                var symbol = "other";
+                var shiftSymbol = "OTHER";
+                var altSymbol = "AltOther";
+
+                var keyCode = *((Key*)buffer);
+                if (keyCode == Key.A)
+                {
+                    if (currentLayoutName == "default")
+                    {
+                        scanCode = 0x01;
+                        symbol = "m";
+                        shiftSymbol = "M";
+                        altSymbol = string.Empty;
+                    }
+                    else
+                    {
+                        scanCode = 0x01;
+                        symbol = "q";
+                        shiftSymbol = "Q";
+                        altSymbol = "#";
+                    }
+                }
+
+                *((int*)buffer) = scanCode;
+                var offset = 4u;
+                if (!StringHelpers.WriteStringToBuffer(symbol, buffer, sizeInBytes, ref offset))
+                    return 0;
+                if (!StringHelpers.WriteStringToBuffer(shiftSymbol, buffer, sizeInBytes, ref offset))
+                    return 0;
+                if (!StringHelpers.WriteStringToBuffer(altSymbol, buffer, sizeInBytes, ref offset))
+                    return 0;
+                return (int)offset;
+            }
+            else if (type == LayoutConfigCode)
+            {
+                uint offset = 0;
+                if (StringHelpers.WriteStringToBuffer(currentLayoutName, buffer, sizeInBytes, ref offset))
+                    return (int)offset;
+            }
+
+            return 0;
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetDisplayNameFromKeyboardKey()
+    {
+        InputSystem.RegisterTemplate<TestKeyboard>();
+        var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
+
+        Assert.That(keyboard.a.displayName, Is.EqualTo("m"));
+        Assert.That(keyboard.a.shiftDisplayName, Is.EqualTo("M"));
+        Assert.That(keyboard.a.altDisplayName, Is.Empty);
+        Assert.That(keyboard.b.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.b.shiftDisplayName, Is.EqualTo("OTHER"));
+        Assert.That(keyboard.b.altDisplayName, Is.EqualTo("AltOther"));
+
+        // Change layout.
+        keyboard.currentLayoutName = "other";
+        InputSystem.QueueConfigChangeEvent(keyboard);
+        InputSystem.Update();
+
+        Assert.That(keyboard.a.displayName, Is.EqualTo("q"));
+        Assert.That(keyboard.a.shiftDisplayName, Is.EqualTo("Q"));
+        Assert.That(keyboard.a.altDisplayName, Is.EqualTo("#"));
+        Assert.That(keyboard.b.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.b.shiftDisplayName, Is.EqualTo("OTHER"));
+        Assert.That(keyboard.b.altDisplayName, Is.EqualTo("AltOther"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetNameOfCurrentKeyboardLayout()
+    {
+        InputSystem.RegisterTemplate<TestKeyboard>();
+
+        var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
+        keyboard.currentLayoutName = "default";
+
+        Assert.That(keyboard.layout, Is.EqualTo("default"));
+
+        keyboard.currentLayoutName = "new";
+        InputSystem.QueueConfigChangeEvent(keyboard);
+        InputSystem.Update();
+
+        Assert.That(keyboard.layout, Is.EqualTo("new"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetKeyCodeFromKeyboardKey()
+    {
+        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+
+        Assert.That(keyboard.a.keyCode, Is.EqualTo(Key.A));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanLookUpKeyFromKeyboardUsingKeyCode()
+    {
+        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+
+        Assert.That(keyboard[Key.A], Is.SameAs(keyboard.a));
     }
 
     [Test]
@@ -2460,6 +2638,30 @@ public class FunctionalTests : InputTestFixture
         var gamepad = (Gamepad) new InputControlSetup("CustomGamepad").Finish();
 
         Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_DisplayNameDefaultsToControlName()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control"",
+                        ""template"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("MyDevice");
+        var control = setup.GetControl("control");
+
+        Assert.That(control.displayName, Is.EqualTo("control"));
     }
 
     // This is one of the most central tests. If this one breaks, it most often

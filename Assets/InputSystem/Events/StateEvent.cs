@@ -4,8 +4,12 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace ISX.LowLevel
 {
-    // Full state update for an input device.
-    // Variable-size event.
+    /// <summary>
+    /// A complete state snapshot for an entire input device.
+    /// </summary>
+    /// <remarks>
+    /// This is a variable-sized event.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 5)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {

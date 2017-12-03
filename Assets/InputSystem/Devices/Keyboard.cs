@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 namespace ISX
@@ -7,6 +8,7 @@ namespace ISX
     // Named according to the US keyboard layout which is our reference layout.
     //
     // NOTE: Has to match up with 'KeyboardInputState::KeyCode' in native.
+    // NOTE: In the keyboard code, we depend on the order of the keys in the various keyboard blocks.
     public enum Key
     {
         None,
@@ -291,13 +293,34 @@ namespace ISX
         }
     }
 
+    /// <summary>
+    /// A keyboard input device.
+    /// </summary>
+    /// <remarks>
+    /// Keyboards allow for both individual button input as well as text input.
+    /// </remarks>
     [InputState(typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
+        public static FourCC LayoutConfigCode { get { return new FourCC('K', 'B', 'L', 'T'); } }
+
+        /// <summary>
+        /// Event that is fired for every single character entered on the keyboard.
+        /// </summary>
         public event Action<char> onTextInput
         {
             add { m_TextInputListeners.Append(value); }
             remove { m_TextInputListeners.Remove(value); }
+        }
+
+        public string layout
+        {
+            get
+            {
+                RefreshConfigurationIfNeeded();
+                return m_LayoutName;
+            }
+            protected set { m_LayoutName = value; }
         }
 
         public AnyKeyControl any { get; private set; }
@@ -365,6 +388,7 @@ namespace ISX
         public KeyControl rightApple { get; private set; }
         public KeyControl leftCommand { get; private set; }
         public KeyControl rightCommand { get; private set; }
+        public KeyControl contextMenu { get; private set; }
         public KeyControl escape { get; private set; }
         public KeyControl leftArrow { get; private set; }
         public KeyControl rightArrow { get; private set; }
@@ -380,6 +404,7 @@ namespace ISX
         public KeyControl capsLock { get; private set; }
         public KeyControl scrollLock { get; private set; }
         public KeyControl numLock { get; private set; }
+        public KeyControl printScreen { get; private set; }
         public KeyControl pause { get; private set; }
         public KeyControl numpadEnter { get; private set; }
         public KeyControl numpadDivide { get; private set; }
@@ -410,8 +435,163 @@ namespace ISX
         public KeyControl f10 { get; private set; }
         public KeyControl f11 { get; private set; }
         public KeyControl f12 { get; private set; }
+        public KeyControl oem1 { get; private set; }
+        public KeyControl oem2 { get; private set; }
+        public KeyControl oem3 { get; private set; }
+        public KeyControl oem4 { get; private set; }
+        public KeyControl oem5 { get; private set; }
 
         public static Keyboard current { get; internal set; }
+
+        public KeyControl this[Key key]
+        {
+            get
+            {
+                if (key >= Key.A && key <= Key.Z)
+                {
+                    switch (key)
+                    {
+                        case Key.A: return a;
+                        case Key.B: return b;
+                        case Key.C: return c;
+                        case Key.D: return d;
+                        case Key.E: return e;
+                        case Key.F: return f;
+                        case Key.G: return g;
+                        case Key.H: return h;
+                        case Key.I: return i;
+                        case Key.J: return j;
+                        case Key.K: return k;
+                        case Key.L: return l;
+                        case Key.M: return m;
+                        case Key.N: return n;
+                        case Key.O: return o;
+                        case Key.P: return p;
+                        case Key.Q: return q;
+                        case Key.R: return r;
+                        case Key.S: return s;
+                        case Key.T: return t;
+                        case Key.U: return u;
+                        case Key.V: return v;
+                        case Key.W: return w;
+                        case Key.X: return x;
+                        case Key.Y: return y;
+                        case Key.Z: return z;
+                    }
+                }
+
+                if (key >= Key.Digit1 && key <= Key.Digit0)
+                {
+                    switch (key)
+                    {
+                        case Key.Digit1: return digit1;
+                        case Key.Digit2: return digit2;
+                        case Key.Digit3: return digit3;
+                        case Key.Digit4: return digit4;
+                        case Key.Digit5: return digit5;
+                        case Key.Digit6: return digit6;
+                        case Key.Digit7: return digit7;
+                        case Key.Digit8: return digit8;
+                        case Key.Digit9: return digit9;
+                        case Key.Digit0: return digit0;
+                    }
+                }
+
+                if (key >= Key.F1 && key <= Key.F12)
+                {
+                    switch (key)
+                    {
+                        case Key.F1: return f1;
+                        case Key.F2: return f2;
+                        case Key.F3: return f3;
+                        case Key.F4: return f4;
+                        case Key.F5: return f5;
+                        case Key.F6: return f6;
+                        case Key.F7: return f7;
+                        case Key.F8: return f8;
+                        case Key.F9: return f9;
+                        case Key.F10: return f10;
+                        case Key.F11: return f11;
+                        case Key.F12: return f12;
+                    }
+                }
+
+                if (key >= Key.NumpadEnter && key <= Key.Numpad9)
+                {
+                    switch (key)
+                    {
+                        case Key.NumpadEnter: return numpadEnter;
+                        case Key.NumpadDivide: return numpadDivide;
+                        case Key.NumpadMultiply: return numpadMultiply;
+                        case Key.NumpadPlus: return numpadPlus;
+                        case Key.NumpadMinus: return numpadMinus;
+                        case Key.NumpadPeriod: return numpadPeriod;
+                        case Key.NumpadEquals: return numpadEquals;
+                        case Key.Numpad0: return numpad0;
+                        case Key.Numpad1: return numpad1;
+                        case Key.Numpad2: return numpad2;
+                        case Key.Numpad3: return numpad3;
+                        case Key.Numpad4: return numpad4;
+                        case Key.Numpad5: return numpad5;
+                        case Key.Numpad6: return numpad6;
+                        case Key.Numpad7: return numpad7;
+                        case Key.Numpad8: return numpad8;
+                        case Key.Numpad9: return numpad9;
+                    }
+                }
+
+                switch (key)
+                {
+                    case Key.Space: return space;
+                    case Key.Enter: return enter;
+                    case Key.Tab: return tab;
+                    case Key.Backquote: return backquote;
+                    case Key.Quote: return quote;
+                    case Key.Semicolon: return semicolon;
+                    case Key.Comma: return comma;
+                    case Key.Period: return period;
+                    case Key.Slash: return slash;
+                    case Key.Backslash: return backslash;
+                    case Key.LeftBracket: return leftBracket;
+                    case Key.RightBracket: return rightBracket;
+                    case Key.Minus: return minus;
+                    case Key.Equals: return equals;
+                    case Key.LeftShift: return leftShift;
+                    case Key.RightShift: return rightShift;
+                    case Key.LeftAlt: return leftAlt;
+                    case Key.RightAlt: return rightAlt;
+                    case Key.LeftCtrl: return leftCtrl;
+                    case Key.RightCtrl: return rightCtrl;
+                    case Key.LeftMeta: return leftMeta;
+                    case Key.RightMeta: return rightMeta;
+                    case Key.ContextMenu: return contextMenu;
+                    case Key.Escape: return escape;
+                    case Key.LeftArrow: return leftArrow;
+                    case Key.RightArrow: return rightArrow;
+                    case Key.UpArrow: return upArrow;
+                    case Key.DownArrow: return downArrow;
+                    case Key.Backspace: return backspace;
+                    case Key.PageDown: return pageDown;
+                    case Key.PageUp: return pageUp;
+                    case Key.Home: return home;
+                    case Key.End: return end;
+                    case Key.Insert: return insert;
+                    case Key.Delete: return delete;
+                    case Key.CapsLock: return capsLock;
+                    case Key.NumLock: return numLock;
+                    case Key.PrintScreen: return printScreen;
+                    case Key.ScrollLock: return scrollLock;
+                    case Key.Pause: return pause;
+                    case Key.OEM1: return oem1;
+                    case Key.OEM2: return oem2;
+                    case Key.OEM3: return oem3;
+                    case Key.OEM4: return oem4;
+                    case Key.OEM5: return oem5;
+                }
+
+                throw new ArgumentOutOfRangeException("key");
+            }
+        }
 
         public override void MakeCurrent()
         {
@@ -486,6 +666,7 @@ namespace ISX
             rightApple = setup.GetControl<KeyControl>("RightApple");
             leftCommand = setup.GetControl<KeyControl>("LeftCommand");
             rightCommand = setup.GetControl<KeyControl>("RightCommand");
+            contextMenu = setup.GetControl<KeyControl>("ContextMenu");
             escape = setup.GetControl<KeyControl>("Escape");
             leftArrow = setup.GetControl<KeyControl>("LeftArrow");
             rightArrow = setup.GetControl<KeyControl>("RightArrow");
@@ -530,9 +711,45 @@ namespace ISX
             capsLock = setup.GetControl<KeyControl>("CapsLock");
             numLock = setup.GetControl<KeyControl>("NumLock");
             scrollLock = setup.GetControl<KeyControl>("ScrollLock");
+            printScreen = setup.GetControl<KeyControl>("PrintScreen");
             pause = setup.GetControl<KeyControl>("Pause");
+            oem1 = setup.GetControl<KeyControl>("OEM1");
+            oem2 = setup.GetControl<KeyControl>("OEM2");
+            oem3 = setup.GetControl<KeyControl>("OEM3");
+            oem4 = setup.GetControl<KeyControl>("OEM4");
+            oem5 = setup.GetControl<KeyControl>("OEM5");
+
+            ////REVIEW: Ideally, we'd have a way to do this through templates; this way nested key controls could work, too,
+            ////        and it just seems somewhat dirty to jam the data into the control here
+
+            // Assign key code to all keys.
+            for (var key = 1; key < (int)Key.Count; ++key)
+                this[(Key)key].keyCode = (Key)key;
 
             base.FinishSetup(setup);
+        }
+
+        protected override void RefreshConfiguration()
+        {
+            const int kMaxBufferSize = 256;
+            var buffer = UnsafeUtility.Malloc(kMaxBufferSize, 4, Allocator.Temp);
+            try
+            {
+                // Read layout configuration.
+                var numBytesRead = device.ReadData(LayoutConfigCode, buffer, kMaxBufferSize);
+                if (numBytesRead < sizeof(int))
+                {
+                    // Got nothing. Device probably does not support key configuration data.
+                    return;
+                }
+
+                var offset = 0u;
+                layout = StringHelpers.ReadStringFromBuffer(buffer, kMaxBufferSize, ref offset);
+            }
+            finally
+            {
+                UnsafeUtility.Free(buffer, Allocator.Temp);
+            }
         }
 
         public override void OnTextInput(char character)
@@ -542,5 +759,6 @@ namespace ISX
         }
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
+        private string m_LayoutName;
     }
 }

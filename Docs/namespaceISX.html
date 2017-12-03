@@ -82,7 +82,8 @@ $(document).ready(function(){initNavTree('namespaceISX.html','');});
 <div class="header">
   <div class="summary">
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle">
 <div class="title">ISX Namespace Reference</div>  </div>
 </div><!--header-->
@@ -108,6 +109,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html">InputDevice</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The root of a control hierarchy.  <a href="classISX_1_1InputDevice.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1InputDeviceDescription.html">InputDeviceDescription</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Metadata for a device. Primarily used to find a matching template which we can then use to create a control setup for the device.  <a href="structISX_1_1InputDeviceDescription.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputPluginAttribute.html">InputPluginAttribute</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Marks a class that as an input plugin which registers additional functionality with the input system.  <a href="classISX_1_1InputPluginAttribute.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,7 +127,74 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputTestFixture.html">InputTestFixture</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A test fixture for writing tests that use the input system. Can be derived from or simply instantiated from another test fixture.  <a href="classISX_1_1InputTestFixture.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1Keyboard.html">Keyboard</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A keyboard input device.  <a href="classISX_1_1Keyboard.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1KeyControl.html">KeyControl</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A key on a <a class="el" href="classISX_1_1Keyboard.html" title="A keyboard input device. ">Keyboard</a>.  <a href="classISX_1_1KeyControl.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">InputDeviceChange</a> { <br />
+&#160;&#160;<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1af29ddbfb905eb2593fdcdfb243f9af85">InputDeviceChange.Added</a>, 
+<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a93f07b720ebf7d1246512569761a5804">InputDeviceChange.Removed</a>, 
+<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7">InputDeviceChange.Connected</a>, 
+<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0">InputDeviceChange.Disconnected</a>, 
+<br />
+&#160;&#160;<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3">InputDeviceChange.UsageChanged</a>
+, <a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5">InputDeviceChange.ConfigurationChanged</a>
+<br />
+ }<tr class="memdesc:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates what type of change related to an input device occurred.  <a href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">More...</a><br /></td></tr>
+</td></tr>
+<tr class="separator:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="a664a08fa4bdc226c4fecddb3f350d6a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a664a08fa4bdc226c4fecddb3f350d6a1">&#9670;&nbsp;</a></span>InputDeviceChange</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">ISX.InputDeviceChange</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Indicates what type of change related to an input device occurred. </p>
+<dl class="section see"><dt>See also</dt><dd>InputSystem.onDeviceChange</dd></dl>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1af29ddbfb905eb2593fdcdfb243f9af85"></a>Added&#160;</td><td class="fielddoc"><p>A new device was added to the system. </p>
+<dl class="section see"><dt>See also</dt><dd>InputSystem.AddDevice</dd></dl>
+</td></tr>
+<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a93f07b720ebf7d1246512569761a5804"></a>Removed&#160;</td><td class="fielddoc"><p>An existing device was removed from the system. </p>
+<dl class="section see"><dt>See also</dt><dd>InputSystem.RemoveDevice</dd></dl>
+</td></tr>
+<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7"></a>Connected&#160;</td><td class="fielddoc"><p>A previously added device was re-connected after having been disconnected. </p>
+<dl class="section see"><dt>See also</dt><dd>ConnectEvent</dd></dl>
+</td></tr>
+<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0"></a>Disconnected&#160;</td><td class="fielddoc"><dl class="section see"><dt>See also</dt><dd>DisconnectEvent</dd></dl>
+</td></tr>
+<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3"></a>UsageChanged&#160;</td><td class="fielddoc"><p>The usages on a device have changed. </p>
+<p>This may signal, for example, that what was the right hand XR controller before is now the left hand controller. </p>
+<dl class="section see"><dt>See also</dt><dd>InputSystem.SetUsage, InputControl.usages</dd></dl>
+</td></tr>
+<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5"></a>ConfigurationChanged&#160;</td><td class="fielddoc"><p>The configuration of a device has changed. </p>
+<p>This may signal, for example, that the layout used by the keyboard has changed or that, on a console, a gamepad has changed which player ID(s) it is assigned to. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

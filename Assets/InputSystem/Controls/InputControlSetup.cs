@@ -277,6 +277,7 @@ namespace ISX
                 name = template.name;
 
             control.m_Name = name;
+            control.m_DisplayNameFromTemplate = template.m_DisplayName;
             control.m_Template = template.name;
             control.m_Variant = variant;
             control.m_Parent = parent;
@@ -426,6 +427,9 @@ namespace ISX
                 m_Device.m_ChildrenForEachControl[childIndex] = control;
                 ++childIndex;
 
+                // Set display name.
+                control.m_DisplayNameFromTemplate = controlTemplate.displayName;
+
                 // Pass state block config on to control.
                 var usesStateFromOtherControl = !string.IsNullOrEmpty(controlTemplate.useStateFrom);
                 if (!usesStateFromOtherControl)
@@ -536,6 +540,8 @@ namespace ISX
                         AddProcessors(child, controlTemplate, template.name);
                     if (controlTemplate.parameters.Count > 0)
                         SetParameters(child, controlTemplate.parameters);
+                    if (!string.IsNullOrEmpty(controlTemplate.displayName))
+                        child.m_DisplayNameFromTemplate = controlTemplate.displayName;
 
                     ////TODO: other modifications
 

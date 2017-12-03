@@ -81,6 +81,7 @@ $(document).ready(function(){initNavTree('classISX_1_1Gamepad.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classISX_1_1Gamepad-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ISX.Gamepad Class Reference</div>  </div>
@@ -99,10 +100,66 @@ Inheritance diagram for ISX.Gamepad:</div>
 <area href="classISX_1_1InputControl.html" title="A typed and named value in a hierarchy of controls. " alt="ISX.InputControl" shape="rect" coords="0,0,104,24"/>
 </map>
  </div></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a8a4a173b63af83939a8d1b4fe1a15b94"><td class="memItemLeft" align="right" valign="top">override void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1Gamepad.html#a8a4a173b63af83939a8d1b4fe1a15b94">MakeCurrent</a> ()</td></tr>
+<tr class="memdesc:a8a4a173b63af83939a8d1b4fe1a15b94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make this the current device of its type.  <a href="#a8a4a173b63af83939a8d1b4fe1a15b94">More...</a><br /></td></tr>
+<tr class="separator:a8a4a173b63af83939a8d1b4fe1a15b94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header properties_classISX_1_1InputDevice"><td colspan="2" onclick="javascript:toggleInherit('properties_classISX_1_1InputDevice')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="classISX_1_1InputDevice.html">ISX.InputDevice</a></td></tr>
+<tr class="memitem:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">remote</a><code> [get]</code></td></tr>
+<tr class="memdesc:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the device is mirrored from a remote input system and not actually present as a "real" device in the local system.  <a href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">More...</a><br /></td></tr>
+<tr class="separator:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39d1fea5d98ec26ff8f0c0da5d15367f inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a39d1fea5d98ec26ff8f0c0da5d15367f">native</a><code> [get]</code></td></tr>
+<tr class="memdesc:a39d1fea5d98ec26ff8f0c0da5d15367f inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the device comes from the native Unity runtime.  <a href="classISX_1_1InputDevice.html#a39d1fea5d98ec26ff8f0c0da5d15367f">More...</a><br /></td></tr>
+<tr class="separator:a39d1fea5d98ec26ff8f0c0da5d15367f inherit properties_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdf24e99a5e11a380c117896ff30b520 inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#acdf24e99a5e11a380c117896ff30b520">lastUpdateTime</a><code> [get]</code></td></tr>
+<tr class="memdesc:acdf24e99a5e11a380c117896ff30b520 inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timestamp of last state event used to update the device.  <a href="classISX_1_1InputDevice.html#acdf24e99a5e11a380c117896ff30b520">More...</a><br /></td></tr>
+<tr class="separator:acdf24e99a5e11a380c117896ff30b520 inherit properties_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00849d4372b89aa379a1b9526ac578fa inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a00849d4372b89aa379a1b9526ac578fa">configurationSequenceNumber</a><code> [get]</code></td></tr>
+<tr class="memdesc:a00849d4372b89aa379a1b9526ac578fa inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">A running numeric identifier for the device's current configuration.  <a href="classISX_1_1InputDevice.html#a00849d4372b89aa379a1b9526ac578fa">More...</a><br /></td></tr>
+<tr class="separator:a00849d4372b89aa379a1b9526ac578fa inherit properties_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers, two shoulder buttons, and two menu buttons. </p>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="structISX_1_1GamepadState.html" title="Default state layout gamepads. ">GamepadState</a></dd></dl>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a8a4a173b63af83939a8d1b4fe1a15b94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a4a173b63af83939a8d1b4fe1a15b94">&#9670;&nbsp;</a></span>MakeCurrent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">override void ISX.Gamepad.MakeCurrent </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Make this the current device of its type. </p>
+<p>Use this to set static properties that give fast access to the latest device used of a given type (Gamepad.current or XRController.leftHand and XRController.rightHand).</p>
+<p>This functionality is somewhat like a 'pwd' for the semantic paths but one where there can be multiple current working directories, one for each type.</p>
+<p>A device will be made current by the system initially when it is created and subsequently whenever it receives an event. </p>
+
+<p>Reimplemented from <a class="el" href="classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2">ISX.InputDevice</a>.</p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

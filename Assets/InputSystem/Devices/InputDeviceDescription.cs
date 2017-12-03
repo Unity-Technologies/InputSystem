@@ -4,14 +4,20 @@ using UnityEngine;
 
 namespace ISX
 {
-    // Metadata for a device. Primarily used to find a matching template
-    // which we can then use to create a control setup for the device.
+    /// <summary>
+    /// Metadata for a device. Primarily used to find a matching template
+    /// which we can then use to create a control setup for the device.
+    /// </summary>
     [Serializable]
     public struct InputDeviceDescription
     {
-        // How we talk to the device; usually name of the underlying backend that feeds
-        // state for the device.
+        /// <summary>
+        /// How we talk to the device; usually name of the underlying backend that feeds
+        /// state for the device.
+        /// </summary>
+        /// <example>Examples: "HID", "XInput"</example>
         public string interfaceName;
+
         // What the interface thinks the device classifies as.
         public string deviceClass;
         // Who made the thing.

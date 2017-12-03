@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
 using ISX.LowLevel;
 
-////FIXME: doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
+////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
+////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
 
 namespace ISX
 {
-    using Configuration = KeyValuePair<InternedString, PrimitiveValue>;
-
     /// <summary>
     /// A typed and named value in a hierarchy of controls.
     /// </summary>
@@ -51,10 +49,47 @@ namespace ISX
             get { return m_Name; }
         }
 
+        /// <summary>
+        /// The text to display as the name of the control.
+        /// </summary>
+        /// <remarks>
+        /// Note that the display name of a control may change over time. For example, when changing
+        /// from a QWERTY keyboard layout to an AZERTY keyboard layout, the "q" key (which will keep
+        /// that <see cref="name"/>) will change its display name from "q" to "a".
+        ///
+        /// By default, a control's display name will come from its template. If it is not assigned
+        /// a display name there, the display name will default to <see cref="name"/>. However, specific
+        /// controls may override this behavior. <see cref="KeyControl"/>, for example, will set the
+        /// display name to the actual key name corresponding to the current keyboard layout.
+        /// </remarks>
+        public string displayName
+        {
+            get
+            {
+                RefreshConfigurationIfNeeded();
+                if (m_DisplayName != null)
+                    return m_DisplayName;
+                if (m_DisplayNameFromTemplate != null)
+                    return m_DisplayNameFromTemplate;
+                return m_Name;
+            }
+            // This is not public as a domain reload will wipe the change. This should really
+            // come from the control itself *if* the control wants to have a custom display name
+            // not driven by its template.
+            protected set { m_DisplayName = value; }
+        }
+
         ////TODO: include icon-related info from control template
 
-        // Full semantic path all the way from the root.
-        // NOTE: Allocates on first hit. We don't create paths until someone asks for them.
+        /// <summary>
+        /// Full path all the way from the root.
+        /// </summary>
+        /// <remarks>
+        /// Allocates on first hit. Paths are not created until someone asks for them.
+        /// </remarks>
+        /// <example>
+        /// Example: "/gamepad/leftStick/x"
+        /// </example>
         public string path
         {
             get
@@ -70,9 +105,14 @@ namespace ISX
             }
         }
 
-        // Template the control is based on.
-        // We store the name rather than reference the InputTemplate as we want
-        // to avoid allocating those objects except where necessary.
+        /// <summary>
+        /// Template the control is based on.
+        /// </summary>
+        /// <remarks>
+        /// This is the template name rather than a reference to an InputTemplate as
+        /// we only create template instances during device creation and treat them
+        /// as temporaries in general so as to not waste heap space during normal operation.
+        /// </remarks>
         public string template
         {
             get { return m_Template; }
@@ -94,13 +134,22 @@ namespace ISX
             get { return null; }
         }
 
-        // Root of the control hierarchy.
+        /// <summary>
+        /// The device that this control is a part of.
+        /// </summary>
+        /// <remarks>
+        /// This is the root of the control hiearchy. For the device at the root, this
+        /// will point to itself.
+        /// </remarks>
         public InputDevice device
         {
             get { return m_Device; }
         }
 
-        // Immediate parent.
+        /// <summary>
+        /// The immediate parent of the control or null if the control has no parent
+        /// (which, once fully constructed) will only be the case for InputDevices).
+        /// </summary>
         public InputControl parent
         {
             get { return m_Parent; }
@@ -149,22 +198,6 @@ namespace ISX
             return controlOfType.value;
         }
 
-        ////REVIEW: where would this go? what about configuration events?
-        public virtual ReadOnlyArray<Configuration> GetConfiguration()
-        {
-            //For device:
-            //  If native device (have flag on control), call through to NativeInputSystem.GetDeviceConfiguration
-            //For controls:
-            //  Same but need to find way to identify the control on the device
-            throw new NotImplementedException();
-        }
-
-        public virtual void SetConfiguration(ReadOnlyArray<Configuration> configuration)
-        {
-            //For native API, instead of sending actual string names for keys, CRC the keys and use ints for communication
-            throw new NotImplementedException();
-        }
-
         // Constructor for devices which are assigned names once plugged
         // into the system.
         protected InputControl()
@@ -179,6 +212,19 @@ namespace ISX
         // child controls for fast access.
         // NOTE: This function will be called repeatedly in case the setup is changed repeatedly.
         protected virtual void FinishSetup(InputControlSetup setup)
+        {
+        }
+
+        protected void RefreshConfigurationIfNeeded()
+        {
+            if (!m_ConfigUpToDate)
+            {
+                RefreshConfiguration();
+                m_ConfigUpToDate = true;
+            }
+        }
+
+        protected virtual void RefreshConfiguration()
         {
         }
 
@@ -197,6 +243,8 @@ namespace ISX
         // This data is initialized by InputControlSetup.
         internal InternedString m_Name;
         internal string m_Path;
+        internal string m_DisplayName; // Display name set by the control itself (may be null).
+        internal string m_DisplayNameFromTemplate; // Display name coming from template (may be null).
         internal InternedString m_Template;
         internal InternedString m_Variant;
         internal InputDevice m_Device;
@@ -204,6 +252,7 @@ namespace ISX
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
+        internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().

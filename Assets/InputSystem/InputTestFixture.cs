@@ -16,7 +16,7 @@ namespace ISX
     /// </remarks>
     /// <example>
     /// <code>
-    /// public class MyTests : InputTestFixture
+    /// public class MyInputTests : InputTestFixture
     /// {
     ///     public override void Setup()
     ///     {

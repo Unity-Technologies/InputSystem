@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['remoting',['remoting',['../classISX_1_1InputSystem.html#aaecc5e9aab6f76e726533003298628e7',1,'ISX::InputSystem']]]
+  ['configurationsequencenumber',['configurationSequenceNumber',['../classISX_1_1InputDevice.html#a00849d4372b89aa379a1b9526ac578fa',1,'ISX::InputDevice']]]
 ];

@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['write',['Write',['../structISX_1_1LowLevel_1_1InputEventBuffer.html#a75fc1ee9282a35f927ee51ae0fdf1110',1,'ISX::LowLevel::InputEventBuffer']]]
+  ['makecurrent',['MakeCurrent',['../classISX_1_1Gamepad.html#a8a4a173b63af83939a8d1b4fe1a15b94',1,'ISX.Gamepad.MakeCurrent()'],['../classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2',1,'ISX.InputDevice.MakeCurrent()'],['../classISX_1_1Keyboard.html#a27c061c87cfbd93b3743b60d8ad1e7b9',1,'ISX.Keyboard.MakeCurrent()']]],
+  ['message',['Message',['../structISX_1_1InputRemoting_1_1Message.html',1,'ISX::InputRemoting']]],
+  ['messagetype',['MessageType',['../classISX_1_1InputRemoting.html#a67a9a0f806eabe3bbc217639bf6d4042',1,'ISX::InputRemoting']]]
 ];

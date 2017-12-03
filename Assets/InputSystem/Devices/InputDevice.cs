@@ -1,11 +1,13 @@
 using System;
 using ISX.LowLevel;
+using UnityEngineInternal.Input;
 
 //device callbacks:
 //  - update/poll
 //  - read data
 //  - write data
 //  - text input
+//  - configuration change
 //  - make current
 //  - reset current
 
@@ -19,7 +21,7 @@ namespace ISX
     /// a device at the root. Devices cannot occur inside of hierarchies.
     ///
     /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    /// without requiring a change to the device template.
+    /// without requiring a change to the device template (<see cref="InputSystem.SetUsage"/>).
     /// </remarks>
     /// \todo The entire control hierarchy should be a linear array; transition to that with InputData.
     public class InputDevice : InputControl
@@ -51,15 +53,18 @@ namespace ISX
             get { return (m_Flags & Flags.Connected) == Flags.Connected; }
         }
 
-        // Whether the device is mirrored from a remote input system and not actually present
-        // as a "real" device in the local system.
+        /// <summary>
+        /// Whether the device is mirrored from a remote input system and not actually present
+        /// as a "real" device in the local system.
+        /// </summary>
         public bool remote
         {
             get { return (m_Flags & Flags.Remote) == Flags.Remote; }
         }
 
-        ////REVIEW: is this one really worth the code?
-        // Whether the device comes from the native Unity runtime.
+        /// <summary>
+        /// Whether the device comes from the native Unity runtime.
+        /// </summary>
         public bool native
         {
             get { return (m_Flags & Flags.Native) == Flags.Native; }
@@ -77,17 +82,38 @@ namespace ISX
             get { return m_Id; }
         }
 
-        // Timestamp of last state event used to update the device.
+        /// <summary>
+        /// Timestamp of last state event used to update the device.
+        /// </summary>
+        /// <remarks>
+        /// Events other than <see cref="LowLevel.StateEvent"/> and <see cref="LowLevel.DeltaStateEvent"/> will
+        /// not cause lastUpdateTime to be changed.
+        /// </remarks>
         public double lastUpdateTime
         {
             get { return m_LastUpdateTime; }
         }
 
-        // Make this the current device of its type.
-        // Use this to set static properties that give fast access to the latest device used of a given
-        // type (see Gamepad.current).
-        // This functionality is sort of like a 'pwd' for the semantic paths but one where there can
-        // be multiple current working directories, one for each type.
+        // This has to be public for Activator.CreateInstance() to be happy.
+        public InputDevice()
+        {
+            m_Id = kInvalidDeviceId;
+            m_DeviceIndex = kInvalidDeviceIndex;
+        }
+
+        /// <summary>
+        /// Make this the current device of its type.
+        /// </summary>
+        /// <remarks>
+        /// Use this to set static properties that give fast access to the latest device used of a given
+        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
+        ///
+        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
+        /// be multiple current working directories, one for each type.
+        ///
+        /// A device will be made current by the system initially when it is created and subsequently whenever
+        /// it receives an event.
+        /// </remarks>
         public virtual void MakeCurrent()
         {
         }
@@ -96,11 +122,37 @@ namespace ISX
         {
         }
 
-        // This has to be public for Activator.CreateInstance() to be happy.
-        public InputDevice()
+        /// <summary>
+        /// Called by the system when the configuration of the device has changed.
+        /// </summary>
+        /// <seealso cref="LowLevel.ConfigChangeEvent"/>
+        public virtual void OnConfigChange()
         {
-            m_Id = kInvalidDeviceId;
-            m_DeviceIndex = kInvalidDeviceIndex;
+            // Mark all controls in the hierarchy as having their config out of date.
+            // We don't want to update configuration right away but rather wait until
+            // someone actually depends on it.
+            m_ConfigUpToDate = false;
+            for (var i = 0; i < m_ChildrenForEachControl.Length; ++i)
+                m_ChildrenForEachControl[i].m_ConfigUpToDate = false;
+        }
+
+        ////REVIEW: Should ReadData and WriteData() sit *behind* a different interface that would
+        ////        make C# data pass through natively rather than go through memory buffers?
+
+        public virtual int ReadData(FourCC type, IntPtr buffer, int sizeInBytes)
+        {
+            if (native)
+                return NativeInputSystem.ReadDeviceData(id, type, buffer, sizeInBytes);
+
+            return 0;
+        }
+
+        public virtual int WriteData(FourCC type, IntPtr buffer, int sizeInBytes)
+        {
+            if (native)
+                return NativeInputSystem.WriteDeviceData(id, type, buffer, sizeInBytes);
+
+            return 0;
         }
 
         [Flags]

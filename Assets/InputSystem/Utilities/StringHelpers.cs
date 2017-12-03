@@ -1,3 +1,7 @@
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
 namespace ISX
 {
     internal static class StringHelpers
@@ -47,6 +51,49 @@ namespace ISX
             }
 
             return result;
+        }
+
+        public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize, ref uint offset)
+        {
+            if (buffer == IntPtr.Zero)
+                throw new ArgumentNullException("buffer");
+
+            var length = string.IsNullOrEmpty(text) ? 0 : text.Length;
+            var endOffset = offset + sizeof(char) * length + sizeof(int);
+            if (endOffset > bufferSize)
+                return false;
+
+            var ptr = ((byte*)buffer) + offset;
+            *((int*)ptr) = length;
+            ptr += sizeof(int);
+
+            for (var i = 0; i < length; ++i, ptr += sizeof(char))
+                *((char*)ptr) = text[i];
+
+            offset = (uint)endOffset;
+            return true;
+        }
+
+        public static unsafe string ReadStringFromBuffer(IntPtr buffer, int bufferSize, ref uint offset)
+        {
+            if (buffer == IntPtr.Zero)
+                throw new ArgumentNullException("buffer");
+
+            if (offset + sizeof(int) > bufferSize)
+                return null;
+
+            var ptr = ((byte*)buffer) + offset;
+            var length = *((int*)ptr);
+            ptr += sizeof(int);
+
+            var endOffset = offset + sizeof(char) * length + sizeof(int);
+            if (endOffset > bufferSize)
+                return null;
+
+            var text = Marshal.PtrToStringUni(new IntPtr(ptr), length);
+
+            offset = (uint)endOffset;
+            return text;
         }
     }
 }

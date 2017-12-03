@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['messagetype',['MessageType',['../classISX_1_1InputRemoting.html#a67a9a0f806eabe3bbc217639bf6d4042',1,'ISX::InputRemoting']]]
+  ['inputdevicechange',['InputDeviceChange',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1',1,'ISX']]]
 ];

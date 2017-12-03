@@ -2,7 +2,13 @@ using System.Runtime.InteropServices;
 
 namespace ISX.LowLevel
 {
-    // Input device got re-connected after a disconnect.
+    /// <summary>
+    /// Signals that a device got re-connected after a disconnect.
+    /// </summary>
+    /// <seealso cref="InputDeviceChange.Connected"/>
+    /// <seealso cref="InputSystem.QueueConnectEvent"/>
+    /// <seealso cref="InputDevice.connected"/>
+    /// <seealso cref="InputSystem.onDeviceChange"/>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct ConnectEvent : IInputEventTypeInfo
     {
@@ -16,6 +22,12 @@ namespace ISX.LowLevel
             return Type;
         }
 
+        /// <summary>
+        /// Create a connection event for the given device at the given time.
+        /// </summary>
+        /// <param name="deviceId">ID of input device (<see cref="InputDevice.id"/>).</param>
+        /// <param name="time">Time (in seconds) for event.</param>
+        /// <returns>A device connect event.</returns>
         public static ConnectEvent Create(int deviceId, double time)
         {
             var inputEvent = new ConnectEvent();

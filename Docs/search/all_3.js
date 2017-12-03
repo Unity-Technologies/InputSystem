@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['hid',['HID',['../classISX_1_1HID_1_1HID.html',1,'ISX::HID']]],
-  ['hidsupport',['HIDSupport',['../classISX_1_1HID_1_1HIDSupport.html',1,'ISX::HID']]]
+  ['disconnected',['Disconnected',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0',1,'ISX']]],
+  ['displayname',['displayName',['../structISX_1_1InputTemplate_1_1ControlTemplate.html#a0b3b315ee7de0d9ba822508167730935',1,'ISX::InputTemplate::ControlTemplate']]]
 ];

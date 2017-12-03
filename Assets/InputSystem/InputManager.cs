@@ -100,7 +100,7 @@ namespace ISX
         // Add a template constructed from a type.
         // If a template with the same name already exists, the new template
         // takes its place.
-        public void RegisterTemplate(string name, Type type)
+        public void RegisterTemplate(string name, Type type, InputDeviceDescription? deviceDescription = null)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -124,7 +124,26 @@ namespace ISX
             // in a game that never uses VR.
             m_Templates.templateTypes[internedName] = type;
 
-            PerformTemplatePostRegistration(internedName, null, null, isReplacement, isKnownToBeDeviceTemplate: isDeviceTemplate);
+            ////FIXME: this relies on initialization order
+            ////       also, means we have to rescan on domain reload; not convinced adding this features is the right thing
+
+            // Walk class hierarchy all the way up to InputControl to see
+            // if there's another type that's been registered as a template.
+            // If so, make it a base template for this one.
+            string baseTemplate = null;
+            for (var baseType = type.BaseType; baseTemplate == null && baseType != typeof(InputControl);
+                 baseType = baseType.BaseType)
+            {
+                foreach (var entry in m_Templates.templateTypes)
+                    if (entry.Value == baseType)
+                    {
+                        baseTemplate = entry.Key;
+                        break;
+                    }
+            }
+
+            PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement,
+                isKnownToBeDeviceTemplate: isDeviceTemplate);
         }
 
         // Add a template constructed from a JSON string.
@@ -577,6 +596,10 @@ namespace ISX
             device.m_Id = deviceId;
             device.m_Description = description;
 
+            // Default display name to product name.
+            if (!string.IsNullOrEmpty(description.product))
+                device.m_DisplayName = description.product;
+
             if (isNative)
                 device.m_Flags |= InputDevice.Flags.Native;
 
@@ -894,7 +917,7 @@ namespace ISX
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            NativeInputSystem.SendInput(ref inputEvent);
+            NativeInputSystem.QueueInputEvent(ref inputEvent);
         }
 
         public void Update()
@@ -1602,6 +1625,12 @@ namespace ISX
 
                         break;
 
+                    case TextEvent.Type:
+                        var textEventPtr = (TextEvent*)currentEventPtr;
+                        ////TODO: handle UTF-32 to UTF-16 conversion properly
+                        device.OnTextInput((char)textEventPtr->character);
+                        break;
+
                     case ConnectEvent.Type:
                         if (!device.connected)
                         {
@@ -1621,10 +1650,8 @@ namespace ISX
                         }
                         break;
 
-                    case TextEvent.Type:
-                        var textEventPtr = (TextEvent*)currentEventPtr;
-                        ////TODO: handle UTF-32 to UTF-16 conversion properly
-                        device.OnTextInput((char)textEventPtr->character);
+                    case ConfigChangeEvent.Type:
+                        device.OnConfigChange();
                         break;
                 }
 

@@ -121,12 +121,8 @@ namespace ISX.Editor
                     continue;
                 ++displayedDeviceCount;
 
-                // Decide whether to show product name or device name.
-                var text = device.description.product;
-                if (string.IsNullOrEmpty(text))
-                    text = device.name;
-
                 // Draw it.
+                var text = device.displayName;
                 var deviceLabel = new GUIContent(text);
                 var rect = GUILayoutUtility.GetRect(deviceLabel, Styles.deviceStyle, GUILayout.Width(kDeviceElementWidth));
                 var width = Styles.deviceStyle.CalcSize(deviceLabel).x;
