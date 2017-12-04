@@ -670,6 +670,7 @@ namespace ISX
         {
             var template = TryFindMatchingTemplate(description);
 
+            ////REVIEW: listeners registering new templates from in here may potentially lead to the creation of devices; should we disallow that?
             // Give listeners a shot to select/create a template.
             for (var i = 0; i < m_DeviceFindTemplateListeners.Count; ++i)
             {
@@ -684,7 +685,7 @@ namespace ISX
             if (template == null)
             {
                 if (throwIfNoTemplateFound)
-                    throw new ArgumentException("Cannot find template matching device description", "description");
+                    throw new ArgumentException(string.Format("Cannot find template matching device description '{0}'", description), "description");
                 return null;
             }
 
@@ -819,16 +820,24 @@ namespace ISX
 
         private void ReportAvailableDevice(InputDeviceDescription description, int deviceId, bool isNative = false)
         {
-            // Remember it.
-            m_AvailableDevices.Add(new AvailableDevice
+            try
             {
-                description = description,
-                deviceId = deviceId,
-                isNative = true
-            });
-
-            // Try to turn it into a device instance.
-            AddDevice(description, throwIfNoTemplateFound: false, deviceId: deviceId, isNative: isNative);
+                // Try to turn it into a device instance.
+                AddDevice(description, throwIfNoTemplateFound: false, deviceId: deviceId, isNative: isNative);
+            }
+            finally
+            {
+                // Remember it. Do this *after* the AddDevice() call above so that if there's
+                // a listener creating templates on the fly won't end up matching this device and
+                // create an InputDevice right away (which would then conflict with the one we
+                // create in AddDevice).
+                m_AvailableDevices.Add(new AvailableDevice
+                {
+                    description = description,
+                    deviceId = deviceId,
+                    isNative = true
+                });
+            }
         }
 
         public void RegisterPluginManager(IInputPluginManager manager)
@@ -1651,7 +1660,7 @@ namespace ISX
                         break;
 
                     case ConfigChangeEvent.Type:
-                        device.OnConfigChange();
+                        device.OnConfigurationChanged();
                         for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
                             m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
                         break;
@@ -1945,7 +1954,7 @@ namespace ISX
             public string name;
             public string typeName;
             public string methodName;
-            public object instance;
+            public string instanceJson;
         }
 
         [Serializable]
@@ -2036,7 +2045,8 @@ namespace ISX
                 {
                     name = entry.Key,
                     typeName = entry.Value.method.DeclaringType.AssemblyQualifiedName,
-                    methodName = entry.Value.method.Name
+                    methodName = entry.Value.method.Name,
+                    instanceJson = entry.Value.instance != null ? JsonUtility.ToJson(entry.Value.instance) : null,
                 };
 
             // Devices.
@@ -2158,7 +2168,7 @@ namespace ISX
                 m_Templates.templateConstructors[name] = new InputTemplate.Constructor
                 {
                     method = method,
-                    instance = template.instance
+                    instance = template.instanceJson != null ? JsonUtility.FromJson(template.instanceJson, type) : null
                 };
             }
 

@@ -3,9 +3,13 @@ using UnityEngine;
 
 namespace ISX
 {
-    // A float axis control.
-    // Can optionally be configured to perform normalization.
-    // Stored as either a float, a short, a byte, or a single bit.
+    /// <summary>
+    /// A floating-point axis control.
+    /// </summary>
+    /// <remarks>
+    /// Can optionally be configured to perform normalization.
+    /// Stored as either a float, a short, a byte, or a single bit.
+    /// </remarks>
     public class AxisControl : InputControl<float>
     {
         // These can be added as processors but they are so common that we

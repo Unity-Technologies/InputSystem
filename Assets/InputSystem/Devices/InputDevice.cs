@@ -126,7 +126,7 @@ namespace ISX
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="LowLevel.ConfigChangeEvent"/>
-        public virtual void OnConfigChange()
+        public virtual void OnConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until

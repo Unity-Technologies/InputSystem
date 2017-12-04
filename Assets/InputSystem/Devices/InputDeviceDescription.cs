@@ -18,16 +18,37 @@ namespace ISX
         /// <example>Examples: "HID", "XInput"</example>
         public string interfaceName;
 
-        // What the interface thinks the device classifies as.
+
+        /// <summary>
+        /// What the interface thinks the device classifies as.
+        /// </summary>
+        /// <remarks>
+        /// If there is no template specifically matching a device description,
+        /// the device class is used as as fallback. If, for example, this field
+        /// is set to "Gamepad", the "Gamepad" template is used as a fallback.
+        /// </remarks>
         public string deviceClass;
+
         // Who made the thing.
         public string manufacturer;
         // What they call it.
         public string product;
         public string serial;
         public string version;
-        // An optional JSON string listing device-specific capabilities.
-        // Example: For HIDs, this will be the HID descriptor.
+
+        /// <summary>
+        /// An optional JSON string listing device-specific capabilities.
+        /// </summary>
+        /// <remarks>
+        /// The primary use of this field is to allow custom template constructors
+        /// to create templates on the fly from in-depth device descriptions delivered
+        /// by external APIs.
+        ///
+        /// In the case of HID, for example, this field contains a JSON representation
+        /// of the HID descriptor as reported by the device driver. This descriptor
+        /// contains information about all I/O elements on the device which can be used
+        /// to determine the control setup and data format used by the device.
+        /// </remarks>
         public string capabilities;
 
         public bool empty

@@ -16,7 +16,13 @@ var hierarchy =
     ] ],
     [ "ISX.InputControl< AudioBuffer >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Color >", "classISX_1_1InputControl.html", null ],
-    [ "ISX.InputControl< float >", "classISX_1_1InputControl.html", null ],
+    [ "ISX.InputControl< float >", "classISX_1_1InputControl.html", [
+      [ "ISX.AxisControl", "classISX_1_1AxisControl.html", [
+        [ "ISX.ButtonControl", "classISX_1_1ButtonControl.html", [
+          [ "ISX.KeyControl", "classISX_1_1KeyControl.html", null ]
+        ] ]
+      ] ]
+    ] ],
     [ "ISX.InputControl< int >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Pose >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Quaternion >", "classISX_1_1InputControl.html", null ],
@@ -32,7 +38,6 @@ var hierarchy =
     [ "ISX.InputSystem", "classISX_1_1InputSystem.html", null ],
     [ "ISX.InputTemplate", "classISX_1_1InputTemplate.html", null ],
     [ "ISX.InputTestFixture", "classISX_1_1InputTestFixture.html", null ],
-    [ "ISX.KeyControl", "classISX_1_1KeyControl.html", null ],
     [ "ISX.InputRemoting.Message", "structISX_1_1InputRemoting_1_1Message.html", null ],
     [ "ISX.LowLevel.StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", null ]
 ];

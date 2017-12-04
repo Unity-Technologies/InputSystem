@@ -73,6 +73,7 @@ namespace ISX.HID
             var baseTemplate = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
+                /*
                 ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
                 if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
                     baseTemplate = "Joystick";
@@ -84,7 +85,12 @@ namespace ISX.HID
                     baseTemplate = "Pointer";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Keyboard)
                     baseTemplate = "Keyboard";
+                */
             }
+
+            // We don't want the capabilities field in the description to be matched
+            // when the input system is looking for matching templates so null it out.
+            description.capabilities = null;
 
             ////TODO: make sure we don't produce name conflicts on the template name
 
@@ -246,6 +252,9 @@ namespace ISX.HID
             public int productId;
             public int usage;
             public UsagePage usagePage;
+            public int inputReportSize;
+            public int outputReportSize;
+            public int featureReportSize;
             public HIDElementDescriptor[] elements;
 
             public string ToJson()

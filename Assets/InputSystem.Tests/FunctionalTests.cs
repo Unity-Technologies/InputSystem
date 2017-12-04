@@ -617,11 +617,15 @@ public class FunctionalTests : InputTestFixture
     }
 
     [Serializable]
-    private class MyTemplateConstructor
+    private class TestTemplateConstructor
     {
-        public InputTemplate template = new InputTemplate.Builder().WithName("MyTemplate").Build();
+        [SerializeField] public string templateToLoad;
+        [NonSerialized] public InputTemplate template;
+
         public InputTemplate DoIt()
         {
+            // To make this as simple as possible, just load another template.
+            template = InputSystem.TryLoadTemplate(templateToLoad);
             return template;
         }
     }
@@ -630,12 +634,13 @@ public class FunctionalTests : InputTestFixture
     [Category("Templates")]
     public void Templates_CanAddCustomTemplateConstructor()
     {
-        var constructor = new MyTemplateConstructor();
+        var constructor = new TestTemplateConstructor {templateToLoad = "Gamepad"};
 
         InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), "MyTemplate");
 
         var result = InputSystem.TryLoadTemplate("MyTemplate");
 
+        Assert.That(result.name.ToString(), Is.EqualTo("MyTemplate"));
         Assert.That(result, Is.SameAs(constructor.template));
     }
 
@@ -4989,6 +4994,22 @@ public class FunctionalTests : InputTestFixture
 
         Assert.That(receivedOnEvent, Is.Zero);
         Assert.That(receivedOnDeviceChange, Is.Zero);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RestoringStateWillRestoreObjectsOfTemplateConstructors()
+    {
+        var constructor = new TestTemplateConstructor {templateToLoad = "Gamepad"};
+        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), "TestTemplate");
+
+        InputSystem.Save();
+        InputSystem.Reset();
+        InputSystem.Restore();
+
+        var device = InputSystem.AddDevice("TestTemplate");
+
+        Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
     // Editor updates are confusing in that they denote just another point in the

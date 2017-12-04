@@ -96,10 +96,51 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a0c9dc7053fbd241ddf2132ec51a5b600"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1InputDeviceDescription.html#a0c9dc7053fbd241ddf2132ec51a5b600">interfaceName</a></td></tr>
 <tr class="memdesc:a0c9dc7053fbd241ddf2132ec51a5b600"><td class="mdescLeft">&#160;</td><td class="mdescRight">How we talk to the device; usually name of the underlying backend that feeds state for the device.  <a href="#a0c9dc7053fbd241ddf2132ec51a5b600">More...</a><br /></td></tr>
 <tr class="separator:a0c9dc7053fbd241ddf2132ec51a5b600"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a8d233ec188f6dceb68d36a2cc5b24b"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1InputDeviceDescription.html#a0a8d233ec188f6dceb68d36a2cc5b24b">deviceClass</a></td></tr>
+<tr class="memdesc:a0a8d233ec188f6dceb68d36a2cc5b24b"><td class="mdescLeft">&#160;</td><td class="mdescRight">What the interface thinks the device classifies as.  <a href="#a0a8d233ec188f6dceb68d36a2cc5b24b">More...</a><br /></td></tr>
+<tr class="separator:a0a8d233ec188f6dceb68d36a2cc5b24b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e0bf3cb0c02c87cb91ee612760baa1b"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1InputDeviceDescription.html#a7e0bf3cb0c02c87cb91ee612760baa1b">capabilities</a></td></tr>
+<tr class="memdesc:a7e0bf3cb0c02c87cb91ee612760baa1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">An optional JSON string listing device-specific capabilities.  <a href="#a7e0bf3cb0c02c87cb91ee612760baa1b">More...</a><br /></td></tr>
+<tr class="separator:a7e0bf3cb0c02c87cb91ee612760baa1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Metadata for a device. Primarily used to find a matching template which we can then use to create a control setup for the device. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a7e0bf3cb0c02c87cb91ee612760baa1b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e0bf3cb0c02c87cb91ee612760baa1b">&#9670;&nbsp;</a></span>capabilities</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">string ISX.InputDeviceDescription.capabilities</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>An optional JSON string listing device-specific capabilities. </p>
+<p>The primary use of this field is to allow custom template constructors to create templates on the fly from in-depth device descriptions delivered by external APIs.</p>
+<p>In the case of <a class="el" href="namespaceISX_1_1HID.html">HID</a>, for example, this field contains a JSON representation of the <a class="el" href="namespaceISX_1_1HID.html">HID</a> descriptor as reported by the device driver. This descriptor contains information about all I/O elements on the device which can be used to determine the control setup and data format used by the device. </p>
+
+</div>
+</div>
+<a id="a0a8d233ec188f6dceb68d36a2cc5b24b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a8d233ec188f6dceb68d36a2cc5b24b">&#9670;&nbsp;</a></span>deviceClass</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">string ISX.InputDeviceDescription.deviceClass</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>What the interface thinks the device classifies as. </p>
+<p>If there is no template specifically matching a device description, the device class is used as as fallback. If, for example, this field is set to "Gamepad", the "Gamepad" template is used as a fallback. </p>
+
+</div>
+</div>
 <a id="a0c9dc7053fbd241ddf2132ec51a5b600"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0c9dc7053fbd241ddf2132ec51a5b600">&#9670;&nbsp;</a></span>interfaceName</h2>
 

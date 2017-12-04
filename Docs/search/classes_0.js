@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['builder',['Builder',['../structISX_1_1InputTemplate_1_1Builder.html',1,'ISX::InputTemplate']]]
+  ['axiscontrol',['AxisControl',['../classISX_1_1AxisControl.html',1,'ISX']]]
 ];

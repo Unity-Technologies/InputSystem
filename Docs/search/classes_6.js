@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['message',['Message',['../structISX_1_1InputRemoting_1_1Message.html',1,'ISX::InputRemoting']]]
+  ['keyboard',['Keyboard',['../classISX_1_1Keyboard.html',1,'ISX']]],
+  ['keycontrol',['KeyControl',['../classISX_1_1KeyControl.html',1,'ISX']]]
 ];

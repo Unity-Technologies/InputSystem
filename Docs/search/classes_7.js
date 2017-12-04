@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['stateevent',['StateEvent',['../structISX_1_1LowLevel_1_1StateEvent.html',1,'ISX::LowLevel']]]
+  ['message',['Message',['../structISX_1_1InputRemoting_1_1Message.html',1,'ISX::InputRemoting']]]
 ];

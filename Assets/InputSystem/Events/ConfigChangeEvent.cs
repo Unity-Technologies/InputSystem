@@ -6,7 +6,7 @@ namespace ISX.LowLevel
     /// Indicates that the configuration of a device has changed.
     /// </summary>
     /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
-    /// <seealso cref="InputDevice.OnConfigChange"/>
+    /// <seealso cref="InputDevice.OnConfigurationChanged"/>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct ConfigChangeEvent : IInputEventTypeInfo
     {

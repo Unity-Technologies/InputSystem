@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['gamepad',['Gamepad',['../classISX_1_1Gamepad.html',1,'ISX']]],
-  ['gamepadstate',['GamepadState',['../structISX_1_1GamepadState.html',1,'ISX']]]
+  ['configchangeevent',['ConfigChangeEvent',['../structISX_1_1LowLevel_1_1ConfigChangeEvent.html',1,'ISX::LowLevel']]],
+  ['connectevent',['ConnectEvent',['../structISX_1_1LowLevel_1_1ConnectEvent.html',1,'ISX::LowLevel']]],
+  ['controltemplate',['ControlTemplate',['../structISX_1_1InputTemplate_1_1ControlTemplate.html',1,'ISX::InputTemplate']]]
 ];
