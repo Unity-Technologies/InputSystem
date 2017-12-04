@@ -148,9 +148,24 @@ namespace ISX.HID
         // NOTE: Must match HIDReportType in native.
         public enum HIDReportType
         {
+            Unknown,
             Input,
             Output,
             Feature
+        }
+
+
+        // NOTE: Must match HIDCollectionType in native.
+        public enum HIDCollectionType
+        {
+            Unknown,
+            Physical,
+            Application,
+            Logical,
+            Report,
+            NamedArray,
+            UsageSwitch,
+            UsageModifier
         }
 
         // NOTE: Must match up with the serialization represention of HIDInputElementDescriptor in native.
@@ -167,6 +182,7 @@ namespace ISX.HID
             public int physicalMin;
             public int physicalMax;
             public HIDReportType reportType;
+            public int collectionIndex;
             public int reportId;
             public int reportCount;
             public int reportSizeInBits;
@@ -244,6 +260,17 @@ namespace ISX.HID
             }
         }
 
+        [Serializable]
+        public struct HIDCollectionDescriptor
+        {
+            public HIDCollectionType type;
+            public int usage;
+            public UsagePage usagePage;
+            public int parent;
+            public int childCount;
+            public int firstChild;
+        }
+
         // NOTE: Must match up with the serialized representation of HIDInputDeviceDescriptor in native.
         [Serializable]
         public struct HIDDeviceDescriptor
@@ -255,7 +282,9 @@ namespace ISX.HID
             public int inputReportSize;
             public int outputReportSize;
             public int featureReportSize;
+
             public HIDElementDescriptor[] elements;
+            public HIDCollectionDescriptor[] collections;
 
             public string ToJson()
             {
