@@ -135,7 +135,8 @@ namespace ISX.HID
                         var control =
                             builder.AddControl(element.DetermineName())
                             .WithTemplate(template)
-                            //.WithOffset(offset) ////FIXME: offset is in bits; handle bit addressing correctly
+                            .WithOffset(inputReportBitOffset / 8)
+                            .WithBit(inputReportBitOffset % 8)
                             .WithFormat(element.DetermineFormat());
 
                         ////TODO: configure axis parameters from min/max limits
@@ -143,8 +144,7 @@ namespace ISX.HID
                         element.SetUsage(control);
                     }
 
-                    if (element.reportType == HIDReportType.Input)
-                        inputReportBitOffset += (uint)element.reportSizeInBits;
+                    inputReportBitOffset += (uint)element.reportSizeInBits;
                 }
 
                 return builder.Build();

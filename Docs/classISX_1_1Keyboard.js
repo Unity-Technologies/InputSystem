@@ -1,6 +1,5 @@
 var classISX_1_1Keyboard =
 [
-    [ "MakeCurrent", "classISX_1_1Keyboard.html#a27c061c87cfbd93b3743b60d8ad1e7b9", null ],
     [ "any", "classISX_1_1Keyboard.html#a7903f8b16386a9ae4f0a147b51881157", null ],
     [ "backquote", "classISX_1_1Keyboard.html#acf4704219e4e6e9585c3a31b4065ce63", null ],
     [ "comma", "classISX_1_1Keyboard.html#a81b6b2909f20bb989355f33c9a53e815", null ],

@@ -3,8 +3,9 @@ using UnityEngine;
 
 namespace ISX
 {
-    // Combine a single pointer with buttons and a scroll wheel.
-    //
+    /// <summary>
+    /// Combine a single pointer with buttons and a scroll wheel.
+    /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct MouseState : IInputStateTypeInfo
@@ -31,8 +32,6 @@ namespace ISX
         [InputControl(name = "leftButton", template = "Button", bit = (int)Button.Left, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         [InputControl(name = "rightButton", template = "Button", bit = (int)Button.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
         [InputControl(name = "middleButton", template = "Button", bit = (int)Button.Middle)]
-        [InputControl(name = "forwardButton", template = "Button", bit = (int)Button.Forward, usage = "Forward")]
-        [InputControl(name = "backButton", template = "Button", bit = (int)Button.Back, usage = "Back")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
@@ -63,17 +62,39 @@ namespace ISX
         }
     }
 
+    /// <summary>
+    /// A mouse input device.
+    /// </summary>
+    /// <remarks>
+    /// Adds a scroll wheel and a typical 3-button setup with a left, middle, and right
+    /// button.
+    /// </remarks>
     [InputState(typeof(MouseState))]
     public class Mouse : Pointer
     {
-        public Vector2Control scrollWheel { get; private set; }
+        /// <summary>
+        /// The horizontal and vertical scroll wheels.
+        /// </summary>
+        public Vector2Control scroll { get; private set; }
 
+        /// <summary>
+        /// The left mouse button.
+        /// </summary>
         public ButtonControl leftButton { get; private set; }
-        public ButtonControl middleButton { get; private set; }
-        public ButtonControl rightButton { get; private set; }
-        public ButtonControl forwardButton { get; private set; }
-        public ButtonControl backButton { get; private set; }
 
+        /// <summary>
+        /// The middle mouse button.
+        /// </summary>
+        public ButtonControl middleButton { get; private set; }
+
+        /// <summary>
+        /// The right mouse button.
+        /// </summary>
+        public ButtonControl rightButton { get; private set; }
+
+        /// <summary>
+        /// The mouse that was added or updated last.
+        /// </summary>
         public new static Mouse current { get; internal set; }
 
         public override void MakeCurrent()
@@ -84,12 +105,10 @@ namespace ISX
 
         protected override void FinishSetup(InputControlSetup setup)
         {
-            scrollWheel = setup.GetControl<Vector2Control>(this, "scroll");
+            scroll = setup.GetControl<Vector2Control>(this, "scroll");
             leftButton = setup.GetControl<ButtonControl>(this, "leftButton");
             middleButton = setup.GetControl<ButtonControl>(this, "middleButton");
             rightButton = setup.GetControl<ButtonControl>(this, "rightButton");
-            forwardButton = setup.GetControl<ButtonControl>(this, "forwardButton");
-            backButton = setup.GetControl<ButtonControl>(this, "backButton");
             base.FinishSetup(setup);
         }
     }

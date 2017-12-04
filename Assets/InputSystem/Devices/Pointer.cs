@@ -56,10 +56,18 @@ namespace ISX
     }
 
     ////REVIEW: should this be extended to 3D?
-    // A device that can move a pointer on a 2D surface.
+    /// <summary>
+    /// Base class for pointer-style devices where a pointer can move across a 2D surface.
+    /// </summary>
     [InputState(typeof(PointerState))]
     public class Pointer : InputDevice
     {
+        /// <summary>
+        /// Current position of the pointer on its 2D surface.
+        /// </summary>
+        /// <remarks>
+        /// The coordinates are not normalized.
+        /// </remarks>
         public Vector2Control position { get; private set; }
         public Vector2Control delta { get; private set; }
         public Vector2Control tilt { get; private set; }

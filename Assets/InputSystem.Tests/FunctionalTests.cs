@@ -2473,11 +2473,11 @@ public class FunctionalTests : InputTestFixture
     {
         var mouse = (Mouse)InputSystem.AddDevice("Mouse");
 
-        InputSystem.QueueStateEvent(mouse.scrollWheel, new Vector2(10, 12));
+        InputSystem.QueueStateEvent(mouse.scroll, new Vector2(10, 12));
         InputSystem.Update();
 
-        Assert.That(mouse.scrollWheel.x.value, Is.EqualTo(10).Within(0.0000001));
-        Assert.That(mouse.scrollWheel.y.value, Is.EqualTo(12).Within(0.0000001));
+        Assert.That(mouse.scroll.x.value, Is.EqualTo(10).Within(0.0000001));
+        Assert.That(mouse.scroll.y.value, Is.EqualTo(12).Within(0.0000001));
     }
 
     [Test]

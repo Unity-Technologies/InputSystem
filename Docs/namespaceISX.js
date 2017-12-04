@@ -4,7 +4,7 @@ var namespaceISX =
     [ "LowLevel", "namespaceISX_1_1LowLevel.html", "namespaceISX_1_1LowLevel" ],
     [ "AxisControl", "classISX_1_1AxisControl.html", null ],
     [ "ButtonControl", "classISX_1_1ButtonControl.html", null ],
-    [ "Gamepad", "classISX_1_1Gamepad.html", "classISX_1_1Gamepad" ],
+    [ "Gamepad", "classISX_1_1Gamepad.html", null ],
     [ "GamepadState", "structISX_1_1GamepadState.html", "structISX_1_1GamepadState" ],
     [ "IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "InputControl", "classISX_1_1InputControl.html", null ],
@@ -17,5 +17,8 @@ var namespaceISX =
     [ "InputTemplate", "classISX_1_1InputTemplate.html", "classISX_1_1InputTemplate" ],
     [ "InputTestFixture", "classISX_1_1InputTestFixture.html", "classISX_1_1InputTestFixture" ],
     [ "Keyboard", "classISX_1_1Keyboard.html", "classISX_1_1Keyboard" ],
-    [ "KeyControl", "classISX_1_1KeyControl.html", "classISX_1_1KeyControl" ]
+    [ "KeyControl", "classISX_1_1KeyControl.html", "classISX_1_1KeyControl" ],
+    [ "Mouse", "classISX_1_1Mouse.html", "classISX_1_1Mouse" ],
+    [ "MouseState", "structISX_1_1MouseState.html", null ],
+    [ "Pointer", "classISX_1_1Pointer.html", "classISX_1_1Pointer" ]
 ];

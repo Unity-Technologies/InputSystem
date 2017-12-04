@@ -11,7 +11,10 @@ var hierarchy =
       [ "ISX.InputDevice", "classISX_1_1InputDevice.html", [
         [ "ISX.Gamepad", "classISX_1_1Gamepad.html", null ],
         [ "ISX.HID.HID", "classISX_1_1HID_1_1HID.html", null ],
-        [ "ISX.Keyboard", "classISX_1_1Keyboard.html", null ]
+        [ "ISX.Keyboard", "classISX_1_1Keyboard.html", null ],
+        [ "ISX.Pointer", "classISX_1_1Pointer.html", [
+          [ "ISX.Mouse", "classISX_1_1Mouse.html", null ]
+        ] ]
       ] ]
     ] ],
     [ "ISX.InputControl< AudioBuffer >", "classISX_1_1InputControl.html", null ],
@@ -40,5 +43,6 @@ var hierarchy =
     [ "ISX.InputTemplate", "classISX_1_1InputTemplate.html", null ],
     [ "ISX.InputTestFixture", "classISX_1_1InputTestFixture.html", null ],
     [ "ISX.InputRemoting.Message", "structISX_1_1InputRemoting_1_1Message.html", null ],
+    [ "ISX.MouseState", "structISX_1_1MouseState.html", null ],
     [ "ISX.LowLevel.StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", null ]
 ];

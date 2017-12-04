@@ -7,5 +7,6 @@ var searchData=
   ['connected',['Connected',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7',1,'ISX']]],
   ['connectevent',['ConnectEvent',['../structISX_1_1LowLevel_1_1ConnectEvent.html',1,'ISX::LowLevel']]],
   ['controltemplate',['ControlTemplate',['../structISX_1_1InputTemplate_1_1ControlTemplate.html',1,'ISX::InputTemplate']]],
-  ['create',['Create',['../structISX_1_1LowLevel_1_1ConnectEvent.html#a09a83e2269792437b2e4f9a8e6daa786',1,'ISX::LowLevel::ConnectEvent']]]
+  ['create',['Create',['../structISX_1_1LowLevel_1_1ConnectEvent.html#a09a83e2269792437b2e4f9a8e6daa786',1,'ISX::LowLevel::ConnectEvent']]],
+  ['current',['current',['../classISX_1_1Mouse.html#ac65c1ac5f84af5e011ab0eecc4130a9e',1,'ISX::Mouse']]]
 ];

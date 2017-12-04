@@ -284,6 +284,12 @@ namespace ISX
                     return this;
                 }
 
+                public ControlBuilder WithBit(uint bit)
+                {
+                    controls[index].bit = bit;
+                    return this;
+                }
+
                 public ControlBuilder WithUsages(InternedString[] usages)
                 {
                     controls[index].usages = new ReadOnlyArray<InternedString>(usages);

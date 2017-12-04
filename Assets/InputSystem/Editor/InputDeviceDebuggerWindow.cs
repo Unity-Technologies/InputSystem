@@ -143,6 +143,16 @@ namespace ISX.Editor
                 m_EventTree.Reload();
             }
 
+            var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, EditorStyles.toolbarButton);
+            if (eventTraceDisabledNow != m_EventTraceDisabled)
+            {
+                m_EventTraceDisabled = eventTraceDisabledNow;
+                if (eventTraceDisabledNow)
+                    m_EventTrace.Disable();
+                else
+                    m_EventTrace.Enable();
+            }
+
             GUILayout.EndHorizontal();
 
             ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
@@ -170,7 +180,8 @@ namespace ISX.Editor
                     m_EventTree.Reload();
                     Repaint();
                 };
-            m_EventTrace.Enable();
+            if (!m_EventTraceDisabled)
+                m_EventTrace.Enable();
 
             // Set up event tree.
             m_EventTree = InputEventTreeView.Create(m_Device, m_EventTrace, ref m_EventTreeState, ref m_EventTreeHeaderState);
@@ -197,6 +208,7 @@ namespace ISX.Editor
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
         [SerializeField] private Vector2 m_EventListScrollPosition;
         [SerializeField] private InputEventTrace m_EventTrace;
+        [SerializeField] private bool m_EventTraceDisabled;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;
 
@@ -231,6 +243,7 @@ namespace ISX.Editor
         private static class Contents
         {
             public static GUIContent clearContent = new GUIContent("Clear");
+            public static GUIContent pauseContent = new GUIContent("Pause");
             public static GUIContent stateContent = new GUIContent("State");
         }
 
