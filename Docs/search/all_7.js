@@ -16,6 +16,7 @@ var searchData=
   ['inputcontrol_3c_20touch_20_3e',['InputControl&lt; Touch &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrol_3c_20vector2_20_3e',['InputControl&lt; Vector2 &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrol_3c_20vector3_20_3e',['InputControl&lt; Vector3 &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
+  ['inputcontrolpath',['InputControlPath',['../classISX_1_1InputControlPath.html',1,'ISX']]],
   ['inputdevice',['InputDevice',['../classISX_1_1InputDevice.html',1,'ISX']]],
   ['inputdevicechange',['InputDeviceChange',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1',1,'ISX']]],
   ['inputdevicedescription',['InputDeviceDescription',['../structISX_1_1InputDeviceDescription.html',1,'ISX']]],

@@ -12,13 +12,16 @@ using UnityEngine;
 
 namespace ISX
 {
-    // Functions to working with control path specs (like "/gamepad/*stick").
-    //
-    // The thinking here is somewhat similar to System.IO.Path, i.e. have a range
-    // of static methods that perform various operations on paths.
-    //
-    // Has both methods that work just on paths themselves (like TryGetControlTemplate())
-    // and methods that work on paths in combination with controls (like FindControls()).
+    /// <summary>
+    /// Functions to working with control path specs (like "/gamepad/*stick").
+    /// </summary>
+    /// <remarks>
+    /// The thinking here is somewhat similar to System.IO.Path, i.e. have a range
+    /// of static methods that perform various operations on paths.
+    ///
+    /// Has both methods that work just on paths themselves (like <see cref="TryGetControlTemplate"/>)
+    /// and methods that work on paths in combination with controls (like <see cref="TryFindControls"/>).
+    /// </remarks>
     public static class InputControlPath
     {
         public const string kWildcard = "*";
@@ -34,13 +37,29 @@ namespace ISX
             throw new NotImplementedException();
         }
 
+        /// <summary>
         // From the given control path, try to determine the device template being used.
-        //
-        // NOTE: This function will only use information available in the path itself or
-        //       in templates referenced by the path. It will not look at actual devices
-        //       in the system. This is to make the behavior predictable and not dependent
-        //       on whether you currently have the right device connected or not.
-        // NOTE: Allocates!
+        /// </summary>
+        /// <remarks>
+        /// This function will only use information available in the path itself or
+        /// in templates referenced by the path. It will not look at actual devices
+        /// in the system. This is to make the behavior predictable and not dependent
+        /// on whether you currently have the right device connected or not.
+        ///
+        /// Note that this function allocates and causes GC.
+        /// </remarks>
+        /// <param name="path">A control path (like "/<gamepad>/leftStick")</param>
+        /// <returns>The name of the device template used by the given control path or null
+        /// if the path does not specify a device template or does so in a way that is not
+        /// supported by the function.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is null</exception>
+        /// <example>
+        /// <code>
+        /// InputControlPath.TryGetDeviceTemplate("/<gamepad>/leftStick"); // Returns "gamepad".
+        /// InputControlPath.TryGetDeviceTemplate("/*/leftStick"); // Returns "*".
+        /// InputControlPath.TryGetDeviceTemplate("/gamepad/leftStick"); // Returns null. "gamepad" is a device name here.
+        /// </code>
+        /// </example>
         public static string TryGetDeviceTemplate(string path)
         {
             if (path == null)
@@ -258,7 +277,7 @@ namespace ISX
         // Return the first control that matches the given path.
         //
         // NOTE: Does not allocate!
-        public static InputControl FindControl(InputControl control, string path, int indexInPath = 0)
+        public static InputControl TryFindControl(InputControl control, string path, int indexInPath = 0)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
@@ -281,7 +300,7 @@ namespace ISX
         // Matching is case-insensitive.
         //
         // NOTE: Does not allocate!
-        public static int FindControls(InputControl control, string path, int indexInPath,
+        public static int TryFindControls(InputControl control, string path, int indexInPath,
             List<InputControl> matches)
         {
             if (control == null)
@@ -295,6 +314,25 @@ namespace ISX
             var countBefore = matches.Count;
             MatchControlsRecursive(control, path, indexInPath, matches);
             return matches.Count - countBefore;
+        }
+
+        public static InputControl TryFindChild(InputControl control, string path, int indexInPath = 0)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (path == null)
+                throw new ArgumentNullException("path");
+
+            var childCount = control.m_ChildrenReadOnly.Count;
+            for (var i = 0; i < childCount; ++i)
+            {
+                var child = control.m_ChildrenReadOnly[i];
+                var match = TryFindControl(child, path, indexInPath);
+                if (match != null)
+                    return match;
+            }
+
+            return null;
         }
 
         ////TODO: refactor this to use the new PathParser

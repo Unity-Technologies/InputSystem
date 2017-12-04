@@ -8,6 +8,7 @@ var namespaceISX =
     [ "GamepadState", "structISX_1_1GamepadState.html", "structISX_1_1GamepadState" ],
     [ "IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "InputControl", "classISX_1_1InputControl.html", null ],
+    [ "InputControlPath", "classISX_1_1InputControlPath.html", "classISX_1_1InputControlPath" ],
     [ "InputDevice", "classISX_1_1InputDevice.html", "classISX_1_1InputDevice" ],
     [ "InputDeviceDescription", "structISX_1_1InputDeviceDescription.html", "structISX_1_1InputDeviceDescription" ],
     [ "InputPluginAttribute", "classISX_1_1InputPluginAttribute.html", null ],

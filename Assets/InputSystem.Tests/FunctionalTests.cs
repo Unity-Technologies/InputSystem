@@ -1140,6 +1140,16 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanFindChildControlsByPath()
+    {
+        var gamepad = (Gamepad) new InputControlSetup("Gamepad").Finish();
+        Assert.That(gamepad["leftStick"], Is.SameAs(gamepad.leftStick));
+        Assert.That(gamepad["leftStick/x"], Is.SameAs(gamepad.leftStick.x));
+        Assert.That(gamepad.leftStick["x"], Is.SameAs(gamepad.leftStick.x));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_DeviceAndControlsRememberTheirTemplates()
     {
         var setup = new InputControlSetup("Gamepad");

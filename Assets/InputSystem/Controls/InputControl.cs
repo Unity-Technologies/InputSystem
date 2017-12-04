@@ -18,7 +18,7 @@ namespace ISX
     /// hierarchy is always an InputDevice (which themselves are InputControls).
     ///
     /// Controls can be looked up by their path (see <see cref="InputControlSetup.GetControl"/> and
-    /// <see cref="InputControlPath.FindControl"/>).
+    /// <see cref="InputControlPath.TryFindControl"/>).
     ///
     /// Each control must have a unique name within its parent (see <see cref="name"/>). Multiple
     /// names can be assigned to controls using aliases (see <see cref="aliases"/>). Name lookup
@@ -181,6 +181,11 @@ namespace ISX
         public InputStateBlock stateBlock
         {
             get { return m_StateBlock; }
+        }
+
+        public InputControl this[string path]
+        {
+            get { return InputControlPath.TryFindChild(this, path); }
         }
 
         public override string ToString()

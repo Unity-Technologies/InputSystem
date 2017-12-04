@@ -33,7 +33,7 @@ namespace ISX
 
             for (var i = 0; i < bindingsCount; ++i)
             {
-                var matchingControl = InputControlPath.FindControl(control, bindings[i].path);
+                var matchingControl = InputControlPath.TryFindControl(control, bindings[i].path);
                 if (matchingControl == null)
                     continue;
 

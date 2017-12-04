@@ -531,7 +531,7 @@ namespace ISX
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                numMatches += InputControlPath.FindControls(device, path, 0, controls);
+                numMatches += InputControlPath.TryFindControls(device, path, 0, controls);
             }
 
             return numMatches;

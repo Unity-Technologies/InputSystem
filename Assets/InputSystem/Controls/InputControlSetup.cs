@@ -77,17 +77,12 @@ namespace ISX
             if (parent == null)
                 parent = m_Device;
 
-            var childCount = parent.m_ChildrenReadOnly.Count;
-            for (var i = 0; i < childCount; ++i)
-            {
-                var child = parent.m_ChildrenReadOnly[i];
-                var match = InputControlPath.FindControl(child, path);
-                if (match != null)
-                    return match;
-            }
+            var match = InputControlPath.TryFindChild(parent, path);
+            if (match != null)
+                return match;
 
             if (ReferenceEquals(parent, m_Device))
-                return InputControlPath.FindControl(m_Device, string.Format("{0}/{1}", m_Device.name, path));
+                return InputControlPath.TryFindControl(m_Device, string.Format("{0}/{1}", m_Device.name, path));
 
             return null;
         }

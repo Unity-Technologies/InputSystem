@@ -103,7 +103,7 @@ Inheritance diagram for ISX.InputControl:</div>
 <div class="textblock"><p>A typed and named value in a hierarchy of controls. </p>
 <p>Controls do not actually store values. Instead, every control receives an InputStateBlock which, after the control's device has been added to the system, is used to read out values from the device's backing store.</p>
 <p>Controls can have children which in turn may have children. At the root of the child hierarchy is always an <a class="el" href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a> (which themselves are InputControls).</p>
-<p>Controls can be looked up by their path (see InputControlSetup.GetControl and InputControlPath.FindControl).</p>
+<p>Controls can be looked up by their path (see InputControlSetup.GetControl and InputControlPath.TryFindControl).</p>
 <p>Each control must have a unique name within its parent (see name). Multiple names can be assigned to controls using aliases (see aliases). Name lookup is case-insensitive.</p>
 <p>In addition to names, a control may have usages associated with it (see usages). A usage indicates how a control is meant to be used. For example, a button can be assigned the "PrimaryAction" usage to indicate it is the primary action button the device. Within a device, usages have to be unique. See CommonUsages for a list of standardized usages. </p>
 <dl class="section see"><dt>See also</dt><dd><a class="el" href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a></dd></dl>

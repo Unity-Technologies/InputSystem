@@ -29,6 +29,7 @@ var hierarchy =
     [ "ISX.InputControl< Touch >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Vector2 >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Vector3 >", "classISX_1_1InputControl.html", null ],
+    [ "ISX.InputControlPath", "classISX_1_1InputControlPath.html", null ],
     [ "ISX.InputDeviceDescription", "structISX_1_1InputDeviceDescription.html", null ],
     [ "ISX.LowLevel.InputEvent", "structISX_1_1LowLevel_1_1InputEvent.html", null ],
     [ "ISX.LowLevel.InputEventBuffer", "structISX_1_1LowLevel_1_1InputEventBuffer.html", null ],
