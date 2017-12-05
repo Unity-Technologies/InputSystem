@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 using ISX.LowLevel;
+using ISX.Utilities;
 #if !NET_4_0
 using ISX.Net35Compatibility;
 #endif
@@ -1510,6 +1511,7 @@ namespace ISX
 
                         var deviceIndex = device.m_DeviceIndex;
                         var stateBlock = device.m_StateBlock;
+                        var stateBlockSize = stateBlock.alignedSizeInBytes;
                         var stateOffset = 0u;
                         uint stateSize;
                         IntPtr statePtr;
@@ -1523,9 +1525,9 @@ namespace ISX
                             stateSize = stateEventPtr->stateSizeInBytes;
                             statePtr = stateEventPtr->state;
 
-                            // Ignore state event if it is larger than the device's total state size.
-                            if (stateBlock.alignedSizeInBytes < stateSize)
-                                break;
+                            // Ignore extra state at end of event.
+                            if (stateSize > stateBlockSize)
+                                stateSize = stateBlockSize;
                         }
                         else
                         {
@@ -1535,9 +1537,14 @@ namespace ISX
                             statePtr = deltaEventPtr->state;
                             stateOffset = deltaEventPtr->stateOffset;
 
-                            // Ignore delta event if it would write state past end of device state block.
-                            if (stateBlock.alignedSizeInBytes < stateOffset + stateSize)
-                                break;
+                            // Ignore extra state at end of event.
+                            if (stateOffset + stateSize > stateBlockSize)
+                            {
+                                if (stateOffset >= stateBlockSize)
+                                    break; // Entire delta state is out of range.
+
+                                stateSize = stateBlockSize - stateOffset;
+                            }
                         }
 
                         // Ignore state event if the format doesn't match.

@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Utilities
 {
     public struct FourCC
     {

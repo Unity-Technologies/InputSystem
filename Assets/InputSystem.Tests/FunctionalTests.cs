@@ -12,7 +12,7 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.TestTools;
 using UnityEngineInternal.Input;
 using ISX.LowLevel;
-
+using ISX.Utilities;
 #if UNITY_EDITOR
 using ISX.Editor;
 using UnityEditor;
@@ -568,28 +568,6 @@ public class FunctionalTests : InputTestFixture
         var stick = setup.GetControl<StickControl>("stick");
 
         Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
-    }
-
-    ////REVIEW: is it better to relax the rule in InputManager and allow state events to be larger than the device state?
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanForceSizeOfDeviceState()
-    {
-        const string json = @"
-            {
-                ""name"" : ""TestTemplate"",
-                ""stateSizeInBytes"" : ""256"",
-                ""controls"" : [
-                    { ""name"" : ""control"", ""template"" : ""Button"" }
-                ]
-            }
-        ";
-
-        InputSystem.RegisterTemplate(json);
-
-        var setup = new InputControlSetup("TestTemplate").Finish();
-
-        Assert.That(setup.stateBlock.alignedSizeInBytes, Is.EqualTo(256));
     }
 
     [Test]
@@ -3177,10 +3155,19 @@ public class FunctionalTests : InputTestFixture
     }
 
     [InputState(typeof(CustomDeviceState))]
-    class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
+    class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
 
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            axis = setup.GetControl<AxisControl>(this, "axis");
+            base.FinishSetup(setup);
+        }
+    }
+
+    class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
+    {
         public int onUpdateCallCount;
         public InputUpdateType onUpdateType;
 
@@ -3190,20 +3177,69 @@ public class FunctionalTests : InputTestFixture
             onUpdateType = updateType;
             InputSystem.QueueStateEvent(this, new CustomDeviceState {axis = 0.234f});
         }
+    }
 
-        protected override void FinishSetup(InputControlSetup setup)
+    // We want devices to be able to "park" unused controls outside of the state
+    // memory region that is being sent to the device in events.
+    [Test]
+    [Category("Events")]
+    public void Events_CanSendSmallerStateToDeviceWithLargerState()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestTemplate"",
+                ""extend"" : ""CustomDevice"",
+                ""controls"" : [
+                    { ""name"" : ""extra"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate<CustomDevice>();
+        InputSystem.RegisterTemplate(json);
+        var device = (CustomDevice)InputSystem.AddDevice("TestTemplate");
+
+        InputSystem.QueueStateEvent(device, new CustomDeviceState {axis = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.axis.value, Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    struct ExtendedCustomDeviceState : IInputStateTypeInfo
+    {
+        public CustomDeviceState baseState;
+        public int extra;
+
+        public FourCC GetFormat()
         {
-            axis = setup.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(setup);
+            return baseState.GetFormat();
         }
+    }
+
+    // HIDs rely on this behavior as we may only use a subset of a HID's set of
+    // controls and thus get state events that are larger than the device state
+    // that we store for the HID.
+    [Test]
+    [Category("Events")]
+    public void Events_CandSendLargerStateToDeviceWithSmallerState()
+    {
+        InputSystem.RegisterTemplate<CustomDevice>();
+        var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
+
+        var state = new ExtendedCustomDeviceState();
+        state.baseState.axis = 0.5f;
+        InputSystem.QueueStateEvent(device, state);
+        InputSystem.Update();
+
+        Assert.That(device.axis.value, Is.EqualTo(0.5).Within(0.000001));
     }
 
     [Test]
     [Category("Events")]
     public void Events_CanUpdateDeviceWithEventsFromUpdateCallback()
     {
-        InputSystem.RegisterTemplate<CustomDevice>();
-        var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
+        InputSystem.RegisterTemplate<CustomDeviceWithUpdate>();
+        var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
 
         InputSystem.Update();
 
@@ -3216,8 +3252,8 @@ public class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_RemovingDeviceCleansUpUpdateCallback()
     {
-        InputSystem.RegisterTemplate<CustomDevice>();
-        var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
+        InputSystem.RegisterTemplate<CustomDeviceWithUpdate>();
+        var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
         InputSystem.RemoveDevice(device);
 
         InputSystem.Update();

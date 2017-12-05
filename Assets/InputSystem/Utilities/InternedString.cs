@@ -4,7 +4,7 @@ using System;
 ////      (this will probably also be useful for jobs)
 ////      when this is implemented, also allow interning directly from Substrings
 
-namespace ISX
+namespace ISX.Utilities
 {
     // Wraps around a string to allow for faster case-insensitive
     // string comparisons while preserving original casing.

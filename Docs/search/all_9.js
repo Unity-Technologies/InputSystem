@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['lastupdatetime',['lastUpdateTime',['../classISX_1_1InputDevice.html#acdf24e99a5e11a380c117896ff30b520',1,'ISX::InputDevice']]],
-  ['layout',['layout',['../classISX_1_1Keyboard.html#ab5ef12769dac776b49dd6f4c2976c75b',1,'ISX::Keyboard']]],
-  ['leftbutton',['leftButton',['../classISX_1_1Mouse.html#ae3c534ff14182c2a37bd6a258afa58b3',1,'ISX::Mouse']]],
-  ['leftstick',['leftStick',['../structISX_1_1GamepadState.html#a51e37e94bbf3838c0ffcd0391220158d',1,'ISX::GamepadState']]],
-  ['lefttrigger',['leftTrigger',['../structISX_1_1GamepadState.html#a7d01d15c0e9043d91a5755cc40e1bb11',1,'ISX::GamepadState']]]
+  ['key',['Key',['../namespaceISX.html#a38873005ef32f511b64aa2a8c06bd89b',1,'ISX']]],
+  ['keyboard',['Keyboard',['../classISX_1_1Keyboard.html',1,'ISX']]],
+  ['keycode',['keyCode',['../classISX_1_1KeyControl.html#aa3fc3751ee23eddd7a8d09da586bc6ff',1,'ISX::KeyControl']]],
+  ['keycontrol',['KeyControl',['../classISX_1_1KeyControl.html',1,'ISX']]]
 ];

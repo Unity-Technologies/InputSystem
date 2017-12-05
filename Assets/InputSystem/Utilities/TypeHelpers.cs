@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace ISX
+namespace ISX.Utilities
 {
     internal static class TypeHelpers
     {

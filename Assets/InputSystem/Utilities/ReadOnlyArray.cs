@@ -1,16 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
 #if !NET_4_0
 using ISX.Net35Compatibility;
 #endif
 
-namespace ISX
+namespace ISX.Utilities
 {
-    // Read-only access to an array. Additionally allows to expose only
-    // a slice of the whole array.
-    // NOTE: Use indexer instead of enumerator if you want to avoid garbage.
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
         internal TValue[] m_Array;
@@ -120,8 +116,6 @@ namespace ISX
         }
     }
 
-    // Extension methods for ReadOnlyArray that allow for optional functionality that
-    // may not work with all ReadOnlyArrays.
     public static class ReadOnlyArrayExtensions
     {
         public static bool Contains<TValue>(this ReadOnlyArray<TValue> array, TValue value)

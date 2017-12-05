@@ -1,3 +1,5 @@
+using ISX.Utilities;
+
 namespace ISX.LowLevel
 {
     // Allows retrieving information about event types from an instance of the type.

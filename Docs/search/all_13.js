@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['vector2control',['Vector2Control',['../classISX_1_1Vector2Control.html',1,'ISX']]]
+  ['usagechanged',['UsageChanged',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3',1,'ISX']]]
 ];

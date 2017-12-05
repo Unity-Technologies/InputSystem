@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ISX
+namespace ISX.Utilities
 {
     // A collection of utility functions to work with arrays.
-    public static class ArrayHelpers
+    internal static class ArrayHelpers
     {
         public static bool Contains<TValue>(TValue[] array, TValue value)
         {

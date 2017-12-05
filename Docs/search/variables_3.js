@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['interfacename',['interfaceName',['../structISX_1_1InputDeviceDescription.html#a0c9dc7053fbd241ddf2132ec51a5b600',1,'ISX::InputDeviceDescription']]]
+  ['format',['format',['../structISX_1_1LowLevel_1_1InputStateBlock.html#ab019529ab3aa4fac93b9ccd523bbbc4d',1,'ISX::LowLevel::InputStateBlock']]]
 ];

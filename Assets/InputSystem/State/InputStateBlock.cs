@@ -1,16 +1,20 @@
 using System;
+using ISX.Utilities;
 using UnityEngine;
 
 namespace ISX.LowLevel
 {
-    // Input state is kept in raw memory blocks.
-    // All state is centrally managed by InputManager; controls cannot keep their own independent state.
-    // State can be used to store values received from external systems (input) or to accumulate values to
-    // send back to external systems (output).
-    // NOTE: Generally, there is no need to futz around with state directly; stick to InputControls
-    //       to do the heavy-lifting.
+    /// <summary>
+    /// Information about a memory region storing state.
+    /// </summary>
+    /// <remarks>
+    /// Input state is kept in raw memory blocks. All state is centrally managed by InputManager; controls
+    /// cannot keep their own independent state. State can be used to store values received from external
+    /// systems (input) or to accumulate values to send back to external systems (output).
+    /// </remarks>
     public struct InputStateBlock
     {
+        ////TODO: move into Flags semantics; should support input and output concurrently on a state block
         [Flags]
         public enum Semantics
         {
@@ -87,10 +91,14 @@ namespace ISX.LowLevel
             return new FourCC();
         }
 
-        // Type identifier for the memory layout used by the state. Used for safety checks to
-        // make sure that when we do memory copies of entire state blocks, we copy between
-        // identical layouts. In the case of the memory layouts given by the type codes above,
-        // also used to determine the size of the state block.
+        /// <summary>
+        /// Type identifier for the memory layout used by the state.
+        /// </summary>
+        /// <remarks>
+        /// Used for safety checks to make sure that when the system copies state memory, it
+        /// copies between compatible layouts. If set to a primitive state format, also used to
+        /// determine the size of the state block.
+        /// </remarks>
         public FourCC format;
 
         // Offset into state buffer. After a device is added to the system, this is relative

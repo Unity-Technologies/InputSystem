@@ -1,6 +1,6 @@
 using System;
 
-namespace ISX
+namespace ISX.Utilities
 {
     internal static class BitfieldHelpers
     {

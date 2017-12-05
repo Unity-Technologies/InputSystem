@@ -1,3 +1,4 @@
+using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 

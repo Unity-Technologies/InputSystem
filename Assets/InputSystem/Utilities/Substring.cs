@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace ISX
+namespace ISX.Utilities
 {
     // Work with substrings without actually allocating strings.
     internal struct Substring : IComparable<Substring>
@@ -28,6 +28,35 @@ namespace ISX
             m_String = str;
             m_Index = index;
             m_Length = length;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Substring)
+                return Equals((Substring)obj);
+
+            var str = obj as string;
+            if (str != null)
+                return Equals(str);
+
+            return false;
+        }
+
+        public bool Equals(string other)
+        {
+            if (string.IsNullOrEmpty(other))
+            {
+                return m_Length == 0;
+            }
+
+            if (other.Length != m_Length)
+                return false;
+
+            for (var i = 0; i < m_Length; ++i)
+                if (other[i] != m_String[m_Index + i])
+                    return false;
+
+            return true;
         }
 
         public bool Equals(Substring other)
@@ -62,6 +91,18 @@ namespace ISX
                 return string.Empty;
 
             return m_String.Substring(m_Index, m_Length);
+        }
+
+        public override int GetHashCode()
+        {
+            if (m_String == null)
+                return 0;
+
+            if (m_Index == 0 && m_Length == m_String.Length)
+                return m_String.GetHashCode();
+
+            ////FIXME: this is bad... shouldn't allocate
+            return ToString().GetHashCode();
         }
 
         public static bool operator==(Substring a, Substring b)

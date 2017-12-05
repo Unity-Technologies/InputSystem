@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using ISX.LowLevel;
+using ISX.Utilities;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR

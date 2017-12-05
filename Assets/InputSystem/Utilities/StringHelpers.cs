@@ -1,8 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
-namespace ISX
+namespace ISX.Utilities
 {
     internal static class StringHelpers
     {

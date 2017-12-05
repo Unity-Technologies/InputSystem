@@ -45,6 +45,7 @@ var hierarchy =
     [ "ISX.LowLevel.InputEventQueue", "structISX_1_1LowLevel_1_1InputEventQueue.html", null ],
     [ "ISX.InputPluginAttribute", "classISX_1_1InputPluginAttribute.html", null ],
     [ "ISX.InputRemoting", "classISX_1_1InputRemoting.html", null ],
+    [ "ISX.LowLevel.InputStateBlock", "structISX_1_1LowLevel_1_1InputStateBlock.html", null ],
     [ "ISX.InputSystem", "classISX_1_1InputSystem.html", null ],
     [ "ISX.InputTemplate", "classISX_1_1InputTemplate.html", null ],
     [ "ISX.InputTestFixture", "classISX_1_1InputTestFixture.html", null ],

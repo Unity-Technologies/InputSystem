@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ISX.Utilities;
 using UnityEngine;
 
 ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy

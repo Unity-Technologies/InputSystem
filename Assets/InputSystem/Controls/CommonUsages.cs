@@ -1,3 +1,5 @@
+using ISX.Utilities;
+
 namespace ISX
 {
     public static class CommonUsages

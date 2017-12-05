@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using ISX.LowLevel;
+using ISX.Utilities;
 using UnityEngine;
 
 namespace ISX

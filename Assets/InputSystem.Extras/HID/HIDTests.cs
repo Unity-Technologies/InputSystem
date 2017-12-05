@@ -69,12 +69,13 @@ namespace ISX.HID
         }
 
         // There may be vendor-specific stuff in an input report which we don't know how to use so the
-        // set of usable elements may be smaller than the set of actual elements in the report. However, we
-        // have to make sure that the state blocks that the device is sending us aren't bigger than the
-        // state we store for the device or the input system will reject state events.
+        // set of usable elements may be smaller than the set of actual elements in the report. The system
+        // is fine with state events that are larger than the state we store for a device as long as the
+        // format codes match. So, the total size of the state block for a device should correspond to
+        // only the range of elements we actually use.
         [Test]
         [Category("Devices")]
-        public void TODO_Devices_WillEnsureThatStateBlockIsAtLeastAsBigAsInputReport()
+        public void Devices_HIDsIgnoreUnusedExcessElements()
         {
             var hidDescriptor = new HID.HIDDeviceDescriptor
             {
@@ -83,7 +84,8 @@ namespace ISX.HID
                 inputReportSize = 36,
                 elements = new[]
                 {
-                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 }
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+                    new HID.HIDElementDescriptor { usage = 0x23435, usagePage = (HID.UsagePage) 0x544314, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 }
                 }
             };
 
@@ -96,7 +98,7 @@ namespace ISX.HID
             });
 
             var device = InputSystem.devices.First(x => x is HID);
-            Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(36 * 8));
+            Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(32));
         }
 
         [Test]

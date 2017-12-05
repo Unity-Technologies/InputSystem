@@ -1,5 +1,6 @@
 using System;
 using ISX.LowLevel;
+using ISX.Utilities;
 using UnityEngineInternal.Input;
 
 //device callbacks:

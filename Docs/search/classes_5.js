@@ -19,6 +19,7 @@ var searchData=
   ['inputeventqueue',['InputEventQueue',['../structISX_1_1LowLevel_1_1InputEventQueue.html',1,'ISX::LowLevel']]],
   ['inputpluginattribute',['InputPluginAttribute',['../classISX_1_1InputPluginAttribute.html',1,'ISX']]],
   ['inputremoting',['InputRemoting',['../classISX_1_1InputRemoting.html',1,'ISX']]],
+  ['inputstateblock',['InputStateBlock',['../structISX_1_1LowLevel_1_1InputStateBlock.html',1,'ISX::LowLevel']]],
   ['inputsystem',['InputSystem',['../classISX_1_1InputSystem.html',1,'ISX']]],
   ['inputtemplate',['InputTemplate',['../classISX_1_1InputTemplate.html',1,'ISX']]],
   ['inputtestfixture',['InputTestFixture',['../classISX_1_1InputTestFixture.html',1,'ISX']]]

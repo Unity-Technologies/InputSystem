@@ -1,4 +1,4 @@
-namespace ISX
+namespace ISX.Utilities
 {
     // A buffer of audio samples in a specific format.
     public class AudioBuffer

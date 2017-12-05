@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ISX.LowLevel;
+using ISX.Utilities;
 using UnityEngine;
 
 #if !NET_4_0

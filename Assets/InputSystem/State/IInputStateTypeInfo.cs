@@ -1,3 +1,5 @@
+using ISX.Utilities;
+
 namespace ISX
 {
     // Allows to generically query information from a state struct.

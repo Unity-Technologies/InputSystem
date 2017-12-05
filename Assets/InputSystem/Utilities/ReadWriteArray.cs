@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-
 #if !NET_4_0
 using ISX.Net35Compatibility;
 #endif
 
-namespace ISX
+namespace ISX.Utilities
 {
     // Variation of ReadOnlyArray that has the slicing ability but
     // does provide write access. Used only internally.
