@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Processors
 {
     // Interprets a float value as time and uses it to interpolate over an
     // AnimationCurve.

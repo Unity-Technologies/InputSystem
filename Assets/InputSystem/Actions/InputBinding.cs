@@ -4,8 +4,12 @@ using System;
 
 namespace ISX
 {
-    // A combination of a control path and modifiers.
-    // A single binding can match arbitrary many controls through its path.
+    /// <summary>
+    /// A combination of a control path and modifiers.
+    /// </summary>
+    /// <remarks>
+    /// A single binding can match arbitrary many controls through its path.
+    /// </remarks>
     [Serializable]
     public struct InputBinding
     {

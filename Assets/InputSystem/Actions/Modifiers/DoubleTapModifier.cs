@@ -1,4 +1,4 @@
-namespace ISX
+namespace ISX.Modifiers
 {
     public class DoubleTapModifier
     {

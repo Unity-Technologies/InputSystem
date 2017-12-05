@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['name',['name',['../structISX_1_1InputTemplate_1_1ControlTemplate.html#a8a169f6e38bb6624fc8694b458d2a19c',1,'ISX::InputTemplate::ControlTemplate']]]
+  ['min',['min',['../classISX_1_1Processors_1_1DeadzoneProcessor.html#a6a4ca131a44cff7567cc11b15bbd6fea',1,'ISX::Processors::DeadzoneProcessor']]]
 ];

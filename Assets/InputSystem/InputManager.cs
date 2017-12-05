@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 using ISX.LowLevel;
+using ISX.Modifiers;
+using ISX.Processors;
 using ISX.Utilities;
 #if !NET_4_0
 using ISX.Net35Compatibility;
@@ -1887,6 +1889,8 @@ namespace ISX
             return flipped;
         }
 
+        ////REVIEW: shouldn't resets be visible to actions by generating proper change notifications?
+        ////        (might be a better idea to instead send an state event with default state)
         private void ResetDeviceState(InputDevice device)
         {
             var offset = (int)device.m_StateBlock.byteOffset;
@@ -2236,6 +2240,8 @@ namespace ISX
                 device.m_Id = deviceState.deviceId;
                 device.m_DeviceIndex = i;
                 device.m_Description = deviceState.description;
+                if (!string.IsNullOrEmpty(device.m_Description.product))
+                    device.m_DisplayName = device.m_Description.product;
                 device.m_Flags = deviceState.flags;
                 deviceState.RestoreUsagesOnDevice(device);
 

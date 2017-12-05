@@ -1,4 +1,4 @@
-namespace ISX
+namespace ISX.Modifiers
 {
     // Performs the action if the control is pressed, held for at least the set duration
     // (which defaults to InputConfiguration.SlowTapTime) and then *released*.

@@ -1,5 +1,6 @@
 using System.Linq;
 using ISX;
+using ISX.Utilities;
 using UnityEngine;
 
 public struct MyDeviceState : IInputStateTypeInfo

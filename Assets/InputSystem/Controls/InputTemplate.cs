@@ -307,8 +307,22 @@ namespace ISX
             }
 
             // This invalidates the ControlBuilders from previous calls! (our array may move)
+            /// <summary>
+            /// Add a new control to the template.
+            /// </summary>
+            /// <param name="name">Name or path of the control. If it is a path (e.g. <c>"leftStick/x"</c>,
+            /// then the control either modifies the setup of a child control of another control in the template
+            /// or adds a new child control to another control in the template. Modifying child control is useful,
+            /// for example, to alter the state format of controls coming from the base template. Likewise,
+            /// adding child controls to another control is useful to modify the setup of of the control template
+            /// being used without having to create and register a custom control template.</param>
+            /// <returns>A control builder that permits setting various parameters on the control.</returns>
+            /// <exception cref="ArgumentException"><paramref name="name"/> is null or empty.</exception>
             public ControlBuilder AddControl(string name)
             {
+                if (string.IsNullOrEmpty(name))
+                    throw new ArgumentException(name);
+
                 var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
                         new ControlTemplate {name = new InternedString(name)});
 
@@ -322,6 +336,30 @@ namespace ISX
             public Builder WithName(string name)
             {
                 this.name = name;
+                return this;
+            }
+
+            public Builder WithType<T>()
+                where T : InputControl
+            {
+                type = typeof(T);
+                return this;
+            }
+
+            public Builder WithFormat(FourCC format)
+            {
+                stateFormat = format;
+                return this;
+            }
+
+            public Builder WithFormat(string format)
+            {
+                return WithFormat(new FourCC(format));
+            }
+
+            public Builder Extend(string baseTemplateName)
+            {
+                extendsTemplate = baseTemplateName;
                 return this;
             }
 

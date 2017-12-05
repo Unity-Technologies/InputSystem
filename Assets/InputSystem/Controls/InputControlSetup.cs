@@ -376,7 +376,7 @@ namespace ISX
                 var controlTemplate = controlTemplates[i];
 
                 // Skip control templates that don't add controls but rather modify child
-                // controls of other controls added by the template. We do a seccond pass
+                // controls of other controls added by the template. We do a second pass
                 // to apply their settings.
                 if (controlTemplate.isModifyingChildControlByPath)
                     continue;
@@ -386,97 +386,8 @@ namespace ISX
                 if (!controlTemplate.variant.IsEmpty() && controlTemplate.variant != variant)
                     continue;
 
-                ////REVIEW: can we check this in InputTemplate instead?
-                if (string.IsNullOrEmpty(controlTemplate.template))
-                    throw new Exception(string.Format("Template has not been set on control '{0}' in '{1}'",
-                            controlTemplate.name, template.name));
-
-                // See if we have an existing control that we might be able to re-use.
-                InputControl existingControl = null;
-                if (existingChildren != null)
-                {
-                    var existingChildCount = existingChildren.Value.Count;
-                    for (var n = 0; n < existingChildCount; ++n)
-                    {
-                        var existingChild = existingChildren.Value[n];
-                        if (existingChild.template == controlTemplate.template
-                            && existingChild.name.ToLower() == controlTemplate.name.ToLower())
-                        {
-                            existingControl = existingChild;
-                            break;
-                        }
-                    }
-                }
-
-                // Create control.
-                InputControl control;
-                try { control = AddControl(controlTemplate.template, variant, controlTemplate.name, parent, existingControl); }
-                catch (InputTemplate.TemplateNotFoundException exception)
-                {
-                    // Throw better exception that gives more info.
-                    throw new Exception(
-                        string.Format("Cannot find template '{0}' used in control '{1}' of template '{2}'",
-                            exception.template, controlTemplate.name, template.name),
-                        exception);
-                }
-
-                // Add to array.
-                m_Device.m_ChildrenForEachControl[childIndex] = control;
-                ++childIndex;
-
-                // Set display name.
-                control.m_DisplayNameFromTemplate = controlTemplate.displayName;
-
-                // Pass state block config on to control.
-                var usesStateFromOtherControl = !string.IsNullOrEmpty(controlTemplate.useStateFrom);
-                if (!usesStateFromOtherControl)
-                {
-                    control.m_StateBlock.byteOffset = controlTemplate.offset;
-                    if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
-                        control.m_StateBlock.bitOffset = controlTemplate.bit;
-                    if (controlTemplate.sizeInBits != 0)
-                        control.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
-                    if (controlTemplate.format != 0)
-                        SetFormat(control, controlTemplate);
-                }
-                else
-                {
-                    // Mark controls that don't have state blocks of their own but rather get their
-                    // blocks from other controls by setting their state size to kInvalidOffset.
-                    control.m_StateBlock.sizeInBits = kSizeForControlUsingStateFromOtherControl;
-                    haveChildrenUsingStateFromOtherControls = true;
-                }
-
-                ////REVIEW: the constant appending to m_UsagesForEachControl and m_AliasesForEachControl may lead to a lot
-                ////        of successive re-allocations
-
-                // Add usages.
-                if (controlTemplate.usages.Count > 0)
-                {
-                    var usageCount = controlTemplate.usages.Count;
-                    var usageIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlTemplate.usages.m_Array);
-                    control.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
-
-                    ArrayHelpers.GrowBy(ref m_Device.m_UsageToControl, usageCount);
-                    for (var n = 0; n < usageCount; ++n)
-                        m_Device.m_UsageToControl[usageIndex + n] = control;
-                }
-
-                // Add aliases.
-                if (controlTemplate.aliases.Count > 0)
-                {
-                    var aliasCount = controlTemplate.aliases.Count;
-                    var aliasIndex = ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlTemplate.aliases.m_Array);
-                    control.m_AliasesReadOnly = new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
-                }
-
-                // Set parameters.
-                if (controlTemplate.parameters.Count > 0)
-                    SetParameters(control, controlTemplate.parameters);
-
-                // Add processors.
-                if (controlTemplate.processors.Count > 0)
-                    AddProcessors(control, controlTemplate, template.name);
+                AddChildControl(template, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
+                    ref controlTemplate, ref childIndex);
             }
 
             // Install child array on parent. We will later patch up the array
@@ -497,63 +408,246 @@ namespace ISX
                     if (!controlTemplate.isModifyingChildControlByPath)
                         continue;
 
-                    // Find the child control.
-                    var child = TryGetControl(parent, controlTemplate.name);
-                    if (child == null)
-                        throw new Exception(
-                            string.Format("Cannot find control '{0}' in template '{1}'", controlTemplate.name,
-                                template.name));
+                    // If the control is part of a variant, skip it if it isn't the variant we're
+                    // looking for.
+                    if (!controlTemplate.variant.IsEmpty() && controlTemplate.variant != variant)
+                        continue;
 
-                    // Controls layout themselves as we come back up the hierarchy. However, when we
-                    // apply layout modifications reaching *into* the hierarchy, we need to retrigger
-                    // layouting on their parents.
-                    var haveChangedLayoutOfChild = false;
-
-                    // Apply modifications.
-                    if (controlTemplate.sizeInBits != 0 &&
-                        child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
-                    {
-                        child.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
-                    }
-                    if (controlTemplate.format != 0 && child.m_StateBlock.format != controlTemplate.format)
-                    {
-                        SetFormat(child, controlTemplate);
-                        haveChangedLayoutOfChild = true;
-                    }
-                    ////REVIEW: ATM, when you move a child with a fixed offset, we only move the child
-                    ////        and don't move the parent or siblings. What this means is that if you move
-                    ////        leftStick/x, for example, leftStick stays put. ATM you have to move *all*
-                    ////        controls that are part of a chain manually. Not sure what the best behavior
-                    ////        is. If we opt to move parents along with children, we have to make sure we
-                    ////        are not colliding with any other relocations of children (e.g. if you move
-                    ////        both leftStick/x and leftStick/y, leftStick itself should move only once and
-                    ////        not at all if there indeed is a leftStick control template with an offset;
-                    ////        so, it'd get quite complicated)
-                    if (controlTemplate.offset != InputStateBlock.kInvalidOffset)
-                        child.m_StateBlock.byteOffset = controlTemplate.offset;
-                    if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
-                        child.m_StateBlock.bitOffset = controlTemplate.bit;
-                    if (controlTemplate.processors.Count > 0)
-                        AddProcessors(child, controlTemplate, template.name);
-                    if (controlTemplate.parameters.Count > 0)
-                        SetParameters(child, controlTemplate.parameters);
-                    if (!string.IsNullOrEmpty(controlTemplate.displayName))
-                        child.m_DisplayNameFromTemplate = controlTemplate.displayName;
-
-                    ////TODO: other modifications
-
-                    // Apply layout change.
-                    ////REVIEW: not sure what's better here; trigger this immediately means we may trigger
-                    ////        it a number of times on the same parent but doing it as a final pass would
-                    ////        require either collecting the necessary parents or doing another pass through
-                    ////        the list of control templates
-                    if (haveChangedLayoutOfChild && !ReferenceEquals(child.parent, parent))
-                        ComputeStateLayout(child.parent);
+                    ModifyChildControl(template, variant, parent, ref haveChildrenUsingStateFromOtherControls,
+                        ref controlTemplate);
                 }
             }
         }
 
-        private static void AddProcessors(InputControl control, InputTemplate.ControlTemplate controlTemplate, string templateName)
+        private InputControl AddChildControl(InputTemplate template, InternedString variant, InputControl parent,
+            ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls,
+            ref InputTemplate.ControlTemplate controlTemplate, ref int childIndex, string nameOverride = null)
+        {
+            var name = nameOverride ?? controlTemplate.name;
+            var nameLowerCase = nameOverride != null ? nameOverride.ToLower() : controlTemplate.name.ToLower();
+            var nameInterned = nameOverride != null ? new InternedString(nameOverride) : controlTemplate.name;
+
+            ////REVIEW: can we check this in InputTemplate instead?
+            if (string.IsNullOrEmpty(controlTemplate.template))
+                throw new Exception(string.Format("Template has not been set on control '{0}' in '{1}'",
+                        controlTemplate.name, template.name));
+
+            // See if we have an existing control that we might be able to re-use.
+            InputControl existingControl = null;
+            if (existingChildren != null)
+            {
+                var existingChildCount = existingChildren.Value.Count;
+                for (var n = 0; n < existingChildCount; ++n)
+                {
+                    var existingChild = existingChildren.Value[n];
+                    if (existingChild.template == controlTemplate.template
+                        && existingChild.name.ToLower() == nameLowerCase)
+                    {
+                        existingControl = existingChild;
+                        break;
+                    }
+                }
+            }
+
+            // Create control.
+            InputControl control;
+            try
+            {
+                control = AddControl(controlTemplate.template, variant, nameInterned, parent, existingControl);
+            }
+            catch (InputTemplate.TemplateNotFoundException exception)
+            {
+                // Throw better exception that gives more info.
+                throw new Exception(
+                    string.Format("Cannot find template '{0}' used in control '{1}' of template '{2}'",
+                        exception.template, controlTemplate.name, template.name),
+                    exception);
+            }
+
+            // Add to array.
+            m_Device.m_ChildrenForEachControl[childIndex] = control;
+            ++childIndex;
+
+            // Set display name.
+            control.m_DisplayNameFromTemplate = controlTemplate.displayName;
+
+            // Pass state block config on to control.
+            var usesStateFromOtherControl = !string.IsNullOrEmpty(controlTemplate.useStateFrom);
+            if (!usesStateFromOtherControl)
+            {
+                control.m_StateBlock.byteOffset = controlTemplate.offset;
+                if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
+                    control.m_StateBlock.bitOffset = controlTemplate.bit;
+                if (controlTemplate.sizeInBits != 0)
+                    control.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
+                if (controlTemplate.format != 0)
+                    SetFormat(control, controlTemplate);
+            }
+            else
+            {
+                // Mark controls that don't have state blocks of their own but rather get their
+                // blocks from other controls by setting their state size to kInvalidOffset.
+                control.m_StateBlock.sizeInBits = kSizeForControlUsingStateFromOtherControl;
+                haveChildrenUsingStateFromOtherControls = true;
+            }
+
+            ////REVIEW: the constant appending to m_UsagesForEachControl and m_AliasesForEachControl may lead to a lot
+            ////        of successive re-allocations
+
+            // Add usages.
+            if (controlTemplate.usages.Count > 0)
+            {
+                var usageCount = controlTemplate.usages.Count;
+                var usageIndex =
+                    ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlTemplate.usages.m_Array);
+                control.m_UsagesReadOnly =
+                    new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
+
+                ArrayHelpers.GrowBy(ref m_Device.m_UsageToControl, usageCount);
+                for (var n = 0; n < usageCount; ++n)
+                    m_Device.m_UsageToControl[usageIndex + n] = control;
+            }
+
+            // Add aliases.
+            if (controlTemplate.aliases.Count > 0)
+            {
+                var aliasCount = controlTemplate.aliases.Count;
+                var aliasIndex =
+                    ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlTemplate.aliases.m_Array);
+                control.m_AliasesReadOnly =
+                    new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
+            }
+
+            // Set parameters.
+            if (controlTemplate.parameters.Count > 0)
+                SetParameters(control, controlTemplate.parameters);
+
+            // Add processors.
+            if (controlTemplate.processors.Count > 0)
+                AddProcessors(control, ref controlTemplate, template.name);
+
+            return control;
+        }
+
+        private void ModifyChildControl(InputTemplate template, InternedString variant, InputControl parent,
+            ref bool haveChildrenUsingStateFromOtherControls,
+            ref InputTemplate.ControlTemplate controlTemplate)
+        {
+            // Controls layout themselves as we come back up the hierarchy. However, when we
+            // apply layout modifications reaching *into* the hierarchy, we need to retrigger
+            // layouting on their parents.
+            var haveChangedLayoutOfParent = false;
+
+            // Find the child control.
+            var child = TryGetControl(parent, controlTemplate.name);
+            if (child == null)
+            {
+                // We're adding a child somewhere in the existing hierarchy. This is a tricky
+                // case as we have to potentially shift indices around in the hierarchy to make
+                // room for the new control.
+
+                ////TODO: this path does not support recovering existing controls? does it matter?
+
+                child = InsertChildControl(template, variant, parent,
+                        ref haveChildrenUsingStateFromOtherControls, ref controlTemplate);
+                haveChangedLayoutOfParent = true;
+            }
+            else
+            {
+                // Apply modifications.
+                if (controlTemplate.sizeInBits != 0 &&
+                    child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
+                {
+                    child.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
+                }
+                if (controlTemplate.format != 0 && child.m_StateBlock.format != controlTemplate.format)
+                {
+                    SetFormat(child, controlTemplate);
+                    haveChangedLayoutOfParent = true;
+                }
+                ////REVIEW: ATM, when you move a child with a fixed offset, we only move the child
+                ////        and don't move the parent or siblings. What this means is that if you move
+                ////        leftStick/x, for example, leftStick stays put. ATM you have to move *all*
+                ////        controls that are part of a chain manually. Not sure what the best behavior
+                ////        is. If we opt to move parents along with children, we have to make sure we
+                ////        are not colliding with any other relocations of children (e.g. if you move
+                ////        both leftStick/x and leftStick/y, leftStick itself should move only once and
+                ////        not at all if there indeed is a leftStick control template with an offset;
+                ////        so, it'd get quite complicated)
+                if (controlTemplate.offset != InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.byteOffset = controlTemplate.offset;
+                if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.bitOffset = controlTemplate.bit;
+                if (controlTemplate.processors.Count > 0)
+                    AddProcessors(child, ref controlTemplate, template.name);
+                if (controlTemplate.parameters.Count > 0)
+                    SetParameters(child, controlTemplate.parameters);
+                if (!string.IsNullOrEmpty(controlTemplate.displayName))
+                    child.m_DisplayNameFromTemplate = controlTemplate.displayName;
+
+                ////TODO: other modifications
+            }
+
+            // Apply layout change.
+            ////REVIEW: not sure what's better here; trigger this immediately means we may trigger
+            ////        it a number of times on the same parent but doing it as a final pass would
+            ////        require either collecting the necessary parents or doing another pass through
+            ////        the list of control templates
+            if (haveChangedLayoutOfParent && !ReferenceEquals(child.parent, parent))
+                ComputeStateLayout(child.parent);
+        }
+
+        private InputControl InsertChildControl(InputTemplate template, InternedString variant, InputControl parent,
+            ref bool haveChildrenUsingStateFromOtherControls,
+            ref InputTemplate.ControlTemplate controlTemplate)
+        {
+            var path = controlTemplate.name.ToString();
+
+            // First we need to find the immediate parent from the given path.
+            var indexOfSlash = path.LastIndexOf('/');
+            if (indexOfSlash == -1)
+                throw new ArgumentException("InsertChildControl has to be called with a slash-separated path", "path");
+            Debug.Assert(indexOfSlash != 0);
+            var immediateParentPath = path.Substring(0, indexOfSlash);
+            var immediateParent = InputControlPath.TryFindChild(parent, immediateParentPath);
+            if (immediateParent == null)
+                throw new Exception(
+                    string.Format("Cannot find parent '{0}' of control '{1}' in template '{2}'", immediateParentPath,
+                        controlTemplate.name, template.name));
+
+            var controlName = path.Substring(indexOfSlash + 1);
+            if (controlName.Length == 0)
+                throw new Exception(
+                    string.Format("Path cannot end in '/' (control '{0}' in template '{1}')", controlTemplate.name,
+                        template.name));
+
+            // Make room in the device's child array.
+            var childStartIndex = immediateParent.m_ChildrenReadOnly.m_StartIndex;
+            var childIndex = childStartIndex + immediateParent.m_ChildrenReadOnly.m_Length;
+            ArrayHelpers.InsertAt(ref m_Device.m_ChildrenForEachControl, childIndex, null);
+            ++immediateParent.m_ChildrenReadOnly.m_Length;
+
+            // Insert the child.
+            var control = AddChildControl(template, variant, immediateParent, null,
+                    ref haveChildrenUsingStateFromOtherControls, ref controlTemplate, ref childIndex, controlName);
+
+            // Adjust indices of control's that have been shifted around by our insertion.
+            ShiftChildIndicesInHierarchyOneUp(parent, childIndex);
+
+            return control;
+        }
+
+        private void ShiftChildIndicesInHierarchyOneUp(InputControl root, int startIndex)
+        {
+            if (root.m_ChildrenReadOnly.m_StartIndex >= startIndex)
+                ++root.m_ChildrenReadOnly.m_StartIndex;
+            root.m_ChildrenReadOnly.m_Array = m_Device.m_ChildrenForEachControl;
+
+            foreach (var child in root.children)
+                ShiftChildIndicesInHierarchyOneUp(child, startIndex);
+        }
+
+        private static void AddProcessors(InputControl control, ref InputTemplate.ControlTemplate controlTemplate, string templateName)
         {
             var processorCount = controlTemplate.processors.Count;
             for (var n = 0; n < processorCount; ++n)
@@ -626,7 +720,7 @@ namespace ISX
             return m_TemplateCache.FindOrLoadTemplate(name);
         }
 
-        private void ComputeStateLayout(InputControl control)
+        private static void ComputeStateLayout(InputControl control)
         {
             var children = control.m_ChildrenReadOnly;
 

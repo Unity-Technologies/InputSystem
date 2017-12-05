@@ -12,6 +12,8 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.TestTools;
 using UnityEngineInternal.Input;
 using ISX.LowLevel;
+using ISX.Modifiers;
+using ISX.Processors;
 using ISX.Utilities;
 #if UNITY_EDITOR
 using ISX.Editor;
@@ -23,7 +25,7 @@ using ISX.Net35Compatibility;
 #endif
 
 // These tests rely on the default template setup present in the code
-// of the system (e.g. they make assumptions about Gamepad is set up).
+// of the system (e.g. they make assumptions about how Gamepad is set up).
 public class FunctionalTests : InputTestFixture
 {
     // The test categories give the feature area associated with the test:
@@ -537,6 +539,27 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanAddChildControlToExistingControl()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestTemplate"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""leftStick/enabled"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+        var device = (Gamepad) new InputControlSetup("TestTemplate").Finish();
+
+        Assert.That(device.leftStick.children, Has.Exactly(1).With.Property("name").EqualTo("enabled"));
+        Assert.That(device.leftStick["enabled"].template, Is.EqualTo("Button"));
+    }
+
+    [Test]
+    [Category("Templates")]
     public void TODO_Templates_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
     {
         const string baseJson = @"
@@ -605,15 +628,23 @@ public class FunctionalTests : InputTestFixture
     [Category("Templates")]
     public void Templates_CanBuildTemplatesInCode()
     {
-        var builder = new InputTemplate.Builder();
+        var builder = new InputTemplate.Builder()
+            .WithName("MyTemplate")
+            .WithType<Gamepad>()
+            .Extend("Pointer")
+            .WithFormat("CUST");
 
-        builder.name = "MyTemplate";
-        builder.type = typeof(Gamepad);
+        builder.AddControl("button").WithTemplate("Button");
 
         var template = builder.Build();
 
-        Assert.That(template.name, Is.EqualTo(new InternedString("MyTemplate")));
+        Assert.That(template.name.ToString(), Is.EqualTo("MyTemplate"));
         Assert.That(template.type, Is.SameAs(typeof(Gamepad)));
+        Assert.That(template.stateFormat, Is.EqualTo(new FourCC("CUST")));
+        Assert.That(template.extendsTemplate.ToString(), Is.EqualTo("Pointer"));
+        Assert.That(template.controls, Has.Count.EqualTo(1));
+        Assert.That(template.controls[0].name.ToString(), Is.EqualTo("button"));
+        Assert.That(template.controls[0].template.ToString(), Is.EqualTo("Button"));
     }
 
     [Serializable]

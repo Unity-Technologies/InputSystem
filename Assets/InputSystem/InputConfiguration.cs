@@ -1,12 +1,19 @@
 using System;
+using ISX.Processors;
 
 namespace ISX
 {
-    // Static configuration values that are picked up by the various pieces of logic.
-    // These are not const and can be changed by the user.
+    /// <summary>
+    /// Static configuration values that are picked up by the various pieces of logic.
+    /// </summary>
+    /// <remarks>
+    /// The values are not const and can be changed on the fly.
+    /// </remarks>
     public static class InputConfiguration
     {
-        // Default value used when nothing is set explicitly on DeadzoneProcessor.min.
+        /// <summary>
+        /// Default value used when nothing is set explicitly on <see cref="DeadzoneProcessor.min"/>.
+        /// </summary>
         public static float DeadzoneMin = 0.125f;
 
         // Default value used when nothing is set explicitly on DeadzoneProcessor.max.

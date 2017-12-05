@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['create',['Create',['../structISX_1_1LowLevel_1_1ConnectEvent.html#a09a83e2269792437b2e4f9a8e6daa786',1,'ISX::LowLevel::ConnectEvent']]]
+  ['addcontrol',['AddControl',['../structISX_1_1InputTemplate_1_1Builder.html#a434b1f0ad88a69584ed0880d71f85f09',1,'ISX::InputTemplate::Builder']]]
 ];

@@ -6,8 +6,10 @@ using System;
 
 namespace ISX.Utilities
 {
-    // Wraps around a string to allow for faster case-insensitive
-    // string comparisons while preserving original casing.
+    /// <summary>
+    /// Wraps around a string to allow for faster case-insensitive
+    /// string comparisons while preserving original casing.
+    /// </summary>
     public struct InternedString : IEquatable<InternedString>, IComparable<InternedString>
     {
         private readonly string m_StringOriginalCase;

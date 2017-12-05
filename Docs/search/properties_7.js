@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['native',['native',['../classISX_1_1InputDevice.html#a39d1fea5d98ec26ff8f0c0da5d15367f',1,'ISX::InputDevice']]]
+  ['middlebutton',['middleButton',['../classISX_1_1Mouse.html#aea5adefa4bfcf8ab518334e5455c82aa',1,'ISX::Mouse']]]
 ];

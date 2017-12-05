@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Processors
 {
     public class ClampProcessor : IInputProcessor<float>
     {

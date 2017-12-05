@@ -1,12 +1,20 @@
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Processors
 {
-    // Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
-    // than just clamping individual axes).
-    // Normalizes to the min/max range.
+    /// <summary>
+    /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
+    /// than just clamping individual axes). Normalizes to the min/max range.
+    /// </summary>
     public class DeadzoneProcessor : IInputProcessor<Vector2>
     {
+        /// <summary>
+        /// Value at which the lower bound deadzone starts.
+        /// </summary>
+        /// <remarks>
+        /// Values in the input at or below min will get dropped and values
+        /// will be scaled to the range between min and max.
+        /// </remarks>
         public float min;
         public float max;
 

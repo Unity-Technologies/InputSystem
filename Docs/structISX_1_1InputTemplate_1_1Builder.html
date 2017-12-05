@@ -81,6 +81,7 @@ $(document).ready(function(){initNavTree('structISX_1_1InputTemplate_1_1Builder.
 
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="structISX_1_1InputTemplate_1_1Builder-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ISX.InputTemplate.Builder Struct Reference</div>  </div>
@@ -89,10 +90,51 @@ $(document).ready(function(){initNavTree('structISX_1_1InputTemplate_1_1Builder.
 
 <p>Build a template programmatically. Primarily for use by template constructors registered with the system.  
  <a href="structISX_1_1InputTemplate_1_1Builder.html#details">More...</a></p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a434b1f0ad88a69584ed0880d71f85f09"><td class="memItemLeft" align="right" valign="top">ControlBuilder&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1InputTemplate_1_1Builder.html#a434b1f0ad88a69584ed0880d71f85f09">AddControl</a> (string name)</td></tr>
+<tr class="memdesc:a434b1f0ad88a69584ed0880d71f85f09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a new control to the template.  <a href="#a434b1f0ad88a69584ed0880d71f85f09">More...</a><br /></td></tr>
+<tr class="separator:a434b1f0ad88a69584ed0880d71f85f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Build a template programmatically. Primarily for use by template constructors registered with the system. </p>
 <dl class="section see"><dt>See also</dt><dd>InputSystem.RegisterTemplateConstructor</dd></dl>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a434b1f0ad88a69584ed0880d71f85f09"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a434b1f0ad88a69584ed0880d71f85f09">&#9670;&nbsp;</a></span>AddControl()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">ControlBuilder ISX.InputTemplate.Builder.AddControl </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Add a new control to the template. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>Name or path of the control. If it is a path (e.g. <code>"leftStick/x"</code>, then the control either modifies the setup of a child control of another control in the template or adds a new child control to another control in the template. Modifying child control is useful, for example, to alter the state format of controls coming from the base template. Likewise, adding child controls to another control is useful to modify the setup of of the control template being used without having to create and register a custom control template.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A control builder that permits setting various parameters on the control.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentException</td><td><em>name</em>  is null or empty.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

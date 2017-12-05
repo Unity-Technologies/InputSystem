@@ -1,4 +1,4 @@
-namespace ISX
+namespace ISX.Modifiers
 {
     // A modifier for button-like behavior. Will perform action once
     // when control is pressed and then not perform again until control

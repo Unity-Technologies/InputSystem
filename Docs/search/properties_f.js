@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['y',['y',['../classISX_1_1Vector2Control.html#ab5ee2f56571a0af7012f6ebf708fac8e',1,'ISX::Vector2Control']]]
+  ['up',['up',['../classISX_1_1DpadControl.html#a530be6e6ee4af0a5579d8f0b2c042b54',1,'ISX::DpadControl']]]
 ];

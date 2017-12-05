@@ -4,8 +4,17 @@ using UnityEngine;
 
 namespace ISX
 {
-    // A control made up of four discrete, directional buttons. Forms a vector
-    // but can also be addressed as individual buttons. Is stored as four bits.
+    /// <summary>
+    /// A control made up of four discrete, directional buttons. Forms a vector
+    /// but can also be addressed as individual buttons.
+    /// </summary>
+    /// <remarks>
+    /// Is stored as four bits by default.
+    ///
+    /// The vector that is aggregated from the button states is normalized. I.e.
+    /// even if pressing diagonally, the vector will have a length of 1 (instead
+    /// of reading something like <c>(1,1)</c> for example).
+    /// </remarks>
     public class DpadControl : InputControl<Vector2>
     {
         public enum ButtonBits
@@ -16,12 +25,27 @@ namespace ISX
             Right,
         }
 
+        /// <summary>
+        /// The button representing the vertical upwards state of the D-Pad.
+        /// </summary>
         [InputControl(bit = (int)ButtonBits.Up)]
         public ButtonControl up { get; private set; }
+
+        /// <summary>
+        /// The button representing the vertical downwards state of the D-Pad.
+        /// </summary>
         [InputControl(bit = (int)ButtonBits.Down)]
         public ButtonControl down { get; private set; }
+
+        /// <summary>
+        /// The button representing the horizontal left state of the D-Pad.
+        /// </summary>
         [InputControl(bit = (int)ButtonBits.Left)]
         public ButtonControl left { get; private set; }
+
+        /// <summary>
+        /// The button representing the horizontal right state of the D-Pad.
+        /// </summary>
         [InputControl(bit = (int)ButtonBits.Right)]
         public ButtonControl right { get; private set; }
 

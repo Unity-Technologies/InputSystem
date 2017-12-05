@@ -5,11 +5,16 @@ using UnityEngine;
 
 namespace ISX
 {
-    // Used to override a default binding on an action. Can be stored externally and then
-    // applied to an action or action set to alter its bindings.
-    //
-    // NOTE: These structs are what should be stored in user profiles to preserve
-    //       user rebindings.
+    /// <summary>
+    /// Used to override a default binding on an action.
+    /// </summary>
+    /// <remarks>
+    /// Can be stored externally and then applied to an action or action set
+    /// to alter its bindings.
+    ///
+    /// These structs are what should be stored in user profiles to preserve
+    /// user rebindings.
+    /// </remarks>
     [Serializable]
     public struct InputBindingOverride
     {

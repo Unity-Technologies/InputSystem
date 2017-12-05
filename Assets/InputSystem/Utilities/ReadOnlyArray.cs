@@ -7,6 +7,10 @@ using ISX.Net35Compatibility;
 
 namespace ISX.Utilities
 {
+    /// <summary>
+    /// Read-only access to an array or to a slice of an array.
+    /// </summary>
+    /// <typeparam name="TValue">Value type.</typeparam>
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
         internal TValue[] m_Array;

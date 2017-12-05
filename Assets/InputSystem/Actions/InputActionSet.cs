@@ -5,18 +5,21 @@ using UnityEngine;
 
 namespace ISX
 {
-    // A set of input actions that can be enabled/disabled in bulk.
-    //
-    // Also stores data for actions. All actions have to have an associated
-    // action set. "Lose" actions constructed without a set will internally
-    // create their own "set" to hold their data.
-    //
-    // A common usage pattern for action sets is to use them to group action
-    // "contexts". So one set could hold "menu" actions, for example, whereas
-    // another set holds "gameplay" actions. This kind of splitting can be
-    // made arbitrarily complex. Like, you could have separate "driving" and
-    // "walking" action sets, for example, that you enable and disable depending
-    // on whether the player is walking or driving around.
+    /// <summary>
+    /// A set of input actions that can be enabled/disabled in bulk.
+    /// </summary>
+    /// <remarks>
+    /// Also stores data for actions. All actions have to have an associated
+    /// action set. "Lose" actions constructed without a set will internally
+    /// create their own "set" to hold their data.
+    ///
+    /// A common usage pattern for action sets is to use them to group action
+    /// "contexts". So one set could hold "menu" actions, for example, whereas
+    /// another set holds "gameplay" actions. This kind of splitting can be
+    /// made arbitrarily complex. Like, you could have separate "driving" and
+    /// "walking" action sets, for example, that you enable and disable depending
+    /// on whether the player is walking or driving around.
+    /// </remarks>
     [Serializable]
     public class InputActionSet : ISerializationCallbackReceiver, ICloneable
     {

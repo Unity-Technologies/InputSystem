@@ -3,7 +3,7 @@
 ////        all relevant controls so that the SwipeModifier itself can work off of
 ////        both a ButtonControl and a Vector2Control
 
-namespace ISX
+namespace ISX.Modifiers
 {
     // Performs the action if the 2D control is pressed and then released within
     // 'minDistance' in the direction between 'minAngle' and 'maxAngle'.

@@ -24,23 +24,27 @@ namespace ISX
     ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas
     public delegate void InputActionListener(InputAction.CallbackContext context);
 
-    // A named input signal that can flexibly decide which input data to tap.
-    // Unlike controls, actions signal value *changes* rather than the values themselves.
-    // They sit on top of controls (and each single action may reference several controls
-    // collectively) and monitor the system for change.
-    //
-    // NOTE: Unlike InputControls, InputActions are not passive. They will actively perform
-    //       processing each frame they are active whereas InputControls just sit there as
-    //       long as no one is asking them directly for a value.
-    //
-    // NOTE: Processors on controls are *NOT* taken into account by actions. A state is
-    //       considered changed if its underlying memory changes not if the final processed
-    //       value changes.
-    //
-    // NOTE: Actions are agnostic to update types. They trigger in whatever update detects
-    //       a change in value.
-    //
-    // NOTE: Actions are not supported in edit mode.
+    /// <summary>
+    /// A named input signal that can flexibly decide which input data to tap.
+    /// </summary>
+    /// <remarks>
+    /// Unlike controls, actions signal value changes rather than the values themselves.
+    /// They sit on top of controls (and each single action may reference several controls
+    /// collectively) and monitor the system for change.
+    ///
+    /// Unlike InputControls, InputActions are not passive. They will actively perform
+    /// processing each frame they are active whereas InputControls just sit there as
+    /// long as no one is asking them directly for a value.
+    ///
+    /// Processors on controls are *NOT* taken into account by actions. A state is
+    /// considered changed if its underlying memory changes not if the final processed
+    /// value changes.
+    ///
+    /// Actions are agnostic to update types. They trigger in whatever update detects
+    /// a change in value.
+    ///
+    /// Actions are not supported in edit mode.
+    /// </remarks>
     [Serializable]
     public class InputAction : ICloneable
         ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
@@ -54,6 +58,18 @@ namespace ISX
             Cancelled
         }
 
+        /// <summary>
+        /// Name of the action.
+        /// </summary>
+        /// <remarks>
+        /// Can be null for anonymous actions created in code.
+        ///
+        /// If the action is part of a set, it will have a name and the name
+        /// will be unique in the set.
+        ///
+        /// The name is just the name of the action alone, not a "setName/actionName"
+        /// combination.
+        /// </remarks>
         public string name
         {
             get { return m_Name; }
@@ -64,6 +80,12 @@ namespace ISX
             get { return m_CurrentPhase; }
         }
 
+        /// <summary>
+        /// The set the action belongs to.
+        /// </summary>
+        /// <remarks>
+        /// If the action is a lose action created in code, this will be null.
+        /// </remarks>
         public InputActionSet set
         {
             get { return isSingletonAction ? null : m_ActionSet; }
@@ -72,6 +94,9 @@ namespace ISX
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devics set on action set)
 
+        /// <summary>
+        /// The list of bindings associated with the action.
+        /// </summary>
         public ReadOnlyArray<InputBinding> bindings
         {
             get
