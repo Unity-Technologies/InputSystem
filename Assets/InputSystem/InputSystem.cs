@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using ISX.LowLevel;
+using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -278,6 +279,11 @@ namespace ISX
         {
             add { s_Manager.onEvent += value; }
             remove { s_Manager.onEvent -= value; }
+        }
+
+        public static void QueueEvent(InputEventPtr eventPtr)
+        {
+            NativeInputSystem.QueueInputEvent(eventPtr.data);
         }
 
         public static void QueueEvent<TEvent>(ref TEvent inputEvent)
@@ -561,6 +567,16 @@ namespace ISX
             #endif
         }
 
+        ////FIXME: Unity is not calling this method if it's inside an #if block that is not
+        ////       visible to the editor; that shouldn't be the case
+        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void RunInitializeInPlayer()
+        {
+            // We're using this method just to make sure the class constructor is called
+            // so we don't need any code in here. When the engine calls this method, the
+            // class constructor will be run if it hasn't been run already.
+        }
+
 #if UNITY_EDITOR
         private static InputSystemObject s_SystemObject;
 
@@ -607,14 +623,6 @@ namespace ISX
         #if DEVELOPMENT_BUILD
         private static RemoteInputPlayerConnection s_ConnectionToEditor;
         #endif
-
-        [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RunInitializeInPlayer()
-        {
-            // We only need this method to ensure that the class constructor is run. It
-            // may have already run if someone was calling into InputSystem from other
-            // initialization code.
-        }
 
         private static void InitializeInPlayer()
         {

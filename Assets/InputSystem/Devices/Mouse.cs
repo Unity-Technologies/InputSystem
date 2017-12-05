@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ISX.LowLevel;
 using UnityEngine;
 
 namespace ISX
@@ -93,7 +94,8 @@ namespace ISX
         public ButtonControl rightButton { get; private set; }
 
         /// <summary>
-        /// The mouse that was added or updated last.
+        /// The mouse that was added or updated last or null if there is no mouse
+        /// connected to the system.
         /// </summary>
         public new static Mouse current { get; internal set; }
 

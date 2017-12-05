@@ -570,6 +570,28 @@ public class FunctionalTests : InputTestFixture
         Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
     }
 
+    ////REVIEW: is it better to relax the rule in InputManager and allow state events to be larger than the device state?
+    [Test]
+    [Category("Templates")]
+    public void TODO_Templates_CanForceSizeOfDeviceState()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestTemplate"",
+                ""stateSizeInBytes"" : ""256"",
+                ""controls"" : [
+                    { ""name"" : ""control"", ""template"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("TestTemplate").Finish();
+
+        Assert.That(setup.stateBlock.alignedSizeInBytes, Is.EqualTo(256));
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_CanSpecifyDisplayNameForControl()
@@ -822,16 +844,6 @@ public class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterTemplate(json);
-
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanConstructTemplateFromHIDDescriptor()
-    {
-        var descriptor = @"
-        ";
 
         Assert.Fail();
     }

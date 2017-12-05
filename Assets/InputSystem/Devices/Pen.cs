@@ -1,8 +1,12 @@
 using System.Runtime.InteropServices;
+using ISX.LowLevel;
 using UnityEngine;
 
 namespace ISX
 {
+    /// <summary>
+    /// Default state layout for pen devices.
+    /// </summary>
     // IMPORTANT: Must match with PenInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 36)]
     public struct PenState : IInputStateTypeInfo
@@ -61,6 +65,9 @@ namespace ISX
         }
     }
 
+    /// <summary>
+    /// A pen/stylus input device.
+    /// </summary>
     [InputState(typeof(PenState))]
     public class Pen : Pointer
     {

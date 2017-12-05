@@ -1,5 +1,7 @@
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
+using ISX.LowLevel;
+
 namespace ISX
 {
     /// <summary>

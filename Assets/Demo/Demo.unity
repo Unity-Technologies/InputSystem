@@ -87,6 +87,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ShowResolutionOverlay: 1
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -155,6 +156,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
@@ -273,10 +275,6 @@ GameObject:
   - component: {fileID: 919824550}
   - component: {fileID: 919824549}
   - component: {fileID: 919824554}
-  - component: {fileID: 919824557}
-  - component: {fileID: 919824556}
-  - component: {fileID: 919824555}
-  - component: {fileID: 919824558}
   m_Layer: 0
   m_Name: Player
   m_TagString: MainCamera
@@ -300,7 +298,8 @@ MonoBehaviour:
   burstSpeed: 10
   projectile: {fileID: 1050929111787496, guid: 10d52fac856bc411c8b30746a4f3bb05, type: 2}
   controls:
-    m_Asset: {fileID: 11400000, guid: db628de0ec03d439ba806fdb7b2ef1cb, type: 3}
+    m_Asset: {fileID: 11400000, guid: e0f46a37bbc4f4bf8ad42ad37bb6d56a, type: 3}
+  myAction: {fileID: 0}
 --- !u!81 &919824550
 AudioListener:
   m_ObjectHideFlags: 0
@@ -375,91 +374,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1e07378438184f0293d5c131cea6253, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &919824555
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 919824548}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ab7c7a7ef9e44f4d8c56e49c8bfed8f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 10
-  rotateSpeed: 60
-  burstSpeed: 10
-  projectile: {fileID: 1050929111787496, guid: 10d52fac856bc411c8b30746a4f3bb05, type: 2}
-  moveAction:
-    m_Name: Move
-    m_Bindings:
-    - path: <Gamepad>/leftStick
-      modifiers: 
-      group: 
-      flags: 0
-    m_BindingsStartIndex: 0
-    m_BindingsCount: 1
-  lookAction:
-    m_Name: Look
-    m_Bindings:
-    - path: <Gamepad>/rightStick
-      modifiers: 
-      group: 
-      flags: 0
-    m_BindingsStartIndex: 0
-    m_BindingsCount: 1
-  fireAction:
-    m_Name: Fire
-    m_Bindings:
-    - path: '*/{PrimaryAction}'
-      modifiers: Tap,SlowTap
-      group: 
-      flags: 0
-    m_BindingsStartIndex: 0
-    m_BindingsCount: 1
---- !u!114 &919824556
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 919824548}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 767c036f1bd9b4807bc11f76fafbad25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 10
-  rotateSpeed: 60
---- !u!114 &919824557
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 919824548}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6530e5fa6e7bd4c9d99219c476807b5e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 10
-  rotateSpeed: 60
---- !u!114 &919824558
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 919824548}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 092bf3b983af64d85be968602701f933, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 10
-  rotateSpeed: 60
-  burstSpeed: 10
-  projectile: {fileID: 1050929111787496, guid: 10d52fac856bc411c8b30746a4f3bb05, type: 2}
-  controls:
-    m_Asset: {fileID: 11400000, guid: db628de0ec03d439ba806fdb7b2ef1cb, type: 3}
 --- !u!1 &924788181
 GameObject:
   m_ObjectHideFlags: 0
@@ -504,6 +418,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
@@ -575,6 +490,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
@@ -674,6 +590,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
@@ -758,6 +675,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 4294967295
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:

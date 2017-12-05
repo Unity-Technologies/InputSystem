@@ -798,7 +798,7 @@ namespace ISX
             try
             {
                 // Read layout configuration.
-                var numBytesRead = device.ReadData(LayoutConfigCode, buffer, kMaxBufferSize);
+                var numBytesRead = ReadData(LayoutConfigCode, buffer, kMaxBufferSize);
                 if (numBytesRead < sizeof(int))
                 {
                     // Got nothing. Device probably does not support key configuration data.

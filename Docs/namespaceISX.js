@@ -20,5 +20,11 @@ var namespaceISX =
     [ "KeyControl", "classISX_1_1KeyControl.html", "classISX_1_1KeyControl" ],
     [ "Mouse", "classISX_1_1Mouse.html", "classISX_1_1Mouse" ],
     [ "MouseState", "structISX_1_1MouseState.html", null ],
-    [ "Pointer", "classISX_1_1Pointer.html", "classISX_1_1Pointer" ]
+    [ "Pen", "classISX_1_1Pen.html", null ],
+    [ "PenState", "structISX_1_1PenState.html", null ],
+    [ "Pointer", "classISX_1_1Pointer.html", "classISX_1_1Pointer" ],
+    [ "TouchControl", "classISX_1_1TouchControl.html", "classISX_1_1TouchControl" ],
+    [ "Touchscreen", "classISX_1_1Touchscreen.html", "classISX_1_1Touchscreen" ],
+    [ "TouchscreenState", "structISX_1_1TouchscreenState.html", null ],
+    [ "Vector2Control", "classISX_1_1Vector2Control.html", "classISX_1_1Vector2Control" ]
 ];

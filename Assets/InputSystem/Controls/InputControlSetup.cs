@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using ISX.LowLevel;
 
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the template cache around instead of throwing

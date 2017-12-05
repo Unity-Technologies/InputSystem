@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // Input state is kept in raw memory blocks.
     // All state is centrally managed by InputManager; controls cannot keep their own independent state.
@@ -11,10 +11,11 @@ namespace ISX
     //       to do the heavy-lifting.
     public struct InputStateBlock
     {
+        [Flags]
         public enum Semantics
         {
-            Input, // State captures values coming in.
-            Output // State captures values going out.
+            Input = 1 << 0, // State captures values coming in.
+            Output = 1 << 1 // State captures values going out.
         }
 
         public const uint kInvalidOffset = 0xffffffff;

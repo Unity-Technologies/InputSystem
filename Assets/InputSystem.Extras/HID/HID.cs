@@ -1,4 +1,5 @@
 using System;
+using ISX.LowLevel;
 using UnityEngine;
 
 namespace ISX.HID
@@ -118,9 +119,11 @@ namespace ISX.HID
 
                 ////TODO: for joysticks, set up stick from X and Y
 
-                // Every report starts with an 8 bit report ID.
-                var inputReportBitOffset = 8u;
-                var outputReportBitOffset = 8u;
+                // Technically, HID reports start with an 8bit field containing
+                // the report ID but the native APIs are sending us the report
+                // data starting after the ID.
+                var inputReportBitOffset = 0u;
+                var outputReportBitOffset = 0u;
 
                 // Process HID descriptor.
                 foreach (var element in descriptor.elements)

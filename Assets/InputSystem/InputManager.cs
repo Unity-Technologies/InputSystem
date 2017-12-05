@@ -7,7 +7,6 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 using ISX.LowLevel;
-
 #if !NET_4_0
 using ISX.Net35Compatibility;
 #endif

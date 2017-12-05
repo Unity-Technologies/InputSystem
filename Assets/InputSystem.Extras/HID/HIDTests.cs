@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Linq;
 
 namespace ISX.HID
 {
@@ -49,7 +50,53 @@ namespace ISX.HID
             Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
             Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
 
-            ////TODO: test sending events against HIDs to make sure we get the control offsets right
+            var x = device["X"];
+            var y = device["Y"];
+            var button1 = device["button1"];
+            var button2 = device["button2"];
+
+            Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(5 * 8));
+
+            Assert.That(x.stateBlock.byteOffset, Is.Zero);
+            Assert.That(y.stateBlock.byteOffset, Is.EqualTo(2));
+            Assert.That(x.stateBlock.bitOffset, Is.Zero);
+            Assert.That(y.stateBlock.bitOffset, Is.Zero);
+
+            Assert.That(button1.stateBlock.byteOffset, Is.EqualTo(4));
+            Assert.That(button2.stateBlock.byteOffset, Is.EqualTo(4));
+            Assert.That(button1.stateBlock.bitOffset, Is.EqualTo(0));
+            Assert.That(button2.stateBlock.bitOffset, Is.EqualTo(1));
+        }
+
+        // There may be vendor-specific stuff in an input report which we don't know how to use so the
+        // set of usable elements may be smaller than the set of actual elements in the report. However, we
+        // have to make sure that the state blocks that the device is sending us aren't bigger than the
+        // state we store for the device or the input system will reject state events.
+        [Test]
+        [Category("Devices")]
+        public void TODO_Devices_WillEnsureThatStateBlockIsAtLeastAsBigAsInputReport()
+        {
+            var hidDescriptor = new HID.HIDDeviceDescriptor
+            {
+                usage = (int)HID.GenericDesktop.MultiAxisController,
+                usagePage = HID.UsagePage.GenericDesktop,
+                inputReportSize = 36,
+                elements = new[]
+                {
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 }
+                }
+            };
+
+            InputSystem.ReportAvailableDevice(
+                new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                product = "MyHIDThing",
+                capabilities = hidDescriptor.ToJson()
+            });
+
+            var device = InputSystem.devices.First(x => x is HID);
+            Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(36 * 8));
         }
 
         [Test]

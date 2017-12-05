@@ -1,11 +1,17 @@
 using System.Runtime.InteropServices;
+using ISX.LowLevel;
 
 namespace ISX
 {
-    // Combine multiple pointers each corresponding to a finger.
-    // All fingers combine to quite a bit of state; ideally send delta events that update
-    // only specific fingers.
-    //
+    /// <summary>
+    /// Default state layout for touch devices.
+    /// </summary>
+    /// <remarks>
+    /// Combines multiple pointers each corresponding to a finger.
+    ///
+    /// All fingers combine to quite a bit of state; ideally send delta events that update
+    /// only specific fingers.
+    /// </remarks>
     // IMPORTANT: Must match TouchInputState in native code.
     [StructLayout(LayoutKind.Explicit, Size = 360)]
     public struct TouchscreenState : IInputStateTypeInfo
@@ -90,11 +96,24 @@ namespace ISX
         }
     }
 
+    /// <summary>
+    /// A multi-touch surface.
+    /// </summary>
     [InputState(typeof(TouchscreenState))]
     public class Touchscreen : Pointer
     {
+        /// <summary>
+        /// Array of touches.
+        /// </summary>
+        /// <remarks>
+        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries.
+        /// </remarks>
         public ReadOnlyArray<TouchControl> touches { get; private set; }
 
+        /// <summary>
+        /// The touchscreen that was added or updated last or null if there is no
+        /// touchscreen connected to the system.
+        /// </summary>
         public new static Touchscreen current { get; internal set; }
 
         public override void MakeCurrent()

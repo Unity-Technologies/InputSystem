@@ -2,8 +2,15 @@ using System;
 
 namespace ISX
 {
+    /// <summary>
+    /// A control representing a touch contact.
+    /// </summary>
     public class TouchControl : InputControl<Touch>
     {
+        /// <summary>
+        /// The ID of the touch contact as reported by the underlying system.
+        /// </summary>
+        /// </remarks>
         [InputControl(alias = "pointerId", offset = 0)]
         public DiscreteControl touchId { get; private set; }
         [InputControl(usage = "Point", offset = 4)]

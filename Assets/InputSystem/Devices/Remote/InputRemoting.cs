@@ -6,7 +6,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngineInternal.Input;
 using ISX.LowLevel;
-
 #if !NET_4_0
 using ISX.Net35Compatibility;
 #endif
@@ -604,7 +603,7 @@ namespace ISX
                         if (localDeviceId != InputDevice.kInvalidDeviceId && isConnectedToNative)
                         {
                             ////TODO: add API to send events in bulk rather than one by one
-                            NativeInputSystem.QueueInputEvent(eventPtr.data);
+                            InputSystem.QueueEvent(eventPtr);
                         }
 
                         ++eventCount;

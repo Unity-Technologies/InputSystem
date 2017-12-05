@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using ISX.LowLevel;
 using UnityEngine;
 
 #if !NET_4_0
@@ -404,9 +405,13 @@ namespace ISX
             return templateJson.ToTemplate();
         }
 
+        ////REVIEW: shouldn't state be split between input and output? how does output fit into the template picture in general?
+        ////        should the control template alone determine the direction things are going in?
+
         private InternedString m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
         internal FourCC m_StateFormat;
+        internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;
         private InternedString m_ExtendsTemplate;
         private string[] m_OverridesTemplates;
