@@ -4129,6 +4129,35 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
+    public void Actions_AddingDeviceWillUpdateControlsOnAction()
+    {
+        var action = new InputAction(binding: "/<gamepad>/leftTrigger");
+        action.Enable();
+
+        Assert.That(action.controls, Has.Count.Zero);
+
+        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls[0], Is.SameAs(gamepad1.leftTrigger));
+
+        // Make sure it actually triggers correctly.
+        InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        Assert.That(action.lastTriggerControl, Is.SameAs(gamepad1.leftTrigger));
+
+        // Also make sure that this device creation path gets it right.
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "Test", deviceClass = "Gamepad"});
+        var gamepad2 = (Gamepad)InputSystem.devices.First(x => x.description.product == "Test");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftTrigger));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftTrigger));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_RemovingDeviceWillUpdateControlsOnAction()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");

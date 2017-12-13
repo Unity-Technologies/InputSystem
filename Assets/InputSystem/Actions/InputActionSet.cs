@@ -477,10 +477,49 @@ namespace ISX
             return numFound;
         }
 
-        internal static void RefreshEnabledActions()
+        ////REVIEW: can we do better than just re-resolving *every* enabled action? seems heavy-handed
+        internal static void RefreshAllEnabledActions()
         {
             for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+            {
+                // First get rid of all state change monitors currently installed by
+                // actions in the set.
+                if (set.m_SingletonAction != null)
+                {
+                    var action = set.m_SingletonAction;
+                    if (action.enabled)
+                        action.UninstallStateChangeMonitors();
+                }
+                else
+                {
+                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                    {
+                        var action = set.m_Actions[i];
+                        if (action.enabled)
+                            action.UninstallStateChangeMonitors();
+                    }
+                }
+
+                // Now re-resolve all the bindings to update the control lists.
                 set.ResolveBindings();
+
+                // And finally, re-install state change monitors.
+                if (set.m_SingletonAction != null)
+                {
+                    var action = set.m_SingletonAction;
+                    if (action.enabled)
+                        action.InstallStateChangeMonitors();
+                }
+                else
+                {
+                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                    {
+                        var action = set.m_Actions[i];
+                        if (action.enabled)
+                            action.InstallStateChangeMonitors();
+                    }
+                }
+            }
         }
 
         internal static void DisableAllEnabledActions()

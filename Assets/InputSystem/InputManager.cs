@@ -650,7 +650,7 @@ namespace ISX
             ////REVIEW: what about device connects and disconnects? should actions stay with controls
             ////        of disconnected devices or do we want to restrict them to just connected devices?
             // Let actions re-resolve their paths.
-            InputActionSet.RefreshEnabledActions();
+            InputActionSet.RefreshAllEnabledActions();
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
@@ -735,7 +735,7 @@ namespace ISX
             device.BakeOffsetIntoStateBlockRecursive((uint)(-device.m_StateBlock.byteOffset));
 
             // Let actions know.
-            InputActionSet.RefreshEnabledActions();
+            InputActionSet.RefreshAllEnabledActions();
 
             // Kill before update callback, if applicable.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;

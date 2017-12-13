@@ -219,26 +219,19 @@ namespace ISX
             if (enabled)
                 return;
 
+            // For singleton actions, we create an internal-only InputActionSet
+            // private to the action.
             if (m_ActionSet == null)
                 CreateInternalActionSetForSingletonAction();
 
+            // First time we're enabled, find all controls.
             if (m_ActionSet.m_Controls == null)
                 m_ActionSet.ResolveBindings();
 
-            // Let set know we're changing state.
+            // Go live.
             m_ActionSet.TellAboutActionChangingEnabledStatus(this, true);
+            InstallStateChangeMonitors();
 
-            // Hook up state monitors for all our controls.
-            var manager = InputSystem.s_Manager;
-            for (var i = 0; i < m_ResolvedBindings.Count; ++i)
-            {
-                ////TODO: need to make sure that change monitors of combined bindings are in the right order
-                var controls = m_ResolvedBindings[i].controls;
-                for (var n = 0; n < controls.Count; ++n)
-                    manager.AddStateChangeMonitor(controls[n], this, i);
-            }
-
-            // Done.
             enabled = true;
             m_CurrentPhase = Phase.Waiting;
         }
@@ -248,10 +241,30 @@ namespace ISX
             if (!enabled)
                 return;
 
-            // Let set know.
+            // Remove global state.
             m_ActionSet.TellAboutActionChangingEnabledStatus(this, false);
+            UninstallStateChangeMonitors();
 
-            // Delete state change monitors.
+            enabled = false;
+
+            m_CurrentPhase = Phase.Disabled;
+            m_LastTrigger = new TriggerState();
+        }
+
+        internal void InstallStateChangeMonitors()
+        {
+            var manager = InputSystem.s_Manager;
+            for (var i = 0; i < m_ResolvedBindings.Count; ++i)
+            {
+                ////TODO: need to make sure that change monitors of combined bindings are in the right order
+                var controls = m_ResolvedBindings[i].controls;
+                for (var n = 0; n < controls.Count; ++n)
+                    manager.AddStateChangeMonitor(controls[n], this, i);
+            }
+        }
+
+        internal void UninstallStateChangeMonitors()
+        {
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < m_ResolvedBindings.Count; ++i)
             {
@@ -259,11 +272,6 @@ namespace ISX
                 for (var n = 0; n < controls.Count; ++n)
                     manager.RemoveStateChangeMonitor(controls[n], this);
             }
-
-            enabled = false;
-
-            m_CurrentPhase = Phase.Disabled;
-            m_LastTrigger = new TriggerState();
         }
 
         // Add a new binding to the action. This works both with action that are part of
