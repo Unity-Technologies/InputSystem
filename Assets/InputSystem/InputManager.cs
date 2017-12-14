@@ -1382,9 +1382,9 @@ namespace ISX
         internal unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
         {
 #if ENABLE_PROFILER
+            // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
+            //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
-            try
-            {
 #endif
 
             // First callback from native should initialize plugins. We don't know which callback (device
@@ -1433,6 +1433,9 @@ namespace ISX
             {
                 if (buffersToUseForUpdate != updateType)
                     m_StateBuffers.SwitchTo((InputUpdateType)updateType);
+                #if ENABLE_PROFILER
+                Profiler.EndSample();
+                #endif
                 return;
             }
 
@@ -1692,12 +1695,7 @@ namespace ISX
                 m_StateBuffers.SwitchTo((InputUpdateType)updateType);
 
 #if ENABLE_PROFILER
-        }
-
-        finally
-        {
             Profiler.EndSample();
-        }
 #endif
         }
 
