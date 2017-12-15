@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
+using System;
 using ISX.Utilities;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace ISX.Processors
@@ -23,26 +22,16 @@ namespace ISX.Processors
 
         public unsafe Vector2 Process(Vector2 position, InputControl control)
         {
-            var bufferSize = sizeof(Vector2);
-            var buffer = UnsafeUtility.Malloc((ulong)bufferSize, 4, Allocator.Temp);
-            try
-            {
-                // Write input coordinates.
-                *((Vector2*)buffer) = position;
+            var positionPtr = &position;
 
-                // Request conversion from device.
-                var device = control.device;
-                var numBytesRead = device.ReadData(EditorWindowPosConfig, buffer, bufferSize);
-                if (numBytesRead < bufferSize)
-                    return position;
+            // Request conversion from device.
+            var device = control.device;
+            var numBytesRead = device.ReadData(EditorWindowPosConfig, new IntPtr(positionPtr), sizeof(Vector2));
+            if (numBytesRead < sizeof(Vector2))
+                return position;
 
-                // Return converted coordinates.
-                return *((Vector2*)buffer);
-            }
-            finally
-            {
-                UnsafeUtility.Free(buffer, Allocator.Temp);
-            }
+            // Return converted coordinates.
+            return *positionPtr;
         }
     }
 }
