@@ -70,6 +70,8 @@ namespace ISX
     /// <remarks>
     /// Adds a scroll wheel and a typical 3-button setup with a left, middle, and right
     /// button.
+    ///
+    /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputState(typeof(MouseState))]
     public class Mouse : Pointer

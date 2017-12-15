@@ -33,6 +33,7 @@ var namespaceISX =
     [ "Pen", "classISX_1_1Pen.html", null ],
     [ "PenState", "structISX_1_1PenState.html", null ],
     [ "Pointer", "classISX_1_1Pointer.html", "classISX_1_1Pointer" ],
+    [ "PointerState", "structISX_1_1PointerState.html", "structISX_1_1PointerState" ],
     [ "StickControl", "classISX_1_1StickControl.html", null ],
     [ "TouchControl", "classISX_1_1TouchControl.html", "classISX_1_1TouchControl" ],
     [ "Touchscreen", "classISX_1_1Touchscreen.html", "classISX_1_1Touchscreen" ],

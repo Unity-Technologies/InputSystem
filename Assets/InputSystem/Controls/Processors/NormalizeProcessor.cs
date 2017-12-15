@@ -10,7 +10,7 @@ namespace ISX.Processors
         public float min;
         public float max;
 
-        public float Process(float value)
+        public float Process(float value, InputControl control)
         {
             return Normalize(value, min, max);
         }

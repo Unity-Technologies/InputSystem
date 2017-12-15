@@ -1,0 +1,8 @@
+﻿{
+    "name": "InputSystemXInput",
+    "references": [
+        "InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

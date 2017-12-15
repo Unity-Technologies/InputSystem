@@ -5,6 +5,8 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
+////TODO: reordering support
+
 namespace ISX.Editor
 {
     // A ReorderableList that displays an editable list of bindings for an action.
@@ -17,7 +19,7 @@ namespace ISX.Editor
             Initialize(actionProperty, null, displayHeader);
         }
 
-        // Constructxor for binding list of actions that are part of action sets.
+        // Constructor for binding list of actions that are part of action sets.
         public InputBindingListView(SerializedProperty actionProperty, SerializedProperty actionSetProperty, bool displayHeader = true)
             : base(new BindingList(actionProperty, actionSetProperty), typeof(SerializedProperty))
         {
@@ -64,7 +66,7 @@ namespace ISX.Editor
         // can't have ReorderableList access m_Bindings directly in the case of an action that is part
         // of a set (we need a slice of m_Bindings from the set, something we can't do with ReorderableList's
         // SerializedProperty-based interface). To work around this, we only have the IList-based API available,
-        // so we manually wrap around m_SerialiedProperty here.
+        // so we manually wrap around the SerializedProperties here.
         //
         // Only implements the portion of IList actually used by ReorderableList -- which pretty much only
         // needs Count and the indexer.

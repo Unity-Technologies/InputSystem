@@ -31,6 +31,7 @@ var searchData=
   ['inputdevicedescription',['InputDeviceDescription',['../structISX_1_1InputDeviceDescription.html',1,'ISX']]],
   ['inputevent',['InputEvent',['../structISX_1_1LowLevel_1_1InputEvent.html',1,'ISX::LowLevel']]],
   ['inputeventbuffer',['InputEventBuffer',['../structISX_1_1LowLevel_1_1InputEventBuffer.html',1,'ISX::LowLevel']]],
+  ['inputeventptr',['InputEventPtr',['../structISX_1_1LowLevel_1_1InputEventPtr.html',1,'ISX::LowLevel']]],
   ['inputeventqueue',['InputEventQueue',['../structISX_1_1LowLevel_1_1InputEventQueue.html',1,'ISX::LowLevel']]],
   ['inputpluginattribute',['InputPluginAttribute',['../classISX_1_1InputPluginAttribute.html',1,'ISX']]],
   ['inputremoting',['InputRemoting',['../classISX_1_1InputRemoting.html',1,'ISX']]],

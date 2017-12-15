@@ -8,7 +8,7 @@ namespace ISX.Processors
     {
         public AnimationCurve curve;
 
-        public float Process(float value)
+        public float Process(float value, InputControl control)
         {
             return curve.Evaluate(value);
         }

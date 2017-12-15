@@ -299,7 +299,6 @@ MonoBehaviour:
   projectile: {fileID: 1050929111787496, guid: 10d52fac856bc411c8b30746a4f3bb05, type: 2}
   controls:
     m_Asset: {fileID: 11400000, guid: e0f46a37bbc4f4bf8ad42ad37bb6d56a, type: 3}
-  myAction: {fileID: 0}
 --- !u!81 &919824550
 AudioListener:
   m_ObjectHideFlags: 0

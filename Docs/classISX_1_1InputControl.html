@@ -97,7 +97,7 @@ Inheritance diagram for ISX.InputControl:</div>
 <area href="classISX_1_1Gamepad.html" title="An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers, two shoulder button..." alt="ISX.Gamepad" shape="rect" coords="0,112,110,136"/>
 <area href="classISX_1_1HID_1_1HID.html" title="A generic HID input device. " alt="ISX.HID.HID" shape="rect" coords="120,112,230,136"/>
 <area href="classISX_1_1Keyboard.html" title="A keyboard input device. " alt="ISX.Keyboard" shape="rect" coords="240,112,350,136"/>
-<area href="classISX_1_1Pointer.html" title="Base class for pointer-style devices where a pointer can move across a 2D surface. " alt="ISX.Pointer" shape="rect" coords="360,112,470,136"/>
+<area href="classISX_1_1Pointer.html" title="Base class for pointer-style devices moving on a 2D screen. " alt="ISX.Pointer" shape="rect" coords="360,112,470,136"/>
 <area href="classISX_1_1Mouse.html" title="A mouse input device. " alt="ISX.Mouse" shape="rect" coords="240,168,350,192"/>
 <area href="classISX_1_1Pen.html" title="A pen/stylus input device. " alt="ISX.Pen" shape="rect" coords="360,168,470,192"/>
 <area href="classISX_1_1Touchscreen.html" title="A multi-touch surface. " alt="ISX.Touchscreen" shape="rect" coords="480,168,590,192"/>
@@ -106,11 +106,11 @@ Inheritance diagram for ISX.InputControl:</div>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A typed and named value in a hierarchy of controls. </p>
 <p>Controls do not actually store values. Instead, every control receives an InputStateBlock which, after the control's device has been added to the system, is used to read out values from the device's backing store.</p>
-<p>Controls can have children which in turn may have children. At the root of the child hierarchy is always an <a class="el" href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a> (which themselves are InputControls).</p>
+<p>Controls can have children which in turn may have children. At the root of the child hierarchy is always an InputDevice (which themselves are InputControls).</p>
 <p>Controls can be looked up by their path (see InputControlSetup.GetControl and InputControlPath.TryFindControl).</p>
 <p>Each control must have a unique name within its parent (see name). Multiple names can be assigned to controls using aliases (see aliases). Name lookup is case-insensitive.</p>
 <p>In addition to names, a control may have usages associated with it (see usages). A usage indicates how a control is meant to be used. For example, a button can be assigned the "PrimaryAction" usage to indicate it is the primary action button the device. Within a device, usages have to be unique. See CommonUsages for a list of standardized usages. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a></dd></dl>
+<dl class="section see"><dt>See also</dt><dd>InputDevice</dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd><p class="startdd">Add ability to get and to set configuration on a control (probably just key/value pairs) </p>
 <p class="enddd">Remove the distinction between input and output controls; allow every InputControl to write values </p>
 </dd></dl>

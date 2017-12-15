@@ -32,7 +32,7 @@ namespace ISX
     ///     // If not explicitly configured, will have its default value.
     ///     public float factor = 2.0f;
     ///
-    ///     public float Process(float value)
+    ///     public float Process(float value, InputControl control)
     ///     {
     ///         return value * factor;
     ///     }
@@ -66,8 +66,11 @@ namespace ISX
         /// The implementation of this method must not be stateful.
         /// </remarks>
         /// <param name="value">Input value to process.</param>
+        /// <param name="control">The control the value is processed for. Note that <paramref name="value"/> is
+        /// not necessarily equal to <see cref="InputControl{TValue}.value"/> as other processors in the stack
+        /// may have already altered the value.</param>
         /// <returns>Processed input value.</returns>
-        TValue Process(TValue value);
+        TValue Process(TValue value, InputControl control);
     }
 
     internal static class InputProcessor

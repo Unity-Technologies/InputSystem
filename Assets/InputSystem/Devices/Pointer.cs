@@ -14,6 +14,9 @@ namespace ISX
         Canceled
     }
 
+    /// <summary>
+    /// Default state structure for pointer devices.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct PointerState : IInputStateTypeInfo
     {
@@ -25,7 +28,14 @@ namespace ISX
         [InputControl(template = "Digital")]
         public uint pointerId;
 
+        /// <summary>
+        /// Position of the pointer in screen space.
+        /// </summary>
+#if UNITY_EDITOR
+        [InputControl(usage = "Point", processors = "EditorWindowSpace")]
+#else
         [InputControl(usage = "Point")]
+#endif
         public Vector2 position;
 
         [InputControl(usage = "Secondary2DMotion", autoReset = true)]
@@ -56,20 +66,34 @@ namespace ISX
         }
     }
 
-    ////REVIEW: should this be extended to 3D?
     /// <summary>
-    /// Base class for pointer-style devices where a pointer can move across a 2D surface.
+    /// Base class for pointer-style devices moving on a 2D screen.
     /// </summary>
+    /// <remarks>
+    /// Note that a pointer may have "multi-point" ability as is the case with multi-touch where
+    /// multiple touches represent multiple concurrent "pointers". However, for any pointer device
+    /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
+    /// controls present on the base class.
+    /// </remarks>
     [InputState(typeof(PointerState))]
     public class Pointer : InputDevice
     {
+        ////REVIEW: shouldn't this be done for every touch position, too?
         /// <summary>
-        /// Current position of the pointer on its 2D surface.
+        /// The current pointer coordinates in window space.
         /// </summary>
         /// <remarks>
-        /// The coordinates are not normalized.
+        /// Within player code, the coordinates are in the coordinate space of the <see cref="UnityEngine.Display">
+        /// Display</see> space that is current according to <see cref="displayIndex"/>. When running with a
+        /// single display, that means the coordinates will always be in window space of the first display.
+        ///
+        /// Within editor code, the coordinates are in the coordinate space of the current <see cref="UnityEditor.EditorWindow"/>.
+        /// This means that if you query <c>Mouse.current.position</c> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
+        /// the returned 2D vector will be in the coordinate space of your local GUI (same as
+        /// <see cref="UnityEditor.Event.mousePosition"/>).
         /// </remarks>
         public Vector2Control position { get; private set; }
+
         public Vector2Control delta { get; private set; }
         public Vector2Control tilt { get; private set; }
         public Vector2Control radius { get; private set; }
@@ -78,9 +102,13 @@ namespace ISX
         public DiscreteControl pointerId { get; private set; }
         ////TODO: find a way which gives values as PointerPhase instead of as int
         public DiscreteControl phase { get; private set; }
-        public DiscreteControl displayIndex { get; private set; }
+        public DiscreteControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
         public ButtonControl button { get; private set; }
 
+        /// <summary>
+        /// The pointer that was added or updated last or null if there is no pointer
+        /// connected to the system.
+        /// </summary>
         public static Pointer current { get; internal set; }
 
         public override void MakeCurrent()

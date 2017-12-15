@@ -314,6 +314,7 @@ namespace ISX
     [InputState(typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
+        ////REVIEW: really expose this stuff?
         public static FourCC LayoutConfigCode { get { return new FourCC('K', 'B', 'L', 'T'); } }
 
         /// <summary>

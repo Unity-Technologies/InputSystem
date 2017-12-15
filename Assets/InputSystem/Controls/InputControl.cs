@@ -406,10 +406,10 @@ namespace ISX
         protected TValue Process(TValue value)
         {
             if (m_ProcessorStack.firstValue != null)
-                value = m_ProcessorStack.firstValue.Process(value);
+                value = m_ProcessorStack.firstValue.Process(value, this);
             if (m_ProcessorStack.additionalValues != null)
                 for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    value = m_ProcessorStack.additionalValues[i].Process(value);
+                    value = m_ProcessorStack.additionalValues[i].Process(value, this);
             return value;
         }
 

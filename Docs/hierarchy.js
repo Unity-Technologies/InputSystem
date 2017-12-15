@@ -11,7 +11,7 @@ var hierarchy =
     [ "ISX.IInputProcessor< float >", "interfaceISX_1_1IInputProcessor.html", null ],
     [ "ISX.IInputProcessor< Vector2 >", "interfaceISX_1_1IInputProcessor.html", [
       [ "ISX.Processors.DeadzoneProcessor", "classISX_1_1Processors_1_1DeadzoneProcessor.html", null ],
-      [ "ISX.Processors.ScreenToWindowSpaceProcessor", "classISX_1_1Processors_1_1ScreenToWindowSpaceProcessor.html", null ]
+      [ "ISX.Processors.EditorWindowSpaceProcessor", "classISX_1_1Processors_1_1EditorWindowSpaceProcessor.html", null ]
     ] ],
     [ "ISX.InputAction", "classISX_1_1InputAction.html", null ],
     [ "ISX.InputActionSet", "classISX_1_1InputActionSet.html", null ],
@@ -57,6 +57,7 @@ var hierarchy =
     [ "ISX.InputDeviceDescription", "structISX_1_1InputDeviceDescription.html", null ],
     [ "ISX.LowLevel.InputEvent", "structISX_1_1LowLevel_1_1InputEvent.html", null ],
     [ "ISX.LowLevel.InputEventBuffer", "structISX_1_1LowLevel_1_1InputEventBuffer.html", null ],
+    [ "ISX.LowLevel.InputEventPtr", "structISX_1_1LowLevel_1_1InputEventPtr.html", null ],
     [ "ISX.LowLevel.InputEventQueue", "structISX_1_1LowLevel_1_1InputEventQueue.html", null ],
     [ "ISX.InputPluginAttribute", "classISX_1_1InputPluginAttribute.html", null ],
     [ "ISX.InputRemoting", "classISX_1_1InputRemoting.html", null ],
@@ -68,6 +69,7 @@ var hierarchy =
     [ "ISX.InputRemoting.Message", "structISX_1_1InputRemoting_1_1Message.html", null ],
     [ "ISX.MouseState", "structISX_1_1MouseState.html", null ],
     [ "ISX.PenState", "structISX_1_1PenState.html", null ],
+    [ "ISX.PointerState", "structISX_1_1PointerState.html", null ],
     [ "ISX.Utilities.ReadOnlyArray< TValue >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ISX.Utilities.ReadOnlyArray< InternedString >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ISX.Utilities.ReadOnlyArray< ISX.InputActionSet.ResolvedBinding >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],

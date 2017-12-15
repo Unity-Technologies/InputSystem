@@ -28,7 +28,7 @@ namespace ISX.Processors
             get { return max == 0.0f ? InputConfiguration.DeadzoneMax : max; }
         }
 
-        public Vector2 Process(Vector2 vector)
+        public Vector2 Process(Vector2 vector, InputControl control)
         {
             var magnitude = vector.magnitude;
             var newMagnitude = GetDeadZoneAdjustedValue(magnitude);

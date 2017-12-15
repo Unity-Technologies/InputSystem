@@ -230,13 +230,13 @@ namespace ISX
             if (!string.IsNullOrEmpty(baseTemplate))
                 m_Templates.baseTemplateTable[name] = new InternedString(baseTemplate);
 
+            // Re-create any devices using the template.
+            RecreateDevicesUsingTemplate(name, isKnownToBeDeviceTemplate: isKnownToBeDeviceTemplate);
+
             // If the template has a device description, see if it allows us
             // to make sense of any device we couldn't make sense of so far.
             if (deviceDescription != null && !deviceDescription.Value.empty)
                 AddSupportedDevice(deviceDescription.Value, name);
-
-            // Re-create any devices using the template.
-            RecreateDevicesUsingTemplate(name, isKnownToBeDeviceTemplate: isKnownToBeDeviceTemplate);
 
             // Let listeners know.
             var change = isReplacement ? InputTemplateChange.Replaced : InputTemplateChange.Added;
@@ -707,6 +707,9 @@ namespace ISX
             if (device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
                 return;
 
+            // Remove state monitors while device index is still valid.
+            RemoveStateChangeMonitors(device);
+
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             ArrayHelpers.EraseAt(ref m_Devices, deviceIndex);
@@ -734,7 +737,9 @@ namespace ISX
             // Unbake offset into global state buffers.
             device.BakeOffsetIntoStateBlockRecursive((uint)(-device.m_StateBlock.byteOffset));
 
-            // Let actions know.
+            // Force enabled actions to remove controls from the device.
+            // We've already set the device index to be invalid so we any attempts
+            // by actions to uninstall state monitors will get ignored.
             InputActionSet.RefreshAllEnabledActions();
 
             // Kill before update callback, if applicable.
@@ -830,7 +835,7 @@ namespace ISX
             finally
             {
                 // Remember it. Do this *after* the AddDevice() call above so that if there's
-                // a listener creating templates on the fly won't end up matching this device and
+                // a listener creating templates on the fly we won't end up matching this device and
                 // create an InputDevice right away (which would then conflict with the one we
                 // create in AddDevice).
                 m_AvailableDevices.Add(new AvailableDevice
@@ -849,9 +854,11 @@ namespace ISX
             m_PluginManagers.Append(manager);
         }
 
+        ////TODO: this should happen *after* there's a change to register custom plugin managers but *before* any actions are enabled
+        ////      (i.e. before any MB's are enabled)
         internal void InitializePlugins()
         {
-            // If we have plugin managers, let them drive all our plugin initialization.
+            // If we have plugin managers, let them drive all our plugin initializations.
             if (m_PluginManagers.Count > 0)
             {
                 for (var i = 0; i < m_PluginManagers.Count; ++i)
@@ -902,6 +909,7 @@ namespace ISX
                     if (pluginAttribute == null)
                         continue;
 
+                    ////TODO: make desktop player compatibility imply editor compatibility
                     // Skip if platform doesn't match.
                     if (pluginAttribute.supportedPlatforms != null
                         && !ArrayHelpers.Contains(pluginAttribute.supportedPlatforms, currentPlatform))
@@ -1039,6 +1047,10 @@ namespace ISX
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
+            #if UNITY_EDITOR
+            RegisterProcessor("EditorWindowSpace", typeof(EditorWindowSpaceProcessor));
+            #endif
+
             // Register action modifiers.
             RegisterModifier("Press", typeof(PressModifier));
             RegisterModifier("Hold", typeof(HoldModifier));
@@ -1046,8 +1058,6 @@ namespace ISX
             RegisterModifier("SlowTap", typeof(SlowTapModifier));
             RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
             RegisterModifier("Swipe", typeof(SwipeModifier));
-
-            BuiltinDeviceTemplates.RegisterTemplates(this);
         }
 
         // Revive after domain reload.
@@ -1217,6 +1227,22 @@ namespace ISX
             signals.Add(false);
         }
 
+        private void RemoveStateChangeMonitors(InputDevice device)
+        {
+            if (m_StateChangeMonitorListeners == null)
+                return;
+
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
+                return;
+
+            ArrayHelpers.EraseAt(ref m_StateChangeMonitorListeners, deviceIndex);
+            ArrayHelpers.EraseAt(ref m_StateChangeMonitorMemoryRegions, deviceIndex);
+            ArrayHelpers.EraseAt(ref m_StateChangeSignalled, deviceIndex);
+        }
+
         ////REVIEW: better to to just pass device+action and remove all state change monitors for the pair?
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
         {
@@ -1226,7 +1252,12 @@ namespace ISX
             var device = control.device;
             var deviceIndex = device.m_DeviceIndex;
 
-            if (m_StateChangeMonitorListeners.Length <= deviceIndex)
+            // Ignore if device has already been removed.
+            if (deviceIndex == InputDevice.kInvalidDeviceIndex)
+                return;
+
+            // Ignore if there are no state monitors set up for the device.
+            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
                 return;
 
             var listeners = m_StateChangeMonitorListeners[deviceIndex];
@@ -1763,8 +1794,6 @@ namespace ISX
                     if (BitfieldHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
                         continue;
 
-                    //Debug.Log($"Bit {bitOffset} new={BitfieldHelpers.ReadSingleBit(newState+offset,bitOffset)} old={BitfieldHelpers.ReadSingleBit(oldState+offset, bitOffset)}");
-
                     if (BitfieldHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
                         BitfieldHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
                         continue;
@@ -1823,6 +1852,7 @@ namespace ISX
         {
             if (updateType == NativeInputUpdateType.BeforeRender)
             {
+                ////REVIEW: I think this is wrong; if we haven't flipped in the current dynamic or fixed update, we should do so now
                 // We never flip buffers for before render. Instead, we already write
                 // into the front buffer.
                 return false;
@@ -1887,6 +1917,7 @@ namespace ISX
             return flipped;
         }
 
+        ////TODO: reset device states for dynamic and fixed updates when going in and out of play mode
         ////REVIEW: shouldn't resets be visible to actions by generating proper change notifications?
         ////        (might be a better idea to instead send an state event with default state)
         private void ResetDeviceState(InputDevice device)

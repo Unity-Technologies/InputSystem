@@ -81,7 +81,7 @@ namespace ISX
             var result = new Vector2(leftValue + rightValue, upValue + downValue);
 
             // If press is diagonal, adjust coordinates to produce vector of length 1.
-            // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pos(0.707107)) is ~1.
+            // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pow(0.707107)) is ~1.
             const float diagonal = 0.707107f;
             if (result.x != 0 && result.y != 0)
                 return new Vector2(result.x * diagonal, result.y * diagonal);

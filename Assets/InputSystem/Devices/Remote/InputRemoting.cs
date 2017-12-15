@@ -492,7 +492,7 @@ namespace ISX
 
             public static Message Create(InputRemoting sender, InputDevice device)
             {
-                Debug.Assert(!device.remote, "Device being sent to remotes should be a local devices, not a remote one");
+                Debug.Assert(!device.remote, "Device being sent to remotes should be a local device, not a remote one");
 
                 var data = new Data
                 {

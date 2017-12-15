@@ -84,7 +84,7 @@ namespace ISX
             HoldTime = state.holdTime;
             #if UNITY_EDITOR
             LockInputToGame = state.lockInputToGame;
-#endif
+            #endif
         }
     }
 }

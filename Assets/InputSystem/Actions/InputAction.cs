@@ -274,7 +274,7 @@ namespace ISX
             }
         }
 
-        // Add a new binding to the action. This works both with action that are part of
+        // Add a new binding to the action. This works both with actions that are part of
         // action set as well as with actions that aren't.
         // Returns a fluent-style syntax structure that allows performing additional modifications
         // based on the new binding.

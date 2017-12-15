@@ -3,8 +3,10 @@ using ISX.Utilities;
 
 namespace ISX.LowLevel
 {
-    // Pointer to an InputEvent. Makes it easier to work with InputEvents and hides
-    // the unsafe operations necessary to work with events.
+    /// <summary>
+    /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
+    /// the unsafe operations necessary to work with events.
+    /// </summary>
     public unsafe struct InputEventPtr
     {
         // C# does not allow us to have pointers to structs that have managed data members. Since

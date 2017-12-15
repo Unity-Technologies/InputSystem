@@ -87,10 +87,10 @@ $(document).ready(function(){initNavTree('structISX_1_1LowLevel_1_1InputEventQue
 </div><!--header-->
 <div class="contents">
 
-<p>An <a class="el" href="structISX_1_1LowLevel_1_1InputEventBuffer.html" title="A buffer containing InputEvents. ">InputEventBuffer</a> that can be concurrently written to and read from in FIFO order.  
+<p>An InputEventBuffer that can be concurrently written to and read from in FIFO order.  
  <a href="structISX_1_1LowLevel_1_1InputEventQueue.html#details">More...</a></p>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>An <a class="el" href="structISX_1_1LowLevel_1_1InputEventBuffer.html" title="A buffer containing InputEvents. ">InputEventBuffer</a> that can be concurrently written to and read from in FIFO order. </p>
+<div class="textblock"><p>An InputEventBuffer that can be concurrently written to and read from in FIFO order. </p>
 <p>Event queues have a fixed size. If events are produced faster than they are consumed, new events will start overwriting old events.</p>
 <p>Event size is also fixed. While smaller events can be written to the queue, larger events will be rejected.</p>
 <p>Memory for event queues is allocated on the native heap and queues can be written to and read from both in C++ and in C#.</p>

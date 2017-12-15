@@ -554,8 +554,14 @@ public class FunctionalTests : InputTestFixture
         InputSystem.RegisterTemplate(json);
         var device = (Gamepad) new InputControlSetup("TestTemplate").Finish();
 
+        ////TODO: this ignores layouting; ATM there's a conflict between the automatic layout used by the added button
+        ////      and the manual layouting employed by Gamepad; we don't detect conflicts between manual and automatic
+        ////      layouts yet so this goes undiagnosed
+
         Assert.That(device.leftStick.children, Has.Exactly(1).With.Property("name").EqualTo("enabled"));
+        Assert.That(device.leftStick.children.Count, Is.EqualTo(device.rightStick.children.Count + 1));
         Assert.That(device.leftStick["enabled"].template, Is.EqualTo("Button"));
+        Assert.That(device.leftStick["enabled"].parent, Is.SameAs(device.leftStick));
     }
 
     [Test]
@@ -1249,7 +1255,7 @@ public class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(device, secondState);
         InputSystem.Update();
 
-        Assert.That(device.leftStick.value, Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f))));
+        Assert.That(device.leftStick.value, Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f), device.leftStick)));
     }
 
     [Test]
@@ -1746,7 +1752,7 @@ public class FunctionalTests : InputTestFixture
         Assert.That(gamepad.dpad.right.stateBlock.byteOffset, Is.EqualTo(gamepad.dpad.stateBlock.byteOffset));
     }
 
-    // Using "offset = N" with an InputControlAttribute that doesn't specific a child path (or even then?)
+    // Using "offset = N" with an InputControlAttribute that doesn't specify a child path (or even then?)
     // should add the base offset of the field itself.
     [Test]
     [Category("State")]
@@ -2284,11 +2290,24 @@ public class FunctionalTests : InputTestFixture
         Assert.That(joystick.stick.name, Is.EqualTo("stick"));
     }
 
+    class TestMouse : Mouse
+    {
+    }
+
+    // This is an interesting case. If we support this, it would make the pointer position not just
+    // an input but also an output control. And it should actually warp the cursor position in Unity
+    // -- not just alter the value reported by .position.
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanQueryKeyCodeInformationFromKeyboard()
+    public void TODO_Devices_CanWarpPointerPosition()
     {
-        //set up callback equivalent to what native does to query per-key control data
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_PointerDeltasResetBetweenUpdates()
+    {
         Assert.Fail();
     }
 
@@ -2309,30 +2328,6 @@ public class FunctionalTests : InputTestFixture
 
         Assert.That(device, Is.InstanceOf<InputDevice>());
         Assert.That(device.template, Is.EqualTo(template));
-    }
-
-    [Test]
-    [Category("Devices")]
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "Gamepad")]
-#endif
-    public void Devices_SupportsPlatformsNativeDevice(string product, string manufacturer, string interfaceName, string baseTemplate)
-    {
-        var description = new InputDeviceDescription
-        {
-            interfaceName = interfaceName,
-            product = product,
-            manufacturer = manufacturer
-        };
-
-        InputDevice device = null;
-        Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
-
-        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", baseTemplate)), Has.Exactly(1).SameAs(device));
-        Assert.That(device.name, Is.EqualTo(baseTemplate));
-        Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
-        Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
-        Assert.That(device.description.product, Is.EqualTo(product));
     }
 
     [Test]
@@ -5270,6 +5265,22 @@ public class FunctionalTests : InputTestFixture
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
         Assert.That(code, Contains.Substring("public ISX.InputActionSet Clone()"));
+    }
+
+    class TestEditorWindow : EditorWindow
+    {
+        public Vector2 mousePosition;
+        public void OnGUI()
+        {
+            mousePosition = Mouse.current.position.value;
+        }
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void TODO_Editor_PointerCoordinatesInEditorWindowOnGUI_AreInEditorWindowSpace()
+    {
+        Assert.Fail();
     }
 
     ////TODO: the following tests have to be edit mode tests but it looks like putting them into

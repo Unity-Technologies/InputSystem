@@ -3,6 +3,8 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
+////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
+
 namespace ISX.HID
 {
     /// <summary>

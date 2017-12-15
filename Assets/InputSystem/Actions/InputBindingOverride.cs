@@ -30,6 +30,7 @@ namespace ISX
         // binding before any other binding.
         public string group;
 
+        ////REVIEW: I think this is nonsense; seems brittle and non-obvious
         // The group may have a '[number]' suffix to address a specific binding when multiple
         // bindings use the same group. This method returns the index.
         // If no index is set for the group, returns 0.

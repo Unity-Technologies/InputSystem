@@ -109,7 +109,7 @@ Properties</h2></td></tr>
 <div class="textblock"><p>A named input signal that can flexibly decide which input data to tap. </p>
 <p>Unlike controls, actions signal value changes rather than the values themselves. They sit on top of controls (and each single action may reference several controls collectively) and monitor the system for change.</p>
 <p>Unlike InputControls, InputActions are not passive. They will actively perform processing each frame they are active whereas InputControls just sit there as long as no one is asking them directly for a value.</p>
-<p><a class="el" href="namespaceISX_1_1Processors.html">Processors</a> on controls are *NOT* taken into account by actions. A state is considered changed if its underlying memory changes not if the final processed value changes.</p>
+<p>Processors on controls are *NOT* taken into account by actions. A state is considered changed if its underlying memory changes not if the final processed value changes.</p>
 <p>Actions are agnostic to update types. They trigger in whatever update detects a change in value.</p>
 <p>Actions are not supported in edit mode. </p>
 </div><h2 class="groupheader">Property Documentation</h2>

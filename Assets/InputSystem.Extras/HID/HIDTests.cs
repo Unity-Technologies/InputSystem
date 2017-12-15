@@ -1,3 +1,4 @@
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using NUnit.Framework;
 using System.Linq;
 
@@ -116,3 +117,4 @@ namespace ISX.HID
         }
     }
 }
+#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

@@ -179,7 +179,10 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default state layout for pen devices.  <a href="structISX_1_1PenState.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1Pointer.html">Pointer</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base class for pointer-style devices where a pointer can move across a 2D surface.  <a href="classISX_1_1Pointer.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base class for pointer-style devices moving on a 2D screen.  <a href="classISX_1_1Pointer.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1PointerState.html">PointerState</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default state structure for pointer devices.  <a href="structISX_1_1PointerState.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1StickControl.html">StickControl</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A two-axis thumbstick control that can act as both a vector and a four-way dpad.  <a href="classISX_1_1StickControl.html#details">More...</a><br /></td></tr>
@@ -246,7 +249,7 @@ Enumerations</h2></td></tr>
 <dl class="section see"><dt>See also</dt><dd>InputSystem.RemoveDevice</dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7"></a>Connected&#160;</td><td class="fielddoc"><p>A previously added device was re-connected after having been disconnected. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="structISX_1_1LowLevel_1_1ConnectEvent.html" title="Signals that a device got re-connected after a disconnect. ">LowLevel.ConnectEvent</a>, InputSystem.QueueConnectEvent</dd></dl>
+<dl class="section see"><dt>See also</dt><dd>LowLevel.ConnectEvent, InputSystem.QueueConnectEvent</dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0"></a>Disconnected&#160;</td><td class="fielddoc"><p>A previously added device was disconnected but remains added to the system. </p>
 <dl class="section see"><dt>See also</dt><dd>LowLevel.DisconnectEvent, InputSystem.QueueDisconnectEvent</dd></dl>
@@ -257,7 +260,7 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5"></a>ConfigurationChanged&#160;</td><td class="fielddoc"><p>The configuration of a device has changed. </p>
 <p>This may signal, for example, that the layout used by the keyboard has changed or that, on a console, a gamepad has changed which player ID(s) it is assigned to. </p>
-<dl class="section see"><dt>See also</dt><dd><a class="el" href="structISX_1_1LowLevel_1_1ConfigChangeEvent.html" title="Indicates that the configuration of a device has changed. ">LowLevel.ConfigChangeEvent</a>, InputSystem.QueueConfigChangeEvent</dd></dl>
+<dl class="section see"><dt>See also</dt><dd>LowLevel.ConfigChangeEvent, InputSystem.QueueConfigChangeEvent</dd></dl>
 </td></tr>
 </table>
 

@@ -97,6 +97,8 @@ namespace ISX
         }
     }
 
+    ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?
+    ////REVIEW: does it *actually* make sense to base this on Pointer?
     /// <summary>
     /// A multi-touch surface.
     /// </summary>

@@ -96,7 +96,7 @@ Inheritance diagram for ISX.Touchscreen:</div>
  <div class="center">
   <img src="classISX_1_1Touchscreen.png" usemap="#ISX.Touchscreen_map" alt=""/>
   <map id="ISX.Touchscreen_map" name="ISX.Touchscreen_map">
-<area href="classISX_1_1Pointer.html" title="Base class for pointer-style devices where a pointer can move across a 2D surface. " alt="ISX.Pointer" shape="rect" coords="0,112,110,136"/>
+<area href="classISX_1_1Pointer.html" title="Base class for pointer-style devices moving on a 2D screen. " alt="ISX.Pointer" shape="rect" coords="0,112,110,136"/>
 <area href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. " alt="ISX.InputDevice" shape="rect" coords="0,56,110,80"/>
 <area href="classISX_1_1InputControl.html" title="A typed and named value in a hierarchy of controls. " alt="ISX.InputControl" shape="rect" coords="0,0,110,24"/>
 </map>
@@ -112,8 +112,11 @@ Properties</h2></td></tr>
 <tr class="separator:ad1d7ded12d59ca962950469e48816465"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header properties_classISX_1_1Pointer"><td colspan="2" onclick="javascript:toggleInherit('properties_classISX_1_1Pointer')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="classISX_1_1Pointer.html">ISX.Pointer</a></td></tr>
 <tr class="memitem:aac9d31ee3054f74c73728976f78bc115 inherit properties_classISX_1_1Pointer"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classISX_1_1Vector2Control.html">Vector2Control</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1Pointer.html#aac9d31ee3054f74c73728976f78bc115">position</a><code> [get]</code></td></tr>
-<tr class="memdesc:aac9d31ee3054f74c73728976f78bc115 inherit properties_classISX_1_1Pointer"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current position of the pointer on its 2D surface.  <a href="classISX_1_1Pointer.html#aac9d31ee3054f74c73728976f78bc115">More...</a><br /></td></tr>
+<tr class="memdesc:aac9d31ee3054f74c73728976f78bc115 inherit properties_classISX_1_1Pointer"><td class="mdescLeft">&#160;</td><td class="mdescRight">The current pointer coordinates in window space.  <a href="classISX_1_1Pointer.html#aac9d31ee3054f74c73728976f78bc115">More...</a><br /></td></tr>
 <tr class="separator:aac9d31ee3054f74c73728976f78bc115 inherit properties_classISX_1_1Pointer"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af26e3bddaee2d00e6547e32221704d22 inherit properties_classISX_1_1Pointer"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classISX_1_1Pointer.html">Pointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1Pointer.html#af26e3bddaee2d00e6547e32221704d22">current</a><code> [get, set]</code></td></tr>
+<tr class="memdesc:af26e3bddaee2d00e6547e32221704d22 inherit properties_classISX_1_1Pointer"><td class="mdescLeft">&#160;</td><td class="mdescRight">The pointer that was added or updated last or null if there is no pointer connected to the system.  <a href="classISX_1_1Pointer.html#af26e3bddaee2d00e6547e32221704d22">More...</a><br /></td></tr>
+<tr class="separator:af26e3bddaee2d00e6547e32221704d22 inherit properties_classISX_1_1Pointer"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header properties_classISX_1_1InputDevice"><td colspan="2" onclick="javascript:toggleInherit('properties_classISX_1_1InputDevice')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="classISX_1_1InputDevice.html">ISX.InputDevice</a></td></tr>
 <tr class="memitem:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">remote</a><code> [get]</code></td></tr>
 <tr class="memdesc:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the device is mirrored from a remote input system and not actually present as a "real" device in the local system.  <a href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">More...</a><br /></td></tr>
@@ -134,6 +137,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A multi-touch surface. </p>
+<p>REVIEW: does it *actually* make sense to base this on Pointer? </p>
 </div><h2 class="groupheader">Property Documentation</h2>
 <a id="ad1d7ded12d59ca962950469e48816465"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad1d7ded12d59ca962950469e48816465">&#9670;&nbsp;</a></span>current</h2>

@@ -337,6 +337,7 @@ namespace ISX
             var controlStartIndex = controls.Count;
             var resolvedBindingsStartIndex = resolvedBindings.Count;
 
+            ////TODO: handle case where we have bindings resolving to the same control
             for (var n = 0; n < bindings.Count; ++n)
             {
                 var binding = bindings[n];
