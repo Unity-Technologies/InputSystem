@@ -664,7 +664,7 @@ namespace ISX
                 m_Modifier = modifier,
                 m_StartTime = startTime
             };
-            
+
             #if ENABLE_PROFILER
             Profiler.BeginSample("InputActionCallback");
             #endif
@@ -675,7 +675,7 @@ namespace ISX
                 for (var i = 0; i < listeners.additionalValues.Length; ++i)
                     listeners.additionalValues[i](context);
             }
-            
+
             #if ENABLE_PROFILER
             Profiler.EndSample();
             #endif

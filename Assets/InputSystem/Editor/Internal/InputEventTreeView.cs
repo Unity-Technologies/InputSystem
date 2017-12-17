@@ -5,6 +5,8 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using ISX.LowLevel;
 
+////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
+
 namespace ISX.Editor
 {
     // Multi-column TreeView that shows the events in a trace.

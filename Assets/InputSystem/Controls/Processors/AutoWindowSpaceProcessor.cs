@@ -16,7 +16,7 @@ namespace ISX.Processors
     /// Outside of EditorWindow callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
     /// </remarks>
-    public class EditorWindowSpaceProcessor : IInputProcessor<Vector2>
+    public class AutoWindowSpaceProcessor : IInputProcessor<Vector2>
     {
         public static FourCC EditorWindowPosConfig = new FourCC('E', 'W', 'P', 'S');
 

@@ -1048,7 +1048,7 @@ namespace ISX
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
             #if UNITY_EDITOR
-            RegisterProcessor("EditorWindowSpace", typeof(EditorWindowSpaceProcessor));
+            RegisterProcessor("AutoWindowSpace", typeof(AutoWindowSpaceProcessor));
             #endif
 
             // Register action modifiers.
@@ -2217,7 +2217,7 @@ namespace ISX
                     instance = template.instanceJson != null ? JsonUtility.FromJson(template.instanceJson, type) : null
                 };
             }
-            
+
             // Base templates.
             if (state.baseTemplates != null)
                 foreach (var entry in state.baseTemplates)
@@ -2270,7 +2270,7 @@ namespace ISX
                 if (!m_Templates.HasTemplate(template))
                     continue;
 
-                setup.Setup( template, null, new InternedString( deviceState.variant ) );
+                setup.Setup(template, null, new InternedString(deviceState.variant));
                 var device = setup.Finish();
                 device.m_Name = new InternedString(deviceState.name);
                 device.m_Id = deviceState.deviceId;

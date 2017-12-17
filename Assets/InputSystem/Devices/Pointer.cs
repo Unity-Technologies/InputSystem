@@ -32,7 +32,7 @@ namespace ISX
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(usage = "Point", processors = "EditorWindowSpace")]
+        [InputControl(usage = "Point", processors = "AutoWindowSpace")]
 #else
         [InputControl(usage = "Point")]
 #endif
