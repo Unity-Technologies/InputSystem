@@ -1988,6 +1988,13 @@ namespace ISX
         }
 
         [Serializable]
+        internal struct BaseTemplateState
+        {
+            public string baseTemplate;
+            public string derivedTemplate;
+        }
+
+        [Serializable]
         internal struct TemplateConstructorState
         {
             public string name;
@@ -2026,7 +2033,7 @@ namespace ISX
             public TemplateState[] templateTypes;
             public TemplateState[] templateStrings;
             public TemplateConstructorState[] templateConstructors;
-            public KeyValuePair<string, string>[] baseTemplates;
+            public BaseTemplateState[] baseTemplates;
             public TypeRegistrationState[] processors;
             public TypeRegistrationState[] modifiers;
             public SupportedDevice[] supportedDevices;
@@ -2114,7 +2121,7 @@ namespace ISX
                 templateTypes = templateTypeArray,
                 templateStrings = templateStringArray,
                 templateConstructors = templateConstructorArray,
-                baseTemplates = m_Templates.baseTemplateTable.Select(x => new KeyValuePair<string, string>(x.Key, x.Value)).ToArray(),
+                baseTemplates = m_Templates.baseTemplateTable.Select(x => new BaseTemplateState { derivedTemplate = x.Key, baseTemplate = x.Value }).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
                 modifiers = TypeRegistrationState.SaveState(m_Modifiers),
                 supportedDevices = m_SupportedDevices.ToArray(),
@@ -2210,14 +2217,14 @@ namespace ISX
                     instance = template.instanceJson != null ? JsonUtility.FromJson(template.instanceJson, type) : null
                 };
             }
-
+            
             // Base templates.
             if (state.baseTemplates != null)
                 foreach (var entry in state.baseTemplates)
                 {
-                    var name = new InternedString(entry.Key);
+                    var name = new InternedString(entry.derivedTemplate);
                     if (!m_Templates.baseTemplateTable.ContainsKey(name))
-                        m_Templates.baseTemplateTable[name] = new InternedString(entry.Value);
+                        m_Templates.baseTemplateTable[name] = new InternedString(entry.baseTemplate);
                 }
 
             // Processors.
@@ -2263,7 +2270,7 @@ namespace ISX
                 if (!m_Templates.HasTemplate(template))
                     continue;
 
-                setup.Setup(template, null, new InternedString(deviceState.variant));
+                setup.Setup( template, null, new InternedString( deviceState.variant ) );
                 var device = setup.Finish();
                 device.m_Name = new InternedString(deviceState.name);
                 device.m_Id = deviceState.deviceId;

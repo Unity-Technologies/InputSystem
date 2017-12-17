@@ -2,6 +2,8 @@ using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: we can't get shift and alt symbols on all platforms (Windows won't play, for example); worth even keeping it in the API?
+
 namespace ISX
 {
     /// <summary>

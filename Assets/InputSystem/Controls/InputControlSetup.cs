@@ -204,6 +204,8 @@ namespace ISX
             }
             else
             {
+                Debug.Assert(template.type != null);
+                
                 // No, so create a new control.
                 var controlObject = Activator.CreateInstance(template.type);
                 control = controlObject as InputControl;

@@ -2,6 +2,7 @@
 using ISX;
 using ISX.XInput;
 using NUnit.Framework;
+using UnityEngine;
 
 public class XInputTests : InputTestFixture
 {
@@ -16,6 +17,9 @@ public class XInputTests : InputTestFixture
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
     [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "Gamepad")]
+#endif
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    [TestCase(null, null, "XInput", "Gamepad")]
 #endif
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string baseTemplate)
     {
@@ -35,5 +39,27 @@ public class XInputTests : InputTestFixture
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
     }
+
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetSubTypeOfXInputDevice()
+    {
+        var capabilities = new XInputController.Capabilities
+        {
+            subType = XInputController.DeviceSubType.ArcadePad
+        };
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "XInput",
+            capabilities = JsonUtility.ToJson(capabilities)
+        };
+
+        var device = (XInputController)InputSystem.AddDevice(description);
+
+        Assert.That(device.subType, Is.EqualTo(XInputController.DeviceSubType.ArcadePad));
+    }
+
+#endif
 }
 #endif // DEVELOPMENT_BUILD || UNITY_EDITOR

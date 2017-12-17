@@ -1,18 +1,56 @@
 namespace ISX.XInput
 {
-    [InputPlugin(description = "Support for XInput gamepads")]
+    [InputPlugin]
     public static class XInputSupport
     {
         public static void Initialize()
         {
-            // Base template for Xbox-style gamepad. Currently doesn't have
-            // anything special and mostly just acts as a collective base for
-            // the actual XInput product templates.
-            const string xboxGamepad = @"{
-""name"" : ""XboxGamepad"",
-""extend"" : ""Gamepad""
-}";
-            InputSystem.RegisterTemplate(xboxGamepad);
+            // Base template for Xbox-style gamepad.
+            InputSystem.RegisterTemplate<XInputController>();
+
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            // XInput controllers on Windows.
+            // State layout is XINPUT_GAMEPAD.
+            // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx
+            InputSystem.RegisterTemplate(@"{
+""name"" : ""XInputControllerWindows"",
+""extend"" : ""XInputController"",
+""format"" : ""XINP"",
+""device"" : { ""interface"" : ""XInput"" },
+""controls"" : [
+    { ""name"" : ""dpad"", ""offset"" : 0, ""bit"" : 0 },
+    { ""name"" : ""dpad/up"", ""offset"" : 0, ""bit"" : 0 },
+    { ""name"" : ""dpad/down"", ""offset"" : 0, ""bit"" : 1 },
+    { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 2 },
+    { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 3 },
+    { ""name"" : ""start"", ""offset"" : 0, ""bit"" : 4 },
+    { ""name"" : ""select"", ""offset"" : 0, ""bit"" : 5 },
+    { ""name"" : ""leftStickPress"", ""offset"" : 0, ""bit"" : 6 },
+    { ""name"" : ""rightStickPress"", ""offset"" : 0, ""bit"" : 7 },
+    { ""name"" : ""leftShoulder"", ""offset"" : 0, ""bit"" : 8 },
+    { ""name"" : ""rightShoulder"", ""offset"" : 0, ""bit"" : 9 },
+    { ""name"" : ""buttonSouth"", ""offset"" : 0, ""bit"" : 12 },
+    { ""name"" : ""buttonEast"", ""offset"" : 0, ""bit"" : 13 },
+    { ""name"" : ""buttonWest"", ""offset"" : 0, ""bit"" : 14 },
+    { ""name"" : ""buttonNorth"", ""offset"" : 0, ""bit"" : 15 },
+    { ""name"" : ""leftTrigger"", ""offset"" : 2, ""format"" : ""BYTE"" },
+    { ""name"" : ""rightTrigger"", ""offset"" : 3, ""format"" : ""BYTE"" },
+    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"" },
+    { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""leftStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""leftStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""leftStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"" },
+    { ""name"" : ""rightStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""rightStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""rightStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""rightStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""rightStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""rightStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" }
+] }");
+#endif
 
             ////TODO: it would be totally rad if instead of going to JSON in code here,
             ////      you could just create a new state struct representing the changed
@@ -39,7 +77,7 @@ namespace ISX.XInput
             ////TODO: rumble and LED output
             InputSystem.RegisterTemplate(@"{
 ""name"" : ""XboxGamepadOSX"",
-""extend"" : ""XboxGamepad"",
+""extend"" : ""XInputController"",
 ""format"" : ""HID"",
 ""device"" : { ""interface"" : ""HID"", ""product"" : ""Xbox.*Controller"" },
 ""controls"" : [
