@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ISX.Utilities;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
 
@@ -663,6 +664,10 @@ namespace ISX
                 m_Modifier = modifier,
                 m_StartTime = startTime
             };
+            
+            #if ENABLE_PROFILER
+            Profiler.BeginSample("InputActionCallback");
+            #endif
 
             listeners.firstValue(context);
             if (listeners.additionalValues != null)
@@ -670,6 +675,10 @@ namespace ISX
                 for (var i = 0; i < listeners.additionalValues.Length; ++i)
                     listeners.additionalValues[i](context);
             }
+            
+            #if ENABLE_PROFILER
+            Profiler.EndSample();
+            #endif
         }
 
         private void ThrowIfPhaseTransitionIsInvalid(Phase currentPhase, Phase newPhase, int bindingIndex, int modifierIndex)
