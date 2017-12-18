@@ -162,10 +162,8 @@ namespace ISX.Editor
                     m_ControlTree.ExpandAll();
                 }
 
-                m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
                 var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
                 m_ControlTree.OnGUI(rect);
-                EditorGUILayout.EndScrollView();
             }
         }
 
@@ -235,7 +233,6 @@ namespace ISX.Editor
         [SerializeField] private bool m_ShowRawBytes;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
-        [SerializeField] private Vector2 m_ControlTreeScrollPosition;
         [SerializeField] private Vector2 m_HexDumpScrollPosition;
 
         [NonSerialized] private InputControlTreeView m_ControlTree;

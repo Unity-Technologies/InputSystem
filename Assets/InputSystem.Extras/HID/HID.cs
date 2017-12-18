@@ -21,11 +21,25 @@ namespace ISX.HID
         public const string kHIDInterface = "HID";
         public const string kHIDNamespace = "HID";
 
-        // The HID device descriptor as received from the device driver.
+        /// <summary>
+        /// The HID device descriptor as received from the device driver.
+        /// </summary>
         public HIDDeviceDescriptor hidDescriptor
         {
-            get { return new HIDDeviceDescriptor(); }
+            get
+            {
+                if (!m_HaveParsedHIDDescriptor)
+                {
+                    if (!string.IsNullOrEmpty(description.capabilities))
+                        m_HIDDescriptor = JsonUtility.FromJson<HIDDeviceDescriptor>(description.capabilities);
+                    m_HaveParsedHIDDescriptor = true;
+                }
+                return m_HIDDescriptor;
+            }
         }
+
+        private bool m_HaveParsedHIDDescriptor;
+        private HIDDeviceDescriptor m_HIDDescriptor;
 
         internal static string OnFindTemplateForDevice(InputDeviceDescription description, string matchedTemplate)
         {

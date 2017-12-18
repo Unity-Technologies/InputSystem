@@ -104,6 +104,36 @@ namespace ISX.HID
 
         [Test]
         [Category("Devices")]
+        public void Devices_CanGetDescriptorFromHID()
+        {
+            var hidDescriptor = new HID.HIDDeviceDescriptor
+            {
+                usage = (int)HID.GenericDesktop.MultiAxisController,
+                usagePage = HID.UsagePage.GenericDesktop,
+                productId = 1234,
+                vendorId = 5678,
+                elements = new[]
+                {
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+                }
+            };
+
+            InputSystem.ReportAvailableDevice(
+                new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                product = "MyHIDThing",
+                capabilities = hidDescriptor.ToJson()
+            });
+
+            var device = (HID)InputSystem.devices.First(x => x is HID);
+            Assert.That(device.hidDescriptor.productId, Is.EqualTo(1234));
+            Assert.That(device.hidDescriptor.vendorId, Is.EqualTo(5678));
+            Assert.That(device.hidDescriptor.elements.Length, Is.EqualTo(1));
+        }
+
+        [Test]
+        [Category("Devices")]
         public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
         {
             Assert.Fail();

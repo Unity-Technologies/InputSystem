@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -18,7 +19,7 @@ namespace ISX.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
-    internal class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
+    internal class InputDeviceDebuggerWindow : EditorWindow
     {
         public static void CreateOrShowExisting(InputDevice device)
         {
@@ -44,11 +45,11 @@ namespace ISX.Editor
             window.minSize = new Vector2(270, 300);
             window.Show();
             window.titleContent = new GUIContent(device.name);
-            window.AddToList();
         }
 
         public void Awake()
         {
+            AddToList();
             InputSystem.onDeviceChange += OnDeviceChange;
         }
 
@@ -100,6 +101,13 @@ namespace ISX.Editor
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
+
+            if (m_OnToolbarGUIMethods != null)
+            {
+                var parameters = new object[] {m_Device};
+                foreach (var method in m_OnToolbarGUIMethods)
+                    method.Invoke(null, parameters);
+            }
 
             if (GUILayout.Button(Contents.stateContent, EditorStyles.toolbarButton))
             {
@@ -189,6 +197,9 @@ namespace ISX.Editor
             // Set up control tree.
             m_ControlTree = InputControlTreeView.Create(m_Device, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
             m_ControlTree.ExpandAll();
+
+            // Look for GUI extension methods in plugins.
+            m_OnToolbarGUIMethods = InputManager.ScanForPluginMethods("OnToolbarGUI");
         }
 
         // We will lose our device on domain reload and then look it back up the first
@@ -199,6 +210,7 @@ namespace ISX.Editor
         [NonSerialized] private string m_DeviceUsagesString;
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
+        [NonSerialized] private List<MethodInfo> m_OnToolbarGUIMethods;
 
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -245,15 +257,6 @@ namespace ISX.Editor
             public static GUIContent clearContent = new GUIContent("Clear");
             public static GUIContent pauseContent = new GUIContent("Pause");
             public static GUIContent stateContent = new GUIContent("State");
-        }
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-        }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            AddToList();
         }
     }
 }

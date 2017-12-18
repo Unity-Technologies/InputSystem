@@ -1,4 +1,9 @@
+using ISX.HID.Editor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace ISX.HID
 {
@@ -16,15 +21,7 @@ namespace ISX.HID
     /// out a suitable class for the device and will use the HID elements
     /// present in the HID descriptor to populate the device.
     /// </remarks>
-    [InputPlugin(
-         description = "Support for surfacing HIDs as input devices without knowing the specific products being used.",
-         supportedPlatforms = new[]
-    {
-        RuntimePlatform.WindowsEditor,
-        RuntimePlatform.WindowsPlayer,
-        RuntimePlatform.OSXEditor,
-        RuntimePlatform.OSXPlayer,
-    })]
+    [InputPlugin]
     public static class HIDSupport
     {
         /// <summary>
@@ -35,5 +32,21 @@ namespace ISX.HID
             InputSystem.RegisterTemplate<HID>();
             InputSystem.onFindTemplateForDevice += HID.OnFindTemplateForDevice;
         }
+
+#if UNITY_EDITOR
+        public static void OnToolbarGUI(InputDevice device)
+        {
+            var hid = device as HID;
+            if (hid == null)
+                return;
+
+            if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
+            {
+                HIDDescriptorWindow.CreateOrShowExisting(hid);
+            }
+        }
+
+        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
+#endif
     }
 }

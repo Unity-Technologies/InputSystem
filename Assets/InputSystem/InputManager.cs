@@ -871,9 +871,14 @@ namespace ISX
                 // Fall back to scanning for all [InputPlugin]s in the system and calling
                 // their Initialize() methods if they are compatible with the current
                 // runtime platform.
-                var initMethods = ScanForPluginInitializeMethods();
+                var initMethods = ScanForPluginMethods("Initialize");
                 foreach (var method in initMethods)
+                {
+                    if (method.GetParameters().Length != 0)
+                        Debug.LogError(string.Format(
+                                "[InputPlugin] %s should not take parameters; skipping", method));
                     method.Invoke(null, null);
+                }
             }
 
             m_PluginsInitialized = true;
@@ -882,7 +887,7 @@ namespace ISX
         // NOTE: This is a fallback path! Proper setup should have a plugin manager in place
         //       that does not perform scanning but rather knows which plugins to initialize
         //       and where they are.
-        private static List<MethodInfo> ScanForPluginInitializeMethods()
+        internal static List<MethodInfo> ScanForPluginMethods(string methodName)
         {
             var currentPlatform = Application.platform;
             var result = new List<MethodInfo>();
@@ -916,15 +921,9 @@ namespace ISX
                         continue;
 
                     // Look up Initialize() method.
-                    var initializeMethod = type.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
-                    if (initializeMethod == null)
-                        Debug.LogError(string.Format(
-                                "[InputPlugin] %s has no public static Initialize() method; skipping", type.Name));
-                    else if (initializeMethod.GetParameters().Length != 0)
-                        Debug.LogError(string.Format(
-                                "[InputPlugin] %s's Initialize() should not take parameters; skipping", type.Name));
-                    else
-                        result.Add(initializeMethod);
+                    var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
+                    if (method != null)
+                        result.Add(method);
                 }
             }
 
