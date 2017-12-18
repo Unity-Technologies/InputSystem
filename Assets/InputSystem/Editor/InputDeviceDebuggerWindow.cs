@@ -19,7 +19,7 @@ namespace ISX.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
-    internal class InputDeviceDebuggerWindow : EditorWindow
+    internal class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
         public static void CreateOrShowExisting(InputDevice device)
         {
@@ -257,6 +257,15 @@ namespace ISX.Editor
             public static GUIContent clearContent = new GUIContent("Clear");
             public static GUIContent pauseContent = new GUIContent("Pause");
             public static GUIContent stateContent = new GUIContent("State");
+        }
+
+        public void OnBeforeSerialize()
+        {
+        }
+
+        public void OnAfterDeserialize()
+        {
+            AddToList();
         }
     }
 }

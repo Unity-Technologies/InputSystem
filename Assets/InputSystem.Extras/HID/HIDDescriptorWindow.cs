@@ -8,7 +8,7 @@ using UnityEngine;
 namespace ISX.HID.Editor
 {
     // A window that dumps a raw HID descriptor in a tree view.
-    internal class HIDDescriptorWindow : EditorWindow
+    internal class HIDDescriptorWindow : EditorWindow, ISerializationCallbackReceiver
     {
         public static void CreateOrShowExisting(HID device)
         {
@@ -31,21 +31,19 @@ namespace ISX.HID.Editor
             // No, so create a new one.
             var window = CreateInstance<HIDDescriptorWindow>();
             window.InitializeWith(device);
-            window.minSize = new Vector2(270, 300);
+            window.minSize = new Vector2(270, 200);
             window.Show();
-            window.titleContent = new GUIContent(device.name);
+            window.titleContent = new GUIContent("HID Descriptor");
         }
 
         public void Awake()
         {
-            if (s_OpenWindows == null)
-                s_OpenWindows = new List<HIDDescriptorWindow>();
-            s_OpenWindows.Add(this);
+            AddToList();
         }
 
         public void OnDestroy()
         {
-            s_OpenWindows.Remove(this);
+            RemoveFromList();
         }
 
         public void OnGUI()
@@ -77,7 +75,8 @@ namespace ISX.HID.Editor
             m_TreeView = new HIDDescriptorTreeView(m_TreeViewState, m_Device.hidDescriptor);
             m_TreeView.SetExpanded(1, true);
 
-            m_Label = new GUIContent(string.Format("HID Descriptor for '{0}'", m_Device.displayName));
+            m_Label = new GUIContent(string.Format("HID Descriptor for '{0} {1}'", m_Device.description.manufacturer,
+                        m_Device.description.product));
         }
 
         [NonSerialized] private HID m_Device;
@@ -86,6 +85,20 @@ namespace ISX.HID.Editor
 
         [SerializeField] private int m_DeviceId;
         [SerializeField] private TreeViewState m_TreeViewState;
+
+        private void AddToList()
+        {
+            if (s_OpenWindows == null)
+                s_OpenWindows = new List<HIDDescriptorWindow>();
+            if (!s_OpenWindows.Contains(this))
+                s_OpenWindows.Add(this);
+        }
+
+        private void RemoveFromList()
+        {
+            if (s_OpenWindows != null)
+                s_OpenWindows.Remove(this);
+        }
 
         private static List<HIDDescriptorWindow> s_OpenWindows;
 
@@ -183,6 +196,7 @@ namespace ISX.HID.Editor
                 AddChild(item,
                     string.Format("Inferred Offset: byte #{0}, bit #{1}", runningBitOffset / 8, runningBitOffset % 8),
                     ref id);
+
                 runningBitOffset += element.reportSizeInBits;
 
                 return item;
@@ -201,6 +215,15 @@ namespace ISX.HID.Editor
 
                 return item;
             }
+        }
+
+        public void OnBeforeSerialize()
+        {
+        }
+
+        public void OnAfterDeserialize()
+        {
+            AddToList();
         }
     }
 }

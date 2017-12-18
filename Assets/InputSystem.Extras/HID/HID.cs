@@ -5,6 +5,13 @@ using UnityEngine;
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
+////FIXME: ATM both the Windows and the OSX HID backend list elements in the HID descriptors in an
+////       order different from what's on the device. This means that the offsets we compute are incorrect.
+////       I think ideally we should get rid of the implicit layouting inherent in HID descriptors and
+////       require native backends to supply offset information to us. This way they can list the elements
+////       however they want. Unfortunately, neither the Windows nor the OSX HID APIs make this information
+////       readily available.
+
 namespace ISX.HID
 {
     /// <summary>
@@ -148,6 +155,8 @@ namespace ISX.HID
                     ////TODO: support output elements
                     if (element.reportType != HIDReportType.Input)
                         continue;
+
+                    ////TODO: this needs to take reportCount into account
 
                     var template = element.DetermineTemplate();
                     if (template != null)
