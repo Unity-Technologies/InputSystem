@@ -10,8 +10,8 @@ var hierarchy =
     [ "ISX.IInputProcessor< TValue >", "interfaceISX_1_1IInputProcessor.html", null ],
     [ "ISX.IInputProcessor< float >", "interfaceISX_1_1IInputProcessor.html", null ],
     [ "ISX.IInputProcessor< Vector2 >", "interfaceISX_1_1IInputProcessor.html", [
-      [ "ISX.Processors.DeadzoneProcessor", "classISX_1_1Processors_1_1DeadzoneProcessor.html", null ],
-      [ "ISX.Processors.EditorWindowSpaceProcessor", "classISX_1_1Processors_1_1EditorWindowSpaceProcessor.html", null ]
+      [ "ISX.Processors.AutoWindowSpaceProcessor", "classISX_1_1Processors_1_1AutoWindowSpaceProcessor.html", null ],
+      [ "ISX.Processors.DeadzoneProcessor", "classISX_1_1Processors_1_1DeadzoneProcessor.html", null ]
     ] ],
     [ "ISX.InputAction", "classISX_1_1InputAction.html", null ],
     [ "ISX.InputActionSet", "classISX_1_1InputActionSet.html", null ],
@@ -20,7 +20,9 @@ var hierarchy =
     [ "ISX.InputConfiguration", "classISX_1_1InputConfiguration.html", null ],
     [ "ISX.InputControl", "classISX_1_1InputControl.html", [
       [ "ISX.InputDevice", "classISX_1_1InputDevice.html", [
-        [ "ISX.Gamepad", "classISX_1_1Gamepad.html", null ],
+        [ "ISX.Gamepad", "classISX_1_1Gamepad.html", [
+          [ "ISX.XInput.XInputController", "classISX_1_1XInput_1_1XInputController.html", null ]
+        ] ],
         [ "ISX.HID.HID", "classISX_1_1HID_1_1HID.html", null ],
         [ "ISX.Keyboard", "classISX_1_1Keyboard.html", null ],
         [ "ISX.Pointer", "classISX_1_1Pointer.html", [
@@ -77,5 +79,6 @@ var hierarchy =
     [ "ISX.Utilities.ReadOnlyArray< NameAndParameters >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ISX.Utilities.ReadOnlyArray< ParameterValue >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ISX.LowLevel.StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", null ],
-    [ "ISX.TouchscreenState", "structISX_1_1TouchscreenState.html", null ]
+    [ "ISX.TouchscreenState", "structISX_1_1TouchscreenState.html", null ],
+    [ "ISX.XInput.XInputSupport", "classISX_1_1XInput_1_1XInputSupport.html", null ]
 ];

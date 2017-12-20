@@ -10,7 +10,7 @@ using UnityEngineInternal.Input;
 //  - text input
 //  - configuration change
 //  - make current
-//  - reset current
+//  - on remove (also resets current)
 
 namespace ISX
 {

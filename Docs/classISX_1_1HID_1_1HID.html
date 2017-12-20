@@ -81,6 +81,7 @@ $(document).ready(function(){initNavTree('classISX_1_1HID_1_1HID.html','');});
 
 <div class="header">
   <div class="summary">
+<a href="#properties">Properties</a> &#124;
 <a href="classISX_1_1HID_1_1HID-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ISX.HID.HID Class Reference</div>  </div>
@@ -100,15 +101,11 @@ Inheritance diagram for ISX.HID.HID:</div>
 </map>
  </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pub_methods_classISX_1_1InputDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classISX_1_1InputDevice')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classISX_1_1InputDevice.html">ISX.InputDevice</a></td></tr>
-<tr class="memitem:a18d3a4551ab679910e7aca01bcda7ea2 inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2">MakeCurrent</a> ()</td></tr>
-<tr class="memdesc:a18d3a4551ab679910e7aca01bcda7ea2 inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make this the current device of its type.  <a href="classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2">More...</a><br /></td></tr>
-<tr class="separator:a18d3a4551ab679910e7aca01bcda7ea2 inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">OnConfigurationChanged</a> ()</td></tr>
-<tr class="memdesc:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by the system when the configuration of the device has changed.  <a href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">More...</a><br /></td></tr>
-<tr class="separator:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
+Properties</h2></td></tr>
+<tr class="memitem:ad668fd11ec9308a2b07691e1e1184d35"><td class="memItemLeft" align="right" valign="top">HIDDeviceDescriptor&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HID.html#ad668fd11ec9308a2b07691e1e1184d35">hidDescriptor</a><code> [get]</code></td></tr>
+<tr class="memdesc:ad668fd11ec9308a2b07691e1e1184d35"><td class="mdescLeft">&#160;</td><td class="mdescRight">The HID device descriptor as received from the device driver.  <a href="#ad668fd11ec9308a2b07691e1e1184d35">More...</a><br /></td></tr>
+<tr class="separator:ad668fd11ec9308a2b07691e1e1184d35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header properties_classISX_1_1InputDevice"><td colspan="2" onclick="javascript:toggleInherit('properties_classISX_1_1InputDevice')"><img src="closed.png" alt="-"/>&#160;Properties inherited from <a class="el" href="classISX_1_1InputDevice.html">ISX.InputDevice</a></td></tr>
 <tr class="memitem:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">remote</a><code> [get]</code></td></tr>
 <tr class="memdesc:a87948035cec08321cbc1b6116f8df141 inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the device is mirrored from a remote input system and not actually present as a "real" device in the local system.  <a href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">More...</a><br /></td></tr>
@@ -119,11 +116,46 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:acdf24e99a5e11a380c117896ff30b520 inherit properties_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#acdf24e99a5e11a380c117896ff30b520">lastUpdateTime</a><code> [get]</code></td></tr>
 <tr class="memdesc:acdf24e99a5e11a380c117896ff30b520 inherit properties_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Timestamp of last state event used to update the device.  <a href="classISX_1_1InputDevice.html#acdf24e99a5e11a380c117896ff30b520">More...</a><br /></td></tr>
 <tr class="separator:acdf24e99a5e11a380c117896ff30b520 inherit properties_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pub_methods_classISX_1_1InputDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classISX_1_1InputDevice')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classISX_1_1InputDevice.html">ISX.InputDevice</a></td></tr>
+<tr class="memitem:a18d3a4551ab679910e7aca01bcda7ea2 inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2">MakeCurrent</a> ()</td></tr>
+<tr class="memdesc:a18d3a4551ab679910e7aca01bcda7ea2 inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make this the current device of its type.  <a href="classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2">More...</a><br /></td></tr>
+<tr class="separator:a18d3a4551ab679910e7aca01bcda7ea2 inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">OnConfigurationChanged</a> ()</td></tr>
+<tr class="memdesc:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by the system when the configuration of the device has changed.  <a href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">More...</a><br /></td></tr>
+<tr class="separator:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A generic HID input device. </p>
 <p>This class represents a best effort to mirror the control setup of a HID discovered in the system. It is used only as a fallback where we cannot match the device to a specific product we know of. Wherever possible we construct more specific device representations such as Gamepad. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Property Documentation</h2>
+<a id="ad668fd11ec9308a2b07691e1e1184d35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad668fd11ec9308a2b07691e1e1184d35">&#9670;&nbsp;</a></span>hidDescriptor</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">HIDDeviceDescriptor ISX.HID.HID.hidDescriptor</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The HID device descriptor as received from the device driver. </p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

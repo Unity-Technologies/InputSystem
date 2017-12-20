@@ -4,6 +4,7 @@ var namespaceISX =
     [ "LowLevel", "namespaceISX_1_1LowLevel.html", "namespaceISX_1_1LowLevel" ],
     [ "Processors", "namespaceISX_1_1Processors.html", "namespaceISX_1_1Processors" ],
     [ "Utilities", "namespaceISX_1_1Utilities.html", "namespaceISX_1_1Utilities" ],
+    [ "XInput", "namespaceISX_1_1XInput.html", "namespaceISX_1_1XInput" ],
     [ "AxisControl", "classISX_1_1AxisControl.html", null ],
     [ "ButtonControl", "classISX_1_1ButtonControl.html", null ],
     [ "DpadControl", "classISX_1_1DpadControl.html", "classISX_1_1DpadControl" ],

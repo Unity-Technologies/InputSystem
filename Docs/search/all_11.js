@@ -10,5 +10,6 @@ var searchData=
   ['space',['space',['../classISX_1_1Keyboard.html#a2345c9059d074db7ef1b346efb10d908',1,'ISX::Keyboard']]],
   ['startsending',['StartSending',['../classISX_1_1InputRemoting.html#a59211d2990d4fdf60423b8c2c820cc15',1,'ISX::InputRemoting']]],
   ['stateevent',['StateEvent',['../structISX_1_1LowLevel_1_1StateEvent.html',1,'ISX::LowLevel']]],
-  ['stickcontrol',['StickControl',['../classISX_1_1StickControl.html',1,'ISX']]]
+  ['stickcontrol',['StickControl',['../classISX_1_1StickControl.html',1,'ISX']]],
+  ['subtype',['subType',['../classISX_1_1XInput_1_1XInputController.html#a3d84f2cb4af4914508736ecc77305abb',1,'ISX::XInput::XInputController']]]
 ];

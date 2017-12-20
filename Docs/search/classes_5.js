@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['gamepad',['Gamepad',['../classISX_1_1Gamepad.html',1,'ISX']]],
-  ['gamepadstate',['GamepadState',['../structISX_1_1GamepadState.html',1,'ISX']]]
+  ['hid',['HID',['../classISX_1_1HID_1_1HID.html',1,'ISX::HID']]],
+  ['hidsupport',['HIDSupport',['../classISX_1_1HID_1_1HIDSupport.html',1,'ISX::HID']]]
 ];

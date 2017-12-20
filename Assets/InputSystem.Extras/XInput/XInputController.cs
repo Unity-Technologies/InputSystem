@@ -9,7 +9,7 @@ namespace ISX.XInput
     /// <remarks>
     /// Note that on non-Microsoft platforms, XInput controllers will not actually use the XInput interface
     /// but will rather be interfaced with through different APIs -- on OSX, for example, HID is used to
-    /// interface with Xbox controlllers. In those, XInput-specific functionality (like <see cref="Capabilities"/>)
+    /// interface with Xbox controlllers. In those cases, XInput-specific functionality (like <see cref="Capabilities"/>)
     /// will not be available.
     /// </remarks>
     public class XInputController : Gamepad
@@ -20,7 +20,7 @@ namespace ISX.XInput
         /// <remarks>
         /// When the controller is picked up through interfaces other than XInput or through old versions of
         /// XInput, this will always be <see cref="DeviceSubType.Unknown"/>. Put another way, this value is
-        /// meaningful only on Microsoft platforms.
+        /// meaningful only on recent Microsoft platforms.
         /// </remarks>
         public DeviceSubType subType
         {

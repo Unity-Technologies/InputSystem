@@ -308,6 +308,7 @@ public class FunctionalTests : InputTestFixture
         Assert.Fail();
     }
 
+    ////REVIEW: if this behavior is guaranteed, we also have to make sure we preserve it across domain reloads
     [Test]
     [Category("Templates")]
     public void TODO_Templates_WhenTwoTemplatesConflict_LastOneRegisteredWins()
@@ -849,7 +850,7 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
-    public void TODO_Templates_CanQueryImageAndDisplayNameFromControl()
+    public void TODO_Templates_CanQueryResourceNameFromControl()
     {
         var json = @"
             {
@@ -2307,6 +2308,24 @@ public class FunctionalTests : InputTestFixture
     [Test]
     [Category("Devices")]
     public void TODO_Devices_PointerDeltasResetBetweenUpdates()
+    {
+        var pointer = (Pointer)InputSystem.AddDevice("Pointer");
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.value.x, Is.Zero);
+        Assert.That(pointer.delta.value.y, Is.Zero);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_PointerDeltasAccumulateBetweenUpdates()
     {
         Assert.Fail();
     }

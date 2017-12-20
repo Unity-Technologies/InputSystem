@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['keycode',['keyCode',['../classISX_1_1KeyControl.html#aa3fc3751ee23eddd7a8d09da586bc6ff',1,'ISX::KeyControl']]]
+  ['hiddescriptor',['hidDescriptor',['../classISX_1_1HID_1_1HID.html#ad668fd11ec9308a2b07691e1e1184d35',1,'ISX::HID::HID']]]
 ];

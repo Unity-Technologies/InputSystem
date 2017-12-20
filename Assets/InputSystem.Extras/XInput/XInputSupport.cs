@@ -1,5 +1,8 @@
 namespace ISX.XInput
 {
+    /// <summary>
+    /// Adds support for XInput controllers.
+    /// </summary>
     [InputPlugin]
     public static class XInputSupport
     {

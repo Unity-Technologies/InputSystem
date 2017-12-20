@@ -78,6 +78,8 @@ namespace ISX
 
             const int kMaxBufferSize = 256;
 
+            ////TODO: remove the allocation here and put things on the stack with a fixed byte buffer in a struct
+
             // Allocate memory buffer.
             var buffer = UnsafeUtility.Malloc(kMaxBufferSize, 4, Allocator.Temp);
             try
