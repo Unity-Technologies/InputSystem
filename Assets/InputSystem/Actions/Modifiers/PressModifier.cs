@@ -15,6 +15,7 @@ namespace ISX.Modifiers
             var button = control as ButtonControl;
             if (button != null)
             {
+                ////REVIEW: ths may not work as desired if multiple button state changes happen in the same update
                 if (button.wasJustPressed)
                     context.Performed();
             }

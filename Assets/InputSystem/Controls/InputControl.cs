@@ -50,6 +50,7 @@ namespace ISX
             get { return m_Name; }
         }
 
+        ////TODO: protect against empty strings
         /// <summary>
         /// The text to display as the name of the control.
         /// </summary>

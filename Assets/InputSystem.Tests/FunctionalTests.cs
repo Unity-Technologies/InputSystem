@@ -1645,6 +1645,39 @@ public class FunctionalTests : InputTestFixture
     }
 
     [Test]
+    [Category("State")]
+    public void State_DoesNotNeedToBe4ByteAligned()
+    {
+        var jsonTemplate = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""format"" : ""CUST"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""button1"",
+                        ""template"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(jsonTemplate);
+
+        var device1 = InputSystem.AddDevice("TestDevice");
+        var device2 = InputSystem.AddDevice("TestDevice");
+
+        // State block sizes should correspond exactly to what's on the device aligned
+        // to next byte offset.
+        Assert.That(device1.stateBlock.sizeInBits, Is.EqualTo(8));
+        Assert.That(device2.stateBlock.sizeInBits, Is.EqualTo(8));
+
+        // But offsets in the state buffers should be 4-byte aligned. This ensures that we
+        // comply to alignment restrictions on ARMs.
+        Assert.That(device1.stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(device2.stateBlock.byteOffset, Is.EqualTo(4));
+    }
+
+    [Test]
     [Category("Templates")]
     public void Templates_CanReformatAndResizeControlHierarchy()
     {

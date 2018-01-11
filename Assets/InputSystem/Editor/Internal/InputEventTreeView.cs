@@ -5,6 +5,8 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using ISX.LowLevel;
 
+////TODO: add more information for each event (ideally, dump deltas that highlight control values that have changed)
+
 ////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
 
 namespace ISX.Editor

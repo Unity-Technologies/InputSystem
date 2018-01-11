@@ -1,5 +1,6 @@
 using System;
 using ISX.LowLevel;
+using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -182,6 +183,7 @@ namespace ISX
             sizePerBuffer = ComputeSizeOfSingleBufferAndOffsetForEachDevice(devices, ref newDeviceOffsets);
             if (sizePerBuffer == 0)
                 return null;
+            sizePerBuffer = NumberHelpers.AlignToMultiple(sizePerBuffer, 4);
 
             var isDynamicUpdateEnabled = (updateMask & InputUpdateType.Dynamic) == InputUpdateType.Dynamic;
             var isFixedUpdateEnabled = (updateMask & InputUpdateType.Fixed) == InputUpdateType.Fixed;
@@ -379,6 +381,7 @@ namespace ISX
             for (var i = 0; i < devices.Length; ++i)
             {
                 var size = devices[i].m_StateBlock.alignedSizeInBytes;
+                size = NumberHelpers.AlignToMultiple(size, 4);
                 ////REVIEW: what should we do about this case? silently accept it and just give the device the current offset?
                 if (size == 0)
                     throw new Exception(string.Format("Device '{0}' has a zero-size state buffer", devices[i]));
