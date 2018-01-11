@@ -267,5 +267,19 @@ namespace ISX.Utilities
 
             return result;
         }
+
+        public static TNew[] Select<TOld, TNew>(TOld[] array, Func<TOld, TNew> converter)
+        {
+            if (array == null)
+                return null;
+
+            var length = array.Length;
+            var result = new TNew[length];
+
+            for (var i = 0; i < length; ++i)
+                result[i] = converter(array[i]);
+
+            return result;
+        }
     }
 }

@@ -176,30 +176,36 @@ namespace ISX.Editor
                 };
 
                 // Header.
-                AddChild(item, string.Format("Type: {0}", template.type.Name), ref id);
+                AddChild(item, "Type: " + template.type.Name, ref id);
                 if (!string.IsNullOrEmpty(template.extendsTemplate))
-                    AddChild(item, string.Format("Extends: {0}", template.extendsTemplate), ref id);
+                    AddChild(item, "Extends: " + template.extendsTemplate, ref id);
                 if (template.stateFormat != 0)
-                    AddChild(item, string.Format("Format: {0}", template.stateFormat), ref id);
+                    AddChild(item, "Format: " + template.stateFormat, ref id);
                 if (template.m_UpdateBeforeRender != null)
                 {
                     var value = template.m_UpdateBeforeRender.Value ? "Update" : "Disabled";
-                    AddChild(item, string.Format("Before Render: {0}", value), ref id);
+                    AddChild(item, "Before Render: " + value, ref id);
+                }
+                if (template.commonUsages.Count > 0)
+                {
+                    AddChild(item,
+                        "Common Usages: " +
+                        string.Join(", ", template.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
                 }
                 if (!template.deviceDescription.empty)
                 {
                     var deviceDescription = AddChild(item, "Device Description", ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.deviceClass))
                         AddChild(deviceDescription,
-                            string.Format("Device Class: {0}", template.deviceDescription.deviceClass), ref id);
+                            "Device Class: " + template.deviceDescription.deviceClass, ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.interfaceName))
                         AddChild(deviceDescription,
-                            string.Format("Interface: {0}", template.deviceDescription.interfaceName), ref id);
+                            "Interface: " + template.deviceDescription.interfaceName, ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.product))
-                        AddChild(deviceDescription, string.Format("Product: {0}", template.deviceDescription.product), ref id);
+                        AddChild(deviceDescription, "Product: " + template.deviceDescription.product, ref id);
                     if (!string.IsNullOrEmpty(template.deviceDescription.manufacturer))
                         AddChild(deviceDescription,
-                            string.Format("Manufacturer: {0}", template.deviceDescription.manufacturer), ref id);
+                            "Manufacturer: " + template.deviceDescription.manufacturer, ref id);
                 }
 
                 // Controls.

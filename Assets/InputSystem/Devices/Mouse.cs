@@ -73,7 +73,7 @@ namespace ISX
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
-    [InputState(typeof(MouseState))]
+    [InputTemplate(stateType = typeof(MouseState))]
     public class Mouse : Pointer
     {
         /// <summary>

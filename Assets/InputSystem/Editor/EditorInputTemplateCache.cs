@@ -6,13 +6,21 @@ using ISX.Utilities;
 
 namespace ISX.Editor
 {
-    // In the editor we need access to the InputTemplates registered with
-    // the system in order to facilitate various UI features. Instead of
-    // constructing template instances over and over, we keep them around
-    // in here.
+    /// <summary>
+    /// Caches <see cref="InputTemplate"/> instances.
+    /// </summary>
+    /// <remarks>
+    /// In the editor we need access to the <see cref="InputTemplate">InputTemplates</see>
+    /// registered with the system in order to facilitate various UI features. Instead of
+    /// constructing template instances over and over, we keep them around in here.
+    ///
+    /// This class is only available in the editor (when <c>UNITY_EDITOR</c> is true).
+    /// </remarks>
     public static class EditorInputTemplateCache
     {
-        // Iterate over all templates in the system.
+        /// <summary>
+        /// Iterate over all templates in the system.
+        /// </summary>
         public static IEnumerable<InputTemplate> allTemplates
         {
             get
@@ -22,7 +30,9 @@ namespace ISX.Editor
             }
         }
 
-        // Get all unique usages and the list of templates used with each one.
+        /// <summary>
+        /// Iterate over all unique usages and their respective lists of templates that use them.
+        /// </summary>
         public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> allUsages
         {
             get
@@ -32,8 +42,9 @@ namespace ISX.Editor
             }
         }
 
-        // Iterate over all device templates that do not extend
-        // other templates.
+        /// <summary>
+        /// Iterate over all device templates that do not extend other templates.
+        /// </summary>
         public static IEnumerable<InputTemplate> allBaseDeviceTemplates
         {
             get
@@ -45,6 +56,9 @@ namespace ISX.Editor
             }
         }
 
+        /// <summary>
+        /// Event that is triggered whenever the template setup in the system changes.
+        /// </summary>
         public static event Action onRefresh
         {
             add

@@ -38,6 +38,7 @@ var searchData=
   ['inputstateblock',['InputStateBlock',['../structISX_1_1LowLevel_1_1InputStateBlock.html',1,'ISX::LowLevel']]],
   ['inputsystem',['InputSystem',['../classISX_1_1InputSystem.html',1,'ISX']]],
   ['inputtemplate',['InputTemplate',['../classISX_1_1InputTemplate.html',1,'ISX']]],
+  ['inputtemplateattribute',['InputTemplateAttribute',['../classISX_1_1InputTemplateAttribute.html',1,'ISX']]],
   ['inputtestfixture',['InputTestFixture',['../classISX_1_1InputTestFixture.html',1,'ISX']]],
   ['interfacename',['interfaceName',['../structISX_1_1InputDeviceDescription.html#a0c9dc7053fbd241ddf2132ec51a5b600',1,'ISX::InputDeviceDescription']]],
   ['internedstring',['InternedString',['../structISX_1_1Utilities_1_1InternedString.html',1,'ISX::Utilities']]],

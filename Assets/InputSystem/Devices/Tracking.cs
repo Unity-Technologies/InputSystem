@@ -42,7 +42,7 @@ namespace ISX
         }
     }
 
-    [InputState(typeof(TrackingState))]
+    [InputTemplate(stateType = typeof(TrackingState))]
     public abstract class TrackedDevice : InputDevice
     {
         public PoseControl pose { get; private set; }
@@ -57,7 +57,7 @@ namespace ISX
     }
 
     // A head tracking device.
-    [InputState(typeof(HMDState))]
+    [InputTemplate(stateType = typeof(HMDState))]
     public class HMD : TrackedDevice
     {
         public static HMD current { get; internal set; }
@@ -69,6 +69,9 @@ namespace ISX
         }
     }
 
+    /// <summary>
+    /// Default state layout for <see cref="XRController">XR controllers</see>.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct XRControllerState : IInputStateTypeInfo
     {
@@ -85,8 +88,10 @@ namespace ISX
         }
     }
 
-    // A hand and interaction tracking device.
-    [InputState(typeof(XRControllerState))]
+    /// <summary>
+    /// A hand and interaction tracking device.
+    /// </summary>
+    [InputTemplate(stateType = typeof(XRControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : TrackedDevice
     {
         public static XRController leftHand { get; internal set; }

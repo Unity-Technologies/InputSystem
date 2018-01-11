@@ -17,7 +17,7 @@ public struct MyDeviceState : IInputStateTypeInfo
     }
 }
 
-[InputState(typeof(MyDeviceState))]
+[InputTemplate(stateType = typeof(MyDeviceState))]
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {
     public ButtonControl button1 { get; private set; }

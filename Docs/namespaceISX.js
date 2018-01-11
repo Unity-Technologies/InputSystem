@@ -1,5 +1,6 @@
 var namespaceISX =
 [
+    [ "Editor", "namespaceISX_1_1Editor.html", "namespaceISX_1_1Editor" ],
     [ "HID", "namespaceISX_1_1HID.html", "namespaceISX_1_1HID" ],
     [ "LowLevel", "namespaceISX_1_1LowLevel.html", "namespaceISX_1_1LowLevel" ],
     [ "Processors", "namespaceISX_1_1Processors.html", "namespaceISX_1_1Processors" ],
@@ -26,6 +27,7 @@ var namespaceISX =
     [ "InputRemoting", "classISX_1_1InputRemoting.html", "classISX_1_1InputRemoting" ],
     [ "InputSystem", "classISX_1_1InputSystem.html", "classISX_1_1InputSystem" ],
     [ "InputTemplate", "classISX_1_1InputTemplate.html", "classISX_1_1InputTemplate" ],
+    [ "InputTemplateAttribute", "classISX_1_1InputTemplateAttribute.html", "classISX_1_1InputTemplateAttribute" ],
     [ "InputTestFixture", "classISX_1_1InputTestFixture.html", "classISX_1_1InputTestFixture" ],
     [ "Keyboard", "classISX_1_1Keyboard.html", "classISX_1_1Keyboard" ],
     [ "KeyControl", "classISX_1_1KeyControl.html", "classISX_1_1KeyControl" ],
@@ -39,5 +41,7 @@ var namespaceISX =
     [ "TouchControl", "classISX_1_1TouchControl.html", "classISX_1_1TouchControl" ],
     [ "Touchscreen", "classISX_1_1Touchscreen.html", "classISX_1_1Touchscreen" ],
     [ "TouchscreenState", "structISX_1_1TouchscreenState.html", null ],
-    [ "Vector2Control", "classISX_1_1Vector2Control.html", "classISX_1_1Vector2Control" ]
+    [ "Vector2Control", "classISX_1_1Vector2Control.html", "classISX_1_1Vector2Control" ],
+    [ "XRController", "classISX_1_1XRController.html", null ],
+    [ "XRControllerState", "structISX_1_1XRControllerState.html", null ]
 ];

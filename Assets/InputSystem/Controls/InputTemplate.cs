@@ -11,11 +11,15 @@ using UnityEngine;
 using ISX.Net35Compatibility;
 #endif
 
+////TODO: rename 'overrides' to 'replaces'
+
 ////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
 
 ////TODO: ensure that if a template sets a device description, it is indeed a device template
 
 ////TODO: array support
+
+////REVIEW: common usages are on all templates but only make sense for devices
 
 namespace ISX
 {
@@ -219,6 +223,11 @@ namespace ISX
             get { return m_ExtendsTemplate; }
         }
 
+        public ReadOnlyArray<InternedString> commonUsages
+        {
+            get { return new ReadOnlyArray<InternedString>(m_CommonUsages); }
+        }
+
         // Unlike in a normal device descriptor, the strings in this descriptor are
         // regular expressions which can be used to match against the strings of an
         // actual device descriptor.
@@ -392,33 +401,30 @@ namespace ISX
         public static InputTemplate FromType(string name, Type type)
         {
             var controlTemplates = new List<ControlTemplate>();
+            var templateAttribute = type.GetCustomAttribute<InputTemplateAttribute>(true);
 
-            ////TODO: allow InputControl-derived classes to communicate their state type code
-            // If it's a device with an InputStructAttribute, add control templates
-            // from its state (if present) instead of from the device.
-            var isDeviceWithStateAttribute = false;
-            var format = new FourCC();
-            if (typeof(InputDevice).IsAssignableFrom(type))
+            // If there's an InputTemplateAttribute on the type that has 'stateType' set,
+            // add control templates from its state (if present) instead of from the type.
+            var stateFormat = new FourCC();
+            if (templateAttribute != null && templateAttribute.stateType != null)
             {
-                var stateAttribute = type.GetCustomAttribute<InputStateAttribute>(true);
-                if (stateAttribute != null)
-                {
-                    isDeviceWithStateAttribute = true;
-                    AddControlTemplates(stateAttribute.type, controlTemplates, name);
+                AddControlTemplates(templateAttribute.stateType, controlTemplates, name);
 
-                    // Get state type code from state struct.
-                    if (typeof(IInputStateTypeInfo).IsAssignableFrom(stateAttribute.type))
-                    {
-                        format = ((IInputStateTypeInfo)Activator.CreateInstance(stateAttribute.type))
-                            .GetFormat();
-                    }
+                // Get state type code from state struct.
+                if (typeof(IInputStateTypeInfo).IsAssignableFrom(templateAttribute.stateType))
+                {
+                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(templateAttribute.stateType))
+                        .GetFormat();
                 }
             }
-            if (!isDeviceWithStateAttribute)
+            else
             {
                 // Add control templates from type contents.
                 AddControlTemplates(type, controlTemplates, name);
             }
+
+            if (templateAttribute != null && templateAttribute.stateFormat != new FourCC())
+                stateFormat = templateAttribute.stateFormat;
 
             ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json templates as well)
             ////TODO: make sure all paths are unique (only relevant for JSON templates?)
@@ -426,7 +432,11 @@ namespace ISX
             // Create template object.
             var template = new InputTemplate(name, type);
             template.m_Controls = controlTemplates.ToArray();
-            template.m_StateFormat = format;
+            template.m_StateFormat = stateFormat;
+
+            if (templateAttribute != null && templateAttribute.commonUsages != null)
+                template.m_CommonUsages =
+                    ArrayHelpers.Select(templateAttribute.commonUsages, x => new InternedString(x));
 
             return template;
         }
@@ -453,7 +463,8 @@ namespace ISX
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;
         private InternedString m_ExtendsTemplate;
-        private string[] m_OverridesTemplates;
+        private InternedString[] m_OverridesTemplates;
+        private InternedString[] m_CommonUsages;
         internal ControlTemplate[] m_Controls;
         private InputDeviceDescription m_DeviceDescription;
         internal string m_DisplayName;
@@ -848,6 +859,8 @@ namespace ISX
             if (string.IsNullOrEmpty(m_ResourceName))
                 m_ResourceName = other.m_ResourceName;
 
+            m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
+
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
             else
@@ -1039,7 +1052,7 @@ namespace ISX
             public string[] overrides;
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
-            public string[] usages;////TODO: this isn't implemented
+            public string[] commonUsages;
             public string displayName;
             public string resourceName;
             public string type; // This is mostly for when we turn arbitrary InputTemplates into JSON; less for templates *coming* from JSON.
@@ -1095,14 +1108,20 @@ namespace ISX
                         throw new Exception(string.Format("Invalid beforeRender setting '{0}'", beforeRender));
                 }
 
+                // Add common usages.
+                if (commonUsages != null)
+                {
+                    template.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
+                }
+
                 // Add overrides.
                 if (!string.IsNullOrEmpty(@override) || overrides != null)
                 {
-                    var names = new List<string>();
+                    var names = new List<InternedString>();
                     if (!string.IsNullOrEmpty(@override))
-                        names.Add(@override);
+                        names.Add(new InternedString(@override));
                     if (overrides != null)
-                        names.AddRange(overrides);
+                        names.AddRange(overrides.Select(x => new InternedString(x)));
                     template.m_OverridesTemplates = names.ToArray();
                 }
 

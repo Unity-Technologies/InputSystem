@@ -145,7 +145,7 @@ namespace ISX
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
     /// <seealso cref="GamepadState"/>
-    [InputState(typeof(GamepadState))]
+    [InputTemplate(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice
     {
         // Given that the north/east/south/west directions are awkward to use,

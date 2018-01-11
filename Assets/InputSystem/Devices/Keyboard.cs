@@ -311,7 +311,7 @@ namespace ISX
     /// <see cref="KeyControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
-    [InputState(typeof(KeyboardState))]
+    [InputTemplate(stateType = typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
         ////REVIEW: really expose this stuff?

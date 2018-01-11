@@ -4,8 +4,9 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-////TODO: add means to pick specific device index or device role
-////      (toolbar button with a dropdown menu with "By Index" and "By Role" entries?)
+////TODO: add means to pick specific device index
+
+////TODO: add usages actually used by a template also to the list of controls of the template
 
 namespace ISX.Editor
 {
@@ -42,9 +43,9 @@ namespace ISX.Editor
         private void DrawToolbar()
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
-            GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
+            GUILayout.Label("Controls", GUILayout.MinWidth(75), GUILayout.ExpandWidth(false));
 
-            var searchRect = GUILayoutUtility.GetRect(GUIContent.none, Styles.toolbarSearchField, GUILayout.MinWidth(80));
+            var searchRect = GUILayoutUtility.GetRect(GUIContent.none, Styles.toolbarSearchField, GUILayout.MinWidth(70));
             GUI.SetNextControlName("SearchField");
             m_PathTree.searchString = EditorGUI.TextField(searchRect, m_PathTree.searchString, Styles.toolbarSearchField);
             if (!m_FirstRenderCompleted)
@@ -76,11 +77,18 @@ namespace ISX.Editor
         {
             private InputControlPicker m_Parent;
 
+            private const int kUsagePopupWidth = 75;
+            private static GUIContent s_NoUsage = new GUIContent("<Any>");
+
             private class Item : TreeViewItem
             {
                 public string usage;
                 public string device;
-                public string control;
+                public string controlPath;
+                public InputTemplate template;
+                public GUIContent[] popupOptions;
+                public int[] popupValues;
+                public int selectedPopupOption;
             }
 
             public PathTreeView(TreeViewState state, InputControlPicker parent)
@@ -92,20 +100,52 @@ namespace ISX.Editor
 
             protected override void RowGUI(RowGUIArgs args)
             {
-                // If we're searching ATM, display the full path of controls. It's confusing to see
+                var item = args.item as Item;
+
+                // If we're searching ATM, display the full path of controls. Otherwise it's confusing to see
                 // two "leftButton" controls show up in the list and now know where they are coming from.
-                if (hasSearch)
+                if (hasSearch && item != null && item.controlPath != null)
                 {
-                    var item = args.item as Item;
-                    if (item != null && item.control != null)
+                    var indent = GetContentIndent(item);
+                    var rect = args.rowRect;
+                    rect.x += indent;
+                    rect.width -= indent;
+                    EditorGUI.LabelField(rect, string.Format("{0}/{1}", item.device, item.controlPath));
+                    return;
+                }
+
+                // If the item is a device and it has usages associated with it, show a popup.
+                if (item != null
+                    && item.device != null
+                    && item.controlPath == null
+                    && item.template.commonUsages.Count > 0)
+                {
+                    // On first render, create popup options.
+                    if (item.popupOptions == null)
                     {
-                        var indent = GetContentIndent(item);
-                        var rect = args.rowRect;
-                        rect.x += indent;
-                        rect.width -= indent;
-                        EditorGUI.LabelField(rect, string.Format("{0}/{1}", item.device, item.control));
-                        return;
+                        var usageCount = item.template.commonUsages.Count;
+                        var options = new GUIContent[usageCount + 1];
+                        var values = new int[usageCount + 1];
+
+                        options[0] = s_NoUsage;
+                        values[0] = 0;
+
+                        for (var i = 0; i < usageCount; ++i)
+                        {
+                            options[i + 1] = new GUIContent(item.template.commonUsages[i].ToString());
+                            values[i + 1] = i + 1;
+                        }
+
+                        item.popupOptions = options;
+                        item.popupValues = values;
                     }
+
+                    // Show popup.
+                    var rect = args.rowRect;
+                    rect.x = rect.x + rect.width - kUsagePopupWidth - 2;
+                    rect.width = kUsagePopupWidth;
+                    item.selectedPopupOption = EditorGUI.IntPopup(rect, item.selectedPopupOption, item.popupOptions,
+                            item.popupValues, EditorStyles.miniButton);
                 }
 
                 base.RowGUI(args);
@@ -121,10 +161,20 @@ namespace ISX.Editor
                     String path = null;
                     if (item.usage != null)
                         path = string.Format("*/{{{0}}}", item.usage);
-                    else if (item.device != null && item.control != null)
-                        path = string.Format("<{0}>/{1}", item.device, item.control);
-                    else if (item.device != null)
-                        path = string.Format("<{0}>", item.device);
+                    else
+                    {
+                        var deviceUsage = "";
+                        if (item.selectedPopupOption != 0)
+                        {
+                            deviceUsage = string.Format("{{{0}}}",
+                                    item.template.commonUsages[item.selectedPopupOption - 1]);
+                        }
+
+                        if (item.controlPath != null)
+                            path = string.Format("<{0}>{1}/{2}", item.device, deviceUsage, item.controlPath);
+                        else if (item.device != null)
+                            path = string.Format("<{0}>{1}", item.device, deviceUsage);
+                    }
 
                     if (path != null)
                     {
@@ -202,7 +252,8 @@ namespace ISX.Editor
                     displayName = template.name,
                     id = id++,
                     depth = 0,
-                    device = template.name
+                    device = template.name,
+                    template = template
                 };
 
                 BuildControlsRecursive(deviceRoot, template, string.Empty, ref id);
@@ -210,7 +261,7 @@ namespace ISX.Editor
                 return deviceRoot;
             }
 
-            private void BuildControlsRecursive(TreeViewItem parent, InputTemplate template, string prefix, ref int id)
+            private void BuildControlsRecursive(Item parent, InputTemplate template, string prefix, ref int id)
             {
                 ////TODO: filter out output controls
                 foreach (var control in template.controls)
@@ -228,8 +279,9 @@ namespace ISX.Editor
                         id = id++,
                         depth = 1,
                         displayName = controlPath,
-                        device = parent.displayName, ////REVIEW: this seems pointless
-                        control = controlPath
+                        device = parent.template.name,
+                        controlPath = controlPath,
+                        template = template
                     };
 
                     var childTemplate = EditorInputTemplateCache.TryGetTemplate(control.template);

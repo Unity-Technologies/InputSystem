@@ -75,7 +75,7 @@ namespace ISX
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputState(typeof(PointerState))]
+    [InputTemplate(stateType = typeof(PointerState))]
     public class Pointer : InputDevice
     {
         ////REVIEW: shouldn't this be done for every touch position, too?

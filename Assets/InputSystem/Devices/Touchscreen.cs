@@ -102,7 +102,7 @@ namespace ISX
     /// <summary>
     /// A multi-touch surface.
     /// </summary>
-    [InputState(typeof(TouchscreenState))]
+    [InputTemplate(stateType = typeof(TouchscreenState))]
     public class Touchscreen : Pointer
     {
         /// <summary>

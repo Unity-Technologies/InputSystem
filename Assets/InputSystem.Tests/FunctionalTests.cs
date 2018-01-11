@@ -241,6 +241,34 @@ public class FunctionalTests : InputTestFixture
         Assert.That(device.leftStick.x.clamp, Is.True);
     }
 
+    [InputTemplate(commonUsages = new[] { "LeftHand", "RightHand" })]
+    class DeviceWithCommonUsages : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_CanSpecifyCommonUsagesForDevices()
+    {
+        const string derivedJson = @"
+            {
+                ""name"" : ""DerivedDevice"",
+                ""extend"" : ""BaseDevice"",
+                ""commonUsages"" : [ ""LeftToe"" ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(typeof(DeviceWithCommonUsages), "BaseDevice");
+        InputSystem.RegisterTemplate(derivedJson);
+
+        var template = InputSystem.TryLoadTemplate("DerivedDevice");
+
+        Assert.That(template.commonUsages, Has.Count.EqualTo(3));
+        Assert.That(template.commonUsages[0], Is.EqualTo(CommonUsages.LeftHand));
+        Assert.That(template.commonUsages[1], Is.EqualTo(CommonUsages.RightHand));
+        Assert.That(template.commonUsages[2], Is.EqualTo(new InternedString("LeftToe")));
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_CanFindTemplateFromDeviceDescription()
@@ -487,7 +515,7 @@ public class FunctionalTests : InputTestFixture
             return new FourCC('T', 'E', 'S', 'T');
         }
     }
-    [InputState(typeof(StateStructWithPrimitiveFields))]
+    [InputTemplate(stateType = typeof(StateStructWithPrimitiveFields))]
     class DeviceWithStateStructWithPrimitiveFields : InputDevice
     {
     }
@@ -3232,7 +3260,7 @@ public class FunctionalTests : InputTestFixture
         }
     }
 
-    [InputState(typeof(CustomDeviceState))]
+    [InputTemplate(stateType = typeof(CustomDeviceState))]
     class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
@@ -5448,7 +5476,7 @@ public class FunctionalTests : InputTestFixture
             return new FourCC("BASE");
         }
     }
-    [InputState(typeof(BaseInputState))]
+    [InputTemplate(stateType = typeof(BaseInputState))]
     class BaseInputDevice : InputDevice
     {
     }
@@ -5460,7 +5488,7 @@ public class FunctionalTests : InputTestFixture
             return new FourCC("DERI");
         }
     }
-    [InputState(typeof(DerivedInputState))]
+    [InputTemplate(stateType = typeof(DerivedInputState))]
     class DerivedInputDevice : InputDevice
     {
     }

@@ -4,7 +4,7 @@ namespace ISX.DualShock
     {
     }
 
-    [InputState(typeof(DualShockGamepadState))]
+    [InputTemplate(stateType = typeof(DualShockGamepadState))]
     public class DualShockGamepad : Gamepad
     {
         public Vector3Control gyro { get; private set; }

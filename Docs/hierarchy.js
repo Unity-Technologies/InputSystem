@@ -4,6 +4,7 @@ var hierarchy =
     [ "ISX.LowLevel.ConfigChangeEvent", "structISX_1_1LowLevel_1_1ConfigChangeEvent.html", null ],
     [ "ISX.LowLevel.ConnectEvent", "structISX_1_1LowLevel_1_1ConnectEvent.html", null ],
     [ "ISX.InputTemplate.ControlTemplate", "structISX_1_1InputTemplate_1_1ControlTemplate.html", null ],
+    [ "ISX.Editor.EditorInputTemplateCache", "classISX_1_1Editor_1_1EditorInputTemplateCache.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],
     [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
     [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
@@ -66,6 +67,7 @@ var hierarchy =
     [ "ISX.LowLevel.InputStateBlock", "structISX_1_1LowLevel_1_1InputStateBlock.html", null ],
     [ "ISX.InputSystem", "classISX_1_1InputSystem.html", null ],
     [ "ISX.InputTemplate", "classISX_1_1InputTemplate.html", null ],
+    [ "ISX.InputTemplateAttribute", "classISX_1_1InputTemplateAttribute.html", null ],
     [ "ISX.InputTestFixture", "classISX_1_1InputTestFixture.html", null ],
     [ "ISX.Utilities.InternedString", "structISX_1_1Utilities_1_1InternedString.html", null ],
     [ "ISX.InputRemoting.Message", "structISX_1_1InputRemoting_1_1Message.html", null ],
@@ -80,5 +82,7 @@ var hierarchy =
     [ "ISX.Utilities.ReadOnlyArray< ParameterValue >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ISX.LowLevel.StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", null ],
     [ "ISX.TouchscreenState", "structISX_1_1TouchscreenState.html", null ],
-    [ "ISX.XInput.XInputSupport", "classISX_1_1XInput_1_1XInputSupport.html", null ]
+    [ "ISX.XInput.XInputSupport", "classISX_1_1XInput_1_1XInputSupport.html", null ],
+    [ "ISX.XRController", "classISX_1_1XRController.html", null ],
+    [ "ISX.XRControllerState", "structISX_1_1XRControllerState.html", null ]
 ];
