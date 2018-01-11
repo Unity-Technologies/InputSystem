@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
+////TODO: reordering support for modifiers
+
 namespace ISX.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
@@ -159,7 +161,7 @@ namespace ISX.Editor
                 if (!string.IsNullOrEmpty(modifierString))
                     m_Modifiers = InputTemplate.ParseNameAndParameterList(modifierString);
                 else
-                    m_Modifiers = new InputTemplate.NameAndParameters[0]; //Array.Empty<InputTemplate.NameAndParameters>();
+                    m_Modifiers = new InputTemplate.NameAndParameters[0];
 
                 InitializeModifierListView();
             }
@@ -208,6 +210,7 @@ namespace ISX.Editor
             {
                 ArrayHelpers.Append(ref m_Modifiers,
                     new InputTemplate.NameAndParameters {name = (string)modifierNameString});
+                m_ModifierListView.list = m_Modifiers;
                 ApplyModifiers();
             }
 
@@ -245,7 +248,13 @@ namespace ISX.Editor
                 m_ModifierListView.onRemoveCallback =
                     (list) =>
                     {
-                        ArrayHelpers.EraseAt(ref m_Modifiers, list.index);
+                        var indexToRemove = list.index;
+                        if (indexToRemove == m_Modifiers.Length - 1)
+                            --list.index;
+                        ArrayHelpers.EraseAt(ref m_Modifiers, indexToRemove);
+                        if (m_Modifiers == null)
+                            m_Modifiers = new InputTemplate.NameAndParameters[0];
+                        list.list = m_Modifiers;
                         ApplyModifiers();
                     };
             }

@@ -8,6 +8,8 @@ using ISX.Utilities;
 ////        it away after the creation of every single device; best approach may be to just
 ////        reuse the same InputControlSetup instance over and over
 
+////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
+
 namespace ISX
 {
     // Turns a template into a control hierarchy.
