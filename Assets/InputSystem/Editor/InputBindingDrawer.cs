@@ -66,10 +66,15 @@ namespace ISX.Editor
         ////TODO: move this out into a general routine that can take a path and construct a display name
         private GUIContent GetContentForPath(string path, string modifiers, InputBinding.Flags flags)
         {
+            const int kUsageNameGroup = 1;
+            const int kDeviceNameGroup = 1;
+            const int kDeviceUsageGroup = 3;
+            const int kControlPathGroup = 4;
+
             if (s_UsageRegex == null)
                 s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
             if (s_ControlRegex == null)
-                s_ControlRegex = new Regex("<([A-Za-z0-9]+)>/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
+                s_ControlRegex = new Regex("<([A-Za-z0-9]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
 
             var text = path;
 
@@ -83,19 +88,23 @@ namespace ISX.Editor
             var usageMatch = s_UsageRegex.Match(path);
             if (usageMatch.Success)
             {
-                text = usageMatch.Groups[1].Value;
+                text = usageMatch.Groups[kUsageNameGroup].Value;
             }
             else
             {
                 var controlMatch = s_ControlRegex.Match(path);
                 if (controlMatch.Success)
                 {
-                    var device = controlMatch.Groups[1].Value;
-                    var control = controlMatch.Groups[2].Value;
+                    var device = controlMatch.Groups[kDeviceNameGroup].Value;
+                    var deviceUsage = controlMatch.Groups[kDeviceUsageGroup].Value;
+                    var control = controlMatch.Groups[kControlPathGroup].Value;
 
                     ////TODO: would be nice to include template name to print something like "Gamepad A Button" instead of "Gamepad A" (or whatever)
 
-                    text = string.Format("{0} {1}", device, control);
+                    if (!string.IsNullOrEmpty(deviceUsage))
+                        text = string.Format("{0} {1} {2}", deviceUsage, device, control);
+                    else
+                        text = string.Format("{0} {1}", device, control);
                 }
             }
 

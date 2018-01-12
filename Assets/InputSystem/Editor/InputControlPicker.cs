@@ -8,6 +8,8 @@ using UnityEngine;
 
 ////TODO: add usages actually used by a template also to the list of controls of the template
 
+////TODO: prime picker with currently selected control (also with usage on device)
+
 namespace ISX.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate
@@ -163,11 +165,15 @@ namespace ISX.Editor
                         path = string.Format("*/{{{0}}}", item.usage);
                     else
                     {
+                        // See if usage is set on device.
                         var deviceUsage = "";
-                        if (item.selectedPopupOption != 0)
+                        var deviceItem = item;
+                        if (item.controlPath != null)
+                            deviceItem = item.parent as Item;
+                        if (deviceItem != null && deviceItem.selectedPopupOption != 0)
                         {
                             deviceUsage = string.Format("{{{0}}}",
-                                    item.template.commonUsages[item.selectedPopupOption - 1]);
+                                    deviceItem.template.commonUsages[deviceItem.selectedPopupOption - 1]);
                         }
 
                         if (item.controlPath != null)

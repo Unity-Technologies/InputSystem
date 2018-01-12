@@ -4,6 +4,8 @@ using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: rename control properties on Keyboard to 'aKey' (instead of just 'a') etc?
+
 namespace ISX
 {
     /// <summary>
