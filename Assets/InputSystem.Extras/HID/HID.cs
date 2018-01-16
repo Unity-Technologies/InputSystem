@@ -5,13 +5,6 @@ using UnityEngine;
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
-////FIXME: ATM both the Windows and the OSX HID backend list elements in the HID descriptors in an
-////       order different from what's on the device. This means that the offsets we compute are incorrect.
-////       I think ideally we should get rid of the implicit layouting inherent in HID descriptors and
-////       require native backends to supply offset information to us. This way they can list the elements
-////       however they want. Unfortunately, neither the Windows nor the OSX HID APIs make this information
-////       readily available.
-
 namespace ISX.HID
 {
     /// <summary>
@@ -29,8 +22,19 @@ namespace ISX.HID
         public const string kHIDNamespace = "HID";
 
         /// <summary>
-        /// The HID device descriptor as received from the device driver.
+        /// The HID device descriptor as received from the system.
         /// </summary>
+        /// <remarks>
+        /// Note that platform-specific backends for HID are tied to the HID APIs that are provided
+        /// on each platform. These APIs often have their own idiosyncrasies and process HID descriptors
+        /// using their own parser. Thus, the descriptor we see may not have the exact same form as it
+        /// appears on the hardware or driver level.
+        /// 
+        /// On Windows, the HID API will not provide information about vendor-defined elements present
+        /// in the HID descriptor. These elements will still appears as entries in the descriptor but will
+        /// have only the <see cref="HIDElementDescriptor.usagePage"/> (set to <see cref="UsagePage.VendorDefined"/>
+        /// and <see cref="HIDElementDescriptor.reportType"/> field filled out.
+        /// </remarks>
         public HIDDeviceDescriptor hidDescriptor
         {
             get
@@ -126,6 +130,35 @@ namespace ISX.HID
             InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, description);
 
             return templateName;
+        }
+
+        public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
+        {
+            const string kVendorDefined = "Vendor-Defined";
+            
+            if ( ( int ) usagePage >= 0xFF00 )
+            {
+                usagePageString = kVendorDefined;
+                usageString = kVendorDefined;
+                return true;
+            }
+            
+            usagePageString = usagePage.ToString();
+            usageString = null;
+            
+            switch (usagePage)
+            {
+                case UsagePage.GenericDesktop:
+                    usageString = ((GenericDesktop)usage).ToString();
+                    break;
+                case UsagePage.Simulation:
+                    usageString = ((Simulation)usage).ToString();
+                    break;
+                default:
+                    return false;
+            }
+
+            return true;
         }
 
         [Serializable]
@@ -231,9 +264,9 @@ namespace ISX.HID
 
             internal string DetermineName()
             {
-                if (!string.IsNullOrEmpty(name))
-                    return name;
-
+                // Element names are often bogus and we have no guarantee they are unique so we just ignore them
+                // and do our own naming here.
+                
                 switch (usagePage)
                 {
                     case UsagePage.Button:
@@ -242,7 +275,7 @@ namespace ISX.HID
                         return ((GenericDesktop)usage).ToString();
                 }
 
-                return null;
+                return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
             }
 
             internal string DetermineTemplate()
@@ -266,7 +299,24 @@ namespace ISX.HID
                             case (int)GenericDesktop.Rx:
                             case (int)GenericDesktop.Ry:
                             case (int)GenericDesktop.Rz:
+                            case (int)GenericDesktop.Vx:
+                            case (int)GenericDesktop.Vy:
+                            case (int)GenericDesktop.Vz:
+                            case (int)GenericDesktop.Vbrx:
+                            case (int)GenericDesktop.Vbry:
+                            case (int)GenericDesktop.Vbrz:
+                            case (int)GenericDesktop.Slider:
+                            case (int)GenericDesktop.Dial:
+                            case (int)GenericDesktop.Wheel:
                                 return "Axis";
+                                
+                            case (int)GenericDesktop.Select:
+                            case (int)GenericDesktop.Start:
+                            case (int)GenericDesktop.DpadUp:
+                            case (int)GenericDesktop.DpadDown:
+                            case (int)GenericDesktop.DpadLeft:
+                            case (int)GenericDesktop.DpadRight:
+                                return "Button";
                         }
                         break;
                 }
@@ -292,6 +342,8 @@ namespace ISX.HID
             {
                 if (usagePage == UsagePage.Button && usage == 0)
                     control.WithUsages(new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction});
+                if (usagePage == UsagePage.Button && usage == 1)
+                    control.WithUsages(new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction});
             }
         }
 
@@ -332,8 +384,16 @@ namespace ISX.HID
             }
         }
 
+        /// <summary>
+        /// Enumeration of HID usage pages.
+        /// </summary>00
+        /// <remarks>
+        /// Note that some of the values are actually ranges.
+        /// </remarks>
+        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum UsagePage
         {
+            Undefined = 0x00,
             GenericDesktop = 0x01,
             Simulation = 0x02,
             VRControls = 0x03,
@@ -351,11 +411,22 @@ namespace ISX.HID
             Unicode = 0x10,
             AlphanumericDisplay = 0x14,
             MedicalInstruments = 0x40,
+            Monitor = 0x80, // Starts here and goes up to 0x83.
+            Power = 0x84, // Starts here and goes up to 0x87.
+            BarCodeScanner = 0x8C,
+            MagneticStripeReader = 0x8E,
+            Camera = 0x90,
+            Arcade = 0x91,
+            VendorDefined = 0xFF00, // Starts here and goes up to 0xFFFF.
         }
 
-        // See http://www.usb.org/developers/hidpage/Hut1_12v2.pdf.
+        /// <summary>
+        /// Usages in the GenericDesktop HID usage page.
+        /// </summary>
+        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum GenericDesktop
         {
+            Undefined = 0x00,
             Pointer = 0x01,
             Mouse = 0x02,
             Joystick = 0x04,
@@ -378,7 +449,7 @@ namespace ISX.HID
             ByteCount = 0x3B,
             MotionWakeup = 0x3C,
             Start = 0x3D,
-            Selectd = 0x3E,
+            Select = 0x3E,
             Vx = 0x40,
             Vy = 0x41,
             Vz = 0x42,
@@ -429,6 +500,7 @@ namespace ISX.HID
 
         public enum Simulation
         {
+            Undefined = 0x00,
             FlightSimulationDevice = 0x01,
             AutomobileSimulationDevice = 0x02,
             TankSimulationDevice = 0x03,
@@ -484,7 +556,8 @@ namespace ISX.HID
 
         public enum Button
         {
-            Primary = 1,
+            Undefined = 0,
+            Primary,
             Secondary,
             Tertiary
         }

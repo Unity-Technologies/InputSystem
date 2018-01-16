@@ -74,7 +74,7 @@ namespace ISX.Editor
             if (s_UsageRegex == null)
                 s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
             if (s_ControlRegex == null)
-                s_ControlRegex = new Regex("<([A-Za-z0-9]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
+                s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
 
             var text = path;
 

@@ -5,6 +5,8 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
+////TODO: use two columns for treeview and separate name and value
+
 namespace ISX.HID.Editor
 {
     // A window that dumps a raw HID descriptor in a tree view.
@@ -166,8 +168,16 @@ namespace ISX.HID.Editor
             {
                 var item = AddChild(parent, string.Format("Element {0} ({1})", index, element.reportType), ref id);
 
-                AddChild(item, string.Format("Usage Page: 0x{0:X} ({1})", (uint)element.usagePage, element.usagePage), ref id);
-                AddChild(item, string.Format("Usage: 0x{0:X}", element.usage), ref id);
+                string usagePageString;
+                string usageString;
+                HID.UsageToString( element.usagePage, element.usage, out usagePageString, out usageString );
+
+                AddChild(item, string.Format("Usage Page: 0x{0:X} ({1})", (uint)element.usagePage, usagePageString), ref id);
+                if (usageString != null)
+                    AddChild(item, string.Format("Usage: 0x{0:X} ({1})", element.usage, usageString), ref id);
+                else
+                    AddChild(item, string.Format("Usage: 0x{0:X}", element.usage), ref id);
+                
                 AddChild(item, "Report Type: " + element.reportType, ref id);
                 AddChild(item, "Report ID: " + element.reportId, ref id);
                 AddChild(item, "Report Size in Bits: " + element.reportSizeInBits, ref id);
