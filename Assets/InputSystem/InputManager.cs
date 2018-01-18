@@ -5,7 +5,6 @@ using System.Reflection;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Profiling;
-using UnityEngineInternal.Input;
 using ISX.LowLevel;
 using ISX.Modifiers;
 using ISX.Processors;
@@ -86,9 +85,9 @@ namespace ISX
         {
             add
             {
-                if (!m_NativeBeforeUpdateHooked && m_GlobalsInstalled)
+                if (!m_NativeBeforeUpdateHooked)
                 {
-                    NativeInputSystem.onBeforeUpdate = OnNativeBeforeUpdate;
+                    m_Runtime.onBeforeUpdate = OnBeforeUpdate;
                     m_NativeBeforeUpdateHooked = true;
                 }
                 m_UpdateListeners.Append(value);
@@ -821,7 +820,7 @@ namespace ISX
                     "Description must have at least one of 'product', 'manufacturer', or 'deviceClass'",
                     "description");
 
-            var deviceId = NativeInputSystem.AllocateDeviceId();
+            var deviceId = m_Runtime.AllocateDeviceId();
             ReportAvailableDevice(description, deviceId);
         }
 
@@ -930,12 +929,17 @@ namespace ISX
             return result;
         }
 
+        public void QueueEvent(InputEventPtr ptr)
+        {
+            m_Runtime.QueueEvent(ptr.data);
+        }
+
         public void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            NativeInputSystem.QueueInputEvent(ref inputEvent);
+            m_Runtime.QueueEvent(UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()
@@ -945,43 +949,28 @@ namespace ISX
 
         public void Update(InputUpdateType updateType)
         {
-            if ((updateType & InputUpdateType.Dynamic) == InputUpdateType.Dynamic)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Dynamic);
-            }
-            if ((updateType & InputUpdateType.Fixed) == InputUpdateType.Fixed)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Fixed);
-            }
-            if ((updateType & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.BeforeRender);
-            }
-#if UNITY_EDITOR
-            if ((updateType & InputUpdateType.Editor) == InputUpdateType.Editor)
-            {
-                NativeInputSystem.Update(NativeInputUpdateType.Editor);
-            }
-#endif
+            m_Runtime.Update(updateType);
         }
 
-        internal void Initialize()
+        internal void Initialize(IInputRuntime runtime)
         {
             InitializeData();
+            InstallRuntime(runtime);
             InstallGlobals();
         }
 
         internal void Destroy()
         {
-            if (m_GlobalsInstalled)
-            {
+            if (ReferenceEquals(InputTemplate.s_Templates.baseTemplateTable, m_Templates.baseTemplateTable))
                 InputTemplate.s_Templates = new InputTemplate.Collection();
+            if (ReferenceEquals(InputProcessor.s_Processors, m_Processors))
                 InputProcessor.s_Processors = null;
-                NativeInputSystem.onUpdate = null;
-                NativeInputSystem.onDeviceDiscovered = null;
-                NativeInputSystem.onBeforeUpdate = null;
 
-                m_GlobalsInstalled = false;
+            if (m_Runtime != null)
+            {
+                m_Runtime.onUpdate = null;
+                m_Runtime.onDeviceDiscovered = null;
+                m_Runtime.onBeforeUpdate = null;
             }
         }
 
@@ -1059,20 +1048,32 @@ namespace ISX
             RegisterModifier("Swipe", typeof(SwipeModifier));
         }
 
+        internal void InstallRuntime(IInputRuntime runtime)
+        {
+            if (m_Runtime != null)
+            {
+                m_Runtime.onUpdate = null;
+                m_Runtime.onBeforeUpdate = null;
+                m_Runtime.onDeviceDiscovered = null;
+            }
+
+            m_Runtime = runtime;
+            m_Runtime.onUpdate = OnUpdate;
+            m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
+
+            // We only hook NativeInputSystem.onBeforeUpdate if necessary.
+            if (m_UpdateListeners.Count > 0)
+            {
+                m_Runtime.onBeforeUpdate = OnBeforeUpdate;
+                m_NativeBeforeUpdateHooked = true;
+            }
+        }
+
         // Revive after domain reload.
         internal void InstallGlobals()
         {
             InputTemplate.s_Templates = m_Templates;
             InputProcessor.s_Processors = m_Processors;
-
-            NativeInputSystem.onUpdate = OnNativeUpdate;
-            NativeInputSystem.onDeviceDiscovered = OnNativeDeviceDiscovered;
-
-            // We only hook NativeInputSystem.onBeforeUpdate if necessary.
-            if (!m_NativeBeforeUpdateHooked && m_UpdateListeners.Count > 0)
-                NativeInputSystem.onBeforeUpdate = OnNativeBeforeUpdate;
-
-            m_GlobalsInstalled = true;
         }
 
         // Bundles a template name and a device description.
@@ -1129,9 +1130,10 @@ namespace ISX
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
 
-        [NonSerialized] private bool m_GlobalsInstalled;
         [NonSerialized] private bool m_PluginsInitialized;
         [NonSerialized] private InlinedArray<IInputPluginManager> m_PluginManagers;
+
+        [NonSerialized] private IInputRuntime m_Runtime;
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
@@ -1353,7 +1355,7 @@ namespace ISX
             }
             else
             {
-                device.m_Id = NativeInputSystem.AllocateDeviceId();
+                device.m_Id = m_Runtime.AllocateDeviceId();
             }
         }
 
@@ -1379,26 +1381,26 @@ namespace ISX
             ////TODO: need to update state change monitors
         }
 
-        private void OnNativeDeviceDiscovered(NativeInputDeviceInfo deviceInfo)
+        private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
             if (!m_PluginsInitialized)
                 InitializePlugins();
 
             // Parse description.
-            var description = InputDeviceDescription.FromJson(deviceInfo.deviceDescriptor);
+            var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
             // Report it.
-            ReportAvailableDevice(description, deviceInfo.deviceId, isNative: true);
+            ReportAvailableDevice(description, deviceId, isNative: true);
         }
 
-        private void OnNativeBeforeUpdate(NativeInputUpdateType updateType)
+        private void OnBeforeUpdate(InputUpdateType updateType)
         {
             if (!m_PluginsInitialized)
                 InitializePlugins();
 
             ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_UpdateListeners.Count; ++i)
-                m_UpdateListeners[i]((InputUpdateType)updateType);
+                m_UpdateListeners[i](updateType);
         }
 
         // When we have the C# job system, this should be a job and NativeInputSystem should double
@@ -1409,7 +1411,7 @@ namespace ISX
         //
         // NOTE: Update types do *NOT* say what the events we receive are for. The update type only indicates
         //       where in the Unity's application loop we got called from.
-        internal unsafe void OnNativeUpdate(NativeInputUpdateType updateType, int eventCount, IntPtr eventData)
+        internal unsafe void OnUpdate(InputUpdateType updateType, int eventCount, IntPtr eventData)
         {
 #if ENABLE_PROFILER
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
@@ -1432,37 +1434,37 @@ namespace ISX
             gameIsPlayingAndHasFocus = InputConfiguration.LockInputToGame ||
                 (UnityEditor.EditorApplication.isPlaying && Application.isFocused);
 
-            if (updateType == NativeInputUpdateType.Editor && gameIsPlayingAndHasFocus)
+            if (updateType == InputUpdateType.Editor && gameIsPlayingAndHasFocus)
             {
                 // For actions, it is important we have play mode buffers active when
                 // fire change notifications.
                 if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
-                    buffersToUseForUpdate = NativeInputUpdateType.Dynamic;
+                    buffersToUseForUpdate = InputUpdateType.Dynamic;
                 else
-                    buffersToUseForUpdate = NativeInputUpdateType.Fixed;
+                    buffersToUseForUpdate = InputUpdateType.Fixed;
             }
 #endif
 
-            m_CurrentUpdate = (InputUpdateType)updateType;
-            m_StateBuffers.SwitchTo((InputUpdateType)buffersToUseForUpdate);
+            m_CurrentUpdate = updateType;
+            m_StateBuffers.SwitchTo(buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (m_ActionTimeouts != null && gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
                 ProcessActionTimeouts();
 
             var isBeforeRenderUpdate = false;
-            if (updateType == NativeInputUpdateType.Dynamic)
+            if (updateType == InputUpdateType.Dynamic)
                 ++m_CurrentDynamicUpdateCount;
-            else if (updateType == NativeInputUpdateType.Fixed)
+            else if (updateType == InputUpdateType.Fixed)
                 ++m_CurrentFixedUpdateCount;
-            else if (updateType == NativeInputUpdateType.BeforeRender)
+            else if (updateType == InputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
 
             // Early out if there's no events to process.
             if (eventCount <= 0)
             {
                 if (buffersToUseForUpdate != updateType)
-                    m_StateBuffers.SwitchTo((InputUpdateType)updateType);
+                    m_StateBuffers.SwitchTo(updateType);
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
@@ -1847,9 +1849,9 @@ namespace ISX
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
         // the given update type.
         // Returns true if there was a buffer flip.
-        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, NativeInputUpdateType updateType, bool gameIsPlayingAndHasFocus)
+        private bool FlipBuffersForDeviceIfNecessary(InputDevice device, InputUpdateType updateType, bool gameIsPlayingAndHasFocus)
         {
-            if (updateType == NativeInputUpdateType.BeforeRender)
+            if (updateType == InputUpdateType.BeforeRender)
             {
                 ////REVIEW: I think this is wrong; if we haven't flipped in the current dynamic or fixed update, we should do so now
                 // We never flip buffers for before render. Instead, we already write
@@ -1861,7 +1863,7 @@ namespace ISX
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
             // fixed updates.
-            if (updateType == NativeInputUpdateType.Editor && !gameIsPlayingAndHasFocus)
+            if (updateType == InputUpdateType.Editor && !gameIsPlayingAndHasFocus)
             {
                 // The editor doesn't really have a concept of frame-to-frame operation the
                 // same way the player does. So we simply flip buffers on a device whenever
@@ -1875,7 +1877,7 @@ namespace ISX
 
             // If it is *NOT* a fixed update, we need to flip for the *next* coming fixed
             // update if we haven't already.
-            if (updateType != NativeInputUpdateType.Fixed &&
+            if (updateType != InputUpdateType.Fixed &&
                 device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount + 1)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
@@ -1885,7 +1887,7 @@ namespace ISX
 
             // If it is *NOT* a dynamic update, we need to flip for the *next* coming
             // dynamic update if we haven't already.
-            if (updateType != NativeInputUpdateType.Dynamic &&
+            if (updateType != InputUpdateType.Dynamic &&
                 device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount + 1)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
@@ -1895,7 +1897,7 @@ namespace ISX
 
             // If it *is* a fixed update and we haven't flipped for the current update
             // yet, do it.
-            if (updateType == NativeInputUpdateType.Fixed &&
+            if (updateType == InputUpdateType.Fixed &&
                 device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
@@ -1905,7 +1907,7 @@ namespace ISX
 
             // If it *is* a dynamic update and we haven't flipped for the current update
             // yet, do it.
-            if (updateType == NativeInputUpdateType.Dynamic &&
+            if (updateType == InputUpdateType.Dynamic &&
                 device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
@@ -2042,9 +2044,9 @@ namespace ISX
             public InputConfiguration.SerializedState configuration;
             public InputUpdateType updateMask;
 
-            // We want to preserve the event listeners across Save() and Restore() but not
-            // across domain reloads. So we put them in here but don't serialize them (and
-            // can't either except if we make them UnityEvents).
+            // The rest is state that we want to preserve across Save() and Restore() but
+            // not across domain reloads.
+
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
             [NonSerialized] public InlinedArray<DeviceFindTemplateListener> deviceDiscoveredListeners;
             [NonSerialized] public InlinedArray<TemplateChangeListener> templateChangeListeners;
@@ -2052,6 +2054,8 @@ namespace ISX
 
             [NonSerialized] public InlinedArray<IInputPluginManager> pluginManagers;
             [NonSerialized] public bool pluginsInitialized;
+
+            [NonSerialized] public IInputRuntime runtime;
         }
 
         internal SerializedState SaveState()
@@ -2134,7 +2138,8 @@ namespace ISX
                 eventListeners = m_EventListeners.Clone(),
                 pluginManagers = m_PluginManagers.Clone(),
                 pluginsInitialized = m_PluginsInitialized,
-                updateMask = m_UpdateMask
+                updateMask = m_UpdateMask,
+                runtime = m_Runtime
             };
 
             // We don't bring monitors along. InputActions and related classes are equipped
@@ -2160,9 +2165,9 @@ namespace ISX
             m_UpdateMask = state.updateMask;
 
             InitializeData();
-
-            InputTemplate.s_Templates = m_Templates;
-            InputProcessor.s_Processors = m_Processors;
+            if (state.runtime != null)
+                InstallRuntime(state.runtime);
+            InstallGlobals();
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);

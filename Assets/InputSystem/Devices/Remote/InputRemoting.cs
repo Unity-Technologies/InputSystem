@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngineInternal.Input;
 using ISX.LowLevel;
 using ISX.Utilities;
 #if !NET_4_0
@@ -581,11 +580,7 @@ namespace ISX
 
             public static unsafe void Process(InputRemoting receiver, Message msg)
             {
-                // This isn't the best solution but should do for now. NativeInputSystem isn't
-                // designed for having multiple InputManagers and we only have that scenario
-                // for tests ATM. So, to make InputManagers that aren't really properly connected
-                // still work for testing, we directly feed them the events we get here.
-                var isConnectedToNative = NativeInputSystem.onUpdate == receiver.m_LocalManager.OnNativeUpdate;
+                var manager = receiver.m_LocalManager;
 
                 fixed(byte* dataPtr = msg.data)
                 {
@@ -601,18 +596,15 @@ namespace ISX
                         var localDeviceId = receiver.FindLocalDeviceId(remoteDeviceId, senderIndex);
                         eventPtr.deviceId = localDeviceId;
 
-                        if (localDeviceId != InputDevice.kInvalidDeviceId && isConnectedToNative)
+                        if (localDeviceId != InputDevice.kInvalidDeviceId)
                         {
                             ////TODO: add API to send events in bulk rather than one by one
-                            InputSystem.QueueEvent(eventPtr);
+                            manager.QueueEvent(eventPtr);
                         }
 
                         ++eventCount;
                         eventPtr = eventPtr.Next();
                     }
-
-                    if (!isConnectedToNative)
-                        receiver.m_LocalManager.OnNativeUpdate(NativeInputUpdateType.Dynamic, eventCount, new IntPtr(dataPtr));
                 }
             }
         }

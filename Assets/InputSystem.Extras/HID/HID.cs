@@ -22,6 +22,11 @@ namespace ISX.HID
         public const string kHIDNamespace = "HID";
 
         /// <summary>
+        ///
+        /// </summary>
+        public static FourCC IOCTLQueryHIDDescriptor { get { return new FourCC('H', 'I', 'D', 'D'); } }
+
+        /// <summary>
         /// The HID device descriptor as received from the system.
         /// </summary>
         /// <remarks>
@@ -29,7 +34,7 @@ namespace ISX.HID
         /// on each platform. These APIs often have their own idiosyncrasies and process HID descriptors
         /// using their own parser. Thus, the descriptor we see may not have the exact same form as it
         /// appears on the hardware or driver level.
-        /// 
+        ///
         /// On Windows, the HID API will not provide information about vendor-defined elements present
         /// in the HID descriptor. These elements will still appears as entries in the descriptor but will
         /// have only the <see cref="HIDElementDescriptor.usagePage"/> (set to <see cref="UsagePage.VendorDefined"/>
@@ -135,17 +140,17 @@ namespace ISX.HID
         public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
         {
             const string kVendorDefined = "Vendor-Defined";
-            
-            if ( ( int ) usagePage >= 0xFF00 )
+
+            if ((int)usagePage >= 0xFF00)
             {
                 usagePageString = kVendorDefined;
                 usageString = kVendorDefined;
                 return true;
             }
-            
+
             usagePageString = usagePage.ToString();
             usageString = null;
-            
+
             switch (usagePage)
             {
                 case UsagePage.GenericDesktop:
@@ -266,7 +271,7 @@ namespace ISX.HID
             {
                 // Element names are often bogus and we have no guarantee they are unique so we just ignore them
                 // and do our own naming here.
-                
+
                 switch (usagePage)
                 {
                     case UsagePage.Button:
@@ -309,7 +314,7 @@ namespace ISX.HID
                             case (int)GenericDesktop.Dial:
                             case (int)GenericDesktop.Wheel:
                                 return "Axis";
-                                
+
                             case (int)GenericDesktop.Select:
                             case (int)GenericDesktop.Start:
                             case (int)GenericDesktop.DpadUp:

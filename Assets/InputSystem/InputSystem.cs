@@ -681,7 +681,6 @@ namespace ISX
             {
                 var index = s_SerializedStateStack.Count - 1;
                 s_Manager.RestoreState(s_SerializedStateStack[index]);
-                s_Manager.InstallGlobals();
                 s_SerializedStateStack.RemoveAt(index);
             }
         }

@@ -10,7 +10,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.TestTools;
-using UnityEngineInternal.Input;
 using ISX.LowLevel;
 using ISX.Modifiers;
 using ISX.Processors;
@@ -2276,7 +2275,7 @@ public class FunctionalTests : InputTestFixture
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
         var description = new InputDeviceDescription {deviceClass = "Gamepad"};
-        var deviceId = NativeInputSystem.ReportNewInputDevice(description.ToJson());
+        var deviceId = testRuntime.ReportNewInputDevice(description.ToJson());
 
         InputSystem.Update();
 
@@ -2440,7 +2439,7 @@ public class FunctionalTests : InputTestFixture
         Assert.That(textReceived, Is.EqualTo("abc"));
     }
 
-    // Getting key information relies on InputDevice.ReadData() to read configuration
+    // Getting key information relies on InputDevice.IOCTL() to read configuration
     // data. This method punches through to native for native devices but has to be
     // implemented in subclasses for scripted devices. As we don't have a native keyboard
     // in tests, we need to provide an implementation here.
@@ -2448,9 +2447,9 @@ public class FunctionalTests : InputTestFixture
     {
         public string currentLayoutName = "default";
 
-        public override unsafe int ReadData(FourCC type, IntPtr buffer, int sizeInBytes)
+        public override unsafe long IOCTL(FourCC code, IntPtr buffer, int sizeInBytes)
         {
-            if (type == KeyControl.KeyConfigCode)
+            if (code == KeyControl.IOCTLGetKeyConfig)
             {
                 if (sizeInBytes < sizeof(int) * 4)
                     return 0;
@@ -2489,14 +2488,15 @@ public class FunctionalTests : InputTestFixture
                     return 0;
                 return (int)offset;
             }
-            else if (type == LayoutConfigCode)
+
+            if (code == IOCTLGetKeyboardLayout)
             {
                 uint offset = 0;
                 if (StringHelpers.WriteStringToBuffer(currentLayoutName, buffer, sizeInBytes, ref offset))
                     return (int)offset;
             }
 
-            return 0;
+            return -1;
         }
     }
 
@@ -3210,13 +3210,13 @@ public class FunctionalTests : InputTestFixture
         var receivedUpdateCalls = 0;
         var receivedEventCount = 0;
 
-        NativeUpdateCallback onUpdate =
+        Action<InputUpdateType, int, IntPtr> onUpdate =
             (updateType, eventCount, eventData) =>
             {
                 ++receivedUpdateCalls;
                 receivedEventCount += eventCount;
             };
-        NativeInputSystem.onUpdate += onUpdate;
+        testRuntime.onUpdate += onUpdate;
 
         InputSystem.Update();
 
@@ -4785,13 +4785,13 @@ public class FunctionalTests : InputTestFixture
         //       entirely from user land but having multiple input systems in the same
         //       application isn't something that we necessarily want to expose (we do
         //       have global state so it can easily lead to surprising results).
-        // NOTE: This second system is *NOT* connected to NativeInputSystem. Running
-        //       updates on it, for example, won't do anything.
-        var secondInputSystem = new InputManager();
-        secondInputSystem.InitializeData();
+        var secondInputRuntime = new InputTestRuntime();
+        var secondInputManager = new InputManager();
+        secondInputManager.InstallRuntime(secondInputRuntime);
+        secondInputManager.InitializeData();
 
         var local = InputSystem.remoting;
-        var remote = new InputRemoting(secondInputSystem);
+        var remote = new InputRemoting(secondInputManager);
 
         // We wire the two directly into each other effectively making function calls
         // our "network transport layer". In a real networking situation, we'd effectively
@@ -4806,34 +4806,37 @@ public class FunctionalTests : InputTestFixture
 
         // Make sure that our "remote" system now has the data we initially
         // set up on the local system.
-        Assert.That(secondInputSystem.devices,
+        Assert.That(secondInputManager.devices,
             Has.Exactly(1).With.Property("template").EqualTo(remoteGamepadTemplate));
-        Assert.That(secondInputSystem.devices, Has.Exactly(2).TypeOf<Gamepad>());
-        Assert.That(secondInputSystem.devices, Has.All.With.Property("remote").True);
+        Assert.That(secondInputManager.devices, Has.Exactly(2).TypeOf<Gamepad>());
+        Assert.That(secondInputManager.devices, Has.All.With.Property("remote").True);
 
         // Send state event to local gamepad.
         InputSystem.QueueStateEvent(localGamepad, new GamepadState { leftTrigger = 0.5f });
         InputSystem.Update();
 
-        // Have second system install its state buffers. Remember that state isn't stored
-        // on the controls so querying controls on remoteGamepad for their values would read
-        // state that is actually owned by the "real" local input system.
-        secondInputSystem.m_StateBuffers.SwitchTo(InputUpdateType.Dynamic);
+        // Make second input manager process the events it got.
+        // NOTE: This will also switch the system to the state buffers from the second input manager.
+        secondInputManager.Update();
 
-        var remoteGamepad = (Gamepad)secondInputSystem.devices.First(x => x.template == remoteGamepadTemplate);
+        var remoteGamepad = (Gamepad)secondInputManager.devices.First(x => x.template == remoteGamepadTemplate);
 
         Assert.That(remoteGamepad.leftTrigger.value, Is.EqualTo(0.5).Within(0.0000001));
+
+        secondInputRuntime.Dispose();
     }
 
     [Test]
     [Category("Remote")]
     public void Remote_ChangingDevicesWhileRemoting_WillSendChangesToRemote()
     {
-        var secondInputSystem = new InputManager();
-        secondInputSystem.InitializeData();
+        var secondInputRuntime = new InputTestRuntime();
+        var secondInputManager = new InputManager();
+        secondInputManager.InstallRuntime(secondInputRuntime);
+        secondInputManager.InitializeData();
 
         var local = InputSystem.remoting;
-        var remote = new InputRemoting(secondInputSystem);
+        var remote = new InputRemoting(secondInputManager);
 
         local.Subscribe(remote);
         remote.Subscribe(local);
@@ -4842,22 +4845,27 @@ public class FunctionalTests : InputTestFixture
 
         // Add device.
         var localGamepad = InputSystem.AddDevice("Gamepad");
+        secondInputManager.Update();
 
-        Assert.That(secondInputSystem.devices, Has.Count.EqualTo(1));
-        var remoteGamepad = secondInputSystem.devices[0];
+        Assert.That(secondInputManager.devices, Has.Count.EqualTo(1));
+        var remoteGamepad = secondInputManager.devices[0];
         Assert.That(remoteGamepad, Is.TypeOf<Gamepad>());
         Assert.That(remoteGamepad.remote, Is.True);
         Assert.That(remoteGamepad.template, Contains.Substring("Gamepad"));
 
         // Change usage.
         InputSystem.SetUsage(localGamepad, CommonUsages.LeftHand);
+        secondInputManager.Update();
         Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
 
         // Bind and disconnect are events so no need to test those.
 
         // Remove device.
         InputSystem.RemoveDevice(localGamepad);
-        Assert.That(secondInputSystem.devices, Has.Count.Zero);
+        secondInputManager.Update();
+        Assert.That(secondInputManager.devices, Has.Count.Zero);
+
+        secondInputRuntime.Dispose();
     }
 
     [Test]

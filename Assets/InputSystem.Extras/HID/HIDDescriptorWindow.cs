@@ -170,14 +170,14 @@ namespace ISX.HID.Editor
 
                 string usagePageString;
                 string usageString;
-                HID.UsageToString( element.usagePage, element.usage, out usagePageString, out usageString );
+                HID.UsageToString(element.usagePage, element.usage, out usagePageString, out usageString);
 
                 AddChild(item, string.Format("Usage Page: 0x{0:X} ({1})", (uint)element.usagePage, usagePageString), ref id);
                 if (usageString != null)
                     AddChild(item, string.Format("Usage: 0x{0:X} ({1})", element.usage, usageString), ref id);
                 else
                     AddChild(item, string.Format("Usage: 0x{0:X}", element.usage), ref id);
-                
+
                 AddChild(item, "Report Type: " + element.reportType, ref id);
                 AddChild(item, "Report ID: " + element.reportId, ref id);
                 AddChild(item, "Report Size in Bits: " + element.reportSizeInBits, ref id);

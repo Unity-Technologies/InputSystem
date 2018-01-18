@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using ISX.Editor;
+using ISX.LowLevel;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
 
@@ -23,7 +24,7 @@ namespace ISX
             hideFlags = HideFlags.HideAndDontSave;
 
             manager = new InputManager();
-            manager.Initialize();
+            manager.Initialize(NativeInputRuntime.instance);
 
             // In the editor, we always set up for remoting.
             SetUpRemoting();
@@ -31,6 +32,7 @@ namespace ISX
 
         public void ReviveAfterDomainReload()
         {
+            manager.InstallRuntime(NativeInputRuntime.instance);
             manager.InstallGlobals();
             SetUpRemoting();
         }

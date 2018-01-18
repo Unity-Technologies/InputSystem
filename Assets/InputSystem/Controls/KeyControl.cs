@@ -20,7 +20,7 @@ namespace ISX
     /// </remarks>
     public class KeyControl : ButtonControl
     {
-        public static FourCC KeyConfigCode { get { return new FourCC('K', 'Y', 'C', 'F'); } }
+        public static FourCC IOCTLGetKeyConfig { get { return new FourCC('K', 'Y', 'C', 'F'); } }
 
         /// <summary>
         /// The code used in Unity to identify the key.
@@ -88,7 +88,7 @@ namespace ISX
                 *((int*)buffer) = (int)keyCode;
 
                 // Read key configuration data from device.
-                var numBytesRead = device.ReadData(KeyConfigCode, buffer, kMaxBufferSize);
+                var numBytesRead = device.IOCTL(IOCTLGetKeyConfig, buffer, kMaxBufferSize);
                 if (numBytesRead < sizeof(int) * 4)
                 {
                     // Got nothing. Device probably does not support key configuration data.

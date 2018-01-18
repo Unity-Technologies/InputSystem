@@ -317,7 +317,7 @@ namespace ISX
     public class Keyboard : InputDevice
     {
         ////REVIEW: really expose this stuff?
-        public static FourCC LayoutConfigCode { get { return new FourCC('K', 'B', 'L', 'T'); } }
+        public static FourCC IOCTLGetKeyboardLayout { get { return new FourCC('K', 'B', 'L', 'T'); } }
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
@@ -802,7 +802,7 @@ namespace ISX
             try
             {
                 // Read layout configuration.
-                var numBytesRead = ReadData(LayoutConfigCode, buffer, kMaxBufferSize);
+                var numBytesRead = IOCTL(IOCTLGetKeyboardLayout, buffer, kMaxBufferSize);
                 if (numBytesRead < sizeof(int))
                 {
                     // Got nothing. Device probably does not support key configuration data.

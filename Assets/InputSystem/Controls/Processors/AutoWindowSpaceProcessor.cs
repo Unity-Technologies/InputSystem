@@ -11,14 +11,14 @@ namespace ISX.Processors
     /// </summary>
     /// <remarks>
     /// This processor is only available in the editor. Also, it only works on devices that
-    /// support the <see cref="EditorWindowPosConfig"/> request.
+    /// support the <see cref="IOCTLGetEditorWindowCoordinates"/> request.
     ///
     /// Outside of EditorWindow callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
     /// </remarks>
     public class AutoWindowSpaceProcessor : IInputProcessor<Vector2>
     {
-        public static FourCC EditorWindowPosConfig = new FourCC('E', 'W', 'P', 'S');
+        public static FourCC IOCTLGetEditorWindowCoordinates = new FourCC('E', 'W', 'P', 'S');
 
         public unsafe Vector2 Process(Vector2 position, InputControl control)
         {
@@ -26,7 +26,7 @@ namespace ISX.Processors
 
             // Request conversion from device.
             var device = control.device;
-            var numBytesRead = device.ReadData(EditorWindowPosConfig, new IntPtr(positionPtr), sizeof(Vector2));
+            var numBytesRead = device.IOCTL(IOCTLGetEditorWindowCoordinates, new IntPtr(positionPtr), sizeof(Vector2));
             if (numBytesRead < sizeof(Vector2))
                 return position;
 

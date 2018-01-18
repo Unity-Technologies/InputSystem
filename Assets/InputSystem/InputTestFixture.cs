@@ -36,6 +36,8 @@ namespace ISX
     /// </example>
     public class InputTestFixture
     {
+        public InputTestRuntime testRuntime { get; private set; }
+
         /// <summary>
         /// Put InputSystem into a known state where it only has a basic set of
         /// templates and does not have any input devices.
@@ -50,16 +52,13 @@ namespace ISX
         {
             InputSystem.Save();
 
-            ////FIXME: ATM events fired by platform layers for mice and keyboard etc.
-            ////       interfere with tests; we need to isolate the system from them
-            ////       during testing (probably also from native device discoveries)
-            ////       Put a switch in native that blocks events except those coming
-            ////       in from C# through SendEvent and which supresses flushing device
-            ////       discoveries to managed
-
             // Put system in a blank state where it has all the templates but has
             // none of the native devices.
             InputSystem.Reset();
+
+            // Replace native input runtime with test runtime.
+            testRuntime = new InputTestRuntime();
+            InputSystem.s_Manager.InstallRuntime(testRuntime);
 
             // Install dummy plugin manager to get rid of default logic scanning
             // for [InputPlugins].
@@ -88,6 +87,8 @@ namespace ISX
             InputSystem.DisableAllEnabledActions();
 
             InputSystem.Restore();
+
+            testRuntime.Dispose();
         }
 
         // Dummy plugin manager we install to suppress the default logic of crawling through the code

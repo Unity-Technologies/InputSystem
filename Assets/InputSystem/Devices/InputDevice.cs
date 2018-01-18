@@ -137,23 +137,15 @@ namespace ISX
                 m_ChildrenForEachControl[i].m_ConfigUpToDate = false;
         }
 
-        ////REVIEW: Should ReadData and WriteData() sit *behind* a different interface that would
+        ////REVIEW: Should IOCTL()  sit *behind* a different interface that would
         ////        make C# data pass through natively rather than go through memory buffers?
 
-        public virtual int ReadData(FourCC type, IntPtr buffer, int sizeInBytes)
+        public virtual long IOCTL(FourCC code, IntPtr buffer, int sizeInBytes)
         {
             if (native)
-                return NativeInputSystem.ReadDeviceData(id, type, buffer, sizeInBytes);
+                return NativeInputSystem.IOCTL(id, code, buffer, sizeInBytes);
 
-            return 0;
-        }
-
-        public virtual int WriteData(FourCC type, IntPtr buffer, int sizeInBytes)
-        {
-            if (native)
-                return NativeInputSystem.WriteDeviceData(id, type, buffer, sizeInBytes);
-
-            return 0;
+            return -1;
         }
 
         [Flags]
