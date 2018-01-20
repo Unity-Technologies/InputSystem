@@ -24,22 +24,13 @@ namespace ISX.HID
         /// <summary>
         ///
         /// </summary>
-        public static FourCC IOCTLQueryHIDDescriptor { get { return new FourCC('H', 'I', 'D', 'D'); } }
+        public static FourCC IOCTLQueryHIDReportDescriptor { get { return new FourCC('H', 'I', 'D', 'D'); } }
+
+        public static FourCC IOCTLQueryHIDReportDescriptorSize { get { return new FourCC('H', 'I', 'D', 'S'); } }
 
         /// <summary>
         /// The HID device descriptor as received from the system.
         /// </summary>
-        /// <remarks>
-        /// Note that platform-specific backends for HID are tied to the HID APIs that are provided
-        /// on each platform. These APIs often have their own idiosyncrasies and process HID descriptors
-        /// using their own parser. Thus, the descriptor we see may not have the exact same form as it
-        /// appears on the hardware or driver level.
-        ///
-        /// On Windows, the HID API will not provide information about vendor-defined elements present
-        /// in the HID descriptor. These elements will still appears as entries in the descriptor but will
-        /// have only the <see cref="HIDElementDescriptor.usagePage"/> (set to <see cref="UsagePage.VendorDefined"/>
-        /// and <see cref="HIDElementDescriptor.reportType"/> field filled out.
-        /// </remarks>
         public HIDDeviceDescriptor hidDescriptor
         {
             get
@@ -57,7 +48,11 @@ namespace ISX.HID
         private bool m_HaveParsedHIDDescriptor;
         private HIDDeviceDescriptor m_HIDDescriptor;
 
-        internal static string OnFindTemplateForDevice(InputDeviceDescription description, string matchedTemplate)
+        // This is the workhorse for figuring out fallback options for HIDs attached to the system.
+        // If the system cannot find a more specific template for a given HID, this method will try
+        // to produce a template constructor on the fly based on the HID descriptor received from
+        // the device.
+        internal static unsafe string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description, string matchedTemplate, IInputRuntime runtime)
         {
             // If the system found a matching template, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedTemplate))
@@ -71,12 +66,12 @@ namespace ISX.HID
             if (string.IsNullOrEmpty(description.product))
                 return null;
 
-            // If the description doesn't come with a HID descriptor, we're not
-            // interested either.
+            // If the description doesn't come with a HIDDeviceDescriptor in its capabilities field,
+            // we're not interested either.
             if (string.IsNullOrEmpty(description.capabilities))
                 return null;
 
-            // Try to parse the HID descriptor.
+            // Try to parse the HIDDeviceDescriptor.
             HIDDeviceDescriptor hidDeviceDescriptor;
             try
             {
@@ -88,16 +83,49 @@ namespace ISX.HID
                 return null;
             }
 
+            // If the descriptor has no elements associated with it, try to get a report descriptor
+            // directly from the device.
+            if (hidDeviceDescriptor.elements == null || hidDeviceDescriptor.elements.Length == 0)
+            {
+                // If the device has no assigned ID yet, we're not interested either.
+                // This isn't a device coming from the runtime.
+                if (deviceId == InputDevice.kInvalidDeviceId)
+                    return null;
+
+                // Try to get the size of the HID descriptor from the device.
+                var sizeOfDescriptorInBytes = runtime.IOCTL(deviceId, IOCTLQueryHIDReportDescriptorSize, IntPtr.Zero, 0);
+                if (sizeOfDescriptorInBytes <= 0)
+                    return null;
+
+                // Now try to fetch the HID descriptor.
+                var buffer = new byte[sizeOfDescriptorInBytes];
+                fixed(byte* bufferPtr = buffer)
+                {
+                    if (runtime.IOCTL(deviceId, IOCTLQueryHIDReportDescriptor, new IntPtr(bufferPtr), (int)sizeOfDescriptorInBytes) !=
+                        sizeOfDescriptorInBytes)
+                        return null;
+                }
+
+                // Try to parse the HID report descriptor.
+                if (!HIDParser.ParseReportDescriptor(buffer, ref hidDeviceDescriptor))
+                    return null;
+
+                // Update the descriptor on the device with the information we got.
+                description.capabilities = hidDeviceDescriptor.ToJson();
+            }
+
             // Determine if there's any usable elements on the device.
             var hasUsableElements = false;
             if (hidDeviceDescriptor.elements != null)
             {
                 foreach (var element in hidDeviceDescriptor.elements)
+                {
                     if (element.DetermineTemplate() != null)
                     {
                         hasUsableElements = true;
                         break;
                     }
+                }
             }
 
             if (!hasUsableElements)
@@ -124,7 +152,8 @@ namespace ISX.HID
 
             // We don't want the capabilities field in the description to be matched
             // when the input system is looking for matching templates so null it out.
-            description.capabilities = null;
+            var deviceDescriptionForTemplate = description;
+            deviceDescriptionForTemplate.capabilities = null;
 
             ////TODO: make sure we don't produce name conflicts on the template name
 
@@ -132,7 +161,7 @@ namespace ISX.HID
             // InputTemplate instance.
             var templateName = string.Format("{0}::{1}", kHIDNamespace, description.product);
             var template = new HIDTemplate {descriptor = hidDeviceDescriptor};
-            InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, description);
+            InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, deviceDescriptionForTemplate);
 
             return templateName;
         }
@@ -363,7 +392,7 @@ namespace ISX.HID
             public int firstChild;
         }
 
-        // NOTE: Must match up with the serialized representation of HIDInputDeviceDescriptor in native.
+        // NOTE: Must match up with the serialized representation of HIDInputDeviceCapabilities in native.
         [Serializable]
         public struct HIDDeviceDescriptor
         {

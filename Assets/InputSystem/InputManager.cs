@@ -22,10 +22,12 @@ using ISX.Net35Compatibility;
 namespace ISX
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using DeviceFindTemplateListener = Func<InputDeviceDescription, string, string>;
     using TemplateChangeListener = Action<string, InputTemplateChange>;
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
+
+    public delegate string DeviceFindTemplateCallback(int deviceId, ref InputDeviceDescription description, string matchedTemplate,
+        IInputRuntime runtime);
 
     // The hub of the input system.
     // All state is ultimately gathered here.
@@ -60,10 +62,10 @@ namespace ISX
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
-        public event DeviceFindTemplateListener onFindTemplateForDevice
+        public event DeviceFindTemplateCallback onFindTemplateForDevice
         {
-            add { m_DeviceFindTemplateListeners.Append(value); }
-            remove { m_DeviceFindTemplateListeners.Remove(value); }
+            add { m_DeviceFindTemplateCallbacks.Append(value); }
+            remove { m_DeviceFindTemplateCallbacks.Remove(value); }
         }
 
         public event TemplateChangeListener onTemplateChange
@@ -673,9 +675,9 @@ namespace ISX
 
             ////REVIEW: listeners registering new templates from in here may potentially lead to the creation of devices; should we disallow that?
             // Give listeners a shot to select/create a template.
-            for (var i = 0; i < m_DeviceFindTemplateListeners.Count; ++i)
+            for (var i = 0; i < m_DeviceFindTemplateCallbacks.Count; ++i)
             {
-                var newTemplate = m_DeviceFindTemplateListeners[i](description, template);
+                var newTemplate = m_DeviceFindTemplateCallbacks[i](deviceId, ref description, template, m_Runtime);
                 if (!string.IsNullOrEmpty(newTemplate))
                 {
                     template = newTemplate;
@@ -1124,7 +1126,7 @@ namespace ISX
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        [NonSerialized] private InlinedArray<DeviceFindTemplateListener> m_DeviceFindTemplateListeners;
+        [NonSerialized] private InlinedArray<DeviceFindTemplateCallback> m_DeviceFindTemplateCallbacks;
         [NonSerialized] private InlinedArray<TemplateChangeListener> m_TemplateChangeListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
@@ -2048,7 +2050,7 @@ namespace ISX
             // not across domain reloads.
 
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
-            [NonSerialized] public InlinedArray<DeviceFindTemplateListener> deviceDiscoveredListeners;
+            [NonSerialized] public InlinedArray<DeviceFindTemplateCallback> deviceFindTemplateCallbacks;
             [NonSerialized] public InlinedArray<TemplateChangeListener> templateChangeListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
 
@@ -2133,7 +2135,7 @@ namespace ISX
                 buffers = m_StateBuffers,
                 configuration = InputConfiguration.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
-                deviceDiscoveredListeners = m_DeviceFindTemplateListeners.Clone(),
+                deviceFindTemplateCallbacks = m_DeviceFindTemplateCallbacks.Clone(),
                 templateChangeListeners = m_TemplateChangeListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
                 pluginManagers = m_PluginManagers.Clone(),
@@ -2157,7 +2159,7 @@ namespace ISX
             m_Devices = null;
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
-            m_DeviceFindTemplateListeners = state.deviceDiscoveredListeners;
+            m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
             m_TemplateChangeListeners = state.templateChangeListeners;
             m_EventListeners = state.eventListeners;
             m_PluginManagers = state.pluginManagers;

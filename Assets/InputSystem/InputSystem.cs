@@ -178,7 +178,7 @@ namespace ISX
             remove { s_Manager.onDeviceChange -= value; }
         }
 
-        public static event Func<InputDeviceDescription, string, string> onFindTemplateForDevice
+        public static event DeviceFindTemplateCallback onFindTemplateForDevice
         {
             add { s_Manager.onFindTemplateForDevice += value; }
             remove { s_Manager.onFindTemplateForDevice -= value; }

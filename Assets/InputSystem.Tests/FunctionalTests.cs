@@ -297,7 +297,7 @@ public class FunctionalTests : InputTestFixture
     public void Templates_CanOverrideTemplateMatchesForDiscoveredDevices()
     {
         InputSystem.onFindTemplateForDevice +=
-            (description, templateMatch) => "Keyboard";
+            (int deviceId, ref InputDeviceDescription description, string templateMatch, IInputRuntime runtime) => "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
@@ -682,7 +682,7 @@ public class FunctionalTests : InputTestFixture
     }
 
     [Serializable]
-    private class TestTemplateConstructor
+    class TestTemplateConstructor
     {
         [SerializeField] public string templateToLoad;
         [NonSerialized] public InputTemplate template;

@@ -8,6 +8,14 @@ using UnityEngine;
 
 namespace ISX
 {
+    /// <summary>
+    /// An implementation of <see cref="IInputRuntime"/> for use during tests.
+    /// </summary>
+    /// <remarks>
+    /// This class is only available in the editor and in development players.
+    ///
+    /// The test runtime replaces the services usually supplied by <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
+    /// </remarks>
     public class InputTestRuntime : IInputRuntime, IDisposable
     {
         ~InputTestRuntime()
@@ -77,7 +85,27 @@ namespace ISX
 
         public long IOCTL(int deviceId, int code, IntPtr buffer, int size)
         {
-            throw new NotImplementedException();
+            lock (m_Lock)
+            {
+                if (m_IOCTLCallbacks != null)
+                    foreach (var entry in m_IOCTLCallbacks)
+                    {
+                        if (entry.Key == deviceId)
+                            return entry.Value(code, buffer, size);
+                    }
+            }
+
+            return -1;
+        }
+
+        public void SetIOCTLCallback(int deviceId, Func<int, IntPtr, int, long> callback)
+        {
+            lock (m_Lock)
+            {
+                if (m_IOCTLCallbacks == null)
+                    m_IOCTLCallbacks = new List<KeyValuePair<int, Func<int, IntPtr, int, long>>>();
+                m_IOCTLCallbacks.Add(new KeyValuePair<int, Func<int, IntPtr, int, long>>(deviceId, callback));
+            }
         }
 
         public int ReportNewInputDevice(string deviceDescriptor)
@@ -109,6 +137,7 @@ namespace ISX
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
+        private List<KeyValuePair<int, Func<int, IntPtr, int, long>>> m_IOCTLCallbacks;
         private object m_Lock = new object();
     }
 }
