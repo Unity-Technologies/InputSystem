@@ -175,7 +175,7 @@ namespace ISX.HID
             Assert.That(device.hidDescriptor.elements[0].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
             Assert.That(device.hidDescriptor.elements[0].usage, Is.EqualTo((int)HID.GenericDesktop.X));
             Assert.That(device.hidDescriptor.elements[0].reportId, Is.EqualTo(1));
-            Assert.That(device.hidDescriptor.elements[0].reportBitOffset, Is.EqualTo(0));
+            Assert.That(device.hidDescriptor.elements[0].reportBitOffset, Is.EqualTo(8)); // Descriptor has report ID so that's the first thing in reports.
             Assert.That(device.hidDescriptor.elements[0].reportSizeInBits, Is.EqualTo(8));
             Assert.That(device.hidDescriptor.elements[0].logicalMin, Is.EqualTo(0));
             Assert.That(device.hidDescriptor.elements[0].logicalMax, Is.EqualTo(255));
@@ -183,7 +183,7 @@ namespace ISX.HID
             Assert.That(device.hidDescriptor.elements[1].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
             Assert.That(device.hidDescriptor.elements[1].usage, Is.EqualTo((int)HID.GenericDesktop.Y));
             Assert.That(device.hidDescriptor.elements[1].reportId, Is.EqualTo(1));
-            Assert.That(device.hidDescriptor.elements[1].reportBitOffset, Is.EqualTo(8));
+            Assert.That(device.hidDescriptor.elements[1].reportBitOffset, Is.EqualTo(16));
             Assert.That(device.hidDescriptor.elements[1].reportSizeInBits, Is.EqualTo(8));
             Assert.That(device.hidDescriptor.elements[1].logicalMin, Is.EqualTo(0));
             Assert.That(device.hidDescriptor.elements[1].logicalMax, Is.EqualTo(255));
@@ -194,6 +194,7 @@ namespace ISX.HID
 
             Assert.That(device.hidDescriptor.elements[5].unit, Is.Zero);
 
+            Assert.That(device.hidDescriptor.elements[5].reportBitOffset, Is.EqualTo(5 * 8 + 4));
             Assert.That(device.hidDescriptor.elements[5].usagePage, Is.EqualTo(HID.UsagePage.Button));
             Assert.That(device.hidDescriptor.elements[6].usagePage, Is.EqualTo(HID.UsagePage.Button));
             Assert.That(device.hidDescriptor.elements[7].usagePage, Is.EqualTo(HID.UsagePage.Button));

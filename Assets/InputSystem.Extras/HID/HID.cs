@@ -217,12 +217,6 @@ namespace ISX.HID
 
                 ////TODO: for joysticks, set up stick from X and Y
 
-                // Technically, HID reports start with an 8bit field containing
-                // the report ID but the native APIs are sending us the report
-                // data starting after the ID.
-                var inputReportBitOffset = 0u;
-                var outputReportBitOffset = 0u;
-
                 // Process HID descriptor.
                 foreach (var element in descriptor.elements)
                 {
@@ -238,16 +232,14 @@ namespace ISX.HID
                         var control =
                             builder.AddControl(element.DetermineName())
                             .WithTemplate(template)
-                            .WithOffset(inputReportBitOffset / 8)
-                            .WithBit(inputReportBitOffset % 8)
+                            .WithOffset((uint)element.reportBitOffset / 8)
+                            .WithBit((uint)element.reportBitOffset % 8)
                             .WithFormat(element.DetermineFormat());
 
                         ////TODO: configure axis parameters from min/max limits
 
                         element.SetUsage(control);
                     }
-
-                    inputReportBitOffset += (uint)element.reportSizeInBits;
                 }
 
                 return builder.Build();
