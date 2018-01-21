@@ -3,6 +3,8 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
+////REVIEW: move the enums and structs out of here and into ISX.HID? Or remove the "HID" name prefixes from them?
+
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
 namespace ISX.HID
@@ -22,10 +24,15 @@ namespace ISX.HID
         public const string kHIDNamespace = "HID";
 
         /// <summary>
-        ///
+        /// IOCTL code for querying the HID report descriptor from a device.
         /// </summary>
+        /// <seealso cref="InputDevice.IOCTL"/>
         public static FourCC IOCTLQueryHIDReportDescriptor { get { return new FourCC('H', 'I', 'D', 'D'); } }
 
+        /// <summary>
+        /// IOCTL code for querying the HID report descriptor size in bytes from a device.
+        /// </summary>
+        /// <seealso cref="InputDevice.IOCTL"/>
         public static FourCC IOCTLQueryHIDReportDescriptorSize { get { return new FourCC('H', 'I', 'D', 'S'); } }
 
         /// <summary>
@@ -247,7 +254,6 @@ namespace ISX.HID
             }
         }
 
-        // NOTE: Must match HIDReportType in native.
         public enum HIDReportType
         {
             Unknown,
@@ -256,25 +262,37 @@ namespace ISX.HID
             Feature
         }
 
-
-        // NOTE: Must match HIDCollectionType in native.
         public enum HIDCollectionType
         {
-            Unknown,
-            Physical,
-            Application,
-            Logical,
-            Report,
-            NamedArray,
-            UsageSwitch,
-            UsageModifier
+            Physical = 0x00,
+            Application = 0x01,
+            Logical = 0x02,
+            Report = 0x03,
+            NamedArray = 0x04,
+            UsageSwitch = 0x05,
+            UsageModifier = 0x06
         }
 
-        // NOTE: Must match up with the serialization represention of HIDInputElementDescriptor in native.
+        [Flags]
+        public enum HIDElementFlags
+        {
+            Constant = 1 << 0,
+            Variable = 1 << 1,
+            Relative = 1 << 2,
+            Wrap = 1 << 3,
+            NonLinear = 1 << 4,
+            NoPreferred = 1 << 5,
+            NullState = 1 << 6,
+            Volatile = 1 << 7,
+            BufferedBytes = 1 << 8
+        }
+
+        /// <summary>
+        /// Descriptor for a single report element.
+        /// </summary>
         [Serializable]
         public struct HIDElementDescriptor
         {
-            public string name;
             public int usage;
             public UsagePage usagePage;
             public int unit;
@@ -286,20 +304,54 @@ namespace ISX.HID
             public HIDReportType reportType;
             public int collectionIndex;
             public int reportId;
-            public int reportCount;
             public int reportSizeInBits;
-            public bool hasNullState;
-            public bool hasPreferredState;
-            public bool isArray;
-            public bool isNonLinear;
-            public bool isRelative;
-            public bool isVirtual;
-            public bool isWrapping;
+            public int reportBitOffset;
+            public HIDElementFlags flags;
+
+            // Fields only relevant to arrays.
+            public int? usageMin;
+            public int? usageMax;
+
+            public bool hasNullState
+            {
+                get { return (flags & HIDElementFlags.NullState) == HIDElementFlags.NullState; }
+            }
+
+            public bool hasPreferredState
+            {
+                get { return (flags & HIDElementFlags.NoPreferred) != HIDElementFlags.NoPreferred; }
+            }
+
+            public bool isArray
+            {
+                get { return (flags & HIDElementFlags.Variable) != HIDElementFlags.Variable; }
+            }
+
+            public bool isNonLinear
+            {
+                get { return (flags & HIDElementFlags.NonLinear) == HIDElementFlags.NonLinear; }
+            }
+
+            public bool isRelative
+            {
+                get { return (flags & HIDElementFlags.Relative) == HIDElementFlags.Relative; }
+            }
+
+            public bool isConstant
+            {
+                get { return (flags & HIDElementFlags.Constant) == HIDElementFlags.Constant; }
+            }
+
+            public bool isWrapping
+            {
+                get { return (flags & HIDElementFlags.Wrap) == HIDElementFlags.Wrap; }
+            }
 
             internal string DetermineName()
             {
-                // Element names are often bogus and we have no guarantee they are unique so we just ignore them
-                // and do our own naming here.
+                // It's rare for HIDs to declare string names for items and HID drivers may report weird strings
+                // plus there's no guarantee that these names are unique per item. So, we don't bother here with
+                // device/driver-supplied names at all but rather do our own naming.
 
                 switch (usagePage)
                 {
@@ -381,27 +433,60 @@ namespace ISX.HID
             }
         }
 
+        /// <summary>
+        /// Descriptor for a collection of HID elements.
+        /// </summary>
         [Serializable]
         public struct HIDCollectionDescriptor
         {
             public HIDCollectionType type;
             public int usage;
             public UsagePage usagePage;
-            public int parent;
+            public int parent; // -1 if no parent.
             public int childCount;
             public int firstChild;
         }
 
-        // NOTE: Must match up with the serialized representation of HIDInputDeviceCapabilities in native.
+        /// <summary>
+        /// HID descriptor for a HID class device.
+        /// </summary>
+        /// <remarks>
+        /// This is a processed view of the combined descriptors provided by a HID as defined
+        /// in the HID specification, i.e. it's a combination of information from the USB device
+        /// descriptor, HID class descriptor, and HID report descriptor.
+        /// </remarks>
         [Serializable]
         public struct HIDDeviceDescriptor
         {
+            /// <summary>
+            /// USB vendor ID.
+            /// </summary>
+            /// <remarks>
+            /// To get the string version of the vendor ID, see <see cref="InputDeviceDescription.manufacturer"/>
+            /// on <see cref="InputDevice.description"/>.
+            /// </remarks>
             public int vendorId;
+
+            /// <summary>
+            /// USB product ID.
+            /// </summary>
             public int productId;
             public int usage;
             public UsagePage usagePage;
+
+            /// <summary>
+            /// Maximum size of individual input reports sent by the device.
+            /// </summary>
             public int inputReportSize;
+
+            /// <summary>
+            /// Maximum size of individual output reports sent to the device.
+            /// </summary>
             public int outputReportSize;
+
+            /// <summary>
+            /// Maximum size of individual feature reports exchanged with the device.
+            /// </summary>
             public int featureReportSize;
 
             public HIDElementDescriptor[] elements;

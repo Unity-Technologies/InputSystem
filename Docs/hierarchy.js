@@ -6,6 +6,10 @@ var hierarchy =
     [ "ISX.InputTemplate.ControlTemplate", "structISX_1_1InputTemplate_1_1ControlTemplate.html", null ],
     [ "ISX.Editor.EditorInputTemplateCache", "classISX_1_1Editor_1_1EditorInputTemplateCache.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],
+    [ "ISX.HID.HID.HIDCollectionDescriptor", "structISX_1_1HID_1_1HID_1_1HIDCollectionDescriptor.html", null ],
+    [ "ISX.HID.HID.HIDDeviceDescriptor", "structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html", null ],
+    [ "ISX.HID.HID.HIDElementDescriptor", "structISX_1_1HID_1_1HID_1_1HIDElementDescriptor.html", null ],
+    [ "ISX.HID.HIDParser", "classISX_1_1HID_1_1HIDParser.html", null ],
     [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
     [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "ISX.IInputProcessor< TValue >", "interfaceISX_1_1IInputProcessor.html", null ],
@@ -13,6 +17,9 @@ var hierarchy =
     [ "ISX.IInputProcessor< Vector2 >", "interfaceISX_1_1IInputProcessor.html", [
       [ "ISX.Processors.AutoWindowSpaceProcessor", "classISX_1_1Processors_1_1AutoWindowSpaceProcessor.html", null ],
       [ "ISX.Processors.DeadzoneProcessor", "classISX_1_1Processors_1_1DeadzoneProcessor.html", null ]
+    ] ],
+    [ "ISX.LowLevel.IInputRuntime", "interfaceISX_1_1LowLevel_1_1IInputRuntime.html", [
+      [ "ISX.InputTestRuntime", "classISX_1_1InputTestRuntime.html", null ]
     ] ],
     [ "ISX.InputAction", "classISX_1_1InputAction.html", null ],
     [ "ISX.InputActionSet", "classISX_1_1InputActionSet.html", null ],

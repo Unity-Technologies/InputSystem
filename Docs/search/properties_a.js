@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['onrefresh',['onRefresh',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#a3ad4bddd8ded0f22f780193f5d3db1db',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['ontextinput',['onTextInput',['../classISX_1_1Keyboard.html#a32208b6d941ae0dfd46a5291358d08e3',1,'ISX::Keyboard']]]
+  ['name',['name',['../classISX_1_1InputAction.html#ab6268dc51076c35828a57085246b5e8d',1,'ISX::InputAction']]],
+  ['native',['native',['../classISX_1_1InputDevice.html#a39d1fea5d98ec26ff8f0c0da5d15367f',1,'ISX::InputDevice']]]
 ];

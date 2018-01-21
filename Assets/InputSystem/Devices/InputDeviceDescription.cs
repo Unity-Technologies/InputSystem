@@ -29,11 +29,21 @@ namespace ISX
         /// </remarks>
         public string deviceClass;
 
-        // Who made the thing.
+        /// <summary>
+        /// Name of the vendor that produced the device.
+        /// </summary>
         public string manufacturer;
-        // What they call it.
+
+        /// <summary>
+        /// Name of the product assigned by the vendor to the device.
+        /// </summary>
         public string product;
+
+        /// <summary>
+        /// If available, serial number for the device.
+        /// </summary>
         public string serial;
+
         public string version;
 
         /// <summary>

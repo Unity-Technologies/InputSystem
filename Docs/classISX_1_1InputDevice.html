@@ -117,9 +117,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae9dd251f614b05c750bd6257718b4803"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">OnConfigurationChanged</a> ()</td></tr>
 <tr class="memdesc:ae9dd251f614b05c750bd6257718b4803"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by the system when the configuration of the device has changed.  <a href="#ae9dd251f614b05c750bd6257718b4803">More...</a><br /></td></tr>
 <tr class="separator:ae9dd251f614b05c750bd6257718b4803"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3533a12abc161e10a49e74ee8d494bf"><td class="memItemLeft" align="right" valign="top">virtual long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf">IOCTL</a> (FourCC code, IntPtr buffer, int sizeInBytes)</td></tr>
+<tr class="memdesc:ad3533a12abc161e10a49e74ee8d494bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific control transfer.  <a href="#ad3533a12abc161e10a49e74ee8d494bf">More...</a><br /></td></tr>
+<tr class="separator:ad3533a12abc161e10a49e74ee8d494bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
+<tr class="memitem:a213442c0209a9e64cc9517e8a9ed3a03"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structISX_1_1InputDeviceDescription.html">InputDeviceDescription</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a213442c0209a9e64cc9517e8a9ed3a03">description</a><code> [get]</code></td></tr>
+<tr class="memdesc:a213442c0209a9e64cc9517e8a9ed3a03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Metadata describing the device (product name etc.).  <a href="#a213442c0209a9e64cc9517e8a9ed3a03">More...</a><br /></td></tr>
+<tr class="separator:a213442c0209a9e64cc9517e8a9ed3a03"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a87948035cec08321cbc1b6116f8df141"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141">remote</a><code> [get]</code></td></tr>
 <tr class="memdesc:a87948035cec08321cbc1b6116f8df141"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the device is mirrored from a remote input system and not actually present as a "real" device in the local system.  <a href="#a87948035cec08321cbc1b6116f8df141">More...</a><br /></td></tr>
 <tr class="separator:a87948035cec08321cbc1b6116f8df141"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -136,6 +142,61 @@ Properties</h2></td></tr>
 <p>Unlike other controls, usages of InputDevices are allowed to be changed on the fly without requiring a change to the device template (InputSystem.SetUsage). </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>The entire control hierarchy should be a linear array; transition to that with InputData. </dd></dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="ad3533a12abc161e10a49e74ee8d494bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3533a12abc161e10a49e74ee8d494bf">&#9670;&nbsp;</a></span>IOCTL()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual long ISX.InputDevice.IOCTL </td>
+          <td>(</td>
+          <td class="paramtype">FourCC&#160;</td>
+          <td class="paramname"><em>code</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">IntPtr&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>sizeInBytes</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Perform a device-specific control transfer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">code</td><td>FourCC code that indicates the type of transfer to be transacted.</td></tr>
+    <tr><td class="paramname">buffer</td><td>Optional data buffer. This can be used by the transfer for both input and output.</td></tr>
+    <tr><td class="paramname">sizeInBytes</td><td>Size of the data buffer in bytes.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A transfer-specific return code. Negative values are considered failure codes.</dd></dl>
+<p>IOCTL transfers allow devices to set up custom protocols without having to extend the device API. This is most useful for devices implemented in the native Unity runtime which, through the IOCTL interface, may provide custom, device-specific functions.</p>
+<p>This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html" target="_blank">ioctl</a> on UNIX-like systems. </p>
+
+</div>
+</div>
 <a id="a18d3a4551ab679910e7aca01bcda7ea2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a18d3a4551ab679910e7aca01bcda7ea2">&#9670;&nbsp;</a></span>MakeCurrent()</h2>
 
@@ -195,6 +256,30 @@ Properties</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Property Documentation</h2>
+<a id="a213442c0209a9e64cc9517e8a9ed3a03"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a213442c0209a9e64cc9517e8a9ed3a03">&#9670;&nbsp;</a></span>description</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structISX_1_1InputDeviceDescription.html">InputDeviceDescription</a> ISX.InputDevice.description</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Metadata describing the device (product name etc.). </p>
+
+</div>
+</div>
 <a id="acdf24e99a5e11a380c117896ff30b520"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acdf24e99a5e11a380c117896ff30b520">&#9670;&nbsp;</a></span>lastUpdateTime</h2>
 

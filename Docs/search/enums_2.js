@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['messagetype',['MessageType',['../classISX_1_1InputRemoting.html#a67a9a0f806eabe3bbc217639bf6d4042',1,'ISX::InputRemoting']]]
+  ['key',['Key',['../namespaceISX.html#a38873005ef32f511b64aa2a8c06bd89b',1,'ISX']]]
 ];

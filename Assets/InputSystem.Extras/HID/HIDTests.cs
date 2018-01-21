@@ -1,6 +1,8 @@
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
+using System;
 using NUnit.Framework;
 using System.Linq;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace ISX.HID
 {
@@ -67,6 +69,141 @@ namespace ISX.HID
             Assert.That(button2.stateBlock.byteOffset, Is.EqualTo(4));
             Assert.That(button1.stateBlock.bitOffset, Is.EqualTo(0));
             Assert.That(button2.stateBlock.bitOffset, Is.EqualTo(1));
+        }
+
+        [Test]
+        [Category("Devices")]
+        public void Devices_CanCreateGenericHID_FromDeviceWithBinaryReportDescriptor()
+        {
+            // This is several snippet from the PS4 controller's HID report descriptor
+            // pasted together.
+            var reportDescriptor = new byte[]
+            {
+                0x05, 0x01, // Usage Page (Generic Desktop)
+                0x09, 0x05, // Usage (Gamepad)
+                0xA1, 0x01, // Collection (Application)
+                0x85, 0x01,     // Report ID (1)
+                0x09, 0x30,     // Usage (X)
+                0x09, 0x31,     // Usage (Y)
+                0x09, 0x32,     // Usage (Z)
+                0x09, 0x35,     // Usage (Rz)
+                0x15, 0x00,     // Logical Minimum (0)
+                0x26, 0xFF, 0x00,     // Logical Maximum (255)
+                0x75, 0x08,     // Report Size (8)
+                0x95, 0x04,     // Report Count (4)
+                0x81, 0x02,     // Input (Data, Var, Abs, NWrp, Lin, Pref, NNul, Bit)
+                0x09, 0x39,     // Usage (Hat Switch)
+                0x15, 0x00,     // Logical Minimum (0)
+                0x25, 0x07,     // Logical Maximum (7)
+                0x35, 0x00,     // Physical Maximum (0)
+                0x46, 0x3B, 0x01,     // Physical Maximum (315)
+                0x65, 0x14,     // Unit (Eng Rot: Degree)
+                0x75, 0x04,     // Report Size (4)
+                0x95, 0x01,     // Report Count (1)
+                0x81, 0x42,     // Input (Data, Var, Abs, NWrp, Lin, Pref, Null, Bit)
+                0x65, 0x00,     // Unit (None)
+                0x05, 0x09,     // Usage Page (Button)
+                0x19, 0x01,     // Usage Minimum (Button 1)
+                0x29, 0x0E,     // Usage Maximum (Button 14)
+                0x15, 0x00,     // Logical Minimum (0)
+                0x25, 0x01,     // Logical Maximum (1)
+                0x75, 0x01,     // Report Size (1)
+                0x95, 0x0E,     // Report Count (14)
+                0x81, 0x02,     // Input (Data, Var, Abs, NWrp, Lin, Pref, NNul, Bit)
+                0x06, 0x00, 0xFF,     // Usage Page (Vendor-Defined 1)
+                0x09, 0x21,     // Usage (Vendor-Defined 33)
+                0x95, 0x36,     // Report Count (54)
+                0x81, 0x02,     // Input (Data, Var, Abs, NWrp, Lin, Pref, NNul, Bit)
+                0x85, 0x05,     // Report ID (5)
+                0x09, 0x22,     // Usage (Vendor-Defined 34)
+                0x95, 0x1F,     // Report Count (31)
+                0x91, 0x02,     // Output (Data, Var, Abs, NWrp, Lin, Pref, NNul, NVol, Bit)
+                0xC0, // End Collection
+            };
+
+            const int kNumElements = 4 + 1 + 14 + 54 + 31;
+
+            // The HID report descriptor is fetched from the device via an IOCTL.
+            var deviceId = testRuntime.AllocateDeviceId();
+            testRuntime.SetIOCTLCallback(deviceId,
+                (code, buffer, bufferSize) =>
+                {
+                    if (code == HID.IOCTLQueryHIDReportDescriptorSize)
+                        return reportDescriptor.Length;
+
+                    if (code == HID.IOCTLQueryHIDReportDescriptor
+                        && bufferSize >= reportDescriptor.Length)
+                    {
+                        unsafe
+                        {
+                            fixed(byte* ptr = reportDescriptor)
+                            {
+                                UnsafeUtility.MemCpy(buffer, new IntPtr(ptr), (ulong)reportDescriptor.Length);
+                                return reportDescriptor.Length;
+                            }
+                        }
+                    }
+                    return InputDevice.kIOCTLFailure;
+                });
+
+            // Report device.
+            testRuntime.ReportNewInputDevice(
+                new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                product = "TestHID",
+                capabilities = new HID.HIDDeviceDescriptor
+                {
+                    vendorId = 0x54C,     // Sony
+                    productId = 0x9CC     // PS4 Wireless Controller
+                }.ToJson()
+            }.ToJson(), deviceId);
+            InputSystem.Update();
+
+            // Grab device.
+            var device = (HID)InputSystem.TryGetDeviceById(deviceId);
+            Assert.That(device, Is.Not.Null);
+            Assert.That(device, Is.TypeOf<HID>());
+
+            // Check HID descriptor.
+            Assert.That(device.hidDescriptor.vendorId, Is.EqualTo(0x54C));
+            Assert.That(device.hidDescriptor.productId, Is.EqualTo(0x9CC));
+            Assert.That(device.hidDescriptor.usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
+            Assert.That(device.hidDescriptor.usage, Is.EqualTo((int)HID.GenericDesktop.Gamepad));
+            Assert.That(device.hidDescriptor.elements.Length, Is.EqualTo(kNumElements));
+
+            Assert.That(device.hidDescriptor.elements[0].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
+            Assert.That(device.hidDescriptor.elements[0].usage, Is.EqualTo((int)HID.GenericDesktop.X));
+            Assert.That(device.hidDescriptor.elements[0].reportId, Is.EqualTo(1));
+            Assert.That(device.hidDescriptor.elements[0].reportBitOffset, Is.EqualTo(0));
+            Assert.That(device.hidDescriptor.elements[0].reportSizeInBits, Is.EqualTo(8));
+            Assert.That(device.hidDescriptor.elements[0].logicalMin, Is.EqualTo(0));
+            Assert.That(device.hidDescriptor.elements[0].logicalMax, Is.EqualTo(255));
+
+            Assert.That(device.hidDescriptor.elements[1].usagePage, Is.EqualTo(HID.UsagePage.GenericDesktop));
+            Assert.That(device.hidDescriptor.elements[1].usage, Is.EqualTo((int)HID.GenericDesktop.Y));
+            Assert.That(device.hidDescriptor.elements[1].reportId, Is.EqualTo(1));
+            Assert.That(device.hidDescriptor.elements[1].reportBitOffset, Is.EqualTo(8));
+            Assert.That(device.hidDescriptor.elements[1].reportSizeInBits, Is.EqualTo(8));
+            Assert.That(device.hidDescriptor.elements[1].logicalMin, Is.EqualTo(0));
+            Assert.That(device.hidDescriptor.elements[1].logicalMax, Is.EqualTo(255));
+
+            Assert.That(device.hidDescriptor.elements[4].hasNullState, Is.True);
+            Assert.That(device.hidDescriptor.elements[4].physicalMax, Is.EqualTo(315));
+            Assert.That(device.hidDescriptor.elements[4].unit, Is.EqualTo(0x14));
+
+            Assert.That(device.hidDescriptor.elements[5].unit, Is.Zero);
+
+            Assert.That(device.hidDescriptor.elements[5].usagePage, Is.EqualTo(HID.UsagePage.Button));
+            Assert.That(device.hidDescriptor.elements[6].usagePage, Is.EqualTo(HID.UsagePage.Button));
+            Assert.That(device.hidDescriptor.elements[7].usagePage, Is.EqualTo(HID.UsagePage.Button));
+            Assert.That(device.hidDescriptor.elements[5].usage, Is.EqualTo(1));
+            Assert.That(device.hidDescriptor.elements[6].usage, Is.EqualTo(2));
+            Assert.That(device.hidDescriptor.elements[7].usage, Is.EqualTo(3));
+
+            Assert.That(device.hidDescriptor.collections.Length, Is.EqualTo(1));
+            Assert.That(device.hidDescriptor.collections[0].type, Is.EqualTo(HID.HIDCollectionType.Application));
+            Assert.That(device.hidDescriptor.collections[0].childCount, Is.EqualTo(kNumElements));
         }
 
         // There may be vendor-specific stuff in an input report which we don't know how to use so the

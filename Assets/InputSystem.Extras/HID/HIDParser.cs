@@ -1,5 +1,10 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
+using UnityEngine;
+
+////TODO: array support
+////TODO: delimiter support
+////TODO: designator support
 
 namespace ISX.HID
 {
@@ -7,53 +12,455 @@ namespace ISX.HID
     /// Turns binary HID descriptors into <see cref="HID.HIDDeviceDescriptor"/> instances.
     /// </summary>
     /// <remarks>
-    /// For information about the format, see the <see cref="http://www.usb.org/developers/hidpage/HID1_11.pdf">
-    /// Device Class Definition for Human Interface Devices</see> section 6.2.2.
+    /// For information about the format, see the <a href="http://www.usb.org/developers/hidpage/HID1_11.pdf">
+    /// Device Class Definition for Human Interface Devices</a> section 6.2.2.
     /// </remarks>
     public static class HIDParser
     {
-        public enum HIDItemType
+        /// <summary>
+        /// Parse a HID report descriptor as defined by section 6.2.2 of the
+        /// <a href="http://www.usb.org/developers/hidpage/HID1_11.pdf">HID
+        /// specification</a> and add the elements and collections from the
+        /// descriptor to the given <paramref name="deviceDescriptor"/>.
+        /// </summary>
+        /// <param name="buffer">Buffer containing raw HID report descriptor.</param>
+        /// <param name="deviceDescriptor">HID device descriptor to complete with the information
+        /// from the report descriptor. Elements and collections will get added to this descriptor.</param>
+        /// <returns>True if the report descriptor was successfully parsed.</returns>
+        /// <remarks>
+        /// Will also set <see cref="HID.HIDDeviceDescriptor.inputReportSize"/>,
+        /// <see cref="HID.HIDDeviceDescriptor.outputReportSize"/>, and
+        /// <see cref="HID.HIDDeviceDescriptor.featureReportSize"/>.
+        /// </remarks>
+        public static bool ParseReportDescriptor(byte[] buffer, ref HID.HIDDeviceDescriptor deviceDescriptor)
         {
-            Input,
-            Output,
-            Feature,
-            Collection,
-            EndCollection
-        }
+            // Item state.
+            var localItemState = new HIDItemStateLocal();
+            var globalItemState = new HIDItemStateGlobal();
 
-        public struct HIDItem
-        {
-            public ushort? usage;
-            public ushort? usagePage;
-            public int? reportSize;
-            public int? reportCount;
-            public HIDItem[] children;
+            // Lists where we accumulate the data from the HID items.
+            var reports = new List<HIDReportData>();
+            var elements = new List<HID.HIDElementDescriptor>();
+            var collections = new List<HID.HIDCollectionDescriptor>();
+            var currentCollection = -1;
 
-            public void Read(BinaryReader reader)
+            // Parse the linear list of items.
+            var currentOffset = 0;
+            var bufferLength = buffer.Length;
+            while (currentOffset < bufferLength)
             {
-                var firstByte = reader.ReadByte();
+                var firstByte = buffer[currentOffset];
 
-                if (firstByte == 0xfe)
+                ////TODO
+                if (firstByte == 0xFE)
                     throw new NotImplementedException("long item support");
 
-                var bSize = (byte)(firstByte & 0x3);
-                var bType = (byte)((firstByte & 0xC) >> 2);
-                var bTag = (byte)((firstByte & 0xf0) >> 4);
+                // Read item header.
+                var itemSize = (byte)(firstByte & 0x3);
+                var itemTypeAndTag = (byte)(firstByte & 0xFC);
+                ++currentOffset;
+
+                // Process item.
+                switch (itemTypeAndTag)
+                {
+                    // ------------ Global Items --------------
+                    // These set item state permanently until it is reset.
+
+                    // Usage Page
+                    case (int)HIDItemTypeAndTag.UsagePage:
+                        globalItemState.usagePage = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Report Count
+                    case (int)HIDItemTypeAndTag.ReportCount:
+                        globalItemState.reportCount = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Report Size
+                    case (int)HIDItemTypeAndTag.ReportSize:
+                        globalItemState.reportSize = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Report ID
+                    case (int)HIDItemTypeAndTag.ReportID:
+                        globalItemState.reportId = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Logical Minimum
+                    case (int)HIDItemTypeAndTag.LogicalMinimum:
+                        globalItemState.logicalMinimum = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Logical Maximum
+                    case (int)HIDItemTypeAndTag.LogicalMaximum:
+                        globalItemState.logicalMaximum = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Physical Minimum
+                    case (int)HIDItemTypeAndTag.PhysicalMinimum:
+                        globalItemState.physicalMinimum = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Physical Maximum
+                    case (int)HIDItemTypeAndTag.PhysicalMaximum:
+                        globalItemState.physicalMaximum = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Unit Exponent
+                    case (int)HIDItemTypeAndTag.UnitExponent:
+                        globalItemState.unitExponent = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Unit
+                    case (int)HIDItemTypeAndTag.Unit:
+                        globalItemState.unit = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // ------------ Local Items --------------
+                    // These set the state for the very next elements to be generated.
+
+                    // Usage
+                    case (int)HIDItemTypeAndTag.Usage:
+                        localItemState.SetUsage(ReadData(itemSize, currentOffset, buffer));
+                        break;
+
+                    // Usage Minimum
+                    case (int)HIDItemTypeAndTag.UsageMinimum:
+                        localItemState.usageMinimum = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // Usage Maximum
+                    case (int)HIDItemTypeAndTag.UsageMaximum:
+                        localItemState.usageMaximum = ReadData(itemSize, currentOffset, buffer);
+                        break;
+
+                    // ------------ Main Items --------------
+                    // These emit things into the descriptor based on the local and global item state.
+
+                    // Collection
+                    case (int)HIDItemTypeAndTag.Collection:
+
+                        // Start new collection.
+                        var parentCollection = currentCollection;
+                        currentCollection = collections.Count;
+                        collections.Add(new HID.HIDCollectionDescriptor
+                    {
+                        type = (HID.HIDCollectionType)ReadData(itemSize, currentOffset, buffer),
+                        parent = parentCollection,
+                        usagePage = globalItemState.GetUsagePage(0, ref localItemState),
+                        usage = localItemState.GetUsage(0),
+                        firstChild = elements.Count
+                    });
+
+                        HIDItemStateLocal.Reset(ref localItemState);
+                        break;
+
+                    // EndCollection
+                    case (int)HIDItemTypeAndTag.EndCollection:
+                        if (currentCollection == -1)
+                            return false;
+
+                        // Close collection.
+                        var collection = collections[currentCollection];
+                        collection.childCount = elements.Count - collection.firstChild;
+                        collections[currentCollection] = collection;
+
+                        // Switch back to parent collection (if any).
+                        currentCollection = collection.parent;
+
+                        HIDItemStateLocal.Reset(ref localItemState);
+                        break;
+
+                    // Input/Output/Feature
+                    case (int)HIDItemTypeAndTag.Input:
+                    case (int)HIDItemTypeAndTag.Output:
+                    case (int)HIDItemTypeAndTag.Feature:
+
+                        // Determine report type.
+                        var reportType = itemTypeAndTag == (int)HIDItemTypeAndTag.Input
+                            ? HID.HIDReportType.Input
+                            : itemTypeAndTag == (int)HIDItemTypeAndTag.Output
+                            ? HID.HIDReportType.Output
+                            : HID.HIDReportType.Feature;
+
+                        // Find report.
+                        var reportIndex = HIDReportData.FindOrAddReport(globalItemState.reportId, reportType, reports);
+                        var report = reports[reportIndex];
+
+                        // Add elements to report.
+                        var reportCount = globalItemState.reportCount.GetValueOrDefault(1);
+                        var flags = ReadData(itemSize, currentOffset, buffer);
+                        for (var i = 0; i < reportCount; ++i)
+                        {
+                            var element = new HID.HIDElementDescriptor
+                            {
+                                usage = localItemState.GetUsage(i) & 0xFFFF, // Mask off usage page, if set.
+                                usagePage = globalItemState.GetUsagePage(i, ref localItemState),
+                                reportType = reportType,
+                                reportSizeInBits = globalItemState.reportSize.GetValueOrDefault(8),
+                                reportBitOffset = report.currentBitOffset,
+                                reportId = globalItemState.reportId.GetValueOrDefault(1),
+                                flags = (HID.HIDElementFlags)flags,
+                                logicalMin = globalItemState.logicalMinimum.GetValueOrDefault(0),
+                                logicalMax = globalItemState.logicalMaximum.GetValueOrDefault(0),
+                                physicalMin = globalItemState.GetPhysicalMin(),
+                                physicalMax = globalItemState.GetPhysicalMax(),
+                                unitExponent = globalItemState.unitExponent.GetValueOrDefault(0),
+                                unit = globalItemState.unit.GetValueOrDefault(0),
+                            };
+                            report.currentBitOffset += element.reportSizeInBits;
+                            elements.Add(element);
+                        }
+                        reports[reportIndex] = report;
+
+                        HIDItemStateLocal.Reset(ref localItemState);
+                        break;
+                }
+
+                if (itemSize == 3)
+                    currentOffset += 4;
+                else
+                    currentOffset += itemSize;
             }
 
-            public void Write(BinaryWriter writer)
+            deviceDescriptor.elements = elements.ToArray();
+            deviceDescriptor.collections = collections.ToArray();
+
+            // Set usage and usage page on device descriptor to what's
+            // on the toplevel application collection.
+            foreach (var collection in collections)
             {
+                if (collection.parent == -1 && collection.type == HID.HIDCollectionType.Application)
+                {
+                    deviceDescriptor.usage = collection.usage;
+                    deviceDescriptor.usagePage = collection.usagePage;
+                    break;
+                }
             }
 
-            public byte[] ToArray()
+            return true;
+        }
+
+        private static int ReadData(int itemSize, int currentOffset, byte[] buffer)
+        {
+            if (itemSize == 0)
+                return 0;
+
+            var bufferLength = buffer.Length;
+
+            // Read byte.
+            if (itemSize == 1)
             {
-                throw new NotImplementedException();
+                if (currentOffset >= bufferLength)
+                    return 0;
+                return buffer[currentOffset];
+            }
+
+            // Read short.
+            if (itemSize == 2)
+            {
+                if (currentOffset + 2 >= bufferLength)
+                    return 0;
+                var data1 = buffer[currentOffset];
+                var data2 = buffer[currentOffset + 1];
+                return (data2 << 8) | data1;
+            }
+
+            // Read int.
+            if (itemSize == 3) // Item size 3 means 4 bytes!
+            {
+                if (currentOffset + 4 >= bufferLength)
+                    return 0;
+
+                var data1 = buffer[currentOffset];
+                var data2 = buffer[currentOffset + 1];
+                var data3 = buffer[currentOffset + 2];
+                var data4 = buffer[currentOffset + 3];
+
+                return (data4 << 24) | (data3 << 24) | (data2 << 8) | data1;
+            }
+
+            Debug.Assert(false, "Should not reach here");
+            return 0;
+        }
+
+        private struct HIDReportData
+        {
+            public int reportId;
+            public HID.HIDReportType reportType;
+            public int currentBitOffset;
+
+            public static int FindOrAddReport(int? reportId, HID.HIDReportType reportType, List<HIDReportData> reports)
+            {
+                var id = 1;
+                if (reportId.HasValue)
+                    id = reportId.Value;
+
+                for (var i = 0; i < reports.Count; ++i)
+                {
+                    if (reports[i].reportId == id && reports[i].reportType == reportType)
+                        return i;
+                }
+
+                reports.Add(new HIDReportData
+                {
+                    reportId = id,
+                    reportType = reportType
+                });
+
+                return reports.Count - 1;
             }
         }
 
-        public static bool ParseReportDescriptor(byte[] buffer, ref HID.HIDDeviceDescriptor result)
+        // All types and tags with size bits (low order two bits) masked out (i.e. being 0).
+        private enum HIDItemTypeAndTag
         {
-            throw new NotImplementedException();
+            Input = 0x80,
+            Output = 0x90,
+            Feature = 0xB0,
+            Collection = 0xA0,
+            EndCollection = 0xC0,
+            UsagePage = 0x04,
+            LogicalMinimum = 0x14,
+            LogicalMaximum = 0x24,
+            PhysicalMinimum = 0x34,
+            PhysicalMaximum = 0x44,
+            UnitExponent = 0x54,
+            Unit = 0x64,
+            ReportSize = 0x74,
+            ReportID = 0x84,
+            ReportCount = 0x94,
+            Push = 0xA4,
+            Pop = 0xB4,
+            Usage = 0x08,
+            UsageMinimum = 0x18,
+            UsageMaximum = 0x28,
+            DesignatorIndex = 0x38,
+            DesignatorMinimum = 0x48,
+            DesignatorMaximum = 0x58,
+            StringIndex = 0x78,
+            StringMinimum = 0x88,
+            StringMaximum = 0x98,
+            Delimiter = 0xA8,
+        }
+
+        // State that needs to be defined for each main item separately.
+        // See section 6.2.2.8
+        private struct HIDItemStateLocal
+        {
+            public int? usage;
+            public int? usageMinimum;
+            public int? usageMaximum;
+            public int? designatorIndex;
+            public int? designatorMinimum;
+            public int? designatorMaximum;
+            public int? stringIndex;
+            public int? stringMinimum;
+            public int? stringMaximum;
+
+            public List<int> usageList;
+
+            // Wipe state but preserve usageList allocation.
+            public static void Reset(ref HIDItemStateLocal state)
+            {
+                var usageList = state.usageList;
+                state = new HIDItemStateLocal();
+                if (usageList != null)
+                {
+                    usageList.Clear();
+                    state.usageList = usageList;
+                }
+            }
+
+            // Usage can be set repeatedly to provide an enumeration of usages.
+            public void SetUsage(int value)
+            {
+                if (usage.HasValue)
+                {
+                    if (usageList == null)
+                        usageList = new List<int>();
+                    usageList.Add(usage.Value);
+                }
+                usage = value;
+            }
+
+            // Get usage for Nth element in [0-reportCount] list.
+            public int GetUsage(int index)
+            {
+                // If we have minimum and maximum usage, interpolate between that.
+                if (usageMinimum.HasValue && usageMaximum.HasValue)
+                {
+                    var min = usageMinimum.Value;
+                    var max = usageMaximum.Value;
+
+                    var range = max - min;
+                    if (range < 0)
+                        return 0;
+                    if (index >= range)
+                        return max;
+                    return min + index;
+                }
+
+                // If we have a list of usages, index into that.
+                if (usageList != null && usageList.Count > 0)
+                {
+                    var usageCount = usageList.Count;
+                    if (index >= usageCount)
+                        return usage.Value;
+
+                    return usageList[index];
+                }
+
+                if (usage.HasValue)
+                    return usage.Value;
+
+                ////TODO: min/max
+
+                return 0;
+            }
+        }
+
+        // State that is carried over from main item to main item.
+        // See section 6.2.2.7
+        private struct HIDItemStateGlobal
+        {
+            public int? usagePage;
+            public int? logicalMinimum;
+            public int? logicalMaximum;
+            public int? physicalMinimum;
+            public int? physicalMaximum;
+            public int? unitExponent;
+            public int? unit;
+            public int? reportSize;
+            public int? reportCount;
+            public int? reportId;
+
+            public HID.UsagePage GetUsagePage(int index, ref HIDItemStateLocal localItemState)
+            {
+                if (!usagePage.HasValue)
+                {
+                    var usage = localItemState.GetUsage(index);
+                    return (HID.UsagePage)(usage >> 16);
+                }
+
+                return (HID.UsagePage)usagePage.Value;
+            }
+
+            public int GetPhysicalMin()
+            {
+                if (physicalMinimum == null || physicalMaximum == null ||
+                    (physicalMinimum.Value == 0 && physicalMaximum.Value == 0))
+                    return logicalMinimum.GetValueOrDefault(0);
+                return physicalMinimum.Value;
+            }
+
+            public int GetPhysicalMax()
+            {
+                if (physicalMinimum == null || physicalMaximum == null ||
+                    (physicalMinimum.Value == 0 && physicalMaximum.Value == 0))
+                    return logicalMaximum.GetValueOrDefault(0);
+                return physicalMaximum.Value;
+            }
         }
     }
 }

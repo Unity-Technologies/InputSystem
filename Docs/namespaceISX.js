@@ -29,6 +29,7 @@ var namespaceISX =
     [ "InputTemplate", "classISX_1_1InputTemplate.html", "classISX_1_1InputTemplate" ],
     [ "InputTemplateAttribute", "classISX_1_1InputTemplateAttribute.html", "classISX_1_1InputTemplateAttribute" ],
     [ "InputTestFixture", "classISX_1_1InputTestFixture.html", "classISX_1_1InputTestFixture" ],
+    [ "InputTestRuntime", "classISX_1_1InputTestRuntime.html", null ],
     [ "Keyboard", "classISX_1_1Keyboard.html", "classISX_1_1Keyboard" ],
     [ "KeyControl", "classISX_1_1KeyControl.html", "classISX_1_1KeyControl" ],
     [ "Mouse", "classISX_1_1Mouse.html", "classISX_1_1Mouse" ],

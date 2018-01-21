@@ -28,9 +28,12 @@ namespace ISX
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;
-        public const int kMaxDeviceId = 256;
         internal const int kInvalidDeviceIndex = -1;
+        public const long kIOCTLFailure = -1;
 
+        /// <summary>
+        /// Metadata describing the device (product name etc.).
+        /// </summary>
         public InputDeviceDescription description
         {
             get { return m_Description; }
@@ -140,12 +143,27 @@ namespace ISX
         ////REVIEW: Should IOCTL()  sit *behind* a different interface that would
         ////        make C# data pass through natively rather than go through memory buffers?
 
+        /// <summary>
+        /// Perform a device-specific control transfer.
+        /// </summary>
+        /// <param name="code">FourCC code that indicates the type of transfer to be transacted.</param>
+        /// <param name="buffer">Optional data buffer. This can be used by the transfer for both input and output.</param>
+        /// <param name="sizeInBytes">Size of the data buffer in bytes.</param>
+        /// <returns>A transfer-specific return code. Negative values are considered failure codes.</returns>
+        /// <remarks>
+        /// IOCTL transfers allow devices to set up custom protocols without having to extend
+        /// the device API. This is most useful for devices implemented in the native Unity runtime
+        /// which, through the IOCTL interface, may provide custom, device-specific functions.
+        ///
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396"
+        /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
+        /// target="_blank">ioctl</a> on UNIX-like systems.
+        /// </remarks>
         public virtual long IOCTL(FourCC code, IntPtr buffer, int sizeInBytes)
         {
             if (native)
                 return NativeInputSystem.IOCTL(id, code, buffer, sizeInBytes);
-
-            return -1;
+            return kIOCTLFailure;
         }
 
         [Flags]

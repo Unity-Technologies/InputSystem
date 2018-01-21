@@ -237,6 +237,7 @@ namespace ISX
             m_CurrentPhase = Phase.Waiting;
         }
 
+        ////TODO: need to cancel action if it's in started state
         public void Disable()
         {
             if (!enabled)

@@ -151,12 +151,11 @@ namespace ISX.HID.Editor
                 // Elements.
                 if (device.elements != null)
                 {
-                    var bitOffset = 0;
                     var currentReportType = HID.HIDReportType.Unknown;
                     var elementCount = device.elements.Length;
                     var elements = AddChild(item, elementCount + " Elements", ref id);
                     for (var i = 0; i < elementCount; ++i)
-                        BuildElementItem(i, elements, device.elements[i], ref id, ref bitOffset, ref currentReportType);
+                        BuildElementItem(i, elements, device.elements[i], ref id, ref currentReportType);
                 }
 
                 ////TODO: collections
@@ -164,7 +163,7 @@ namespace ISX.HID.Editor
                 return item;
             }
 
-            private TreeViewItem BuildElementItem(int index, TreeViewItem parent, HID.HIDElementDescriptor element, ref int id, ref int runningBitOffset, ref HID.HIDReportType currentReportType)
+            private TreeViewItem BuildElementItem(int index, TreeViewItem parent, HID.HIDElementDescriptor element, ref int id, ref HID.HIDReportType currentReportType)
             {
                 var item = AddChild(parent, string.Format("Element {0} ({1})", index, element.reportType), ref id);
 
@@ -181,7 +180,7 @@ namespace ISX.HID.Editor
                 AddChild(item, "Report Type: " + element.reportType, ref id);
                 AddChild(item, "Report ID: " + element.reportId, ref id);
                 AddChild(item, "Report Size in Bits: " + element.reportSizeInBits, ref id);
-                AddChild(item, "Report Count: " + element.reportCount, ref id);
+                AddChild(item, "Report Bit Offset: " + element.reportBitOffset, ref id);
                 AddChild(item, "Collection Index: " + element.collectionIndex, ref id);
                 AddChild(item, string.Format("Unit: {0:X}", element.unit), ref id);
                 AddChild(item, string.Format("Unit Exponent: {0:X}", element.unitExponent), ref id);
@@ -194,20 +193,8 @@ namespace ISX.HID.Editor
                 AddChild(item, "Is Array?: " + element.isArray, ref id);
                 AddChild(item, "Is Non-Linear?: " + element.isNonLinear, ref id);
                 AddChild(item, "Is Relative?: " + element.isRelative, ref id);
-                AddChild(item, "Is Virtual?: " + element.isVirtual, ref id);
+                AddChild(item, "Is Constant?: " + element.isConstant, ref id);
                 AddChild(item, "Is Wrapping?: " + element.isWrapping, ref id);
-
-                if (currentReportType != element.reportType)
-                {
-                    currentReportType = element.reportType;
-                    runningBitOffset = 0;
-                }
-
-                AddChild(item,
-                    string.Format("Inferred Offset: byte #{0}, bit #{1}", runningBitOffset / 8, runningBitOffset % 8),
-                    ref id);
-
-                runningBitOffset += element.reportSizeInBits;
 
                 return item;
             }

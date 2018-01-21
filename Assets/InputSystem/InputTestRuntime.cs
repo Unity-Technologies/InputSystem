@@ -8,6 +8,8 @@ using UnityEngine;
 
 namespace ISX
 {
+    using IOCTLCallback = Func<int, IntPtr, int, long>;
+
     /// <summary>
     /// An implementation of <see cref="IInputRuntime"/> for use during tests.
     /// </summary>
@@ -83,6 +85,16 @@ namespace ISX
             }
         }
 
+        public void SetIOCTLCallback(int deviceId, IOCTLCallback callback)
+        {
+            lock (m_Lock)
+            {
+                if (m_IOCTLCallbacks == null)
+                    m_IOCTLCallbacks = new List<KeyValuePair<int, IOCTLCallback>>();
+                m_IOCTLCallbacks.Add(new KeyValuePair<int, IOCTLCallback>(deviceId, callback));
+            }
+        }
+
         public long IOCTL(int deviceId, int code, IntPtr buffer, int size)
         {
             lock (m_Lock)
@@ -98,21 +110,12 @@ namespace ISX
             return -1;
         }
 
-        public void SetIOCTLCallback(int deviceId, Func<int, IntPtr, int, long> callback)
+        public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.kInvalidDeviceId)
         {
             lock (m_Lock)
             {
-                if (m_IOCTLCallbacks == null)
-                    m_IOCTLCallbacks = new List<KeyValuePair<int, Func<int, IntPtr, int, long>>>();
-                m_IOCTLCallbacks.Add(new KeyValuePair<int, Func<int, IntPtr, int, long>>(deviceId, callback));
-            }
-        }
-
-        public int ReportNewInputDevice(string deviceDescriptor)
-        {
-            lock (m_Lock)
-            {
-                var deviceId = AllocateDeviceId();
+                if (deviceId == InputDevice.kInvalidDeviceId)
+                    deviceId = AllocateDeviceId();
                 if (m_NewDeviceDiscoveries == null)
                     m_NewDeviceDiscoveries = new List<KeyValuePair<int, string>>();
                 m_NewDeviceDiscoveries.Add(new KeyValuePair<int, string>(deviceId, deviceDescriptor));
@@ -137,7 +140,7 @@ namespace ISX
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
-        private List<KeyValuePair<int, Func<int, IntPtr, int, long>>> m_IOCTLCallbacks;
+        private List<KeyValuePair<int, IOCTLCallback>> m_IOCTLCallbacks;
         private object m_Lock = new object();
     }
 }
