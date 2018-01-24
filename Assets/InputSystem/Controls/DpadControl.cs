@@ -88,5 +88,10 @@ namespace ISX
 
             return result;
         }
+
+        protected override void WriteRawValueInto(IntPtr statePtr, Vector2 value)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

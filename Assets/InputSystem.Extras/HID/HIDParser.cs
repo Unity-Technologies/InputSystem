@@ -188,7 +188,7 @@ namespace ISX.HID
                         var report = reports[reportIndex];
 
                         // If we have a report ID, then reports start with an 8 byte report ID.
-                        // Shift our offets accordingly.
+                        // Shift our offsets accordingly.
                         if (report.currentBitOffset == 0 && globalItemState.reportId.HasValue)
                             report.currentBitOffset = 8;
 

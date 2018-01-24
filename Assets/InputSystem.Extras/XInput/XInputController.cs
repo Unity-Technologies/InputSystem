@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 
+////TODO: set displayNames of the controls according to Xbox controller standards
+
 namespace ISX.XInput
 {
     /// <summary>

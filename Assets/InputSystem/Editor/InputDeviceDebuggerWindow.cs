@@ -15,6 +15,8 @@ using ISX.LowLevel;
 
 ////TODO: this window should help diagnose problems in the event stream (e.g. ignored state events and why they were ignored)
 
+////REVIEW: input/output toggle in control section?
+
 namespace ISX.Editor
 {
     // Shows status and activity of a single input device in a separate window.

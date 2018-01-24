@@ -129,6 +129,7 @@ namespace ISX
             get { return new FourCC('M', 'O', 'T', 'R'); }
         }
 
+        ////TODO: rename to lowFrequencyMotor and highFrequencyMotor
         [InputControl(name = "leftMotor", template = "Motor", usage = "LowFreqMotor")]
         public float leftMotor;
         [InputControl(name = "rightMotor", template = "Motor", usage = "HighFreqMotor")]

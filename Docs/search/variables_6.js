@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['manufacturer',['manufacturer',['../structISX_1_1InputDeviceDescription.html#a8410a0fe79708abd3e6c5d4132c2bc50',1,'ISX::InputDeviceDescription']]],
-  ['min',['min',['../classISX_1_1Processors_1_1DeadzoneProcessor.html#a6a4ca131a44cff7567cc11b15bbd6fea',1,'ISX::Processors::DeadzoneProcessor']]]
+  ['leftstick',['leftStick',['../structISX_1_1GamepadState.html#a51e37e94bbf3838c0ffcd0391220158d',1,'ISX::GamepadState']]],
+  ['lefttrigger',['leftTrigger',['../structISX_1_1GamepadState.html#a7d01d15c0e9043d91a5755cc40e1bb11',1,'ISX::GamepadState']]]
 ];

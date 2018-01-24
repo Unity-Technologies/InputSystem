@@ -8,5 +8,5 @@ var namespaceISX_1_1LowLevel =
     [ "InputEventPtr", "structISX_1_1LowLevel_1_1InputEventPtr.html", null ],
     [ "InputEventQueue", "structISX_1_1LowLevel_1_1InputEventQueue.html", null ],
     [ "InputStateBlock", "structISX_1_1LowLevel_1_1InputStateBlock.html", "structISX_1_1LowLevel_1_1InputStateBlock" ],
-    [ "StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", null ]
+    [ "StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", "structISX_1_1LowLevel_1_1StateEvent" ]
 ];

@@ -1,9 +1,13 @@
 using System;
 using ISX.LowLevel;
 using ISX.Utilities;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 
 ////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
 ////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
+
+////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
 namespace ISX
 {
@@ -247,6 +251,25 @@ namespace ISX
             get { return InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()); }
         }
 
+        /// <summary>
+        /// The offset of this control's state relative to its device root.
+        /// </summary>
+        /// <remarks>
+        /// Once a device has been added to the system, its state block will get allocated
+        /// in the global state buffers and the offset of the device's state block will
+        /// get baked into all of the controls on the device. This property always returns
+        /// the "unbaked" offset.
+        /// </remarks>
+        protected internal uint stateOffsetRelativeToDeviceRoot
+        {
+            get
+            {
+                var deviceStateOffset = device.m_StateBlock.byteOffset;
+                Debug.Assert(deviceStateOffset <= m_StateBlock.byteOffset);
+                return m_StateBlock.byteOffset - deviceStateOffset;
+            }
+        }
+
         // This data is initialized by InputControlSetup.
         internal InternedString m_Name;
         internal string m_Path;
@@ -329,8 +352,12 @@ namespace ISX
         }
     }
 
-    // Helper to more quickly implement new control types.
-    // Adds processing stack.
+    /// <summary>
+    /// Base class for input controls with a specific value type.
+    /// </summary>
+    /// <typeparam name="TValue">Type of value captured by the control. Note that this does not mean
+    /// that the control has to store data in the given value format. A control that captures float
+    /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
     {
         public TValue value
@@ -403,6 +430,47 @@ namespace ISX
         }
 
         protected abstract TValue ReadRawValueFrom(IntPtr statePtr);
+
+        protected virtual void WriteRawValueInto(IntPtr statePtr, TValue value)
+        {
+            ////TODO: indicate propertly that this control does not support writing
+            throw new NotSupportedException();
+        }
+
+        public void WriteValueInto(InputEventPtr eventPtr, TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteValueInto(IntPtr statePtr, TValue value)
+        {
+            var deviceStateOffset = device.m_StateBlock.byteOffset;
+            var adjustedStatePtr = new IntPtr(statePtr.ToInt64() - (int)deviceStateOffset);
+
+            WriteRawValueInto(adjustedStatePtr, value);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="value"></param>
+        /// <typeparam name="TState"></typeparam>
+        /// <exception cref="ArgumentException">Control's value does not fit within the memory of <paramref name="state"/>.</exception>
+        public void WriteValueInto<TState>(ref TState state, TValue value)
+            where TState : struct, IInputStateTypeInfo
+        {
+            // Make sure the control's state actually fits within the given state.
+            var sizeOfState = UnsafeUtility.SizeOf<TState>();
+            if (stateOffsetRelativeToDeviceRoot + m_StateBlock.alignedSizeInBytes >= sizeOfState)
+                throw new ArgumentException(
+                    string.Format("Control {0} with offset {1} and size of {2} bits is out of bounds for state of type {3} with size {4}",
+                        path, stateOffsetRelativeToDeviceRoot, m_StateBlock.sizeInBits, typeof(TState).Name, sizeOfState), "state");
+
+            // Write value.
+            var addressOfState = UnsafeUtility.AddressOf(ref state);
+            WriteValueInto(addressOfState, value);
+        }
 
         protected TValue Process(TValue value)
         {

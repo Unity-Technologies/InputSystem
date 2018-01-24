@@ -45,5 +45,11 @@ namespace ISX
         {
             return new Pose(position.ReadValueFrom(statePtr), rotation.ReadValueFrom(statePtr));
         }
+
+        protected override void WriteRawValueInto(IntPtr statePtr, Pose value)
+        {
+            position.WriteValueInto(statePtr, value.translation);
+            rotation.WriteValueInto(statePtr, value.rotation);
+        }
     }
 }

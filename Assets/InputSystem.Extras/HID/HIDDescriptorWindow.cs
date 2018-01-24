@@ -140,8 +140,8 @@ namespace ISX.HID.Editor
                     displayName = "Device"
                 };
 
-                AddChild(item, "Vendor ID: " + device.vendorId, ref id);
-                AddChild(item, "Product ID: " + device.productId, ref id);
+                AddChild(item, string.Format("Vendor ID: 0x{0:X}", device.vendorId), ref id);
+                AddChild(item, string.Format("Product ID: 0x{0:X}", device.productId), ref id);
                 AddChild(item, string.Format("Usage Page: 0x{0:X} ({1})", (uint)device.usagePage, device.usagePage), ref id);
                 AddChild(item, string.Format("Usage: 0x{0:X}", device.usage), ref id);
                 AddChild(item, "Input Report Size: " + device.inputReportSize, ref id);

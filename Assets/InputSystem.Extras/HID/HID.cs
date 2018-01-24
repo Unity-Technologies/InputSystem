@@ -86,7 +86,7 @@ namespace ISX.HID
             }
             catch (Exception exception)
             {
-                Debug.Log(string.Format("Could not parse HID descriptor (exception: {0}", exception));
+                Debug.Log(string.Format("Could not parse HID descriptor (exception: {0})", exception));
                 return null;
             }
 
@@ -223,8 +223,6 @@ namespace ISX.HID
                     ////TODO: support output elements
                     if (element.reportType != HIDReportType.Input)
                         continue;
-
-                    ////TODO: this needs to take reportCount into account
 
                     var template = element.DetermineTemplate();
                     if (template != null)

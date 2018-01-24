@@ -1,4 +1,5 @@
 using System;
+using ISX.Utilities;
 using UnityEngineInternal.Input;
 
 namespace ISX.LowLevel
@@ -39,7 +40,7 @@ namespace ISX.LowLevel
             NativeInputSystem.QueueInputEvent(ptr);
         }
 
-        public long IOCTL(int deviceId, int code, IntPtr buffer, int size)
+        public long IOCTL(int deviceId, FourCC code, IntPtr buffer, int size)
         {
             return NativeInputSystem.IOCTL(deviceId, code, buffer, size);
         }

@@ -1,9 +1,11 @@
 var namespaceISX =
 [
     [ "Editor", "namespaceISX_1_1Editor.html", "namespaceISX_1_1Editor" ],
+    [ "Haptics", "namespaceISX_1_1Haptics.html", "namespaceISX_1_1Haptics" ],
     [ "HID", "namespaceISX_1_1HID.html", "namespaceISX_1_1HID" ],
     [ "LowLevel", "namespaceISX_1_1LowLevel.html", "namespaceISX_1_1LowLevel" ],
     [ "Processors", "namespaceISX_1_1Processors.html", "namespaceISX_1_1Processors" ],
+    [ "Steam", "namespaceISX_1_1Steam.html", "namespaceISX_1_1Steam" ],
     [ "Utilities", "namespaceISX_1_1Utilities.html", "namespaceISX_1_1Utilities" ],
     [ "XInput", "namespaceISX_1_1XInput.html", "namespaceISX_1_1XInput" ],
     [ "AxisControl", "classISX_1_1AxisControl.html", null ],
@@ -31,6 +33,7 @@ var namespaceISX =
     [ "InputTestFixture", "classISX_1_1InputTestFixture.html", "classISX_1_1InputTestFixture" ],
     [ "InputTestRuntime", "classISX_1_1InputTestRuntime.html", null ],
     [ "Keyboard", "classISX_1_1Keyboard.html", "classISX_1_1Keyboard" ],
+    [ "KeyboardState", "structISX_1_1KeyboardState.html", null ],
     [ "KeyControl", "classISX_1_1KeyControl.html", "classISX_1_1KeyControl" ],
     [ "Mouse", "classISX_1_1Mouse.html", "classISX_1_1Mouse" ],
     [ "MouseState", "structISX_1_1MouseState.html", null ],

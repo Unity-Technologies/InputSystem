@@ -25,5 +25,10 @@ namespace ISX
             var z = valuePtr[2];
             return new Vector3(x, y, z).magnitude;
         }
+
+        protected override void WriteRawValueInto(IntPtr statePtr, float value)
+        {
+            throw new NotSupportedException("Magnitudes are derived from vectors and cannot be written");
+        }
     }
 }

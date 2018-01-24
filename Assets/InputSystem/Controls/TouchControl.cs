@@ -1,5 +1,6 @@
 using System;
 using ISX.Utilities;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace ISX
 {
@@ -50,6 +51,12 @@ namespace ISX
         {
             var valuePtr = (Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *valuePtr;
+        }
+
+        protected override unsafe void WriteRawValueInto(IntPtr statePtr, Touch value)
+        {
+            var valuePtr = (Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            UnsafeUtility.MemCpy(new IntPtr(valuePtr), UnsafeUtility.AddressOf(ref value), (ulong)UnsafeUtility.SizeOf<Touch>());
         }
     }
 }

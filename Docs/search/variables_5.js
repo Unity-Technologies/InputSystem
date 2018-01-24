@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['leftstick',['leftStick',['../structISX_1_1GamepadState.html#a51e37e94bbf3838c0ffcd0391220158d',1,'ISX::GamepadState']]],
-  ['lefttrigger',['leftTrigger',['../structISX_1_1GamepadState.html#a7d01d15c0e9043d91a5755cc40e1bb11',1,'ISX::GamepadState']]]
+  ['kioctlfailure',['kIOCTLFailure',['../classISX_1_1InputDevice.html#a37d804c008a3dc913fd77f72f324ebe5',1,'ISX::InputDevice']]]
 ];

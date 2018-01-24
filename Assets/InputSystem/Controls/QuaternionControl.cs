@@ -25,5 +25,14 @@ namespace ISX
             var w = valuePtr[3];
             return new Quaternion(x, y, z, w);
         }
+
+        protected override unsafe void WriteRawValueInto(IntPtr statePtr, Quaternion value)
+        {
+            var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            valuePtr[0] = value.x;
+            valuePtr[1] = value.y;
+            valuePtr[2] = value.z;
+            valuePtr[3] = value.w;
+        }
     }
 }

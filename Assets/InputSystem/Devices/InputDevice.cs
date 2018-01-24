@@ -3,14 +3,16 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngineInternal.Input;
 
-//device callbacks:
+// per device functions:
 //  - update/poll
-//  - read data
-//  - write data
+//  - IOCTL
 //  - text input
 //  - configuration change
 //  - make current
 //  - on remove (also resets current)
+//
+// Ideally, these would *not* be virtual methods on InputDevice but use a different process (which?)
+// for associating responses with devices
 
 namespace ISX
 {
@@ -29,6 +31,13 @@ namespace ISX
     {
         public const int kInvalidDeviceId = 0;
         internal const int kInvalidDeviceIndex = -1;
+
+        /// <summary>
+        /// Generic failure code for <see cref="IOCTL"/> calls.
+        /// </summary>
+        /// <remarks>
+        /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
+        /// </remarks>
         public const long kIOCTLFailure = -1;
 
         /// <summary>
@@ -39,6 +48,7 @@ namespace ISX
             get { return m_Description; }
         }
 
+        ////REVIEW: turn this into an object of some kind? or maybe use long? or string?
         ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
         ////TODO: this needs to become part of the device's configuration
         // Systems that support multiple concurrent player inputs on the same system, the available
@@ -122,6 +132,11 @@ namespace ISX
         {
         }
 
+        ////REVIEW: should this receive a timestamp, too?
+        /// <summary>
+        /// Invoked when the device receive a <see cref="LowLevel.TextEvent">text input event</see>.
+        /// </summary>
+        /// <param name="character"></param>
         public virtual void OnTextInput(char character)
         {
         }

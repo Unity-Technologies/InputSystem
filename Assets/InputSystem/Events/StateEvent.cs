@@ -17,12 +17,17 @@ namespace ISX.LowLevel
         public const int Type = 0x53544154; // 'STAT'
 
         [FieldOffset(0)] public InputEvent baseEvent;
+
+        /// <summary>
+        /// Type code for the state stored in the event.
+        /// </summary>
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
+
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public fixed byte stateData[1]; // Variable-sized.
 
         public uint stateSizeInBytes
         {
-            get { return (uint)(baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4)); }
+            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4); }
         }
 
         public IntPtr state

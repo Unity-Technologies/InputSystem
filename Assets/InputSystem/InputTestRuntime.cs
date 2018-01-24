@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using ISX.LowLevel;
+using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -95,7 +96,7 @@ namespace ISX
             }
         }
 
-        public long IOCTL(int deviceId, int code, IntPtr buffer, int size)
+        public long IOCTL(int deviceId, FourCC code, IntPtr buffer, int size)
         {
             lock (m_Lock)
             {

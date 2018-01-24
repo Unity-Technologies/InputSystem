@@ -4,6 +4,17 @@ using NUnit.Framework;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: Is there some way we can center axis controls of HIDs correctly and automatically?
+////        If this code picks up a PS4 controller, for example, then X and Y are the left stick,
+////        Z and Rz are the right stick, and Rx and Ry are the triggers. The triggers work fine.
+////        They go from 0 to 1. However, the axes on the sticks end up centered at 0.5 instead
+////        of going from -1 to 1 with the center at 0. The problem is that from the HID descriptor
+////        data we can't really tell. All those axes look exactly identical. In the HID spec, too;
+////        there's no special meaning applied to the individual axes.
+////
+////        Maybe it's good enough to center X and Y in the -1..1 range. Will do the trick for
+////        joysticks.
+
 namespace ISX.HID
 {
     public class HIDTests : InputTestFixture
@@ -27,11 +38,11 @@ namespace ISX.HID
                 elements = new[]
                 {
                     // 16bit X and Y axes.
-                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
-                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 16 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportBitOffset = 0, reportSizeInBits = 16 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.Y, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportBitOffset = 16, reportSizeInBits = 16 },
                     // 1bit primary and secondary buttons.
-                    new HID.HIDElementDescriptor { usage = (int)HID.Button.Primary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
-                    new HID.HIDElementDescriptor { usage = (int)HID.Button.Secondary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 1 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.Button.Primary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportBitOffset = 32, reportSizeInBits = 1 },
+                    new HID.HIDElementDescriptor { usage = (int)HID.Button.Secondary, usagePage = HID.UsagePage.Button, reportType = HID.HIDReportType.Input, reportId = 1, reportBitOffset = 33, reportSizeInBits = 1 },
                 }
             };
 
@@ -75,7 +86,7 @@ namespace ISX.HID
         [Category("Devices")]
         public void Devices_CanCreateGenericHID_FromDeviceWithBinaryReportDescriptor()
         {
-            // This is several snippet from the PS4 controller's HID report descriptor
+            // This is several snippets from the PS4 controller's HID report descriptor
             // pasted together.
             var reportDescriptor = new byte[]
             {
@@ -205,6 +216,8 @@ namespace ISX.HID
             Assert.That(device.hidDescriptor.collections.Length, Is.EqualTo(1));
             Assert.That(device.hidDescriptor.collections[0].type, Is.EqualTo(HID.HIDCollectionType.Application));
             Assert.That(device.hidDescriptor.collections[0].childCount, Is.EqualTo(kNumElements));
+
+            ////TODO: check hat switch
         }
 
         // There may be vendor-specific stuff in an input report which we don't know how to use so the

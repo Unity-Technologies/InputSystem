@@ -6,6 +6,8 @@ using ISX.Utilities;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
+////TODO: make control values editable (create state events from UI and pump them into the system)
+
 namespace ISX.Editor
 {
     // Multi-column TreeView that shows control tree of device.

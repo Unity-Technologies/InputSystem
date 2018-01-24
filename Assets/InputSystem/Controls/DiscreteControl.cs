@@ -16,5 +16,11 @@ namespace ISX
             var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *(int*)valuePtr;
         }
+
+        protected override unsafe void WriteRawValueInto(IntPtr statePtr, int value)
+        {
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+            *(int*)valuePtr = value;
+        }
     }
 }

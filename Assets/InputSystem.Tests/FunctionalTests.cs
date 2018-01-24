@@ -1382,6 +1382,19 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanWriteValueIntoState()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var state = new GamepadState();
+        var value = new Vector2(0.5f, 0.5f);
+
+        gamepad.leftStick.WriteValueInto(ref state, value);
+
+        Assert.That(state.leftStick, Is.EqualTo(value));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_DpadVectorsAreCircular()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
@@ -2418,7 +2431,7 @@ public class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
         InputSystem.Update();
 
-        Assert.That(keyboard.any.isPressed, Is.True);
+        Assert.That(keyboard.anyKey.isPressed, Is.True);
     }
 
     [Test]
@@ -2507,24 +2520,24 @@ public class FunctionalTests : InputTestFixture
         InputSystem.RegisterTemplate<TestKeyboard>();
         var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
 
-        Assert.That(keyboard.a.displayName, Is.EqualTo("m"));
-        Assert.That(keyboard.a.shiftDisplayName, Is.EqualTo("M"));
-        Assert.That(keyboard.a.altDisplayName, Is.Empty);
-        Assert.That(keyboard.b.displayName, Is.EqualTo("other"));
-        Assert.That(keyboard.b.shiftDisplayName, Is.EqualTo("OTHER"));
-        Assert.That(keyboard.b.altDisplayName, Is.EqualTo("AltOther"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
+        Assert.That(keyboard.aKey.shiftDisplayName, Is.EqualTo("M"));
+        Assert.That(keyboard.aKey.altDisplayName, Is.Empty);
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.bKey.shiftDisplayName, Is.EqualTo("OTHER"));
+        Assert.That(keyboard.bKey.altDisplayName, Is.EqualTo("AltOther"));
 
         // Change layout.
         keyboard.currentLayoutName = "other";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
-        Assert.That(keyboard.a.displayName, Is.EqualTo("q"));
-        Assert.That(keyboard.a.shiftDisplayName, Is.EqualTo("Q"));
-        Assert.That(keyboard.a.altDisplayName, Is.EqualTo("#"));
-        Assert.That(keyboard.b.displayName, Is.EqualTo("other"));
-        Assert.That(keyboard.b.shiftDisplayName, Is.EqualTo("OTHER"));
-        Assert.That(keyboard.b.altDisplayName, Is.EqualTo("AltOther"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("q"));
+        Assert.That(keyboard.aKey.shiftDisplayName, Is.EqualTo("Q"));
+        Assert.That(keyboard.aKey.altDisplayName, Is.EqualTo("#"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.bKey.shiftDisplayName, Is.EqualTo("OTHER"));
+        Assert.That(keyboard.bKey.altDisplayName, Is.EqualTo("AltOther"));
     }
 
     [Test]
@@ -2551,7 +2564,7 @@ public class FunctionalTests : InputTestFixture
     {
         var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
 
-        Assert.That(keyboard.a.keyCode, Is.EqualTo(Key.A));
+        Assert.That(keyboard.aKey.keyCode, Is.EqualTo(Key.A));
     }
 
     [Test]
@@ -2560,7 +2573,7 @@ public class FunctionalTests : InputTestFixture
     {
         var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
 
-        Assert.That(keyboard[Key.A], Is.SameAs(keyboard.a));
+        Assert.That(keyboard[Key.A], Is.SameAs(keyboard.aKey));
     }
 
     [Test]

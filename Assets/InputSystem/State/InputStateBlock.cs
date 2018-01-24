@@ -14,7 +14,6 @@ namespace ISX.LowLevel
     /// </remarks>
     public struct InputStateBlock
     {
-        ////TODO: move into Flags semantics; should support input and output concurrently on a state block
         [Flags]
         public enum Semantics
         {

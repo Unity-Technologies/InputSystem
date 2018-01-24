@@ -3,6 +3,7 @@ var searchData=
   ['dualshock',['DualShock',['../namespaceISX_1_1DualShock.html',1,'ISX']]],
   ['editor',['Editor',['../namespaceISX_1_1Editor.html',1,'ISX.Editor'],['../namespaceISX_1_1HID_1_1Editor.html',1,'ISX.HID.Editor']]],
   ['flightsticks',['Flightsticks',['../namespaceISX_1_1Flightsticks.html',1,'ISX']]],
+  ['haptics',['Haptics',['../namespaceISX_1_1Haptics.html',1,'ISX']]],
   ['hid',['HID',['../namespaceISX_1_1HID.html',1,'ISX']]],
   ['isx',['ISX',['../namespaceISX.html',1,'']]],
   ['lowlevel',['LowLevel',['../namespaceISX_1_1LowLevel.html',1,'ISX']]],

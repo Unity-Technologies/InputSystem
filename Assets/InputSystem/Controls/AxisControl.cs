@@ -82,5 +82,36 @@ namespace ISX
 
             return Preprocess(value);
         }
+
+        protected override unsafe void WriteRawValueInto(IntPtr statePtr, float value)
+        {
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
+
+            var format = m_StateBlock.format;
+            if (format == InputStateBlock.kTypeFloat)
+            {
+                *(float*)valuePtr = value;
+            }
+            else if (format == InputStateBlock.kTypeBit)
+            {
+                if (m_StateBlock.sizeInBits != 1)
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
+
+                BitfieldHelpers.WriteSingleBit(valuePtr, m_StateBlock.bitOffset, value >= 0.5f);
+            }
+            else if (format == InputStateBlock.kTypeShort)
+            {
+                *(short*)valuePtr = (short)(value * 65535.0f);
+            }
+            else if (format == InputStateBlock.kTypeByte)
+            {
+                *(byte*)valuePtr = (byte)(value * 255.0f);
+            }
+            else
+            {
+                throw new Exception(string.Format("State format '{0}' is not supported as state for {1}",
+                        m_StateBlock.format, GetType().Name));
+            }
+        }
     }
 }

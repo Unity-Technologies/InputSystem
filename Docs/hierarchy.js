@@ -11,6 +11,7 @@ var hierarchy =
     [ "ISX.HID.HID.HIDElementDescriptor", "structISX_1_1HID_1_1HID_1_1HIDElementDescriptor.html", null ],
     [ "ISX.HID.HIDParser", "classISX_1_1HID_1_1HIDParser.html", null ],
     [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
+    [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", null ],
     [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "ISX.IInputProcessor< TValue >", "interfaceISX_1_1IInputProcessor.html", null ],
     [ "ISX.IInputProcessor< float >", "interfaceISX_1_1IInputProcessor.html", null ],
@@ -27,6 +28,7 @@ var hierarchy =
     [ "ISX.InputBindingOverride", "structISX_1_1InputBindingOverride.html", null ],
     [ "ISX.InputConfiguration", "classISX_1_1InputConfiguration.html", null ],
     [ "ISX.InputControl", "classISX_1_1InputControl.html", [
+      [ "ISX.InputControl< TValue >", "classISX_1_1InputControl.html", null ],
       [ "ISX.InputDevice", "classISX_1_1InputDevice.html", [
         [ "ISX.Gamepad", "classISX_1_1Gamepad.html", [
           [ "ISX.XInput.XInputController", "classISX_1_1XInput_1_1XInputController.html", null ]
@@ -37,7 +39,8 @@ var hierarchy =
           [ "ISX.Mouse", "classISX_1_1Mouse.html", null ],
           [ "ISX.Pen", "classISX_1_1Pen.html", null ],
           [ "ISX.Touchscreen", "classISX_1_1Touchscreen.html", null ]
-        ] ]
+        ] ],
+        [ "ISX.Steam.SteamController", "classISX_1_1Steam_1_1SteamController.html", null ]
       ] ]
     ] ],
     [ "ISX.InputControl< AudioBuffer >", "classISX_1_1InputControl.html", null ],
@@ -77,6 +80,7 @@ var hierarchy =
     [ "ISX.InputTemplateAttribute", "classISX_1_1InputTemplateAttribute.html", null ],
     [ "ISX.InputTestFixture", "classISX_1_1InputTestFixture.html", null ],
     [ "ISX.Utilities.InternedString", "structISX_1_1Utilities_1_1InternedString.html", null ],
+    [ "ISX.KeyboardState", "structISX_1_1KeyboardState.html", null ],
     [ "ISX.InputRemoting.Message", "structISX_1_1InputRemoting_1_1Message.html", null ],
     [ "ISX.MouseState", "structISX_1_1MouseState.html", null ],
     [ "ISX.PenState", "structISX_1_1PenState.html", null ],

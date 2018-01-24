@@ -1,14 +1,16 @@
 var classISX_1_1Keyboard =
 [
-    [ "any", "classISX_1_1Keyboard.html#a7903f8b16386a9ae4f0a147b51881157", null ],
-    [ "backquote", "classISX_1_1Keyboard.html#acf4704219e4e6e9585c3a31b4065ce63", null ],
-    [ "comma", "classISX_1_1Keyboard.html#a81b6b2909f20bb989355f33c9a53e815", null ],
-    [ "enter", "classISX_1_1Keyboard.html#a721a7bd924475bd264eacdf7db0c3494", null ],
+    [ "aKey", "classISX_1_1Keyboard.html#a3a8d48c7a8ed9f62aab13af2ee981503", null ],
+    [ "anyKey", "classISX_1_1Keyboard.html#a2a4efff801e9414fac5c6c0b544bc31d", null ],
+    [ "backquoteKey", "classISX_1_1Keyboard.html#a60127ea67a46d9704d1c9bac1e9eac9b", null ],
+    [ "commaKey", "classISX_1_1Keyboard.html#a8a4b45e48f7a277ed4b50cf0ad65fa79", null ],
+    [ "enterKey", "classISX_1_1Keyboard.html#a62f6794fa8761e6862d70cce84fa1332", null ],
+    [ "equalsKey", "classISX_1_1Keyboard.html#a53384cb971f1051084f923bee5b23484", null ],
     [ "layout", "classISX_1_1Keyboard.html#ab5ef12769dac776b49dd6f4c2976c75b", null ],
     [ "onTextInput", "classISX_1_1Keyboard.html#a32208b6d941ae0dfd46a5291358d08e3", null ],
-    [ "quote", "classISX_1_1Keyboard.html#a7dcd1541ac535eb169bc17afe10dfaf0", null ],
-    [ "semicolon", "classISX_1_1Keyboard.html#ac4c1c852a6c2f3661911732c58b98504", null ],
-    [ "space", "classISX_1_1Keyboard.html#a2345c9059d074db7ef1b346efb10d908", null ],
-    [ "tab", "classISX_1_1Keyboard.html#ae068e27e21f50a3495fbed603411f8f2", null ],
+    [ "quoteKey", "classISX_1_1Keyboard.html#a3fa3eed6ba890c70b1a9a3c52761ab64", null ],
+    [ "semicolonKey", "classISX_1_1Keyboard.html#aa825545f2c26a0d42be5ae68a2d41a56", null ],
+    [ "spaceKey", "classISX_1_1Keyboard.html#a2d5d9fb150b869c9b080ba81cb92e60f", null ],
+    [ "tabKey", "classISX_1_1Keyboard.html#ac16c48f324f2dc3b4d5460f4a8be78ae", null ],
     [ "this[Key key]", "classISX_1_1Keyboard.html#ae053ebaa165a7aa645c3585b57353073", null ]
 ];

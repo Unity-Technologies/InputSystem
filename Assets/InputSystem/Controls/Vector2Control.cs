@@ -46,5 +46,11 @@ namespace ISX
         {
             return new Vector2(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr));
         }
+
+        protected override void WriteRawValueInto(IntPtr statePtr, Vector2 value)
+        {
+            x.WriteValueInto(statePtr, value.x);
+            y.WriteValueInto(statePtr, value.y);
+        }
     }
 }
