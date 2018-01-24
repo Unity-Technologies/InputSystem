@@ -1,3 +1,4 @@
+using System;
 using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -88,7 +89,7 @@ namespace ISX
                 *((int*)buffer) = (int)keyCode;
 
                 // Read key configuration data from device.
-                var numBytesRead = device.IOCTL(IOCTLGetKeyConfig, buffer, kMaxBufferSize);
+                var numBytesRead = device.IOCTL(IOCTLGetKeyConfig, new IntPtr(buffer), kMaxBufferSize);
                 if (numBytesRead < sizeof(int) * 4)
                 {
                     // Got nothing. Device probably does not support key configuration data.
@@ -107,9 +108,9 @@ namespace ISX
                 // alt symbol.
                 m_ScanCode = *((int*)buffer);
                 var offset = 4u;
-                displayName = StringHelpers.ReadStringFromBuffer(buffer, kMaxBufferSize, ref offset);
-                m_ShiftDisplayName = StringHelpers.ReadStringFromBuffer(buffer, kMaxBufferSize, ref offset);
-                m_AltDisplayName = StringHelpers.ReadStringFromBuffer(buffer, kMaxBufferSize, ref offset);
+                displayName = StringHelpers.ReadStringFromBuffer(new IntPtr(buffer), kMaxBufferSize, ref offset);
+                m_ShiftDisplayName = StringHelpers.ReadStringFromBuffer(new IntPtr(buffer), kMaxBufferSize, ref offset);
+                m_AltDisplayName = StringHelpers.ReadStringFromBuffer(new IntPtr(buffer), kMaxBufferSize, ref offset);
             }
             finally
             {

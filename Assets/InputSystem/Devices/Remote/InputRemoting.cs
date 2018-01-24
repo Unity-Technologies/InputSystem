@@ -567,7 +567,7 @@ namespace ISX
                 var data = new byte[totalSize];
                 fixed(byte* dataPtr = data)
                 {
-                    UnsafeUtility.MemCpy(new IntPtr(dataPtr), events, totalSize);
+                    UnsafeUtility.MemCpy(dataPtr, events.ToPointer(), totalSize);
                 }
 
                 // Done.

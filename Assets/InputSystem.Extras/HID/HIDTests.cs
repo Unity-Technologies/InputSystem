@@ -149,7 +149,7 @@ namespace ISX.HID
                         {
                             fixed(byte* ptr = reportDescriptor)
                             {
-                                UnsafeUtility.MemCpy(buffer, new IntPtr(ptr), (ulong)reportDescriptor.Length);
+                                UnsafeUtility.MemCpy(buffer.ToPointer(), ptr, reportDescriptor.Length);
                                 return reportDescriptor.Length;
                             }
                         }

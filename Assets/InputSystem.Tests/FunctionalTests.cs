@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using ISX;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
@@ -1477,8 +1478,8 @@ public class FunctionalTests : InputTestFixture
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>() * 8));
-        Assert.That(gamepad.leftStick.stateBlock.byteOffset, Is.EqualTo(UnsafeUtility.OffsetOf<GamepadState>("leftStick")));
-        Assert.That(gamepad.dpad.stateBlock.byteOffset, Is.EqualTo(UnsafeUtility.OffsetOf<GamepadState>("buttons")));
+        Assert.That(gamepad.leftStick.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32()));
+        Assert.That(gamepad.dpad.stateBlock.byteOffset, Is.EqualTo(Marshal.OffsetOf(typeof(GamepadState), "buttons").ToInt32()));
     }
 
     [Test]
@@ -1489,8 +1490,8 @@ public class FunctionalTests : InputTestFixture
         var rightMotor = setup.GetControl("rightMotor");
         setup.Finish();
 
-        var outputOffset = UnsafeUtility.OffsetOf<GamepadState>("motors");
-        var rightMotorOffset = outputOffset + UnsafeUtility.OffsetOf<GamepadOutputState>("rightMotor");
+        var outputOffset = Marshal.OffsetOf(typeof(GamepadState), "motors").ToInt32();
+        var rightMotorOffset = outputOffset + Marshal.OffsetOf(typeof(GamepadOutputState), "rightMotor").ToInt32();
 
         Assert.That(rightMotor.stateBlock.byteOffset, Is.EqualTo(rightMotorOffset));
     }
@@ -1515,7 +1516,7 @@ public class FunctionalTests : InputTestFixture
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
 
-        var leftStickOffset = UnsafeUtility.OffsetOf<GamepadState>("leftStick");
+        var leftStickOffset = Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32();
         var leftStickXOffset = leftStickOffset;
         var leftStickYOffset = leftStickOffset + 4;
 
@@ -1530,7 +1531,7 @@ public class FunctionalTests : InputTestFixture
         InputSystem.AddDevice("Gamepad");
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var leftStickOffset = UnsafeUtility.OffsetOf<GamepadState>("leftStick");
+        var leftStickOffset = Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32();
         var leftStickXOffset = leftStickOffset;
         var leftStickYOffset = leftStickOffset + 4;
 
@@ -2263,7 +2264,7 @@ public class FunctionalTests : InputTestFixture
         Assert.That(gamepad2.stateBlock.byteOffset, Is.EqualTo(0)); // Should have lost its offset into state buffers.
         Assert.That(gamepad3.stateBlock.byteOffset, Is.EqualTo(gamepad2Offset)); // 3 should have moved into 2's position.
         Assert.That(gamepad2.leftStick.stateBlock.byteOffset,
-            Is.EqualTo(UnsafeUtility.OffsetOf<GamepadState>("leftStick"))); // Should have unbaked offsets in control hierarchy.
+            Is.EqualTo(Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32())); // Should have unbaked offsets in control hierarchy.
     }
 
     [Test]
@@ -3120,15 +3121,15 @@ public class FunctionalTests : InputTestFixture
             Assert.That(events[0].deviceId, Is.EqualTo(device.id));
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
-            Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState), StateEvent.From(events[0])->state,
-                    (ulong)UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+            Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
+                    StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
             Assert.That(events[1].deviceId, Is.EqualTo(device.id));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
-            Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState), StateEvent.From(events[1])->state,
-                    (ulong)UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+            Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
+                    StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
     }
 

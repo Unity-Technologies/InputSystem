@@ -43,7 +43,7 @@ namespace ISX.Editor
             var buffer = new byte[stateSize];
             fixed(byte* stateDataPtr = buffer)
             {
-                UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), stateEventPtr->state, stateSize);
+                UnsafeUtility.MemCpy(stateDataPtr, stateEventPtr->state.ToPointer(), stateSize);
             }
             m_StateBuffers = new byte[1][];
             m_StateBuffers[0] = buffer;
@@ -73,7 +73,7 @@ namespace ISX.Editor
                 var buffer = new byte[stateSize];
                 fixed(byte* stateDataPtr = buffer)
                 {
-                    UnsafeUtility.MemCpy(new IntPtr(stateDataPtr), new IntPtr(deviceState.ToInt64() + (int)stateOffset), stateSize);
+                    UnsafeUtility.MemCpy(stateDataPtr, (void*)(deviceState.ToInt64() + (int)stateOffset), stateSize);
                 }
                 m_StateBuffers[i] = buffer;
 

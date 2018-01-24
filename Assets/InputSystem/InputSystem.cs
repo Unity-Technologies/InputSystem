@@ -337,7 +337,7 @@ namespace ISX
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
-            UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref state), stateSize);
+            UnsafeUtility.MemCpy(ptr, UnsafeUtility.AddressOf(ref state), stateSize);
 
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
@@ -392,7 +392,7 @@ namespace ISX
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
-            UnsafeUtility.MemCpy(new IntPtr(ptr), UnsafeUtility.AddressOf(ref delta), deltaSize);
+            UnsafeUtility.MemCpy(ptr, UnsafeUtility.AddressOf(ref delta), deltaSize);
 
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }

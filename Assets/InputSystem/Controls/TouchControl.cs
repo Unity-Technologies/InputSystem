@@ -56,7 +56,7 @@ namespace ISX
         protected override unsafe void WriteRawValueInto(IntPtr statePtr, Touch value)
         {
             var valuePtr = (Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            UnsafeUtility.MemCpy(new IntPtr(valuePtr), UnsafeUtility.AddressOf(ref value), (ulong)UnsafeUtility.SizeOf<Touch>());
+            UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<Touch>());
         }
     }
 }

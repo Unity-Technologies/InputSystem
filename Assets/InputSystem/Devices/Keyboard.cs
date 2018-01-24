@@ -289,7 +289,7 @@ namespace ISX
         {
             fixed(byte* keysPtr = keys)
             {
-                UnsafeUtility.MemClear(new IntPtr(keysPtr), kSizeInBytes);
+                UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
                 for (var i = 0; i < pressedKeys.Length; ++i)
                 {
                     BitfieldHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
@@ -806,14 +806,14 @@ namespace ISX
             base.FinishSetup(setup);
         }
 
-        protected override void RefreshConfiguration()
+        protected override unsafe void RefreshConfiguration()
         {
             const int kMaxBufferSize = 256;
             var buffer = UnsafeUtility.Malloc(kMaxBufferSize, 4, Allocator.Temp);
             try
             {
                 // Read layout configuration.
-                var numBytesRead = IOCTL(IOCTLGetKeyboardLayout, buffer, kMaxBufferSize);
+                var numBytesRead = IOCTL(IOCTLGetKeyboardLayout, new IntPtr(buffer), kMaxBufferSize);
                 if (numBytesRead < sizeof(int))
                 {
                     // Got nothing. Device probably does not support key configuration data.
@@ -821,7 +821,7 @@ namespace ISX
                 }
 
                 var offset = 0u;
-                layout = StringHelpers.ReadStringFromBuffer(buffer, kMaxBufferSize, ref offset);
+                layout = StringHelpers.ReadStringFromBuffer(new IntPtr(buffer), kMaxBufferSize, ref offset);
             }
             finally
             {

@@ -210,8 +210,8 @@ namespace ISX
 #endif
 
             // Allocate.
-            m_AllBuffers = UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
-            UnsafeUtility.MemClear(m_AllBuffers, totalSize);
+            m_AllBuffers = (IntPtr)UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
+            UnsafeUtility.MemClear(m_AllBuffers.ToPointer(), totalSize);
 
             // Set up device to buffer mappings.
             var ptr = m_AllBuffers;
@@ -259,11 +259,11 @@ namespace ISX
             return buffers;
         }
 
-        public void FreeAll()
+        public unsafe void FreeAll()
         {
             if (m_AllBuffers != IntPtr.Zero)
             {
-                UnsafeUtility.Free(m_AllBuffers, Allocator.Persistent);
+                UnsafeUtility.Free(m_AllBuffers.ToPointer(), Allocator.Persistent);
                 m_AllBuffers = IntPtr.Zero;
             }
 
@@ -321,7 +321,7 @@ namespace ISX
             }
         }
 
-        private void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
+        private unsafe void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
         {
             // Nothing to migrate if we no longer keep a buffer or the corresponding type.
             if (!newBuffer.valid)
@@ -353,11 +353,11 @@ namespace ISX
                 var newDeviceIndex = i;
                 var numBytes = device.m_StateBlock.alignedSizeInBytes;
 
-                var oldFrontPtr = new IntPtr(oldBuffer.GetFrontBuffer(oldDeviceIndex).ToInt64() + (int)device.m_StateBlock.byteOffset);
-                var oldBackPtr = new IntPtr(oldBuffer.GetBackBuffer(oldDeviceIndex).ToInt64() + (int)device.m_StateBlock.byteOffset);
+                var oldFrontPtr = (byte*)oldBuffer.GetFrontBuffer(oldDeviceIndex).ToPointer() + (int)device.m_StateBlock.byteOffset;
+                var oldBackPtr = (byte*)oldBuffer.GetBackBuffer(oldDeviceIndex).ToPointer() + (int)device.m_StateBlock.byteOffset;
 
-                var newFrontPtr = new IntPtr(newBuffer.GetFrontBuffer(newDeviceIndex).ToInt64() + (int)newStateBlockOffsets[i]);
-                var newBackPtr = new IntPtr(newBuffer.GetBackBuffer(newDeviceIndex).ToInt64() + (int)newStateBlockOffsets[i]);
+                var newFrontPtr = (byte*)newBuffer.GetFrontBuffer(newDeviceIndex).ToPointer() + (int)newStateBlockOffsets[i];
+                var newBackPtr = (byte*)newBuffer.GetBackBuffer(newDeviceIndex).ToPointer() + (int)newStateBlockOffsets[i];
 
                 // Copy state.
                 UnsafeUtility.MemCpy(newFrontPtr, oldFrontPtr, numBytes);

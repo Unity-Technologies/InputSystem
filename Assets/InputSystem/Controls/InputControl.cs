@@ -457,7 +457,7 @@ namespace ISX
         /// <param name="value"></param>
         /// <typeparam name="TState"></typeparam>
         /// <exception cref="ArgumentException">Control's value does not fit within the memory of <paramref name="state"/>.</exception>
-        public void WriteValueInto<TState>(ref TState state, TValue value)
+        public unsafe void WriteValueInto<TState>(ref TState state, TValue value)
             where TState : struct, IInputStateTypeInfo
         {
             // Make sure the control's state actually fits within the given state.
@@ -468,7 +468,7 @@ namespace ISX
                         path, stateOffsetRelativeToDeviceRoot, m_StateBlock.sizeInBits, typeof(TState).Name, sizeOfState), "state");
 
             // Write value.
-            var addressOfState = UnsafeUtility.AddressOf(ref state);
+            var addressOfState = new IntPtr(UnsafeUtility.AddressOf(ref state));
             WriteValueInto(addressOfState, value);
         }
 

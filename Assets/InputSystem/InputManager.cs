@@ -910,7 +910,7 @@ namespace ISX
                 {
                     continue;
                 }
-                foreach (var type in assembly.GetTypes())
+                foreach (var type in types)
 #endif
                 {
                     var pluginAttribute = type.GetCustomAttribute<InputPluginAttribute>(false);
@@ -938,12 +938,12 @@ namespace ISX
             m_Runtime.QueueEvent(ptr.data);
         }
 
-        public void QueueEvent<TEvent>(ref TEvent inputEvent)
+        public unsafe void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            m_Runtime.QueueEvent(UnsafeUtility.AddressOf(ref inputEvent));
+            m_Runtime.QueueEvent((IntPtr)UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()
@@ -1625,12 +1625,12 @@ namespace ISX
 
                             if (needToCopyFromBackBuffer)
                                 UnsafeUtility.MemCpy(
-                                    new IntPtr(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
-                                    new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
-                                        (int)device.m_StateBlock.byteOffset),
+                                    (void*)(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
+                                    (void*)(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
+                                            (int)device.m_StateBlock.byteOffset),
                                     device.m_StateBlock.alignedSizeInBytes);
 
-                            UnsafeUtility.MemCpy(new IntPtr(buffer.ToInt64() + (int)deviceStateOffset), statePtr, stateSize);
+                            UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
                         }
                         else
 #endif
@@ -1648,12 +1648,12 @@ namespace ISX
 
                                 if (needToCopyFromBackBuffer)
                                     UnsafeUtility.MemCpy(
-                                        new IntPtr(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
-                                        new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
-                                            (int)device.m_StateBlock.byteOffset),
+                                        (void*)(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
+                                        (void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
+                                                (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy(new IntPtr(buffer.ToInt64() + (int)deviceStateOffset), statePtr, stateSize);
+                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
@@ -1662,12 +1662,12 @@ namespace ISX
 
                                 if (needToCopyFromBackBuffer)
                                     UnsafeUtility.MemCpy(
-                                        new IntPtr(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
-                                        new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
-                                            (int)device.m_StateBlock.byteOffset),
+                                        (void*)(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
+                                        (void*)(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
+                                                (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy(new IntPtr(buffer.ToInt64() + (int)deviceStateOffset), statePtr, stateSize);
+                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
                             }
                         }
 
@@ -1747,7 +1747,7 @@ namespace ISX
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
         //       'newStateOffset' must give the offset into the full state and 'newStateSize' must
         //       give the size of memory slice to be updated.
-        private bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, uint newStateSize, uint newStateOffset)
+        private unsafe bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, uint newStateSize, uint newStateOffset)
         {
             if (m_StateChangeMonitorListeners == null)
                 return false;
@@ -1811,7 +1811,7 @@ namespace ISX
                     if (offset - newStateOffset + sizeInBytes > newStateSize)
                         continue;
 
-                    if (UnsafeUtility.MemCmp(new IntPtr(newState.ToInt64() + offset), new IntPtr(oldState.ToInt64() + offset), sizeInBytes) == 0)
+                    if (UnsafeUtility.MemCmp((byte*)newState.ToPointer() + offset, (byte*)oldState.ToPointer() + offset, sizeInBytes) == 0)
                         continue;
                 }
 
@@ -1925,7 +1925,7 @@ namespace ISX
         ////TODO: reset device states for dynamic and fixed updates when going in and out of play mode
         ////REVIEW: shouldn't resets be visible to actions by generating proper change notifications?
         ////        (might be a better idea to instead send an state event with default state)
-        private void ResetDeviceState(InputDevice device)
+        private unsafe void ResetDeviceState(InputDevice device)
         {
             var offset = (int)device.m_StateBlock.byteOffset;
             var sizeInBytes = device.m_StateBlock.alignedSizeInBytes;
@@ -1933,19 +1933,19 @@ namespace ISX
 
             if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
             {
-                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
             }
 
             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
             {
-                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-                UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
             }
 
 #if UNITY_EDITOR
-            UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            UnsafeUtility.MemClear(new IntPtr(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+            UnsafeUtility.MemClear((void*)(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
+            UnsafeUtility.MemClear((void*)(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
 #endif
         }
 

@@ -33,7 +33,7 @@ namespace ISX
             return result;
         }
 
-        public void Update(InputUpdateType type)
+        public unsafe void Update(InputUpdateType type)
         {
             lock (m_Lock)
             {
@@ -51,7 +51,7 @@ namespace ISX
                 }
                 if (onUpdate != null)
                 {
-                    onUpdate(type, m_EventCount, m_EventBuffer.GetUnsafePtr());
+                    onUpdate(type, m_EventCount, (IntPtr)m_EventBuffer.GetUnsafePtr());
                 }
 
                 m_EventCount = 0;
@@ -74,13 +74,13 @@ namespace ISX
                 {
                     var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)eventSize, 1024);
                     var newBuffer = new NativeArray<byte>(newBufferSize, Allocator.Persistent);
-                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), (ulong)m_EventBuffer.Length);
+                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventBuffer.Length);
                     m_EventBuffer.Dispose();
                     m_EventBuffer = newBuffer;
                 }
 
                 // Copy event.
-                UnsafeUtility.MemCpy(new IntPtr(m_EventBuffer.GetUnsafePtr().ToInt64() + m_EventWritePosition), ptr, eventSize);
+                UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
                 m_EventWritePosition += (int)eventSize;
                 ++m_EventCount;
             }

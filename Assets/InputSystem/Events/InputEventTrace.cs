@@ -148,17 +148,17 @@ namespace ISX.LowLevel
         [SerializeField] private IntPtr m_EventBufferHead;
         [SerializeField] private IntPtr m_EventBufferTail;
 
-        private void Allocate()
+        private unsafe void Allocate()
         {
-            m_EventBuffer = UnsafeUtility.Malloc(m_EventBufferSize, 4, Allocator.Persistent);
+            m_EventBuffer = (IntPtr)UnsafeUtility.Malloc(m_EventBufferSize, 4, Allocator.Persistent);
         }
 
-        private void Release()
+        private unsafe void Release()
         {
             Disable();
 
             if (m_EventBuffer != IntPtr.Zero)
-                UnsafeUtility.Free(m_EventBuffer, Allocator.Persistent);
+                UnsafeUtility.Free(m_EventBuffer.ToPointer(), Allocator.Persistent);
 
             m_EventBuffer = IntPtr.Zero;
             m_EventBufferHead = IntPtr.Zero;
@@ -205,7 +205,7 @@ namespace ISX.LowLevel
                     // buffer by wiping the space if it could fit an event.
                     var spaceLeft = m_EventBufferSize - (m_EventBufferTail.ToInt64() - m_EventBuffer.ToInt64());
                     if (spaceLeft >= InputEvent.kBaseEventSize)
-                        UnsafeUtility.MemClear(m_EventBufferTail, InputEvent.kBaseEventSize);
+                        UnsafeUtility.MemClear(m_EventBufferTail.ToPointer(), InputEvent.kBaseEventSize);
 
                     m_EventBufferTail = m_EventBuffer;
                     newTail = new IntPtr(m_EventBuffer.ToInt64() + eventSize);
@@ -240,7 +240,7 @@ namespace ISX.LowLevel
             }
 
             // Copy data to buffer.
-            UnsafeUtility.MemCpy(buffer, eventData, eventSize);
+            UnsafeUtility.MemCpy(buffer.ToPointer(), eventData.ToPointer(), eventSize);
             ++m_ChangeCounter;
 
             // Notify listeners.
