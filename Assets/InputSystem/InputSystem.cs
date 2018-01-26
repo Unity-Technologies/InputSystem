@@ -46,6 +46,9 @@ namespace ISX
     {
         #region Templates
 
+        /// <summary>
+        /// Event that is signalled when the template setup in the system changes.
+        /// </summary>
         public static event Action<string, InputTemplateChange> onTemplateChange
         {
             add { s_Manager.onTemplateChange += value; }
@@ -70,17 +73,44 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
-        // Register a constructor that delivers an InputTemplate instance on demand.
-        //
-        // The given expression must be a lambda expression solely comprised of a method call with
-        // no arguments. Can be static or instance method call. If it is an instance method, the
-        // instance object must be serializable.
-        //
-        // The reason for these restrictions and for not taking an arbitrary delegate is that we
-        // need to be able to persist the template constructor between domain reloads.
-        //
-        // NOTE: The template that is being constructed must not vary over time (except between
-        //       domain reloads).
+        /// <summary>
+        /// Register a constructor that delivers an <see cref="InputTemplate"/> instance on demand.
+        /// </summary>
+        /// <param name="constructor"></param>
+        /// <param name="name"></param>
+        /// <param name="baseTemplate"></param>
+        /// <param name="deviceDescription"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        /// <remarks>
+        /// The given expression must be a lambda expression solely comprised of a method call with
+        /// no arguments. Can be static or instance method call. If it is an instance method, the
+        /// instance object must be serializable.
+        ///
+        /// The reason for these restrictions and for not taking an arbitrary delegate is that we
+        /// need to be able to persist the template constructor between domain reloads.
+        ///
+        /// Note that the template that is being constructed must not vary over time (except between
+        /// domain reloads).
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// [Serializable]
+        /// class MyTemplateConstructor
+        /// {
+        ///     public InputTemplate Build()
+        ///     {
+        ///         var builder = new InputTemplate.Builder()
+        ///             .WithType<MyDevice>();
+        ///         builder.AddControl("button1").WithTemplate("Button");
+        ///         return builder.Build();
+        ///     }
+        /// }
+        ///
+        /// var constructor = new MyTemplateConstructor();
+        /// InputSystem.RegisterTemplateConstructor(() => constructor.Build(), "MyTemplate");
+        /// </code>
+        /// </example>
         public static void RegisterTemplateConstructor(Expression<Func<InputTemplate>> constructor, string name,
             string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
         {
@@ -107,12 +137,20 @@ namespace ISX
                 deviceDescription: deviceDescription);
         }
 
+        /// <summary>
+        /// Remove an already registered template from the system.
+        /// </summary>
+        /// <param name="name">Name of the template to remove. Note that template names are case-insensitive.</param>
+        /// <remarks>
+        /// Note that removing a template also removes all devices that directly or indirectly
+        /// use the template.
+        ///
+        /// This method can be used to remove both control or device templates.
+        /// </remarks>
         public static void RemoveTemplate(string name)
         {
             s_Manager.RemoveTemplate(name);
         }
-
-        //public static void RegisterTemplateMethod<T>(string )
 
         public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
         {
@@ -167,26 +205,121 @@ namespace ISX
 
         #region Devices
 
+        /// <summary>
+        /// The list of currently connected devices.
+        /// </summary>
+        /// <remarks>
+        /// Note that accessing this property does not allocate. It gives read-only access
+        /// directly to the system's internal array of devices.
+        /// </remarks>
         public static ReadOnlyArray<InputDevice> devices
         {
             get { return s_Manager.devices; }
         }
 
+        /// <summary>
+        /// Event that is signalled when the device setup in the system changes.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to detect when device are added or removed as well as
+        /// detecting when existing device change their configuration.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.onDeviceChange +=
+        ///     (device, change) =>
+        ///     {
+        ///         switch (change)
+        ///         {
+        ///             case InputDeviceChange.Added:
+        ///                 Debug.Log("Device added: " + device);
+        ///                 break;
+        ///             case InputDeviceChange.Removed:
+        ///                 Debug.Log("Device removed: " + device);
+        ///                 break;
+        ///             case InputDeviceChange.ConfigurationChanged:
+        ///                 Debug.Log("Device coniguration changed: " + device);
+        ///                 break;
+        ///         }
+        ///     };
+        /// </code>
+        /// </example>
         public static event Action<InputDevice, InputDeviceChange> onDeviceChange
         {
             add { s_Manager.onDeviceChange += value; }
             remove { s_Manager.onDeviceChange -= value; }
         }
 
+        /// <summary>
+        /// Event that is signalled when the system is trying to match a template to
+        /// a device it has discovered.
+        /// </summary>
+        /// <remarks>
+        /// This event allows customizing the template discovery process and to generate
+        /// templates on the fly, if need be. The system will invoke callbacks with the
+        /// name of the template it has matched to the device based on the current template setup.
+        /// If all the callbacks return <c>null</c>, that template will be instantiated. If,
+        /// however, any of the callbacks returns a new name instead, the system will use that
+        /// template instead.
+        ///
+        /// To generate templates on the fly, register them with the system in the callback and
+        /// then return the name of the newly generated template from the callback.
+        ///
+        /// Note that this callback will also be invoked if the system could not match any
+        /// existing template to the device. In that case, the <c>matchedTemplate</c> argument
+        /// to the callback will be <c>null</c>.
+        ///
+        /// Callbacks also receive a device ID and reference to the input runtime. For devices
+        /// where more information has to be fetched from the runtime in order to generate a
+        /// template, this allows issuing <see cref="IInputRuntime.IOCTL"/> calls for the device.
+        /// Note that for devices that are not coming from the runtime (i.e. devices created
+        /// directly in script code), the device ID will be <see cref="InputDevice.kInvalidDeviceId"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.onFindTemplateForDevice +=
+        ///     (deviceId, description, matchedTemplate, runtime) =>
+        ///     {
+        ///         ////TODO: complete example
+        ///     };
+        /// </code>
+        /// </example>
         public static event DeviceFindTemplateCallback onFindTemplateForDevice
         {
             add { s_Manager.onFindTemplateForDevice += value; }
             remove { s_Manager.onFindTemplateForDevice -= value; }
         }
 
+        /// <summary>
+        /// Add a new device by instantiating the given device template.
+        /// </summary>
+        /// <param name="template">Name of the template to instantiate. Must be a device template. Note that
+        /// template names are case-insensitive.</param>
+        /// <param name="name">Name to assign to the device. If null, the template name is used instead. Note that
+        /// device names are made unique automatically by the system by appending numbers to them (e.g. "gamepad",
+        /// "gamepad1", "gamepad2", etc.).</param>
+        /// <returns>The newly created input device.</returns>
+        /// <remarks>
+        /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.AddDevice("Gamepad");
+        /// </code>
+        /// </example>
         public static InputDevice AddDevice(string template, string name = null)
         {
             return s_Manager.AddDevice(template, name);
+        }
+
+        public static TDevice AddDevice<TDevice>(string name = null)
+            where TDevice : InputDevice
+        {
+            var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
+            if (device == null)
+                throw new Exception(string.Format("Template registered for type '{0}' did not produce a device of that type; template probably has been overridden",
+                        typeof(TDevice).Name));
+            return device;
         }
 
         public static InputDevice AddDevice(InputDeviceDescription description)

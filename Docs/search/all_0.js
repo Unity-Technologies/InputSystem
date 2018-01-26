@@ -1,6 +1,7 @@
 var searchData=
 [
   ['addcontrol',['AddControl',['../structISX_1_1InputTemplate_1_1Builder.html#a434b1f0ad88a69584ed0880d71f85f09',1,'ISX::InputTemplate::Builder']]],
+  ['adddevice',['AddDevice',['../classISX_1_1InputSystem.html#a384a36c99cab94886a0359083bd21b00',1,'ISX::InputSystem']]],
   ['added',['Added',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1af29ddbfb905eb2593fdcdfb243f9af85',1,'ISX']]],
   ['akey',['aKey',['../classISX_1_1Keyboard.html#a3a8d48c7a8ed9f62aab13af2ee981503',1,'ISX::Keyboard']]],
   ['allbasedevicetemplates',['allBaseDeviceTemplates',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#ad6807bead965190f148c5428984d2036',1,'ISX::Editor::EditorInputTemplateCache']]],

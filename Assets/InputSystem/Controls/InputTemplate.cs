@@ -1477,8 +1477,8 @@ namespace ISX
         internal class TemplateNotFoundException : Exception
         {
             public string template { get; private set; }
-            public TemplateNotFoundException(string name)
-                : base(string.Format("Cannot find template '{0}'", name))
+            public TemplateNotFoundException(string name, string message = null)
+                : base(message ?? string.Format("Cannot find template '{0}'", name))
             {
                 template = name;
             }

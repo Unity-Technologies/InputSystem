@@ -570,6 +570,42 @@ namespace ISX
 
         ////TODO: make sure that no device or control with a '/' in the name can creep into the system
 
+        public InputDevice AddDevice(Type type, string name = null)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+
+            // Find the template name that the given type was registered with.
+            // First just try the name of the type and see if that produces a hit.
+            var templateName = new InternedString(type.Name);
+            Type registeredType;
+            if (!m_Templates.templateTypes.TryGetValue(templateName, out registeredType)
+                || registeredType != type)
+            {
+                // Didn't produce a hit so crawl through all registered template types
+                // and look for a match.
+                templateName = new InternedString();
+                foreach (var entry in m_Templates.templateTypes)
+                {
+                    if (entry.Value == type)
+                    {
+                        templateName = entry.Key;
+                        break;
+                    }
+                }
+
+                if (templateName.IsEmpty())
+                    throw new ArgumentException(string.Format("Cannot find template registered for type '{0}'", type.Name),
+                        "type");
+            }
+
+            Debug.Assert(!templateName.IsEmpty(), name);
+
+            // Note that since we go through the normal by-name lookup here, this will
+            // still work if the template from the type was override with a string template.
+            return AddDevice(templateName);
+        }
+
         // Creates a device from the given template and adds it to the system.
         // NOTE: Creates garbage.
         public InputDevice AddDevice(string template, string name = null)

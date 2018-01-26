@@ -1986,6 +1986,20 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanAddDeviceFromTemplate_LookedUpFromType()
+    {
+        // Register template with name different from name of type
+        // so that trying to find the template using the type name
+        // would fail.
+        InputSystem.RegisterTemplate<CustomDevice>("MyDevice");
+
+        var device = InputSystem.AddDevice<CustomDevice>();
+
+        Assert.That(device, Is.TypeOf<CustomDevice>());
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_AddingDeviceTwiceIsIgnored()
     {
         var device = InputSystem.AddDevice("Gamepad");
@@ -2226,7 +2240,7 @@ public class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanBeReadded()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice("Keyboard");
 
         InputSystem.RemoveDevice(gamepad);
