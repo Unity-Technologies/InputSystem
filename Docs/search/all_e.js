@@ -4,6 +4,7 @@ var searchData=
   ['parsereportdescriptor',['ParseReportDescriptor',['../classISX_1_1HID_1_1HIDParser.html#a8b1ca411278f83c62cba999c15f55d5b',1,'ISX::HID::HIDParser']]],
   ['participantid',['participantId',['../structISX_1_1InputRemoting_1_1Message.html#a3436cb56d043290d5749f037f7402aa2',1,'ISX::InputRemoting::Message']]],
   ['path',['path',['../classISX_1_1InputControl.html#ae444777a164e1626b625573943ecd61c',1,'ISX::InputControl']]],
+  ['pausehaptics',['PauseHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060',1,'ISX::Haptics::IHaptics']]],
   ['pen',['Pen',['../classISX_1_1Pen.html',1,'ISX']]],
   ['penstate',['PenState',['../structISX_1_1PenState.html',1,'ISX']]],
   ['pointer',['Pointer',['../classISX_1_1Pointer.html',1,'ISX']]],

@@ -95,16 +95,50 @@ $(document).ready(function(){initNavTree('structISX_1_1LowLevel_1_1InputEvent.ht
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
+<tr class="memitem:a8477f4a35cb12379e75ffd230436019e"><td class="memItemLeft" align="right" valign="top">FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#a8477f4a35cb12379e75ffd230436019e">type</a><code> [get]</code></td></tr>
+<tr class="memdesc:a8477f4a35cb12379e75ffd230436019e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type code for the event.  <a href="#a8477f4a35cb12379e75ffd230436019e">More...</a><br /></td></tr>
+<tr class="separator:a8477f4a35cb12379e75ffd230436019e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada42f63d144a448670b80e92815a5144"><td class="memItemLeft" align="right" valign="top">uint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144">sizeInBytes</a><code> [get]</code></td></tr>
 <tr class="memdesc:ada42f63d144a448670b80e92815a5144"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total size of the event in bytes.  <a href="#ada42f63d144a448670b80e92815a5144">More...</a><br /></td></tr>
 <tr class="separator:ada42f63d144a448670b80e92815a5144"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d02451974ca5d7131399ce3f76ee98c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#a3d02451974ca5d7131399ce3f76ee98c">eventId</a><code> [get]</code></td></tr>
 <tr class="memdesc:a3d02451974ca5d7131399ce3f76ee98c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unique serial ID of the event.  <a href="#a3d02451974ca5d7131399ce3f76ee98c">More...</a><br /></td></tr>
 <tr class="separator:a3d02451974ca5d7131399ce3f76ee98c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9df745dc0b0b5f84ac1de2b055e0033"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#af9df745dc0b0b5f84ac1de2b055e0033">deviceId</a><code> [get, set]</code></td></tr>
+<tr class="memdesc:af9df745dc0b0b5f84ac1de2b055e0033"><td class="mdescLeft">&#160;</td><td class="mdescRight">ID of the device that the event is for.  <a href="#af9df745dc0b0b5f84ac1de2b055e0033">More...</a><br /></td></tr>
+<tr class="separator:af9df745dc0b0b5f84ac1de2b055e0033"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa773cfee75ae05c9eb02b19f6c7f1341"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#aa773cfee75ae05c9eb02b19f6c7f1341">time</a><code> [get, set]</code></td></tr>
+<tr class="memdesc:aa773cfee75ae05c9eb02b19f6c7f1341"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time that the event was generated.  <a href="#aa773cfee75ae05c9eb02b19f6c7f1341">More...</a><br /></td></tr>
+<tr class="separator:aa773cfee75ae05c9eb02b19f6c7f1341"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A chunk of memory signaling a data transfer in the input system. </p>
 </div><h2 class="groupheader">Property Documentation</h2>
+<a id="af9df745dc0b0b5f84ac1de2b055e0033"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9df745dc0b0b5f84ac1de2b055e0033">&#9670;&nbsp;</a></span>deviceId</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int ISX.LowLevel.InputEvent.deviceId</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>ID of the device that the event is for. </p>
+<dl class="section see"><dt>See also</dt><dd>InputDevice.id</dd></dl>
+
+</div>
+</div>
 <a id="a3d02451974ca5d7131399ce3f76ee98c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3d02451974ca5d7131399ce3f76ee98c">&#9670;&nbsp;</a></span>eventId</h2>
 
@@ -153,6 +187,55 @@ Properties</h2></td></tr>
 <p>Total size of the event in bytes. </p>
 <p>Events are variable-size structs. This field denotes the total size of the event as stored in memory. This includes the full size of this struct and not just the "payload" of the event. </p>
 <p>Store event in private buffer: </p><div class="fragment"><div class="line">unsafe byte[] CopyEventData(InputEventPtr eventPtr)</div><div class="line">{</div><div class="line">    var <a class="code" href="structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144">sizeInBytes</a> = eventPtr.sizeInBytes;</div><div class="line">    var buffer = <span class="keyword">new</span> byte[<a class="code" href="structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144">sizeInBytes</a>];</div><div class="line">    fixed (byte* bufferPtr = buffer)</div><div class="line">    {</div><div class="line">        UnsafeUtility.MemCpy(<span class="keyword">new</span> IntPtr(bufferPtr), eventPtr.data, sizeInBytes);</div><div class="line">    }</div><div class="line">    <span class="keywordflow">return</span> buffer;</div><div class="line">}</div></div><!-- fragment --> 
+</div>
+</div>
+<a id="aa773cfee75ae05c9eb02b19f6c7f1341"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa773cfee75ae05c9eb02b19f6c7f1341">&#9670;&nbsp;</a></span>time</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">double ISX.LowLevel.InputEvent.time</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span><span class="mlabel">set</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Time that the event was generated. </p>
+<p>TODO: clarify timeline that this sits on </p>
+
+</div>
+</div>
+<a id="a8477f4a35cb12379e75ffd230436019e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8477f4a35cb12379e75ffd230436019e">&#9670;&nbsp;</a></span>type</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">FourCC ISX.LowLevel.InputEvent.type</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">get</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Type code for the event. </p>
+
 </div>
 </div>
 </div><!-- contents -->

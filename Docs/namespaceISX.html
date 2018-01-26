@@ -217,15 +217,10 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">InputDeviceChange</a> { <br />
-&#160;&#160;<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1af29ddbfb905eb2593fdcdfb243f9af85">InputDeviceChange.Added</a>, 
+<tr class="memitem:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">InputDeviceChange</a> { <a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1af29ddbfb905eb2593fdcdfb243f9af85">InputDeviceChange.Added</a>, 
 <a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a93f07b720ebf7d1246512569761a5804">InputDeviceChange.Removed</a>, 
-<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7">InputDeviceChange.Connected</a>, 
-<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0">InputDeviceChange.Disconnected</a>, 
-<br />
-&#160;&#160;<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3">InputDeviceChange.UsageChanged</a>
+<a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3">InputDeviceChange.UsageChanged</a>
 , <a class="el" href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5">InputDeviceChange.ConfigurationChanged</a>
-<br />
  }<tr class="memdesc:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates what type of change related to an input device occurred.  <a href="namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1">More...</a><br /></td></tr>
 </td></tr>
 <tr class="separator:a664a08fa4bdc226c4fecddb3f350d6a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -263,19 +258,13 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a93f07b720ebf7d1246512569761a5804"></a>Removed&#160;</td><td class="fielddoc"><p>An existing device was removed from the system. </p>
 <dl class="section see"><dt>See also</dt><dd>InputSystem.RemoveDevice</dd></dl>
 </td></tr>
-<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a2ec0d16e4ca169baedb9b2d50ec5c6d7"></a>Connected&#160;</td><td class="fielddoc"><p>A previously added device was re-connected after having been disconnected. </p>
-<dl class="section see"><dt>See also</dt><dd>LowLevel.ConnectEvent, InputSystem.QueueConnectEvent</dd></dl>
-</td></tr>
-<tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1aef70e46fd3bbc21e3e1f0b6815e750c0"></a>Disconnected&#160;</td><td class="fielddoc"><p>A previously added device was disconnected but remains added to the system. </p>
-<dl class="section see"><dt>See also</dt><dd>LowLevel.DisconnectEvent, InputSystem.QueueDisconnectEvent</dd></dl>
-</td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a1c49d571f9d59cf999198884684eb1b3"></a>UsageChanged&#160;</td><td class="fielddoc"><p>The usages on a device have changed. </p>
 <p>This may signal, for example, that what was the right hand XR controller before is now the left hand controller. </p>
 <dl class="section see"><dt>See also</dt><dd>InputSystem.SetUsage, InputControl.usages</dd></dl>
 </td></tr>
 <tr><td class="fieldname"><a id="a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5"></a>ConfigurationChanged&#160;</td><td class="fielddoc"><p>The configuration of a device has changed. </p>
 <p>This may signal, for example, that the layout used by the keyboard has changed or that, on a console, a gamepad has changed which player ID(s) it is assigned to. </p>
-<dl class="section see"><dt>See also</dt><dd>LowLevel.ConfigChangeEvent, InputSystem.QueueConfigChangeEvent</dd></dl>
+<dl class="section see"><dt>See also</dt><dd>DeviceConfigurationEvent, InputSystem.QueueConfigChangeEvent</dd></dl>
 </td></tr>
 </table>
 

@@ -17,6 +17,8 @@ using ISX.LowLevel;
 
 ////REVIEW: input/output toggle in control section?
 
+////TODO: react to device being removed (close window? show as disconnected?)
+
 namespace ISX.Editor
 {
     // Shows status and activity of a single input device in a separate window.
@@ -85,7 +87,6 @@ namespace ISX.Editor
             EditorGUILayout.LabelField("Name", m_Device.name);
             EditorGUILayout.LabelField("Template", m_Device.template);
             EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
-            EditorGUILayout.LabelField("Connected", m_Device.connected ? "True" : "False");
             EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
             EditorGUILayout.LabelField("Product", m_Device.description.product);
             EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);

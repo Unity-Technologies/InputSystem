@@ -72,10 +72,6 @@ namespace ISX.Editor
 
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
 
-            DrawDevicesGUI(Contents.connectedDevicesContent, true);
-            if (m_ShowDisconnectedDevices)
-                DrawDevicesGUI(Contents.disconnectedDevicesContent, false);
-
             if (m_ShowUnrecognizedDevices)
                 DrawUnrecognizedDevicesGUI();
 
@@ -89,8 +85,6 @@ namespace ISX.Editor
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_ShowUnrecognizedDevices = GUILayout.Toggle(m_ShowUnrecognizedDevices,
                     Contents.showUnrecognizedDevicesContent, EditorStyles.toolbarButton);
-            m_ShowDisconnectedDevices = GUILayout.Toggle(m_ShowDisconnectedDevices,
-                    Contents.showDisconnectedDevicesContent, EditorStyles.toolbarButton);
             m_ShowDisabledActions = GUILayout.Toggle(m_ShowDisabledActions,
                     Contents.showDisabledActionsContent, EditorStyles.toolbarButton);
             GUILayout.FlexibleSpace();
@@ -101,7 +95,7 @@ namespace ISX.Editor
 
         // Draw a button for each device. Clicking the button pops up an InputDeviceDebuggerWindow
         // on the device.
-        private void DrawDevicesGUI(GUIContent label, bool connected)
+        private void DrawDevicesGUI(GUIContent label)
         {
             var devices = InputSystem.devices;
             var deviceCount = devices.Count;
@@ -117,10 +111,6 @@ namespace ISX.Editor
             for (var i = 0; i < deviceCount; i++)
             {
                 var device = devices[i];
-
-                // Skip devices that aren't in the connection state we're looking for.
-                if (device.connected != connected)
-                    continue;
                 ++displayedDeviceCount;
 
                 // Draw it.
@@ -218,7 +208,6 @@ namespace ISX.Editor
         [SerializeField] private Mode m_Mode;
         [SerializeField] private Vector2 m_ScrollPosition;
         [SerializeField] private bool m_ShowUnrecognizedDevices;
-        [SerializeField] private bool m_ShowDisconnectedDevices;
         [SerializeField] private bool m_ShowDisabledActions;
 
         [NonSerialized] private List<InputDeviceDescription> m_UnrecognizedDevices;
@@ -247,11 +236,8 @@ namespace ISX.Editor
         private static class Contents
         {
             public static GUIContent noneContent = new GUIContent("None");
-            public static GUIContent connectedDevicesContent = new GUIContent("Connected Devices");
-            public static GUIContent disconnectedDevicesContent = new GUIContent("Disconnected Devices");
             public static GUIContent unrecognizedDevicesContent = new GUIContent("Unrecognized Devices");
             public static GUIContent showUnrecognizedDevicesContent = new GUIContent("Show Unrecognized Devices");
-            public static GUIContent showDisconnectedDevicesContent = new GUIContent("Show Disconnected Devices");
             public static GUIContent showDisabledActionsContent = new GUIContent("Show Disabled Actions");
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
             public static GUIContent browseTemplatesContent = new GUIContent("Browse Templates");

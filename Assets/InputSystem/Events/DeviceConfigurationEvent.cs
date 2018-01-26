@@ -9,7 +9,7 @@ namespace ISX.LowLevel
     /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
     /// <seealso cref="InputDevice.OnConfigurationChanged"/>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
-    public struct ConfigChangeEvent : IInputEventTypeInfo
+    public struct DeviceConfigurationEvent : IInputEventTypeInfo
     {
         public const int Type = 0x44434647;
 
@@ -23,9 +23,9 @@ namespace ISX.LowLevel
             return Type;
         }
 
-        public static ConfigChangeEvent Create(int deviceId, double time)
+        public static DeviceConfigurationEvent Create(int deviceId, double time)
         {
-            var inputEvent = new ConfigChangeEvent();
+            var inputEvent = new DeviceConfigurationEvent();
             inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize, deviceId, time);
             return inputEvent;
         }

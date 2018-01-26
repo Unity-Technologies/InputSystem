@@ -1,9 +1,9 @@
 var hierarchy =
 [
     [ "ISX.InputTemplate.Builder", "structISX_1_1InputTemplate_1_1Builder.html", null ],
-    [ "ISX.LowLevel.ConfigChangeEvent", "structISX_1_1LowLevel_1_1ConfigChangeEvent.html", null ],
-    [ "ISX.LowLevel.ConnectEvent", "structISX_1_1LowLevel_1_1ConnectEvent.html", null ],
     [ "ISX.InputTemplate.ControlTemplate", "structISX_1_1InputTemplate_1_1ControlTemplate.html", null ],
+    [ "ISX.LowLevel.DeviceConfigurationEvent", "structISX_1_1LowLevel_1_1DeviceConfigurationEvent.html", null ],
+    [ "ISX.LowLevel.DeviceRemoveEvent", "structISX_1_1LowLevel_1_1DeviceRemoveEvent.html", null ],
     [ "ISX.Editor.EditorInputTemplateCache", "classISX_1_1Editor_1_1EditorInputTemplateCache.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],
     [ "ISX.HID.HID.HIDCollectionDescriptor", "structISX_1_1HID_1_1HID_1_1HIDCollectionDescriptor.html", null ],
@@ -11,7 +11,9 @@ var hierarchy =
     [ "ISX.HID.HID.HIDElementDescriptor", "structISX_1_1HID_1_1HID_1_1HIDElementDescriptor.html", null ],
     [ "ISX.HID.HIDParser", "classISX_1_1HID_1_1HIDParser.html", null ],
     [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
-    [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", null ],
+    [ "ISX.Haptics.IHaptics", "interfaceISX_1_1Haptics_1_1IHaptics.html", [
+      [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", null ]
+    ] ],
     [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "ISX.IInputProcessor< TValue >", "interfaceISX_1_1IInputProcessor.html", null ],
     [ "ISX.IInputProcessor< float >", "interfaceISX_1_1IInputProcessor.html", null ],

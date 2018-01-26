@@ -23,6 +23,9 @@ namespace ISX.LowLevel
         ////REVIEW: does this really need to be a double? float would save us a 4 bytes
         [FieldOffset(12)] private double m_Time;
 
+        /// <summary>
+        /// Type code for the event.
+        /// </summary>
         public FourCC type
         {
             get { return m_Type; }
@@ -67,13 +70,20 @@ namespace ISX.LowLevel
             get { return (int)(m_EventId & kIdMask); }
         }
 
-        ////TODO: kill device IDs
+        /// <summary>
+        /// ID of the device that the event is for.
+        /// </summary>
+        /// <seealso cref="InputDevice.id"/>
         public int deviceId
         {
             get { return m_DeviceId; }
             set { m_DeviceId = (ushort)value; }
         }
 
+        ////TODO: clarify timeline that this sits on
+        /// <summary>
+        /// Time that the event was generated.
+        /// </summary>
         public double time
         {
             get { return m_Time; }

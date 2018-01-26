@@ -641,17 +641,12 @@ namespace ISX
             // Let InputStateBuffers know this device doesn't have any associated state yet.
             device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
 
-            // Mark as connected.
-            device.m_Flags |= InputDevice.Flags.Connected;
-
             // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
 
             // Make the device current.
             device.MakeCurrent();
 
-            ////REVIEW: what about device connects and disconnects? should actions stay with controls
-            ////        of disconnected devices or do we want to restrict them to just connected devices?
             // Let actions re-resolve their paths.
             InputActionSet.RefreshAllEnabledActions();
 
@@ -1492,6 +1487,7 @@ namespace ISX
             while (remainingEventCount > 0)
             {
                 InputDevice device = null;
+                var doNotMakeDeviceCurrent = false;
 
                 // Bump firstEvent up to the next unhandled event (in before-render updates
                 // the event needs to be *both* unhandled *and* for a device with before
@@ -1687,26 +1683,12 @@ namespace ISX
                         device.OnTextInput((char)textEventPtr->character);
                         break;
 
-                    case ConnectEvent.Type:
-                        if (!device.connected)
-                        {
-                            device.m_Flags |= InputDevice.Flags.Connected;
-                            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
-                                m_DeviceChangeListeners[i](device, InputDeviceChange.Connected);
-                        }
+                    case DeviceRemoveEvent.Type:
+                        RemoveDevice(device);
+                        doNotMakeDeviceCurrent = true;
                         break;
 
-                    case DisconnectEvent.Type:
-                        if (device.connected)
-                        {
-                            device.m_Flags &= ~InputDevice.Flags.Connected;
-                            ResetDeviceState(device);
-                            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
-                                m_DeviceChangeListeners[i](device, InputDeviceChange.Disconnected);
-                        }
-                        break;
-
-                    case ConfigChangeEvent.Type:
+                    case DeviceConfigurationEvent.Type:
                         device.OnConfigurationChanged();
                         for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
                             m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
@@ -1721,8 +1703,10 @@ namespace ISX
                     --remainingEventCount;
                 }
 
-                // Device received event so make it current.
-                device.MakeCurrent();
+                // Device received event so make it current except if we got a
+                // device removal event.
+                if (!doNotMakeDeviceCurrent)
+                    device.MakeCurrent();
             }
 
             ////TODO: fire event that allows code to update state *from* state we just updated

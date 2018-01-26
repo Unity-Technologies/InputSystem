@@ -21,20 +21,6 @@ namespace ISX
         Removed,
 
         /// <summary>
-        /// A previously added device was re-connected after having been disconnected.
-        /// </summary>
-        /// <seealso cref="LowLevel.ConnectEvent"/>
-        /// <seealso cref="InputSystem.QueueConnectEvent"/>
-        Connected,
-
-        /// <summary>
-        /// A previously added device was disconnected but remains added to the system.
-        /// </summary>
-        /// <seealso cref="LowLevel.DisconnectEvent"/>
-        /// <seealso cref="InputSystem.QueueDisconnectEvent"/>
-        Disconnected,
-
-        /// <summary>
         /// The usages on a device have changed.
         /// </summary>
         /// <remarks>
@@ -54,7 +40,7 @@ namespace ISX
         /// This may signal, for example, that the layout used by the keyboard has changed or
         /// that, on a console, a gamepad has changed which player ID(s) it is assigned to.
         /// </remarks>
-        /// <seealso cref="LowLevel.ConfigChangeEvent"/>
+        /// <seealso cref="DeviceConfigurationEvent"/>
         /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
         ConfigurationChanged
     }

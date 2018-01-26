@@ -6,6 +6,7 @@ var searchData=
   ['haptics',['Haptics',['../namespaceISX_1_1Haptics.html',1,'ISX']]],
   ['hid',['HID',['../namespaceISX_1_1HID.html',1,'ISX']]],
   ['idualmotorrumble',['IDualMotorRumble',['../interfaceISX_1_1Haptics_1_1IDualMotorRumble.html',1,'ISX::Haptics']]],
+  ['ihaptics',['IHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html',1,'ISX::Haptics']]],
   ['iinputpluginmanager',['IInputPluginManager',['../interfaceISX_1_1IInputPluginManager.html',1,'ISX']]],
   ['iinputprocessor',['IInputProcessor',['../interfaceISX_1_1IInputProcessor.html',1,'ISX']]],
   ['iinputprocessor_3c_20float_20_3e',['IInputProcessor&lt; float &gt;',['../interfaceISX_1_1IInputProcessor.html',1,'ISX']]],

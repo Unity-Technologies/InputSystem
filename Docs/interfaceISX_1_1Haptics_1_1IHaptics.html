@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Input System: ISX.Haptics Namespace Reference</title>
+<title>Input System: ISX.Haptics.IHaptics Interface Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -62,7 +62,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('namespaceISX_1_1Haptics.html','');});
+$(document).ready(function(){initNavTree('interfaceISX_1_1Haptics_1_1IHaptics.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -81,27 +81,63 @@ $(document).ready(function(){initNavTree('namespaceISX_1_1Haptics.html','');});
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="interfaceISX_1_1Haptics_1_1IHaptics-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ISX.Haptics Namespace Reference</div>  </div>
+<div class="title">ISX.Haptics.IHaptics Interface Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p>Base interface for haptics on input devices.  
+ <a href="interfaceISX_1_1Haptics_1_1IHaptics.html#details">More...</a></p>
+<div class="dynheader">
+Inheritance diagram for ISX.Haptics.IHaptics:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="interfaceISX_1_1Haptics_1_1IHaptics.png" usemap="#ISX.Haptics.IHaptics_map" alt=""/>
+  <map id="ISX.Haptics.IHaptics_map" name="ISX.Haptics.IHaptics_map">
+<area href="interfaceISX_1_1Haptics_1_1IDualMotorRumble.html" title="Simple haptics interface " alt="ISX.Haptics.IDualMotorRumble" shape="rect" coords="0,56,185,80"/>
+</map>
+ </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1Haptics_1_1IDualMotorRumble.html">IDualMotorRumble</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Simple haptics interface  <a href="interfaceISX_1_1Haptics_1_1IDualMotorRumble.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html">IHaptics</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base interface for haptics on input devices.  <a href="interfaceISX_1_1Haptics_1_1IHaptics.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a1b635267351e51bd0210b563d5371060"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060">PauseHaptics</a> ()</td></tr>
+<tr class="memdesc:a1b635267351e51bd0210b563d5371060"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pause haptics playback on the device.  <a href="#a1b635267351e51bd0210b563d5371060">More...</a><br /></td></tr>
+<tr class="separator:a1b635267351e51bd0210b563d5371060"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Base interface for haptics on input devices. </p>
+<p>To support haptics, an <a class="el" href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a> has to implement one or more haptics interfaces. </p>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a1b635267351e51bd0210b563d5371060"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b635267351e51bd0210b563d5371060">&#9670;&nbsp;</a></span>PauseHaptics()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ISX.Haptics.IHaptics.PauseHaptics </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Pause haptics playback on the device. </p>
+<p>This should preserve current playback settings (such as motor speed levels or effect playback positions) but shut down feedback effects on the device.</p>
+<p>If proper resumption of effects is not possible, playback should be stopped and ResumeHaptics is allowed to be a no-operation.</p>
+<p>Note that haptics playback states are not required to survive domain reloads in the editor. </p>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespaceISX.html">ISX</a></li><li class="navelem"><a class="el" href="namespaceISX_1_1Haptics.html">Haptics</a></li>
+    <li class="navelem"><a class="el" href="namespaceISX.html">ISX</a></li><li class="navelem"><a class="el" href="namespaceISX_1_1Haptics.html">Haptics</a></li><li class="navelem"><a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html">IHaptics</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.13 </li>

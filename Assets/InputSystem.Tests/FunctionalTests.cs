@@ -2024,20 +2024,6 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_AddingDeviceMakesItConnected()
-    {
-        var setup = new InputControlSetup("Gamepad");
-        var device = setup.Finish();
-
-        Assert.That(device.connected, Is.False);
-
-        InputSystem.AddDevice(device);
-
-        Assert.That(device.connected, Is.True);
-    }
-
-    [Test]
-    [Category("Devices")]
     public void Devices_AddingDeviceMakesItCurrent()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -2096,62 +2082,6 @@ public class FunctionalTests : InputTestFixture
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad1.id, Is.Not.EqualTo(gamepad2.id));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanBeDisconnectedAndReconnected()
-    {
-        var device = InputSystem.AddDevice("Gamepad");
-
-        var receivedCalls = 0;
-        InputDevice receivedDevice = null;
-        InputDeviceChange? receivedDeviceChange = null;
-
-        InputSystem.onDeviceChange +=
-            (d, c) =>
-            {
-                ++receivedCalls;
-                receivedDevice = d;
-                receivedDeviceChange = c;
-            };
-
-        InputSystem.QueueDisconnectEvent(device);
-        InputSystem.Update();
-
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedDevice, Is.SameAs(device));
-        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.Disconnected));
-        Assert.That(device.connected, Is.False);
-
-        receivedCalls = 0;
-        receivedDevice = null;
-        receivedDeviceChange = null;
-
-        InputSystem.QueueConnectEvent(device);
-        InputSystem.Update();
-
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedDevice, Is.SameAs(device));
-        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.Connected));
-        Assert.That(device.connected, Is.True);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_ResetToDefaultStateWhenDisconnected()
-    {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.234).Within(0.000001));
-
-        InputSystem.QueueDisconnectEvent(gamepad);
-        InputSystem.Update();
-
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.0f));
     }
 
     [Test]
@@ -2265,6 +2195,31 @@ public class FunctionalTests : InputTestFixture
         Assert.That(gamepad3.stateBlock.byteOffset, Is.EqualTo(gamepad2Offset)); // 3 should have moved into 2's position.
         Assert.That(gamepad2.leftStick.stateBlock.byteOffset,
             Is.EqualTo(Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32())); // Should have unbaked offsets in control hierarchy.
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanBeRemoved_ThroughEvents()
+    {
+        var gamepad1 = InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice("Gamepad");
+
+        var gamepad1WasRemoved = false;
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+            {
+                if (device == gamepad1)
+                    gamepad1WasRemoved = true;
+            };
+
+        var inputEvent = DeviceRemoveEvent.Create(gamepad1.id, Time.time);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad2));
+        Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
+        Assert.That(gamepad1WasRemoved, Is.True);
     }
 
     [Test]
@@ -2978,7 +2933,7 @@ public class FunctionalTests : InputTestFixture
                 receivedDeviceId = eventPtr.deviceId;
             };
 
-        var inputEvent = ConnectEvent.Create(4, 1.0);
+        var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
         InputSystem.QueueEvent(ref inputEvent);
 
         InputSystem.Update();
@@ -3001,7 +2956,7 @@ public class FunctionalTests : InputTestFixture
                 wasHandled = eventPtr.handled;
             };
 
-        var inputEvent = ConnectEvent.Create(4, 1.0);
+        var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
 
         // This should go back to false when we inputEvent goes on the queue.
         // The way the behavior is implemented is a side-effect of how we store
@@ -3042,8 +2997,8 @@ public class FunctionalTests : InputTestFixture
                 inputEvent.handled = true;
             };
 
-        var event1 = ConnectEvent.Create(device.id, 1.0);
-        var event2 = ConnectEvent.Create(device.id, 2.0);
+        var event1 = DeviceConfigurationEvent.Create(device.id, 1.0);
+        var event2 = DeviceConfigurationEvent.Create(device.id, 2.0);
 
         InputSystem.QueueEvent(ref event1);
 

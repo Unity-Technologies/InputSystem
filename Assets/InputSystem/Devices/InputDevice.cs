@@ -60,13 +60,6 @@ namespace ISX
             get { return m_PlayerId; }
         }
 
-        // Whether the device is currently connected.
-        // If you want to listen for state changes, hook into InputManager.onDeviceChange.
-        public bool connected
-        {
-            get { return (m_Flags & Flags.Connected) == Flags.Connected; }
-        }
-
         /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
@@ -144,7 +137,7 @@ namespace ISX
         /// <summary>
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
-        /// <seealso cref="LowLevel.ConfigChangeEvent"/>
+        /// <seealso cref="DeviceConfigurationEvent"/>
         public virtual void OnConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
@@ -184,11 +177,10 @@ namespace ISX
         [Flags]
         internal enum Flags
         {
-            Connected = 1 << 0,
-            UpdateBeforeRender = 1 << 1,
-            HasAutoResetControls = 1 << 2,////TODO: remove
-            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 4, // It's a device created from data surfaced by NativeInputSystem.
+            UpdateBeforeRender = 1 << 0,
+            HasAutoResetControls = 1 << 1,////TODO: remove
+            Remote = 1 << 2, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 3, // It's a device created from data surfaced by NativeInputSystem.
         }
 
         internal Flags m_Flags;

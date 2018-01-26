@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['queueevent',['QueueEvent',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#acfaf245213d1cb3d38e661a7e5469b34',1,'ISX::LowLevel::IInputRuntime']]]
+  ['setup',['Setup',['../classISX_1_1InputTestFixture.html#ad8df73510739278c5c0e2023d43b4dae',1,'ISX::InputTestFixture']]],
+  ['startsending',['StartSending',['../classISX_1_1InputRemoting.html#a59211d2990d4fdf60423b8c2c820cc15',1,'ISX::InputRemoting']]]
 ];

@@ -1,7 +1,7 @@
 var namespaceISX_1_1LowLevel =
 [
-    [ "ConfigChangeEvent", "structISX_1_1LowLevel_1_1ConfigChangeEvent.html", null ],
-    [ "ConnectEvent", "structISX_1_1LowLevel_1_1ConnectEvent.html", "structISX_1_1LowLevel_1_1ConnectEvent" ],
+    [ "DeviceConfigurationEvent", "structISX_1_1LowLevel_1_1DeviceConfigurationEvent.html", null ],
+    [ "DeviceRemoveEvent", "structISX_1_1LowLevel_1_1DeviceRemoveEvent.html", "structISX_1_1LowLevel_1_1DeviceRemoveEvent" ],
     [ "IInputRuntime", "interfaceISX_1_1LowLevel_1_1IInputRuntime.html", "interfaceISX_1_1LowLevel_1_1IInputRuntime" ],
     [ "InputEvent", "structISX_1_1LowLevel_1_1InputEvent.html", "structISX_1_1LowLevel_1_1InputEvent" ],
     [ "InputEventBuffer", "structISX_1_1LowLevel_1_1InputEventBuffer.html", "structISX_1_1LowLevel_1_1InputEventBuffer" ],
