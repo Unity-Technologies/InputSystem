@@ -17,6 +17,10 @@ namespace ISX.Utilities
         internal int m_StartIndex;
         internal int m_Length;
 
+        /// <summary>
+        /// Construct a read-only array covering all of the given array.
+        /// </summary>
+        /// <param name="array">Array to index.</param>
         public ReadOnlyArray(TValue[] array)
         {
             m_Array = array;
@@ -27,6 +31,13 @@ namespace ISX.Utilities
                 m_Length = 0;
         }
 
+        /// <summary>
+        /// Construct a read-only array that covers only the given slice of <paramref name="array"/>.
+        /// </summary>
+        /// <param name="array">Array to index.</param>
+        /// <param name="index">Index at which to start indexing <paramref name="array"/>. The given element
+        /// becomes index #0 for the read-only array.</param>
+        /// <param name="length">Length of the slice to index from <paramref name="array"/>.</param>
         public ReadOnlyArray(TValue[] array, int index, int length)
         {
             m_Array = array;
@@ -34,6 +45,10 @@ namespace ISX.Utilities
             m_Length = length;
         }
 
+        /// <summary>
+        /// Convert to array.
+        /// </summary>
+        /// <returns>A new array containing a copy of the contents of the read-only array.</returns>
         public TValue[] ToArray()
         {
             if (m_Length == 0)
@@ -53,11 +68,20 @@ namespace ISX.Utilities
             return GetEnumerator();
         }
 
+        /// <summary>
+        /// Number of elements in the array.
+        /// </summary>
         public int Count
         {
             get { return m_Length; }
         }
 
+        /// <summary>
+        /// Return the element at the given index.
+        /// </summary>
+        /// <param name="index">Index into the array.</param>
+        /// <exception cref="IndexOutOfRangeException"><paramref name="index"/> is less than 0 or greater than <see cref="Count"/>.</exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public TValue this[int index]
         {
             get

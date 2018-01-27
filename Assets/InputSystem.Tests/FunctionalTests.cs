@@ -3818,7 +3818,7 @@ public class FunctionalTests : InputTestFixture
         var action = new InputAction(binding: "/gamepad/leftStick");
         action.Enable();
 
-        var enabledActions = InputSystem.FindAllEnabledActions();
+        var enabledActions = InputSystem.ListEnabledActions();
 
         Assert.That(enabledActions, Has.Count.EqualTo(1));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action));
@@ -3965,7 +3965,7 @@ public class FunctionalTests : InputTestFixture
         action1.Enable();
         action2.Enable();
 
-        var enabledActions = InputSystem.FindAllEnabledActions();
+        var enabledActions = InputSystem.ListEnabledActions();
 
         Assert.That(enabledActions, Has.Count.EqualTo(2));
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action1));
@@ -4289,7 +4289,7 @@ public class FunctionalTests : InputTestFixture
         action.Enable();
         action.Disable();
 
-        Assert.That(InputSystem.FindAllEnabledActions(), Has.Exactly(0).SameAs(action));
+        Assert.That(InputSystem.ListEnabledActions(), Has.Exactly(0).SameAs(action));
         Assert.That(() => action.controls, Throws.InvalidOperationException);
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
         Assert.That(action.enabled, Is.False);

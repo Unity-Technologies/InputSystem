@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['queueevent',['QueueEvent',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#acfaf245213d1cb3d38e661a7e5469b34',1,'ISX::LowLevel::IInputRuntime']]],
-  ['queuetextevent',['QueueTextEvent',['../classISX_1_1InputSystem.html#a57896765dedd2c72dfe365030ff5a44f',1,'ISX::InputSystem']]]
+  ['parsereportdescriptor',['ParseReportDescriptor',['../classISX_1_1HID_1_1HIDParser.html#a7f6253a8514777f5d67cc33574379f26',1,'ISX::HID::HIDParser']]],
+  ['pausehaptics',['PauseHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060',1,'ISX.Haptics.IHaptics.PauseHaptics()'],['../classISX_1_1InputSystem.html#a1dee94fbccae977bbc8386a1d890279f',1,'ISX.InputSystem.PauseHaptics()']]],
+  ['process',['Process',['../interfaceISX_1_1IInputProcessor.html#a087ae350b0915d42d16cad85f2b421b1',1,'ISX::IInputProcessor']]]
 ];

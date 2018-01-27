@@ -2,6 +2,8 @@ using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
+////REVIEW: should there be a way to make fields mandatory matches?
+
 namespace ISX
 {
     /// <summary>
@@ -17,7 +19,6 @@ namespace ISX
         /// </summary>
         /// <example>Examples: "HID", "XInput"</example>
         public string interfaceName;
-
 
         /// <summary>
         /// What the interface thinks the device classifies as.

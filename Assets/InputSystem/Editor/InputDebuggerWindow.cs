@@ -171,7 +171,7 @@ namespace ISX.Editor
             else
                 m_EnabledActions.Clear();
 
-            InputSystem.FindAllEnabledActions(m_EnabledActions);
+            InputSystem.ListEnabledActions(m_EnabledActions);
 
             EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
 

@@ -1,6 +1,10 @@
 var searchData=
 [
-  ['setmotorspeeds',['SetMotorSpeeds',['../interfaceISX_1_1Haptics_1_1IDualMotorRumble.html#abea31e5af3ac71e77f7760cce0479f37',1,'ISX::Haptics::IDualMotorRumble']]],
-  ['setup',['Setup',['../classISX_1_1InputTestFixture.html#ad8df73510739278c5c0e2023d43b4dae',1,'ISX::InputTestFixture']]],
-  ['startsending',['StartSending',['../classISX_1_1InputRemoting.html#a59211d2990d4fdf60423b8c2c820cc15',1,'ISX::InputRemoting']]]
+  ['readonlyarray',['ReadOnlyArray',['../structISX_1_1Utilities_1_1ReadOnlyArray.html#ac5270e715a92053a8801a376b35c3fa8',1,'ISX.Utilities.ReadOnlyArray.ReadOnlyArray(TValue[] array)'],['../structISX_1_1Utilities_1_1ReadOnlyArray.html#a9c8f86275afe4cac53736e85b67f6748',1,'ISX.Utilities.ReadOnlyArray.ReadOnlyArray(TValue[] array, int index, int length)']]],
+  ['registerprocessor',['RegisterProcessor',['../classISX_1_1InputSystem.html#a502692fd434a5dcdc8a6e21b4e9760a4',1,'ISX::InputSystem']]],
+  ['registertemplate',['RegisterTemplate',['../classISX_1_1InputSystem.html#ad400caf913676e49e93ce6a5d930d417',1,'ISX.InputSystem.RegisterTemplate(Type type, string name=null, InputDeviceDescription? deviceDescription=null)'],['../classISX_1_1InputSystem.html#afba604d692ed0347972e43a7f260a890',1,'ISX.InputSystem.RegisterTemplate(string json, string name=null)']]],
+  ['registertemplate_3c_20t_20_3e',['RegisterTemplate&lt; T &gt;',['../classISX_1_1InputSystem.html#a658cc7fad775e44c0e62dd821aa4d10f',1,'ISX::InputSystem']]],
+  ['registertemplateconstructor',['RegisterTemplateConstructor',['../classISX_1_1InputSystem.html#ab511d2a13cd8f7d5c5a78a9033833e47',1,'ISX::InputSystem']]],
+  ['removetemplate',['RemoveTemplate',['../classISX_1_1InputSystem.html#ab8f63ef044111aa2c6f897580cec31fb',1,'ISX::InputSystem']]],
+  ['resumehaptics',['ResumeHaptics',['../classISX_1_1InputSystem.html#a71ab2ff457045e43d112695ef3c77840',1,'ISX::InputSystem']]]
 ];

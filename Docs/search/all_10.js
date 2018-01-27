@@ -1,11 +1,12 @@
 var searchData=
 [
-  ['readonlyarray',['ReadOnlyArray',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX::Utilities']]],
+  ['readonlyarray',['ReadOnlyArray',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX.Utilities.ReadOnlyArray&lt; TValue &gt;'],['../structISX_1_1Utilities_1_1ReadOnlyArray.html#ac5270e715a92053a8801a376b35c3fa8',1,'ISX.Utilities.ReadOnlyArray.ReadOnlyArray(TValue[] array)'],['../structISX_1_1Utilities_1_1ReadOnlyArray.html#a9c8f86275afe4cac53736e85b67f6748',1,'ISX.Utilities.ReadOnlyArray.ReadOnlyArray(TValue[] array, int index, int length)']]],
   ['readonlyarray_3c_20internedstring_20_3e',['ReadOnlyArray&lt; InternedString &gt;',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX::Utilities']]],
   ['readonlyarray_3c_20isx_3a_3ainputactionset_2eresolvedbinding_20_3e',['ReadOnlyArray&lt; ISX::InputActionSet.ResolvedBinding &gt;',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX::Utilities']]],
   ['readonlyarray_3c_20isx_3a_3ainputcontrol_20_3e',['ReadOnlyArray&lt; ISX::InputControl &gt;',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX::Utilities']]],
   ['readonlyarray_3c_20nameandparameters_20_3e',['ReadOnlyArray&lt; NameAndParameters &gt;',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX::Utilities']]],
   ['readonlyarray_3c_20parametervalue_20_3e',['ReadOnlyArray&lt; ParameterValue &gt;',['../structISX_1_1Utilities_1_1ReadOnlyArray.html',1,'ISX::Utilities']]],
+  ['registerprocessor',['RegisterProcessor',['../classISX_1_1InputSystem.html#a502692fd434a5dcdc8a6e21b4e9760a4',1,'ISX::InputSystem']]],
   ['registertemplate',['RegisterTemplate',['../classISX_1_1InputSystem.html#ad400caf913676e49e93ce6a5d930d417',1,'ISX.InputSystem.RegisterTemplate(Type type, string name=null, InputDeviceDescription? deviceDescription=null)'],['../classISX_1_1InputSystem.html#afba604d692ed0347972e43a7f260a890',1,'ISX.InputSystem.RegisterTemplate(string json, string name=null)']]],
   ['registertemplate_3c_20t_20_3e',['RegisterTemplate&lt; T &gt;',['../classISX_1_1InputSystem.html#a658cc7fad775e44c0e62dd821aa4d10f',1,'ISX::InputSystem']]],
   ['registertemplateconstructor',['RegisterTemplateConstructor',['../classISX_1_1InputSystem.html#ab511d2a13cd8f7d5c5a78a9033833e47',1,'ISX::InputSystem']]],

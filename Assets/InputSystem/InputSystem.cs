@@ -7,7 +7,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using ISX.LowLevel;
 using ISX.Utilities;
-using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -210,11 +209,38 @@ namespace ISX
             s_Manager.RemoveTemplate(name);
         }
 
+        /// <summary>
+        /// Try to match a description for an input device to a template.
+        /// </summary>
+        /// <param name="deviceDescription">Description of an input device.</param>
+        /// <returns>Name of the template that has been matched to the given description or null if no
+        /// matching template was found.</returns>
+        /// <remarks>
+        /// Templates are matched by the <see cref="InputDeviceDescription"/> they were registered with (if any).
+        /// The fields in a template's device description are considered regular expressions which are matched
+        /// against the values supplied in the given <paramref name="deviceDescription"/>.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// var templateName = InputSystem.TryFindMatchingTemplate(
+        ///     new InputDeviceDescription
+        ///     {
+        ///         product = "Xbox Wired Controller",
+        ///         manufacturer = "Microsoft"
+        ///     }
+        /// );
+        /// </code>
+        /// </example>
         public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
         {
             return s_Manager.TryFindMatchingTemplate(deviceDescription);
         }
 
+        /// <summary>
+        /// Return a list with the names of all templates that have been registered.
+        /// </summary>
+        /// <returns>A list of template names.</returns>
+        /// <seealso cref="ListTemplates(List{string})"/>
         public static List<string> ListTemplates()
         {
             var list = new List<string>();
@@ -222,11 +248,24 @@ namespace ISX
             return list;
         }
 
+        /// <summary>
+        /// Add the names of all templates that have been registered to the given list.
+        /// </summary>
+        /// <param name="list">List to add the template names to.</param>
+        /// <returns>The number of names added to <paramref name="list"/>.</returns>
+        /// <remarks>
+        /// If the capacity of the given list is large enough, this method will not allocate.
+        /// </remarks>
         public static int ListTemplates(List<string> list)
         {
             return s_Manager.ListTemplates(list);
         }
 
+        /// <summary>
+        /// Try to load a template instance.
+        /// </summary>
+        /// <param name="name">Name of the template to load. Note that template names are case-insensitive.</param>
+        /// <returns>The constructed template instance or null if no template of the given name could be found.</returns>
         public static InputTemplate TryLoadTemplate(string name)
         {
             ////FIXME: this will intern the name even if the operation fails
@@ -237,6 +276,12 @@ namespace ISX
 
         #region Processors
 
+        /// <summary>
+        /// Register an <see cref="IInputProcessor{TValue}"/> with the system.
+        /// </summary>
+        /// <param name="type">Type that implements <see cref="IInputProcessor{TValue}"/>.</param>
+        /// <param name="name">Name to use for the process. If null or empty, name will be taken from short name
+        /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
         public static void RegisterProcessor(Type type, string name = null)
         {
             if (string.IsNullOrEmpty(name))
@@ -427,9 +472,22 @@ namespace ISX
         /// Pause haptic effect playback on all devices.
         /// </summary>
         /// <remarks>
-        /// Calls <see cref="IHaptics.PauseHaptics"/> on all <see cref="InputDevice">input devices</see>
+        /// Calls <see cref="Haptics.IHaptics.PauseHaptics"/> on all <see cref="InputDevice">input devices</see>
         /// that implement the interface.
         /// </remarks>
+        /// <seealso cref="ResumeHaptics"/>
+        /// <example>
+        /// <code>
+        /// // When going into the menu from gameplay, pause haptics.
+        /// gameplayControls.backAction.onPerformed +=
+        ///     ctx =>
+        ///     {
+        ///         gameplayControls.Disable();
+        ///         menuControls.Enable();
+        ///         InputSystem.PauseHaptics();
+        ///     };
+        /// </code>
+        /// </example>
         public static void PauseHaptics()
         {
             var devicesList = devices;
@@ -448,9 +506,10 @@ namespace ISX
         /// Resume haptic effect playback on all devices.
         /// </summary>
         /// <remarks>
-        /// Calls <see cref="IHaptics.ResumeHaptics"/> on all <see cref="InputDevice">input devices</see>
+        /// Calls <see cref="Haptics.IHaptics.ResumeHaptics"/> on all <see cref="InputDevice">input devices</see>
         /// that implement the interface.
         /// </remarks>
+        /// <seealso cref="PauseHaptics"/>
         public static void ResumeHaptics()
         {
             var devicesList = devices;
@@ -519,7 +578,7 @@ namespace ISX
 
         public static void QueueEvent(InputEventPtr eventPtr)
         {
-            NativeInputSystem.QueueInputEvent(eventPtr.data);
+            s_Manager.QueueEvent(eventPtr);
         }
 
         public static void QueueEvent<TEvent>(ref TEvent inputEvent)
@@ -711,22 +770,41 @@ namespace ISX
             return s_Manager.ListModifiers();
         }
 
+        /// <summary>
+        /// Disable all actions (and implicitly all action sets) that are currently enabled.
+        /// </summary>
+        /// <seealso cref="ListEnabledActions"/>
+        /// <seealso cref="InputAction.Disable"/>
         public static void DisableAllEnabledActions()
         {
             InputActionSet.DisableAllEnabledActions();
         }
 
-        // Return a list of all the actions that are currently enabled in the system.
-        public static List<InputAction> FindAllEnabledActions()
+        /// <summary>
+        /// Return a list of all the actions that are currently enabled in the system.
+        /// </summary>
+        /// <returns>A new list instance containing all currently enabled actions.</returns>
+        /// <remarks>
+        /// To avoid allocations, use <see cref="ListEnabledActions(List{ISX.InputAction})"/>.
+        /// </remarks>
+        /// <seealso cref="InputAction.enabled"/>
+        public static List<InputAction> ListEnabledActions()
         {
             var result = new List<InputAction>();
-            FindAllEnabledActions(result);
+            ListEnabledActions(result);
             return result;
         }
 
-        // Add all actions that are currently enabled in the system to the given list
-        // and return the number of such actions that have been found.
-        public static int FindAllEnabledActions(List<InputAction> actions)
+        /// <summary>
+        /// Add all actions that are currently enabled in the system to the given list.
+        /// </summary>
+        /// <param name="actions">List to add actions to.</param>
+        /// <returns>The number of actions added to the list.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is null.</exception>
+        /// <remarks>
+        /// If the capacity of the given list is large enough, this method will not allocate memory.
+        /// </remarks>
+        public static int ListEnabledActions(List<InputAction> actions)
         {
             if (actions == null)
                 throw new ArgumentNullException("actions");

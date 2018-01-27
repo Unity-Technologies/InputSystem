@@ -1,5 +1,7 @@
 using System;
 
+////TODO: add API to send events in bulk rather than one by one
+
 namespace ISX.LowLevel
 {
     /// <summary>
@@ -7,17 +9,38 @@ namespace ISX.LowLevel
     /// </summary>
     public interface IInputRuntime
     {
+        /// <summary>
+        /// Allocate a new unique device ID.
+        /// </summary>
+        /// <returns>A numeric device ID that is not <see cref="InputDevice.kInvalidDeviceId"/>.</returns>
+        /// <remarks>
+        /// Device IDs are managed by the runtime. This method allows creating devices that
+        /// can use the same ID system but are not known to the underlying runtime.
+        /// </remarks>
         int AllocateDeviceId();
+
+        /// <summary>
+        /// Manually trigger an update.
+        /// </summary>
+        /// <param name="type">Type of update to run. If this is a combination of updates, each flag
+        /// that is set in the mask will run a separate update.</param>
+        /// <remarks>
+        /// Updates will flush out events and trigger <see cref="onBeforeUpdate"/> and <see cref="onUpdate"/>.
+        /// Also, newly discovered devices will be reported by an update is run.
+        /// </remarks>
         void Update(InputUpdateType type);
 
-        ////TODO: add API to send events in bulk rather than one by one
         /// <summary>
-        ///
+        /// Queue an input event.
         /// </summary>
         /// <remarks>
         /// This method has to be thread-safe.
         /// </remarks>
-        /// <param name="ptr"></param>
+        /// <param name="ptr">Pointer to the event data. Uses the <see cref="InputEvent"/> format.</param>
+        /// <remarks>
+        /// Events are copied into an internal buffer. Thus the memory referenced by this method does
+        /// not have to persist until the event is processed.
+        /// </remarks>
         void QueueEvent(IntPtr ptr);
 
         /// <summary>
@@ -36,10 +59,30 @@ namespace ISX.LowLevel
         long DeviceCommand<TCommand>(int deviceId, ref TCommand command) where TCommand : struct, IInputDeviceCommandInfo;
 
         /// <summary>
-        /// Set the delegate to be called on input updates.
+        /// Set delegate to be called on input updates.
         /// </summary>
         Action<InputUpdateType, int, IntPtr> onUpdate { set; }
+
+        /// <summary>
+        /// Set delegate to be called right before <see cref="onUpdate"/>.
+        /// </summary>
+        /// <remarks>
+        /// This delegate is meant to allow events to be queued that should be processed right
+        /// in the upcoming update.
+        /// </remarks>
         Action<InputUpdateType> onBeforeUpdate { set; }
+
+
+        /// <summary>
+        /// Set delegate to be called when a new device is discovered.
+        /// </summary>
+        /// <remarks>
+        /// The runtime should delay reporting of already present devices until the delegate
+        /// has been put in place and then call the delegate for every device already in the system.
+        ///
+        /// First parameter is the ID assigned to the device, second parameter is a description
+        /// in JSON format of the device (see <see cref="InputDeviceDescription.FromJson"/>).
+        /// </remarks>
         Action<int, string> onDeviceDiscovered { set; }
 
         /// <summary>

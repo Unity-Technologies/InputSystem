@@ -36,6 +36,9 @@ namespace ISX
     /// </example>
     public class InputTestFixture
     {
+        /// <summary>
+        /// The input runtime used during testing.
+        /// </summary>
         public InputTestRuntime testRuntime { get; private set; }
 
         /// <summary>

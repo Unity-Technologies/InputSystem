@@ -1,7 +1,8 @@
 using System;
-using ISX.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
+
+// This should be the only file referencing the API at UnityEngineInternal.Input.
 
 namespace ISX.LowLevel
 {
