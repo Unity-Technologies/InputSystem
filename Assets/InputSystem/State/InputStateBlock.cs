@@ -14,13 +14,6 @@ namespace ISX.LowLevel
     /// </remarks>
     public struct InputStateBlock
     {
-        [Flags]
-        public enum Semantics
-        {
-            Input = 1 << 0, // State captures values coming in.
-            Output = 1 << 1 // State captures values going out.
-        }
-
         public const uint kInvalidOffset = 0xffffffff;
 
         // Primitive state type codes.
@@ -118,35 +111,10 @@ namespace ISX.LowLevel
         // setup will throw.
         public uint sizeInBits;
 
-        public Semantics semantics
-        {
-            get
-            {
-                if ((m_Flags & Flags.SemanticsOutput) == Flags.SemanticsOutput)
-                    return Semantics.Input;
-                return Semantics.Input;
-            }
-            set
-            {
-                if (value == Semantics.Input)
-                    m_Flags &= ~Flags.SemanticsOutput;
-                else
-                    m_Flags |= Flags.SemanticsOutput;
-            }
-        }
-
         public bool isBitfield
         {
             get { return sizeInBits % 8 != 0; }
         }
-
-        [Flags]
-        private enum Flags
-        {
-            SemanticsOutput = 1 << 0,
-        }
-
-        private Flags m_Flags;
 
         internal uint alignedSizeInBytes
         {

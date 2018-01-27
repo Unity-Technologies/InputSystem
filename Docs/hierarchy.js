@@ -12,7 +12,12 @@ var hierarchy =
     [ "ISX.HID.HIDParser", "classISX_1_1HID_1_1HIDParser.html", null ],
     [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
     [ "ISX.Haptics.IHaptics", "interfaceISX_1_1Haptics_1_1IHaptics.html", [
-      [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", null ]
+      [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", [
+        [ "ISX.Gamepad", "classISX_1_1Gamepad.html", [
+          [ "ISX.XInput.XInputController", "classISX_1_1XInput_1_1XInputController.html", null ]
+        ] ],
+        [ "ISX.XInput.IXboxOneRumble", "interfaceISX_1_1XInput_1_1IXboxOneRumble.html", null ]
+      ] ]
     ] ],
     [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
     [ "ISX.IInputProcessor< TValue >", "interfaceISX_1_1IInputProcessor.html", null ],
@@ -32,9 +37,7 @@ var hierarchy =
     [ "ISX.InputControl", "classISX_1_1InputControl.html", [
       [ "ISX.InputControl< TValue >", "classISX_1_1InputControl.html", null ],
       [ "ISX.InputDevice", "classISX_1_1InputDevice.html", [
-        [ "ISX.Gamepad", "classISX_1_1Gamepad.html", [
-          [ "ISX.XInput.XInputController", "classISX_1_1XInput_1_1XInputController.html", null ]
-        ] ],
+        [ "ISX.Gamepad", "classISX_1_1Gamepad.html", null ],
         [ "ISX.HID.HID", "classISX_1_1HID_1_1HID.html", null ],
         [ "ISX.Keyboard", "classISX_1_1Keyboard.html", null ],
         [ "ISX.Pointer", "classISX_1_1Pointer.html", [
@@ -69,6 +72,7 @@ var hierarchy =
     [ "ISX.InputControl< Vector3 >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControlAttribute", "classISX_1_1InputControlAttribute.html", null ],
     [ "ISX.InputControlPath", "classISX_1_1InputControlPath.html", null ],
+    [ "ISX.LowLevel.InputDeviceCommand", "structISX_1_1LowLevel_1_1InputDeviceCommand.html", null ],
     [ "ISX.InputDeviceDescription", "structISX_1_1InputDeviceDescription.html", null ],
     [ "ISX.LowLevel.InputEvent", "structISX_1_1LowLevel_1_1InputEvent.html", null ],
     [ "ISX.LowLevel.InputEventBuffer", "structISX_1_1LowLevel_1_1InputEventBuffer.html", null ],

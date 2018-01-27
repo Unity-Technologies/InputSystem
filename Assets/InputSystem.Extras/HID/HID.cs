@@ -1,6 +1,7 @@
 using System;
 using ISX.LowLevel;
 using ISX.Utilities;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 ////REVIEW: move the enums and structs out of here and into ISX.HID? Or remove the "HID" name prefixes from them?
@@ -24,16 +25,16 @@ namespace ISX.HID
         public const string kHIDNamespace = "HID";
 
         /// <summary>
-        /// IOCTL code for querying the HID report descriptor from a device.
+        /// Command code for querying the HID report descriptor from a device.
         /// </summary>
-        /// <seealso cref="InputDevice.IOCTL"/>
-        public static FourCC IOCTLQueryHIDReportDescriptor { get { return new FourCC('H', 'I', 'D', 'D'); } }
+        /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
+        public static FourCC QueryHIDReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'D'); } }
 
         /// <summary>
-        /// IOCTL code for querying the HID report descriptor size in bytes from a device.
+        /// Command code for querying the HID report descriptor size in bytes from a device.
         /// </summary>
-        /// <seealso cref="InputDevice.IOCTL"/>
-        public static FourCC IOCTLQueryHIDReportDescriptorSize { get { return new FourCC('H', 'I', 'D', 'S'); } }
+        /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
+        public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
 
         /// <summary>
         /// The HID device descriptor as received from the system.
@@ -100,22 +101,23 @@ namespace ISX.HID
                     return null;
 
                 // Try to get the size of the HID descriptor from the device.
-                var sizeOfDescriptorInBytes = runtime.IOCTL(deviceId, IOCTLQueryHIDReportDescriptorSize, IntPtr.Zero, 0);
+                var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
+                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
                 if (sizeOfDescriptorInBytes <= 0)
                     return null;
 
                 // Now try to fetch the HID descriptor.
-                var buffer = new byte[sizeOfDescriptorInBytes];
-                fixed(byte* bufferPtr = buffer)
+                using (var buffer =
+                           InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
                 {
-                    if (runtime.IOCTL(deviceId, IOCTLQueryHIDReportDescriptor, new IntPtr(bufferPtr), (int)sizeOfDescriptorInBytes) !=
-                        sizeOfDescriptorInBytes)
+                    var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                    if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
+                        return null;
+
+                    // Try to parse the HID report descriptor.
+                    if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
                         return null;
                 }
-
-                // Try to parse the HID report descriptor.
-                if (!HIDParser.ParseReportDescriptor(buffer, ref hidDeviceDescriptor))
-                    return null;
 
                 // Update the descriptor on the device with the information we got.
                 description.capabilities = hidDeviceDescriptor.ToJson();

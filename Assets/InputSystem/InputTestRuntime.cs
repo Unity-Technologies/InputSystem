@@ -2,15 +2,12 @@
 using System;
 using System.Collections.Generic;
 using ISX.LowLevel;
-using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace ISX
 {
-    using IOCTLCallback = Func<int, IntPtr, int, long>;
-
     /// <summary>
     /// An implementation of <see cref="IInputRuntime"/> for use during tests.
     /// </summary>
@@ -21,6 +18,8 @@ namespace ISX
     /// </remarks>
     public class InputTestRuntime : IInputRuntime, IDisposable
     {
+        public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
+
         ~InputTestRuntime()
         {
             Dispose();
@@ -86,25 +85,29 @@ namespace ISX
             }
         }
 
-        public void SetIOCTLCallback(int deviceId, IOCTLCallback callback)
+        public void SetDeviceCommandCallback(int deviceId, DeviceCommandCallback callback)
         {
             lock (m_Lock)
             {
-                if (m_IOCTLCallbacks == null)
-                    m_IOCTLCallbacks = new List<KeyValuePair<int, IOCTLCallback>>();
-                m_IOCTLCallbacks.Add(new KeyValuePair<int, IOCTLCallback>(deviceId, callback));
+                if (m_DeviceCommandCallbacks == null)
+                    m_DeviceCommandCallbacks = new List<KeyValuePair<int, DeviceCommandCallback>>();
+                m_DeviceCommandCallbacks.Add(new KeyValuePair<int, DeviceCommandCallback>(deviceId, callback));
             }
         }
 
-        public long IOCTL(int deviceId, FourCC code, IntPtr buffer, int size)
+        public unsafe long DeviceCommand<TCommand>(int deviceId, ref TCommand command)
+            where TCommand : struct, IInputDeviceCommandInfo
         {
             lock (m_Lock)
             {
-                if (m_IOCTLCallbacks != null)
-                    foreach (var entry in m_IOCTLCallbacks)
+                if (m_DeviceCommandCallbacks != null)
+                    foreach (var entry in m_DeviceCommandCallbacks)
                     {
                         if (entry.Key == deviceId)
-                            return entry.Value(code, buffer, size);
+                        {
+                            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+                            return entry.Value(deviceId, commandPtr);
+                        }
                     }
             }
 
@@ -141,7 +144,7 @@ namespace ISX
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
-        private List<KeyValuePair<int, IOCTLCallback>> m_IOCTLCallbacks;
+        private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
     }
 }

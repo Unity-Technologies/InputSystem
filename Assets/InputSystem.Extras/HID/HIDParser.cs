@@ -32,7 +32,15 @@ namespace ISX.HID
         /// <see cref="HID.HIDDeviceDescriptor.outputReportSize"/>, and
         /// <see cref="HID.HIDDeviceDescriptor.featureReportSize"/>.
         /// </remarks>
-        public static bool ParseReportDescriptor(byte[] buffer, ref HID.HIDDeviceDescriptor deviceDescriptor)
+        public static unsafe bool ParseReportDescriptor(byte[] buffer, ref HID.HIDDeviceDescriptor deviceDescriptor)
+        {
+            fixed(byte* bufferPtr = buffer)
+            {
+                return ParseReportDescriptor(bufferPtr, buffer.Length, ref deviceDescriptor);
+            }
+        }
+
+        public unsafe static bool ParseReportDescriptor(byte* bufferPtr, int bufferLength, ref HID.HIDDeviceDescriptor deviceDescriptor)
         {
             // Item state.
             var localItemState = new HIDItemStateLocal();
@@ -45,11 +53,11 @@ namespace ISX.HID
             var currentCollection = -1;
 
             // Parse the linear list of items.
-            var currentOffset = 0;
-            var bufferLength = buffer.Length;
-            while (currentOffset < bufferLength)
+            var endPtr = bufferPtr + bufferLength;
+            var currentPtr = bufferPtr;
+            while (currentPtr < endPtr)
             {
-                var firstByte = buffer[currentOffset];
+                var firstByte = *currentPtr;
 
                 ////TODO
                 if (firstByte == 0xFE)
@@ -58,7 +66,7 @@ namespace ISX.HID
                 // Read item header.
                 var itemSize = (byte)(firstByte & 0x3);
                 var itemTypeAndTag = (byte)(firstByte & 0xFC);
-                ++currentOffset;
+                ++currentPtr;
 
                 // Process item.
                 switch (itemTypeAndTag)
@@ -68,52 +76,52 @@ namespace ISX.HID
 
                     // Usage Page
                     case (int)HIDItemTypeAndTag.UsagePage:
-                        globalItemState.usagePage = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.usagePage = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Report Count
                     case (int)HIDItemTypeAndTag.ReportCount:
-                        globalItemState.reportCount = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.reportCount = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Report Size
                     case (int)HIDItemTypeAndTag.ReportSize:
-                        globalItemState.reportSize = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.reportSize = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Report ID
                     case (int)HIDItemTypeAndTag.ReportID:
-                        globalItemState.reportId = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.reportId = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Logical Minimum
                     case (int)HIDItemTypeAndTag.LogicalMinimum:
-                        globalItemState.logicalMinimum = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.logicalMinimum = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Logical Maximum
                     case (int)HIDItemTypeAndTag.LogicalMaximum:
-                        globalItemState.logicalMaximum = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.logicalMaximum = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Physical Minimum
                     case (int)HIDItemTypeAndTag.PhysicalMinimum:
-                        globalItemState.physicalMinimum = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.physicalMinimum = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Physical Maximum
                     case (int)HIDItemTypeAndTag.PhysicalMaximum:
-                        globalItemState.physicalMaximum = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.physicalMaximum = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Unit Exponent
                     case (int)HIDItemTypeAndTag.UnitExponent:
-                        globalItemState.unitExponent = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.unitExponent = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Unit
                     case (int)HIDItemTypeAndTag.Unit:
-                        globalItemState.unit = ReadData(itemSize, currentOffset, buffer);
+                        globalItemState.unit = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // ------------ Local Items --------------
@@ -121,17 +129,17 @@ namespace ISX.HID
 
                     // Usage
                     case (int)HIDItemTypeAndTag.Usage:
-                        localItemState.SetUsage(ReadData(itemSize, currentOffset, buffer));
+                        localItemState.SetUsage(ReadData(itemSize, currentPtr, endPtr));
                         break;
 
                     // Usage Minimum
                     case (int)HIDItemTypeAndTag.UsageMinimum:
-                        localItemState.usageMinimum = ReadData(itemSize, currentOffset, buffer);
+                        localItemState.usageMinimum = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // Usage Maximum
                     case (int)HIDItemTypeAndTag.UsageMaximum:
-                        localItemState.usageMaximum = ReadData(itemSize, currentOffset, buffer);
+                        localItemState.usageMaximum = ReadData(itemSize, currentPtr, endPtr);
                         break;
 
                     // ------------ Main Items --------------
@@ -145,7 +153,7 @@ namespace ISX.HID
                         currentCollection = collections.Count;
                         collections.Add(new HID.HIDCollectionDescriptor
                     {
-                        type = (HID.HIDCollectionType)ReadData(itemSize, currentOffset, buffer),
+                        type = (HID.HIDCollectionType)ReadData(itemSize, currentPtr, endPtr),
                         parent = parentCollection,
                         usagePage = globalItemState.GetUsagePage(0, ref localItemState),
                         usage = localItemState.GetUsage(0),
@@ -194,7 +202,7 @@ namespace ISX.HID
 
                         // Add elements to report.
                         var reportCount = globalItemState.reportCount.GetValueOrDefault(1);
-                        var flags = ReadData(itemSize, currentOffset, buffer);
+                        var flags = ReadData(itemSize, currentPtr, endPtr);
                         for (var i = 0; i < reportCount; ++i)
                         {
                             var element = new HID.HIDElementDescriptor
@@ -223,9 +231,9 @@ namespace ISX.HID
                 }
 
                 if (itemSize == 3)
-                    currentOffset += 4;
+                    currentPtr += 4;
                 else
-                    currentOffset += itemSize;
+                    currentPtr += itemSize;
             }
 
             deviceDescriptor.elements = elements.ToArray();
@@ -246,41 +254,39 @@ namespace ISX.HID
             return true;
         }
 
-        private static int ReadData(int itemSize, int currentOffset, byte[] buffer)
+        private unsafe static int ReadData(int itemSize, byte* currentPtr, byte* endPtr)
         {
             if (itemSize == 0)
                 return 0;
 
-            var bufferLength = buffer.Length;
-
             // Read byte.
             if (itemSize == 1)
             {
-                if (currentOffset >= bufferLength)
+                if (currentPtr >= endPtr)
                     return 0;
-                return buffer[currentOffset];
+                return *currentPtr;
             }
 
             // Read short.
             if (itemSize == 2)
             {
-                if (currentOffset + 2 >= bufferLength)
+                if (currentPtr + 2 >= endPtr)
                     return 0;
-                var data1 = buffer[currentOffset];
-                var data2 = buffer[currentOffset + 1];
+                var data1 = *currentPtr;
+                var data2 = *(currentPtr + 1);
                 return (data2 << 8) | data1;
             }
 
             // Read int.
             if (itemSize == 3) // Item size 3 means 4 bytes!
             {
-                if (currentOffset + 4 >= bufferLength)
+                if (currentPtr + 4 >= endPtr)
                     return 0;
 
-                var data1 = buffer[currentOffset];
-                var data2 = buffer[currentOffset + 1];
-                var data3 = buffer[currentOffset + 2];
-                var data4 = buffer[currentOffset + 3];
+                var data1 = *currentPtr;
+                var data2 = *(currentPtr + 1);
+                var data3 = *(currentPtr + 2);
+                var data4 = *(currentPtr + 3);
 
                 return (data4 << 24) | (data3 << 24) | (data2 << 8) | data1;
             }

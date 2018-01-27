@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using ISX.LowLevel;
 using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -319,9 +320,6 @@ namespace ISX
     [InputTemplate(stateType = typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
-        ////REVIEW: really expose this stuff?
-        public static FourCC IOCTLGetKeyboardLayout { get { return new FourCC('K', 'B', 'L', 'T'); } }
-
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
         /// </summary>
@@ -808,25 +806,10 @@ namespace ISX
 
         protected override unsafe void RefreshConfiguration()
         {
-            const int kMaxBufferSize = 256;
-            var buffer = UnsafeUtility.Malloc(kMaxBufferSize, 4, Allocator.Temp);
-            try
-            {
-                // Read layout configuration.
-                var numBytesRead = IOCTL(IOCTLGetKeyboardLayout, new IntPtr(buffer), kMaxBufferSize);
-                if (numBytesRead < sizeof(int))
-                {
-                    // Got nothing. Device probably does not support key configuration data.
-                    return;
-                }
-
-                var offset = 0u;
-                layout = StringHelpers.ReadStringFromBuffer(new IntPtr(buffer), kMaxBufferSize, ref offset);
-            }
-            finally
-            {
-                UnsafeUtility.Free(buffer, Allocator.Temp);
-            }
+            layout = null;
+            var command = QueryKeyboardLayoutCommand.Create();
+            if (OnDeviceCommand(ref command) >= 0)
+                layout = command.ReadLayoutName();
         }
 
         public override void OnTextInput(char character)

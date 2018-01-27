@@ -1,5 +1,4 @@
 using System;
-using ISX.Utilities;
 
 namespace ISX.LowLevel
 {
@@ -34,7 +33,7 @@ namespace ISX.LowLevel
         /// <param name="buffer"></param>
         /// <param name="size"></param>
         /// <returns></returns>
-        long IOCTL(int deviceId, FourCC code, IntPtr buffer, int size);
+        long DeviceCommand<TCommand>(int deviceId, ref TCommand command) where TCommand : struct, IInputDeviceCommandInfo;
 
         /// <summary>
         /// Set the delegate to be called on input updates.
@@ -47,5 +46,10 @@ namespace ISX.LowLevel
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
         float PollingFrequency { set; }
+    }
+
+    internal static class InputRuntime
+    {
+        public static IInputRuntime s_Runtime;
     }
 }

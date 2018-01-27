@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using ISX.Utilities;
 
+////REVIEW: should this really implement IInputEventTypeInfo? it's essentially an "abstract" struct
+
 namespace ISX.LowLevel
 {
     /// <summary>

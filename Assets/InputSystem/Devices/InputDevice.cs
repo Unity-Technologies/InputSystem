@@ -1,7 +1,6 @@
 using System;
 using ISX.LowLevel;
 using ISX.Utilities;
-using UnityEngineInternal.Input;
 
 // per device functions:
 //  - update/poll
@@ -38,7 +37,7 @@ namespace ISX
         /// <remarks>
         /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
         /// </remarks>
-        public const long kIOCTLFailure = -1;
+        public const long kCommandResultFailure = -1;
 
         /// <summary>
         /// Metadata describing the device (product name etc.).
@@ -148,30 +147,24 @@ namespace ISX
                 m_ChildrenForEachControl[i].m_ConfigUpToDate = false;
         }
 
-        ////REVIEW: Should IOCTL()  sit *behind* a different interface that would
-        ////        make C# data pass through natively rather than go through memory buffers?
-
         /// <summary>
-        /// Perform a device-specific control transfer.
+        /// Perform a device-specific command.
         /// </summary>
-        /// <param name="code">FourCC code that indicates the type of transfer to be transacted.</param>
-        /// <param name="buffer">Optional data buffer. This can be used by the transfer for both input and output.</param>
-        /// <param name="sizeInBytes">Size of the data buffer in bytes.</param>
+        /// <param name="command">Data for the command to be performed.</param>
         /// <returns>A transfer-specific return code. Negative values are considered failure codes.</returns>
         /// <remarks>
-        /// IOCTL transfers allow devices to set up custom protocols without having to extend
+        /// Commands allow devices to set up custom protocols without having to extend
         /// the device API. This is most useful for devices implemented in the native Unity runtime
-        /// which, through the IOCTL interface, may provide custom, device-specific functions.
+        /// which, through the command interface, may provide custom, device-specific functions.
         ///
         /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396"
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public virtual long IOCTL(FourCC code, IntPtr buffer, int sizeInBytes)
+        public virtual long OnDeviceCommand<TCommand>(ref TCommand command)
+            where TCommand : struct, IInputDeviceCommandInfo
         {
-            if (native)
-                return NativeInputSystem.IOCTL(id, code, buffer, sizeInBytes);
-            return kIOCTLFailure;
+            return InputRuntime.s_Runtime.DeviceCommand(id, ref command);
         }
 
         [Flags]

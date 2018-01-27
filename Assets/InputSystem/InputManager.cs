@@ -1047,7 +1047,6 @@ namespace ISX
             RegisterTemplate("Touch", typeof(TouchControl));
             RegisterTemplate("Color", typeof(ColorControl));
             RegisterTemplate("Audio", typeof(AudioControl));
-            RegisterTemplate("Motor", typeof(MotorControl));
 
             RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
             RegisterTemplate("Joystick", typeof(Joystick));
@@ -1109,6 +1108,10 @@ namespace ISX
         {
             InputTemplate.s_Templates = m_Templates;
             InputProcessor.s_Processors = m_Processors;
+
+            // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
+            // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
+            InputRuntime.s_Runtime = m_Runtime;
         }
 
         // Bundles a template name and a device description.

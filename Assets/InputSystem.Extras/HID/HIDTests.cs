@@ -1,5 +1,4 @@
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-using System;
 using NUnit.Framework;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
@@ -136,25 +135,25 @@ namespace ISX.HID
 
             // The HID report descriptor is fetched from the device via an IOCTL.
             var deviceId = testRuntime.AllocateDeviceId();
-            testRuntime.SetIOCTLCallback(deviceId,
-                (code, buffer, bufferSize) =>
+            testRuntime.SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
                 {
-                    if (code == HID.IOCTLQueryHIDReportDescriptorSize)
-                        return reportDescriptor.Length;
-
-                    if (code == HID.IOCTLQueryHIDReportDescriptor
-                        && bufferSize >= reportDescriptor.Length)
+                    unsafe
                     {
-                        unsafe
+                        if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
+                            return reportDescriptor.Length;
+
+                        if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
+                            && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
                         {
                             fixed(byte* ptr = reportDescriptor)
                             {
-                                UnsafeUtility.MemCpy(buffer.ToPointer(), ptr, reportDescriptor.Length);
+                                UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
                                 return reportDescriptor.Length;
                             }
                         }
                     }
-                    return InputDevice.kIOCTLFailure;
+                    return InputDevice.kCommandResultFailure;
                 });
 
             // Report device.

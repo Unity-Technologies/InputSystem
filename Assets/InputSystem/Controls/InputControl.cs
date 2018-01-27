@@ -214,7 +214,6 @@ namespace ISX
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
-            m_StateBlock.semantics = InputStateBlock.Semantics.Input;
             m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
             m_StateBlock.bitOffset = 0;
         }

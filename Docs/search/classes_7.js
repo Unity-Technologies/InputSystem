@@ -25,6 +25,7 @@ var searchData=
   ['inputcontrolattribute',['InputControlAttribute',['../classISX_1_1InputControlAttribute.html',1,'ISX']]],
   ['inputcontrolpath',['InputControlPath',['../classISX_1_1InputControlPath.html',1,'ISX']]],
   ['inputdevice',['InputDevice',['../classISX_1_1InputDevice.html',1,'ISX']]],
+  ['inputdevicecommand',['InputDeviceCommand',['../structISX_1_1LowLevel_1_1InputDeviceCommand.html',1,'ISX::LowLevel']]],
   ['inputdevicedescription',['InputDeviceDescription',['../structISX_1_1InputDeviceDescription.html',1,'ISX']]],
   ['inputevent',['InputEvent',['../structISX_1_1LowLevel_1_1InputEvent.html',1,'ISX::LowLevel']]],
   ['inputeventbuffer',['InputEventBuffer',['../structISX_1_1LowLevel_1_1InputEventBuffer.html',1,'ISX::LowLevel']]],
@@ -38,5 +39,6 @@ var searchData=
   ['inputtemplateattribute',['InputTemplateAttribute',['../classISX_1_1InputTemplateAttribute.html',1,'ISX']]],
   ['inputtestfixture',['InputTestFixture',['../classISX_1_1InputTestFixture.html',1,'ISX']]],
   ['inputtestruntime',['InputTestRuntime',['../classISX_1_1InputTestRuntime.html',1,'ISX']]],
-  ['internedstring',['InternedString',['../structISX_1_1Utilities_1_1InternedString.html',1,'ISX::Utilities']]]
+  ['internedstring',['InternedString',['../structISX_1_1Utilities_1_1InternedString.html',1,'ISX::Utilities']]],
+  ['ixboxonerumble',['IXboxOneRumble',['../interfaceISX_1_1XInput_1_1IXboxOneRumble.html',1,'ISX::XInput']]]
 ];

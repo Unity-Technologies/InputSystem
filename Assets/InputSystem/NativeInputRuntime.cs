@@ -1,5 +1,6 @@
 using System;
 using ISX.Utilities;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
 
 namespace ISX.LowLevel
@@ -40,9 +41,12 @@ namespace ISX.LowLevel
             NativeInputSystem.QueueInputEvent(ptr);
         }
 
-        public long IOCTL(int deviceId, FourCC code, IntPtr buffer, int size)
+        public unsafe long DeviceCommand<TCommand>(int deviceId, ref TCommand command)
+            where TCommand : struct, IInputDeviceCommandInfo
         {
-            return NativeInputSystem.IOCTL(deviceId, code, buffer, size);
+            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+            return NativeInputSystem.IOCTL(deviceId, commandPtr->type, (IntPtr)commandPtr->payloadPtr,
+                commandPtr->sizeInBytes - InputDeviceCommand.kBaseCommandSize);
         }
 
         public Action<InputUpdateType, int, IntPtr> onUpdate

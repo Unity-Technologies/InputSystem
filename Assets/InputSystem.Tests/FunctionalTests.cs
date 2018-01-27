@@ -907,12 +907,11 @@ public class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanCreateDeviceWithNestedState()
     {
-        var setup = new InputControlSetup("Gamepad");
+        InputSystem.RegisterTemplate<CustomDevice>();
+        var setup = new InputControlSetup("CustomDevice");
         var device = setup.Finish();
 
-        // The gamepad's output state is nested inside GamepadState and requires the template
-        // code to crawl inside the field to find the motor controls.
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftMotor"));
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1"));
     }
 
     [Test]
@@ -1346,23 +1345,6 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
-    public void TODO_Controls_MotorsCanWriteToState()
-    {
-        /*
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
-
-        gamepad.leftMotor.value = 0.5f;
-
-        InputSystem.QueueOutputEvent(...);
-
-        InputSystem.Update();
-        */
-
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Controls")]
     public void Controls_CanQueryValueFromStateEvents()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
@@ -1486,14 +1468,15 @@ public class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
-        var setup = new InputControlSetup("Gamepad");
-        var rightMotor = setup.GetControl("rightMotor");
+        InputSystem.RegisterTemplate<CustomDevice>();
+        var setup = new InputControlSetup("CustomDevice");
+        var axis2 = setup.GetControl("axis2");
         setup.Finish();
 
-        var outputOffset = Marshal.OffsetOf(typeof(GamepadState), "motors").ToInt32();
-        var rightMotorOffset = outputOffset + Marshal.OffsetOf(typeof(GamepadOutputState), "rightMotor").ToInt32();
+        var nestedOffset = Marshal.OffsetOf(typeof(CustomDeviceState), "nested").ToInt32();
+        var axis2Offset = nestedOffset + Marshal.OffsetOf(typeof(CustomNestedDeviceState), "axis2").ToInt32();
 
-        Assert.That(rightMotor.stateBlock.byteOffset, Is.EqualTo(rightMotorOffset));
+        Assert.That(axis2.stateBlock.byteOffset, Is.EqualTo(axis2Offset));
     }
 
     [Test]
@@ -2283,6 +2266,32 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public unsafe void Devices_CanControlMotorSpeedsOnGamepads()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        DualMotorRumbleCommand? receivedCommand = null;
+        testRuntime.SetDeviceCommandCallback(gamepad.id,
+            (deviceId, command) =>
+            {
+                if (command->type == DualMotorRumbleCommand.Type)
+                {
+                    Assert.That(receivedCommand.HasValue, Is.False);
+                    receivedCommand = *((DualMotorRumbleCommand*)command);
+                    return 1;
+                }
+                return InputDevice.kCommandResultFailure;
+            });
+
+        gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.lowFrequencyMotorSpeed, Is.EqualTo(0x1234).Within(0.00000001));
+        Assert.That(receivedCommand.Value.highFrequencyMotorSpeed, Is.EqualTo(0x5678).Within(0.00000001));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
     {
         var gamepad1 = InputSystem.AddDevice("Gamepad");
@@ -2430,53 +2439,35 @@ public class FunctionalTests : InputTestFixture
     {
         public string currentLayoutName = "default";
 
-        public override unsafe long IOCTL(FourCC code, IntPtr buffer, int sizeInBytes)
+        public override unsafe long OnDeviceCommand<TCommand>(ref TCommand command)
         {
-            if (code == KeyControl.IOCTLGetKeyConfig)
+            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
+            if (commandPtr->type == QueryKeyNameCommand.Type)
             {
-                if (sizeInBytes < sizeof(int) * 4)
-                    return 0;
+                var keyNameCommand = (QueryKeyNameCommand*)commandPtr;
 
                 var scanCode = 0x02;
-                var symbol = "other";
-                var shiftSymbol = "OTHER";
-                var altSymbol = "AltOther";
+                var name = "other";
 
-                var keyCode = *((Key*)buffer);
-                if (keyCode == Key.A)
+                if (keyNameCommand->scanOrKeyCode == (int)Key.A)
                 {
-                    if (currentLayoutName == "default")
-                    {
-                        scanCode = 0x01;
-                        symbol = "m";
-                        shiftSymbol = "M";
-                        altSymbol = string.Empty;
-                    }
-                    else
-                    {
-                        scanCode = 0x01;
-                        symbol = "q";
-                        shiftSymbol = "Q";
-                        altSymbol = "#";
-                    }
+                    scanCode = 0x01;
+                    name = currentLayoutName == "default" ? "m" : "q";
                 }
 
-                *((int*)buffer) = scanCode;
-                var offset = 4u;
-                if (!StringHelpers.WriteStringToBuffer(symbol, buffer, sizeInBytes, ref offset))
-                    return 0;
-                if (!StringHelpers.WriteStringToBuffer(shiftSymbol, buffer, sizeInBytes, ref offset))
-                    return 0;
-                if (!StringHelpers.WriteStringToBuffer(altSymbol, buffer, sizeInBytes, ref offset))
-                    return 0;
-                return (int)offset;
+                keyNameCommand->scanOrKeyCode = scanCode;
+                StringHelpers.WriteStringToBuffer(name, (IntPtr)keyNameCommand->nameBuffer,
+                    QueryKeyNameCommand.kMaxNameLength);
+
+                return QueryKeyNameCommand.kSize;
             }
 
-            if (code == IOCTLGetKeyboardLayout)
+            if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
             {
-                uint offset = 0;
-                if (StringHelpers.WriteStringToBuffer(currentLayoutName, buffer, sizeInBytes, ref offset))
-                    return (int)offset;
+                var layoutCommand = (QueryKeyboardLayoutCommand*)commandPtr;
+                if (StringHelpers.WriteStringToBuffer(currentLayoutName, (IntPtr)layoutCommand->nameBuffer,
+                        QueryKeyboardLayoutCommand.kMaxNameLength))
+                    return QueryKeyboardLayoutCommand.kMaxNameLength;
             }
 
             return -1;
@@ -2491,11 +2482,7 @@ public class FunctionalTests : InputTestFixture
         var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
 
         Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
-        Assert.That(keyboard.aKey.shiftDisplayName, Is.EqualTo("M"));
-        Assert.That(keyboard.aKey.altDisplayName, Is.Empty);
         Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
-        Assert.That(keyboard.bKey.shiftDisplayName, Is.EqualTo("OTHER"));
-        Assert.That(keyboard.bKey.altDisplayName, Is.EqualTo("AltOther"));
 
         // Change layout.
         keyboard.currentLayoutName = "other";
@@ -2503,11 +2490,7 @@ public class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(keyboard.aKey.displayName, Is.EqualTo("q"));
-        Assert.That(keyboard.aKey.shiftDisplayName, Is.EqualTo("Q"));
-        Assert.That(keyboard.aKey.altDisplayName, Is.EqualTo("#"));
         Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
-        Assert.That(keyboard.bKey.shiftDisplayName, Is.EqualTo("OTHER"));
-        Assert.That(keyboard.bKey.altDisplayName, Is.EqualTo("AltOther"));
     }
 
     [Test]
@@ -3076,7 +3059,7 @@ public class FunctionalTests : InputTestFixture
 
             InputSystem.QueueStateEvent(device, firstState, 0.5);
             InputSystem.QueueStateEvent(device, secondState, 1.5);
-            InputSystem.QueueStateEvent(noise, new GamepadOutputState()); // This one just to make sure we don't get it.
+            InputSystem.QueueStateEvent(noise, new GamepadState()); // This one just to make sure we don't get it.
 
             InputSystem.Update();
 
@@ -3230,16 +3213,30 @@ public class FunctionalTests : InputTestFixture
         Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f).Within(0.000001));
     }
 
-    struct CustomDeviceState : IInputStateTypeInfo
+    struct CustomNestedDeviceState : IInputStateTypeInfo
     {
-        public static FourCC Type = new FourCC('C', 'U', 'S', 'T');
+        [InputControl(name = "button1", template = "Button")]
+        public int buttons;
 
         [InputControl(template = "Axis")]
-        public float axis;
+        public float axis2;
 
         public FourCC GetFormat()
         {
-            return Type;
+            return new FourCC('N', 'S', 'T', 'D');
+        }
+    }
+
+    struct CustomDeviceState : IInputStateTypeInfo
+    {
+        [InputControl(template = "Axis")]
+        public float axis;
+
+        public CustomNestedDeviceState nested;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('C', 'U', 'S', 'T');
         }
     }
 

@@ -52,6 +52,12 @@ namespace ISX.Utilities
             return result;
         }
 
+        public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize)
+        {
+            uint offset = 0;
+            return WriteStringToBuffer(text, buffer, bufferSize, ref offset);
+        }
+
         public static unsafe bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize, ref uint offset)
         {
             if (buffer == IntPtr.Zero)
@@ -71,6 +77,12 @@ namespace ISX.Utilities
 
             offset = (uint)endOffset;
             return true;
+        }
+
+        public static unsafe string ReadStringFromBuffer(IntPtr buffer, int bufferSize)
+        {
+            uint offset = 0;
+            return ReadStringFromBuffer(buffer, bufferSize, ref offset);
         }
 
         public static unsafe string ReadStringFromBuffer(IntPtr buffer, int bufferSize, ref uint offset)

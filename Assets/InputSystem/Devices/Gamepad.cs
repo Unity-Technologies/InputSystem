@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using ISX.Haptics;
 using ISX.Utilities;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace ISX
     /// </summary>
     /// <seealso cref="Gamepad"/>
     // NOTE: Must match GamepadInputState in native.
-    [StructLayout(LayoutKind.Explicit, Size = 36)]
+    [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat
@@ -73,10 +74,6 @@ namespace ISX
         [FieldOffset(24)]
         public float rightTrigger;
 
-        ////TODO: this needs to go out of here and be stored separately
-        [FieldOffset(28)]
-        public GamepadOutputState motors;
-
         public enum Button
         {
             // Dpad buttons. Important to be first in the bitfield as we'll
@@ -121,33 +118,13 @@ namespace ISX
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public struct GamepadOutputState : IInputStateTypeInfo
-    {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('M', 'O', 'T', 'R'); }
-        }
-
-        ////TODO: rename to lowFrequencyMotor and highFrequencyMotor
-        [InputControl(name = "leftMotor", template = "Motor", usage = "LowFreqMotor")]
-        public float leftMotor;
-        [InputControl(name = "rightMotor", template = "Motor", usage = "HighFreqMotor")]
-        public float rightMotor;
-
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
-    }
-
     /// <summary>
     /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
     /// <seealso cref="GamepadState"/>
     [InputTemplate(stateType = typeof(GamepadState))]
-    public class Gamepad : InputDevice
+    public class Gamepad : InputDevice, IDualMotorRumble
     {
         // Given that the north/east/south/west directions are awkward to use,
         // we expose the controls using Xbox style naming. However, we still look
@@ -174,9 +151,6 @@ namespace ISX
 
         public ButtonControl leftTrigger { get; private set; }
         public ButtonControl rightTrigger { get; private set; }
-
-        public AxisControl leftMotor { get; private set; }
-        public AxisControl rightMotor { get; private set; }
 
         ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
@@ -217,10 +191,22 @@ namespace ISX
             leftTrigger = setup.GetControl<ButtonControl>(this, "leftTrigger");
             rightTrigger = setup.GetControl<ButtonControl>(this, "rightTrigger");
 
-            leftMotor = setup.GetControl<AxisControl>(this, "leftMotor");
-            rightMotor = setup.GetControl<AxisControl>(this, "rightMotor");
-
             base.FinishSetup(setup);
+        }
+
+        public void PauseHaptics()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ResumeHaptics()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetMotorSpeeds(float lowFrequency, float highFrequency)
+        {
+            throw new NotImplementedException();
         }
     }
 }
