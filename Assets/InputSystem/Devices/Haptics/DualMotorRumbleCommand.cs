@@ -3,10 +3,12 @@ using ISX.Utilities;
 
 namespace ISX.LowLevel
 {
-    [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + 8)]
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct DualMotorRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('R', 'M', 'B', 'L'); } }
+
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -20,6 +22,16 @@ namespace ISX.LowLevel
         public FourCC GetTypeStatic()
         {
             return Type;
+        }
+
+        public static DualMotorRumbleCommand Create(float lowFrequency, float highFrequency)
+        {
+            return new DualMotorRumbleCommand
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                lowFrequencyMotorSpeed = lowFrequency,
+                highFrequencyMotorSpeed = highFrequency
+            };
         }
     }
 }

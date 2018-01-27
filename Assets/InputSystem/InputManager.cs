@@ -1006,6 +1006,9 @@ namespace ISX
                 m_Runtime.onUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
+
+                if (ReferenceEquals(InputRuntime.s_Runtime, m_Runtime))
+                    InputRuntime.s_Runtime = null;
             }
         }
 

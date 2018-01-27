@@ -196,17 +196,19 @@ namespace ISX
 
         public void PauseHaptics()
         {
-            throw new NotImplementedException();
+            m_Rumble.PauseHaptics(this);
         }
 
         public void ResumeHaptics()
         {
-            throw new NotImplementedException();
+            m_Rumble.ResumeHaptics(this);
         }
 
         public void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
-            throw new NotImplementedException();
+            m_Rumble.SetMotorSpeeds(this, lowFrequency, highFrequency);
         }
+
+        private DualMotorRumble m_Rumble;
     }
 }

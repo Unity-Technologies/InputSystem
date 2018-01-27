@@ -59,6 +59,7 @@ namespace ISX
             // Replace native input runtime with test runtime.
             testRuntime = new InputTestRuntime();
             InputSystem.s_Manager.InstallRuntime(testRuntime);
+            InputSystem.s_Manager.InstallGlobals();
 
             // Install dummy plugin manager to get rid of default logic scanning
             // for [InputPlugins].
