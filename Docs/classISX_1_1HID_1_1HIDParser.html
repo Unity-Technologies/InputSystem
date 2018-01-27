@@ -93,16 +93,16 @@ $(document).ready(function(){initNavTree('classISX_1_1HID_1_1HIDParser.html','')
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a8b1ca411278f83c62cba999c15f55d5b"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HIDParser.html#a8b1ca411278f83c62cba999c15f55d5b">ParseReportDescriptor</a> (byte[] buffer, ref <a class="el" href="structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html">HID.HIDDeviceDescriptor</a> deviceDescriptor)</td></tr>
-<tr class="memdesc:a8b1ca411278f83c62cba999c15f55d5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse a HID report descriptor as defined by section 6.2.2 of the <a href="http://www.usb.org/developers/hidpage/HID1_11.pdf">HID specification</a> and add the elements and collections from the descriptor to the given <em>deviceDescriptor</em> .  <a href="#a8b1ca411278f83c62cba999c15f55d5b">More...</a><br /></td></tr>
-<tr class="separator:a8b1ca411278f83c62cba999c15f55d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f6253a8514777f5d67cc33574379f26"><td class="memItemLeft" align="right" valign="top">static unsafe bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HIDParser.html#a7f6253a8514777f5d67cc33574379f26">ParseReportDescriptor</a> (byte[] buffer, ref <a class="el" href="structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html">HID.HIDDeviceDescriptor</a> deviceDescriptor)</td></tr>
+<tr class="memdesc:a7f6253a8514777f5d67cc33574379f26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parse a HID report descriptor as defined by section 6.2.2 of the <a href="http://www.usb.org/developers/hidpage/HID1_11.pdf">HID specification</a> and add the elements and collections from the descriptor to the given <em>deviceDescriptor</em> .  <a href="#a7f6253a8514777f5d67cc33574379f26">More...</a><br /></td></tr>
+<tr class="separator:a7f6253a8514777f5d67cc33574379f26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Turns binary HID descriptors into <a class="el" href="structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html" title="HID descriptor for a HID class device. ">HID.HIDDeviceDescriptor</a> instances. </p>
 <p>For information about the format, see the <a href="http://www.usb.org/developers/hidpage/HID1_11.pdf">Device Class Definition for Human Interface Devices</a> section 6.2.2. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a8b1ca411278f83c62cba999c15f55d5b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8b1ca411278f83c62cba999c15f55d5b">&#9670;&nbsp;</a></span>ParseReportDescriptor()</h2>
+<a id="a7f6253a8514777f5d67cc33574379f26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f6253a8514777f5d67cc33574379f26">&#9670;&nbsp;</a></span>ParseReportDescriptor()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -111,7 +111,7 @@ Static Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static bool ISX.HID.HIDParser.ParseReportDescriptor </td>
+          <td class="memname">static unsafe bool ISX.HID.HIDParser.ParseReportDescriptor </td>
           <td>(</td>
           <td class="paramtype">byte []&#160;</td>
           <td class="paramname"><em>buffer</em>, </td>

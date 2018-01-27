@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using ISX.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using ISX.LowLevel;
@@ -18,6 +19,8 @@ using UnityEngine.Networking.PlayerConnection;
 #if !NET_4_0
 using ISX.Net35Compatibility;
 #endif
+
+////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
 
 // I'd like to call the DLLs UnityEngine.Input and UnityEngine.Input.Tests
 // but the .asmdef mechanism doesn't seem to work properly when there's periods
@@ -55,19 +58,74 @@ namespace ISX
             remove { s_Manager.onTemplateChange -= value; }
         }
 
+        /// <summary>
+        /// Register a type as an input template.
+        /// </summary>
+        /// <param name="type">Type to derive an input template from. Must be derived from <see cref="InputControl"/>.</param>
+        /// <param name="name">Name to use for the template. If null or empty, the short name of the type will be used.</param>
+        /// <param name="deviceDescription">Optional device description. If this is supplied, the template will automatically
+        /// be instanted for newly discovered devices that match the description.</param>
+        /// <remarks>
+        /// When the template is instantiate, the system will reflect on all public <see cref="InputControl"/>
+        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputTemplateAttribute"/>
+        /// to provide additional information for the generated template.
+        /// </remarks>
         public static void RegisterTemplate(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
         {
-            if (name == null)
+            if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
             s_Manager.RegisterTemplate(name, type, deviceDescription);
         }
 
+        /// <summary>
+        /// Register a type as an input template.
+        /// </summary>
+        /// <typeparam name="T">Type to derive an input template from.</typeparam>
+        /// <param name="name">Name to use for the template. If null or empty, the short name of the type will be used.</param>
+        /// <param name="deviceDescription">Optional device description. If this is supplied, the template will automatically
+        /// be instanted for newly discovered devices that match the description.</param>
+        /// <remarks>
+        /// When the template is instantiate, the system will reflect on all public <see cref="InputControl"/>
+        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputTemplateAttribute"/>
+        /// to provide additional information for the generated template.
+        /// </remarks>
         public static void RegisterTemplate<T>(string name = null, InputDeviceDescription? deviceDescription = null)
+            where T : InputControl
         {
             RegisterTemplate(typeof(T), name, deviceDescription);
         }
 
+        /// <summary>
+        /// Register a template in JSON format.
+        /// </summary>
+        /// <param name="json">Template in JSON format.</param>
+        /// <param name="name">Optional name of the template. If null or empty, the name is taken from the "name"
+        /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
+        /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
+        /// or the "name" JSON property.</exception>
+        /// <remarks>
+        /// Note that most errors in templates will only be detected when instantiated (i.e. when a device or control is
+        /// being created from a template). The JSON data will, however, be parsed once on registration to check for a
+        /// device description in the template. JSON format errors will thus be detected during registration.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterTemplate(@"
+        ///    {
+        ///        ""name"" : ""MyDevice"",
+        ///        ""controls"" : [
+        ///            {
+        ///                ""name"" : ""myThing"",
+        ///                ""template"" : ""MyControl"",
+        ///                ""usage"" : ""LeftStick""
+        ///            }
+        ///        ]
+        ///    }
+        ///");
+        /// </code>
+        /// </example>
         public static void RegisterTemplate(string json, string name = null)
         {
             s_Manager.RegisterTemplate(json, name);
@@ -363,6 +421,50 @@ namespace ISX
             return s_Manager.GetUnrecognizedDevices(descriptions);
         }
 
+        ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
+
+        /// <summary>
+        /// Pause haptic effect playback on all devices.
+        /// </summary>
+        /// <remarks>
+        /// Calls <see cref="IHaptics.PauseHaptics"/> on all <see cref="InputDevice">input devices</see>
+        /// that implement the interface.
+        /// </remarks>
+        public static void PauseHaptics()
+        {
+            var devicesList = devices;
+            var devicesCount = devicesList.Count;
+
+            for (var i = 0; i < devicesCount; ++i)
+            {
+                var device = devicesList[i];
+                var haptics = device as IHaptics;
+                if (haptics != null)
+                    haptics.PauseHaptics();
+            }
+        }
+
+        /// <summary>
+        /// Resume haptic effect playback on all devices.
+        /// </summary>
+        /// <remarks>
+        /// Calls <see cref="IHaptics.ResumeHaptics"/> on all <see cref="InputDevice">input devices</see>
+        /// that implement the interface.
+        /// </remarks>
+        public static void ResumeHaptics()
+        {
+            var devicesList = devices;
+            var devicesCount = devicesList.Count;
+
+            for (var i = 0; i < devicesCount; ++i)
+            {
+                var device = devicesList[i];
+                var haptics = device as IHaptics;
+                if (haptics != null)
+                    haptics.ResumeHaptics();
+            }
+        }
+
         #endregion
 
         #region Controls
@@ -544,6 +646,15 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
+        /// <summary>
+        /// Queue a text input event on the given device.
+        /// </summary>
+        /// <param name="device">Device to queue the event on.</param>
+        /// <param name="character">Text character to input through the event.</param>
+        /// <param name="time">Optional event time stamp. If not supplied, the current time will be used.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> is a device that has not been
+        /// added to the system.</exception>
         public static void QueueTextEvent(InputDevice device, char character, double time = -1)
         {
             if (device == null)

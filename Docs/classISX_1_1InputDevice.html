@@ -122,15 +122,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae9dd251f614b05c750bd6257718b4803"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">OnConfigurationChanged</a> ()</td></tr>
 <tr class="memdesc:ae9dd251f614b05c750bd6257718b4803"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by the system when the configuration of the device has changed.  <a href="#ae9dd251f614b05c750bd6257718b4803">More...</a><br /></td></tr>
 <tr class="separator:ae9dd251f614b05c750bd6257718b4803"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3533a12abc161e10a49e74ee8d494bf"><td class="memItemLeft" align="right" valign="top">virtual long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf">IOCTL</a> (FourCC code, IntPtr buffer, int sizeInBytes)</td></tr>
-<tr class="memdesc:ad3533a12abc161e10a49e74ee8d494bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific control transfer.  <a href="#ad3533a12abc161e10a49e74ee8d494bf">More...</a><br /></td></tr>
-<tr class="separator:ad3533a12abc161e10a49e74ee8d494bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14f69f65e918a28c78aa14fd24545517"><td class="memItemLeft" align="right" valign="top">virtual long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a14f69f65e918a28c78aa14fd24545517">OnDeviceCommand&lt; TCommand &gt;</a> (ref TCommand command)</td></tr>
+<tr class="memdesc:a14f69f65e918a28c78aa14fd24545517"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific command.  <a href="#a14f69f65e918a28c78aa14fd24545517">More...</a><br /></td></tr>
+<tr class="separator:a14f69f65e918a28c78aa14fd24545517"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a37d804c008a3dc913fd77f72f324ebe5"><td class="memItemLeft" align="right" valign="top">const long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a37d804c008a3dc913fd77f72f324ebe5">kIOCTLFailure</a> = -1</td></tr>
-<tr class="memdesc:a37d804c008a3dc913fd77f72f324ebe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic failure code for <a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf" title="Perform a device-specific control transfer. ">IOCTL</a> calls.  <a href="#a37d804c008a3dc913fd77f72f324ebe5">More...</a><br /></td></tr>
-<tr class="separator:a37d804c008a3dc913fd77f72f324ebe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacf15c254d0d0cf8e1279eb18950f6f3"><td class="memItemLeft" align="right" valign="top">const long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#aacf15c254d0d0cf8e1279eb18950f6f3">kCommandResultFailure</a> = -1</td></tr>
+<tr class="memdesc:aacf15c254d0d0cf8e1279eb18950f6f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic failure code for IOCTL calls.  <a href="#aacf15c254d0d0cf8e1279eb18950f6f3">More...</a><br /></td></tr>
+<tr class="separator:aacf15c254d0d0cf8e1279eb18950f6f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -153,61 +153,6 @@ Properties</h2></td></tr>
 <p>Unlike other controls, usages of InputDevices are allowed to be changed on the fly without requiring a change to the device template (InputSystem.SetUsage). </p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>The entire control hierarchy should be a linear array; transition to that with InputData. </dd></dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="ad3533a12abc161e10a49e74ee8d494bf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad3533a12abc161e10a49e74ee8d494bf">&#9670;&nbsp;</a></span>IOCTL()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual long ISX.InputDevice.IOCTL </td>
-          <td>(</td>
-          <td class="paramtype">FourCC&#160;</td>
-          <td class="paramname"><em>code</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">IntPtr&#160;</td>
-          <td class="paramname"><em>buffer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>sizeInBytes</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Perform a device-specific control transfer. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">code</td><td>FourCC code that indicates the type of transfer to be transacted.</td></tr>
-    <tr><td class="paramname">buffer</td><td>Optional data buffer. This can be used by the transfer for both input and output.</td></tr>
-    <tr><td class="paramname">sizeInBytes</td><td>Size of the data buffer in bytes.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>A transfer-specific return code. Negative values are considered failure codes.</dd></dl>
-<p>IOCTL transfers allow devices to set up custom protocols without having to extend the device API. This is most useful for devices implemented in the native Unity runtime which, through the IOCTL interface, may provide custom, device-specific functions.</p>
-<p>This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html" target="_blank">ioctl</a> on UNIX-like systems. </p>
-
-</div>
-</div>
 <a id="a18d3a4551ab679910e7aca01bcda7ea2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a18d3a4551ab679910e7aca01bcda7ea2">&#9670;&nbsp;</a></span>MakeCurrent()</h2>
 
@@ -266,6 +211,52 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a id="a14f69f65e918a28c78aa14fd24545517"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a14f69f65e918a28c78aa14fd24545517">&#9670;&nbsp;</a></span>OnDeviceCommand< TCommand >()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual long ISX.InputDevice.OnDeviceCommand&lt; TCommand &gt; </td>
+          <td>(</td>
+          <td class="paramtype">ref TCommand&#160;</td>
+          <td class="paramname"><em>command</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Perform a device-specific command. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">command</td><td>Data for the command to be performed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A transfer-specific return code. Negative values are considered failure codes.</dd></dl>
+<p>Commands allow devices to set up custom protocols without having to extend the device API. This is most useful for devices implemented in the native Unity runtime which, through the command interface, may provide custom, device-specific functions.</p>
+<p>This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html" target="_blank">ioctl</a> on UNIX-like systems. </p>
+<div class="typeconstraint">
+<dl><dt><b>Type Constraints</b></dt><dd>
+<table border="0" cellspacing="2" cellpadding="0">
+<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>struct</em></td><td>&#160;</td></tr>
+<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>IInputDeviceCommandInfo</em></td><td>&#160;</td></tr>
+</table>
+</dd>
+</dl>
+</div>
+
+</div>
+</div>
 <a id="a62ee625a6da383d2d54b279e017cc396"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a62ee625a6da383d2d54b279e017cc396">&#9670;&nbsp;</a></span>OnTextInput()</h2>
 
@@ -302,20 +293,20 @@ Properties</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a37d804c008a3dc913fd77f72f324ebe5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a37d804c008a3dc913fd77f72f324ebe5">&#9670;&nbsp;</a></span>kIOCTLFailure</h2>
+<a id="aacf15c254d0d0cf8e1279eb18950f6f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacf15c254d0d0cf8e1279eb18950f6f3">&#9670;&nbsp;</a></span>kCommandResultFailure</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const long ISX.InputDevice.kIOCTLFailure = -1</td>
+          <td class="memname">const long ISX.InputDevice.kCommandResultFailure = -1</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Generic failure code for <a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf" title="Perform a device-specific control transfer. ">IOCTL</a> calls. </p>
-<p>Any negative return value for an <a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf" title="Perform a device-specific control transfer. ">IOCTL</a> call should be considered failure. </p>
+<p>Generic failure code for IOCTL calls. </p>
+<p>Any negative return value for an IOCTL call should be considered failure. </p>
 
 </div>
 </div>

@@ -7,7 +7,6 @@ var searchData=
   ['set',['set',['../classISX_1_1InputAction.html#af5e506b8aec9629a30abd5a266174221',1,'ISX::InputAction']]],
   ['setmotorspeeds',['SetMotorSpeeds',['../interfaceISX_1_1Haptics_1_1IDualMotorRumble.html#abea31e5af3ac71e77f7760cce0479f37',1,'ISX::Haptics::IDualMotorRumble']]],
   ['setup',['Setup',['../classISX_1_1InputTestFixture.html#ad8df73510739278c5c0e2023d43b4dae',1,'ISX::InputTestFixture']]],
-  ['shiftdisplayname',['shiftDisplayName',['../classISX_1_1KeyControl.html#a2be33c20e27c7fabf0276dee2e14033b',1,'ISX::KeyControl']]],
   ['sizeinbytes',['sizeInBytes',['../structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144',1,'ISX::LowLevel::InputEvent']]],
   ['spacekey',['spaceKey',['../classISX_1_1Keyboard.html#a2d5d9fb150b869c9b080ba81cb92e60f',1,'ISX::Keyboard']]],
   ['startsending',['StartSending',['../classISX_1_1InputRemoting.html#a59211d2990d4fdf60423b8c2c820cc15',1,'ISX::InputRemoting']]],

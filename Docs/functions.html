@@ -101,9 +101,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>allUsages
 : <a class="el" href="classISX_1_1Editor_1_1EditorInputTemplateCache.html#a9be1328ec0cbde601798048fed3518c5">ISX.Editor.EditorInputTemplateCache</a>
 </li>
-<li>altDisplayName
-: <a class="el" href="classISX_1_1KeyControl.html#a8442bfa27936e2b6a2b80a710450bb9c">ISX.KeyControl</a>
-</li>
 <li>anyKey
 : <a class="el" href="classISX_1_1Keyboard.html#a2a4efff801e9414fac5c6c0b544bc31d">ISX.Keyboard</a>
 </li>
@@ -153,6 +150,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>deviceClass
 : <a class="el" href="structISX_1_1InputDeviceDescription.html#a0a8d233ec188f6dceb68d36a2cc5b24b">ISX.InputDeviceDescription</a>
+</li>
+<li>DeviceCommand&lt; TCommand &gt;()
+: <a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a78b180abb919e703ce8e4f15c511402b">ISX.LowLevel.IInputRuntime</a>
 </li>
 <li>deviceId
 : <a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#af9df745dc0b0b5f84ac1de2b055e0033">ISX.LowLevel.InputEvent</a>
@@ -217,25 +217,15 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>interfaceName
 : <a class="el" href="structISX_1_1InputDeviceDescription.html#a0c9dc7053fbd241ddf2132ec51a5b600">ISX.InputDeviceDescription</a>
 </li>
-<li>IOCTL()
-: <a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf">ISX.InputDevice</a>
-, <a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a19498b7ad08a5011a675e68cad786254">ISX.LowLevel.IInputRuntime</a>
-</li>
-<li>IOCTLQueryHIDReportDescriptor
-: <a class="el" href="classISX_1_1HID_1_1HID.html#a1c4c7eec5c5e663e8d1e3d898bfa9209">ISX.HID.HID</a>
-</li>
-<li>IOCTLQueryHIDReportDescriptorSize
-: <a class="el" href="classISX_1_1HID_1_1HID.html#a2e241cd2fd71d1d5d176085661bc36a7">ISX.HID.HID</a>
-</li>
 </ul>
 
 
 <h3><a id="index_k"></a>- k -</h3><ul>
+<li>kCommandResultFailure
+: <a class="el" href="classISX_1_1InputDevice.html#aacf15c254d0d0cf8e1279eb18950f6f3">ISX.InputDevice</a>
+</li>
 <li>keyCode
 : <a class="el" href="classISX_1_1KeyControl.html#aa3fc3751ee23eddd7a8d09da586bc6ff">ISX.KeyControl</a>
-</li>
-<li>kIOCTLFailure
-: <a class="el" href="classISX_1_1InputDevice.html#a37d804c008a3dc913fd77f72f324ebe5">ISX.InputDevice</a>
 </li>
 </ul>
 
@@ -300,6 +290,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 <li>onDeviceChange
 : <a class="el" href="classISX_1_1InputSystem.html#a2250d53984b8555f8b6f383782e7bfa4">ISX.InputSystem</a>
 </li>
+<li>OnDeviceCommand&lt; TCommand &gt;()
+: <a class="el" href="classISX_1_1InputDevice.html#a14f69f65e918a28c78aa14fd24545517">ISX.InputDevice</a>
+</li>
 <li>onFindTemplateForDevice
 : <a class="el" href="classISX_1_1InputSystem.html#aba5d5e15243c14e0fc4d22ce68d5e118">ISX.InputSystem</a>
 </li>
@@ -329,7 +322,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 : <a class="el" href="classISX_1_1InputControl.html#a254b6b693502e19b517736f26197601f">ISX.InputControl&lt; TValue &gt;</a>
 </li>
 <li>ParseReportDescriptor()
-: <a class="el" href="classISX_1_1HID_1_1HIDParser.html#a8b1ca411278f83c62cba999c15f55d5b">ISX.HID.HIDParser</a>
+: <a class="el" href="classISX_1_1HID_1_1HIDParser.html#a7f6253a8514777f5d67cc33574379f26">ISX.HID.HIDParser</a>
 </li>
 <li>participantId
 : <a class="el" href="structISX_1_1InputRemoting_1_1Message.html#a3436cb56d043290d5749f037f7402aa2">ISX.InputRemoting.Message</a>
@@ -339,6 +332,7 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>PauseHaptics()
 : <a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060">ISX.Haptics.IHaptics</a>
+, <a class="el" href="classISX_1_1InputSystem.html#a1dee94fbccae977bbc8386a1d890279f">ISX.InputSystem</a>
 </li>
 <li>PollingFrequency
 : <a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#ab8d48342d2eeb82bfd44a72520ed7f29">ISX.LowLevel.IInputRuntime</a>
@@ -360,8 +354,17 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a id="index_q"></a>- q -</h3><ul>
+<li>QueryHIDReportDescriptorDeviceCommandType
+: <a class="el" href="classISX_1_1HID_1_1HID.html#a4f0679f074af0b8df2430052b3f4ff5a">ISX.HID.HID</a>
+</li>
+<li>QueryHIDReportDescriptorSizeDeviceCommandType
+: <a class="el" href="classISX_1_1HID_1_1HID.html#a4909c6b4f373f109997db6cb5491beec">ISX.HID.HID</a>
+</li>
 <li>QueueEvent()
 : <a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#acfaf245213d1cb3d38e661a7e5469b34">ISX.LowLevel.IInputRuntime</a>
+</li>
+<li>QueueTextEvent()
+: <a class="el" href="classISX_1_1InputSystem.html#a57896765dedd2c72dfe365030ff5a44f">ISX.InputSystem</a>
 </li>
 <li>quoteKey
 : <a class="el" href="classISX_1_1Keyboard.html#a3fa3eed6ba890c70b1a9a3c52761ab64">ISX.Keyboard</a>
@@ -370,6 +373,12 @@ $(document).ready(function(){initNavTree('functions.html','');});
 
 
 <h3><a id="index_r"></a>- r -</h3><ul>
+<li>RegisterTemplate()
+: <a class="el" href="classISX_1_1InputSystem.html#ad400caf913676e49e93ce6a5d930d417">ISX.InputSystem</a>
+</li>
+<li>RegisterTemplate&lt; T &gt;()
+: <a class="el" href="classISX_1_1InputSystem.html#a658cc7fad775e44c0e62dd821aa4d10f">ISX.InputSystem</a>
+</li>
 <li>RegisterTemplateConstructor()
 : <a class="el" href="classISX_1_1InputSystem.html#ab511d2a13cd8f7d5c5a78a9033833e47">ISX.InputSystem</a>
 </li>
@@ -381,6 +390,9 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>RemoveTemplate()
 : <a class="el" href="classISX_1_1InputSystem.html#ab8f63ef044111aa2c6f897580cec31fb">ISX.InputSystem</a>
+</li>
+<li>ResumeHaptics()
+: <a class="el" href="classISX_1_1InputSystem.html#a71ab2ff457045e43d112695ef3c77840">ISX.InputSystem</a>
 </li>
 <li>right
 : <a class="el" href="classISX_1_1DpadControl.html#a31707e56366ef35c95e2625203cf8ad6">ISX.DpadControl</a>
@@ -418,9 +430,6 @@ $(document).ready(function(){initNavTree('functions.html','');});
 </li>
 <li>Setup()
 : <a class="el" href="classISX_1_1InputTestFixture.html#ad8df73510739278c5c0e2023d43b4dae">ISX.InputTestFixture</a>
-</li>
-<li>shiftDisplayName
-: <a class="el" href="classISX_1_1KeyControl.html#a2be33c20e27c7fabf0276dee2e14033b">ISX.KeyControl</a>
 </li>
 <li>sizeInBytes
 : <a class="el" href="structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144">ISX.LowLevel.InputEvent</a>

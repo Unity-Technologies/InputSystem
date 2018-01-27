@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['parsereportdescriptor',['ParseReportDescriptor',['../classISX_1_1HID_1_1HIDParser.html#a8b1ca411278f83c62cba999c15f55d5b',1,'ISX::HID::HIDParser']]],
-  ['pausehaptics',['PauseHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060',1,'ISX::Haptics::IHaptics']]],
-  ['process',['Process',['../interfaceISX_1_1IInputProcessor.html#a087ae350b0915d42d16cad85f2b421b1',1,'ISX::IInputProcessor']]]
+  ['onconfigurationchanged',['OnConfigurationChanged',['../classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803',1,'ISX::InputDevice']]],
+  ['ondevicecommand_3c_20tcommand_20_3e',['OnDeviceCommand&lt; TCommand &gt;',['../classISX_1_1InputDevice.html#a14f69f65e918a28c78aa14fd24545517',1,'ISX::InputDevice']]],
+  ['ontextinput',['OnTextInput',['../classISX_1_1InputDevice.html#a62ee625a6da383d2d54b279e017cc396',1,'ISX::InputDevice']]]
 ];

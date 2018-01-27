@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['makecurrent',['MakeCurrent',['../classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2',1,'ISX::InputDevice']]]
+  ['initialize',['Initialize',['../classISX_1_1HID_1_1HIDSupport.html#aa2e9a0a6254844461347652dd980156a',1,'ISX::HID::HIDSupport']]]
 ];

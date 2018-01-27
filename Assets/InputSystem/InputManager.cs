@@ -112,11 +112,13 @@ namespace ISX
             if (type == null)
                 throw new ArgumentNullException("type");
 
+            // Note that since InputDevice derives from InputControl, isDeviceTemplate implies
+            // isControlTemplate to be true as well.
             var isDeviceTemplate = typeof(InputDevice).IsAssignableFrom(type);
             var isControlTemplate = typeof(InputControl).IsAssignableFrom(type);
 
             if (!isDeviceTemplate && !isControlTemplate)
-                throw new ArgumentException("Types used as templates have to be InputControls are InputDevices",
+                throw new ArgumentException("Types used as templates have to be InputControls or InputDevices",
                     "type");
 
             var internedName = new InternedString(name);

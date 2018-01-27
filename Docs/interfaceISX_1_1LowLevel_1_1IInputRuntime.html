@@ -105,9 +105,9 @@ Inheritance diagram for ISX.LowLevel.IInputRuntime:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:acfaf245213d1cb3d38e661a7e5469b34"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#acfaf245213d1cb3d38e661a7e5469b34">QueueEvent</a> (IntPtr ptr)</td></tr>
 <tr class="separator:acfaf245213d1cb3d38e661a7e5469b34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19498b7ad08a5011a675e68cad786254"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a19498b7ad08a5011a675e68cad786254">IOCTL</a> (int deviceId, FourCC code, IntPtr buffer, int size)</td></tr>
-<tr class="memdesc:a19498b7ad08a5011a675e68cad786254"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform an I/O transaction directly against a specific device.  <a href="#a19498b7ad08a5011a675e68cad786254">More...</a><br /></td></tr>
-<tr class="separator:a19498b7ad08a5011a675e68cad786254"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78b180abb919e703ce8e4f15c511402b"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a78b180abb919e703ce8e4f15c511402b">DeviceCommand&lt; TCommand &gt;</a> (int deviceId, ref TCommand command)</td></tr>
+<tr class="memdesc:a78b180abb919e703ce8e4f15c511402b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform an I/O transaction directly against a specific device.  <a href="#a78b180abb919e703ce8e4f15c511402b">More...</a><br /></td></tr>
+<tr class="separator:a78b180abb919e703ce8e4f15c511402b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -121,14 +121,14 @@ Properties</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Input functions that have to be performed by the underlying input runtime. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a19498b7ad08a5011a675e68cad786254"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a19498b7ad08a5011a675e68cad786254">&#9670;&nbsp;</a></span>IOCTL()</h2>
+<a id="a78b180abb919e703ce8e4f15c511402b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78b180abb919e703ce8e4f15c511402b">&#9670;&nbsp;</a></span>DeviceCommand< TCommand >()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">long ISX.LowLevel.IInputRuntime.IOCTL </td>
+          <td class="memname">long ISX.LowLevel.IInputRuntime.DeviceCommand&lt; TCommand &gt; </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>deviceId</em>, </td>
@@ -136,20 +136,8 @@ Properties</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">FourCC&#160;</td>
-          <td class="paramname"><em>code</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">IntPtr&#160;</td>
-          <td class="paramname"><em>buffer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>size</em>&#160;</td>
+          <td class="paramtype">ref TCommand&#160;</td>
+          <td class="paramname"><em>command</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -171,6 +159,15 @@ Properties</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd></dd></dl>
+<div class="typeconstraint">
+<dl><dt><b>Type Constraints</b></dt><dd>
+<table border="0" cellspacing="2" cellpadding="0">
+<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>struct</em></td><td>&#160;</td></tr>
+<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>IInputDeviceCommandInfo</em></td><td>&#160;</td></tr>
+</table>
+</dd>
+</dl>
+</div>
 
 </div>
 </div>

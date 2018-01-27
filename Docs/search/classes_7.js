@@ -12,7 +12,7 @@ var searchData=
   ['inputbinding',['InputBinding',['../structISX_1_1InputBinding.html',1,'ISX']]],
   ['inputbindingoverride',['InputBindingOverride',['../structISX_1_1InputBindingOverride.html',1,'ISX']]],
   ['inputconfiguration',['InputConfiguration',['../classISX_1_1InputConfiguration.html',1,'ISX']]],
-  ['inputcontrol',['InputControl',['../classISX_1_1InputControl.html',1,'ISX.InputControl&lt; TValue &gt;'],['../classISX_1_1InputControl.html',1,'ISX.InputControl']]],
+  ['inputcontrol',['InputControl',['../classISX_1_1InputControl.html',1,'ISX.InputControl'],['../classISX_1_1InputControl.html',1,'ISX.InputControl&lt; TValue &gt;']]],
   ['inputcontrol_3c_20audiobuffer_20_3e',['InputControl&lt; AudioBuffer &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrol_3c_20color_20_3e',['InputControl&lt; Color &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrol_3c_20float_20_3e',['InputControl&lt; float &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],

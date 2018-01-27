@@ -2266,6 +2266,44 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public unsafe void Devices_CanPauseAndResumeHapticsOnAllDevices()
+    {
+        InputSystem.AddDevice<Gamepad>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
+
+        gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
+
+        DualMotorRumbleCommand? receivedCommand = null;
+        testRuntime.SetDeviceCommandCallback(gamepad.id,
+            (deviceId, command) =>
+            {
+                if (command->type == DualMotorRumbleCommand.Type)
+                {
+                    Assert.That(receivedCommand.HasValue, Is.False);
+                    receivedCommand = *((DualMotorRumbleCommand*)command);
+                    return 1;
+                }
+                Assert.Fail();
+                return InputDevice.kCommandResultFailure;
+            });
+
+        InputSystem.PauseHaptics();
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.lowFrequencyMotorSpeed, Is.Zero.Within(0.000001));
+        Assert.That(receivedCommand.Value.highFrequencyMotorSpeed, Is.Zero.Within(0.000001));
+
+        receivedCommand = null;
+        InputSystem.ResumeHaptics();
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.lowFrequencyMotorSpeed, Is.EqualTo(0.1234).Within(0.000001));
+        Assert.That(receivedCommand.Value.highFrequencyMotorSpeed, Is.EqualTo(0.5678).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
     public unsafe void Devices_CanControlMotorSpeedsOnGamepad()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

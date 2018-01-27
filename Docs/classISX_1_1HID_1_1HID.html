@@ -126,12 +126,12 @@ Public Types</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
-<tr class="memitem:a1c4c7eec5c5e663e8d1e3d898bfa9209"><td class="memItemLeft" align="right" valign="top">static FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HID.html#a1c4c7eec5c5e663e8d1e3d898bfa9209">IOCTLQueryHIDReportDescriptor</a><code> [get]</code></td></tr>
-<tr class="memdesc:a1c4c7eec5c5e663e8d1e3d898bfa9209"><td class="mdescLeft">&#160;</td><td class="mdescRight">IOCTL code for querying the HID report descriptor from a device.  <a href="#a1c4c7eec5c5e663e8d1e3d898bfa9209">More...</a><br /></td></tr>
-<tr class="separator:a1c4c7eec5c5e663e8d1e3d898bfa9209"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e241cd2fd71d1d5d176085661bc36a7"><td class="memItemLeft" align="right" valign="top">static FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HID.html#a2e241cd2fd71d1d5d176085661bc36a7">IOCTLQueryHIDReportDescriptorSize</a><code> [get]</code></td></tr>
-<tr class="memdesc:a2e241cd2fd71d1d5d176085661bc36a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">IOCTL code for querying the HID report descriptor size in bytes from a device.  <a href="#a2e241cd2fd71d1d5d176085661bc36a7">More...</a><br /></td></tr>
-<tr class="separator:a2e241cd2fd71d1d5d176085661bc36a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f0679f074af0b8df2430052b3f4ff5a"><td class="memItemLeft" align="right" valign="top">static FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HID.html#a4f0679f074af0b8df2430052b3f4ff5a">QueryHIDReportDescriptorDeviceCommandType</a><code> [get]</code></td></tr>
+<tr class="memdesc:a4f0679f074af0b8df2430052b3f4ff5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Command code for querying the HID report descriptor from a device.  <a href="#a4f0679f074af0b8df2430052b3f4ff5a">More...</a><br /></td></tr>
+<tr class="separator:a4f0679f074af0b8df2430052b3f4ff5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4909c6b4f373f109997db6cb5491beec"><td class="memItemLeft" align="right" valign="top">static FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HID.html#a4909c6b4f373f109997db6cb5491beec">QueryHIDReportDescriptorSizeDeviceCommandType</a><code> [get]</code></td></tr>
+<tr class="memdesc:a4909c6b4f373f109997db6cb5491beec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Command code for querying the HID report descriptor size in bytes from a device.  <a href="#a4909c6b4f373f109997db6cb5491beec">More...</a><br /></td></tr>
+<tr class="separator:a4909c6b4f373f109997db6cb5491beec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad668fd11ec9308a2b07691e1e1184d35"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html">HIDDeviceDescriptor</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1HID_1_1HID.html#ad668fd11ec9308a2b07691e1e1184d35">hidDescriptor</a><code> [get]</code></td></tr>
 <tr class="memdesc:ad668fd11ec9308a2b07691e1e1184d35"><td class="mdescLeft">&#160;</td><td class="mdescRight">The HID device descriptor as received from the system.  <a href="#ad668fd11ec9308a2b07691e1e1184d35">More...</a><br /></td></tr>
 <tr class="separator:ad668fd11ec9308a2b07691e1e1184d35"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -161,13 +161,13 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">OnConfigurationChanged</a> ()</td></tr>
 <tr class="memdesc:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by the system when the configuration of the device has changed.  <a href="classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803">More...</a><br /></td></tr>
 <tr class="separator:ae9dd251f614b05c750bd6257718b4803 inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3533a12abc161e10a49e74ee8d494bf inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf">IOCTL</a> (FourCC code, IntPtr buffer, int sizeInBytes)</td></tr>
-<tr class="memdesc:ad3533a12abc161e10a49e74ee8d494bf inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific control transfer.  <a href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf">More...</a><br /></td></tr>
-<tr class="separator:ad3533a12abc161e10a49e74ee8d494bf inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14f69f65e918a28c78aa14fd24545517 inherit pub_methods_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">virtual long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a14f69f65e918a28c78aa14fd24545517">OnDeviceCommand&lt; TCommand &gt;</a> (ref TCommand command)</td></tr>
+<tr class="memdesc:a14f69f65e918a28c78aa14fd24545517 inherit pub_methods_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific command.  <a href="classISX_1_1InputDevice.html#a14f69f65e918a28c78aa14fd24545517">More...</a><br /></td></tr>
+<tr class="separator:a14f69f65e918a28c78aa14fd24545517 inherit pub_methods_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_classISX_1_1InputDevice"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_classISX_1_1InputDevice')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="classISX_1_1InputDevice.html">ISX.InputDevice</a></td></tr>
-<tr class="memitem:a37d804c008a3dc913fd77f72f324ebe5 inherit pub_attribs_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">const long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#a37d804c008a3dc913fd77f72f324ebe5">kIOCTLFailure</a> = -1</td></tr>
-<tr class="memdesc:a37d804c008a3dc913fd77f72f324ebe5 inherit pub_attribs_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic failure code for <a class="el" href="classISX_1_1InputDevice.html#ad3533a12abc161e10a49e74ee8d494bf" title="Perform a device-specific control transfer. ">IOCTL</a> calls.  <a href="classISX_1_1InputDevice.html#a37d804c008a3dc913fd77f72f324ebe5">More...</a><br /></td></tr>
-<tr class="separator:a37d804c008a3dc913fd77f72f324ebe5 inherit pub_attribs_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacf15c254d0d0cf8e1279eb18950f6f3 inherit pub_attribs_classISX_1_1InputDevice"><td class="memItemLeft" align="right" valign="top">const long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputDevice.html#aacf15c254d0d0cf8e1279eb18950f6f3">kCommandResultFailure</a> = -1</td></tr>
+<tr class="memdesc:aacf15c254d0d0cf8e1279eb18950f6f3 inherit pub_attribs_classISX_1_1InputDevice"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic failure code for IOCTL calls.  <a href="classISX_1_1InputDevice.html#aacf15c254d0d0cf8e1279eb18950f6f3">More...</a><br /></td></tr>
+<tr class="separator:aacf15c254d0d0cf8e1279eb18950f6f3 inherit pub_attribs_classISX_1_1InputDevice"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A generic HID input device. </p>
@@ -250,8 +250,8 @@ Additional Inherited Members</h2></td></tr>
 
 </div>
 </div>
-<a id="a1c4c7eec5c5e663e8d1e3d898bfa9209"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1c4c7eec5c5e663e8d1e3d898bfa9209">&#9670;&nbsp;</a></span>IOCTLQueryHIDReportDescriptor</h2>
+<a id="a4f0679f074af0b8df2430052b3f4ff5a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f0679f074af0b8df2430052b3f4ff5a">&#9670;&nbsp;</a></span>QueryHIDReportDescriptorDeviceCommandType</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -260,7 +260,7 @@ Additional Inherited Members</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">FourCC ISX.HID.HID.IOCTLQueryHIDReportDescriptor</td>
+          <td class="memname">FourCC ISX.HID.HID.QueryHIDReportDescriptorDeviceCommandType</td>
         </tr>
       </table>
   </td>
@@ -270,13 +270,13 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>IOCTL code for querying the HID report descriptor from a device. </p>
-<dl class="section see"><dt>See also</dt><dd>InputDevice.IOCTL</dd></dl>
+<p>Command code for querying the HID report descriptor from a device. </p>
+<dl class="section see"><dt>See also</dt><dd>InputDevice.OnDeviceCommand&lt;TCommand&gt;</dd></dl>
 
 </div>
 </div>
-<a id="a2e241cd2fd71d1d5d176085661bc36a7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2e241cd2fd71d1d5d176085661bc36a7">&#9670;&nbsp;</a></span>IOCTLQueryHIDReportDescriptorSize</h2>
+<a id="a4909c6b4f373f109997db6cb5491beec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4909c6b4f373f109997db6cb5491beec">&#9670;&nbsp;</a></span>QueryHIDReportDescriptorSizeDeviceCommandType</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -285,7 +285,7 @@ Additional Inherited Members</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">FourCC ISX.HID.HID.IOCTLQueryHIDReportDescriptorSize</td>
+          <td class="memname">FourCC ISX.HID.HID.QueryHIDReportDescriptorSizeDeviceCommandType</td>
         </tr>
       </table>
   </td>
@@ -295,8 +295,8 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>IOCTL code for querying the HID report descriptor size in bytes from a device. </p>
-<dl class="section see"><dt>See also</dt><dd>InputDevice.IOCTL</dd></dl>
+<p>Command code for querying the HID report descriptor size in bytes from a device. </p>
+<dl class="section see"><dt>See also</dt><dd>InputDevice.OnDeviceCommand&lt;TCommand&gt;</dd></dl>
 
 </div>
 </div>

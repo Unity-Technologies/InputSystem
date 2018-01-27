@@ -6,6 +6,6 @@ var classISX_1_1HID_1_1HID =
     [ "GenericDesktop", "classISX_1_1HID_1_1HID.html#acba710eadc24e3894045ec9108d97347", null ],
     [ "UsagePage", "classISX_1_1HID_1_1HID.html#a2f87b2cdfdf7a69370849cd196257ebd", null ],
     [ "hidDescriptor", "classISX_1_1HID_1_1HID.html#ad668fd11ec9308a2b07691e1e1184d35", null ],
-    [ "IOCTLQueryHIDReportDescriptor", "classISX_1_1HID_1_1HID.html#a1c4c7eec5c5e663e8d1e3d898bfa9209", null ],
-    [ "IOCTLQueryHIDReportDescriptorSize", "classISX_1_1HID_1_1HID.html#a2e241cd2fd71d1d5d176085661bc36a7", null ]
+    [ "QueryHIDReportDescriptorDeviceCommandType", "classISX_1_1HID_1_1HID.html#a4f0679f074af0b8df2430052b3f4ff5a", null ],
+    [ "QueryHIDReportDescriptorSizeDeviceCommandType", "classISX_1_1HID_1_1HID.html#a4909c6b4f373f109997db6cb5491beec", null ]
 ];
