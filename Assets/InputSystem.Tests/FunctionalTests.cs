@@ -2586,13 +2586,44 @@ public class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanPerformHorizontalAndVerticalScrollWithMouse()
     {
-        var mouse = (Mouse)InputSystem.AddDevice("Mouse");
+        var mouse = InputSystem.AddDevice<Mouse>();
 
         InputSystem.QueueStateEvent(mouse.scroll, new Vector2(10, 12));
         InputSystem.Update();
 
         Assert.That(mouse.scroll.x.value, Is.EqualTo(10).Within(0.0000001));
         Assert.That(mouse.scroll.y.value, Is.EqualTo(12).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanWarpMousePosition()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        WarpMousePositionCommand? receivedCommand = null;
+        testRuntime.SetDeviceCommandCallback(mouse.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == WarpMousePositionCommand.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((WarpMousePositionCommand*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail();
+                    return InputDevice.kCommandResultFailure;
+                }
+            });
+
+        mouse.WarpCursorPosition(new Vector2(0.1234f, 0.5678f));
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.warpPositionInPlayerDisplaySpace.x, Is.EqualTo(0.1234).Within(0.000001));
+        Assert.That(receivedCommand.Value.warpPositionInPlayerDisplaySpace.y, Is.EqualTo(0.5678).Within(0.000001));
     }
 
     [Test]

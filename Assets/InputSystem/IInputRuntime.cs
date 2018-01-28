@@ -72,7 +72,6 @@ namespace ISX.LowLevel
         /// </remarks>
         Action<InputUpdateType> onBeforeUpdate { set; }
 
-
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
         /// </summary>

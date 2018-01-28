@@ -102,6 +102,21 @@ namespace ISX
         /// </summary>
         public new static Mouse current { get; internal set; }
 
+        ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
+        /// <summary>
+        /// Move the operating system's mouse cursor.
+        /// </summary>
+        /// <param name="position">New position in player window space.</param>
+        /// <remarks>
+        /// The <see cref="Pointer.position"/> property will not update immediately but rather will update in the
+        /// next input update.
+        /// </remarks>
+        public void WarpCursorPosition(Vector2 position)
+        {
+            var command = WarpMousePositionCommand.Create(position);
+            OnDeviceCommand(ref command);
+        }
+
         public override void MakeCurrent()
         {
             base.MakeCurrent();
