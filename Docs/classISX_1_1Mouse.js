@@ -1,5 +1,6 @@
 var classISX_1_1Mouse =
 [
+    [ "WarpCursorPosition", "classISX_1_1Mouse.html#a88a3f0eec81cb757a764b15566715e11", null ],
     [ "current", "classISX_1_1Mouse.html#ac65c1ac5f84af5e011ab0eecc4130a9e", null ],
     [ "leftButton", "classISX_1_1Mouse.html#ae3c534ff14182c2a37bd6a258afa58b3", null ],
     [ "middleButton", "classISX_1_1Mouse.html#aea5adefa4bfcf8ab518334e5455c82aa", null ],

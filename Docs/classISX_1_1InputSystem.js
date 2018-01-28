@@ -14,6 +14,7 @@ var classISX_1_1InputSystem =
     [ "RegisterTemplate< T >", "classISX_1_1InputSystem.html#a658cc7fad775e44c0e62dd821aa4d10f", null ],
     [ "RegisterTemplateConstructor", "classISX_1_1InputSystem.html#ab511d2a13cd8f7d5c5a78a9033833e47", null ],
     [ "RemoveTemplate", "classISX_1_1InputSystem.html#ab8f63ef044111aa2c6f897580cec31fb", null ],
+    [ "ResetHaptics", "classISX_1_1InputSystem.html#a1e17d891368a47531d74aec0a4e154aa", null ],
     [ "ResumeHaptics", "classISX_1_1InputSystem.html#a71ab2ff457045e43d112695ef3c77840", null ],
     [ "TryFindMatchingTemplate", "classISX_1_1InputSystem.html#a69eec6c51b8146cf7e9473b744b705c4", null ],
     [ "TryLoadTemplate", "classISX_1_1InputSystem.html#af0b0b1a015d7d6481945f7a23776363e", null ],

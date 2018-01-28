@@ -142,6 +142,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ab8f63ef044111aa2c6f897580cec31fb"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputSystem.html#ab8f63ef044111aa2c6f897580cec31fb">RemoveTemplate</a> (string name)</td></tr>
 <tr class="memdesc:ab8f63ef044111aa2c6f897580cec31fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove an already registered template from the system.  <a href="#ab8f63ef044111aa2c6f897580cec31fb">More...</a><br /></td></tr>
 <tr class="separator:ab8f63ef044111aa2c6f897580cec31fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e17d891368a47531d74aec0a4e154aa"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputSystem.html#a1e17d891368a47531d74aec0a4e154aa">ResetHaptics</a> ()</td></tr>
+<tr class="memdesc:a1e17d891368a47531d74aec0a4e154aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stop haptic effect playback on all devices.  <a href="#a1e17d891368a47531d74aec0a4e154aa">More...</a><br /></td></tr>
+<tr class="separator:a1e17d891368a47531d74aec0a4e154aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a71ab2ff457045e43d112695ef3c77840"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classISX_1_1InputSystem.html#a71ab2ff457045e43d112695ef3c77840">ResumeHaptics</a> ()</td></tr>
 <tr class="memdesc:a71ab2ff457045e43d112695ef3c77840"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resume haptic effect playback on all devices.  <a href="#a71ab2ff457045e43d112695ef3c77840">More...</a><br /></td></tr>
 <tr class="separator:a71ab2ff457045e43d112695ef3c77840"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -410,7 +413,7 @@ Properties</h2></td></tr>
 
 <p>Pause haptic effect playback on all devices. </p>
 <p>Calls <a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060" title="Pause haptics playback on the device. ">Haptics.IHaptics.PauseHaptics</a> on all <a class="el" href="classISX_1_1InputDevice.html">input devices</a> that implement the interface. </p>
-<dl class="section see"><dt>See also</dt><dd>ResumeHaptics</dd></dl>
+<dl class="section see"><dt>See also</dt><dd>ResumeHaptics, ResetHaptics</dd></dl>
 <div class="fragment"><div class="line"><span class="comment">// When going into the menu from gameplay, pause haptics.</span></div><div class="line">gameplayControls.backAction.onPerformed +=</div><div class="line">    ctx =&gt;</div><div class="line">    {</div><div class="line">        gameplayControls.Disable();</div><div class="line">        menuControls.Enable();</div><div class="line">        InputSystem.PauseHaptics();</div><div class="line">    };</div></div><!-- fragment --> 
 </div>
 </div>
@@ -788,6 +791,35 @@ Properties</h2></td></tr>
 
 </div>
 </div>
+<a id="a1e17d891368a47531d74aec0a4e154aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e17d891368a47531d74aec0a4e154aa">&#9670;&nbsp;</a></span>ResetHaptics()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void ISX.InputSystem.ResetHaptics </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Stop haptic effect playback on all devices. </p>
+<p>Will reset haptics effects on all devices to their default state.</p>
+<p>Calls <a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a0011deb5ee3c64a7c52fdef31934efbf" title="Reset haptics playback on the device to its default state. ">Haptics.IHaptics.ResetHaptics</a> on all <a class="el" href="classISX_1_1InputDevice.html">input devices</a> that implement the interface. </p>
+
+</div>
+</div>
 <a id="a71ab2ff457045e43d112695ef3c77840"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a71ab2ff457045e43d112695ef3c77840">&#9670;&nbsp;</a></span>ResumeHaptics()</h2>
 
@@ -812,7 +844,7 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Resume haptic effect playback on all devices. </p>
-<p>Calls Haptics.IHaptics.ResumeHaptics on all <a class="el" href="classISX_1_1InputDevice.html">input devices</a> that implement the interface. </p>
+<p>Calls <a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a134a813cb8d0e6681e3cc5ee9488b50b" title="Resume haptics playback on the device. ">Haptics.IHaptics.ResumeHaptics</a> on all <a class="el" href="classISX_1_1InputDevice.html">input devices</a> that implement the interface. </p>
 <dl class="section see"><dt>See also</dt><dd>PauseHaptics</dd></dl>
 
 </div>

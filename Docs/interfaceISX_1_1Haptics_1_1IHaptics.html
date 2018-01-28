@@ -114,10 +114,17 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1b635267351e51bd0210b563d5371060"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060">PauseHaptics</a> ()</td></tr>
 <tr class="memdesc:a1b635267351e51bd0210b563d5371060"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pause haptics playback on the device.  <a href="#a1b635267351e51bd0210b563d5371060">More...</a><br /></td></tr>
 <tr class="separator:a1b635267351e51bd0210b563d5371060"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0011deb5ee3c64a7c52fdef31934efbf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a0011deb5ee3c64a7c52fdef31934efbf">ResetHaptics</a> ()</td></tr>
+<tr class="memdesc:a0011deb5ee3c64a7c52fdef31934efbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reset haptics playback on the device to its default state.  <a href="#a0011deb5ee3c64a7c52fdef31934efbf">More...</a><br /></td></tr>
+<tr class="separator:a0011deb5ee3c64a7c52fdef31934efbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a134a813cb8d0e6681e3cc5ee9488b50b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a134a813cb8d0e6681e3cc5ee9488b50b">ResumeHaptics</a> ()</td></tr>
+<tr class="memdesc:a134a813cb8d0e6681e3cc5ee9488b50b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resume haptics playback on the device.  <a href="#a134a813cb8d0e6681e3cc5ee9488b50b">More...</a><br /></td></tr>
+<tr class="separator:a134a813cb8d0e6681e3cc5ee9488b50b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base interface for haptics on input devices. </p>
 <p>To support haptics, an <a class="el" href="classISX_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a> has to implement one or more haptics interfaces. </p>
+<div class="fragment"><div class="line"><span class="keyword">class </span>MyDevice : InputDevice, IDualMotorRumble</div><div class="line">{</div><div class="line">    <span class="keyword">private</span> DualMotorRumble m_Rumble;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keywordtype">void</span> SetMotorSpeeds(<span class="keywordtype">float</span> lowFrequency, <span class="keywordtype">float</span> highFrequency)</div><div class="line">    {</div><div class="line">        m_Rumble.SetMotorSpeeds(lowFrequency, highFrequency);</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keywordtype">void</span> <a class="code" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060">PauseHaptics</a>()</div><div class="line">    {</div><div class="line">        m_Rumble.PauseHaptics();</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keywordtype">void</span> <a class="code" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a134a813cb8d0e6681e3cc5ee9488b50b">ResumeHaptics</a>()</div><div class="line">    {</div><div class="line">        m_Rumble.ResumeHaptics();</div><div class="line">    }</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keywordtype">void</span> <a class="code" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a0011deb5ee3c64a7c52fdef31934efbf">ResetHaptics</a>()</div><div class="line">    {</div><div class="line">        m_Rumble.ResetHaptics();</div><div class="line">    }</div><div class="line">}</div></div><!-- fragment --> <dl class="section see"><dt>See also</dt><dd>InputSystem.PauseHaptics(), InputSystem.ResumeHaptics, InputSystem.ResetHaptics</dd></dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a1b635267351e51bd0210b563d5371060"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1b635267351e51bd0210b563d5371060">&#9670;&nbsp;</a></span>PauseHaptics()</h2>
@@ -136,8 +143,49 @@ Public Member Functions</h2></td></tr>
 
 <p>Pause haptics playback on the device. </p>
 <p>This should preserve current playback settings (such as motor speed levels or effect playback positions) but shut down feedback effects on the device.</p>
-<p>If proper resumption of effects is not possible, playback should be stopped and ResumeHaptics is allowed to be a no-operation.</p>
+<p>If proper resumption of effects is not possible, playback should be stopped and <a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a134a813cb8d0e6681e3cc5ee9488b50b" title="Resume haptics playback on the device. ">ResumeHaptics</a> is allowed to be a no-operation.</p>
 <p>Note that haptics playback states are not required to survive domain reloads in the editor. </p>
+<dl class="section see"><dt>See also</dt><dd>ResumeHaptics</dd></dl>
+
+</div>
+</div>
+<a id="a0011deb5ee3c64a7c52fdef31934efbf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0011deb5ee3c64a7c52fdef31934efbf">&#9670;&nbsp;</a></span>ResetHaptics()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ISX.Haptics.IHaptics.ResetHaptics </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reset haptics playback on the device to its default state. </p>
+<p>This will turn off all haptics effects that may be playing on the device. </p>
+
+</div>
+</div>
+<a id="a134a813cb8d0e6681e3cc5ee9488b50b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a134a813cb8d0e6681e3cc5ee9488b50b">&#9670;&nbsp;</a></span>ResumeHaptics()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void ISX.Haptics.IHaptics.ResumeHaptics </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Resume haptics playback on the device. </p>
+<p>Should be called after calling <a class="el" href="interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060" title="Pause haptics playback on the device. ">PauseHaptics</a>. Otherwise does nothing. </p>
 
 </div>
 </div>

@@ -2,6 +2,8 @@ using System;
 using ISX.LowLevel;
 using UnityEngine;
 
+////REVIEW: should we keep an explicit playback status? ATM calling ResumeHaptics() will re-issue last set motor speed regardless of pause state
+
 namespace ISX.Haptics
 {
     /// <summary>
@@ -12,14 +14,21 @@ namespace ISX.Haptics
         public float lowFrequencyMotorSpeed { get; private set; }
         public float highFrequencyMotorSpeed { get; private set; }
 
+        public bool isRumbling
+        {
+            get
+            {
+                return !Mathf.Approximately(lowFrequencyMotorSpeed, 0f)
+                    || !Mathf.Approximately(highFrequencyMotorSpeed, 0f);
+            }
+        }
+
         public void PauseHaptics(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
 
-            // If not rumbling, don't send unnecessary command.
-            if (Mathf.Approximately(lowFrequencyMotorSpeed, 0f)
-                && Mathf.Approximately(highFrequencyMotorSpeed, 0f))
+            if (!isRumbling)
                 return;
 
             var command = DualMotorRumbleCommand.Create(0f, 0f);
@@ -31,12 +40,21 @@ namespace ISX.Haptics
             if (device == null)
                 throw new ArgumentNullException("device");
 
-            // If not rumbling, don't send unnecessary command.
-            if (Mathf.Approximately(lowFrequencyMotorSpeed, 0f)
-                && Mathf.Approximately(highFrequencyMotorSpeed, 0f))
+            if (!isRumbling)
                 return;
 
             SetMotorSpeeds(device, lowFrequencyMotorSpeed, highFrequencyMotorSpeed);
+        }
+
+        public void ResetHaptics(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            if (!isRumbling)
+                return;
+
+            SetMotorSpeeds(device, 0.0f, 0.0f);
         }
 
         public void SetMotorSpeeds(InputDevice device, float lowFrequency, float highFrequency)

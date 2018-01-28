@@ -204,6 +204,11 @@ namespace ISX
             m_Rumble.ResumeHaptics(this);
         }
 
+        public void ResetHaptics()
+        {
+            m_Rumble.ResetHaptics(this);
+        }
+
         public void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             m_Rumble.SetMotorSpeeds(this, lowFrequency, highFrequency);

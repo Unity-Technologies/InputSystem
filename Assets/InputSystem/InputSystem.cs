@@ -476,6 +476,7 @@ namespace ISX
         /// that implement the interface.
         /// </remarks>
         /// <seealso cref="ResumeHaptics"/>
+        /// <seealso cref="ResetHaptics"/>
         /// <example>
         /// <code>
         /// // When going into the menu from gameplay, pause haptics.
@@ -521,6 +522,29 @@ namespace ISX
                 var haptics = device as IHaptics;
                 if (haptics != null)
                     haptics.ResumeHaptics();
+            }
+        }
+
+        /// <summary>
+        /// Stop haptic effect playback on all devices.
+        /// </summary>
+        /// <remarks>
+        /// Will reset haptics effects on all devices to their default state.
+        ///
+        /// Calls <see cref="Haptics.IHaptics.ResetHaptics"/> on all <see cref="InputDevice">input devices</see>
+        /// that implement the interface.
+        /// </remarks>
+        public static void ResetHaptics()
+        {
+            var devicesList = devices;
+            var devicesCount = devicesList.Count;
+
+            for (var i = 0; i < devicesCount; ++i)
+            {
+                var device = devicesList[i];
+                var haptics = device as IHaptics;
+                if (haptics != null)
+                    haptics.ResetHaptics();
             }
         }
 
