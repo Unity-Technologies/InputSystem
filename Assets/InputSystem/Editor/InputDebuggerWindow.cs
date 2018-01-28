@@ -72,6 +72,8 @@ namespace ISX.Editor
 
             m_ScrollPosition = EditorGUILayout.BeginScrollView(m_ScrollPosition);
 
+            DrawDevicesGUI(Contents.connectedDevicesContent);
+
             if (m_ShowUnrecognizedDevices)
                 DrawUnrecognizedDevicesGUI();
 
@@ -236,6 +238,7 @@ namespace ISX.Editor
         private static class Contents
         {
             public static GUIContent noneContent = new GUIContent("None");
+            public static GUIContent connectedDevicesContent = new GUIContent("Connected Devices");
             public static GUIContent unrecognizedDevicesContent = new GUIContent("Unrecognized Devices");
             public static GUIContent showUnrecognizedDevicesContent = new GUIContent("Show Unrecognized Devices");
             public static GUIContent showDisabledActionsContent = new GUIContent("Show Disabled Actions");
