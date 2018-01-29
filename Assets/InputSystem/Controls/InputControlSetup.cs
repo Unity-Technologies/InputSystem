@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using ISX.LowLevel;
 using ISX.Utilities;
@@ -9,24 +10,33 @@ using ISX.Utilities;
 ////        reuse the same InputControlSetup instance over and over
 
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
+////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
 namespace ISX
 {
-    // Turns a template into a control hierarchy.
-    // Ultimately produces a device but can also be used to query the control setup described
-    // by a template.
-    // Can be used to create setups as well as to adjust them later.
-    // InputControlSetup is the *only* way to create control hierarchies.
-    // Also computes a final state layout when setup is finished.
-    // Once a setup has been established, it yields an independent control hierarchy and the setup itself
-    // is abandoned.
-    //
-    // NOTE: InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
-    //       use them during normal gameplay.
-    //
-    // NOTE: Running an *existing* device through another control setup is a *destructive* operation.
-    //       Existing controls may be reused while at the same time the hierarchy and even the device instance
-    //       itself may change.
+    /// <summary>
+    /// Turns a template into a control hierarchy.
+    /// </summary>
+    /// <remarks>
+    /// Ultimately produces a device but can also be used to query the control setup described
+    /// by a template.
+    ///
+    /// Can be used to create setups as well as to adjust them later.
+    ///
+    /// InputControlSetup is the only way to create control hierarchies.
+    ///
+    /// Also computes a final state layout when setup is finished.
+    ///
+    /// Once a setup has been established, it yields an independent control hierarchy and the setup itself
+    /// is abandoned.
+    ///
+    /// Note InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
+    /// use them during normal gameplay.
+    ///
+    /// Running an *existing* device through another control setup is a *destructive* operation.
+    /// Existing controls may be reused while at the same time the hierarchy and even the device instance
+    /// itself may change.
+    /// </remarks>
     public class InputControlSetup
     {
         // We use this constructor when we create devices in batches.
@@ -51,7 +61,7 @@ namespace ISX
             if (variant.IsEmpty())
                 variant = new InternedString("Default");
 
-            AddControl(template, variant, new InternedString(), null, existingDevice);
+            InstantiateTemplate(template, variant, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
         }
@@ -178,24 +188,29 @@ namespace ISX
         // 256 times for a keyboard.
         private InputTemplate.Cache m_TemplateCache;
 
+        // Table mapping (lower-cased) control paths to control templates that contain
+        // overrides for the control at the given path.
+        private Dictionary<string, InputTemplate.ControlTemplate> m_ChildControlOverrides;
+
         // Reset the setup in a way where it can be reused for another setup.
         // Should retain allocations that can be reused.
         private void Reset()
         {
             m_Device = null;
+            m_ChildControlOverrides = null;
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl AddControl(InternedString template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateTemplate(InternedString template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
         {
             // Look up template by name.
             var templateInstance = FindOrLoadTemplate(template);
 
             // Create control hierarchy.
-            return AddControlRecursive(templateInstance, variant, name, parent, existingControl);
+            return InstantiateTemplate(templateInstance, variant, name, parent, existingControl);
         }
 
-        private InputControl AddControlRecursive(InputTemplate template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateTemplate(InputTemplate template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
         {
             InputControl control;
 
@@ -358,6 +373,7 @@ namespace ISX
                 if (controlTemplates[i].isModifyingChildControlByPath)
                 {
                     haveControlTemplateWithPath = true;
+                    InsertChildControlOverrides(parent, ref controlTemplates[i]);
                     continue;
                 }
 
@@ -399,9 +415,13 @@ namespace ISX
             // will point to a valid child array all the same even while we are
             // constructing the hierarchy.
             //
-            // NOTE: It's important to do this *after* the loop above where we call AddControl for each child
+            // NOTE: It's important to do this *after* the loop above where we call InstantiateTemplate for each child
             //       as each child may end up moving the m_ChildrenForEachControl array around.
             parent.m_ChildrenReadOnly = new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, firstChildIndex, childCount);
+
+            ////TODO: replace the entire post-creation modification logic here with using m_ChildControlOverrides
+            ////      (note that we have to *merge* into the table; if there's already overrides, only replace properties that haven't been set)
+            ////      (however, this will also require moving the child insertion logic somewhere else)
 
             // Apply control modifications from control templates with paths.
             if (haveControlTemplateWithPath)
@@ -428,13 +448,31 @@ namespace ISX
             ref InputTemplate.ControlTemplate controlTemplate, ref int childIndex, string nameOverride = null)
         {
             var name = nameOverride ?? controlTemplate.name;
-            var nameLowerCase = nameOverride != null ? nameOverride.ToLower() : controlTemplate.name.ToLower();
-            var nameInterned = nameOverride != null ? new InternedString(nameOverride) : controlTemplate.name;
+            var nameLowerCase = name.ToLower();
+            var nameInterned = new InternedString(name);
+            string path = null;
 
             ////REVIEW: can we check this in InputTemplate instead?
             if (string.IsNullOrEmpty(controlTemplate.template))
                 throw new Exception(string.Format("Template has not been set on control '{0}' in '{1}'",
                         controlTemplate.name, template.name));
+
+            // See if there is an override for the control.
+            InputTemplate.ControlTemplate? controlOverride = null;
+            if (m_ChildControlOverrides != null)
+            {
+                path = string.Format("{0}/{1}", parent.path, name);
+                var pathLowerCase = path.ToLower();
+
+                InputTemplate.ControlTemplate match;
+                if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out match))
+                    controlOverride = match;
+            }
+
+            // Get name of template to use for control.
+            var templateName = controlTemplate.template;
+            if (controlOverride != null && !controlOverride.Value.template.IsEmpty())
+                templateName = controlOverride.Value.template;
 
             // See if we have an existing control that we might be able to re-use.
             InputControl existingControl = null;
@@ -444,7 +482,7 @@ namespace ISX
                 for (var n = 0; n < existingChildCount; ++n)
                 {
                     var existingChild = existingChildren.Value[n];
-                    if (existingChild.template == controlTemplate.template
+                    if (existingChild.template == templateName
                         && existingChild.name.ToLower() == nameLowerCase)
                     {
                         existingControl = existingChild;
@@ -457,14 +495,14 @@ namespace ISX
             InputControl control;
             try
             {
-                control = AddControl(controlTemplate.template, variant, nameInterned, parent, existingControl);
+                control = InstantiateTemplate(templateName, variant, nameInterned, parent, existingControl);
             }
             catch (InputTemplate.TemplateNotFoundException exception)
             {
                 // Throw better exception that gives more info.
                 throw new Exception(
                     string.Format("Cannot find template '{0}' used in control '{1}' of template '{2}'",
-                        exception.template, controlTemplate.name, template.name),
+                        exception.template, templateName, template.name),
                     exception);
             }
 
@@ -531,6 +569,28 @@ namespace ISX
                 AddProcessors(control, ref controlTemplate, template.name);
 
             return control;
+        }
+
+        private void InsertChildControlOverrides(InputControl parent, ref InputTemplate.ControlTemplate controlTemplate)
+        {
+            if (m_ChildControlOverrides == null)
+                m_ChildControlOverrides = new Dictionary<string, InputTemplate.ControlTemplate>();
+
+            var path = InputControlPath.Combine(parent, controlTemplate.name);
+            var pathLowerCase = path.ToLower();
+
+            // See if there are existing overrides for the control.
+            InputTemplate.ControlTemplate existingOverrides;
+            if (!m_ChildControlOverrides.TryGetValue(pathLowerCase, out existingOverrides))
+            {
+                // So, so just insert our overrides and we're done.
+                m_ChildControlOverrides[pathLowerCase] = controlTemplate;
+                return;
+            }
+
+            // Yes, there's existing overrides so we have to merge.
+            existingOverrides = existingOverrides.Merge(controlTemplate);
+            m_ChildControlOverrides[pathLowerCase] = existingOverrides;
         }
 
         private void ModifyChildControl(InputTemplate template, InternedString variant, InputControl parent,

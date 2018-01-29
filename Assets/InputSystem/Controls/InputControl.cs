@@ -101,12 +101,7 @@ namespace ISX
             get
             {
                 if (m_Path == null)
-                {
-                    if (m_Parent != null)
-                        m_Path = string.Format("{0}/{1}", m_Parent.path, m_Name);
-                    else
-                        m_Path = string.Format("/{0}", m_Name);
-                }
+                    m_Path = InputControlPath.Combine(m_Parent, m_Name);
                 return m_Path;
             }
         }

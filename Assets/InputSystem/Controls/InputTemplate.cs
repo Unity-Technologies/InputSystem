@@ -199,6 +199,79 @@ namespace ISX
                         flags &= ~Flags.StateAutomaticallyResetsBetweenFrames;
                 }
             }
+
+            /// <summary>
+            /// For any property not set on this control template, take the setting from <paramref name="other"/>.
+            /// </summary>
+            /// <param name="other">Control template providing settings.</param>
+            /// <remarks>
+            /// <see cref="name"/> will not be touched.
+            /// </remarks>
+            public ControlTemplate Merge(ControlTemplate other)
+            {
+                var result = new ControlTemplate();
+
+                result.name = name;
+                Debug.Assert(!name.IsEmpty());
+
+                result.template = template.IsEmpty() ? other.template : template;
+                result.variant = variant.IsEmpty() ? other.variant : variant;
+                result.useStateFrom = useStateFrom ?? other.useStateFrom;
+
+                if (offset != InputStateBlock.kInvalidOffset)
+                    result.offset = offset;
+                else
+                    result.offset = other.offset;
+
+                if (bit != InputStateBlock.kInvalidOffset)
+                    result.bit = bit;
+                else
+                    result.bit = other.bit;
+
+                if (format != 0)
+                    result.format = format;
+                else
+                    result.format = other.format;
+
+                if (sizeInBits != 0)
+                    result.sizeInBits = sizeInBits;
+                else
+                    result.sizeInBits = other.sizeInBits;
+
+                result.aliases = new ReadOnlyArray<InternedString>(
+                        ArrayHelpers.Merge(aliases.m_Array,
+                            other.aliases.m_Array));
+
+                result.usages = new ReadOnlyArray<InternedString>(
+                        ArrayHelpers.Merge(usages.m_Array,
+                            other.usages.m_Array));
+
+                if (parameters.Count == 0)
+                    result.parameters = other.parameters;
+                else if (other.parameters.Count == 0)
+                    result.parameters = parameters;
+                else
+                    throw new NotImplementedException("merging parameters");
+
+                if (processors.Count == 0)
+                    result.processors = other.processors;
+                else if (other.parameters.Count == 0)
+                    result.processors = processors;
+                else
+                    throw new NotImplementedException("merging processors");
+
+                if (!string.IsNullOrEmpty(displayName))
+                    result.displayName = displayName;
+                else
+                    result.displayName = other.displayName;
+
+                if (!string.IsNullOrEmpty(resourceName))
+                    result.resourceName = resourceName;
+                else
+                    result.resourceName = other.resourceName;
+
+                return result;
+            }
         }
 
         // Unique name of the template.
@@ -883,7 +956,7 @@ namespace ISX
                     ControlTemplate baseControlTemplate;
                     if (baseControlTable.TryGetValue(pair.Key, out baseControlTemplate))
                     {
-                        var mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
+                        var mergedTemplate = pair.Value.Merge(baseControlTemplate);
                         controls.Add(mergedTemplate);
 
                         // Remove the entry so we don't hit it again in the pass through
@@ -902,7 +975,7 @@ namespace ISX
                             var key = string.Format("{0}@{1}", pair.Key, variant);
                             if (baseControlTable.TryGetValue(key, out baseControlTemplate))
                             {
-                                var mergedTemplate = MergeControlTemplate(pair.Value, baseControlTemplate);
+                                var mergedTemplate = pair.Value.Merge(baseControlTemplate);
                                 controls.Add(mergedTemplate);
                                 baseControlTable.Remove(key);
                                 isTargetingVariants = true;
@@ -944,72 +1017,6 @@ namespace ISX
                 table[key] = controlTemplates[i];
             }
             return table;
-        }
-
-        private static ControlTemplate MergeControlTemplate(ControlTemplate derivedTemplate, ControlTemplate baseTemplate)
-        {
-            var result = new ControlTemplate();
-
-            result.name = derivedTemplate.name;
-            Debug.Assert(!derivedTemplate.name.IsEmpty());
-
-            result.template = derivedTemplate.template.IsEmpty() ? baseTemplate.template : derivedTemplate.template;
-            result.variant = derivedTemplate.variant.IsEmpty() ? baseTemplate.variant : derivedTemplate.variant;
-            result.useStateFrom = derivedTemplate.useStateFrom ?? baseTemplate.useStateFrom;
-
-            if (derivedTemplate.offset != InputStateBlock.kInvalidOffset)
-                result.offset = derivedTemplate.offset;
-            else
-                result.offset = baseTemplate.offset;
-
-            if (derivedTemplate.bit != InputStateBlock.kInvalidOffset)
-                result.bit = derivedTemplate.bit;
-            else
-                result.bit = baseTemplate.bit;
-
-            if (derivedTemplate.format != 0)
-                result.format = derivedTemplate.format;
-            else
-                result.format = baseTemplate.format;
-
-            if (derivedTemplate.sizeInBits != 0)
-                result.sizeInBits = derivedTemplate.sizeInBits;
-            else
-                result.sizeInBits = baseTemplate.sizeInBits;
-
-            result.aliases = new ReadOnlyArray<InternedString>(
-                    ArrayHelpers.Merge(derivedTemplate.aliases.m_Array,
-                        baseTemplate.aliases.m_Array));
-
-            result.usages = new ReadOnlyArray<InternedString>(
-                    ArrayHelpers.Merge(derivedTemplate.usages.m_Array,
-                        baseTemplate.usages.m_Array));
-
-            if (derivedTemplate.parameters.Count == 0)
-                result.parameters = baseTemplate.parameters;
-            else if (baseTemplate.parameters.Count == 0)
-                result.parameters = derivedTemplate.parameters;
-            else
-                throw new NotImplementedException("merging parameters");
-
-            if (derivedTemplate.processors.Count == 0)
-                result.processors = baseTemplate.processors;
-            else if (baseTemplate.parameters.Count == 0)
-                result.processors = derivedTemplate.processors;
-            else
-                throw new NotImplementedException("merging processors");
-
-            if (!string.IsNullOrEmpty(derivedTemplate.displayName))
-                result.displayName = derivedTemplate.displayName;
-            else
-                result.displayName = baseTemplate.displayName;
-
-            if (!string.IsNullOrEmpty(derivedTemplate.resourceName))
-                result.resourceName = derivedTemplate.resourceName;
-            else
-                result.resourceName = baseTemplate.resourceName;
-
-            return result;
         }
 
         private static void ThrowIfControlTemplateIsDuplicate(ref ControlTemplate controlTemplate,

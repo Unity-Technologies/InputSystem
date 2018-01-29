@@ -630,6 +630,27 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanModifyTemplateOfChildControlUsingPath()
+    {
+        const string json = @"
+        {
+            ""name"" : ""MyGamepad"",
+            ""extend"" : ""Gamepad"",
+            ""controls"" : [
+                { ""name"" : ""dpad/up"", ""template"" : ""DiscreteButton"" }
+            ]
+        }";
+
+        InputSystem.RegisterTemplate(json);
+
+        var setup = new InputControlSetup("MyGamepad");
+        var gamepad = (Gamepad)setup.Finish();
+
+        Assert.That(gamepad.dpad.up.template, Is.EqualTo("DiscreteButton"));
+    }
+
+    [Test]
+    [Category("Templates")]
     public void Templates_CanSpecifyDisplayNameForControl()
     {
         const string json = @"

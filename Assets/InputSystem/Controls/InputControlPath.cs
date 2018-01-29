@@ -28,6 +28,26 @@ namespace ISX
         public const string kWildcard = "*";
         public const string kDoubleWildcard = "**";
 
+        public const char kSeparator = '/';
+
+        public static string Combine(InputControl parent, string path)
+        {
+            if (parent == null)
+            {
+                if (string.IsNullOrEmpty(path))
+                    return string.Empty;
+
+                if (path[0] != kSeparator)
+                    return kSeparator + path;
+
+                return path;
+            }
+            if (string.IsNullOrEmpty(path))
+                return parent.path;
+
+            return string.Format("{0}/{1}", parent.path, path);
+        }
+
         public static string TryGetDisplayName(string path)
         {
             throw new NotImplementedException();
