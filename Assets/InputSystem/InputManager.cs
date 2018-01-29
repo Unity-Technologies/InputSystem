@@ -1178,6 +1178,10 @@ namespace ISX
 
         [NonSerialized] private IInputRuntime m_Runtime;
 
+        #if UNITY_EDITOR
+        [NonSerialized] internal IInputDebugger m_Debugger;
+        #endif
+
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
 
@@ -1572,6 +1576,11 @@ namespace ISX
                     device = TryGetDeviceById(currentEventPtr->deviceId);
                 if (device == null)
                 {
+                    #if UNITY_EDITOR
+                    if (m_Debugger != null)
+                        m_Debugger.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventPtr));
+                    #endif
+
                     // No device found matching event. Consider it handled.
                     currentEventPtr->handled = true;
                     continue;
@@ -1588,7 +1597,13 @@ namespace ISX
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is.
                         if (currentEventTime < device.m_LastUpdateTime)
+                        {
+                            #if UNITY_EDITOR
+                            if (m_Debugger != null)
+                                m_Debugger.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
+                            #endif
                             break;
+                        }
 
                         var deviceIndex = device.m_DeviceIndex;
                         var stateBlock = device.m_StateBlock;
@@ -1630,7 +1645,13 @@ namespace ISX
 
                         // Ignore state event if the format doesn't match.
                         if (stateBlock.format != stateFormat)
+                        {
+                            #if UNITY_EDITOR
+                            if (m_Debugger != null)
+                                m_Debugger.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
+                            #endif
                             break;
+                        }
 
                         // Before we update state, let change monitors compare the old and the new state.
                         // We do this instead of first updating the front buffer and then comparing to the
@@ -2088,6 +2109,10 @@ namespace ISX
             [NonSerialized] public bool pluginsInitialized;
 
             [NonSerialized] public IInputRuntime runtime;
+
+            #if UNITY_EDITOR
+            [NonSerialized] public IInputDebugger debugger;
+            #endif
         }
 
         internal SerializedState SaveState()
@@ -2171,7 +2196,11 @@ namespace ISX
                 pluginManagers = m_PluginManagers.Clone(),
                 pluginsInitialized = m_PluginsInitialized,
                 updateMask = m_UpdateMask,
-                runtime = m_Runtime
+                runtime = m_Runtime,
+
+                #if UNITY_EDITOR
+                debugger = m_Debugger
+                #endif
             };
 
             // We don't bring monitors along. InputActions and related classes are equipped
@@ -2200,6 +2229,10 @@ namespace ISX
             if (state.runtime != null)
                 InstallRuntime(state.runtime);
             InstallGlobals();
+
+            #if UNITY_EDITOR
+            m_Debugger = state.debugger;
+            #endif
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);

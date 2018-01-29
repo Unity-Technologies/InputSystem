@@ -89,6 +89,24 @@ namespace ISX.Editor
                     Contents.showUnrecognizedDevicesContent, EditorStyles.toolbarButton);
             m_ShowDisabledActions = GUILayout.Toggle(m_ShowDisabledActions,
                     Contents.showDisabledActionsContent, EditorStyles.toolbarButton);
+
+            // Enable/disable debug mode.
+            var debugMode = GUILayout.Toggle(m_DebugMode, Contents.debugModeContent, EditorStyles.toolbarButton);
+            if (debugMode != m_DebugMode)
+            {
+                if (debugMode)
+                {
+                    if (m_Debugger == null)
+                        m_Debugger = new InputDebugger();
+                    InputSystem.s_Manager.m_Debugger = m_Debugger;
+                }
+                else
+                {
+                    InputSystem.s_Manager.m_Debugger = null;
+                }
+                m_DebugMode = debugMode;
+            }
+
             GUILayout.FlexibleSpace();
             if (GUILayout.Button(Contents.browseTemplatesContent, EditorStyles.toolbarButton))
                 InputTemplateBrowserWindow.CreateOrShowExisting();
@@ -211,9 +229,11 @@ namespace ISX.Editor
         [SerializeField] private Vector2 m_ScrollPosition;
         [SerializeField] private bool m_ShowUnrecognizedDevices;
         [SerializeField] private bool m_ShowDisabledActions;
+        [SerializeField] private bool m_DebugMode;
 
         [NonSerialized] private List<InputDeviceDescription> m_UnrecognizedDevices;
         [NonSerialized] private List<InputAction> m_EnabledActions;
+        [NonSerialized] private InputDebugger m_Debugger;
 
         internal static void ReviveAfterDomainReload()
         {
@@ -245,6 +265,7 @@ namespace ISX.Editor
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
             public static GUIContent browseTemplatesContent = new GUIContent("Browse Templates");
             public static GUIContent enabledActionsContent = new GUIContent("Enabled Actions");
+            public static GUIContent debugModeContent = new GUIContent("Debug Mode");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
