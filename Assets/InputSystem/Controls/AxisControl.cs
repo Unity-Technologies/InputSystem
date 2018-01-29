@@ -26,7 +26,7 @@ namespace ISX
         public float normalizeMin;
         public float normalizeMax;
 
-        private float Preprocess(float value)
+        protected float Preprocess(float value)
         {
             if (clamp)
                 value = Mathf.Clamp(value, clampMin, clampMax);
@@ -61,7 +61,7 @@ namespace ISX
                 if (m_StateBlock.sizeInBits != 1)
                     throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
 
-                value = BitfieldHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ? 1.0f : 0.0f;
+                value = MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ? 1.0f : 0.0f;
             }
             // If a control with an integer-based representation does not use the full range
             // of its integer size (e.g. only goes from [0..128]), processors or the parameters
@@ -97,7 +97,7 @@ namespace ISX
                 if (m_StateBlock.sizeInBits != 1)
                     throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
 
-                BitfieldHelpers.WriteSingleBit(valuePtr, m_StateBlock.bitOffset, value >= 0.5f);
+                MemoryHelpers.WriteSingleBit(valuePtr, m_StateBlock.bitOffset, value >= 0.5f);
             }
             else if (format == InputStateBlock.kTypeShort)
             {

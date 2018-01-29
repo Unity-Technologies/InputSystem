@@ -224,7 +224,7 @@ namespace ISX.Editor
 
                 if (format == InputStateBlock.kTypeBit)
                 {
-                    if (BitfieldHelpers.ReadSingleBit(new IntPtr(ptr), control.m_StateBlock.bitOffset))
+                    if (MemoryHelpers.ReadSingleBit(new IntPtr(ptr), control.m_StateBlock.bitOffset))
                         return "1";
                     return "0";
                 }

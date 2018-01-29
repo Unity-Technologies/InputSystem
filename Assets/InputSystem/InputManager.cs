@@ -1035,6 +1035,7 @@ namespace ISX
 
             // Register templates.
             RegisterTemplate("Button", typeof(ButtonControl)); // Controls.
+            RegisterTemplate("DiscreteButton", typeof(DiscreteButtonControl));
             RegisterTemplate("Key", typeof(KeyControl));
             RegisterTemplate("Axis", typeof(AxisControl));
             RegisterTemplate("Analog", typeof(AxisControl));
@@ -1853,7 +1854,7 @@ namespace ISX
                 // If we've updated only part of the state, see if the monitored region and the
                 // updated region overlap. Ignore monitor if they don't.
                 if (newStateOffset != 0 &&
-                    !BitfieldHelpers.MemoryOverlapsBitRegion((uint)offset, bitOffset, sizeInBits, newStateOffset, (uint)newStateSize))
+                    !MemoryHelpers.MemoryOverlapsBitRegion((uint)offset, bitOffset, sizeInBits, newStateOffset, (uint)newStateSize))
                     continue;
 
                 // See if we are comparing bits or bytes.
@@ -1865,11 +1866,11 @@ namespace ISX
                         throw new NotImplementedException("state change detection on multi-bit fields");
 
                     // Check if bit offset is out of range of state we have.
-                    if (BitfieldHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
+                    if (MemoryHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
                         continue;
 
-                    if (BitfieldHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
-                        BitfieldHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
+                    if (MemoryHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
+                        MemoryHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
                         continue;
                 }
                 else

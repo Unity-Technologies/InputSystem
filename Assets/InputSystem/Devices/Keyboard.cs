@@ -293,7 +293,7 @@ namespace ISX
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
                 for (var i = 0; i < pressedKeys.Length; ++i)
                 {
-                    BitfieldHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
+                    MemoryHelpers.WriteSingleBit(new IntPtr(keysPtr), (uint)pressedKeys[i], true);
                 }
             }
         }

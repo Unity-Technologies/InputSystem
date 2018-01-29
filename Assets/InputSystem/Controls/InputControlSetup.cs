@@ -833,7 +833,7 @@ namespace ISX
                     continue;
 
                 var endOffset =
-                    BitfieldHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + childSizeInBits);
+                    MemoryHelpers.ComputeFollowingByteOffset(child.m_StateBlock.byteOffset, child.m_StateBlock.bitOffset + childSizeInBits);
                 if (endOffset > firstUnfixedByteOffset)
                     firstUnfixedByteOffset = endOffset;
             }
@@ -881,7 +881,7 @@ namespace ISX
                     // Terminate bitfield group (if there was one).
                     if (firstBitAddressingChild != null)
                     {
-                        runningByteOffset = BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
+                        runningByteOffset = MemoryHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
                         firstBitAddressingChild = null;
                     }
                 }
@@ -890,13 +890,13 @@ namespace ISX
 
                 if (!isBitAddressingChild)
                     runningByteOffset =
-                        BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, child.m_StateBlock.sizeInBits);
+                        MemoryHelpers.ComputeFollowingByteOffset(runningByteOffset, child.m_StateBlock.sizeInBits);
             }
 
             // Compute total size.
             // If we ended on a bitfield, account for its size.
             if (firstBitAddressingChild != null)
-                runningByteOffset = BitfieldHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
+                runningByteOffset = MemoryHelpers.ComputeFollowingByteOffset(runningByteOffset, bitfieldSizeInBits);
             var totalSizeInBytes = runningByteOffset;
 
             // Set size. We force all parents to the combined size of their children.

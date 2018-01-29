@@ -319,7 +319,7 @@ namespace ISX
                 if (m_StateBlock.sizeInBits > 1)
                     throw new NotImplementedException("multi-bit zero check");
 
-                return BitfieldHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) == false;
+                return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) == false;
             }
 
             // Multi-byte value.

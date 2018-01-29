@@ -2,7 +2,7 @@ using System;
 
 namespace ISX.Utilities
 {
-    internal static class BitfieldHelpers
+    internal static class MemoryHelpers
     {
         public static uint ComputeFollowingByteOffset(uint byteOffset, uint sizeInBits)
         {
@@ -86,6 +86,41 @@ namespace ISX.Utilities
             }
 
             return (bits & (1 << (int)bitOffset)) != 0;
+        }
+
+        public static unsafe int ReadMultipleBits(IntPtr ptr, uint bitOffset, uint bitCount)
+        {
+            if (bitCount >= sizeof(int) * 8)
+                throw new ArgumentException("Trying to read more than 32 bits as int", "bitCount");
+
+            // Bits out of byte.
+            if (bitOffset + bitCount <= 8)
+            {
+                var value = *(byte*)ptr;
+                value >>= (int)bitOffset;
+                var mask = 0xFF >> (8 - (int)bitCount);
+                return value & mask;
+            }
+
+            // Bits out of short.
+            if (bitOffset + bitCount <= 16)
+            {
+                var value = *(ushort*)ptr;
+                value >>= (int)bitOffset;
+                var mask = 0xFFFF >> (16 - (int)bitCount);
+                return value & mask;
+            }
+
+            // Bits out of int.
+            if (bitOffset + bitCount <= 32)
+            {
+                var value = *(uint*)ptr;
+                value >>= (int)bitOffset;
+                var mask = 0xFFFFFFFF >> (16 - (int)bitCount);
+                return (int)(value & mask);
+            }
+
+            throw new NotImplementedException("Reading unaligned int");
         }
     }
 }

@@ -1456,6 +1456,52 @@ public class FunctionalTests : InputTestFixture
         Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
     }
 
+    struct DiscreteButtonDpadState : IInputStateTypeInfo
+    {
+        public int dpad;
+        public DiscreteButtonDpadState(int dpad)
+        {
+            this.dpad = dpad;
+        }
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('C', 'U', 'S', 'T');
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFormDpadOutOfDiscreteButtonStates()
+    {
+        // Create a custom device with just a Dpad and customize
+        // the Dpad to use DiscreteButtonControls instead of ButtonControls.
+        const string json = @"
+        {
+            ""name"" : ""MyDevice"",
+            ""format"" : ""CUST"",
+            ""controls"" : [
+                { ""name"" : ""dpad"", ""template"" : ""Dpad"" },
+                { ""name"" : ""dpad/up"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=2,maxValue=4"", ""bit"" : 0, ""sizeInBits"" : 4 },
+                { ""name"" : ""dpad/down"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=6,maxValue=8"", ""bit"" : 0, ""sizeInBits"" : 4 },
+                { ""name"" : ""dpad/left"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=8, maxValue=2"", ""bit"" : 0, ""sizeInBits"" : 4 },
+                { ""name"" : ""dpad/right"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=4,maxValue=6"", ""bit"" : 0, ""sizeInBits"" : 4 }
+            ]
+        }";
+
+        InputSystem.RegisterTemplate(json);
+        var device = InputSystem.AddDevice("MyDevice");
+        var dpad = (DpadControl)device["dpad"];
+
+        InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(1));
+        InputSystem.Update();
+
+        Assert.That(dpad.left.isPressed, Is.True);
+        Assert.That(dpad.right.isPressed, Is.False);
+        Assert.That(dpad.up.isPressed, Is.False);
+        Assert.That(dpad.down.isPressed, Is.False);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_DevicesGetNameFromBaseTemplate()
