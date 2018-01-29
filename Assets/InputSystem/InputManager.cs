@@ -1357,6 +1357,8 @@ namespace ISX
             }
         }
 
+        ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
+
         private void MakeDeviceNameUnique(InputDevice device)
         {
             if (m_Devices == null)
@@ -1365,8 +1367,9 @@ namespace ISX
             var name = device.name;
             var nameLowerCase = device.m_Name.ToLower();
             var nameIsUnique = false;
-            var namesTried = 0;
+            var namesTried = 1;
 
+            // Find unique name.
             while (!nameIsUnique)
             {
                 nameIsUnique = true;
@@ -1374,16 +1377,33 @@ namespace ISX
                 {
                     if (m_Devices[i].name.ToLower() == nameLowerCase)
                     {
-                        ++namesTried;
                         name = string.Format("{0}{1}", device.name, namesTried);
                         nameLowerCase = name.ToLower();
                         nameIsUnique = false;
+                        ++namesTried;
                         break;
                     }
                 }
             }
 
+            // If we have changed the name of the device, nuke all path strings in the control
+            // hiearchy so that they will get re-recreated when queried.
+            if (namesTried >= 1)
+                ResetControlPathsRecursive(device);
+
+            // Assign name.
             device.m_Name = new InternedString(name);
+        }
+
+        private void ResetControlPathsRecursive(InputControl control)
+        {
+            control.m_Path = null;
+
+            var children = control.children;
+            var childCount = children.Count;
+
+            for (var i = 0; i < childCount; ++i)
+                ResetControlPathsRecursive(children[i]);
         }
 
         private void AssignUniqueDeviceId(InputDevice device)

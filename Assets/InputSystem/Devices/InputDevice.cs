@@ -81,8 +81,16 @@ namespace ISX
             get { return (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender; }
         }
 
-        // Every registered device in the system gets a unique numeric ID.
-        // For native devices, this is assigned by the underlying runtime.
+        /// <summary>
+        /// Unique numeric ID for the device.
+        /// </summary>
+        /// <remarks>
+        /// This is only assigned once a device has been added to the system. Not two devices will receive the same
+        /// ID and no device will receive an ID that another device used before even if the device was removed.
+        ///
+        /// IDs are assigned by the input runtime.
+        /// </remarks>
+        /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
         public int id
         {
             get { return m_Id; }
@@ -147,6 +155,7 @@ namespace ISX
                 m_ChildrenForEachControl[i].m_ConfigUpToDate = false;
         }
 
+        ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
         /// </summary>

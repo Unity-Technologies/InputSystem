@@ -2044,6 +2044,22 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_AddingDeviceAffectsControlPaths()
+    {
+        InputSystem.AddDevice("Gamepad");   // Add a gamepad so that when we add another, its name will have to get adjusted.
+
+        var setup = new InputControlSetup("Gamepad");
+        var device = (Gamepad)setup.Finish();
+
+        Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad/dpad/up"));
+
+        InputSystem.AddDevice(device);
+
+        Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad1/dpad/up"));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
         var device = InputSystem.AddDevice("Gamepad");
