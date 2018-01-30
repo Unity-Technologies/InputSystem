@@ -121,8 +121,7 @@ namespace ISX.Editor
 
                 foreach (var template in EditorInputTemplateCache.allTemplates)
                 {
-                    var item = BuildItem(template, ref id);
-
+                    TreeViewItem parent;
                     if (template.isDeviceTemplate)
                     {
                         ////REVIEW: should this split by base device templates derived device templates instead?
@@ -134,7 +133,9 @@ namespace ISX.Editor
                             else
                                 rootBaseTemplateName += "s";
 
-                            var group = products.children != null ? products.children.FirstOrDefault(x => x.displayName == rootBaseTemplateName) : null;
+                            var group = products.children != null
+                                ? products.children.FirstOrDefault(x => x.displayName == rootBaseTemplateName)
+                                : null;
                             if (group == null)
                             {
                                 group = new TreeViewItem
@@ -146,14 +147,15 @@ namespace ISX.Editor
                                 products.AddChild(group);
                             }
 
-                            ++item.depth;
-                            group.AddChild(item);
+                            parent = group;
                         }
                         else
-                            devices.AddChild(item);
+                            parent = devices;
                     }
                     else
-                        controls.AddChild(item);
+                        parent = controls;
+
+                    BuildItem(template, parent, ref id);
                 }
 
                 if (controls.children != null)
@@ -166,14 +168,9 @@ namespace ISX.Editor
                 return root;
             }
 
-            private TreeViewItem BuildItem(InputTemplate template, ref int id)
+            private TreeViewItem BuildItem(InputTemplate template, TreeViewItem parent, ref int id)
             {
-                var item = new TreeViewItem
-                {
-                    id = id++,
-                    depth = 1,
-                    displayName = template.name
-                };
+                var item = AddChild(parent, template.name, ref id);
 
                 // Header.
                 AddChild(item, "Type: " + template.type.Name, ref id);
