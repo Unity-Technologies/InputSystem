@@ -9,17 +9,20 @@ namespace ISX.Processors
     {
         public float min;
         public float max;
+        public float zero;
 
         public float Process(float value, InputControl control)
         {
-            return Normalize(value, min, max);
+            return Normalize(value, min, max, zero);
         }
 
-        public static float Normalize(float value, float min, float max)
+        public static float Normalize(float value, float min, float max, float zero)
         {
+            if (zero < min)
+                zero = min;
             var minAbsolute = Mathf.Abs(min);
             var percentage = (value + minAbsolute) / (max + minAbsolute);
-            if (min < 0.0f)
+            if (min < zero)
                 return 2 * percentage - 1;
             return percentage;
         }

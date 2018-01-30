@@ -1,10 +1,10 @@
+////TODO: set displayNames of the controls according to PlayStation controller standards
+
 namespace ISX.DualShock
 {
-    public struct DualShockGamepadState
-    {
-    }
-
-    [InputTemplate(stateType = typeof(DualShockGamepadState))]
+    /// <summary>
+    /// A PS4 controller.
+    /// </summary>
     public class DualShockGamepad : Gamepad
     {
         public Vector3Control gyro { get; private set; }

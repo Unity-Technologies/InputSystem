@@ -1500,6 +1500,14 @@ public class FunctionalTests : InputTestFixture
         Assert.That(dpad.right.isPressed, Is.False);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.down.isPressed, Is.False);
+
+        InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(8));
+        InputSystem.Update();
+
+        Assert.That(dpad.left.isPressed, Is.True);
+        Assert.That(dpad.down.isPressed, Is.True);
+        Assert.That(dpad.up.isPressed, Is.False);
+        Assert.That(dpad.right.isPressed, Is.False);
     }
 
     [Test]

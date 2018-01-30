@@ -53,9 +53,8 @@ namespace ISX
                 if (wrapAtValue == nullValue)
                     wrapAtValue = minValue;
 
-                if (intValue >= minValue && intValue <= wrapAtValue)
-                    value = 1.0f;
-                else if (intValue > nullValue && intValue <= maxValue)
+                if ((intValue >= minValue && intValue <= wrapAtValue)
+                    || (intValue != nullValue && intValue <= maxValue))
                     value = 1.0f;
             }
             else

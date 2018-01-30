@@ -1,0 +1,9 @@
+{
+    "name": "InputSystemDualShock",
+    "references": [
+        "InputSystem"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

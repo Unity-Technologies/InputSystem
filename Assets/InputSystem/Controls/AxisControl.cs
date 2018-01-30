@@ -25,13 +25,14 @@ namespace ISX
         public bool normalize;
         public float normalizeMin;
         public float normalizeMax;
+        public float normalizeZero;
 
         protected float Preprocess(float value)
         {
             if (clamp)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
-                value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax);
+                value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);
             if (invert)
                 value *= -1.0f;
             return value;
@@ -68,7 +69,7 @@ namespace ISX
             // above have to be used to re-process the resulting float values.
             else if (format == InputStateBlock.kTypeShort)
             {
-                value = *((short*)valuePtr) / 65535.0f;
+                value = *((ushort*)valuePtr) / 65535.0f;
             }
             else if (format == InputStateBlock.kTypeByte)
             {
