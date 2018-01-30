@@ -1,16 +1,28 @@
+using UnityEngine;
+
 ////TODO: set displayNames of the controls according to PlayStation controller standards
+
+////TODO: gyro, speaker, touchpad
 
 namespace ISX.DualShock
 {
     /// <summary>
-    /// A PS4 controller.
+    /// A PS4 DualShock controller.
     /// </summary>
-    public class DualShockGamepad : Gamepad
+    public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
-        public Vector3Control gyro { get; private set; }
-        public Vector3Control accelerometer { get; private set; }
-        public ColorControl lightbar { get; private set; }
-        public AudioControl speaker { get; private set; }
-        //two-point touchpad
+        public ButtonControl touchpadButton { get; private set; }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            touchpadButton = setup.GetControl<ButtonControl>(this, "touchpadButton");
+
+            base.FinishSetup(setup);
+        }
+
+        public virtual void SetLightBarColor(Color color)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

@@ -32,13 +32,13 @@ namespace ISX
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(template = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
 #else
-        [InputControl(usage = "Point")]
+        [InputControl(template = "Vector2", usage = "Point")]
 #endif
         public Vector2 position;
 
-        [InputControl(usage = "Secondary2DMotion", autoReset = true)]
+        [InputControl(template = "Vector2", usage = "Secondary2DMotion", autoReset = true)]
         public Vector2 delta;
 
         [InputControl(template = "Analog", usage = "Pressure")]

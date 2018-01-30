@@ -1789,6 +1789,8 @@ namespace ISX
                     --remainingEventCount;
                 }
 
+                ////TODO: we need to filter out noisy devices; PS4 controller, for example, just spams constant reports and thus will always make itself current
+                ////      (check for actual change and only make current if state changed?)
                 // Device received event so make it current except if we got a
                 // device removal event.
                 if (!doNotMakeDeviceCurrent)

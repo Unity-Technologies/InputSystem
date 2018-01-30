@@ -4,6 +4,8 @@ using ISX.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
+////REVIEW: how are we dealing with multiple different input reports on the same device?
+
 ////REVIEW: move the enums and structs out of here and into ISX.HID? Or remove the "HID" name prefixes from them?
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)

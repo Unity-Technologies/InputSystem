@@ -502,7 +502,7 @@ namespace ISX
                 // Throw better exception that gives more info.
                 throw new Exception(
                     string.Format("Cannot find template '{0}' used in control '{1}' of template '{2}'",
-                        exception.template, templateName, template.name),
+                        exception.template, name, template.name),
                     exception);
             }
 

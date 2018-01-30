@@ -916,7 +916,9 @@ namespace ISX
             var typeName = type.Name;
             if (typeName.EndsWith("Control"))
                 return typeName.Substring(0, typeName.Length - "Control".Length);
-            return typeName;
+            if (!type.IsPrimitive)
+                return typeName;
+            return null;
         }
 
         internal void MergeTemplate(InputTemplate other)
