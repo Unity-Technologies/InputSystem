@@ -1,7 +1,7 @@
 using System;
 using ISX.Utilities;
 
-namespace ISX
+namespace ISX.Controls
 {
     public class PoseControl : InputControl<Pose>
     {

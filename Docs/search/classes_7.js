@@ -24,6 +24,7 @@ var searchData=
   ['inputcontrol_3c_20vector3_20_3e',['InputControl&lt; Vector3 &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrolattribute',['InputControlAttribute',['../classISX_1_1InputControlAttribute.html',1,'ISX']]],
   ['inputcontrolpath',['InputControlPath',['../classISX_1_1InputControlPath.html',1,'ISX']]],
+  ['inputcontrolsetup',['InputControlSetup',['../classISX_1_1InputControlSetup.html',1,'ISX']]],
   ['inputdevice',['InputDevice',['../classISX_1_1InputDevice.html',1,'ISX']]],
   ['inputdevicecommand',['InputDeviceCommand',['../structISX_1_1LowLevel_1_1InputDeviceCommand.html',1,'ISX::LowLevel']]],
   ['inputdevicedescription',['InputDeviceDescription',['../structISX_1_1InputDeviceDescription.html',1,'ISX']]],

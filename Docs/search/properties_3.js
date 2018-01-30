@@ -5,5 +5,5 @@ var searchData=
   ['deviceid',['deviceId',['../structISX_1_1LowLevel_1_1InputEvent.html#af9df745dc0b0b5f84ac1de2b055e0033',1,'ISX::LowLevel::InputEvent']]],
   ['devices',['devices',['../classISX_1_1InputSystem.html#aa196b9a4afd6eddf9752020c1ab17e0e',1,'ISX::InputSystem']]],
   ['displayname',['displayName',['../classISX_1_1InputControl.html#af9584f1964c0fb21e6b7100c3648bda5',1,'ISX::InputControl']]],
-  ['down',['down',['../classISX_1_1DpadControl.html#a7396ef57f142ad61cd384a5f43f54f03',1,'ISX::DpadControl']]]
+  ['down',['down',['../classISX_1_1Controls_1_1DpadControl.html#a4e26ca7d5b0f36947132d91d44428297',1,'ISX::Controls::DpadControl']]]
 ];

@@ -1,7 +1,7 @@
 using System;
 using ISX.Utilities;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A button that is considered pressed if the underlying state has a value in the specific range.

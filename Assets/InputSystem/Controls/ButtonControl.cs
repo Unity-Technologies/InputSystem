@@ -1,8 +1,8 @@
-////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
-
 using ISX.LowLevel;
 
-namespace ISX
+////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
+
+namespace ISX.Controls
 {
     /// <summary>
     /// An axis that has a trigger point beyond which it is considered to be pressed.

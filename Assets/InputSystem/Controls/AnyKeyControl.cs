@@ -1,11 +1,13 @@
 using System;
 using ISX.LowLevel;
 
-namespace ISX
+namespace ISX.Controls
 {
-    // A control that simply checks the entire state it's been assigned
-    // for whether there's any non-zero bytes. If there are, the control
-    // returns 1.0; otherwise it returns 0.0.
+    /// <summary>
+    /// A control that simply checks the entire state it's been assigned
+    /// for whether there's any non-zero bytes. If there are, the control
+    /// returns 1.0; otherwise it returns 0.0.
+    /// </summary>
     public class AnyKeyControl : InputControl<float>
     {
         public bool isPressed

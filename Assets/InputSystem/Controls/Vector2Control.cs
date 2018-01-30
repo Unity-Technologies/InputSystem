@@ -2,7 +2,7 @@ using System;
 using ISX.LowLevel;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A floating-point 2D vector control composed of two <see cref="AxisControl">AxicControls</see>.

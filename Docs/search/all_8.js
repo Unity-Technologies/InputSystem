@@ -1,10 +1,12 @@
 var searchData=
 [
+  ['controls',['Controls',['../namespaceISX_1_1Controls.html',1,'ISX']]],
   ['dualshock',['DualShock',['../namespaceISX_1_1DualShock.html',1,'ISX']]],
   ['editor',['Editor',['../namespaceISX_1_1Editor.html',1,'ISX.Editor'],['../namespaceISX_1_1HID_1_1Editor.html',1,'ISX.HID.Editor']]],
   ['flightsticks',['Flightsticks',['../namespaceISX_1_1Flightsticks.html',1,'ISX']]],
   ['haptics',['Haptics',['../namespaceISX_1_1Haptics.html',1,'ISX']]],
   ['hid',['HID',['../namespaceISX_1_1HID.html',1,'ISX']]],
+  ['id',['id',['../classISX_1_1InputDevice.html#ae92d9348206b7f5cb6b313a3d42a614c',1,'ISX::InputDevice']]],
   ['idualmotorrumble',['IDualMotorRumble',['../interfaceISX_1_1Haptics_1_1IDualMotorRumble.html',1,'ISX::Haptics']]],
   ['ihaptics',['IHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html',1,'ISX::Haptics']]],
   ['iinputpluginmanager',['IInputPluginManager',['../interfaceISX_1_1IInputPluginManager.html',1,'ISX']]],
@@ -30,6 +32,7 @@ var searchData=
   ['inputcontrol_3c_20vector3_20_3e',['InputControl&lt; Vector3 &gt;',['../classISX_1_1InputControl.html',1,'ISX']]],
   ['inputcontrolattribute',['InputControlAttribute',['../classISX_1_1InputControlAttribute.html',1,'ISX']]],
   ['inputcontrolpath',['InputControlPath',['../classISX_1_1InputControlPath.html',1,'ISX']]],
+  ['inputcontrolsetup',['InputControlSetup',['../classISX_1_1InputControlSetup.html',1,'ISX']]],
   ['inputdevice',['InputDevice',['../classISX_1_1InputDevice.html',1,'ISX']]],
   ['inputdevicechange',['InputDeviceChange',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1',1,'ISX']]],
   ['inputdevicecommand',['InputDeviceCommand',['../structISX_1_1LowLevel_1_1InputDeviceCommand.html',1,'ISX::LowLevel']]],

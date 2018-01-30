@@ -5,6 +5,9 @@ var hierarchy =
     [ "ISX.LowLevel.DeviceConfigurationEvent", "structISX_1_1LowLevel_1_1DeviceConfigurationEvent.html", null ],
     [ "ISX.LowLevel.DeviceRemoveEvent", "structISX_1_1LowLevel_1_1DeviceRemoveEvent.html", null ],
     [ "ISX.Haptics.DualMotorRumble", "structISX_1_1Haptics_1_1DualMotorRumble.html", null ],
+    [ "ISX.DualShock.DualShockHIDInputReport", "structISX_1_1DualShock_1_1DualShockHIDInputReport.html", null ],
+    [ "ISX.DualShock.DualShockHIDOutputReport", "structISX_1_1DualShock_1_1DualShockHIDOutputReport.html", null ],
+    [ "ISX.DualShock.DualShockSupport", "classISX_1_1DualShock_1_1DualShockSupport.html", null ],
     [ "ISX.Editor.EditorInputTemplateCache", "classISX_1_1Editor_1_1EditorInputTemplateCache.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],
     [ "ISX.HID.HID.HIDCollectionDescriptor", "structISX_1_1HID_1_1HID_1_1HIDCollectionDescriptor.html", null ],
@@ -15,6 +18,9 @@ var hierarchy =
     [ "ISX.Haptics.IHaptics", "interfaceISX_1_1Haptics_1_1IHaptics.html", [
       [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", [
         [ "ISX.Gamepad", "classISX_1_1Gamepad.html", [
+          [ "ISX.DualShock.DualShockGamepad", "classISX_1_1DualShock_1_1DualShockGamepad.html", [
+            [ "ISX.DualShock.DualShockGamepadHID", "classISX_1_1DualShock_1_1DualShockGamepadHID.html", null ]
+          ] ],
           [ "ISX.XInput.XInputController", "classISX_1_1XInput_1_1XInputController.html", null ]
         ] ],
         [ "ISX.XInput.IXboxOneRumble", "interfaceISX_1_1XInput_1_1IXboxOneRumble.html", null ]
@@ -52,9 +58,11 @@ var hierarchy =
     [ "ISX.InputControl< AudioBuffer >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Color >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< float >", "classISX_1_1InputControl.html", [
-      [ "ISX.AxisControl", "classISX_1_1AxisControl.html", [
-        [ "ISX.ButtonControl", "classISX_1_1ButtonControl.html", [
-          [ "ISX.KeyControl", "classISX_1_1KeyControl.html", null ]
+      [ "ISX.Controls.AnyKeyControl", "classISX_1_1Controls_1_1AnyKeyControl.html", null ],
+      [ "ISX.Controls.AxisControl", "classISX_1_1Controls_1_1AxisControl.html", [
+        [ "ISX.Controls.ButtonControl", "classISX_1_1Controls_1_1ButtonControl.html", [
+          [ "ISX.Controls.DiscreteButtonControl", "classISX_1_1Controls_1_1DiscreteButtonControl.html", null ],
+          [ "ISX.Controls.KeyControl", "classISX_1_1Controls_1_1KeyControl.html", null ]
         ] ]
       ] ]
     ] ],
@@ -62,17 +70,18 @@ var hierarchy =
     [ "ISX.InputControl< Pose >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Quaternion >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControl< Touch >", "classISX_1_1InputControl.html", [
-      [ "ISX.TouchControl", "classISX_1_1TouchControl.html", null ]
+      [ "ISX.Controls.TouchControl", "classISX_1_1Controls_1_1TouchControl.html", null ]
     ] ],
     [ "ISX.InputControl< Vector2 >", "classISX_1_1InputControl.html", [
-      [ "ISX.DpadControl", "classISX_1_1DpadControl.html", null ],
-      [ "ISX.Vector2Control", "classISX_1_1Vector2Control.html", [
-        [ "ISX.StickControl", "classISX_1_1StickControl.html", null ]
+      [ "ISX.Controls.DpadControl", "classISX_1_1Controls_1_1DpadControl.html", null ],
+      [ "ISX.Controls.Vector2Control", "classISX_1_1Controls_1_1Vector2Control.html", [
+        [ "ISX.Controls.StickControl", "classISX_1_1Controls_1_1StickControl.html", null ]
       ] ]
     ] ],
     [ "ISX.InputControl< Vector3 >", "classISX_1_1InputControl.html", null ],
     [ "ISX.InputControlAttribute", "classISX_1_1InputControlAttribute.html", null ],
     [ "ISX.InputControlPath", "classISX_1_1InputControlPath.html", null ],
+    [ "ISX.InputControlSetup", "classISX_1_1InputControlSetup.html", null ],
     [ "ISX.LowLevel.InputDeviceCommand", "structISX_1_1LowLevel_1_1InputDeviceCommand.html", null ],
     [ "ISX.InputDeviceDescription", "structISX_1_1InputDeviceDescription.html", null ],
     [ "ISX.LowLevel.InputEvent", "structISX_1_1LowLevel_1_1InputEvent.html", null ],

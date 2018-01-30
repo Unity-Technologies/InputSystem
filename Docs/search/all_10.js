@@ -16,7 +16,7 @@ var searchData=
   ['removetemplate',['RemoveTemplate',['../classISX_1_1InputSystem.html#ab8f63ef044111aa2c6f897580cec31fb',1,'ISX::InputSystem']]],
   ['resethaptics',['ResetHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html#a0011deb5ee3c64a7c52fdef31934efbf',1,'ISX.Haptics.IHaptics.ResetHaptics()'],['../classISX_1_1InputSystem.html#a1e17d891368a47531d74aec0a4e154aa',1,'ISX.InputSystem.ResetHaptics()']]],
   ['resumehaptics',['ResumeHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html#a134a813cb8d0e6681e3cc5ee9488b50b',1,'ISX.Haptics.IHaptics.ResumeHaptics()'],['../classISX_1_1InputSystem.html#a71ab2ff457045e43d112695ef3c77840',1,'ISX.InputSystem.ResumeHaptics()']]],
-  ['right',['right',['../classISX_1_1DpadControl.html#a31707e56366ef35c95e2625203cf8ad6',1,'ISX::DpadControl']]],
+  ['right',['right',['../classISX_1_1Controls_1_1DpadControl.html#a2740d11d01ac91b0c30b82df84b3afd8',1,'ISX::Controls::DpadControl']]],
   ['rightbutton',['rightButton',['../classISX_1_1Mouse.html#aefecc8e9f798c65acd021e19946d8c5c',1,'ISX::Mouse']]],
   ['rightstick',['rightStick',['../structISX_1_1GamepadState.html#a6f69be3b8f66f44710d3e3af796d2fdf',1,'ISX::GamepadState']]],
   ['righttrigger',['rightTrigger',['../structISX_1_1GamepadState.html#afb6ee8f5d3d60f59e266a4356647fc5d',1,'ISX::GamepadState']]]

@@ -4,7 +4,7 @@ using ISX.Processors;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A floating-point axis control.

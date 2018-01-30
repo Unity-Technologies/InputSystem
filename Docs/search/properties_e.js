@@ -1,10 +1,7 @@
 var searchData=
 [
-  ['scancode',['scanCode',['../classISX_1_1KeyControl.html#a059d8fab0ce3e4fff5b7d91d9bef764c',1,'ISX::KeyControl']]],
-  ['scroll',['scroll',['../classISX_1_1Mouse.html#a723616a83a423263646b301e316e44d6',1,'ISX::Mouse']]],
-  ['semicolonkey',['semicolonKey',['../classISX_1_1Keyboard.html#aa825545f2c26a0d42be5ae68a2d41a56',1,'ISX::Keyboard']]],
-  ['set',['set',['../classISX_1_1InputAction.html#af5e506b8aec9629a30abd5a266174221',1,'ISX::InputAction']]],
-  ['sizeinbytes',['sizeInBytes',['../structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144',1,'ISX::LowLevel::InputEvent']]],
-  ['spacekey',['spaceKey',['../classISX_1_1Keyboard.html#a2d5d9fb150b869c9b080ba81cb92e60f',1,'ISX::Keyboard']]],
-  ['subtype',['subType',['../classISX_1_1XInput_1_1XInputController.html#a3d84f2cb4af4914508736ecc77305abb',1,'ISX::XInput::XInputController']]]
+  ['remote',['remote',['../classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141',1,'ISX::InputDevice']]],
+  ['remoting',['remoting',['../classISX_1_1InputSystem.html#aaecc5e9aab6f76e726533003298628e7',1,'ISX::InputSystem']]],
+  ['right',['right',['../classISX_1_1Controls_1_1DpadControl.html#a2740d11d01ac91b0c30b82df84b3afd8',1,'ISX::Controls::DpadControl']]],
+  ['rightbutton',['rightButton',['../classISX_1_1Mouse.html#aefecc8e9f798c65acd021e19946d8c5c',1,'ISX::Mouse']]]
 ];

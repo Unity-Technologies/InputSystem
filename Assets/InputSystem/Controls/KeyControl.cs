@@ -1,6 +1,6 @@
 using ISX.LowLevel;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A key on a <see cref="Keyboard"/>.

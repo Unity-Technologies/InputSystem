@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['scancode',['scanCode',['../classISX_1_1KeyControl.html#a059d8fab0ce3e4fff5b7d91d9bef764c',1,'ISX::KeyControl']]],
+  ['scancode',['scanCode',['../classISX_1_1Controls_1_1KeyControl.html#a2129f524ad3353b39f41443355735ab0',1,'ISX::Controls::KeyControl']]],
   ['scroll',['scroll',['../classISX_1_1Mouse.html#a723616a83a423263646b301e316e44d6',1,'ISX::Mouse']]],
   ['semicolonkey',['semicolonKey',['../classISX_1_1Keyboard.html#aa825545f2c26a0d42be5ae68a2d41a56',1,'ISX::Keyboard']]],
   ['serial',['serial',['../structISX_1_1InputDeviceDescription.html#add69cc5ce6a01fa658aa0eb20483130f',1,'ISX::InputDeviceDescription']]],
@@ -14,6 +14,6 @@ var searchData=
   ['stateformat',['stateFormat',['../structISX_1_1LowLevel_1_1StateEvent.html#a0dbdf64698b44117fc29003b88932bf0',1,'ISX::LowLevel::StateEvent']]],
   ['statetype',['stateType',['../classISX_1_1InputTemplateAttribute.html#adf4459041a94a9d33000cbc5abb89472',1,'ISX::InputTemplateAttribute']]],
   ['steamcontroller',['SteamController',['../classISX_1_1Steam_1_1SteamController.html',1,'ISX::Steam']]],
-  ['stickcontrol',['StickControl',['../classISX_1_1StickControl.html',1,'ISX']]],
+  ['stickcontrol',['StickControl',['../classISX_1_1Controls_1_1StickControl.html',1,'ISX::Controls']]],
   ['subtype',['subType',['../classISX_1_1XInput_1_1XInputController.html#a3d84f2cb4af4914508736ecc77305abb',1,'ISX::XInput::XInputController']]]
 ];

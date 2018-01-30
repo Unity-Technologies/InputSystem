@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using ISX.Controls;
 using ISX.Haptics;
 using ISX.Utilities;
 using UnityEngine;

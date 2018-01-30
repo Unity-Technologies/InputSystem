@@ -1,7 +1,7 @@
 using System;
 using ISX.LowLevel;
 
-namespace ISX
+namespace ISX.Controls
 {
     ////TODO: allow format to be any integer format
     public class DiscreteControl : InputControl<int>

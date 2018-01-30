@@ -3,6 +3,8 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
+////TODO: we need editor window space conversion on the pen, too
+
 namespace ISX
 {
     /// <summary>

@@ -1,6 +1,6 @@
 using ISX.Processors;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A two-axis thumbstick control that can act as both a vector and a four-way dpad.

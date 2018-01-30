@@ -2,7 +2,7 @@ using System;
 using ISX.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A control representing a touch contact.

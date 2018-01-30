@@ -1,3 +1,5 @@
+using ISX.Controls;
+
 namespace ISX.Modifiers
 {
     // A modifier for button-like behavior. Will perform action once

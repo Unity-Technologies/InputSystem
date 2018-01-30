@@ -2,7 +2,7 @@ using System;
 using ISX.LowLevel;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Controls
 {
     public class QuaternionControl : InputControl<Quaternion>
     {

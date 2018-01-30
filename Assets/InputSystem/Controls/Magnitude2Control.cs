@@ -4,7 +4,7 @@ using UnityEngine;
 
 ////TODO: support vector of shorts
 
-namespace ISX
+namespace ISX.Controls
 {
     // Computes the magnitude of a Vector2.
     // You can add this as a child control of a 2D vector, for example, so as to get a magnitude

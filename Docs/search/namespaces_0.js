@@ -1,5 +1,6 @@
 var searchData=
 [
+  ['controls',['Controls',['../namespaceISX_1_1Controls.html',1,'ISX']]],
   ['dualshock',['DualShock',['../namespaceISX_1_1DualShock.html',1,'ISX']]],
   ['editor',['Editor',['../namespaceISX_1_1Editor.html',1,'ISX.Editor'],['../namespaceISX_1_1HID_1_1Editor.html',1,'ISX.HID.Editor']]],
   ['flightsticks',['Flightsticks',['../namespaceISX_1_1Flightsticks.html',1,'ISX']]],

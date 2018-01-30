@@ -2,7 +2,7 @@ using System;
 using ISX.LowLevel;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.Controls
 {
     /// <summary>
     /// A control made up of four discrete, directional buttons. Forms a vector
