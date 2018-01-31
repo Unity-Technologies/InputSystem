@@ -6,7 +6,7 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX.DualShock
+namespace ISX.Plugins.DualShock
 {
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
@@ -18,29 +18,29 @@ namespace ISX.DualShock
 
         [InputControl(name = "leftStick", template = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
         [InputControl(name = "leftStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
         [FieldOffset(1)] public byte leftStickX;
         [FieldOffset(2)] public byte leftStickY;
 
         [InputControl(name = "rightStick", template = "Stick", format = "VC2B")]
         [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
         [InputControl(name = "rightStick/y", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/up", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 1, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
         [FieldOffset(3)] public byte rightStickX;
         [FieldOffset(4)] public byte rightStickY;
 
-        [InputControl(name = "dpad", template = "Dpad", offset = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/up", template = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", sizeInBits = 4)]
-        [InputControl(name = "dpad/right", template = "DiscreteButton", parameters = "minValue=1,maxValue=3", sizeInBits = 4)]
-        [InputControl(name = "dpad/down", template = "DiscreteButton", parameters = "minValue=3,maxValue=5", sizeInBits = 4)]
-        [InputControl(name = "dpad/left", template = "DiscreteButton", parameters = "minValue=5, maxValue=7", sizeInBits = 4)]
+        [InputControl(name = "dpad", template = "Dpad", sizeInBits = 4)]
+        [InputControl(name = "dpad/up", template = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", template = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", template = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", template = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
         [InputControl(name = "buttonWest", displayName = "Square", bit = 4)]
         [InputControl(name = "buttonSouth", displayName = "Cross", bit = 5)]
         [InputControl(name = "buttonEast", displayName = "Circle", bit = 6)]
