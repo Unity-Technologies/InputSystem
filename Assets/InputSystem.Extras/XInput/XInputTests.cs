@@ -1,6 +1,6 @@
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
 using ISX;
-using ISX.XInput;
+using ISX.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
 

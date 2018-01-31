@@ -13,7 +13,7 @@ var searchData=
   ['stateevent',['StateEvent',['../structISX_1_1LowLevel_1_1StateEvent.html',1,'ISX::LowLevel']]],
   ['stateformat',['stateFormat',['../structISX_1_1LowLevel_1_1StateEvent.html#a0dbdf64698b44117fc29003b88932bf0',1,'ISX::LowLevel::StateEvent']]],
   ['statetype',['stateType',['../classISX_1_1InputTemplateAttribute.html#adf4459041a94a9d33000cbc5abb89472',1,'ISX::InputTemplateAttribute']]],
-  ['steamcontroller',['SteamController',['../classISX_1_1Steam_1_1SteamController.html',1,'ISX::Steam']]],
+  ['steamcontroller',['SteamController',['../classISX_1_1Plugins_1_1Steam_1_1SteamController.html',1,'ISX::Plugins::Steam']]],
   ['stickcontrol',['StickControl',['../classISX_1_1Controls_1_1StickControl.html',1,'ISX::Controls']]],
-  ['subtype',['subType',['../classISX_1_1XInput_1_1XInputController.html#a3d84f2cb4af4914508736ecc77305abb',1,'ISX::XInput::XInputController']]]
+  ['subtype',['subType',['../classISX_1_1Plugins_1_1XInput_1_1XInputController.html#a8385a59ad4d2a800741783ec2f7eb405',1,'ISX::Plugins::XInput::XInputController']]]
 ];

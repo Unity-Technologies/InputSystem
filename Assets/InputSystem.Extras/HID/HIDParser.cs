@@ -6,7 +6,7 @@ using UnityEngine;
 ////TODO: delimiter support
 ////TODO: designator support
 
-namespace ISX.HID
+namespace ISX.Plugins.HID
 {
     /// <summary>
     /// Turns binary HID descriptors into <see cref="HID.HIDDeviceDescriptor"/> instances.

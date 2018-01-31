@@ -1,15 +1,12 @@
 var namespaceISX =
 [
     [ "Controls", "namespaceISX_1_1Controls.html", "namespaceISX_1_1Controls" ],
-    [ "DualShock", "namespaceISX_1_1DualShock.html", "namespaceISX_1_1DualShock" ],
     [ "Editor", "namespaceISX_1_1Editor.html", "namespaceISX_1_1Editor" ],
     [ "Haptics", "namespaceISX_1_1Haptics.html", "namespaceISX_1_1Haptics" ],
-    [ "HID", "namespaceISX_1_1HID.html", "namespaceISX_1_1HID" ],
     [ "LowLevel", "namespaceISX_1_1LowLevel.html", "namespaceISX_1_1LowLevel" ],
+    [ "Plugins", "namespaceISX_1_1Plugins.html", "namespaceISX_1_1Plugins" ],
     [ "Processors", "namespaceISX_1_1Processors.html", "namespaceISX_1_1Processors" ],
-    [ "Steam", "namespaceISX_1_1Steam.html", "namespaceISX_1_1Steam" ],
     [ "Utilities", "namespaceISX_1_1Utilities.html", "namespaceISX_1_1Utilities" ],
-    [ "XInput", "namespaceISX_1_1XInput.html", "namespaceISX_1_1XInput" ],
     [ "Gamepad", "classISX_1_1Gamepad.html", null ],
     [ "GamepadState", "structISX_1_1GamepadState.html", "structISX_1_1GamepadState" ],
     [ "IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],

@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace ISX.Controls
 {
+    /// <summary>
+    /// A floating-point 3D vector control composed of three <see cref="AxisControl">AxicControls</see>.
+    /// </summary>
     public class Vector3Control : InputControl<Vector3>
     {
         [InputControl(offset = 0)]

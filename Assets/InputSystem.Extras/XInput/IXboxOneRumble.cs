@@ -1,6 +1,6 @@
 using ISX.Haptics;
 
-namespace ISX.XInput
+namespace ISX.Plugins.XInput
 {
     /// <summary>
     /// Extended dual motor gamepad rumble that adds left and right trigger motors.

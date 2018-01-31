@@ -1,11 +1,11 @@
-using ISX.HID.Editor;
 using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using ISX.Plugins.HID.Editor;
 #endif
 
-namespace ISX.HID
+namespace ISX.Plugins.HID
 {
     /// <summary>
     /// Adds support for generic HID devices to the input system.

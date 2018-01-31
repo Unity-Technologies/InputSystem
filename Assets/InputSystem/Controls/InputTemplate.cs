@@ -251,7 +251,7 @@ namespace ISX
                 else if (other.parameters.Count == 0)
                     result.parameters = parameters;
                 else
-                    throw new NotImplementedException("merging parameters");
+                    throw new NotImplementedException("merging parameters");////REVIEW: probably best to not merge them actually
 
                 if (processors.Count == 0)
                     result.processors = other.processors;
@@ -437,6 +437,12 @@ namespace ISX
             public Builder WithFormat(string format)
             {
                 return WithFormat(new FourCC(format));
+            }
+
+            public Builder ForDevice(InputDeviceDescription deviceDescription)
+            {
+                this.deviceDescription = deviceDescription;
+                return this;
             }
 
             public Builder Extend(string baseTemplateName)

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['vendorid',['vendorId',['../structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a1e9dc45a8d79f9ba6bcdaf480f2ec2a4',1,'ISX::HID::HID::HIDDeviceDescriptor']]]
+  ['vendorid',['vendorId',['../structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a4fe65a5ea8577ee1e0526bdb792ef6f0',1,'ISX::Plugins::HID::HID::HIDDeviceDescriptor']]]
 ];

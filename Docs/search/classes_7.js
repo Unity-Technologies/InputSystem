@@ -41,5 +41,5 @@ var searchData=
   ['inputtestfixture',['InputTestFixture',['../classISX_1_1InputTestFixture.html',1,'ISX']]],
   ['inputtestruntime',['InputTestRuntime',['../classISX_1_1InputTestRuntime.html',1,'ISX']]],
   ['internedstring',['InternedString',['../structISX_1_1Utilities_1_1InternedString.html',1,'ISX::Utilities']]],
-  ['ixboxonerumble',['IXboxOneRumble',['../interfaceISX_1_1XInput_1_1IXboxOneRumble.html',1,'ISX::XInput']]]
+  ['ixboxonerumble',['IXboxOneRumble',['../interfaceISX_1_1Plugins_1_1XInput_1_1IXboxOneRumble.html',1,'ISX::Plugins::XInput']]]
 ];

@@ -1,6 +1,6 @@
 ////TODO: add support for Windows.Gaming.Input.Gamepad (including the trigger motors)
 
-namespace ISX.XInput
+namespace ISX.Plugins.XInput
 {
     /// <summary>
     /// Adds support for XInput controllers.

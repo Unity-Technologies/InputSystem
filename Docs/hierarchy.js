@@ -5,25 +5,25 @@ var hierarchy =
     [ "ISX.LowLevel.DeviceConfigurationEvent", "structISX_1_1LowLevel_1_1DeviceConfigurationEvent.html", null ],
     [ "ISX.LowLevel.DeviceRemoveEvent", "structISX_1_1LowLevel_1_1DeviceRemoveEvent.html", null ],
     [ "ISX.Haptics.DualMotorRumble", "structISX_1_1Haptics_1_1DualMotorRumble.html", null ],
-    [ "ISX.DualShock.DualShockHIDInputReport", "structISX_1_1DualShock_1_1DualShockHIDInputReport.html", null ],
-    [ "ISX.DualShock.DualShockHIDOutputReport", "structISX_1_1DualShock_1_1DualShockHIDOutputReport.html", null ],
-    [ "ISX.DualShock.DualShockSupport", "classISX_1_1DualShock_1_1DualShockSupport.html", null ],
+    [ "ISX.Plugins.DualShock.DualShockHIDInputReport", "structISX_1_1Plugins_1_1DualShock_1_1DualShockHIDInputReport.html", null ],
+    [ "ISX.Plugins.DualShock.DualShockHIDOutputReport", "structISX_1_1Plugins_1_1DualShock_1_1DualShockHIDOutputReport.html", null ],
+    [ "ISX.Plugins.DualShock.DualShockSupport", "classISX_1_1Plugins_1_1DualShock_1_1DualShockSupport.html", null ],
     [ "ISX.Editor.EditorInputTemplateCache", "classISX_1_1Editor_1_1EditorInputTemplateCache.html", null ],
     [ "ISX.GamepadState", "structISX_1_1GamepadState.html", null ],
-    [ "ISX.HID.HID.HIDCollectionDescriptor", "structISX_1_1HID_1_1HID_1_1HIDCollectionDescriptor.html", null ],
-    [ "ISX.HID.HID.HIDDeviceDescriptor", "structISX_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html", null ],
-    [ "ISX.HID.HID.HIDElementDescriptor", "structISX_1_1HID_1_1HID_1_1HIDElementDescriptor.html", null ],
-    [ "ISX.HID.HIDParser", "classISX_1_1HID_1_1HIDParser.html", null ],
-    [ "ISX.HID.HIDSupport", "classISX_1_1HID_1_1HIDSupport.html", null ],
+    [ "ISX.Plugins.HID.HID.HIDCollectionDescriptor", "structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDCollectionDescriptor.html", null ],
+    [ "ISX.Plugins.HID.HID.HIDDeviceDescriptor", "structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html", null ],
+    [ "ISX.Plugins.HID.HID.HIDElementDescriptor", "structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDElementDescriptor.html", null ],
+    [ "ISX.Plugins.HID.HIDParser", "classISX_1_1Plugins_1_1HID_1_1HIDParser.html", null ],
+    [ "ISX.Plugins.HID.HIDSupport", "classISX_1_1Plugins_1_1HID_1_1HIDSupport.html", null ],
     [ "ISX.Haptics.IHaptics", "interfaceISX_1_1Haptics_1_1IHaptics.html", [
       [ "ISX.Haptics.IDualMotorRumble", "interfaceISX_1_1Haptics_1_1IDualMotorRumble.html", [
         [ "ISX.Gamepad", "classISX_1_1Gamepad.html", [
-          [ "ISX.DualShock.DualShockGamepad", "classISX_1_1DualShock_1_1DualShockGamepad.html", [
-            [ "ISX.DualShock.DualShockGamepadHID", "classISX_1_1DualShock_1_1DualShockGamepadHID.html", null ]
+          [ "ISX.Plugins.DualShock.DualShockGamepad", "classISX_1_1Plugins_1_1DualShock_1_1DualShockGamepad.html", [
+            [ "ISX.Plugins.DualShock.DualShockGamepadHID", "classISX_1_1Plugins_1_1DualShock_1_1DualShockGamepadHID.html", null ]
           ] ],
-          [ "ISX.XInput.XInputController", "classISX_1_1XInput_1_1XInputController.html", null ]
+          [ "ISX.Plugins.XInput.XInputController", "classISX_1_1Plugins_1_1XInput_1_1XInputController.html", null ]
         ] ],
-        [ "ISX.XInput.IXboxOneRumble", "interfaceISX_1_1XInput_1_1IXboxOneRumble.html", null ]
+        [ "ISX.Plugins.XInput.IXboxOneRumble", "interfaceISX_1_1Plugins_1_1XInput_1_1IXboxOneRumble.html", null ]
       ] ]
     ] ],
     [ "ISX.IInputPluginManager", "interfaceISX_1_1IInputPluginManager.html", null ],
@@ -45,14 +45,14 @@ var hierarchy =
       [ "ISX.InputControl< TValue >", "classISX_1_1InputControl.html", null ],
       [ "ISX.InputDevice", "classISX_1_1InputDevice.html", [
         [ "ISX.Gamepad", "classISX_1_1Gamepad.html", null ],
-        [ "ISX.HID.HID", "classISX_1_1HID_1_1HID.html", null ],
         [ "ISX.Keyboard", "classISX_1_1Keyboard.html", null ],
+        [ "ISX.Plugins.HID.HID", "classISX_1_1Plugins_1_1HID_1_1HID.html", null ],
+        [ "ISX.Plugins.Steam.SteamController", "classISX_1_1Plugins_1_1Steam_1_1SteamController.html", null ],
         [ "ISX.Pointer", "classISX_1_1Pointer.html", [
           [ "ISX.Mouse", "classISX_1_1Mouse.html", null ],
           [ "ISX.Pen", "classISX_1_1Pen.html", null ],
           [ "ISX.Touchscreen", "classISX_1_1Touchscreen.html", null ]
-        ] ],
-        [ "ISX.Steam.SteamController", "classISX_1_1Steam_1_1SteamController.html", null ]
+        ] ]
       ] ]
     ] ],
     [ "ISX.InputControl< AudioBuffer >", "classISX_1_1InputControl.html", null ],
@@ -78,7 +78,9 @@ var hierarchy =
         [ "ISX.Controls.StickControl", "classISX_1_1Controls_1_1StickControl.html", null ]
       ] ]
     ] ],
-    [ "ISX.InputControl< Vector3 >", "classISX_1_1InputControl.html", null ],
+    [ "ISX.InputControl< Vector3 >", "classISX_1_1InputControl.html", [
+      [ "ISX.Controls.Vector3Control", "classISX_1_1Controls_1_1Vector3Control.html", null ]
+    ] ],
     [ "ISX.InputControlAttribute", "classISX_1_1InputControlAttribute.html", null ],
     [ "ISX.InputControlPath", "classISX_1_1InputControlPath.html", null ],
     [ "ISX.InputControlSetup", "classISX_1_1InputControlSetup.html", null ],
@@ -111,7 +113,7 @@ var hierarchy =
     [ "ISX.Utilities.ReadOnlyArray< ParameterValue >", "structISX_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ISX.LowLevel.StateEvent", "structISX_1_1LowLevel_1_1StateEvent.html", null ],
     [ "ISX.TouchscreenState", "structISX_1_1TouchscreenState.html", null ],
-    [ "ISX.XInput.XInputSupport", "classISX_1_1XInput_1_1XInputSupport.html", null ],
+    [ "ISX.Plugins.XInput.XInputSupport", "classISX_1_1Plugins_1_1XInput_1_1XInputSupport.html", null ],
     [ "ISX.XRController", "classISX_1_1XRController.html", null ],
     [ "ISX.XRControllerState", "structISX_1_1XRControllerState.html", null ]
 ];

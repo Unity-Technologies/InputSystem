@@ -8,6 +8,8 @@ using UnityEngine;
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
+////TODO: show processors attached to controls
+
 namespace ISX.Editor
 {
     // Multi-column TreeView that shows control tree of device.

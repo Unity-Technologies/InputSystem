@@ -1,4 +1,4 @@
-namespace ISX.Steam
+namespace ISX.Plugins.Steam
 {
     /// <summary>
     /// Base class for controllers made available through the Steam controller API.

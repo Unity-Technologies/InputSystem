@@ -218,6 +218,10 @@ namespace ISX
             if (existingControl != null && existingControl.template == template.name && existingControl.GetType() == template.type)
             {
                 control = existingControl;
+
+                ////FIXME: the re-use path probably has some data that could stick around when it shouldn't
+                control.m_UsagesReadOnly = new ReadOnlyArray<InternedString>();
+                control.ClearProcessors();
             }
             else
             {
@@ -368,6 +372,11 @@ namespace ISX
             var haveControlTemplateWithPath = false;
             for (var i = 0; i < controlTemplates.Length; ++i)
             {
+                ////REVIEW: I'm not sure this is good enough. ATM if you have a control template with
+                ////        name "foo" and one with name "foo/bar", then the latter is taken as an override
+                ////        but the former isn't. However, whether it has a slash in the path or not shouldn't
+                ////        matter. If a control template of the same name already exists, it should be
+                ////        considered an override, if not, it shouldn't.
                 // Not a new child if it's a template reaching in to the hierarchy to modify
                 // an existing child.
                 if (controlTemplates[i].isModifyingChildControlByPath)
@@ -644,6 +653,7 @@ namespace ISX
                     child.m_StateBlock.bitOffset = controlTemplate.bit;
                 if (controlTemplate.processors.Count > 0)
                     AddProcessors(child, ref controlTemplate, template.name);
+                ////REVIEW: ATM parameters applied using this path add on top instead of just overriding existing parameters
                 if (controlTemplate.parameters.Count > 0)
                     SetParameters(child, controlTemplate.parameters);
                 if (!string.IsNullOrEmpty(controlTemplate.displayName))

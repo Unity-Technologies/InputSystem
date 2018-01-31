@@ -15,7 +15,7 @@ using Unity.Collections.LowLevel.Unsafe;
 ////        Maybe it's good enough to center X and Y in the -1..1 range. Will do the trick for
 ////        joysticks.
 
-namespace ISX.HID
+namespace ISX.Plugins.HID
 {
     public class HIDTests : InputTestFixture
     {

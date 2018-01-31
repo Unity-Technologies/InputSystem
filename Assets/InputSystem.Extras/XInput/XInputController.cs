@@ -3,7 +3,7 @@ using UnityEngine;
 
 ////TODO: set displayNames of the controls according to Xbox controller standards
 
-namespace ISX.XInput
+namespace ISX.Plugins.XInput
 {
     /// <summary>
     /// An XInput compatible game controller.

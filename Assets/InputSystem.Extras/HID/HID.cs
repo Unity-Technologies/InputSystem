@@ -10,7 +10,7 @@ using UnityEngine;
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
-namespace ISX.HID
+namespace ISX.Plugins.HID
 {
     /// <summary>
     /// A generic HID input device.
@@ -171,7 +171,7 @@ namespace ISX.HID
             // Register template constructor that will turn the HID descriptor into an
             // InputTemplate instance.
             var templateName = string.Format("{0}::{1}", kHIDNamespace, description.product);
-            var template = new HIDTemplate {descriptor = hidDeviceDescriptor};
+            var template = new HIDTemplate {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForTemplate};
             InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, deviceDescriptionForTemplate);
 
             return templateName;
@@ -209,22 +209,23 @@ namespace ISX.HID
         [Serializable]
         private class HIDTemplate
         {
-            public HIDDeviceDescriptor descriptor;
+            public HIDDeviceDescriptor hidDescriptor;
+            public InputDeviceDescription deviceDescription;
 
             public InputTemplate Build()
             {
                 var builder = new InputTemplate.Builder
                 {
                     type = typeof(HID),
-                    stateFormat = new FourCC('H', 'I', 'D')
+                    stateFormat = new FourCC('H', 'I', 'D'),
+                    deviceDescription = deviceDescription
                 };
 
                 ////TODO: for joysticks, set up stick from X and Y
 
                 // Process HID descriptor.
-                foreach (var element in descriptor.elements)
+                foreach (var element in hidDescriptor.elements)
                 {
-                    ////TODO: support output elements
                     if (element.reportType != HIDReportType.Input)
                         continue;
 

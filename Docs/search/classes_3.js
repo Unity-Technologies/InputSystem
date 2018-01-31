@@ -6,9 +6,9 @@ var searchData=
   ['discretebuttoncontrol',['DiscreteButtonControl',['../classISX_1_1Controls_1_1DiscreteButtonControl.html',1,'ISX::Controls']]],
   ['dpadcontrol',['DpadControl',['../classISX_1_1Controls_1_1DpadControl.html',1,'ISX::Controls']]],
   ['dualmotorrumble',['DualMotorRumble',['../structISX_1_1Haptics_1_1DualMotorRumble.html',1,'ISX::Haptics']]],
-  ['dualshockgamepad',['DualShockGamepad',['../classISX_1_1DualShock_1_1DualShockGamepad.html',1,'ISX::DualShock']]],
-  ['dualshockgamepadhid',['DualShockGamepadHID',['../classISX_1_1DualShock_1_1DualShockGamepadHID.html',1,'ISX::DualShock']]],
-  ['dualshockhidinputreport',['DualShockHIDInputReport',['../structISX_1_1DualShock_1_1DualShockHIDInputReport.html',1,'ISX::DualShock']]],
-  ['dualshockhidoutputreport',['DualShockHIDOutputReport',['../structISX_1_1DualShock_1_1DualShockHIDOutputReport.html',1,'ISX::DualShock']]],
-  ['dualshocksupport',['DualShockSupport',['../classISX_1_1DualShock_1_1DualShockSupport.html',1,'ISX::DualShock']]]
+  ['dualshockgamepad',['DualShockGamepad',['../classISX_1_1Plugins_1_1DualShock_1_1DualShockGamepad.html',1,'ISX::Plugins::DualShock']]],
+  ['dualshockgamepadhid',['DualShockGamepadHID',['../classISX_1_1Plugins_1_1DualShock_1_1DualShockGamepadHID.html',1,'ISX::Plugins::DualShock']]],
+  ['dualshockhidinputreport',['DualShockHIDInputReport',['../structISX_1_1Plugins_1_1DualShock_1_1DualShockHIDInputReport.html',1,'ISX::Plugins::DualShock']]],
+  ['dualshockhidoutputreport',['DualShockHIDOutputReport',['../structISX_1_1Plugins_1_1DualShock_1_1DualShockHIDOutputReport.html',1,'ISX::Plugins::DualShock']]],
+  ['dualshocksupport',['DualShockSupport',['../classISX_1_1Plugins_1_1DualShock_1_1DualShockSupport.html',1,'ISX::Plugins::DualShock']]]
 ];

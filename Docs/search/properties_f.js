@@ -6,5 +6,5 @@ var searchData=
   ['set',['set',['../classISX_1_1InputAction.html#af5e506b8aec9629a30abd5a266174221',1,'ISX::InputAction']]],
   ['sizeinbytes',['sizeInBytes',['../structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144',1,'ISX::LowLevel::InputEvent']]],
   ['spacekey',['spaceKey',['../classISX_1_1Keyboard.html#a2d5d9fb150b869c9b080ba81cb92e60f',1,'ISX::Keyboard']]],
-  ['subtype',['subType',['../classISX_1_1XInput_1_1XInputController.html#a3d84f2cb4af4914508736ecc77305abb',1,'ISX::XInput::XInputController']]]
+  ['subtype',['subType',['../classISX_1_1Plugins_1_1XInput_1_1XInputController.html#a8385a59ad4d2a800741783ec2f7eb405',1,'ISX::Plugins::XInput::XInputController']]]
 ];

@@ -3,7 +3,7 @@ using UnityEngine;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
 
-namespace ISX.DualShock
+namespace ISX.Plugins.DualShock
 {
     public class DualShockTests : InputTestFixture
     {

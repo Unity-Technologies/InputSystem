@@ -1,4 +1,4 @@
-namespace ISX.DualShock
+namespace ISX.Plugins.DualShock
 {
     /// <summary>
     /// Adds support for PS4 DualShock controllers.

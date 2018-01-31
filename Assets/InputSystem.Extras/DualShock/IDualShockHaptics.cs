@@ -1,7 +1,7 @@
 using ISX.Haptics;
 using UnityEngine;
 
-namespace ISX.DualShock
+namespace ISX.Plugins.DualShock
 {
     public interface IDualShockHaptics : IDualMotorRumble
     {

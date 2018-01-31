@@ -85,8 +85,6 @@ namespace ISX
             protected set { m_DisplayName = value; }
         }
 
-        ////TODO: include icon-related info from control template
-
         /// <summary>
         /// Full path all the way from the root.
         /// </summary>
@@ -344,6 +342,10 @@ namespace ISX
         internal virtual void AddProcessor(object first)
         {
         }
+
+        internal virtual void ClearProcessors()
+        {
+        }
     }
 
     /// <summary>
@@ -508,6 +510,11 @@ namespace ISX
                 throw new Exception(string.Format("Cannot add processor of type '{0}' to control of type '{1}'",
                         processor.GetType().Name, GetType().Name));
             m_ProcessorStack.Append(processorOfType);
+        }
+
+        internal override void ClearProcessors()
+        {
+            m_ProcessorStack = new InlinedArray<IInputProcessor<TValue>>();
         }
 
         internal IInputProcessor<TValue>[] processors

@@ -9,6 +9,8 @@ using UnityEngine;
 
 ////TODO: explore a way to add a toggle that switches between browsing merged and unmerged templates
 
+////FIXME: templates registered with an explicit device description don't show up in the products section
+
 namespace ISX.Editor
 {
     // Allows browsing through all templates currently registered with the input system.

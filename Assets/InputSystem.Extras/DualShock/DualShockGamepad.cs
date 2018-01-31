@@ -5,7 +5,7 @@ using UnityEngine;
 
 ////TODO: gyro, speaker, touchpad
 
-namespace ISX.DualShock
+namespace ISX.Plugins.DualShock
 {
     /// <summary>
     /// A PS4 DualShock controller.
