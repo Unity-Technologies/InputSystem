@@ -948,7 +948,7 @@ namespace ISX
             // No domain reloads in the player so we don't need to look for existing
             // instances.
             s_Manager = new InputManager();
-            s_Manager.Initialize();
+            s_Manager.Initialize(NativeInputRuntime.instance);
 
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
