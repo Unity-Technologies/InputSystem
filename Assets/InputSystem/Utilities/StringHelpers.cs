@@ -64,13 +64,16 @@ namespace ISX.Utilities
                 throw new ArgumentNullException("buffer");
 
             var length = string.IsNullOrEmpty(text) ? 0 : text.Length;
+            if (length > ushort.MaxValue)
+                throw new ArgumentException(string.Format("String exceeds max size of {0} characters", ushort.MaxValue), "text");
+
             var endOffset = offset + sizeof(char) * length + sizeof(int);
             if (endOffset > bufferSize)
                 return false;
 
             var ptr = ((byte*)buffer) + offset;
-            *((int*)ptr) = length;
-            ptr += sizeof(int);
+            *((ushort*)ptr) = (ushort)length;
+            ptr += sizeof(ushort);
 
             for (var i = 0; i < length; ++i, ptr += sizeof(char))
                 *((char*)ptr) = text[i];
@@ -79,7 +82,7 @@ namespace ISX.Utilities
             return true;
         }
 
-        public static unsafe string ReadStringFromBuffer(IntPtr buffer, int bufferSize)
+        public static string ReadStringFromBuffer(IntPtr buffer, int bufferSize)
         {
             uint offset = 0;
             return ReadStringFromBuffer(buffer, bufferSize, ref offset);
@@ -94,8 +97,8 @@ namespace ISX.Utilities
                 return null;
 
             var ptr = ((byte*)buffer) + offset;
-            var length = *((int*)ptr);
-            ptr += sizeof(int);
+            var length = *((ushort*)ptr);
+            ptr += sizeof(ushort);
 
             var endOffset = offset + sizeof(char) * length + sizeof(int);
             if (endOffset > bufferSize)
