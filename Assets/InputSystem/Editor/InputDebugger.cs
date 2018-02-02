@@ -1,7 +1,7 @@
+#if UNITY_EDITOR
 using ISX.LowLevel;
 using UnityEngine;
 
-#if UNITY_EDITOR
 namespace ISX.Editor
 {
     internal class InputDebugger : IInputDebugger

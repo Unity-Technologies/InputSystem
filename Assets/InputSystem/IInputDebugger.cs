@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using ISX.LowLevel;
 
-////TODO: make this work in remote players
 ////REVIEW: rename to IInputDiagnostics and "Diagnostics Mode"?
 
 namespace ISX

@@ -247,7 +247,14 @@ namespace ISX.Editor
                 return;
 
             m_Device = null;
-            Repaint();
+            if (change == InputDeviceChange.Removed)
+            {
+                Close();
+            }
+            else
+            {
+                Repaint();
+            }
         }
 
         private static class Styles
