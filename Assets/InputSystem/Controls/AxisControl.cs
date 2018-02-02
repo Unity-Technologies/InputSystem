@@ -69,11 +69,22 @@ namespace ISX.Controls
             // above have to be used to re-process the resulting float values.
             else if (format == InputStateBlock.kTypeShort)
             {
+                ////REVIEW: What's better here? This code reaches a clean -1 but doesn't reach a clean +1 as the range is [-32768..32767].
+                ////        Should we cut off at -32767? Or just live with the fact that 0.999 is as high as it gets?
+                value = *((short*)valuePtr) / 32768.0f;
+            }
+            else if (format == InputStateBlock.kTypeUShort)
+            {
                 value = *((ushort*)valuePtr) / 65535.0f;
             }
             else if (format == InputStateBlock.kTypeByte)
             {
                 value = *((byte*)valuePtr) / 255.0f;
+            }
+            else if (format == InputStateBlock.kTypeSByte)
+            {
+                ////REVIEW: Same problem here as with 'short'
+                value = *((byte*)valuePtr) / 128.0f;
             }
             else
             {

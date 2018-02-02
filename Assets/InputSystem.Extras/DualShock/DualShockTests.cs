@@ -1,7 +1,6 @@
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using NUnit.Framework;
 using UnityEngine;
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 
 namespace ISX.Plugins.DualShock
 {

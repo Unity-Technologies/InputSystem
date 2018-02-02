@@ -19,27 +19,32 @@ namespace ISX.LowLevel
         // Primitive state type codes.
         public static FourCC kTypeBit = new FourCC('B', 'I', 'T');
         public static FourCC kTypeInt = new FourCC('I', 'N', 'T');
+        public static FourCC kTypeUInt = new FourCC('U', 'I', 'N', 'T');
         public static FourCC kTypeShort = new FourCC('S', 'H', 'R', 'T');
+        public static FourCC kTypeUShort = new FourCC('U', 'S', 'H', 'T');
         public static FourCC kTypeByte = new FourCC('B', 'Y', 'T', 'E');
+        public static FourCC kTypeSByte = new FourCC('S', 'B', 'Y', 'T');
         public static FourCC kTypeFloat = new FourCC('F', 'L', 'T');
         public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
         public static FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
         public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '3');
+        public static FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
+
+        ////REVIEW: are these really useful?
         public static FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
         public static FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
         public static FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');
         public static FourCC kTypeVector3Byte = new FourCC('V', 'C', '3', 'B');
-        public static FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
 
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
             if (type == kTypeBit)
                 return 1;
-            if (type == kTypeInt)
+            if (type == kTypeInt || type == kTypeUInt)
                 return 4 * 8;
-            if (type == kTypeShort)
+            if (type == kTypeShort || type == kTypeUShort)
                 return 2 * 8;
-            if (type == kTypeByte)
+            if (type == kTypeByte || type == kTypeSByte)
                 return 1 * 8;
             if (type == kTypeFloat)
                 return 4 * 8;
@@ -66,10 +71,16 @@ namespace ISX.LowLevel
         {
             if (ReferenceEquals(type, typeof(int)))
                 return kTypeInt;
+            if (ReferenceEquals(type, typeof(uint)))
+                return kTypeUInt;
             if (ReferenceEquals(type, typeof(short)))
                 return kTypeShort;
+            if (ReferenceEquals(type, typeof(ushort)))
+                return kTypeUShort;
             if (ReferenceEquals(type, typeof(byte)))
                 return kTypeByte;
+            if (ReferenceEquals(type, typeof(sbyte)))
+                return kTypeSByte;
             if (ReferenceEquals(type, typeof(float)))
                 return kTypeFloat;
             if (ReferenceEquals(type, typeof(double)))

@@ -41,19 +41,19 @@ namespace ISX.Plugins.XInput
     { ""name"" : ""leftTrigger"", ""offset"" : 2, ""format"" : ""BYTE"" },
     { ""name"" : ""rightTrigger"", ""offset"" : 3, ""format"" : ""BYTE"" },
     { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"" },
-    { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""leftStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""leftStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""leftStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
+    { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
+    { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
+    { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
+    { ""name"" : ""leftStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
+    { ""name"" : ""leftStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
+    { ""name"" : ""leftStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"" },
-    { ""name"" : ""rightStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""rightStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""rightStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""rightStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""rightStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" },
-    { ""name"" : ""rightStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert,normalize,normalizeMin=-0.5,normalizeMax=0.5"" }
+    { ""name"" : ""rightStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
+    { ""name"" : ""rightStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
+    { ""name"" : ""rightStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
+    { ""name"" : ""rightStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
+    { ""name"" : ""rightStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
+    { ""name"" : ""rightStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" }
 ] }");
 #endif
 

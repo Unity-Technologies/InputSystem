@@ -1,5 +1,6 @@
 using System.Linq;
 using ISX;
+using ISX.Controls;
 using ISX.Utilities;
 using UnityEngine;
 
@@ -18,6 +19,7 @@ public struct MyDeviceState : IInputStateTypeInfo
 }
 
 [InputTemplate(stateType = typeof(MyDeviceState))]
+//[InputPlugin]
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {
     public ButtonControl button1 { get; private set; }
@@ -49,17 +51,12 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
                 InputSystem.QueueStateEvent(this, new MyDeviceState());
         }
     }
-}
 
-[ExecuteInEditMode]
-public class SimpleDevice : MonoBehaviour
-{
-    public void OnEnable()
+    public static void Initialize()
     {
         InputSystem.RegisterTemplate<MyDevice>();
 
-        var device = InputSystem.devices.FirstOrDefault(x => x is MyDevice);
-        if (device == null)
-            InputSystem.AddDevice("MyDevice");
+        if (!InputSystem.devices.Any(x => x is MyDevice))
+            InputSystem.AddDevice<MyDevice>();
     }
 }
