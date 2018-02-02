@@ -11,7 +11,7 @@ namespace ISX.Plugins.DualShock
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = 10)]
+    [StructLayout(LayoutKind.Explicit, Size = 32)]
     public struct DualShockHIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
@@ -63,6 +63,27 @@ namespace ISX.Plugins.DualShock
         [FieldOffset(8)] public byte leftTrigger;
         [InputControl(name = "rightTrigger", format = "BYTE")]
         [FieldOffset(9)] public byte rightTrigger;
+
+        ////FIXME: gyro and accelerometer aren't read out correctly yet
+        [InputControl(name = "acceleration", template = "Vector3", format = "VC3S")]
+        [InputControl(name = "acceleration/x", format = "USHT", offset = 0)]
+        [InputControl(name = "acceleration/y", format = "USHT", offset = 2)]
+        [InputControl(name = "acceleration/z", format = "USHT", offset = 4)]
+        [FieldOffset(14)] public short accelerationX;
+        [FieldOffset(16)] public short accelerationY;
+        [FieldOffset(18)] public short accelerationZ;
+
+        [InputControl(name = "gyro", template = "Vector3", format = "VC3S")]
+        [InputControl(name = "gyro/x", format = "USHT", offset = 0)]
+        [InputControl(name = "gyro/y", format = "USHT", offset = 2)]
+        [InputControl(name = "gyro/z", format = "USHT", offset = 4)]
+        [FieldOffset(20)] public short gyroX;
+        [FieldOffset(22)] public short gyroY;
+        [FieldOffset(24)] public short gyroZ;
+
+        [FieldOffset(30)] public byte batteryLevel;
+
+        ////TODO: touchpad
 
         public FourCC GetFormat()
         {
