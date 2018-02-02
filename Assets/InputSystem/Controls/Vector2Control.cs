@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ISX.Controls
 {
     /// <summary>
-    /// A floating-point 2D vector control composed of two <see cref="AxisControl">AxicControls</see>.
+    /// A floating-point 2D vector control composed of two <see cref="AxisControl">AxisControls</see>.
     /// </summary>
     /// <remarks>
     /// Normalization is not implied. The X and Y coordinates can be in any range or units.

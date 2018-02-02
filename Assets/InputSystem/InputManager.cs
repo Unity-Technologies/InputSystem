@@ -1684,7 +1684,8 @@ namespace ISX
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ProcessStateChangeMonitors(deviceIndex, statePtr,
-                                InputStateBuffers.GetFrontBuffer(deviceIndex), stateSize, stateOffset);
+                                new IntPtr(InputStateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + stateBlock.byteOffset),
+                                stateSize, stateOffset);
 
                         // Buffer flip.
                         var needToCopyFromBackBuffer = false;
