@@ -5,6 +5,7 @@ var searchData=
   ['semicolonkey',['semicolonKey',['../classISX_1_1Keyboard.html#aa825545f2c26a0d42be5ae68a2d41a56',1,'ISX::Keyboard']]],
   ['serial',['serial',['../structISX_1_1InputDeviceDescription.html#add69cc5ce6a01fa658aa0eb20483130f',1,'ISX::InputDeviceDescription']]],
   ['set',['set',['../classISX_1_1InputAction.html#af5e506b8aec9629a30abd5a266174221',1,'ISX::InputAction']]],
+  ['setlightbarcolor',['SetLightBarColor',['../interfaceISX_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html#a8e02c4ebeb9c8f7479f15cc9b6339aac',1,'ISX::Plugins::DualShock::IDualShockHaptics']]],
   ['setmotorspeeds',['SetMotorSpeeds',['../interfaceISX_1_1Haptics_1_1IDualMotorRumble.html#abea31e5af3ac71e77f7760cce0479f37',1,'ISX::Haptics::IDualMotorRumble']]],
   ['setup',['Setup',['../classISX_1_1InputTestFixture.html#ad8df73510739278c5c0e2023d43b4dae',1,'ISX::InputTestFixture']]],
   ['sizeinbytes',['sizeInBytes',['../structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144',1,'ISX::LowLevel::InputEvent']]],

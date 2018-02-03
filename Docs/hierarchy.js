@@ -23,6 +23,9 @@ var hierarchy =
           ] ],
           [ "ISX.Plugins.XInput.XInputController", "classISX_1_1Plugins_1_1XInput_1_1XInputController.html", null ]
         ] ],
+        [ "ISX.Plugins.DualShock.IDualShockHaptics", "interfaceISX_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html", [
+          [ "ISX.Plugins.DualShock.DualShockGamepad", "classISX_1_1Plugins_1_1DualShock_1_1DualShockGamepad.html", null ]
+        ] ],
         [ "ISX.Plugins.XInput.IXboxOneRumble", "interfaceISX_1_1Plugins_1_1XInput_1_1IXboxOneRumble.html", null ]
       ] ]
     ] ],

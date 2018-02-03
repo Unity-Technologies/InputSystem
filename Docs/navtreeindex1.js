@@ -1,5 +1,7 @@
 var NAVTREEINDEX1 =
 {
+"structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a17c98df9d7b1d58556112034d80861ea":[2,0,0,4,1,0,1,0],
+"structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a4fe65a5ea8577ee1e0526bdb792ef6f0":[2,0,0,4,1,0,1,4],
 "structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a766567f49c92c3d1bc9a8b0445fe8ec8":[2,0,0,4,1,0,1,3],
 "structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a9c8ec0729dcc2d0db17186a7e581da7a":[2,0,0,4,1,0,1,2],
 "structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#ad3c3f74991a49379c50d7978473b9240":[2,0,0,4,1,0,1,1],

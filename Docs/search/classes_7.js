@@ -1,6 +1,7 @@
 var searchData=
 [
   ['idualmotorrumble',['IDualMotorRumble',['../interfaceISX_1_1Haptics_1_1IDualMotorRumble.html',1,'ISX::Haptics']]],
+  ['idualshockhaptics',['IDualShockHaptics',['../interfaceISX_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html',1,'ISX::Plugins::DualShock']]],
   ['ihaptics',['IHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html',1,'ISX::Haptics']]],
   ['iinputpluginmanager',['IInputPluginManager',['../interfaceISX_1_1IInputPluginManager.html',1,'ISX']]],
   ['iinputprocessor',['IInputProcessor',['../interfaceISX_1_1IInputProcessor.html',1,'ISX']]],
