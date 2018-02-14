@@ -2,6 +2,7 @@ InitTestScene*
 *.preformat.bak*
 Assets/Plugins/
 Assets/Plugins.meta
+Builds/
 Library/
 Temp/
 *.sln
