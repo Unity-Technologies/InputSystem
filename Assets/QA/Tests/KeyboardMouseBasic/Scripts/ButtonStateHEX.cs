@@ -42,7 +42,7 @@ public class ButtonStateHex : MonoBehaviour
     // Every 4 hex digits are period delimited
     // This representation does NOT start with "0x"
     //
-    string _GetStringForKBButtonState(Keyboard keyboard)
+    string GetStringForKBButtonState(Keyboard keyboard)
     {
         int workingInt = 0;
         int offset = 0;
