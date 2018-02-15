@@ -24,7 +24,7 @@ public class ButtonStateHex : MonoBehaviour
     {
         if (Keyboard.current != null)
         {
-            m_OutputText.text = "0x" + _GetStringForKBButtonState(Keyboard.current);
+            m_OutputText.text = "0x" + GetStringForKBButtonState(Keyboard.current);
         }
     }
 
