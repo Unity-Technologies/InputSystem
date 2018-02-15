@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,13 +7,15 @@ using ISX;
 
 using UnityEngine.UI;
 
-public class KeyboardLastKey : MonoBehaviour {
-
+// Print the last key based from the Keyboard.onTextInput event
+//
+public class KeyboardLastKey : MonoBehaviour
+{
     [Header("If left empty, will try to auto populate with GetComponent<Text>()")]
     public Text reportText;
 
-    private Keyboard KB;
-    private char LastKeyPressed;
+    private Keyboard m_Keyboard;
+    private char m_LastKeyPressed;
 
     void OnEnable()
     {
@@ -27,15 +29,15 @@ public class KeyboardLastKey : MonoBehaviour {
 
     private void Update()
     {
-        if (KB != null && Keyboard.current != null && KB != Keyboard.current)
+        if (m_Keyboard != null && Keyboard.current != null && m_Keyboard != Keyboard.current)
         {
             ReleaseKB();
             SetCurrentKB();
         }
-        else if (KB == null){
+        else if (m_Keyboard == null)
+        {
             SetCurrentKB();
         }
-        //if (KB.)
     }
 
     private void OnDisable()
@@ -46,6 +48,7 @@ public class KeyboardLastKey : MonoBehaviour {
     void RecordKey(char c)
     {
         reportText.text = "0x" + ((int)c).ToString("X4") + " => ";
+
         if (char.IsControl(c) || ((int)c <= 32))
         {
             reportText.text += StringForNonPrintable(c);
@@ -54,26 +57,27 @@ public class KeyboardLastKey : MonoBehaviour {
         {
             reportText.text += c.ToString();
         }
-        //Debug.Log(((int)c));
-        //Debug.Log(((int)c).ToString("X"));
     }
 
     void SetCurrentKB()
     {
         if (Keyboard.current == null) { return; }
 
-        KB = Keyboard.current;
-        KB.onTextInput += new Action<char>(RecordKey);
+        m_Keyboard = Keyboard.current;
+        m_Keyboard.onTextInput += new Action<char>(RecordKey);
     }
 
     void ReleaseKB()
     {
-        if (KB != null)
+        if (m_Keyboard != null)
         {
-            KB.onTextInput -= new Action<char>(RecordKey);
+            m_Keyboard.onTextInput -= new Action<char>(RecordKey);
         }
     }
 
+    // Assumes ascii input
+    // TODO - expand to wider unicode if necessary
+    //
     String StringForNonPrintable(char ascii)
     {
         switch ((int)ascii)

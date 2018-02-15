@@ -1,50 +1,48 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
 using ISX;
 
-public class MouseOutputs : MonoBehaviour {
-    
-    public Image LeftMouseButtonIndicator;
-    public Image RightMouseButtonIndicator;
-    public Image MiddleMouseButtonIndicator;
-    public Text PositionX;
-    public Text PositionY;
-    public Text DeltaX;
-    public Text DeltaY;
-    public Text ScrollX;
-    public Text ScrollY;
+// Updates images and text based on the state of the most current mouse.
+//
+public class MouseOutputs : MonoBehaviour
+{
+    public Image leftMouseButtonIndicator;
+    public Image rightMouseButtonIndicator;
+    public Image middleMouseButtonIndicator;
+    public Text positionX;
+    public Text positionY;
+    public Text deltaX;
+    public Text deltaY;
+    public Text scrollX;
+    public Text scrollY;
 
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update()
+    {
         Mouse mouse = Mouse.current;
 
         if (mouse == null) { return; }
 
-        SetImageColor(RightMouseButtonIndicator, !(mouse.rightButton.value == 0));
-        SetImageColor(LeftMouseButtonIndicator, !(mouse.leftButton.value == 0));
-        SetImageColor(MiddleMouseButtonIndicator, !(mouse.middleButton.value == 0));
+        SetImageColor(rightMouseButtonIndicator, !(mouse.rightButton.value == 0));
+        SetImageColor(leftMouseButtonIndicator, !(mouse.leftButton.value == 0));
+        SetImageColor(middleMouseButtonIndicator, !(mouse.middleButton.value == 0));
 
-        PositionX.text = mouse.position.x.value.ToString();
-        PositionY.text = mouse.position.y.value.ToString();
+        positionX.text = mouse.position.x.value.ToString();
+        positionY.text = mouse.position.y.value.ToString();
 
-        DeltaX.text = mouse.delta.x.value.ToString();
-        DeltaY.text = mouse.delta.y.value.ToString();
+        deltaX.text = mouse.delta.x.value.ToString();
+        deltaY.text = mouse.delta.y.value.ToString();
 
-        ScrollX.text = mouse.scroll.x.value.ToString();
-        ScrollY.text = mouse.scroll.y.value.ToString();
+        scrollX.text = mouse.scroll.x.value.ToString();
+        scrollY.text = mouse.scroll.y.value.ToString();
     }
 
-    void SetImageColor(Image img, bool Condition)
+    void SetImageColor(Image img, bool condition)
     {
-        if (Condition)
+        if (condition)
         {
             img.color = Color.red;
         }

@@ -1,72 +1,54 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
 using ISX;
 
-
-[RequireComponent (typeof(Text))]
-public class ButtonStateHEX : MonoBehaviour {
-
-    [Header("This text box should have a monospace font")]
-    Text OutputText;
+// Print the last keyboard button state as a hex string.
+//
+[RequireComponent(typeof(Text))]
+public class ButtonStateHex : MonoBehaviour
+{
+    [Header("This text box should have a monospace font.")]
+    Text m_OutputText;
 
     private void Start()
     {
-        OutputText = GetComponent<Text>();
+        m_OutputText = GetComponent<Text>();
     }
 
     // Update is called once per frame
-    void Update() {
-        if (Keyboard.current != null) {
-            Keyboard KB = Keyboard.current;
-            OutputText.text = "0x" + _GetStringForKBButtonState(Keyboard.current);
-
-            /*int workingInt = 0;
-            int offset = 96;
-            //for (int i = 31; i >= 0; i--)
-            //{
-            //    workingInt |= _BoolHelper(KB[(Key)(offset + i)].value != 0f) << (i + offset);
-            //}
-            OutputText.text += workingInt.ToString("X8");
-            workingInt = 0;
-            offset = 64;
-            for (int i = 31; i >= 0; i--)
-            {
-                workingInt |= _BoolHelper(KB[(Key)(offset + i)].value != 0f) << (i + offset);
-            }
-            OutputText.text += workingInt.ToString("X8");
-            workingInt = 0;
-            offset = 32;
-            for (int i = 31; i >= 0; i--)
-            {
-                workingInt |= _BoolHelper(KB[(Key)(offset + i)].value != 0f) << (i + offset);
-            }
-            OutputText.text += workingInt.ToString("X8");
-            workingInt = 0;
-            offset = 0;
-            for (int i = 31; i >= 0; i--)
-            {
-                if (i == 0) { break; } // Don't check zero - it is invalid
-                workingInt |= _BoolHelper(KB[(Key)(offset + i)].value != 0f) << (i + offset);
-            }
-            OutputText.text += workingInt.ToString("X8");*/
-        }
-	}
-    
-    int _BoolHelper(bool BoolIn)
+    //
+    void Update()
     {
-        if (!BoolIn) { return 0; }
+        if (Keyboard.current != null)
+        {
+            m_OutputText.text = "0x" + _GetStringForKBButtonState(Keyboard.current);
+        }
+    }
+
+    // _BoolHelper
+    // true  => 1
+    // false => 0
+    //
+    int _BoolHelper(bool boolIn)
+    {
+        if (!boolIn) { return 0; }
         else { return 1; }
     }
 
-    string _GetStringForKBButtonState(Keyboard KB)
+    // Procedurally generate a hex representation of a keyboard state.
+    // Every 4 hex digits are period delimited
+    // This representation does NOT start with "0x"
+    //
+    string _GetStringForKBButtonState(Keyboard keyboard)
     {
         int workingInt = 0;
         int offset = 0;
         string retVal = "";
-        for (int j = ((int)(Key.Count))/16; j >= 0; j--)
+
+        for (int j = ((int)(Key.Count)) / 16; j >= 0; j--)
         {
             workingInt = 0;
             offset = j * 16;
@@ -74,7 +56,7 @@ public class ButtonStateHEX : MonoBehaviour {
             {
                 if (i + offset != 0 && i + offset < ((int)(Key.Count)))
                 {
-                    workingInt |= _BoolHelper(KB[(Key)(offset + i)].value != 0f) << (i);
+                    workingInt |= _BoolHelper(keyboard[(Key)(offset + i)].value != 0f) << (i);
                 }
             }
 
