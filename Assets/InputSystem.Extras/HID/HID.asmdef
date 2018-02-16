@@ -1,8 +1,10 @@
-﻿{
+{
     "name": "InputSystemHID",
     "references": [
         "InputSystem"
     ],
+    "optionalUnityReferences": [],
     "includePlatforms": [],
-    "excludePlatforms": []
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
 }
