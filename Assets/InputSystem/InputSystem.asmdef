@@ -1,4 +1,8 @@
 {
-	"name" : "InputSystem"
+    "name": "InputSystem",
+    "references": [],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
 }
-

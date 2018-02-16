@@ -251,7 +251,7 @@ namespace ISX.Plugins.DualShock
 //     byte leftStickY;           // #2
 //     byte rightStickX;          // #3
 //     byte rightStickY;          // #4
-//     byte dpad : 4;             // #5 bit #0 (0=up, 2=right, 4=down, 6=right)
+//     byte dpad : 4;             // #5 bit #0 (0=up, 2=right, 4=down, 6=left)
 //     byte squareButton : 1;     // #5 bit #4
 //     byte crossButton : 1;      // #5 bit #5
 //     byte circleButton : 1;     // #5 bit #6
