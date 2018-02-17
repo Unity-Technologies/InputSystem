@@ -10,7 +10,11 @@ Temp/
 *.sln*user
 *.csproj
 .idea/
-Packages/
 obj/
+.DS_Store
 
-
+Packages/com.unity.inputsystem/artifacts/**
+Packages/com.unity.inputsystem/build/**
+Packages/com.unity.inputsystem/Documentation/ApiDocs/**
+Packages/com.unity.inputsystem/.DS_Store
+Packages/com.unity.inputsystem/.npmrc

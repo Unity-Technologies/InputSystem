@@ -1,0 +1,12 @@
+{
+    "name": "Unity.InputSystem.DualShock",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}
