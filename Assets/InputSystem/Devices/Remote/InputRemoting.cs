@@ -425,6 +425,13 @@ namespace ISX
                 try
                 {
                     template = sender.m_LocalManager.TryLoadTemplate(new InternedString(templateName));
+                    if (template == null)
+                    {
+                        Debug.Log(string.Format(
+                                "Could not find template '{0}' meant to be sent through remote connection; this should not happen",
+                                templateName));
+                        return null;
+                    }
                 }
                 catch (Exception exception)
                 {

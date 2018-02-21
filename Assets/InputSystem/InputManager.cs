@@ -1482,6 +1482,7 @@ namespace ISX
         //       where in the Unity's application loop we got called from.
         internal unsafe void OnUpdate(InputUpdateType updateType, int eventCount, IntPtr eventData)
         {
+            ////TODO: switch from Profiler to CustomSampler API
 #if ENABLE_PROFILER
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
