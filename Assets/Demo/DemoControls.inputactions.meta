@@ -1,6 +1,12 @@
 fileFormatVersion: 2
 guid: e0f46a37bbc4f4bf8ad42ad37bb6d56a
 ScriptedImporter:
+  fileIDToRecycleName:
+    11400000: <root>
+    11400002: gameplay/fire
+    11400004: gameplay/move
+    11400006: gameplay/look
+  externalObjects: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 
