@@ -1,9 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SetPositionFromMouse : MonoBehaviour {
-
+public class SetPositionFromMouse : MonoBehaviour
+{
     RectTransform m_RectTransform;
 
     void Start()
@@ -12,9 +12,10 @@ public class SetPositionFromMouse : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update () {
+    void Update()
+    {
         m_RectTransform.position = Input.mousePosition; //new Vector3(Input.mousePosition.x / (float)Screen.width,
-                                     //          Input.mousePosition.y / (float)Screen.height,
-                                       //        0);
-	}
+        //          Input.mousePosition.y / (float)Screen.height,
+        //        0);
+    }
 }
