@@ -195,6 +195,12 @@ namespace ISX
             base.FinishSetup(setup);
         }
 
+        protected override void RefreshConfiguration()
+        {
+            base.RefreshConfiguration();
+            RefreshUserId();
+        }
+
         public virtual void PauseHaptics()
         {
             m_Rumble.PauseHaptics(this);

@@ -27,7 +27,7 @@ using ISX.Net35Compatibility;
 
 // These tests rely on the default template setup present in the code
 // of the system (e.g. they make assumptions about how Gamepad is set up).
-public class FunctionalTests : InputTestFixture
+class FunctionalTests : InputTestFixture
 {
     // The test categories give the feature area associated with the test:
     //
@@ -2358,6 +2358,42 @@ public class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanAssociateUserIdWithDevice()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        string userId = null;
+
+        testRuntime.SetDeviceCommandCallback(device.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryUserIdCommand.Type)
+                    {
+                        var queryUserIdPtr = (QueryUserIdCommand*)commandPtr;
+                        StringHelpers.WriteStringToBuffer(userId, new IntPtr(queryUserIdPtr->idBuffer),
+                            QueryUserIdCommand.kMaxIdLength);
+                        return 1;
+                    }
+                }
+
+                return InputDevice.kCommandResultFailure;
+            });
+
+        Assert.That(device.userId, Is.Null);
+
+        InputSystem.QueueConfigChangeEvent(device);
+        InputSystem.Update();
+        Assert.That(device.userId, Is.Null);
+
+        userId = "testId";
+        InputSystem.QueueConfigChangeEvent(device);
+        InputSystem.Update();
+        Assert.That(device.userId, Is.EqualTo(userId));
+    }
+
+    [Test]
+    [Category("Devices")]
     public unsafe void Devices_CanPauseResumeAndResetHapticsOnAllDevices()
     {
         InputSystem.AddDevice<Gamepad>();
@@ -3064,6 +3100,17 @@ public class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
+    }
+
+    // Should be possible to have a pointer to a state event and from it, return
+    // the list of controls that have non-default values.
+    // Probably makes sense to also be able to return from it a list of changed
+    // controls by comparing it to a device's current state.
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_CanFindActiveControlsFromStateEvent()
+    {
+        Assert.Fail();
     }
 
     [Test]

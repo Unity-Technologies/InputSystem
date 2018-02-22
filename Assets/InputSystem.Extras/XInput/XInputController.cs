@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 
+////TODO: expose user index
+
 ////TODO: set displayNames of the controls according to Xbox controller standards
 
 namespace ISX.Plugins.XInput

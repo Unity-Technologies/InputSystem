@@ -100,6 +100,9 @@ namespace ISX.Utilities
             var length = *((ushort*)ptr);
             ptr += sizeof(ushort);
 
+            if (length == 0)
+                return null;
+
             var endOffset = offset + sizeof(char) * length + sizeof(int);
             if (endOffset > bufferSize)
                 return null;
