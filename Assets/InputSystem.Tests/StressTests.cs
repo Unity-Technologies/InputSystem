@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using NUnit.Framework;
 
 public class StressTests
@@ -9,3 +10,4 @@ public class StressTests
         Assert.Fail();
     }
 }
+#endif // UNITY_EDITOR || DEVELOPMENT_BUILD

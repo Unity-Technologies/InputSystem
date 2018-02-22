@@ -1,4 +1,4 @@
-using System;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Reflection;
 using ISX;
 using NUnit.Framework;
@@ -48,3 +48,4 @@ public class PerformanceTests
 
     ////TODO: same test but with several actions listening on each gamepad
 }
+#endif // UNITY_EDITOR || DEVELOPMENT_BUILD

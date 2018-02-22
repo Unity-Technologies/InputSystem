@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using ISX.LowLevel;
 using NUnit.Framework;
 
@@ -12,3 +13,4 @@ public class UnitTests_InputEventQueue
         Assert.Fail();
     }
 }
+#endif // UNITY_EDITOR || DEVELOPMENT_BUILD

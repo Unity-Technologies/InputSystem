@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using ISX.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
@@ -185,9 +186,49 @@ namespace ISX
                     "constructor");
 
             var method = methodCall.Method;
-            var instance = methodCall.Object.NodeType == ExpressionType.Constant
-                ? ((ConstantExpression)methodCall.Object).Value
-                : Expression.Lambda(methodCall.Object).Compile().DynamicInvoke();
+
+            object instance = null;
+            if (methodCall.Object != null)
+            {
+                // NOTE: We can't compile expressions on the fly here to invoke them as that
+                //       won't work on AOT. So we have to perform a little bit of manual
+                //       interpretation of the expression tree.
+
+                switch (methodCall.Object.NodeType)
+                {
+                    // Method call on value referenced as constant.
+                    case ExpressionType.Constant:
+                        instance = ((ConstantExpression)methodCall.Object).Value;
+                        break;
+
+                    // Method call on variable being closed over (comes out as a field access).
+                    case ExpressionType.MemberAccess:
+                        // Get object that has the field.
+                        var expr = ((MemberExpression)methodCall.Object).Expression;
+                        var constantExpr = expr as ConstantExpression;
+                        if (constantExpr == null)
+                            throw new ArgumentException(
+                                string.Format(
+                                    "Body of template constructor must be a method call on a constant or variable expression (accesses member of {0} instead)",
+                                    expr.NodeType), "constructor");
+
+                        // Get field.
+                        var member = ((MemberExpression)methodCall.Object).Member;
+                        var field = member as FieldInfo;
+                        if (field == null)
+                            throw new ArgumentException(
+                                string.Format(
+                                    "Body of template constructor must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
+                                    member.GetType().Name, member.Name), "constructor");
+
+                        // Read value.
+                        instance = field.GetValue(constantExpr.Value);
+                        break;
+
+                    default:
+                        throw new ArgumentException();
+                }
+            }
 
             // Register.
             s_Manager.RegisterTemplateConstructor(method, instance, name, baseTemplate: baseTemplate,

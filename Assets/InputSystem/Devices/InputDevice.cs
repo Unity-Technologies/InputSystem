@@ -42,21 +42,28 @@ namespace ISX
         /// <summary>
         /// Metadata describing the device (product name etc.).
         /// </summary>
+        /// <remarks>
+        /// The description of a device is unchanging over its lifetime and does not
+        /// comprise data about a device's configuration (which is considered mutable).
+        /// </remarks>
         public InputDeviceDescription description
         {
             get { return m_Description; }
         }
 
-        ////REVIEW: turn this into an object of some kind? or maybe use long? or string?
+        ////REVIEW: turn this into an object of some kind?
         ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
-        ////TODO: this needs to become part of the device's configuration
-        // Systems that support multiple concurrent player inputs on the same system, the available
-        // player inputs are usually numbered. For example, on a console the gamepads slots on the system
-        // will be numbered and associated with gamepads. This number corresponds to the system assigned
-        // player index for the device.
-        public int playerId
+        /// <summary>
+        /// The user currently associated with the input device or null if no user is.
+        /// </summary>
+        public string userId
         {
-            get { return m_PlayerId; }
+            get
+            {
+                RefreshConfigurationIfNeeded();
+                return m_UserId;
+            }
+            protected set { m_UserId = value; }
         }
 
         /// <summary>
@@ -176,6 +183,14 @@ namespace ISX
             return InputRuntime.s_Runtime.DeviceCommand(id, ref command);
         }
 
+        protected void RefreshUserId()
+        {
+            m_UserId = null;
+            var command = QueryUserIdCommand.Create();
+            if (OnDeviceCommand(ref command) > 0)
+                m_UserId = command.ReadId();
+        }
+
         [Flags]
         internal enum Flags
         {
@@ -187,7 +202,7 @@ namespace ISX
 
         internal Flags m_Flags;
         internal int m_Id;
-        internal int m_PlayerId;////TODO: move to desc
+        internal string m_UserId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;
 

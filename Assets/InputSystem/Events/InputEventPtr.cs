@@ -125,6 +125,7 @@ namespace ISX.LowLevel
         {
             if (!valid)
                 return "null";
+
             // il2cpp has a bug which makes builds fail if this is written as 'return m_EventPtr->ToString()'.
             // Gives an error about "trying to constrain an invalid type".
             // Writing it as a two-step operation like here makes it build cleanly.
