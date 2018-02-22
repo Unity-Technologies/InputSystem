@@ -1,11 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Text))]
-public class ShowIMUData : MonoBehaviour {
-    
+public class ShowIMUData : MonoBehaviour
+{
     public enum IMUDisplaySelect
     {
         Acceleration,
@@ -17,10 +17,11 @@ public class ShowIMUData : MonoBehaviour {
 
     Text m_Text;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         m_Text = GetComponent<Text>();
-        
+
         switch (displaySelect)
         {
             case IMUDisplaySelect.Acceleration:
@@ -37,10 +38,11 @@ public class ShowIMUData : MonoBehaviour {
                 Debug.Log("Error - not a valid IMUDisplaySelect");
                 break;
         }
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
         Vector3 dataToDisplay;
         switch (displaySelect)
         {
@@ -60,7 +62,7 @@ public class ShowIMUData : MonoBehaviour {
         }
 
         m_Text.text = dataToDisplay.x.ToString("+000.000; -000.000; +000.000") + ", " +
-                      dataToDisplay.y.ToString("+000.000; -000.000; +000.000") + ", " +
-                      dataToDisplay.z.ToString("+000.000; -000.000; +000.000");
+            dataToDisplay.y.ToString("+000.000; -000.000; +000.000") + ", " +
+            dataToDisplay.z.ToString("+000.000; -000.000; +000.000");
     }
 }

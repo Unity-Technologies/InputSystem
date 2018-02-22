@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,8 +6,8 @@ using UnityEngine.UI;
 using ISX.Controls;
 using ISX.Plugins.XInput;
 
-public class GamepadButtonState : MonoBehaviour {
-
+public class GamepadButtonState : MonoBehaviour
+{
     public ButtonControl buttonToTrack;
 
     [Header("If left empty, will try to auto populate with GetComponent<Image>()")]
@@ -25,9 +25,10 @@ public class GamepadButtonState : MonoBehaviour {
 
         if (stateImage == null) { stateImage = GetComponent<Image>(); }
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
         m_CurrentController = (XInputController)XInputController.current;
 
         if (m_CurrentController == null) { return; }
@@ -40,5 +41,5 @@ public class GamepadButtonState : MonoBehaviour {
         {
             stateImage.color = m_WhiteTransparent;
         }
-	}
+    }
 }
