@@ -3,9 +3,7 @@
     "references": [
         "Unity.InputSystem"
     ],
-    "references": [
-        "Unity.InputSystem"
-    ],
+    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true

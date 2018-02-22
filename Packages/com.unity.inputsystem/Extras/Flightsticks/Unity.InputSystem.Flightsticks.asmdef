@@ -1,5 +1,5 @@
 {
-    "name": "Unity.InputSystem.Flightsticks",
+    "name": "Unity.InputSystem.Flighsticks",
     "references": [
         "Unity.InputSystem"
     ],
