@@ -1,12 +1,12 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 using ISX;
 using ISX.Controls;
 
-public class TouchscreenTouchVisualizer : MonoBehaviour {
-
+public class TouchscreenTouchVisualizer : MonoBehaviour
+{
     [Tooltip("Prefab to use for the average position")]
     public GameObject averagePositionIndicatorPrefab;
     [Tooltip("Prefab to use for each individual touch")]
@@ -16,18 +16,20 @@ public class TouchscreenTouchVisualizer : MonoBehaviour {
     private List<GameObject> m_Touches;
     private Camera m_MainCamera;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         m_Touches = new List<GameObject>();
 
         m_AveragePositionMarker = Instantiate<GameObject>(averagePositionIndicatorPrefab);
         m_AveragePositionMarker.SetActive(false);
 
         m_MainCamera = Camera.main;
-	}
-	
-	// Update is called once per frame
-	void Update () {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
         Touchscreen touchscreen = ISX.Touchscreen.current;
         Vector3 averagePosition = Vector2.zero;
         int numActiveTouches = 0;
@@ -46,7 +48,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour {
                 numActiveTouches++;
             }
         }
-        
+
         if (numActiveTouches == 0)
         {
             m_AveragePositionMarker.SetActive(false);
@@ -70,11 +72,11 @@ public class TouchscreenTouchVisualizer : MonoBehaviour {
             }
 
             m_Touches[i].transform.position = m_MainCamera.ScreenToWorldPoint(
-                new Vector3(touchscreen.touches[i].position.value.x,
-                    touchscreen.touches[i].position.value.y,
-                    m_MainCamera.nearClipPlane));
+                    new Vector3(touchscreen.touches[i].position.value.x,
+                        touchscreen.touches[i].position.value.y,
+                        m_MainCamera.nearClipPlane));
 
-            
+
             // Accumulate average position.  Division happens later
             averagePosition += m_Touches[i].transform.position;
         }
@@ -85,7 +87,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour {
         m_AveragePositionMarker.transform.position = averagePosition;
 
         DeleteExtraTouches(numActiveTouches);
-	}
+    }
 
     void DeleteExtraTouches(int numActiveTouches)
     {
