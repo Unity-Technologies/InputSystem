@@ -239,7 +239,7 @@ GameObject:
   - component: {fileID: 79683868}
   - component: {fileID: 79683867}
   m_Layer: 5
-  m_Name: IMU
+  m_Name: InertialInformation
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1103,7 +1103,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: IMU
+  m_Text: Inertial Motion Information
 --- !u!222 &488319525
 CanvasRenderer:
   m_ObjectHideFlags: 0

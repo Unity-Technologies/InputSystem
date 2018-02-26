@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Text))]
-public class ShowIMUData : MonoBehaviour
+public class ShowInertialData : MonoBehaviour
 {
     public enum IMUDisplaySelect
     {
