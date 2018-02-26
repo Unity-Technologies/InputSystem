@@ -1,0 +1,10 @@
+{
+    "name": "Unity.InputSystem.VR",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}
