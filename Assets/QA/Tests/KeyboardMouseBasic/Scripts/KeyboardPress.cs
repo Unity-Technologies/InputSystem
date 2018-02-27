@@ -17,7 +17,6 @@ public class KeyboardPress : MonoBehaviour
     public Image reportImage;
 
     private Keyboard m_Keyboard;
-    private char m_LastKeyPressed;
 
     private Color m_RedTransparent;
     private Color m_WhiteTransparent;
