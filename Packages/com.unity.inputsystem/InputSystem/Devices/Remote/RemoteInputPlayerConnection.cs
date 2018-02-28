@@ -3,7 +3,7 @@ using ISX.Utilities;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
 

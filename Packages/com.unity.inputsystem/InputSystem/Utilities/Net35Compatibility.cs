@@ -1,4 +1,4 @@
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -61,4 +61,4 @@ namespace ISX.Net35Compatibility
         }
     }
 }
-#endif // !NET_4_0
+#endif // !(NET_4_0 || NET_4_6)
