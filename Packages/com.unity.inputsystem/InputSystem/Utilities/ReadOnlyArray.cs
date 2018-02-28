@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
 

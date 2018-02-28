@@ -6,7 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using ISX.LowLevel;
 using ISX.Utilities;
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
 

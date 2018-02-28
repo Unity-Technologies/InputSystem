@@ -7,7 +7,7 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
 
