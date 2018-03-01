@@ -347,7 +347,7 @@ namespace ISX.PS4DualShock
     {
         public static FourCC Type { get { return new FourCC('P', 'S', 'G', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 9;
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
         [Flags]
         public enum Flags
