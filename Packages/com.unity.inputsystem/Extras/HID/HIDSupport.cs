@@ -20,7 +20,7 @@ namespace ISX.Plugins.HID
     /// controls into an InputDevice. It will make a best effort to figure
     /// out a suitable class for the device and will use the HID elements
     /// present in the HID report descriptor to populate the device.
-    /// 
+    ///
     /// If there is an existing product-specific template for a HID, it will
     /// take precedence and HIDSupport will leave the device alone.
     /// </remarks>
