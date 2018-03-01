@@ -19,12 +19,12 @@ namespace ISX.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public uint stateOffset;
         [FieldOffset(InputEvent.kBaseEventSize + 8)] public fixed byte stateData[1]; // Variable-sized.
 
-        public uint stateSizeInBytes
+        public uint deltaStateSizeInBytes
         {
-            get { return (uint)(baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8)); }
+            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8); }
         }
 
-        public IntPtr state
+        public IntPtr deltaState
         {
             get
             {
@@ -38,6 +38,17 @@ namespace ISX.LowLevel
         public FourCC GetTypeStatic()
         {
             return Type;
+        }
+
+        public static DeltaStateEvent* From(InputEventPtr ptr)
+        {
+            if (!ptr.valid)
+                throw new ArgumentNullException("ptr");
+            if (!ptr.IsA<DeltaStateEvent>())
+                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into DeltaStateEvent",
+                        ptr.type));
+
+            return (DeltaStateEvent*)ptr.data;
         }
     }
 }
