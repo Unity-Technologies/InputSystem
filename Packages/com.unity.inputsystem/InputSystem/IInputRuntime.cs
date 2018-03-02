@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 
 ////TODO: add API to send events in bulk rather than one by one
 
@@ -7,7 +8,7 @@ namespace ISX.LowLevel
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.
     /// </summary>
-    public interface IInputRuntime
+    public unsafe interface IInputRuntime
     {
         /// <summary>
         /// Allocate a new unique device ID.
@@ -43,6 +44,9 @@ namespace ISX.LowLevel
         /// </remarks>
         void QueueEvent(IntPtr ptr);
 
+        //NOTE: This method takes an IntPtr instead of a generic ref type parameter (like InputDevice.OnDeviceCommand)
+        //      to avoid issues with AOT where generic interface methods can lead to problems. Il2cpp can handle it here
+        //      just fine but Mono will run into issues.
         /// <summary>
         /// Perform an I/O transaction directly against a specific device.
         /// </summary>
@@ -51,12 +55,11 @@ namespace ISX.LowLevel
         /// a device and the user of a device. The interface does not dictate a set of supported
         /// IOCTL control codes.
         /// </remarks>
-        /// <param name="deviceId"></param>
-        /// <param name="code"></param>
-        /// <param name="buffer"></param>
-        /// <param name="size"></param>
-        /// <returns></returns>
-        long DeviceCommand<TCommand>(int deviceId, ref TCommand command) where TCommand : struct, IInputDeviceCommandInfo;
+        /// <param name="deviceId">Device to send the command to.</param>
+        /// <param name="commandPtr">Pointer to the command buffer.</param>
+        /// <returns>Negative value on failure, >=0 on success. Meaning of return values depends on the
+        /// command sent to the device.</returns>
+        long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr);
 
         /// <summary>
         /// Set delegate to be called on input updates.
@@ -93,5 +96,14 @@ namespace ISX.LowLevel
     internal static class InputRuntime
     {
         public static IInputRuntime s_Runtime;
+    }
+
+    public static class InputRuntimeExtensions
+    {
+        public static unsafe long DeviceCommand<TCommand>(this IInputRuntime runtime, int deviceId, ref TCommand command)
+            where TCommand : struct, IInputDeviceCommandInfo
+        {
+            return runtime.DeviceCommand(deviceId, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+        }
     }
 }

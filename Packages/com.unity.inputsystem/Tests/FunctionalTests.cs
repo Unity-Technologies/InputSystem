@@ -21,7 +21,7 @@ using ISX.Editor;
 using UnityEditor;
 #endif
 
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
 
