@@ -1,4 +1,3 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
 using System.Collections.Generic;
 using ISX.LowLevel;
@@ -147,4 +146,3 @@ namespace ISX
         private object m_Lock = new object();
     }
 }
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
