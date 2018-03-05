@@ -298,7 +298,15 @@ namespace ISX.Android
         [InputControl(name = "rightShoulder", template = "Button", bit = (uint)KeyCode.BUTTON_R1)]
         public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
 
-        [InputControl(name = "leftTrigger", template = "Button", format = "FLT", usage = "SecondaryTrigger", bit = (uint)Axis.LTRIGGER)]
+        [InputControl(name = "leftTrigger", template = "Button", format = "FLT", bit = (uint)Axis.LTRIGGER)]
+        [InputControl(name = "rightTrigger", template = "Button", format = "FLT", bit = (uint)Axis.RTRIGGER)]
+        [InputControl(name = "leftStick", template = "Stick", format = "VC2F")]
+        [InputControl(name = "leftStick/x", format = "FLT", bit = (uint)Axis.X)]
+        [InputControl(name = "leftStick/y", format = "FLT", bit = (uint)Axis.Y)]
+        [InputControl(name = "rightStick", template = "Stick", format = "VC2F")]
+        [InputControl(name = "rightStick/x", format = "FLT", bit = (uint)Axis.Z)]
+        [InputControl(name = "rightStick/y", format = "FLT", bit = (uint)Axis.RZ)]
+        // TODO DPAD
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
