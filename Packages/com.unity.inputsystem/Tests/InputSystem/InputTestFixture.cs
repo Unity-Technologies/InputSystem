@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using NUnit.Framework;
 
 ////TODO: when running tests in players, make sure that remoting is turned off
@@ -106,4 +105,3 @@ namespace ISX
         }
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

@@ -1652,8 +1652,8 @@ namespace ISX
                         {
                             var deltaEventPtr = (DeltaStateEvent*)currentEventPtr;
                             stateFormat = deltaEventPtr->stateFormat;
-                            stateSize = deltaEventPtr->stateSizeInBytes;
-                            statePtr = deltaEventPtr->state;
+                            stateSize = deltaEventPtr->deltaStateSizeInBytes;
+                            statePtr = deltaEventPtr->deltaState;
                             stateOffset = deltaEventPtr->stateOffset;
 
                             // Ignore extra state at end of event.
