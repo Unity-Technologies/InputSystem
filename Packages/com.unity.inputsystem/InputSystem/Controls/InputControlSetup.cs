@@ -270,17 +270,6 @@ namespace ISX
 
                 if (template.m_UpdateBeforeRender == true)
                     m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
-
-                // Devices get their names from the topmost base templates.
-                if (name.IsEmpty())
-                {
-                    name = InputTemplate.s_Templates.GetRootTemplateName(template.name);
-
-                    // If there's a namespace in the template name, snip it out.
-                    var indexOfLastColon = name.ToString().LastIndexOf(':');
-                    if (indexOfLastColon != -1)
-                        name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
-                }
             }
             else if (parent == null)
             {
@@ -292,9 +281,16 @@ namespace ISX
                         template.name));
             }
 
-            // Set common properties.
+            // Name defaults to name of template.
             if (name.IsEmpty())
+            {
                 name = template.name;
+
+                // If there's a namespace in the template name, snip it out.
+                var indexOfLastColon = name.ToString().LastIndexOf(':');
+                if (indexOfLastColon != -1)
+                    name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
+            }
 
             control.m_Name = name;
             control.m_DisplayNameFromTemplate = template.m_DisplayName;

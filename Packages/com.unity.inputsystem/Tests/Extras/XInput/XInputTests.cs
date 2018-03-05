@@ -1,10 +1,9 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using ISX;
 using ISX.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
 
-public class XInputTests : InputTestFixture
+class XInputTests : InputTestFixture
 {
     public override void Setup()
     {
@@ -16,12 +15,12 @@ public class XInputTests : InputTestFixture
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "Gamepad")]
+    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XInputControllerOSX")]
 #endif
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-    [TestCase(null, null, "XInput", "Gamepad")]
+    [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
-    public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string baseTemplate)
+    public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string templateName)
     {
         var description = new InputDeviceDescription
         {
@@ -33,8 +32,8 @@ public class XInputTests : InputTestFixture
         InputDevice device = null;
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
 
-        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", baseTemplate)), Has.Exactly(1).SameAs(device));
-        Assert.That(device.name, Is.EqualTo(baseTemplate));
+        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", templateName)), Has.Exactly(1).SameAs(device));
+        Assert.That(device.name, Is.EqualTo(templateName));
         Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));
@@ -62,4 +61,3 @@ public class XInputTests : InputTestFixture
 
 #endif
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

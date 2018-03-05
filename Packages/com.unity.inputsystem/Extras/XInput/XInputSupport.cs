@@ -81,7 +81,7 @@ namespace ISX.Plugins.XInput
             ////      state we compare
             ////TODO: rumble and LED output
             InputSystem.RegisterTemplate(@"{
-""name"" : ""XboxGamepadOSX"",
+""name"" : ""XInputControllerOSX"",
 ""extend"" : ""XInputController"",
 ""format"" : ""HID"",
 ""device"" : { ""interface"" : ""HID"", ""product"" : ""Xbox.*Controller"" },

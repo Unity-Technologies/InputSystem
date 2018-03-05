@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -1512,23 +1511,6 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Devices")]
-    public void Devices_DevicesGetNameFromBaseTemplate()
-    {
-        var json = @"
-            { ""name"" : ""MyDevice"",
-              ""extend"" : ""Gamepad"" }
-        ";
-
-        InputSystem.RegisterTemplate(json);
-
-        var setup = new InputControlSetup("MyDevice");
-        var device = setup.Finish();
-
-        Assert.That(device.name, Is.EqualTo("Gamepad"));
-    }
-
-    [Test]
     [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
@@ -2171,6 +2153,15 @@ class FunctionalTests : InputTestFixture
         var gamepad2 = InputSystem.AddDevice("Gamepad");
 
         Assert.That(gamepad1.id, Is.Not.EqualTo(gamepad2.id));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_NameDefaultsToNameOfTemplate()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(device.name, Is.EqualTo("Mouse"));
     }
 
     [Test]
@@ -5726,4 +5717,3 @@ class FunctionalTests : InputTestFixture
         Assert.Fail();
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR
