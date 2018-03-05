@@ -285,9 +285,6 @@ namespace ISX.Android
         // FourCC type codes are used identify the memory layouts of state blocks.
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
-
-        // TODO?
-        //[InputControl(name = "dpad", template = "Dpad", usage = "Hatswitch")]
         [InputControl(name = "buttonSouth", template = "Button", bit = (uint)KeyCode.BUTTON_A, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
         [InputControl(name = "buttonWest", template = "Button", bit = (uint)KeyCode.BUTTON_X, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
         [InputControl(name = "buttonNorth", template = "Button", bit = (uint)KeyCode.BUTTON_Y, aliases = new[] { "y", "triangle" })]
@@ -303,10 +300,17 @@ namespace ISX.Android
         [InputControl(name = "leftStick", template = "Stick", format = "VC2F")]
         [InputControl(name = "leftStick/x", format = "FLT", bit = (uint)Axis.X)]
         [InputControl(name = "leftStick/y", format = "FLT", bit = (uint)Axis.Y)]
-        [InputControl(name = "rightStick", template = "Stick", format = "VC2F")]
+        [InputControl(name = "rightStick", template = "Stick", format = "VC2F")] // NOT working, for some reason returns values of left stick
         [InputControl(name = "rightStick/x", format = "FLT", bit = (uint)Axis.Z)]
         [InputControl(name = "rightStick/y", format = "FLT", bit = (uint)Axis.RZ)]
         // TODO DPAD
+        /*
+        [InputControl(name = "dpad", template = "Dpad")]
+        [InputControl(name = "dpad/up", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_X)]
+        [InputControl(name = "dpad/down", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_X)]
+        [InputControl(name = "dpad/left", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_Y)]
+        [InputControl(name = "dpad/right", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_Y)]
+        */
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
