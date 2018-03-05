@@ -5,7 +5,7 @@
         "Unity.InputSystem.Tests",
         "Unity.InputSystem.XInput"
     ],
-    "optionalUnityReferences": [],
+    "optionalUnityReferences": [ "TestAssemblies" ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true
