@@ -348,7 +348,7 @@ namespace ISX
                     // walk up the referenced control's parent chain and add offsets until
                     // we are at the same level that we are at.
                     for (var parentInChain = referencedControl.parent; parentInChain != control; parentInChain = parentInChain.parent)
-                        child.m_StateBlock.byteOffset = parentInChain.m_StateBlock.byteOffset;
+                        child.m_StateBlock.byteOffset += parentInChain.m_StateBlock.byteOffset;
                 }
             }
 
