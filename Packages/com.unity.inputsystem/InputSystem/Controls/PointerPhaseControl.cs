@@ -18,8 +18,8 @@ namespace ISX.Controls
 
         protected override unsafe PointerPhase ReadRawValueFrom(IntPtr statePtr)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            return (PointerPhase)(*(int*)valuePtr);
+            var intValue = stateBlock.ReadInt(statePtr);
+            return (PointerPhase)intValue;
         }
 
         protected override unsafe void WriteRawValueInto(IntPtr statePtr, PointerPhase value)

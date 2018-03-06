@@ -1,7 +1,6 @@
 using System;
 using ISX.LowLevel;
 using ISX.Processors;
-using ISX.Utilities;
 using UnityEngine;
 
 namespace ISX.Controls
@@ -47,83 +46,15 @@ namespace ISX.Controls
         // the state format of the control and performs conversions.
         // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
         //       or bitfield type.
-        protected override unsafe float ReadRawValueFrom(IntPtr statePtr)
+        protected override float ReadRawValueFrom(IntPtr statePtr)
         {
-            float value;
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-
-            var format = m_StateBlock.format;
-            if (format == InputStateBlock.kTypeFloat)
-            {
-                value = *(float*)valuePtr;
-            }
-            else if (format == InputStateBlock.kTypeBit)
-            {
-                if (m_StateBlock.sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
-
-                value = MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ? 1.0f : 0.0f;
-            }
-            // If a control with an integer-based representation does not use the full range
-            // of its integer size (e.g. only goes from [0..128]), processors or the parameters
-            // above have to be used to re-process the resulting float values.
-            else if (format == InputStateBlock.kTypeShort)
-            {
-                ////REVIEW: What's better here? This code reaches a clean -1 but doesn't reach a clean +1 as the range is [-32768..32767].
-                ////        Should we cut off at -32767? Or just live with the fact that 0.999 is as high as it gets?
-                value = *((short*)valuePtr) / 32768.0f;
-            }
-            else if (format == InputStateBlock.kTypeUShort)
-            {
-                value = *((ushort*)valuePtr) / 65535.0f;
-            }
-            else if (format == InputStateBlock.kTypeByte)
-            {
-                value = *((byte*)valuePtr) / 255.0f;
-            }
-            else if (format == InputStateBlock.kTypeSByte)
-            {
-                ////REVIEW: Same problem here as with 'short'
-                value = *((byte*)valuePtr) / 128.0f;
-            }
-            else
-            {
-                throw new Exception(string.Format("State format '{0}' is not supported as state for {1}",
-                        m_StateBlock.format, GetType().Name));
-            }
-
+            var value = stateBlock.ReadFloat(statePtr);
             return Preprocess(value);
         }
 
-        protected override unsafe void WriteRawValueInto(IntPtr statePtr, float value)
+        protected override void WriteRawValueInto(IntPtr statePtr, float value)
         {
-            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-
-            var format = m_StateBlock.format;
-            if (format == InputStateBlock.kTypeFloat)
-            {
-                *(float*)valuePtr = value;
-            }
-            else if (format == InputStateBlock.kTypeBit)
-            {
-                if (m_StateBlock.sizeInBits != 1)
-                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
-
-                MemoryHelpers.WriteSingleBit(valuePtr, m_StateBlock.bitOffset, value >= 0.5f);
-            }
-            else if (format == InputStateBlock.kTypeShort)
-            {
-                *(short*)valuePtr = (short)(value * 65535.0f);
-            }
-            else if (format == InputStateBlock.kTypeByte)
-            {
-                *(byte*)valuePtr = (byte)(value * 255.0f);
-            }
-            else
-            {
-                throw new Exception(string.Format("State format '{0}' is not supported as state for {1}",
-                        m_StateBlock.format, GetType().Name));
-            }
+            stateBlock.WriteFloat(statePtr, value);
         }
     }
 }

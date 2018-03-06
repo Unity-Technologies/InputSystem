@@ -37,7 +37,7 @@ namespace ISX
         [InputControl(name = "delta", template = "Vector2", usage = "Secondary2DMotion", useStateFrom = "touch0/delta")]
         [InputControl(name = "pressure", template = "Axis", usage = "Pressure", useStateFrom = "touch0/pressure")]
         [InputControl(name = "radius", template = "Vector2", usage = "Radius", useStateFrom = "touch0/radius")]
-        [InputControl(name = "phase", template = "Digital", useStateFrom = "touch0/phase")]
+        [InputControl(name = "phase", template = "PointerPhase", useStateFrom = "touch0/phase")]
         [InputControl(name = "displayIndex", template = "Digital", useStateFrom = "touch0/displayIndex")]
         [InputControl(name = "twist", template = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", template = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
@@ -110,7 +110,7 @@ namespace ISX
         /// Array of currently active touches.
         /// </summary>
         /// <remarks>
-        /// This array only contains touches that are in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>,
+        /// This array only contains touches that are in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
         /// or <see cref="PointerPhase.Moved"/>.
         /// </remarks>
         public ReadOnlyArray<TouchControl> touches

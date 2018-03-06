@@ -58,7 +58,7 @@ namespace ISX
         [InputControl(template = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", template = "Digital", sizeInBits = 4)]
+        [InputControl(name = "phase", template = "PointerPhase", sizeInBits = 4)]
         [InputControl(name = "button", template = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
@@ -106,7 +106,7 @@ namespace ISX
         public AxisControl twist { get; private set; }
         public IntegerControl pointerId { get; private set; }
         ////TODO: find a way which gives values as PointerPhase instead of as int
-        public IntegerControl phase { get; private set; }
+        public PointerPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
         public ButtonControl button { get; private set; }
 
@@ -131,7 +131,7 @@ namespace ISX
             pressure = setup.GetControl<AxisControl>(this, "pressure");
             twist = setup.GetControl<AxisControl>(this, "twist");
             pointerId = setup.GetControl<IntegerControl>(this, "pointerId");
-            phase = setup.GetControl<IntegerControl>(this, "phase");
+            phase = setup.GetControl<PointerPhaseControl>(this, "phase");
             displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
             button = setup.GetControl<ButtonControl>(this, "button");
             base.FinishSetup(setup);

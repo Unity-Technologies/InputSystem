@@ -2762,9 +2762,22 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_TouchscreenCanFunctionAsPointer()
+    public void Devices_TouchscreenCanFunctionAsPointer()
     {
-        Assert.Fail();
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(0.123f, 0.456f)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.position.x.value, Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.position.y.value, Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.phase.value, Is.EqualTo(PointerPhase.Began));
     }
 
     [Test]

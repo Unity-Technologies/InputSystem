@@ -46,7 +46,7 @@ namespace ISX
         // "Park" unused controls.
         [InputControl(name = "radius", template = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "pointerId", template = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", template = "Digital", offset = InputStateBlock.kInvalidOffset)] ////TODO: this should be used
+        [InputControl(name = "phase", template = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////TODO: this should be used
         [FieldOffset(32)]
         public ushort buttons;
 
