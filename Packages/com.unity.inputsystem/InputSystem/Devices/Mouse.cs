@@ -4,7 +4,7 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Combine a single pointer with buttons and a scroll wheel.
@@ -64,7 +64,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     /// <summary>
     /// A mouse input device.
     /// </summary>

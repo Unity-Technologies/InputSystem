@@ -5,7 +5,7 @@ using UnityEngine;
 
 ////TODO: we need editor window space conversion on the pen, too
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Default state layout for pen devices.
@@ -67,7 +67,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     /// <summary>
     /// A pen/stylus input device.
     /// </summary>

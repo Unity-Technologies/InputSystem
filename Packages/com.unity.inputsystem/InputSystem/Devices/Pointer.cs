@@ -1,24 +1,11 @@
 using System.Runtime.InteropServices;
 using ISX.Controls;
+using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
-    ////REVIEW: does it really make sense to have this at the pointer level
-    public enum PointerPhase
-    {
-        /// <summary>
-        /// No activity has been registered on the pointer yet.
-        /// </summary>
-        None,
-
-        Began,
-        Moved,
-        Ended,
-        Cancelled
-    }
-
     /// <summary>
     /// Default state structure for pointer devices.
     /// </summary>
@@ -69,6 +56,23 @@ namespace ISX
         {
             return kFormat;
         }
+    }
+}
+
+namespace ISX
+{
+    ////REVIEW: does it really make sense to have this at the pointer level
+    public enum PointerPhase
+    {
+        /// <summary>
+        /// No activity has been registered on the pointer yet.
+        /// </summary>
+        None,
+
+        Began,
+        Moved,
+        Ended,
+        Cancelled
     }
 
     /// <summary>

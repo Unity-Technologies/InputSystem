@@ -2,13 +2,14 @@ using System;
 using System.Runtime.InteropServices;
 using ISX.Controls;
 using ISX.Haptics;
+using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
 // use case: audio on GP (ps4 mic)
 // use case: player ID and change on same GP
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Default state layout for gamepads.
@@ -118,7 +119,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     /// <summary>
     /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.

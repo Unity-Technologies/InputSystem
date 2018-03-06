@@ -3,7 +3,7 @@ using ISX.Controls;
 using ISX.LowLevel;
 using ISX.Utilities;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Default state layout for touch devices.
@@ -97,7 +97,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?
     ////REVIEW: does it *actually* make sense to base this on Pointer?
     /// <summary>
