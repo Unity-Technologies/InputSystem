@@ -8,11 +8,15 @@ namespace ISX
     ////REVIEW: does it really make sense to have this at the pointer level
     public enum PointerPhase
     {
+        /// <summary>
+        /// No activity has been registered on the pointer yet.
+        /// </summary>
         None,
+
         Began,
-        Move,
+        Moved,
         Ended,
-        Canceled
+        Cancelled
     }
 
     /// <summary>
@@ -100,10 +104,10 @@ namespace ISX
         public Vector2Control radius { get; private set; }
         public AxisControl pressure { get; private set; }
         public AxisControl twist { get; private set; }
-        public DiscreteControl pointerId { get; private set; }
+        public IntegerControl pointerId { get; private set; }
         ////TODO: find a way which gives values as PointerPhase instead of as int
-        public DiscreteControl phase { get; private set; }
-        public DiscreteControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
+        public IntegerControl phase { get; private set; }
+        public IntegerControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
         public ButtonControl button { get; private set; }
 
         /// <summary>
@@ -126,9 +130,9 @@ namespace ISX
             radius = setup.GetControl<Vector2Control>(this, "radius");
             pressure = setup.GetControl<AxisControl>(this, "pressure");
             twist = setup.GetControl<AxisControl>(this, "twist");
-            pointerId = setup.GetControl<DiscreteControl>(this, "pointerId");
-            phase = setup.GetControl<DiscreteControl>(this, "phase");
-            displayIndex = setup.GetControl<DiscreteControl>(this, "displayIndex");
+            pointerId = setup.GetControl<IntegerControl>(this, "pointerId");
+            phase = setup.GetControl<IntegerControl>(this, "phase");
+            displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
             button = setup.GetControl<ButtonControl>(this, "button");
             base.FinishSetup(setup);
         }

@@ -695,7 +695,7 @@ namespace ISX
             public const int kMaxSize = 512;
             public fixed byte data[kMaxSize - 1]; // DeltaStateEvent already adds one.
         }
-        public static unsafe void QueueStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
+        public static unsafe void QueueDeltaStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
             where TDelta : struct
         {
             if (control == null)

@@ -15,6 +15,7 @@ using ISX.LowLevel;
 using ISX.Modifiers;
 using ISX.Processors;
 using ISX.Utilities;
+using Touch = ISX.Touch;
 #if UNITY_EDITOR
 using ISX.Editor;
 using UnityEditor;
@@ -2721,7 +2722,7 @@ class FunctionalTests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        InputSystem.QueueStateEvent(mouse.scroll, new Vector2(10, 12));
+        InputSystem.QueueDeltaStateEvent(mouse.scroll, new Vector2(10, 12));
         InputSystem.Update();
 
         Assert.That(mouse.scroll.x.value, Is.EqualTo(10).Within(0.0000001));
@@ -2764,6 +2765,71 @@ class FunctionalTests : InputTestFixture
     public void TODO_Devices_TouchscreenCanFunctionAsPointer()
     {
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchscreenReturnsActiveTouches()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        Assert.That(device.touches.Count, Is.Zero);
+        Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(0.123f, 0.456f)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.touches.Count, Is.EqualTo(1));
+        Assert.That(device.touches[0].touchId.value, Is.EqualTo(4));
+        Assert.That(device.touches[0].phase.value, Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.touches[0].position.x.value, Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.touches[0].position.y.value, Is.EqualTo(0.456).Within(0.000001));
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(0.123f, 0.456f)
+        });
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
+            new Touch
+        {
+            phase = PointerPhase.Began,
+            touchId = 5,
+            position = new Vector2(0.789f, 0.123f)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.touches.Count, Is.EqualTo(2));
+        Assert.That(device.touches[0].touchId.value, Is.EqualTo(4));
+        Assert.That(device.touches[1].touchId.value, Is.EqualTo(5));
+        Assert.That(device.touches[0].phase.value, Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.touches[1].phase.value, Is.EqualTo(PointerPhase.Began));
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Ended,
+            touchId = 4,
+        });
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
+            new Touch
+        {
+            phase = PointerPhase.Cancelled,
+            touchId = 5,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.touches.Count, Is.Zero);
+        Assert.That(device.allTouchControls[0].phase.value, Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].phase.value, Is.EqualTo(PointerPhase.Cancelled));
     }
 
     [Test]
@@ -3013,7 +3079,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         // Update just left stick.
-        InputSystem.QueueStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
+        InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.5).Within(0.000001));
@@ -4197,7 +4263,7 @@ class FunctionalTests : InputTestFixture
                 receivedControl = ctx.control;
             };
 
-        InputSystem.QueueStateEvent(gamepad.leftStick, Vector2.one);
+        InputSystem.QueueDeltaStateEvent(gamepad.leftStick, Vector2.one);
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));

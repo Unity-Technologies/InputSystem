@@ -107,12 +107,38 @@ namespace ISX
     public class Touchscreen : Pointer
     {
         /// <summary>
-        /// Array of touches.
+        /// Array of currently active touches.
         /// </summary>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries.
+        /// This array only contains touches that are in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>,
+        /// or <see cref="PointerPhase.Moved"/>.
         /// </remarks>
-        public ReadOnlyArray<TouchControl> touches { get; private set; }
+        public ReadOnlyArray<TouchControl> touches
+        {
+            get
+            {
+                var touchCount = 0;
+                for (var i = 0; i < allTouchControls.Count; ++i)
+                {
+                    var phase = allTouchControls[i].phase.value;
+                    if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
+                    {
+                        m_TouchesArray[touchCount] = allTouchControls[i];
+                        ++touchCount;
+                    }
+                }
+                return new ReadOnlyArray<TouchControl>(m_TouchesArray, 0, touchCount);
+            }
+        }
+
+        /// <summary>
+        /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
+        /// </summary>
+        /// <remarks>
+        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries regardless of
+        /// which touches (if any) are currently in progress.
+        /// </remarks>
+        public ReadOnlyArray<TouchControl> allTouchControls { get; private set; }
 
         /// <summary>
         /// The touchscreen that was added or updated last or null if there is no
@@ -141,9 +167,12 @@ namespace ISX
             touchArray[8] = setup.GetControl<TouchControl>(this, "touch8");
             touchArray[9] = setup.GetControl<TouchControl>(this, "touch9");
 
-            touches = new ReadOnlyArray<TouchControl>(touchArray);
+            allTouchControls = new ReadOnlyArray<TouchControl>(touchArray);
+            m_TouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
 
             base.FinishSetup(setup);
         }
+
+        private TouchControl[] m_TouchesArray;
     }
 }
