@@ -1738,6 +1738,18 @@ namespace ISX
                             break;
                         }
 
+                        // If the device has state callbacks, give it a shot at running custom logic on
+                        // the new state before we integrate it into the system.
+                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
+                            InputDevice.Flags.HasStateCallbacks;
+                        if (deviceHasStateCallbacks)
+                        {
+                            var currentState = InputStateBuffers.GetFrontBuffer(deviceIndex);
+                            var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
+
+                            ((IInputStateCallbackReceiver)device).OnBeforeWriteNewState(currentState, newState);
+                        }
+
                         // Before we update state, let change monitors compare the old and the new state.
                         // We do this instead of first updating the front buffer and then comparing to the
                         // back buffer as that would require a buffer flip for each state change in order
