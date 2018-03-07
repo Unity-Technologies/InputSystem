@@ -143,23 +143,37 @@ namespace ISX
             base.FinishSetup(setup);
         }
 
-        void IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
         {
+            var x = delta.x;
+            var y = delta.y;
+
+            var xValue = x.ReadValueFrom(statePtr);
+            var yValue = y.ReadValueFrom(statePtr);
+
+            if (Mathf.Approximately(0f, xValue) && Mathf.Approximately(0f, yValue))
+                return false;
+
             // Reset delta.
-            delta.x.WriteValueInto(statePtr, 0f);
-            delta.y.WriteValueInto(statePtr, 0f);
+            x.WriteValueInto(statePtr, 0f);
+            y.WriteValueInto(statePtr, 0f);
+
+            return true;
         }
 
         void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
         {
-            // Accumulate delta.
-            var oldDeltaX = delta.x.ReadValueFrom(oldStatePtr);
-            var oldDeltaY = delta.y.ReadValueFrom(oldStatePtr);
-            var newDeltaX = delta.x.ReadValueFrom(newStatePtr);
-            var newDeltaY = delta.y.ReadValueFrom(newStatePtr);
+            var x = delta.x;
+            var y = delta.y;
 
-            delta.x.WriteValueInto(newStatePtr, oldDeltaX + newDeltaX);
-            delta.y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
+            // Accumulate delta.
+            var oldDeltaX = x.ReadValueFrom(oldStatePtr);
+            var oldDeltaY = y.ReadValueFrom(oldStatePtr);
+            var newDeltaX = x.ReadValueFrom(newStatePtr);
+            var newDeltaY = y.ReadValueFrom(newStatePtr);
+
+            x.WriteValueInto(newStatePtr, oldDeltaX + newDeltaX);
+            y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
         }
     }
 }

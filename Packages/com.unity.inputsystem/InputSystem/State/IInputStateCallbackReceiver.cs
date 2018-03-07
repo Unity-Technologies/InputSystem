@@ -24,11 +24,30 @@ namespace ISX.LowLevel
         /// state after calling this method. This means that actions are able to observe changes applied
         /// to state in this method.
         /// </remarks>
-        void OnCarryStateForward(IntPtr statePtr);
+        /// <param name="statePtr">Pointer to the buffer containing the state of the device that is
+        /// carried forward.</param>
+        /// <returns>True if you have modified the state in <paramref name="statePtr"/>, false if you
+        /// have left it as is.</returns>
+        bool OnCarryStateForward(IntPtr statePtr);
 
         /// <summary>
-        /// Called when the state of the device is updated.
+        /// Called when a new state is received for the device but before it is copied over the
+        /// device's current state.
         /// </summary>
+        /// <param name="oldStatePtr">Pointer to the buffer containing the current state of the device.</param>
+        /// <param name="newStatePtr">Pointer to the buffer containing the new state that has been received for the device.</param>
+        /// <remarks>
+        /// This method can be used to alter the newly received state before it is written into the
+        /// device. Pointer delta controls, for example, should accumulate values from multiple consecutive
+        /// events that happen in the same frame rather than just overwriting the previously stored delta.
+        /// This can be achieved by reading the current delta from <paramref name="oldStatePtr"/> and then
+        /// adding it on top of the delta found in <paramref name="newStatePtr"/>.
+        ///
+        /// Note that this callback is invoked before state change monitors are run to compare the two
+        /// states. Thus, if in this method, <paramref name="newStatePtr"/> is changed thus that there is
+        /// no difference anymore to the old state, state change monitors will not fire and actions will
+        /// not get triggered.
+        /// </remarks>
         void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr);
     }
 }

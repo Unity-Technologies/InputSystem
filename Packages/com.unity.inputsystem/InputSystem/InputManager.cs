@@ -1111,7 +1111,7 @@ namespace ISX
             m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
-            if (m_UpdateListeners.Count > 0)
+            if (m_UpdateListeners.Count > 0 || m_HaveDevicesWithStateCallbackReceivers)
             {
                 m_Runtime.onBeforeUpdate = OnBeforeUpdate;
                 m_NativeBeforeUpdateHooked = true;
@@ -1472,7 +1472,7 @@ namespace ISX
 
         private void InstallBeforeUpdateHookIfNecessary()
         {
-            if (m_NativeBeforeUpdateHooked)
+            if (m_NativeBeforeUpdateHooked || m_Runtime == null)
                 return;
 
             m_Runtime.onBeforeUpdate = OnBeforeUpdate;
@@ -1517,13 +1517,19 @@ namespace ISX
                         UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
 
                         // Show to device.
-                        ((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer);
-
-                        // Process action state change monitors.
-                        if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
-                                deviceStateSize, 0))
+                        if (((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer))
                         {
-                            FireActionStateChangeNotifications(i, time);
+                            // Let listeners know the device's state has changed.
+                            for (var n = 0; n < m_DeviceChangeListeners.Count; ++n)
+                                m_DeviceChangeListeners[n](device, InputDeviceChange.StateChanged);
+
+                            // Process action state change monitors.
+                            if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
+                                    deviceStateSize, 0))
+                            {
+                                ////REVIEW: should this make the device current?
+                                FireActionStateChangeNotifications(i, time);
+                            }
                         }
                     }
                 }
@@ -1831,6 +1837,10 @@ namespace ISX
                         }
 
                         device.m_LastUpdateTime = currentEventTime;
+
+                        // Notify listeners.
+                        for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                            m_DeviceChangeListeners[i](device, InputDeviceChange.StateChanged);
 
                         // Now that we've committed the new state to memory, if any of the change
                         // monitors fired, let the associated actions know.
@@ -2316,6 +2326,7 @@ namespace ISX
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_AvailableDevices = state.availableDevices.ToList();
             m_Devices = null;
+            m_HaveDevicesWithStateCallbackReceivers = false;
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
             m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
@@ -2464,6 +2475,9 @@ namespace ISX
                     // during deserialization.
                     m_UpdateListeners.Append(beforeUpdateCallbackReceiver.OnUpdate);
                 }
+
+                m_HaveDevicesWithStateCallbackReceivers |= (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
+                    InputDevice.Flags.HasStateCallbacks;
             }
             m_Devices = devices;
 

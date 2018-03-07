@@ -2167,7 +2167,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ChangingConfigurationOfDeviceTriggersNotification()
+    public void Devices_ChangingConfigurationOfDevice_TriggersNotification()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -2189,6 +2189,79 @@ class FunctionalTests : InputTestFixture
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
         Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.ConfigurationChanged));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_TriggersNotification()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                ++receivedCalls;
+                receivedDevice = d;
+                receivedDeviceChange = c;
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.StateChanged));
+    }
+
+    class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
+    {
+        public ButtonControl button { get; private set; }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            button = setup.GetControl<ButtonControl>(this, "button");
+            base.FinishSetup(setup);
+        }
+
+        public bool OnCarryStateForward(IntPtr statePtr)
+        {
+            button.WriteValueInto(statePtr, 1);
+            return true;
+        }
+
+        public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_InStateCallback_TriggersNotification()
+    {
+        InputSystem.RegisterTemplate<TestDeviceThatResetsStateInCallback>();
+        var device = InputSystem.AddDevice<TestDeviceThatResetsStateInCallback>();
+
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                ++receivedCalls;
+                receivedDevice = d;
+                receivedDeviceChange = c;
+            };
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.StateChanged));
     }
 
     [Test]

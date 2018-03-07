@@ -441,10 +441,7 @@ namespace ISX
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
         {
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-            var adjustedStatePtr = new IntPtr(statePtr.ToInt64() - (int)deviceStateOffset);
-
-            WriteRawValueInto(adjustedStatePtr, value);
+            WriteRawValueInto(statePtr, value);
         }
 
         /// <summary>
@@ -465,8 +462,9 @@ namespace ISX
                         path, stateOffsetRelativeToDeviceRoot, m_StateBlock.sizeInBits, typeof(TState).Name, sizeOfState), "state");
 
             // Write value.
-            var addressOfState = new IntPtr(UnsafeUtility.AddressOf(ref state));
-            WriteValueInto(addressOfState, value);
+            var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
+            var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
+            WriteValueInto(new IntPtr(adjustedStatePtr), value);
         }
 
         protected TValue Process(TValue value)

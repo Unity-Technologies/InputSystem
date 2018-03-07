@@ -92,7 +92,8 @@ namespace ISX.Editor
             EditorGUILayout.LabelField("Manufacturer", m_Device.description.manufacturer);
             EditorGUILayout.LabelField("Serial Number", m_Device.description.serial);
             EditorGUILayout.LabelField("Device ID", m_DeviceIdString);
-            EditorGUILayout.LabelField("Usages: ", m_DeviceUsagesString);
+            EditorGUILayout.LabelField("Usages", m_DeviceUsagesString);
+            EditorGUILayout.LabelField("Flags", m_DeviceFlagsString);
             EditorGUILayout.EndVertical();
 
             DrawControlTree();
@@ -180,6 +181,17 @@ namespace ISX.Editor
             m_DeviceIdString = device.id.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
+            var flags = new List<string>();
+            if ((m_Device.m_Flags & InputDevice.Flags.Native) == InputDevice.Flags.Native)
+                flags.Add("Native");
+            if ((m_Device.m_Flags & InputDevice.Flags.Remote) == InputDevice.Flags.Remote)
+                flags.Add("Remote");
+            if ((m_Device.m_Flags & InputDevice.Flags.UpdateBeforeRender) == InputDevice.Flags.UpdateBeforeRender)
+                flags.Add("UpdateBeforeRender");
+            if ((m_Device.m_Flags & InputDevice.Flags.HasStateCallbacks) == InputDevice.Flags.HasStateCallbacks)
+                flags.Add("HasStateCallbacks");
+            m_DeviceFlagsString = string.Join(", ", flags.ToArray());
+
             // Set up event trace. The default trace size of 1mb fits a ton of events and will
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
@@ -189,7 +201,6 @@ namespace ISX.Editor
                 {
                     ////FIXME: this is very inefficient
                     m_EventTree.Reload();
-                    Repaint();
                 };
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
@@ -211,6 +222,7 @@ namespace ISX.Editor
         [NonSerialized] private InputDevice m_Device;
         [NonSerialized] private string m_DeviceIdString;
         [NonSerialized] private string m_DeviceUsagesString;
+        [NonSerialized] private string m_DeviceFlagsString;
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
         [NonSerialized] private List<MethodInfo> m_OnToolbarGUIMethods;
@@ -253,6 +265,7 @@ namespace ISX.Editor
             }
             else
             {
+                Debug.Log("Repaint");
                 Repaint();
             }
         }
