@@ -130,7 +130,7 @@ namespace ISX
             public enum Flags
             {
                 IsModifyingChildControlByPath = 1 << 0,
-                StateAutomaticallyResetsBetweenFrames = 1 << 1,
+                IsNoisy = 1 << 1,
             }
 
             /// <summary>
@@ -188,15 +188,15 @@ namespace ISX
                 }
             }
 
-            public bool isAutoResetControl
+            public bool isNoisy
             {
-                get { return (flags & Flags.StateAutomaticallyResetsBetweenFrames) == Flags.StateAutomaticallyResetsBetweenFrames; }
+                get { return (flags & Flags.IsNoisy) == Flags.IsNoisy; }
                 set
                 {
                     if (value)
-                        flags |= Flags.StateAutomaticallyResetsBetweenFrames;
+                        flags |= Flags.IsNoisy;
                     else
-                        flags &= ~Flags.StateAutomaticallyResetsBetweenFrames;
+                        flags &= ~Flags.IsNoisy;
                 }
             }
 
@@ -743,10 +743,10 @@ namespace ISX
             if (attribute != null && !string.IsNullOrEmpty(attribute.useStateFrom))
                 useStateFrom = attribute.useStateFrom;
 
-            // Determine whether state automatically resets.
-            var autoReset = false;
+            // Determine if it's a noisy control.
+            var isNoisy = false;
             if (attribute != null)
-                autoReset = attribute.autoReset;
+                isNoisy = attribute.noisy;
 
             return new ControlTemplate
             {
@@ -763,7 +763,7 @@ namespace ISX
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
-                isAutoResetControl = autoReset
+                isNoisy = isNoisy,
             };
         }
 
@@ -1202,9 +1202,7 @@ namespace ISX
             public string processors;
             public string displayName;
             public string resourceName;
-
-            ////TODO: drop this
-            public bool autoReset;
+            public bool noisy;
 
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore CS0649
@@ -1228,8 +1226,8 @@ namespace ISX
                     useStateFrom = useStateFrom,
                     bit = bit,
                     sizeInBits = sizeInBits,
-                    isAutoResetControl = autoReset,
-                    isModifyingChildControlByPath = name.IndexOf('/') != -1
+                    isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                    isNoisy = noisy,
                 };
 
                 if (!string.IsNullOrEmpty(format))
@@ -1289,7 +1287,8 @@ namespace ISX
                         parameters = string.Join(",", template.parameters.Select(x => x.ToString()).ToArray()),
                         processors = string.Join(",", template.processors.Select(x => x.ToString()).ToArray()),
                         usages = template.usages.Select(x => x.ToString()).ToArray(),
-                        aliases = template.aliases.Select(x => x.ToString()).ToArray()
+                        aliases = template.aliases.Select(x => x.ToString()).ToArray(),
+                        noisy = template.isNoisy
                     };
                 }
 

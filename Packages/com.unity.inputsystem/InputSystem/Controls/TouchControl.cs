@@ -21,7 +21,7 @@ namespace ISX.Controls
         [InputControl(usage = "Point", offset = 4)]
         public Vector2Control position { get; private set; }
 
-        [InputControl(usage = "Secondary2DMotion", autoReset = true, offset = 12)]
+        [InputControl(usage = "Secondary2DMotion", offset = 12)]
         public Vector2Control delta { get; private set; }
         [InputControl(usage = "Pressure", offset = 20)]
         public AxisControl pressure { get; private set; }

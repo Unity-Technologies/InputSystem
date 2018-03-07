@@ -683,6 +683,30 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanMarkControlAsNoisy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""button"",
+                        ""template"" : ""Button"",
+                        ""noisy"" : true
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = InputSystem.AddDevice("MyTemplate");
+
+        Assert.That(device["button"].noisy, Is.True);
+    }
+
+    [Test]
+    [Category("Templates")]
     public void Templates_CanBuildTemplatesInCode()
     {
         var builder = new InputTemplate.Builder()
@@ -1969,53 +1993,6 @@ class FunctionalTests : InputTestFixture
         Assert.That(gamepad.aButton.value, Is.EqualTo(0.5f));
     }
 
-    ////REVIEW: don't do this; instead have event handlers hooked into onEvent and onUpdate perform the work
-    // Controls like mouse deltas need to reset to zero when there is no activity on them in a frame.
-    // This could be done by requiring the state producing code to always send appropriate state events
-    // when necessary. However, for state producers that are hooked to event sources (like eg. NSEvents
-    // on OSX and MSGs on Windows), this can be very awkward to handle as it requires synchronizing with
-    // input updates and can complicate state producer logic quite a bit.
-    //
-    // So, instead of putting the burden on state producers, controls come with an auto-reset feature
-    // that will automatically cause the system to clear memory of controls when needed.
-    [Test]
-    [Category("State")]
-    public void TODO_State_CanAutomaticallyResetIndividualControlsBetweenFrames()
-    {
-        // Make leftStick/x automatically reset on gamepad.
-        var json = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""extend"" : ""Gamepad"",
-                ""controls"" : [
-                    {
-                        ""name"" : ""leftStick/x"",
-                        ""autoReset"" : true
-                    }
-                ]
-            }
-        ";
-
-        //if there is a state event for pointer device X, update it to accumulate deltas
-        //before an update, reset the ... how? actions need to see the reset
-
-        InputSystem.RegisterTemplate(json);
-        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
-
-        InputSystem.QueueStateEvent(device, new GamepadState {leftStick = new Vector2(0.123f, 0.456f)});
-        InputSystem.Update();
-
-        Assert.That(device.leftStick.x.value, Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
-
-        InputSystem.Update();
-
-        Assert.That(device.leftStick.x.value, Is.Zero);
-        Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
-
-        ////TODO: this test will require a corresponding test that actions see resets properly
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromTemplate()
@@ -3185,7 +3162,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Events")]
-    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
+    public void Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
     {
         Assert.Fail();
     }

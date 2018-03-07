@@ -119,6 +119,8 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
+        ////TODO: rename 'constructor' to 'factory'
+
         /// <summary>
         /// Register a constructor that delivers an <see cref="InputTemplate"/> instance on demand.
         /// </summary>

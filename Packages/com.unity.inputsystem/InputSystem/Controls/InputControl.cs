@@ -183,6 +183,11 @@ namespace ISX
             get { return m_StateBlock; }
         }
 
+        public bool noisy
+        {
+            get { return m_IsNoisy; }
+        }
+
         public InputControl this[string path]
         {
             get { return InputControlPath.TryFindChild(this, path); }
@@ -276,6 +281,7 @@ namespace ISX
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
+        internal bool m_IsNoisy;
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().

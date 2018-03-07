@@ -233,10 +233,6 @@ namespace ISX
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
 
-        // List of state blocks in this device that require automatic resetting
-        // between frames.
-        internal InputStateBlock[] m_AutoResetStateBlocks;
-
         ////TODO: output is still in the works
         // Buffer that will receive state events for output generated from this device.
         // May be shared with other devices.

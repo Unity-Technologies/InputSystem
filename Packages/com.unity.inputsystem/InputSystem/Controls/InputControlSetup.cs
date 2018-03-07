@@ -518,6 +518,9 @@ namespace ISX
             // Set display name.
             control.m_DisplayNameFromTemplate = controlTemplate.displayName;
 
+            // Set flags.
+            control.m_IsNoisy = controlTemplate.isNoisy;
+
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlTemplate.useStateFrom);
             if (!usesStateFromOtherControl)

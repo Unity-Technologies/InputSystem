@@ -22,7 +22,7 @@ namespace ISX.LowLevel
         [FieldOffset(0)]
         public Vector2 position;
 
-        [InputControl(usage = "Secondary2DMotion", autoReset = true)]
+        [InputControl(usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
 
