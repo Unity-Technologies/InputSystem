@@ -15,9 +15,7 @@ using ISX.LowLevel;
 
 ////TODO: this window should help diagnose problems in the event stream (e.g. ignored state events and why they were ignored)
 
-////REVIEW: input/output toggle in control section?
-
-////TODO: react to device being removed (close window? show as disconnected?)
+////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
 namespace ISX.Editor
 {
@@ -265,7 +263,6 @@ namespace ISX.Editor
             }
             else
             {
-                Debug.Log("Repaint");
                 Repaint();
             }
         }

@@ -3169,15 +3169,25 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Events")]
-    public void Events_SendingStateEventToDeviceMakesItCurrent()
+    public void Events_SendingStateEventToDevice_MakesItCurrent()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
-        var newState = new GamepadState();
 
-        InputSystem.QueueStateEvent(gamepad, newState);
+        // Adding a device makes it current so add another one so that .current
+        // is not already set to the gamepad we just created.
+        InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
+    {
+        Assert.Fail();
     }
 
     [Test]
