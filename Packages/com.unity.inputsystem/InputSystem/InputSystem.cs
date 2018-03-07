@@ -640,6 +640,8 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
+        ////REVIEW: consider moving these out into extension methods in ISX.LowLevel
+
         ////TODO: find a more elegant solution for this
         // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
         // structs. So we can't just stuff a generic TState into a StateEvent<TState> and enforce

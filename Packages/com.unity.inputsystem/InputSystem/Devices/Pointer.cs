@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using ISX.Controls;
 using ISX.LowLevel;
@@ -85,7 +86,7 @@ namespace ISX
     /// controls present on the base class.
     /// </remarks>
     [InputTemplate(stateType = typeof(PointerState))]
-    public class Pointer : InputDevice
+    public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
         /// <summary>
@@ -99,7 +100,7 @@ namespace ISX
         /// Within editor code, the coordinates are in the coordinate space of the current <see cref="UnityEditor.EditorWindow"/>.
         /// This means that if you query <c>Mouse.current.position</c> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
-        /// <see cref="UnityEditor.Event.mousePosition"/>).
+        /// <see cref="UnityEngine.Event.mousePosition"/>).
         /// </remarks>
         public Vector2Control position { get; private set; }
 
@@ -138,7 +139,27 @@ namespace ISX
             phase = setup.GetControl<PointerPhaseControl>(this, "phase");
             displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
             button = setup.GetControl<ButtonControl>(this, "button");
+
             base.FinishSetup(setup);
+        }
+
+        void IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        {
+            // Reset delta.
+            delta.x.WriteValueInto(statePtr, 0f);
+            delta.y.WriteValueInto(statePtr, 0f);
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+            // Accumulate delta.
+            var oldDeltaX = delta.x.ReadValueFrom(oldStatePtr);
+            var oldDeltaY = delta.y.ReadValueFrom(oldStatePtr);
+            var newDeltaX = delta.x.ReadValueFrom(newStatePtr);
+            var newDeltaY = delta.y.ReadValueFrom(newStatePtr);
+
+            delta.x.WriteValueInto(newStatePtr, oldDeltaX + newDeltaX);
+            delta.y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
         }
     }
 }

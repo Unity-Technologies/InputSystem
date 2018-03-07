@@ -2530,25 +2530,11 @@ class FunctionalTests : InputTestFixture
         Assert.That(joystick.stick.name, Is.EqualTo("stick"));
     }
 
-    class TestMouse : Mouse
-    {
-    }
-
-    // This is an interesting case. If we support this, it would make the pointer position not just
-    // an input but also an output control. And it should actually warp the cursor position in Unity
-    // -- not just alter the value reported by .position.
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanWarpPointerPosition()
+    public void Devices_PointerDeltasResetBetweenUpdates()
     {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_PointerDeltasResetBetweenUpdates()
-    {
-        var pointer = (Pointer)InputSystem.AddDevice("Pointer");
+        var pointer = InputSystem.AddDevice<Pointer>();
 
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
@@ -2564,9 +2550,16 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_PointerDeltasAccumulateBetweenUpdates()
+    public void Devices_PointerDeltasAccumulateBetweenUpdates()
     {
-        Assert.Fail();
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(1).Within(0.0000001));
     }
 
     [Test]
@@ -5055,6 +5048,52 @@ class FunctionalTests : InputTestFixture
         Assert.That(action2.enabled, Is.False);
         Assert.That(action3.enabled, Is.False);
         Assert.That(set.enabled, Is.False);
+    }
+
+    // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDriveFreeLookFromGamepadStickAndPointerDelta()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Deadzoning alters values on the stick. For this test, get rid of it.
+        InputConfiguration.DeadzoneMin = 0f;
+        InputConfiguration.DeadzoneMax = 1f;
+
+        var action = new InputAction();
+
+        action.AddBinding("/<Gamepad>/leftStick");
+        action.AddBinding("/<Pointer>/delta");
+
+        Vector2? movement = null;
+        action.performed +=
+            ctx => { movement = ctx.GetValue<Vector2>(); };
+
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.Update();
+
+        Assert.That(movement.HasValue, Is.True);
+        Assert.That(movement.Value.x, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(movement.Value.y, Is.EqualTo(0.5).Within(0.000001));
+
+        movement = null;
+        InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(0.25f, 0.25f)});
+        InputSystem.Update();
+
+        Assert.That(movement.HasValue, Is.True);
+        Assert.That(movement.Value.x, Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(movement.Value.y, Is.EqualTo(0.25).Within(0.000001));
+
+        movement = null;
+        InputSystem.Update();
+
+        Assert.That(movement.HasValue, Is.True);
+        Assert.That(movement.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(movement.Value.y, Is.EqualTo(0).Within(0.000001));
     }
 
     [Test]

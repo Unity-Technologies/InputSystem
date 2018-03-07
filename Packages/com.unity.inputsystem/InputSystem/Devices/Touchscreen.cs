@@ -3,6 +3,14 @@ using ISX.Controls;
 using ISX.LowLevel;
 using ISX.Utilities;
 
+////TODO: reset and accumulate deltas of all touches
+
+//// Remaining things to sort out around touch:
+//// - How do we handle 'primary' touches? ATM the setup always makes touch0 the primary touch
+////   by hardwiring the pointer state to it but I have doubts this is a satisfactory solution.
+//// - How do we handle mouse simulation?
+//// - How do we implement deltas for touch when there is no delta information from the platform?
+
 namespace ISX.LowLevel
 {
     /// <summary>

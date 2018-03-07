@@ -10,6 +10,8 @@ using ISX.LowLevel;
 using ISX.Modifiers;
 using ISX.Processors;
 using ISX.Utilities;
+using Unity.Collections;
+using Debug = UnityEngine.Debug;
 #if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
@@ -90,11 +92,7 @@ namespace ISX
         {
             add
             {
-                if (!m_NativeBeforeUpdateHooked)
-                {
-                    m_Runtime.onBeforeUpdate = OnBeforeUpdate;
-                    m_NativeBeforeUpdateHooked = true;
-                }
+                InstallBeforeUpdateHookIfNecessary();
                 m_UpdateListeners.Append(value);
             }
             remove { m_UpdateListeners.Remove(value); }
@@ -695,6 +693,15 @@ namespace ISX
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate += beforeUpdateCallbackReceiver.OnUpdate;
 
+            // If the device has state callbacks, make a note of it.
+            var stateCallbackReceiver = device as IInputStateCallbackReceiver;
+            if (stateCallbackReceiver != null)
+            {
+                InstallBeforeUpdateHookIfNecessary();
+                device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
+                m_HaveDevicesWithStateCallbackReceivers = true;
+            }
+
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
@@ -1150,7 +1157,6 @@ namespace ISX
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
-        [NonSerialized] private List<InputDevice> m_DevicesWithAutoResets;
 
         [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
@@ -1175,6 +1181,7 @@ namespace ISX
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
+        [NonSerialized] private bool m_HaveDevicesWithStateCallbackReceivers;
 
         [NonSerialized] private bool m_PluginsInitialized;
         [NonSerialized] private InlinedArray<IInputPluginManager> m_PluginManagers;
@@ -1463,10 +1470,64 @@ namespace ISX
             ReportAvailableDevice(description, deviceId, isNative: true);
         }
 
-        private void OnBeforeUpdate(InputUpdateType updateType)
+        private void InstallBeforeUpdateHookIfNecessary()
+        {
+            if (m_NativeBeforeUpdateHooked)
+                return;
+
+            m_Runtime.onBeforeUpdate = OnBeforeUpdate;
+            m_NativeBeforeUpdateHooked = true;
+        }
+
+        private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
             if (!m_PluginsInitialized)
                 InitializePlugins();
+
+            // For devices that have state callbacks, tell them we're carrying state over
+            // into the next frame.
+            if (m_HaveDevicesWithStateCallbackReceivers)
+            {
+                var stateBuffers = m_StateBuffers.GetBuffers(updateType);
+
+                // For the sake of action state monitors, we need to be able to detect when
+                // an OnCarryStateForward() method writes new values into a state buffer. To do
+                // so, we create a temporary buffer, copy state blocks into that buffer, and then
+                // run the normal action change logic on the temporary and the current state buffer.
+                using (var tempBuffer = new NativeArray<byte>((int)m_StateBuffers.sizePerBuffer, Allocator.Temp))
+                {
+                    var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
+                    var time = Time.time;
+
+                    for (var i = 0; i < m_Devices.Length; ++i)
+                    {
+                        var device = m_Devices[i];
+                        if ((device.m_Flags & InputDevice.Flags.HasStateCallbacks) != InputDevice.Flags.HasStateCallbacks)
+                            continue;
+
+                        var deviceStateOffset = device.m_StateBlock.byteOffset;
+                        var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
+
+                        // Grab current front buffer.
+                        var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
+
+                        // Copy to temporary buffer.
+                        var statePtr = (byte*)frontBuffer.ToPointer() + deviceStateOffset;
+                        var tempStatePtr = tempBufferPtr + deviceStateOffset;
+                        UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
+
+                        // Show to device.
+                        ((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer);
+
+                        // Process action state change monitors.
+                        if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
+                                deviceStateSize, 0))
+                        {
+                            FireActionStateChangeNotifications(i, time);
+                        }
+                    }
+                }
+            }
 
             ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_UpdateListeners.Count; ++i)
