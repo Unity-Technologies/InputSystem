@@ -715,17 +715,22 @@ class FunctionalTests : InputTestFixture
             .Extend("Pointer")
             .WithFormat("CUST");
 
-        builder.AddControl("button").WithTemplate("Button");
+        builder.AddControl("button")
+        .WithTemplate("Button")
+        .WithUsages("Foo", "Bar");
 
         var template = builder.Build();
 
         Assert.That(template.name.ToString(), Is.EqualTo("MyTemplate"));
         Assert.That(template.type, Is.SameAs(typeof(Gamepad)));
         Assert.That(template.stateFormat, Is.EqualTo(new FourCC("CUST")));
-        Assert.That(template.extendsTemplate.ToString(), Is.EqualTo("Pointer"));
+        Assert.That(template.extendsTemplate, Is.EqualTo("Pointer"));
         Assert.That(template.controls, Has.Count.EqualTo(1));
         Assert.That(template.controls[0].name.ToString(), Is.EqualTo("button"));
         Assert.That(template.controls[0].template.ToString(), Is.EqualTo("Button"));
+        Assert.That(template.controls[0].usages.Count, Is.EqualTo(2));
+        Assert.That(template.controls[0].usages[0].ToString(), Is.EqualTo("Foo"));
+        Assert.That(template.controls[0].usages[1].ToString(), Is.EqualTo("Bar"));
     }
 
     [Serializable]

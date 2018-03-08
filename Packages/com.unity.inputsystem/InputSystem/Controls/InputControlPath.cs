@@ -585,6 +585,9 @@ namespace ISX
 
         private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType)
         {
+            Debug.Assert(!string.IsNullOrEmpty(component));
+            Debug.Assert(!string.IsNullOrEmpty(path));
+
             var nameLength = component.Length;
             var pathLength = path.Length;
             var startIndex = indexInPath;

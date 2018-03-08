@@ -347,6 +347,9 @@ namespace ISX
 
                 public ControlBuilder WithTemplate(string template)
                 {
+                    if (string.IsNullOrEmpty(template))
+                        throw new ArgumentException("Template name cannot be null or empty", "template");
+
                     controls[index].template = new InternedString(template);
                     return this;
                 }
@@ -374,17 +377,28 @@ namespace ISX
                     return this;
                 }
 
-                public ControlBuilder WithUsages(InternedString[] usages)
+                public ControlBuilder WithUsages(params InternedString[] usages)
                 {
+                    if (usages == null || usages.Length == 0)
+                        return this;
+
+                    for (var i = 0; i < usages.Length; ++i)
+                        if (usages[i].IsEmpty())
+                            throw new ArgumentException("Empty usage entry at index " + i, "usages");
+
                     controls[index].usages = new ReadOnlyArray<InternedString>(usages);
                     return this;
                 }
 
                 public ControlBuilder WithUsages(IEnumerable<string> usages)
                 {
-                    controls[index].usages =
-                        new ReadOnlyArray<InternedString>(usages.Select(x => new InternedString(x)).ToArray());
-                    return this;
+                    var usagesArray = usages.Select(x => new InternedString(x)).ToArray();
+                    return WithUsages(usagesArray);
+                }
+
+                public ControlBuilder WithUsages(params string[] usages)
+                {
+                    return WithUsages((IEnumerable<string>)usages);
                 }
             }
 
