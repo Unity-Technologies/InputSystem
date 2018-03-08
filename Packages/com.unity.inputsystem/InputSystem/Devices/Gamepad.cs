@@ -6,6 +6,8 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
+////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
+
 // use case: audio on GP (ps4 mic)
 // use case: player ID and change on same GP
 

@@ -5,6 +5,8 @@ using ISX.Processors;
 using NUnit.Framework;
 using UnityEngine;
 
+////TODO: test button presses individually (put helper in InputTestFixture to verify button presses en bloc)
+
 class DualShockTests : InputTestFixture
 {
     public override void Setup()

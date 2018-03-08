@@ -13,6 +13,10 @@ namespace ISX.Plugins.XInput
             // Base template for Xbox-style gamepad.
             InputSystem.RegisterTemplate<XInputController>();
 
+#if UNITY_EDITOR || UNITY_XBOXONE
+            InputSystem.RegisterTemplate<XboxOneGamepad>();
+#endif
+
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             // XInput controllers on Windows.
             // State layout is XINPUT_GAMEPAD.
