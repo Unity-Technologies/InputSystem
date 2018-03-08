@@ -1,0 +1,12 @@
+﻿{
+    "name": "Unity.InputSystem.XInput.Tests",
+    "references": [
+        "Unity.InputSystem",
+        "Unity.InputSystem.Tests",
+        "Unity.InputSystem.XInput"
+    ],
+    "optionalUnityReferences": [ "TestAssemblies" ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}

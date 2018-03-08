@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using ISX.Controls;
+using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     public struct JoystickState : IInputStateTypeInfo
     {
@@ -36,7 +37,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     // A joystick with an arbitrary number of buttons and axes.
     // By default comes with just a trigger, a potentially twistable
     // stick and an optional single hatswitch.

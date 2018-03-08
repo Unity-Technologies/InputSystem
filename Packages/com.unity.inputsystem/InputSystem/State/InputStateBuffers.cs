@@ -1,11 +1,10 @@
 using System;
-using ISX.LowLevel;
 using ISX.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     // The raw memory blocks which are indexed by InputStateBlocks.
     //
@@ -149,29 +148,32 @@ namespace ISX
             return s_CurrentBuffers.GetBackBuffer(deviceIndex);
         }
 
+        public DoubleBuffers GetBuffers(InputUpdateType updateType)
+        {
+            switch (updateType)
+            {
+                case InputUpdateType.Dynamic:
+                    return m_DynamicUpdateBuffers;
+                case InputUpdateType.Fixed:
+                    return m_FixedUpdateBuffers;
+                case InputUpdateType.BeforeRender:
+                    if (m_DynamicUpdateBuffers.valid)
+                        return m_DynamicUpdateBuffers;
+                    else
+                        return m_FixedUpdateBuffers;
+#if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    return m_EditorUpdateBuffers;
+#endif
+            }
+
+            throw new Exception("Unrecognized InputUpdateType: " + updateType);
+        }
+
         // Switch the current set of buffers used by the system.
         public void SwitchTo(InputUpdateType update)
         {
-            switch (update)
-            {
-                case InputUpdateType.Dynamic:
-                    s_CurrentBuffers = m_DynamicUpdateBuffers;
-                    break;
-                case InputUpdateType.Fixed:
-                    s_CurrentBuffers = m_FixedUpdateBuffers;
-                    break;
-                case InputUpdateType.BeforeRender:
-                    if (m_DynamicUpdateBuffers.valid)
-                        s_CurrentBuffers = m_DynamicUpdateBuffers;
-                    else
-                        s_CurrentBuffers = m_FixedUpdateBuffers;
-                    break;
-#if UNITY_EDITOR
-                case InputUpdateType.Editor:
-                    s_CurrentBuffers = m_EditorUpdateBuffers;
-                    break;
-#endif
-            }
+            s_CurrentBuffers = GetBuffers(update);
         }
 
         // Allocates all buffers to serve the given updates and comes up with a spot

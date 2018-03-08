@@ -10,6 +10,8 @@ using ISX.LowLevel;
 using ISX.Modifiers;
 using ISX.Processors;
 using ISX.Utilities;
+using Unity.Collections;
+using Debug = UnityEngine.Debug;
 #if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
@@ -90,11 +92,7 @@ namespace ISX
         {
             add
             {
-                if (!m_NativeBeforeUpdateHooked)
-                {
-                    m_Runtime.onBeforeUpdate = OnBeforeUpdate;
-                    m_NativeBeforeUpdateHooked = true;
-                }
+                InstallBeforeUpdateHookIfNecessary();
                 m_UpdateListeners.Append(value);
             }
             remove { m_UpdateListeners.Remove(value); }
@@ -695,6 +693,15 @@ namespace ISX
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate += beforeUpdateCallbackReceiver.OnUpdate;
 
+            // If the device has state callbacks, make a note of it.
+            var stateCallbackReceiver = device as IInputStateCallbackReceiver;
+            if (stateCallbackReceiver != null)
+            {
+                InstallBeforeUpdateHookIfNecessary();
+                device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
+                m_HaveDevicesWithStateCallbackReceivers = true;
+            }
+
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
@@ -1040,8 +1047,9 @@ namespace ISX
             RegisterTemplate("Key", typeof(KeyControl));
             RegisterTemplate("Axis", typeof(AxisControl));
             RegisterTemplate("Analog", typeof(AxisControl));
-            RegisterTemplate("Digital", typeof(DiscreteControl));
-            RegisterTemplate("Discrete", typeof(DiscreteControl));
+            RegisterTemplate("Digital", typeof(IntegerControl));
+            RegisterTemplate("Integer", typeof(IntegerControl));
+            RegisterTemplate("PointerPhase", typeof(PointerPhaseControl));
             RegisterTemplate("Vector2", typeof(Vector2Control));
             RegisterTemplate("Vector3", typeof(Vector3Control));
             RegisterTemplate("Magnitude2", typeof(Magnitude2Control));
@@ -1103,7 +1111,7 @@ namespace ISX
             m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
-            if (m_UpdateListeners.Count > 0)
+            if (m_UpdateListeners.Count > 0 || m_HaveDevicesWithStateCallbackReceivers)
             {
                 m_Runtime.onBeforeUpdate = OnBeforeUpdate;
                 m_NativeBeforeUpdateHooked = true;
@@ -1149,7 +1157,6 @@ namespace ISX
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
-        [NonSerialized] private List<InputDevice> m_DevicesWithAutoResets;
 
         [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
@@ -1174,6 +1181,7 @@ namespace ISX
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
+        [NonSerialized] private bool m_HaveDevicesWithStateCallbackReceivers;
 
         [NonSerialized] private bool m_PluginsInitialized;
         [NonSerialized] private InlinedArray<IInputPluginManager> m_PluginManagers;
@@ -1462,10 +1470,70 @@ namespace ISX
             ReportAvailableDevice(description, deviceId, isNative: true);
         }
 
-        private void OnBeforeUpdate(InputUpdateType updateType)
+        private void InstallBeforeUpdateHookIfNecessary()
+        {
+            if (m_NativeBeforeUpdateHooked || m_Runtime == null)
+                return;
+
+            m_Runtime.onBeforeUpdate = OnBeforeUpdate;
+            m_NativeBeforeUpdateHooked = true;
+        }
+
+        private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
             if (!m_PluginsInitialized)
                 InitializePlugins();
+
+            // For devices that have state callbacks, tell them we're carrying state over
+            // into the next frame.
+            if (m_HaveDevicesWithStateCallbackReceivers)
+            {
+                var stateBuffers = m_StateBuffers.GetBuffers(updateType);
+
+                // For the sake of action state monitors, we need to be able to detect when
+                // an OnCarryStateForward() method writes new values into a state buffer. To do
+                // so, we create a temporary buffer, copy state blocks into that buffer, and then
+                // run the normal action change logic on the temporary and the current state buffer.
+                using (var tempBuffer = new NativeArray<byte>((int)m_StateBuffers.sizePerBuffer, Allocator.Temp))
+                {
+                    var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
+                    var time = Time.time;
+
+                    for (var i = 0; i < m_Devices.Length; ++i)
+                    {
+                        var device = m_Devices[i];
+                        if ((device.m_Flags & InputDevice.Flags.HasStateCallbacks) != InputDevice.Flags.HasStateCallbacks)
+                            continue;
+
+                        var deviceStateOffset = device.m_StateBlock.byteOffset;
+                        var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
+
+                        // Grab current front buffer.
+                        var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
+
+                        // Copy to temporary buffer.
+                        var statePtr = (byte*)frontBuffer.ToPointer() + deviceStateOffset;
+                        var tempStatePtr = tempBufferPtr + deviceStateOffset;
+                        UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
+
+                        // Show to device.
+                        if (((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer))
+                        {
+                            // Let listeners know the device's state has changed.
+                            for (var n = 0; n < m_DeviceChangeListeners.Count; ++n)
+                                m_DeviceChangeListeners[n](device, InputDeviceChange.StateChanged);
+
+                            // Process action state change monitors.
+                            if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
+                                    deviceStateSize, 0))
+                            {
+                                ////REVIEW: should this make the device current?
+                                FireActionStateChangeNotifications(i, time);
+                            }
+                        }
+                    }
+                }
+            }
 
             ////REVIEW: should we activate the buffers for the given update here?
             for (var i = 0; i < m_UpdateListeners.Count; ++i)
@@ -1676,6 +1744,18 @@ namespace ISX
                             break;
                         }
 
+                        // If the device has state callbacks, give it a shot at running custom logic on
+                        // the new state before we integrate it into the system.
+                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
+                            InputDevice.Flags.HasStateCallbacks;
+                        if (deviceHasStateCallbacks)
+                        {
+                            var currentState = InputStateBuffers.GetFrontBuffer(deviceIndex);
+                            var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
+
+                            ((IInputStateCallbackReceiver)device).OnBeforeWriteNewState(currentState, newState);
+                        }
+
                         // Before we update state, let change monitors compare the old and the new state.
                         // We do this instead of first updating the front buffer and then comparing to the
                         // back buffer as that would require a buffer flip for each state change in order
@@ -1757,6 +1837,10 @@ namespace ISX
                         }
 
                         device.m_LastUpdateTime = currentEventTime;
+
+                        // Notify listeners.
+                        for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                            m_DeviceChangeListeners[i](device, InputDeviceChange.StateChanged);
 
                         // Now that we've committed the new state to memory, if any of the change
                         // monitors fired, let the associated actions know.
@@ -2242,6 +2326,7 @@ namespace ISX
             m_CurrentUpdate = InputUpdateType.Dynamic;
             m_AvailableDevices = state.availableDevices.ToList();
             m_Devices = null;
+            m_HaveDevicesWithStateCallbackReceivers = false;
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
             m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
@@ -2390,6 +2475,9 @@ namespace ISX
                     // during deserialization.
                     m_UpdateListeners.Append(beforeUpdateCallbackReceiver.OnUpdate);
                 }
+
+                m_HaveDevicesWithStateCallbackReceivers |= (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
+                    InputDevice.Flags.HasStateCallbacks;
             }
             m_Devices = devices;
 

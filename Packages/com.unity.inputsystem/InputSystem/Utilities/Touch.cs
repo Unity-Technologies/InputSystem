@@ -19,6 +19,7 @@ namespace ISX
         public PointerPhase phase
         {
             get { return (PointerPhase)phaseId; }
+            set { phaseId = (ushort)value; }
         }
     }
 }

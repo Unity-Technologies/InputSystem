@@ -1,4 +1,5 @@
 using System;
+using ISX.Controls;
 using ISX.LowLevel;
 using ISX.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
@@ -182,6 +183,11 @@ namespace ISX
             get { return m_StateBlock; }
         }
 
+        public bool noisy
+        {
+            get { return m_IsNoisy; }
+        }
+
         public InputControl this[string path]
         {
             get { return InputControlPath.TryFindChild(this, path); }
@@ -275,6 +281,7 @@ namespace ISX
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
+        internal bool m_IsNoisy;
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().
@@ -440,10 +447,7 @@ namespace ISX
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
         {
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-            var adjustedStatePtr = new IntPtr(statePtr.ToInt64() - (int)deviceStateOffset);
-
-            WriteRawValueInto(adjustedStatePtr, value);
+            WriteRawValueInto(statePtr, value);
         }
 
         /// <summary>
@@ -464,8 +468,9 @@ namespace ISX
                         path, stateOffsetRelativeToDeviceRoot, m_StateBlock.sizeInBits, typeof(TState).Name, sizeOfState), "state");
 
             // Write value.
-            var addressOfState = new IntPtr(UnsafeUtility.AddressOf(ref state));
-            WriteValueInto(addressOfState, value);
+            var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
+            var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
+            WriteValueInto(new IntPtr(adjustedStatePtr), value);
         }
 
         protected TValue Process(TValue value)

@@ -195,9 +195,10 @@ namespace ISX
         internal enum Flags
         {
             UpdateBeforeRender = 1 << 0,
-            HasAutoResetControls = 1 << 1,////TODO: remove
-            Remote = 1 << 2, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 3, // It's a device created from data surfaced by NativeInputSystem.
+            HasStateCallbacks = 1 << 1,
+            HasNoisyControls = 1 << 2,
+            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 4, // It's a device created from data surfaced by NativeInputSystem.
         }
 
         internal Flags m_Flags;
@@ -231,10 +232,6 @@ namespace ISX
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
-
-        // List of state blocks in this device that require automatic resetting
-        // between frames.
-        internal InputStateBlock[] m_AutoResetStateBlocks;
 
         ////TODO: output is still in the works
         // Buffer that will receive state events for output generated from this device.

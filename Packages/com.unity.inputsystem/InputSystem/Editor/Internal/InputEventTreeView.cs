@@ -31,6 +31,7 @@ namespace ISX.Editor
             Device,
             Size,
             Time,
+            Details,
             COUNT
         }
 
@@ -86,6 +87,14 @@ namespace ISX.Editor
                 width = 100,
                 minWidth = 80,
                 headerContent = new GUIContent("Time")
+            };
+
+            columns[(int)ColumnId.Details] =
+                new MultiColumnHeaderState.Column
+            {
+                width = 250,
+                minWidth = 100,
+                headerContent = new GUIContent("Details")
             };
 
             return new MultiColumnHeaderState(columns);
@@ -178,7 +187,7 @@ namespace ISX.Editor
             }
         }
 
-        private void ColumnGUI(Rect cellRect, InputEventPtr eventPtr, int column, ref RowGUIArgs args)
+        private unsafe void ColumnGUI(Rect cellRect, InputEventPtr eventPtr, int column, ref RowGUIArgs args)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 
@@ -198,6 +207,23 @@ namespace ISX.Editor
                     break;
                 case (int)ColumnId.Time:
                     GUI.Label(cellRect, eventPtr.time.ToString("0.0000s"));
+                    break;
+                case (int)ColumnId.Details:
+                    if (eventPtr.IsA<DeltaStateEvent>())
+                    {
+                        var deltaEventPtr = DeltaStateEvent.From(eventPtr);
+                        GUI.Label(cellRect, string.Format("Format={0}, Offset={1}", deltaEventPtr->stateFormat, deltaEventPtr->stateOffset));
+                    }
+                    else if (eventPtr.IsA<StateEvent>())
+                    {
+                        var stateEventPtr = StateEvent.From(eventPtr);
+                        GUI.Label(cellRect, string.Format("Format={0}", stateEventPtr->stateFormat));
+                    }
+                    else if (eventPtr.IsA<TextEvent>())
+                    {
+                        var textEventPtr = TextEvent.From(eventPtr);
+                        GUI.Label(cellRect, string.Format("Character='{0}'", (char)textEventPtr->character));
+                    }
                     break;
             }
         }

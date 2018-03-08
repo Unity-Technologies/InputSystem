@@ -4,9 +4,9 @@ using ISX.LowLevel;
 namespace ISX.Controls
 {
     ////TODO: allow format to be any integer format
-    public class DiscreteControl : InputControl<int>
+    public class IntegerControl : InputControl<int>
     {
-        public DiscreteControl()
+        public IntegerControl()
         {
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }

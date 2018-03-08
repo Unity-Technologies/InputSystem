@@ -131,5 +131,125 @@ namespace ISX.LowLevel
         {
             get { return (uint)((sizeInBits / 8) + (sizeInBits % 8 > 0 ? 1 : 0)); }
         }
+
+        public unsafe int ReadInt(IntPtr statePtr)
+        {
+            var valuePtr = (byte*)statePtr.ToPointer() + (int)byteOffset;
+
+            int value;
+            if (format == kTypeInt || format == kTypeUInt)
+            {
+                value = *(int*)valuePtr;
+            }
+            else if (format == kTypeBit)
+            {
+                if (sizeInBits == 0)
+                    value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1 : 0;
+                else
+                    value = MemoryHelpers.ReadMultipleBits(new IntPtr(valuePtr), bitOffset, sizeInBits);
+            }
+            else if (format == kTypeByte)
+            {
+                value = *(byte*)valuePtr;
+            }
+            else if (format == kTypeSByte)
+            {
+                value = *(sbyte*)valuePtr;
+            }
+            else if (format == kTypeShort)
+            {
+                value = *(short*)valuePtr;
+            }
+            else if (format == kTypeUShort)
+            {
+                value = *(ushort*)valuePtr;
+            }
+            else
+            {
+                throw new Exception(string.Format("State format '{0}' is not supported as integer format", format));
+            }
+
+            return value;
+        }
+
+        public unsafe void WriteInt(IntPtr statePtr, int value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public unsafe float ReadFloat(IntPtr statePtr)
+        {
+            var valuePtr = (byte*)statePtr.ToPointer() + (int)byteOffset;
+
+            float value;
+            if (format == kTypeFloat)
+            {
+                value = *(float*)valuePtr;
+            }
+            else if (format == kTypeBit)
+            {
+                if (sizeInBits != 1)
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
+
+                value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1.0f : 0.0f;
+            }
+            // If a control with an integer-based representation does not use the full range
+            // of its integer size (e.g. only goes from [0..128]), processors or the parameters
+            // above have to be used to re-process the resulting float values.
+            else if (format == kTypeShort)
+            {
+                ////REVIEW: What's better here? This code reaches a clean -1 but doesn't reach a clean +1 as the range is [-32768..32767].
+                ////        Should we cut off at -32767? Or just live with the fact that 0.999 is as high as it gets?
+                value = *((short*)valuePtr) / 32768.0f;
+            }
+            else if (format == kTypeUShort)
+            {
+                value = *((ushort*)valuePtr) / 65535.0f;
+            }
+            else if (format == kTypeByte)
+            {
+                value = *((byte*)valuePtr) / 255.0f;
+            }
+            else if (format == kTypeSByte)
+            {
+                ////REVIEW: Same problem here as with 'short'
+                value = *((byte*)valuePtr) / 128.0f;
+            }
+            else
+            {
+                throw new Exception(string.Format("State format '{0}' is not supported as floating-point format", format));
+            }
+
+            return value;
+        }
+
+        public unsafe void WriteFloat(IntPtr statePtr, float value)
+        {
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)byteOffset);
+
+            if (format == kTypeFloat)
+            {
+                *(float*)valuePtr = value;
+            }
+            else if (format == kTypeBit)
+            {
+                if (sizeInBits != 1)
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
+
+                MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
+            }
+            else if (format == kTypeShort)
+            {
+                *(short*)valuePtr = (short)(value * 65535.0f);
+            }
+            else if (format == kTypeByte)
+            {
+                *(byte*)valuePtr = (byte)(value * 255.0f);
+            }
+            else
+            {
+                throw new Exception(string.Format("State format '{0}' is not supported as floating-point format", format));
+            }
+        }
     }
 }

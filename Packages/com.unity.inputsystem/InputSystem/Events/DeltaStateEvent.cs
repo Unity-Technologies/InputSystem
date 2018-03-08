@@ -6,9 +6,13 @@ using ISX.Utilities;
 
 namespace ISX.LowLevel
 {
-    // Partial state update for an input device.
-    // Avoids having to send a full state memory snapshot when only a small
-    // part of the state has changed.
+    /// <summary>
+    /// Partial state update for an input device.
+    /// </summary>
+    /// <remarks>
+    /// Avoids having to send a full state memory snapshot when only a small
+    /// part of the state has changed.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 9)]
     public unsafe struct DeltaStateEvent : IInputEventTypeInfo
     {
