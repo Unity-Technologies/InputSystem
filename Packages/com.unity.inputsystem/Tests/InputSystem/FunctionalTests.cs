@@ -1300,6 +1300,41 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanGetFlatListOfControlsFromDevice()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""template"" : ""Stick""
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""template"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = new InputControlSetup("MyDevice").Finish();
+
+        Assert.That(device.allControls.Count, Is.EqualTo(2 + 4 + 2)); // 2 toplevel controls, 4 added by Stick, 2 for X and Y
+        Assert.That(device.allControls, Contains.Item(device["button"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["up"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["down"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["left"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["right"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["x"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["y"]));
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
     {
         var setup = new InputControlSetup("Gamepad");

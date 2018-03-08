@@ -115,6 +115,24 @@ namespace ISX
             get { return m_LastUpdateTime; }
         }
 
+        /// <summary>
+        /// A flattened list of controls that make up the device.
+        /// </summary>
+        /// <remarks>
+        /// Does not allocate.
+        /// </remarks>
+        public ReadOnlyArray<InputControl> allControls
+        {
+            get
+            {
+                // Since the m_ChildrenForEachControl contains the device's children as well as the children
+                // of each control in the hierarchy, and since each control can only have a single parent,
+                // this list will actually deliver a flattened list of all controls in the hierarchy (and without
+                // the device itself being listed).
+                return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
+            }
+        }
+
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
         {
