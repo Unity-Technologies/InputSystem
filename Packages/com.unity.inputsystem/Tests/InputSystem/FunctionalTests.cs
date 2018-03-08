@@ -733,6 +733,17 @@ class FunctionalTests : InputTestFixture
         Assert.That(template.controls[0].usages[1].ToString(), Is.EqualTo("Bar"));
     }
 
+    [Test]
+    [Category("Templates")]
+    public void Templates_BuildingTemplateInCode_WithEmptyUsageString_Throws()
+    {
+        var builder = new InputTemplate.Builder().WithName("TestTemplate");
+
+        Assert.That(() => builder.AddControl("TestControl").WithUsages(""),
+            Throws.ArgumentException.With.Message.StringContaining("TestControl")
+            .And.With.Message.StringContaining("TestTemplate"));
+    }
+
     [Serializable]
     class TestTemplateConstructor
     {

@@ -342,6 +342,7 @@ namespace ISX
 
             public struct ControlBuilder
             {
+                internal Builder builder;
                 internal ControlTemplate[] controls;
                 internal int index;
 
@@ -384,7 +385,9 @@ namespace ISX
 
                     for (var i = 0; i < usages.Length; ++i)
                         if (usages[i].IsEmpty())
-                            throw new ArgumentException("Empty usage entry at index " + i, "usages");
+                            throw new ArgumentException(
+                                string.Format("Empty usage entry at index {0} for control '{1}' in template '{2}'", i,
+                                    controls[index].name, builder.name), "usages");
 
                     controls[index].usages = new ReadOnlyArray<InternedString>(usages);
                     return this;
@@ -424,6 +427,7 @@ namespace ISX
 
                 return new ControlBuilder
                 {
+                    builder = this,
                     controls = m_Controls,
                     index = index
                 };
