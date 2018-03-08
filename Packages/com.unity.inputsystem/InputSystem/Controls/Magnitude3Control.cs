@@ -17,7 +17,7 @@ namespace ISX.Controls
             m_StateBlock.format = InputStateBlock.kTypeVector3;
         }
 
-        protected override unsafe float ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe float ReadRawValueFrom(IntPtr statePtr)
         {
             var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             var x = valuePtr[0];

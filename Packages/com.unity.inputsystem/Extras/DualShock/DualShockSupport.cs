@@ -20,6 +20,11 @@ namespace ISX.Plugins.DualShock
                 interfaceName = "HID"
             });
             #endif
+
+            #if UNITY_EDITOR || UNITY_PS4
+            InputSystem.RegisterTemplate<PS4TouchControl>("PS4Touch");
+            InputSystem.RegisterTemplate<DualShockGamepadPS4>("PS4DualShockGamepad");
+            #endif
         }
     }
 }

@@ -16,7 +16,7 @@ namespace ISX.Controls
             m_StateBlock.format = InputStateBlock.kTypeInt;
         }
 
-        protected override unsafe PointerPhase ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe PointerPhase ReadRawValueFrom(IntPtr statePtr)
         {
             var intValue = stateBlock.ReadInt(statePtr);
             return (PointerPhase)intValue;

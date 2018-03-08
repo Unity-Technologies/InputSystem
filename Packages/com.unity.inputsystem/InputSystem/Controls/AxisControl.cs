@@ -46,9 +46,10 @@ namespace ISX.Controls
         // the state format of the control and performs conversions.
         // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
         //       or bitfield type.
-        protected override float ReadRawValueFrom(IntPtr statePtr)
+        public override float ReadRawValueFrom(IntPtr statePtr)
         {
             var value = stateBlock.ReadFloat(statePtr);
+            ////REVIEW: this isn't very raw
             return Preprocess(value);
         }
 

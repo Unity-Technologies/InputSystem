@@ -180,7 +180,6 @@ namespace ISX.XboxOne
 
         public XboxOneGamepad() : base()
         {
-
         }
 
         public void PauseHaptics()
@@ -281,5 +280,4 @@ namespace ISX.XboxOne
             };
         }
     }
-
 }

@@ -432,7 +432,12 @@ namespace ISX
             return Process(ReadRawValueFrom(statePtr));
         }
 
-        protected abstract TValue ReadRawValueFrom(IntPtr statePtr);
+        public TValue ReadRawValue()
+        {
+            return ReadRawValueFrom(currentStatePtr);
+        }
+
+        public abstract TValue ReadRawValueFrom(IntPtr statePtr);
 
         protected virtual void WriteRawValueInto(IntPtr statePtr, TValue value)
         {

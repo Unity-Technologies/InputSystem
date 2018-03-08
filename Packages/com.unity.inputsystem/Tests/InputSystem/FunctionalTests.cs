@@ -161,8 +161,8 @@ class FunctionalTests : InputTestFixture
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo(new InternedString("square")));
-        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo(new InternedString("x")));
+        Assert.That(gamepad.buttonWest.aliases, Has.Exactly(1).EqualTo(new InternedString("square")));
+        Assert.That(gamepad.buttonWest.aliases, Has.Exactly(1).EqualTo(new InternedString("x")));
     }
 
     [Test]
@@ -1924,13 +1924,13 @@ class FunctionalTests : InputTestFixture
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.bButton.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
 
         var newState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.isPressed, Is.True);
+        Assert.That(gamepad.buttonEast.isPressed, Is.True);
     }
 
     [Test]
@@ -1939,22 +1939,22 @@ class FunctionalTests : InputTestFixture
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.wasJustPressed, Is.True);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.True);
     }
 
     // The way we keep state does not allow observing the state change on the final
@@ -1973,9 +1973,9 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.isPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
     }
 
     [Test]
@@ -2006,7 +2006,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, state);
         InputSystem.Update();
 
-        Assert.That(gamepad.aButton.value, Is.EqualTo(0.5f));
+        Assert.That(gamepad.buttonSouth.value, Is.EqualTo(0.5f));
     }
 
     [Test]
@@ -3059,7 +3059,7 @@ class FunctionalTests : InputTestFixture
         var matchByAlias2 = InputSystem.GetControls("/gamepad/cross");
 
         Assert.That(matchByName, Has.Count.EqualTo(1));
-        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.aButton));
+        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.buttonSouth));
         Assert.That(matchByAlias1, Is.EqualTo(matchByName));
         Assert.That(matchByAlias2, Is.EqualTo(matchByName));
     }
@@ -3178,7 +3178,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Events")]
-    public void Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
+    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
     {
         Assert.Fail();
     }
@@ -3944,7 +3944,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
 
         startedReceivedCalls = 0;
 
@@ -3954,7 +3954,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedAction, Is.SameAs(action));
-        Assert.That(performedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
@@ -4001,7 +4001,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
 
         startedReceivedCalls = 0;
 
@@ -4011,7 +4011,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedAction, Is.SameAs(action));
-        Assert.That(performedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
@@ -4239,13 +4239,13 @@ class FunctionalTests : InputTestFixture
         action.Enable();
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
-        Assert.That(action.controls[0], Is.SameAs(gamepad1.aButton));
+        Assert.That(action.controls[0], Is.SameAs(gamepad1.buttonSouth));
 
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
-        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.aButton));
-        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.aButton));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.buttonSouth));
     }
 
     ////REVIEW: what's the bahavior we want here?
@@ -4444,7 +4444,7 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(performed, Has.Count.EqualTo(1));
         // Last control in combination is considered the trigger control.
-        Assert.That(performed[0].control, Is.SameAs(gamepad.aButton));
+        Assert.That(performed[0].control, Is.SameAs(gamepad.buttonSouth));
     }
 
     [Test]
@@ -4965,7 +4965,7 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(numOverrides, Is.EqualTo(1));
         Assert.That(action1.bindings[0].overridePath, Is.Null);
-        Assert.That(action2.bindings[0].overridePath, Is.EqualTo(gamepad.aButton.path));
+        Assert.That(action2.bindings[0].overridePath, Is.EqualTo(gamepad.buttonSouth.path));
     }
 
     [Test]

@@ -52,7 +52,7 @@ namespace ISX.Controls
             base.FinishSetup(setup);
         }
 
-        protected override unsafe Touch ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe Touch ReadRawValueFrom(IntPtr statePtr)
         {
             var valuePtr = (Touch*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return *valuePtr;

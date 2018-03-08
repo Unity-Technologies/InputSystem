@@ -7,7 +7,7 @@ namespace ISX.Controls
 {
     public class ColorControl : InputControl<Color>
     {
-        protected override Color ReadRawValueFrom(IntPtr statePtr)
+        public override Color ReadRawValueFrom(IntPtr statePtr)
         {
             throw new NotImplementedException();
         }
