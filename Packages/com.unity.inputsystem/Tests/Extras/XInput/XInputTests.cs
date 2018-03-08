@@ -14,6 +14,7 @@ class XInputTests : InputTestFixture
     }
 
     ////TODO: refactor this into two tests that send actual state and test the wiring
+    ////TODO: enable everything in the editor always and test
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
@@ -85,7 +86,6 @@ class XInputTests : InputTestFixture
             rightStick = new Vector2(0.789f, 0.234f),
             leftTrigger = 0.567f,
             rightTrigger = 0.891f,
-            buttons = 0xffffffff
         });
         InputSystem.Update();
 
@@ -96,24 +96,35 @@ class XInputTests : InputTestFixture
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.567).Within(0.00001));
         Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.891).Within(0.00001));
 
-        Assert.That(gamepad.menu.isPressed);
-        Assert.That(gamepad.view.isPressed);
-        Assert.That(gamepad.startButton.isPressed);
-        Assert.That(gamepad.selectButton.isPressed);
-        Assert.That(gamepad.aButton.isPressed);
-        Assert.That(gamepad.bButton.isPressed);
-        Assert.That(gamepad.xButton.isPressed);
-        Assert.That(gamepad.yButton.isPressed);
-        Assert.That(gamepad.buttonEast.isPressed);
-        Assert.That(gamepad.buttonWest.isPressed);
-        Assert.That(gamepad.buttonNorth.isPressed);
-        Assert.That(gamepad.buttonSouth.isPressed);
-        Assert.That(gamepad.paddle1.isPressed);
-        Assert.That(gamepad.paddle2.isPressed);
-        Assert.That(gamepad.paddle3.isPressed);
-        Assert.That(gamepad.paddle4.isPressed);
-        Assert.That(gamepad.leftShoulder.isPressed);
-        Assert.That(gamepad.rightShoulder.isPressed);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.A), gamepad.aButton);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.A), gamepad.buttonSouth);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.B), gamepad.bButton);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.B), gamepad.buttonEast);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.X), gamepad.xButton);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.X), gamepad.buttonWest);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Y), gamepad.yButton);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Y), gamepad.buttonNorth);
+
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadDown), gamepad.dpad.down);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadUp), gamepad.dpad.up);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadLeft), gamepad.dpad.left);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.DPadRight), gamepad.dpad.right);
+
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.LeftThumbstick), gamepad.leftStickButton);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.RightThumbstick), gamepad.rightStickButton);
+
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.LeftShoulder), gamepad.leftShoulder);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.RightShoulder), gamepad.rightShoulder);
+
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Menu), gamepad.menu);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Menu), gamepad.startButton);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.View), gamepad.view);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.View), gamepad.selectButton);
+
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle1), gamepad.paddle1);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle2), gamepad.paddle2);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle3), gamepad.paddle3);
+        AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.Paddle4), gamepad.paddle4);
     }
 
 #endif

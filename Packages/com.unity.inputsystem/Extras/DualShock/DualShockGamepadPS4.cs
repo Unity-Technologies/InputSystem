@@ -8,6 +8,8 @@ using ISX.Plugins.DualShock.LowLevel;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
+////TODO: player ID
+
 namespace ISX.Plugins.DualShock.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
@@ -260,7 +262,7 @@ namespace ISX.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
 
-            OnDeviceCommand<DualShockPS4OuputCommand>(ref command);
+            OnDeviceCommand(ref command);
         }
 
         public void ResetHaptics()
@@ -274,7 +276,7 @@ namespace ISX.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.ResetColor();
 
-            OnDeviceCommand<DualShockPS4OuputCommand>(ref command);
+            OnDeviceCommand(ref command);
 
             m_LargeMotor = null;
             m_SmallMotor = null;

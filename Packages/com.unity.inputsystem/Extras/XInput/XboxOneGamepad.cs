@@ -6,6 +6,8 @@ using System.Runtime.InteropServices;
 using ISX.Plugins.XInput.LowLevel;
 using UnityEngine;
 
+////TODO: player ID
+
 namespace ISX.Plugins.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
@@ -50,10 +52,10 @@ namespace ISX.Plugins.XInput.LowLevel
         [InputControl(name = "leftStickPress", bit = (uint)Button.LeftThumbstick)]
         [InputControl(name = "rightStickPress", bit = (uint)Button.RightThumbstick)]
         [InputControl(name = "dpad", template = "Dpad", sizeInBits = 4, bit = 8)]
-        [InputControl(name = "dpad/up", bit = (uint)Button.DPadUp - 8)]
-        [InputControl(name = "dpad/right", bit = (uint)Button.DPadRight - 8)]
-        [InputControl(name = "dpad/down", bit = (uint)Button.DPadDown - 8)]
-        [InputControl(name = "dpad/left", bit = (uint)Button.DPadLeft - 8)]
+        [InputControl(name = "dpad/up", bit = (uint)Button.DPadUp)]
+        [InputControl(name = "dpad/right", bit = (uint)Button.DPadRight)]
+        [InputControl(name = "dpad/down", bit = (uint)Button.DPadDown)]
+        [InputControl(name = "dpad/left", bit = (uint)Button.DPadLeft)]
         [InputControl(name = "paddle1", template = "Button", bit = (uint)Button.Paddle1)]
         [InputControl(name = "paddle2", template = "Button", bit = (uint)Button.Paddle2)]
         [InputControl(name = "paddle3", template = "Button", bit = (uint)Button.Paddle3)]
@@ -92,6 +94,12 @@ namespace ISX.Plugins.XInput.LowLevel
         public FourCC GetFormat()
         {
             return kFormat;
+        }
+
+        public XboxOneGamepadState WithButton(Button button)
+        {
+            buttons |= (uint)1 << (int)button;
+            return this;
         }
     }
 
