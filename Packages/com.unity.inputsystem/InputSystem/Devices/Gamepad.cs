@@ -2,13 +2,16 @@ using System;
 using System.Runtime.InteropServices;
 using ISX.Controls;
 using ISX.Haptics;
+using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
+
+////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
 // use case: audio on GP (ps4 mic)
 // use case: player ID and change on same GP
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Default state layout for gamepads.
@@ -33,6 +36,7 @@ namespace ISX
         [InputControl(name = "buttonWest", template = "Button", bit = (uint)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
         [InputControl(name = "buttonNorth", template = "Button", bit = (uint)Button.North, aliases = new[] { "y", "triangle" })]
         [InputControl(name = "buttonEast", template = "Button", bit = (uint)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
+        ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", template = "Button", bit = (uint)Button.LeftStick)]
         [InputControl(name = "rightStickPress", template = "Button", bit = (uint)Button.RightStick)]
         [InputControl(name = "leftShoulder", template = "Button", bit = (uint)Button.LeftShoulder)]
@@ -118,7 +122,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     /// <summary>
     /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
@@ -127,14 +134,11 @@ namespace ISX
     [InputTemplate(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
-        // Given that the north/east/south/west directions are awkward to use,
-        // we expose the controls using Xbox style naming. However, we still look
-        // them up using directions so the underlying controls should be the right
-        // ones.
-        public ButtonControl xButton { get; private set; }
-        public ButtonControl yButton { get; private set; }
-        public ButtonControl aButton { get; private set; }
-        public ButtonControl bButton { get; private set; }
+        ////REVEIEW: add PS4 and Xbox style alternate accessors?
+        public ButtonControl buttonWest { get; private set; }
+        public ButtonControl buttonNorth { get; private set; }
+        public ButtonControl buttonSouth { get; private set; }
+        public ButtonControl buttonEast { get; private set; }
 
         public ButtonControl leftStickButton { get; private set; }
         public ButtonControl rightStickButton { get; private set; }
@@ -170,10 +174,10 @@ namespace ISX
 
         protected override void FinishSetup(InputControlSetup setup)
         {
-            xButton = setup.GetControl<ButtonControl>(this, "buttonWest");
-            yButton = setup.GetControl<ButtonControl>(this, "buttonNorth");
-            aButton = setup.GetControl<ButtonControl>(this, "buttonSouth");
-            bButton = setup.GetControl<ButtonControl>(this, "buttonEast");
+            buttonWest = setup.GetControl<ButtonControl>(this, "buttonWest");
+            buttonNorth = setup.GetControl<ButtonControl>(this, "buttonNorth");
+            buttonSouth = setup.GetControl<ButtonControl>(this, "buttonSouth");
+            buttonEast = setup.GetControl<ButtonControl>(this, "buttonEast");
 
             startButton = setup.GetControl<ButtonControl>(this, "start");
             selectButton = setup.GetControl<ButtonControl>(this, "select");

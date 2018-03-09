@@ -1,4 +1,3 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
 using System.Collections.Generic;
 using ISX.LowLevel;
@@ -96,8 +95,7 @@ namespace ISX
             }
         }
 
-        public unsafe long DeviceCommand<TCommand>(int deviceId, ref TCommand command)
-            where TCommand : struct, IInputDeviceCommandInfo
+        public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
             lock (m_Lock)
             {
@@ -106,7 +104,6 @@ namespace ISX
                     {
                         if (entry.Key == deviceId)
                         {
-                            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
                             return entry.Value(deviceId, commandPtr);
                         }
                     }
@@ -149,4 +146,3 @@ namespace ISX
         private object m_Lock = new object();
     }
 }
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD

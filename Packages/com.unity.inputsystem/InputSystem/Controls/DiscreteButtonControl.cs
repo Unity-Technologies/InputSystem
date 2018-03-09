@@ -40,7 +40,7 @@ namespace ISX.Controls
 
         public int nullValue;
 
-        protected override float ReadRawValueFrom(IntPtr statePtr)
+        public override float ReadRawValueFrom(IntPtr statePtr)
         {
             var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             var intValue = MemoryHelpers.ReadMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);

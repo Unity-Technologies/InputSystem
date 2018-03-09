@@ -13,6 +13,8 @@ using ISX.LowLevel;
 
 ////TODO: allow setting a C# struct type that we can use to display the layout of the data
 
+////TODO: for delta state events, highlight the controls included in the event (or show only those)
+
 ////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
 
 namespace ISX.Editor
@@ -29,22 +31,38 @@ namespace ISX.Editor
         public unsafe void InitializeWithEvent(InputEventPtr eventPtr, InputControl control)
         {
             // Must be an event carrying state.
-            Debug.Assert(eventPtr.IsA<StateEvent>() || eventPtr.IsA<DeltaStateEvent>());
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                throw new ArgumentException("Event must be state or delta event", "eventPtr");
 
-            ////TODO: support delta events
+            // Get state data.
+            void* dataPtr;
+            uint dataSize;
+            uint stateSize;
+            uint stateOffset = 0;
+
             if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("delta event support not yet implemented");
-
-            m_Control = control;
+            {
+                var deltaEventPtr = DeltaStateEvent.From(eventPtr);
+                stateSize = control.stateBlock.alignedSizeInBytes;
+                stateOffset = deltaEventPtr->stateOffset;
+                dataPtr = deltaEventPtr->deltaState.ToPointer();
+                dataSize = deltaEventPtr->deltaStateSizeInBytes;
+            }
+            else
+            {
+                var stateEventPtr = StateEvent.From(eventPtr);
+                dataSize = stateSize = stateEventPtr->stateSizeInBytes;
+                dataPtr = stateEventPtr->state.ToPointer();
+            }
 
             // Copy event data.
-            var stateEventPtr = StateEvent.From(eventPtr);
-            var stateSize = stateEventPtr->stateSizeInBytes;
             var buffer = new byte[stateSize];
-            fixed(byte* stateDataPtr = buffer)
+            fixed(byte* bufferPtr = buffer)
             {
-                UnsafeUtility.MemCpy(stateDataPtr, stateEventPtr->state.ToPointer(), stateSize);
+                UnsafeUtility.MemCpy(bufferPtr + stateOffset, dataPtr, dataSize);
             }
+
+            m_Control = control;
             m_StateBuffers = new byte[1][];
             m_StateBuffers[0] = buffer;
             m_SelectedStateBuffer = BufferSelector.Default;

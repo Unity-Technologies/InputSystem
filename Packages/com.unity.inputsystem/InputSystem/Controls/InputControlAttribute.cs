@@ -32,9 +32,6 @@ namespace ISX
         public uint sizeInBits;
         public string displayName;
         public string imageName;
-
-        ////TODO: these should go on the chopping block
-        public bool autoReset;
-        public bool accumulate;
+        public bool noisy;
     }
 }

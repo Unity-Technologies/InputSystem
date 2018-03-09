@@ -17,11 +17,11 @@ public class TouchReporter : MonoBehaviour
     {
         Touchscreen touchscreen = ISX.Touchscreen.current;
 
-        coordinateText.text = touchscreen.touches[touchIndex].value.position.x.ToString("0000") + ", " +
-            touchscreen.touches[touchIndex].value.position.y.ToString("0000");
+        coordinateText.text = touchscreen.allTouchControls[touchIndex].value.position.x.ToString("0000") + ", " +
+            touchscreen.allTouchControls[touchIndex].value.position.y.ToString("0000");
 
-        if (touchscreen.touches[touchIndex].value.phase != PointerPhase.None &&
-            touchscreen.touches[touchIndex].value.phase != PointerPhase.Ended)
+        if (touchscreen.allTouchControls[touchIndex].value.phase != PointerPhase.None &&
+            touchscreen.allTouchControls[touchIndex].value.phase != PointerPhase.Ended)
         {
             image.color = Color.red;
         }

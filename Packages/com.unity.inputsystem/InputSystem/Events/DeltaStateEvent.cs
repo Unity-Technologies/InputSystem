@@ -6,9 +6,13 @@ using ISX.Utilities;
 
 namespace ISX.LowLevel
 {
-    // Partial state update for an input device.
-    // Avoids having to send a full state memory snapshot when only a small
-    // part of the state has changed.
+    /// <summary>
+    /// Partial state update for an input device.
+    /// </summary>
+    /// <remarks>
+    /// Avoids having to send a full state memory snapshot when only a small
+    /// part of the state has changed.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 9)]
     public unsafe struct DeltaStateEvent : IInputEventTypeInfo
     {
@@ -19,12 +23,12 @@ namespace ISX.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize + 4)] public uint stateOffset;
         [FieldOffset(InputEvent.kBaseEventSize + 8)] public fixed byte stateData[1]; // Variable-sized.
 
-        public uint stateSizeInBytes
+        public uint deltaStateSizeInBytes
         {
-            get { return (uint)(baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8)); }
+            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8); }
         }
 
-        public IntPtr state
+        public IntPtr deltaState
         {
             get
             {
@@ -38,6 +42,17 @@ namespace ISX.LowLevel
         public FourCC GetTypeStatic()
         {
             return Type;
+        }
+
+        public static DeltaStateEvent* From(InputEventPtr ptr)
+        {
+            if (!ptr.valid)
+                throw new ArgumentNullException("ptr");
+            if (!ptr.IsA<DeltaStateEvent>())
+                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into DeltaStateEvent",
+                        ptr.type));
+
+            return (DeltaStateEvent*)ptr.data;
         }
     }
 }

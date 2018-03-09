@@ -42,12 +42,9 @@ namespace ISX.LowLevel
             NativeInputSystem.QueueInputEvent(ptr);
         }
 
-        public unsafe long DeviceCommand<TCommand>(int deviceId, ref TCommand command)
-            where TCommand : struct, IInputDeviceCommandInfo
+        public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
-            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
-            return NativeInputSystem.IOCTL(deviceId, commandPtr->type, (IntPtr)commandPtr->payloadPtr,
-                commandPtr->sizeInBytes - InputDeviceCommand.kBaseCommandSize);
+            return NativeInputSystem.IOCTL(deviceId, commandPtr->type, new IntPtr(commandPtr->payloadPtr), commandPtr->payloadSizeInBytes);
         }
 
         public Action<InputUpdateType, int, IntPtr> onUpdate

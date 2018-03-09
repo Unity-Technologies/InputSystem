@@ -57,6 +57,26 @@ namespace ISX.Editor
         }
 
         /// <summary>
+        /// Iterate over all device templates that don't try to match specific products.
+        /// </summary>
+        public static IEnumerable<InputTemplate> allNonProductTemplates
+        {
+            get
+            {
+                foreach (var template in allTemplates)
+                {
+                    if (!typeof(InputDevice).IsAssignableFrom(template.type))
+                        continue;
+
+                    var deviceDescription = template.deviceDescription;
+                    if (string.IsNullOrEmpty(deviceDescription.product) &&
+                        string.IsNullOrEmpty(deviceDescription.manufacturer))
+                        yield return template;
+                }
+            }
+        }
+
+        /// <summary>
         /// Event that is triggered whenever the template setup in the system changes.
         /// </summary>
         public static event Action onRefresh

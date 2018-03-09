@@ -1,6 +1,5 @@
 using ISX.LowLevel;
-
-////FIXME: Doxygen doesn't link any of the seealso refs correctly; we really need to get rid of Doxygen
+using ISX.Utilities;
 
 namespace ISX
 {
@@ -13,7 +12,7 @@ namespace ISX
         /// <summary>
         /// A new device was added to the system.
         /// </summary>
-        /// <seealso cref="InputSystem.AddDevice"/>
+        /// <seealso cref="InputSystem.AddDevice(string,string)"/>
         Added,
 
         /// <summary>
@@ -29,7 +28,7 @@ namespace ISX
         /// This may signal, for example, that what was the right hand XR controller before
         /// is now the left hand controller.
         /// </remarks>
-        /// <seealso cref="InputSystem.SetUsage"/>
+        /// <seealso cref="InputSystem.SetUsage(InputDevice,InternedString)"/>
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 
@@ -44,6 +43,12 @@ namespace ISX
         /// </remarks>
         /// <seealso cref="DeviceConfigurationEvent"/>
         /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
-        ConfigurationChanged
+        ConfigurationChanged,
+
+        StateChanged,
+
+        ////REVIEW: should 'current' be renamed to 'lastActive'?
+
+        CurrentChanged
     }
 }

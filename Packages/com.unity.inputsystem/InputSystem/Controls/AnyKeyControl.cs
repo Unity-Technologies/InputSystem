@@ -21,7 +21,7 @@ namespace ISX.Controls
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        protected override float ReadRawValueFrom(IntPtr statePtr)
+        public override float ReadRawValueFrom(IntPtr statePtr)
         {
             var valuePtr = new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             return CheckStateIsAllZeros(valuePtr) ? 0.0f : 1.0f;

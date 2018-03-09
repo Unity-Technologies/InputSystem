@@ -16,7 +16,7 @@ namespace ISX.Controls
             m_StateBlock.format = InputStateBlock.kTypeQuaternion;
         }
 
-        protected override unsafe Quaternion ReadRawValueFrom(IntPtr statePtr)
+        public override unsafe Quaternion ReadRawValueFrom(IntPtr statePtr)
         {
             var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
             var x = valuePtr[0];

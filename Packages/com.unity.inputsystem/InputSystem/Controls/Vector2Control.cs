@@ -42,7 +42,7 @@ namespace ISX.Controls
             base.FinishSetup(setup);
         }
 
-        protected override Vector2 ReadRawValueFrom(IntPtr statePtr)
+        public override Vector2 ReadRawValueFrom(IntPtr statePtr)
         {
             return new Vector2(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr));
         }

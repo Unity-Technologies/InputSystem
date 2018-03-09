@@ -1,4 +1,5 @@
 using System;
+using ISX.Controls;
 using UnityEngine;
 
 ////TODO: expose user index
@@ -18,6 +19,14 @@ namespace ISX.Plugins.XInput
     /// </remarks>
     public class XInputController : Gamepad
     {
+        public ButtonControl aButton { get; private set; }
+        public ButtonControl bButton { get; private set; }
+        public ButtonControl xButton { get; private set; }
+        public ButtonControl yButton { get; private set; }
+
+        public ButtonControl menu { get; private set; }
+        public ButtonControl view { get; private set; }
+
         /// <summary>
         /// What specific kind of XInput controller this is.
         /// </summary>
@@ -34,6 +43,19 @@ namespace ISX.Plugins.XInput
                     ParseCapabilities();
                 return m_SubType;
             }
+        }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            base.FinishSetup(setup);
+
+            aButton = buttonSouth;
+            bButton = buttonEast;
+            xButton = buttonWest;
+            yButton = buttonNorth;
+
+            menu = startButton;
+            view = selectButton;
         }
 
         private bool m_HaveParsedCapabilities;

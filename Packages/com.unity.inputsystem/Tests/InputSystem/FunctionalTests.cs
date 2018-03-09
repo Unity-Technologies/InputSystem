@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,12 +15,13 @@ using ISX.LowLevel;
 using ISX.Modifiers;
 using ISX.Processors;
 using ISX.Utilities;
+using Touch = ISX.Touch;
 #if UNITY_EDITOR
 using ISX.Editor;
 using UnityEditor;
 #endif
 
-#if !NET_4_0
+#if !(NET_4_0 || NET_4_6)
 using ISX.Net35Compatibility;
 #endif
 
@@ -161,8 +161,8 @@ class FunctionalTests : InputTestFixture
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo(new InternedString("square")));
-        Assert.That(gamepad.xButton.aliases, Has.Exactly(1).EqualTo(new InternedString("x")));
+        Assert.That(gamepad.buttonWest.aliases, Has.Exactly(1).EqualTo(new InternedString("square")));
+        Assert.That(gamepad.buttonWest.aliases, Has.Exactly(1).EqualTo(new InternedString("x")));
     }
 
     [Test]
@@ -683,6 +683,30 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
+    public void Templates_CanMarkControlAsNoisy()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyTemplate"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""button"",
+                        ""template"" : ""Button"",
+                        ""noisy"" : true
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = InputSystem.AddDevice("MyTemplate");
+
+        Assert.That(device["button"].noisy, Is.True);
+    }
+
+    [Test]
+    [Category("Templates")]
     public void Templates_CanBuildTemplatesInCode()
     {
         var builder = new InputTemplate.Builder()
@@ -691,17 +715,33 @@ class FunctionalTests : InputTestFixture
             .Extend("Pointer")
             .WithFormat("CUST");
 
-        builder.AddControl("button").WithTemplate("Button");
+        builder.AddControl("button")
+        .WithTemplate("Button")
+        .WithUsages("Foo", "Bar");
 
         var template = builder.Build();
 
         Assert.That(template.name.ToString(), Is.EqualTo("MyTemplate"));
         Assert.That(template.type, Is.SameAs(typeof(Gamepad)));
         Assert.That(template.stateFormat, Is.EqualTo(new FourCC("CUST")));
-        Assert.That(template.extendsTemplate.ToString(), Is.EqualTo("Pointer"));
+        Assert.That(template.extendsTemplate, Is.EqualTo("Pointer"));
         Assert.That(template.controls, Has.Count.EqualTo(1));
         Assert.That(template.controls[0].name.ToString(), Is.EqualTo("button"));
         Assert.That(template.controls[0].template.ToString(), Is.EqualTo("Button"));
+        Assert.That(template.controls[0].usages.Count, Is.EqualTo(2));
+        Assert.That(template.controls[0].usages[0].ToString(), Is.EqualTo("Foo"));
+        Assert.That(template.controls[0].usages[1].ToString(), Is.EqualTo("Bar"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_BuildingTemplateInCode_WithEmptyUsageString_Throws()
+    {
+        var builder = new InputTemplate.Builder().WithName("TestTemplate");
+
+        Assert.That(() => builder.AddControl("TestControl").WithUsages(""),
+            Throws.ArgumentException.With.Message.Contains("TestControl")
+            .And.With.Message.Contains("TestTemplate"));
     }
 
     [Serializable]
@@ -1003,15 +1043,15 @@ class FunctionalTests : InputTestFixture
         var leftyGamepadSetup = new InputControlSetup("Gamepad", variant: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
         var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
-        var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
-        var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
+        //var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
+        //var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
         //shoulder?
 
         var defaultGamepadSetup = new InputControlSetup("Gamepad");
         var defaultGamepadPrimary2DMotion = defaultGamepadSetup.GetControl("{Primary2DMotion}");
         var defaultGamepadSecondary2DMotion = defaultGamepadSetup.GetControl("{Secondary2DMotion}");
-        var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
-        var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
+        //var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
+        //var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
 
         var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
         var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
@@ -1256,6 +1296,41 @@ class FunctionalTests : InputTestFixture
         var device = setup.Finish();
 
         Assert.That(leftStick.device, Is.SameAs(device));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanGetFlatListOfControlsFromDevice()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""template"" : ""Stick""
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""template"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterTemplate(json);
+
+        var device = new InputControlSetup("MyDevice").Finish();
+
+        Assert.That(device.allControls.Count, Is.EqualTo(2 + 4 + 2)); // 2 toplevel controls, 4 added by Stick, 2 for X and Y
+        Assert.That(device.allControls, Contains.Item(device["button"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["up"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["down"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["left"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["right"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["x"]));
+        Assert.That(device.allControls, Contains.Item(device["stick"]["y"]));
     }
 
     [Test]
@@ -1509,23 +1584,6 @@ class FunctionalTests : InputTestFixture
         Assert.That(dpad.down.isPressed, Is.True);
         Assert.That(dpad.up.isPressed, Is.False);
         Assert.That(dpad.right.isPressed, Is.False);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_DevicesGetNameFromBaseTemplate()
-    {
-        var json = @"
-            { ""name"" : ""MyDevice"",
-              ""extend"" : ""Gamepad"" }
-        ";
-
-        InputSystem.RegisterTemplate(json);
-
-        var setup = new InputControlSetup("MyDevice");
-        var device = setup.Finish();
-
-        Assert.That(device.name, Is.EqualTo("Gamepad"));
     }
 
     [Test]
@@ -1901,13 +1959,13 @@ class FunctionalTests : InputTestFixture
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.bButton.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
 
         var newState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.isPressed, Is.True);
+        Assert.That(gamepad.buttonEast.isPressed, Is.True);
     }
 
     [Test]
@@ -1916,22 +1974,22 @@ class FunctionalTests : InputTestFixture
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.wasJustPressed, Is.True);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
         InputSystem.QueueStateEvent(gamepad, secondState);
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.True);
     }
 
     // The way we keep state does not allow observing the state change on the final
@@ -1950,9 +2008,9 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.Update();
 
-        Assert.That(gamepad.bButton.isPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustPressed, Is.False);
-        Assert.That(gamepad.bButton.wasJustReleased, Is.False);
+        Assert.That(gamepad.buttonEast.isPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
     }
 
     [Test]
@@ -1983,54 +2041,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, state);
         InputSystem.Update();
 
-        Assert.That(gamepad.aButton.value, Is.EqualTo(0.5f));
-    }
-
-    ////REVIEW: don't do this; instead have event handlers hooked into onEvent and onUpdate perform the work
-    // Controls like mouse deltas need to reset to zero when there is no activity on them in a frame.
-    // This could be done by requiring the state producing code to always send appropriate state events
-    // when necessary. However, for state producers that are hooked to event sources (like eg. NSEvents
-    // on OSX and MSGs on Windows), this can be very awkward to handle as it requires synchronizing with
-    // input updates and can complicate state producer logic quite a bit.
-    //
-    // So, instead of putting the burden on state producers, controls come with an auto-reset feature
-    // that will automatically cause the system to clear memory of controls when needed.
-    [Test]
-    [Category("State")]
-    public void TODO_State_CanAutomaticallyResetIndividualControlsBetweenFrames()
-    {
-        // Make leftStick/x automatically reset on gamepad.
-        var json = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""extend"" : ""Gamepad"",
-                ""controls"" : [
-                    {
-                        ""name"" : ""leftStick/x"",
-                        ""autoReset"" : true
-                    }
-                ]
-            }
-        ";
-
-        //if there is a state event for pointer device X, update it to accumulate deltas
-        //before an update, reset the ... how? actions need to see the reset
-
-        InputSystem.RegisterTemplate(json);
-        var device = (Gamepad)InputSystem.AddDevice("MyDevice");
-
-        InputSystem.QueueStateEvent(device, new GamepadState {leftStick = new Vector2(0.123f, 0.456f)});
-        InputSystem.Update();
-
-        Assert.That(device.leftStick.x.value, Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
-
-        InputSystem.Update();
-
-        Assert.That(device.leftStick.x.value, Is.Zero);
-        Assert.That(device.leftStick.y.value, Is.EqualTo(0.456).Within(0.000001));
-
-        ////TODO: this test will require a corresponding test that actions see resets properly
+        Assert.That(gamepad.buttonSouth.value, Is.EqualTo(0.5f));
     }
 
     [Test]
@@ -2175,7 +2186,16 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ChangingConfigurationOfDeviceTriggersNotification()
+    public void Devices_NameDefaultsToNameOfTemplate()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(device.name, Is.EqualTo("Mouse"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingConfigurationOfDevice_TriggersNotification()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -2197,6 +2217,79 @@ class FunctionalTests : InputTestFixture
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
         Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.ConfigurationChanged));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_TriggersNotification()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                ++receivedCalls;
+                receivedDevice = d;
+                receivedDeviceChange = c;
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.StateChanged));
+    }
+
+    class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
+    {
+        public ButtonControl button { get; private set; }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            button = setup.GetControl<ButtonControl>(this, "button");
+            base.FinishSetup(setup);
+        }
+
+        public bool OnCarryStateForward(IntPtr statePtr)
+        {
+            button.WriteValueInto(statePtr, 1);
+            return true;
+        }
+
+        public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_InStateCallback_TriggersNotification()
+    {
+        InputSystem.RegisterTemplate<TestDeviceThatResetsStateInCallback>();
+        var device = InputSystem.AddDevice<TestDeviceThatResetsStateInCallback>();
+
+        var receivedCalls = 0;
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedDeviceChange = null;
+
+        InputSystem.onDeviceChange +=
+            (d, c) =>
+            {
+                ++receivedCalls;
+                receivedDevice = d;
+                receivedDeviceChange = c;
+            };
+
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.StateChanged));
     }
 
     [Test]
@@ -2377,7 +2470,7 @@ class FunctionalTests : InputTestFixture
                     }
                 }
 
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         Assert.That(device.userId, Is.Null);
@@ -2413,7 +2506,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         InputSystem.PauseHaptics();
@@ -2454,7 +2547,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -2538,25 +2631,11 @@ class FunctionalTests : InputTestFixture
         Assert.That(joystick.stick.name, Is.EqualTo("stick"));
     }
 
-    class TestMouse : Mouse
-    {
-    }
-
-    // This is an interesting case. If we support this, it would make the pointer position not just
-    // an input but also an output control. And it should actually warp the cursor position in Unity
-    // -- not just alter the value reported by .position.
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanWarpPointerPosition()
+    public void Devices_PointerDeltasResetBetweenUpdates()
     {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_PointerDeltasResetBetweenUpdates()
-    {
-        var pointer = (Pointer)InputSystem.AddDevice("Pointer");
+        var pointer = InputSystem.AddDevice<Pointer>();
 
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
@@ -2572,9 +2651,16 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_PointerDeltasAccumulateBetweenUpdates()
+    public void Devices_PointerDeltasAccumulateBetweenUpdates()
     {
-        Assert.Fail();
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(1).Within(0.0000001));
     }
 
     [Test]
@@ -2626,61 +2712,47 @@ class FunctionalTests : InputTestFixture
         Assert.That(textReceived, Is.EqualTo("abc"));
     }
 
-    // Getting key information relies on InputDevice.IOCTL() to read configuration
-    // data. This method punches through to native for native devices but has to be
-    // implemented in subclasses for scripted devices. As we don't have a native keyboard
-    // in tests, we need to provide an implementation here.
-    class TestKeyboard : Keyboard
-    {
-        public string currentLayoutName = "default";
-
-        public override unsafe long OnDeviceCommand<TCommand>(ref TCommand command)
-        {
-            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
-            if (commandPtr->type == QueryKeyNameCommand.Type)
-            {
-                var keyNameCommand = (QueryKeyNameCommand*)commandPtr;
-
-                var scanCode = 0x02;
-                var name = "other";
-
-                if (keyNameCommand->scanOrKeyCode == (int)Key.A)
-                {
-                    scanCode = 0x01;
-                    name = currentLayoutName == "default" ? "m" : "q";
-                }
-
-                keyNameCommand->scanOrKeyCode = scanCode;
-                StringHelpers.WriteStringToBuffer(name, (IntPtr)keyNameCommand->nameBuffer,
-                    QueryKeyNameCommand.kMaxNameLength);
-
-                return QueryKeyNameCommand.kSize;
-            }
-
-            if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
-            {
-                var layoutCommand = (QueryKeyboardLayoutCommand*)commandPtr;
-                if (StringHelpers.WriteStringToBuffer(currentLayoutName, (IntPtr)layoutCommand->nameBuffer,
-                        QueryKeyboardLayoutCommand.kMaxNameLength))
-                    return QueryKeyboardLayoutCommand.kMaxNameLength;
-            }
-
-            return -1;
-        }
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_CanGetDisplayNameFromKeyboardKey()
     {
-        InputSystem.RegisterTemplate<TestKeyboard>();
-        var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var currentLayoutName = "default";
+        testRuntime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryKeyNameCommand.Type)
+                    {
+                        var keyNameCommand = (QueryKeyNameCommand*)commandPtr;
+
+                        var scanCode = 0x02;
+                        var name = "other";
+
+                        if (keyNameCommand->scanOrKeyCode == (int)Key.A)
+                        {
+                            scanCode = 0x01;
+                            name = currentLayoutName == "default" ? "m" : "q";
+                        }
+
+                        keyNameCommand->scanOrKeyCode = scanCode;
+                        StringHelpers.WriteStringToBuffer(name, (IntPtr)keyNameCommand->nameBuffer,
+                            QueryKeyNameCommand.kMaxNameLength);
+
+                        return QueryKeyNameCommand.kSize;
+                    }
+
+                    return InputDeviceCommand.kFailure;
+                }
+            });
 
         Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
         Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
 
         // Change layout.
-        keyboard.currentLayoutName = "other";
+        currentLayoutName = "other";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
@@ -2692,14 +2764,29 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanGetNameOfCurrentKeyboardLayout()
     {
-        InputSystem.RegisterTemplate<TestKeyboard>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
-        keyboard.currentLayoutName = "default";
+        var currentLayoutName = "default";
+        testRuntime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
+                    {
+                        var layoutCommand = (QueryKeyboardLayoutCommand*)commandPtr;
+                        if (StringHelpers.WriteStringToBuffer(currentLayoutName, (IntPtr)layoutCommand->nameBuffer,
+                                QueryKeyboardLayoutCommand.kMaxNameLength))
+                            return QueryKeyboardLayoutCommand.kMaxNameLength;
+                    }
+
+                    return InputDeviceCommand.kFailure;
+                }
+            });
 
         Assert.That(keyboard.layout, Is.EqualTo("default"));
 
-        keyboard.currentLayoutName = "new";
+        currentLayoutName = "new";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
@@ -2730,7 +2817,7 @@ class FunctionalTests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        InputSystem.QueueStateEvent(mouse.scroll, new Vector2(10, 12));
+        InputSystem.QueueDeltaStateEvent(mouse.scroll, new Vector2(10, 12));
         InputSystem.Update();
 
         Assert.That(mouse.scroll.x.value, Is.EqualTo(10).Within(0.0000001));
@@ -2757,7 +2844,7 @@ class FunctionalTests : InputTestFixture
                     }
 
                     Assert.Fail();
-                    return InputDevice.kCommandResultFailure;
+                    return InputDeviceCommand.kFailure;
                 }
             });
 
@@ -2770,9 +2857,87 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_TouchscreenCanFunctionAsPointer()
+    public void Devices_TouchscreenCanFunctionAsPointer()
     {
-        Assert.Fail();
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(0.123f, 0.456f)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.position.x.value, Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.position.y.value, Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.phase.value, Is.EqualTo(PointerPhase.Began));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchscreenReturnsActiveTouches()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        Assert.That(device.touches.Count, Is.Zero);
+        Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(0.123f, 0.456f)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.touches.Count, Is.EqualTo(1));
+        Assert.That(device.touches[0].touchId.value, Is.EqualTo(4));
+        Assert.That(device.touches[0].phase.value, Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.touches[0].position.x.value, Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.touches[0].position.y.value, Is.EqualTo(0.456).Within(0.000001));
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(0.123f, 0.456f)
+        });
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
+            new Touch
+        {
+            phase = PointerPhase.Began,
+            touchId = 5,
+            position = new Vector2(0.789f, 0.123f)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.touches.Count, Is.EqualTo(2));
+        Assert.That(device.touches[0].touchId.value, Is.EqualTo(4));
+        Assert.That(device.touches[1].touchId.value, Is.EqualTo(5));
+        Assert.That(device.touches[0].phase.value, Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.touches[1].phase.value, Is.EqualTo(PointerPhase.Began));
+
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+            new Touch
+        {
+            phase = PointerPhase.Ended,
+            touchId = 4,
+        });
+        InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
+            new Touch
+        {
+            phase = PointerPhase.Cancelled,
+            touchId = 5,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.touches.Count, Is.Zero);
+        Assert.That(device.allTouchControls[0].phase.value, Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].phase.value, Is.EqualTo(PointerPhase.Cancelled));
     }
 
     [Test]
@@ -2930,7 +3095,7 @@ class FunctionalTests : InputTestFixture
         var matchByAlias2 = InputSystem.GetControls("/gamepad/cross");
 
         Assert.That(matchByName, Has.Count.EqualTo(1));
-        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.aButton));
+        Assert.That(matchByName, Has.Exactly(1).SameAs(gamepad.buttonSouth));
         Assert.That(matchByAlias1, Is.EqualTo(matchByName));
         Assert.That(matchByAlias2, Is.EqualTo(matchByName));
     }
@@ -3022,7 +3187,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         // Update just left stick.
-        InputSystem.QueueStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
+        InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.5).Within(0.000001));
@@ -3033,15 +3198,25 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Events")]
-    public void Events_SendingStateEventToDeviceMakesItCurrent()
+    public void Events_SendingStateEventToDevice_MakesItCurrent()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
-        var newState = new GamepadState();
 
-        InputSystem.QueueStateEvent(gamepad, newState);
+        // Adding a device makes it current so add another one so that .current
+        // is not already set to the gamepad we just created.
+        InputSystem.AddDevice("Gamepad");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
 
         Assert.That(Gamepad.current, Is.SameAs(gamepad));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -3805,7 +3980,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
 
         startedReceivedCalls = 0;
 
@@ -3815,7 +3990,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedAction, Is.SameAs(action));
-        Assert.That(performedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
@@ -3862,7 +4037,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
         Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
 
         startedReceivedCalls = 0;
 
@@ -3872,7 +4047,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedAction, Is.SameAs(action));
-        Assert.That(performedControl, Is.SameAs(gamepad.aButton));
+        Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
@@ -4100,13 +4275,13 @@ class FunctionalTests : InputTestFixture
         action.Enable();
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
-        Assert.That(action.controls[0], Is.SameAs(gamepad1.aButton));
+        Assert.That(action.controls[0], Is.SameAs(gamepad1.buttonSouth));
 
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
-        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.aButton));
-        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.aButton));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.buttonSouth));
     }
 
     ////REVIEW: what's the bahavior we want here?
@@ -4158,7 +4333,9 @@ class FunctionalTests : InputTestFixture
 
     private class TestModifier : IInputActionModifier
     {
-        public float parm1;
+        #pragma warning disable CS0649
+        public float parm1; // Assigned through reflection
+        #pragma warning restore CS0649
 
         public static bool s_GotInvoked;
 
@@ -4206,7 +4383,7 @@ class FunctionalTests : InputTestFixture
                 receivedControl = ctx.control;
             };
 
-        InputSystem.QueueStateEvent(gamepad.leftStick, Vector2.one);
+        InputSystem.QueueDeltaStateEvent(gamepad.leftStick, Vector2.one);
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
@@ -4305,7 +4482,7 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(performed, Has.Count.EqualTo(1));
         // Last control in combination is considered the trigger control.
-        Assert.That(performed[0].control, Is.SameAs(gamepad.aButton));
+        Assert.That(performed[0].control, Is.SameAs(gamepad.buttonSouth));
     }
 
     [Test]
@@ -4826,7 +5003,7 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(numOverrides, Is.EqualTo(1));
         Assert.That(action1.bindings[0].overridePath, Is.Null);
-        Assert.That(action2.bindings[0].overridePath, Is.EqualTo(gamepad.aButton.path));
+        Assert.That(action2.bindings[0].overridePath, Is.EqualTo(gamepad.buttonSouth.path));
     }
 
     [Test]
@@ -4939,7 +5116,7 @@ class FunctionalTests : InputTestFixture
     public void TODO_Actions_CanRebindFromUserInput()
     {
         var action = new InputAction(binding: "/gamepad/leftStick");
-        var gamepad = InputSystem.AddDevice("Gamepad");
+        //var gamepad = InputSystem.AddDevice("Gamepad");
 
         using (var rebind = InputActionRebinding.PerformUserRebind(action))
         {
@@ -4985,6 +5162,52 @@ class FunctionalTests : InputTestFixture
         Assert.That(action2.enabled, Is.False);
         Assert.That(action3.enabled, Is.False);
         Assert.That(set.enabled, Is.False);
+    }
+
+    // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDriveFreeLookFromGamepadStickAndPointerDelta()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Deadzoning alters values on the stick. For this test, get rid of it.
+        InputConfiguration.DeadzoneMin = 0f;
+        InputConfiguration.DeadzoneMax = 1f;
+
+        var action = new InputAction();
+
+        action.AddBinding("/<Gamepad>/leftStick");
+        action.AddBinding("/<Pointer>/delta");
+
+        Vector2? movement = null;
+        action.performed +=
+            ctx => { movement = ctx.GetValue<Vector2>(); };
+
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.Update();
+
+        Assert.That(movement.HasValue, Is.True);
+        Assert.That(movement.Value.x, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(movement.Value.y, Is.EqualTo(0.5).Within(0.000001));
+
+        movement = null;
+        InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(0.25f, 0.25f)});
+        InputSystem.Update();
+
+        Assert.That(movement.HasValue, Is.True);
+        Assert.That(movement.Value.x, Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(movement.Value.y, Is.EqualTo(0.25).Within(0.000001));
+
+        movement = null;
+        InputSystem.Update();
+
+        Assert.That(movement.HasValue, Is.True);
+        Assert.That(movement.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(movement.Value.y, Is.EqualTo(0).Within(0.000001));
     }
 
     [Test]
@@ -5726,4 +5949,3 @@ class FunctionalTests : InputTestFixture
         Assert.Fail();
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

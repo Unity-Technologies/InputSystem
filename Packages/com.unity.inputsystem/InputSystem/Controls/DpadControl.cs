@@ -66,7 +66,7 @@ namespace ISX.Controls
             base.FinishSetup(setup);
         }
 
-        protected override Vector2 ReadRawValueFrom(IntPtr statePtr)
+        public override Vector2 ReadRawValueFrom(IntPtr statePtr)
         {
             var upIsPressed = up.ReadValueFrom(statePtr) >= up.pressPointOrDefault;
             var downIsPressed = down.ReadValueFrom(statePtr) >= down.pressPointOrDefault;

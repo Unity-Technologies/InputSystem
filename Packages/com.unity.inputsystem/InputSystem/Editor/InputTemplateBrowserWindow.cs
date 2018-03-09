@@ -242,8 +242,6 @@ namespace ISX.Editor
                     AddChild(item, string.Format("Size In Bits: {0}", control.sizeInBits), ref id);
                 if (!string.IsNullOrEmpty(control.useStateFrom))
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
-                if (control.isAutoResetControl)
-                    AddChild(item, "Auto-Reset: true", ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages.Select(x => x.ToString()).ToArray()), ref id);

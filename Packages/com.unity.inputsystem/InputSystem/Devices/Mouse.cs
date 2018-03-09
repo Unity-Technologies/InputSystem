@@ -4,7 +4,7 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Combine a single pointer with buttons and a scroll wheel.
@@ -22,7 +22,7 @@ namespace ISX
         [FieldOffset(0)]
         public Vector2 position;
 
-        [InputControl(usage = "Secondary2DMotion", autoReset = true)]
+        [InputControl(usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
 
@@ -43,7 +43,7 @@ namespace ISX
         [InputControl(name = "radius", template = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", template = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "pointerId", template = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", template = "Digital", offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
+        [InputControl(name = "phase", template = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
         [InputControl(template = "Digital")]
@@ -64,7 +64,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     /// <summary>
     /// A mouse input device.
     /// </summary>

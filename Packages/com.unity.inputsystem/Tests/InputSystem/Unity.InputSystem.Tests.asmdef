@@ -3,9 +3,7 @@
     "references": [
         "Unity.InputSystem"
     ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ],
+    "optionalUnityReferences": [ "TestAssemblies" ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true
