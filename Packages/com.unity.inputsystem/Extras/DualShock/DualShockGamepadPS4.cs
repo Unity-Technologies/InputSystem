@@ -244,15 +244,7 @@ namespace ISX.Plugins.DualShock
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
         }
 
-        public static DualShockGamepadPS4 current { get; set; }
-
-        public override void MakeCurrent()
-        {
-            base.MakeCurrent();
-            current = this;
-        }
-
-        public void PauseHaptics()
+        public override void PauseHaptics()
         {
             if (!m_LargeMotor.HasValue && !m_SmallMotor.HasValue && !m_LightBarColor.HasValue)
                 return;
@@ -265,7 +257,7 @@ namespace ISX.Plugins.DualShock
             OnDeviceCommand(ref command);
         }
 
-        public void ResetHaptics()
+        public override void ResetHaptics()
         {
             if (!m_LargeMotor.HasValue && !m_SmallMotor.HasValue && !m_LightBarColor.HasValue)
                 return;
@@ -283,7 +275,7 @@ namespace ISX.Plugins.DualShock
             m_LightBarColor = null;
         }
 
-        public void ResumeHaptics()
+        public override void ResumeHaptics()
         {
             if (!m_LargeMotor.HasValue && !m_SmallMotor.HasValue && !m_LightBarColor.HasValue)
                 return;
@@ -318,7 +310,7 @@ namespace ISX.Plugins.DualShock
             m_LightBarColor = null;
         }
 
-        public void SetMotorSpeeds(float largeMotor, float smallMotor)
+        public override void SetMotorSpeeds(float largeMotor, float smallMotor)
         {
             var command = DualShockPS4OuputCommand.Create();
             command.SetMotorSpeeds(largeMotor, smallMotor);

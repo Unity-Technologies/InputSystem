@@ -24,7 +24,7 @@ namespace ISX.Plugins.DualShock
         public Vector3Control orientation { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
-        public static DualShockGamepad current { get; private set; }
+        public new static DualShockGamepad current { get; private set; }
 
         public ButtonControl L3 { get; private set; }
         public ButtonControl R3 { get; private set; }

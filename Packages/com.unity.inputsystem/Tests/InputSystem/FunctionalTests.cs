@@ -740,8 +740,8 @@ class FunctionalTests : InputTestFixture
         var builder = new InputTemplate.Builder().WithName("TestTemplate");
 
         Assert.That(() => builder.AddControl("TestControl").WithUsages(""),
-            Throws.ArgumentException.With.Message.StringContaining("TestControl")
-            .And.With.Message.StringContaining("TestTemplate"));
+            Throws.ArgumentException.With.Message.Contains("TestControl")
+            .And.With.Message.Contains("TestTemplate"));
     }
 
     [Serializable]
@@ -1043,15 +1043,15 @@ class FunctionalTests : InputTestFixture
         var leftyGamepadSetup = new InputControlSetup("Gamepad", variant: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
         var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
-        var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
-        var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
+        //var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
+        //var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
         //shoulder?
 
         var defaultGamepadSetup = new InputControlSetup("Gamepad");
         var defaultGamepadPrimary2DMotion = defaultGamepadSetup.GetControl("{Primary2DMotion}");
         var defaultGamepadSecondary2DMotion = defaultGamepadSetup.GetControl("{Secondary2DMotion}");
-        var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
-        var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
+        //var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
+        //var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
 
         var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
         var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
@@ -4333,7 +4333,9 @@ class FunctionalTests : InputTestFixture
 
     private class TestModifier : IInputActionModifier
     {
-        public float parm1;
+        #pragma warning disable CS0649
+        public float parm1; // Assigned through reflection
+        #pragma warning restore CS0649
 
         public static bool s_GotInvoked;
 
@@ -5114,7 +5116,7 @@ class FunctionalTests : InputTestFixture
     public void TODO_Actions_CanRebindFromUserInput()
     {
         var action = new InputAction(binding: "/gamepad/leftStick");
-        var gamepad = InputSystem.AddDevice("Gamepad");
+        //var gamepad = InputSystem.AddDevice("Gamepad");
 
         using (var rebind = InputActionRebinding.PerformUserRebind(action))
         {

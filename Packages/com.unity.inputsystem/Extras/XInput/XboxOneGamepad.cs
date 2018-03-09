@@ -164,7 +164,7 @@ namespace ISX.Plugins.XInput
             paddle4 = setup.GetControl<ButtonControl>(this, "paddle4");
         }
 
-        public static XboxOneGamepad current { get; set; }
+        public new static XboxOneGamepad current { get; set; }
 
         public override void MakeCurrent()
         {

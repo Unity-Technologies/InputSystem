@@ -560,7 +560,9 @@ namespace ISX
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;
         private InternedString m_ExtendsTemplate;
-        private InternedString[] m_OverridesTemplates;
+#pragma warning disable CS0414
+        private InternedString[] m_OverridesTemplates; ////TODO
+#pragma warning restore CS0414
         private InternedString[] m_CommonUsages;
         internal ControlTemplate[] m_Controls;
         private InputDeviceDescription m_DeviceDescription;
