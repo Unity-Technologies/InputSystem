@@ -2470,7 +2470,7 @@ class FunctionalTests : InputTestFixture
                     }
                 }
 
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         Assert.That(device.userId, Is.Null);
@@ -2506,7 +2506,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         InputSystem.PauseHaptics();
@@ -2547,7 +2547,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -2712,61 +2712,47 @@ class FunctionalTests : InputTestFixture
         Assert.That(textReceived, Is.EqualTo("abc"));
     }
 
-    // Getting key information relies on InputDevice.IOCTL() to read configuration
-    // data. This method punches through to native for native devices but has to be
-    // implemented in subclasses for scripted devices. As we don't have a native keyboard
-    // in tests, we need to provide an implementation here.
-    class TestKeyboard : Keyboard
-    {
-        public string currentLayoutName = "default";
-
-        public override unsafe long OnDeviceCommand<TCommand>(ref TCommand command)
-        {
-            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
-            if (commandPtr->type == QueryKeyNameCommand.Type)
-            {
-                var keyNameCommand = (QueryKeyNameCommand*)commandPtr;
-
-                var scanCode = 0x02;
-                var name = "other";
-
-                if (keyNameCommand->scanOrKeyCode == (int)Key.A)
-                {
-                    scanCode = 0x01;
-                    name = currentLayoutName == "default" ? "m" : "q";
-                }
-
-                keyNameCommand->scanOrKeyCode = scanCode;
-                StringHelpers.WriteStringToBuffer(name, (IntPtr)keyNameCommand->nameBuffer,
-                    QueryKeyNameCommand.kMaxNameLength);
-
-                return QueryKeyNameCommand.kSize;
-            }
-
-            if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
-            {
-                var layoutCommand = (QueryKeyboardLayoutCommand*)commandPtr;
-                if (StringHelpers.WriteStringToBuffer(currentLayoutName, (IntPtr)layoutCommand->nameBuffer,
-                        QueryKeyboardLayoutCommand.kMaxNameLength))
-                    return QueryKeyboardLayoutCommand.kMaxNameLength;
-            }
-
-            return -1;
-        }
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_CanGetDisplayNameFromKeyboardKey()
     {
-        InputSystem.RegisterTemplate<TestKeyboard>();
-        var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var currentLayoutName = "default";
+        testRuntime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryKeyNameCommand.Type)
+                    {
+                        var keyNameCommand = (QueryKeyNameCommand*)commandPtr;
+
+                        var scanCode = 0x02;
+                        var name = "other";
+
+                        if (keyNameCommand->scanOrKeyCode == (int)Key.A)
+                        {
+                            scanCode = 0x01;
+                            name = currentLayoutName == "default" ? "m" : "q";
+                        }
+
+                        keyNameCommand->scanOrKeyCode = scanCode;
+                        StringHelpers.WriteStringToBuffer(name, (IntPtr)keyNameCommand->nameBuffer,
+                            QueryKeyNameCommand.kMaxNameLength);
+
+                        return QueryKeyNameCommand.kSize;
+                    }
+
+                    return InputDeviceCommand.kFailure;
+                }
+            });
 
         Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
         Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
 
         // Change layout.
-        keyboard.currentLayoutName = "other";
+        currentLayoutName = "other";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
@@ -2778,14 +2764,29 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanGetNameOfCurrentKeyboardLayout()
     {
-        InputSystem.RegisterTemplate<TestKeyboard>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var keyboard = (TestKeyboard)InputSystem.AddDevice("TestKeyboard");
-        keyboard.currentLayoutName = "default";
+        var currentLayoutName = "default";
+        testRuntime.SetDeviceCommandCallback(keyboard.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
+                    {
+                        var layoutCommand = (QueryKeyboardLayoutCommand*)commandPtr;
+                        if (StringHelpers.WriteStringToBuffer(currentLayoutName, (IntPtr)layoutCommand->nameBuffer,
+                                QueryKeyboardLayoutCommand.kMaxNameLength))
+                            return QueryKeyboardLayoutCommand.kMaxNameLength;
+                    }
+
+                    return InputDeviceCommand.kFailure;
+                }
+            });
 
         Assert.That(keyboard.layout, Is.EqualTo("default"));
 
-        keyboard.currentLayoutName = "new";
+        currentLayoutName = "new";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
@@ -2843,7 +2844,7 @@ class FunctionalTests : InputTestFixture
                     }
 
                     Assert.Fail();
-                    return InputDevice.kCommandResultFailure;
+                    return InputDeviceCommand.kFailure;
                 }
             });
 

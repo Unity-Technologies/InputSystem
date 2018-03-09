@@ -32,14 +32,6 @@ namespace ISX
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
-        /// Generic failure code for <see cref="IOCTL"/> calls.
-        /// </summary>
-        /// <remarks>
-        /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
-        /// </remarks>
-        public const long kCommandResultFailure = -1;
-
-        /// <summary>
         /// Metadata describing the device (product name etc.).
         /// </summary>
         /// <remarks>
@@ -125,7 +117,7 @@ namespace ISX
         {
             get
             {
-                // Since the m_ChildrenForEachControl contains the device's children as well as the children
+                // Since m_ChildrenForEachControl contains the device's children as well as the children
                 // of each control in the hierarchy, and since each control can only have a single parent,
                 // this list will actually deliver a flattened list of all controls in the hierarchy (and without
                 // the device itself being listed).
@@ -170,7 +162,7 @@ namespace ISX
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
-        public virtual void OnConfigurationChanged()
+        internal void OnConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
@@ -195,7 +187,7 @@ namespace ISX
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public virtual long OnDeviceCommand<TCommand>(ref TCommand command)
+        public long OnDeviceCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
             return InputRuntime.s_Runtime.DeviceCommand(id, ref command);

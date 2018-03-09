@@ -1,4 +1,5 @@
 using ISX;
+using ISX.LowLevel;
 using ISX.Plugins.DualShock;
 using ISX.Plugins.DualShock.LowLevel;
 using ISX.Processors;
@@ -95,7 +96,7 @@ class DualShockTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDevice.kCommandResultFailure;
+                    return InputDeviceCommand.kFailure;
                 }
             });
 

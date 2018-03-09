@@ -23,6 +23,14 @@ namespace ISX.LowLevel
     {
         public const int kBaseCommandSize = 8;
 
+        /// <summary>
+        /// Generic failure code for <see cref="IOCTL"/> calls.
+        /// </summary>
+        /// <remarks>
+        /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
+        /// </remarks>
+        public const long kFailure = -1;
+
         [FieldOffset(0)] public FourCC type;
         [FieldOffset(4)] public int sizeInBytes;
 

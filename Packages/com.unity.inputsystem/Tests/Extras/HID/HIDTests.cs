@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System.Linq;
 using ISX;
 using ISX.Controls;
+using ISX.LowLevel;
 using ISX.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
 
@@ -153,7 +154,7 @@ class HIDTests : InputTestFixture
                         }
                     }
                 }
-                return InputDevice.kCommandResultFailure;
+                return InputDeviceCommand.kFailure;
             });
 
         // Report device.
