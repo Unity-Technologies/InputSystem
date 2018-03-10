@@ -96,7 +96,7 @@ class DualShockTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 

@@ -9,13 +9,15 @@ using UnityEngine;
 using ISX.LowLevel;
 
 ////FIXME: doesn't survive domain reload correctly
+///
+////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
 ////TODO: Add "Remote:" field in list that also has a button for local devices that allows to mirror them and their input
 ////      into connected players
 
 ////TODO: this window should help diagnose problems in the event stream (e.g. ignored state events and why they were ignored)
 
-////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
+////TODO: add toggle to that switches to displaying raw control values
 
 namespace ISX.Editor
 {

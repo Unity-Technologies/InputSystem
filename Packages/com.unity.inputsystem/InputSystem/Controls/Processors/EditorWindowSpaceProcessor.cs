@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using ISX.LowLevel;
 using UnityEngine;
+using UnityEditor;
 
 namespace ISX.Processors
 {
@@ -10,7 +11,7 @@ namespace ISX.Processors
     /// </summary>
     /// <remarks>
     /// This processor is only available in the editor. Also, it only works on devices that
-    /// support the <see cref="QueryEditorWindowCoordinates"/> request.
+    /// support the <see cref="QueryEditorWindowCoordinatesCommand"/> request.
     ///
     /// Outside of EditorWindow callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
@@ -19,13 +20,12 @@ namespace ISX.Processors
     {
         public Vector2 Process(Vector2 position, InputControl control)
         {
-            // Don't convert to EditorWindowSpace if input is locked to game view.
-            #if UNITY_EDITOR
-            if (InputConfiguration.LockInputToGame)
+            // Don't convert to EditorWindowSpace if input is going to game view.
+            if (InputConfiguration.LockInputToGame ||
+                (EditorApplication.isPlaying && Application.isFocused))
                 return position;
-            #endif
 
-            var command = QueryEditorWindowCoordinates.Create(position);
+            var command = QueryEditorWindowCoordinatesCommand.Create(position);
             if (control.device.OnDeviceCommand(ref command) > 0)
                 return command.inOutCoordinates;
             return position;

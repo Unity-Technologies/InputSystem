@@ -1083,6 +1083,7 @@ namespace ISX
             RegisterProcessor("Normalize", typeof(NormalizeProcessor));
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
+            RegisterProcessor("Sensitivity", typeof(SensitivityProcessor));
 
             #if UNITY_EDITOR
             RegisterProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));

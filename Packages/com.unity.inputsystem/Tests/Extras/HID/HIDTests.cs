@@ -154,7 +154,7 @@ class HIDTests : InputTestFixture
                         }
                     }
                 }
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         // Report device.

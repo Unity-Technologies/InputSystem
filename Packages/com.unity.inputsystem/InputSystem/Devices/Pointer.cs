@@ -31,7 +31,7 @@ namespace ISX.LowLevel
 #endif
         public Vector2 position;
 
-        [InputControl(template = "Vector2", usage = "Secondary2DMotion")]
+        [InputControl(template = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
         [InputControl(template = "Analog", usage = "Pressure")]

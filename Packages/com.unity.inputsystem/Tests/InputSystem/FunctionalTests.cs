@@ -2470,7 +2470,7 @@ class FunctionalTests : InputTestFixture
                     }
                 }
 
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         Assert.That(device.userId, Is.Null);
@@ -2506,7 +2506,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         InputSystem.PauseHaptics();
@@ -2547,7 +2547,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -2640,13 +2640,13 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
 
         InputSystem.Update();
 
-        Assert.That(pointer.delta.value.x, Is.Zero);
-        Assert.That(pointer.delta.value.y, Is.Zero);
+        Assert.That(pointer.delta.x.value, Is.Zero);
+        Assert.That(pointer.delta.y.value, Is.Zero);
     }
 
     // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
@@ -2670,13 +2670,13 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update(InputUpdateType.Fixed);
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
 
         InputSystem.Update(InputUpdateType.Dynamic);
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
     }
 
     [Test]
@@ -2689,8 +2689,47 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(1).Within(0.0000001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.x.value, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(1).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanAdjustSensitivityOnPointerDeltas()
+    {
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        const float kWindowWidth = 640f;
+        const float kWindowHeight = 480f;
+        const float kSensitivity = 6f;
+
+        InputConfiguration.PointerDeltaSensitivity = kSensitivity;
+
+        testRuntime.SetDeviceCommandCallback(pointer.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryDimensionsCommand.Type)
+                    {
+                        var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
+                        windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+
+                    return InputDeviceCommand.kGenericFailure;
+                }
+            });
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
+        InputSystem.Update();
+
+        // NOTE: Whereas the tests above access .delta.x.value and .delta.y.value, here we access
+        //       delta.value.x and delta.value.y. This is because the sensitivity processor sits
+        //       on the vector control and not on the individual component axes.
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
     }
 
     [Test]
@@ -2774,7 +2813,7 @@ class FunctionalTests : InputTestFixture
                         return QueryKeyNameCommand.kSize;
                     }
 
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 
@@ -2810,7 +2849,7 @@ class FunctionalTests : InputTestFixture
                             return QueryKeyboardLayoutCommand.kMaxNameLength;
                     }
 
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 
@@ -2874,7 +2913,7 @@ class FunctionalTests : InputTestFixture
                     }
 
                     Assert.Fail();
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 
@@ -5193,6 +5232,9 @@ class FunctionalTests : InputTestFixture
         InputConfiguration.DeadzoneMin = 0f;
         InputConfiguration.DeadzoneMax = 1f;
 
+        // Same for pointer sensitivity.
+        InputConfiguration.PointerDeltaSensitivity = 1f;
+
         var action = new InputAction();
 
         action.AddBinding("/<Gamepad>/leftStick");
@@ -5875,14 +5917,6 @@ class FunctionalTests : InputTestFixture
     {
         //make sure it reduces memory usage
         ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanLoadTemplateFromCSV()
-    {
-        //take device info from name and the csv data is just a flat list of controls
         Assert.Fail();
     }
 
