@@ -1085,7 +1085,7 @@ namespace ISX
             RegisterProcessor("Curve", typeof(CurveProcessor));
 
             #if UNITY_EDITOR
-            RegisterProcessor("AutoWindowSpace", typeof(AutoWindowSpaceProcessor));
+            RegisterProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
             // Register action modifiers.

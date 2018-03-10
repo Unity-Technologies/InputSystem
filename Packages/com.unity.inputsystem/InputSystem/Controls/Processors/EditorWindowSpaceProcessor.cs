@@ -15,10 +15,16 @@ namespace ISX.Processors
     /// Outside of EditorWindow callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
     /// </remarks>
-    public class AutoWindowSpaceProcessor : IInputProcessor<Vector2>
+    public class EditorWindowSpaceProcessor : IInputProcessor<Vector2>
     {
-        public unsafe Vector2 Process(Vector2 position, InputControl control)
+        public Vector2 Process(Vector2 position, InputControl control)
         {
+            // Don't convert to EditorWindowSpace if input is locked to game view.
+            #if UNITY_EDITOR
+            if (InputConfiguration.LockInputToGame)
+                return position;
+            #endif
+
             var command = QueryEditorWindowCoordinates.Create(position);
             if (control.device.OnDeviceCommand(ref command) > 0)
                 return command.inOutCoordinates;
