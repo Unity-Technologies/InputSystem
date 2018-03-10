@@ -1486,9 +1486,11 @@ namespace ISX
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
-            if (m_HaveDevicesWithStateCallbackReceivers)
+            if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
                 var stateBuffers = m_StateBuffers.GetBuffers(updateType);
+                var isDynamicOrFixedUpdate =
+                    updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
 
                 // For the sake of action state monitors, we need to be able to detect when
                 // an OnCarryStateForward() method writes new values into a state buffer. To do
@@ -1504,6 +1506,29 @@ namespace ISX
                         var device = m_Devices[i];
                         if ((device.m_Flags & InputDevice.Flags.HasStateCallbacks) != InputDevice.Flags.HasStateCallbacks)
                             continue;
+
+                        // Depending on update ordering, we are writing events into *upcoming* updates inside of
+                        // OnUpdate(). E.g. we may receive an event in fixed update and write it concurrently into
+                        // the fixed and dynamic update buffer for the device.
+                        //
+                        // This means that we have to be extra careful here not to overwrite state which has already
+                        // been updated with events. To check for this, we simply determine whether the device's update
+                        // count for the current update type already corresponds to the count of the upcoming update.
+                        //
+                        // NOTE: This is only relevant for non-editor updates.
+                        if (isDynamicOrFixedUpdate)
+                        {
+                            if (updateType == InputUpdateType.Dynamic)
+                            {
+                                if (device.m_CurrentDynamicUpdateCount == m_CurrentDynamicUpdateCount + 1)
+                                    continue; // Device already received state for upcoming dynamic update.
+                            }
+                            else if (updateType == InputUpdateType.Fixed)
+                            {
+                                if (device.m_CurrentFixedUpdateCount == m_CurrentFixedUpdateCount + 1)
+                                    continue; // Device already received state for upcoming fixed update.
+                            }
+                        }
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset;
                         var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;

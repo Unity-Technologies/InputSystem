@@ -2649,6 +2649,36 @@ class FunctionalTests : InputTestFixture
         Assert.That(pointer.delta.value.y, Is.Zero);
     }
 
+    // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
+    // ECS version, all this should be thrown out entirely.
+    //
+    // This test here is another peculiarity we need to watch out for. Events received by the system will
+    // get written into either player or editor buffers. If written into player buffers, they get written
+    // into *both* dynamic and fixed update buffers. However, depending on what the *current* update is
+    // (fixed or dynamic) this means we are writing state into the *next* update of the other type. E.g.
+    // when receiving state during fixed update, we write it both into the current fixed update and into
+    // the *next* dynamic update.
+    //
+    // For the reset logic, this means we have to be extra careful to not overwrite that state we've written
+    // "for the future".
+    [Test]
+    [Category("Devices")]
+    public void Devices_PointerDeltaUpdatedInFixedUpdate_DoesNotGetResetInDynamicUpdate()
+    {
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_PointerDeltasAccumulateBetweenUpdates()
@@ -4284,35 +4314,22 @@ class FunctionalTests : InputTestFixture
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.buttonSouth));
     }
 
-    ////REVIEW: what's the bahavior we want here?
-    /*
     [Test]
     [Category("Actions")]
-    public void Actions_ControlsUpdateWhenDeviceIsDisconnectedAndReconnected()
+    public void Actions_ControlsUpdateWhenDeviceIsRemoved()
     {
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var action = new InputAction(binding: "/<Gamepad>/leftTrigger");
         action.Enable();
 
-        InputSystem.QueueDisconnectEvent(gamepad);
-        InputSystem.Update();
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
+
+        InputSystem.RemoveDevice(gamepad);
 
         Assert.That(action.controls, Has.Count.Zero);
-
-        InputSystem.QueueConnectEvent(gamepad);
-        InputSystem.Update();
-
-        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
     }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_DoNotBindToDisconnectedDevices()
-    {
-        Assert.Fail();
-    }
-    */
 
     [Test]
     [Category("Actions")]
