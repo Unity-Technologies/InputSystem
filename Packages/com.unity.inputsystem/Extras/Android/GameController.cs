@@ -293,6 +293,8 @@ namespace ISX.Android
         [InputControl(name = "rightStickPress", template = "Button", bit = (uint)KeyCode.BUTTON_THUMBR)]
         [InputControl(name = "leftShoulder", template = "Button", bit = (uint)KeyCode.BUTTON_L1)]
         [InputControl(name = "rightShoulder", template = "Button", bit = (uint)KeyCode.BUTTON_R1)]
+        [InputControl(name = "start", template = "Button", bit = (uint)KeyCode.BUTTON_START)]
+        [InputControl(name = "select", template = "Button", bit = (uint)KeyCode.BUTTON_SELECT)]
         public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
 
         [InputControl(name = "leftTrigger", template = "Button", format = "FLT", offset = (uint)Axis.LTRIGGER * sizeof(float))]
