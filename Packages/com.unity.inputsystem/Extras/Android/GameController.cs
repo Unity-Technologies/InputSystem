@@ -295,22 +295,14 @@ namespace ISX.Android
         [InputControl(name = "rightShoulder", template = "Button", bit = (uint)KeyCode.BUTTON_R1)]
         public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
 
-        [InputControl(name = "leftTrigger", template = "Button", format = "FLT", bit = (uint)Axis.LTRIGGER)]
-        [InputControl(name = "rightTrigger", template = "Button", format = "FLT", bit = (uint)Axis.RTRIGGER)]
+        [InputControl(name = "leftTrigger", template = "Button", format = "FLT", offset = (uint)Axis.LTRIGGER * sizeof(float))]
+        [InputControl(name = "rightTrigger", template = "Button", format = "FLT", offset = (uint)Axis.RTRIGGER * sizeof(float))]
         [InputControl(name = "leftStick", template = "Stick", format = "VC2F")]
-        [InputControl(name = "leftStick/x", format = "FLT", bit = (uint)Axis.X)]
-        [InputControl(name = "leftStick/y", format = "FLT", bit = (uint)Axis.Y)]
-        [InputControl(name = "rightStick", template = "Stick", format = "VC2F")] // NOT working, for some reason returns values of left stick
-        [InputControl(name = "rightStick/x", format = "FLT", bit = (uint)Axis.Z)]
-        [InputControl(name = "rightStick/y", format = "FLT", bit = (uint)Axis.RZ)]
-        // TODO DPAD
-        /*
-        [InputControl(name = "dpad", template = "Dpad")]
-        [InputControl(name = "dpad/up", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_X)]
-        [InputControl(name = "dpad/down", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_X)]
-        [InputControl(name = "dpad/left", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_Y)]
-        [InputControl(name = "dpad/right", template = "DiscreteButton", format = "FLT", bit = (uint)Axis.HAT_Y)]
-        */
+        [InputControl(name = "leftStick/x", format = "FLT", offset = (uint)Axis.X * sizeof(float))]
+        [InputControl(name = "leftStick/y", format = "FLT", offset = (uint)Axis.Y * sizeof(float))]
+        [InputControl(name = "rightStick", template = "Stick", format = "VC2F")]
+        [InputControl(name = "rightStick/x", format = "FLT", offset = (uint)Axis.Z * sizeof(float))] 
+        [InputControl(name = "rightStick/y", format = "FLT", offset = (uint)Axis.RZ * sizeof(float))]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
