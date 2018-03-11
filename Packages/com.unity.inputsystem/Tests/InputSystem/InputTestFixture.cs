@@ -1,3 +1,5 @@
+using System.Linq;
+using ISX.Controls;
 using NUnit.Framework;
 
 ////TODO: when running tests in players, make sure that remoting is turned off
@@ -92,6 +94,32 @@ namespace ISX
             InputSystem.Restore();
 
             testRuntime.Dispose();
+        }
+
+        ////REVIEW: move into extension methods in a separate TestUtilities class?
+
+        public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
+            where TState : struct, IInputStateTypeInfo
+        {
+            // Update state.
+            InputSystem.QueueStateEvent(device, state);
+            InputSystem.Update();
+
+            // Now verify that only the buttons we expect to be pressed are pressed.
+            foreach (var control in device.allControls)
+            {
+                var controlAsButton = control as ButtonControl;
+                if (controlAsButton == null)
+                    continue;
+
+                var isInList = buttons.Contains(controlAsButton);
+                if (!isInList)
+                    Assert.That(controlAsButton.isPressed, Is.False,
+                        string.Format("Expected button {0} to NOT be pressed", controlAsButton));
+                else
+                    Assert.That(controlAsButton.isPressed, Is.True,
+                        string.Format("Expected button {0} to be pressed", controlAsButton));
+            }
         }
 
         // Dummy plugin manager we install to suppress the default logic of crawling through the code

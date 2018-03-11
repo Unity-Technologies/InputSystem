@@ -1,20 +1,12 @@
+using System;
 using System.Runtime.InteropServices;
 using ISX.Controls;
+using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace ISX.LowLevel
 {
-    ////REVIEW: does it really make sense to have this at the pointer level
-    public enum PointerPhase
-    {
-        None,
-        Began,
-        Move,
-        Ended,
-        Canceled
-    }
-
     /// <summary>
     /// Default state structure for pointer devices.
     /// </summary>
@@ -39,7 +31,7 @@ namespace ISX
 #endif
         public Vector2 position;
 
-        [InputControl(template = "Vector2", usage = "Secondary2DMotion", autoReset = true)]
+        [InputControl(template = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
         [InputControl(template = "Analog", usage = "Pressure")]
@@ -54,7 +46,7 @@ namespace ISX
         [InputControl(template = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", template = "Digital", sizeInBits = 4)]
+        [InputControl(name = "phase", template = "PointerPhase", sizeInBits = 4)]
         [InputControl(name = "button", template = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
@@ -65,6 +57,23 @@ namespace ISX
         {
             return kFormat;
         }
+    }
+}
+
+namespace ISX
+{
+    ////REVIEW: does it really make sense to have this at the pointer level
+    public enum PointerPhase
+    {
+        /// <summary>
+        /// No activity has been registered on the pointer yet.
+        /// </summary>
+        None,
+
+        Began,
+        Moved,
+        Ended,
+        Cancelled
     }
 
     /// <summary>
@@ -77,7 +86,7 @@ namespace ISX
     /// controls present on the base class.
     /// </remarks>
     [InputTemplate(stateType = typeof(PointerState))]
-    public class Pointer : InputDevice
+    public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
         /// <summary>
@@ -91,7 +100,7 @@ namespace ISX
         /// Within editor code, the coordinates are in the coordinate space of the current <see cref="UnityEditor.EditorWindow"/>.
         /// This means that if you query <c>Mouse.current.position</c> in <see cref="UnityEditor.EditorWindow.OnGUI"/>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
-        /// <see cref="UnityEditor.Event.mousePosition"/>).
+        /// <see cref="UnityEngine.Event.mousePosition"/>).
         /// </remarks>
         public Vector2Control position { get; private set; }
 
@@ -100,10 +109,10 @@ namespace ISX
         public Vector2Control radius { get; private set; }
         public AxisControl pressure { get; private set; }
         public AxisControl twist { get; private set; }
-        public DiscreteControl pointerId { get; private set; }
+        public IntegerControl pointerId { get; private set; }
         ////TODO: find a way which gives values as PointerPhase instead of as int
-        public DiscreteControl phase { get; private set; }
-        public DiscreteControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
+        public PointerPhaseControl phase { get; private set; }
+        public IntegerControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
         public ButtonControl button { get; private set; }
 
         /// <summary>
@@ -126,11 +135,45 @@ namespace ISX
             radius = setup.GetControl<Vector2Control>(this, "radius");
             pressure = setup.GetControl<AxisControl>(this, "pressure");
             twist = setup.GetControl<AxisControl>(this, "twist");
-            pointerId = setup.GetControl<DiscreteControl>(this, "pointerId");
-            phase = setup.GetControl<DiscreteControl>(this, "phase");
-            displayIndex = setup.GetControl<DiscreteControl>(this, "displayIndex");
+            pointerId = setup.GetControl<IntegerControl>(this, "pointerId");
+            phase = setup.GetControl<PointerPhaseControl>(this, "phase");
+            displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
             button = setup.GetControl<ButtonControl>(this, "button");
+
             base.FinishSetup(setup);
+        }
+
+        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        {
+            var x = delta.x;
+            var y = delta.y;
+
+            var xValue = x.ReadValueFrom(statePtr);
+            var yValue = y.ReadValueFrom(statePtr);
+
+            if (Mathf.Approximately(0f, xValue) && Mathf.Approximately(0f, yValue))
+                return false;
+
+            // Reset delta.
+            x.WriteValueInto(statePtr, 0f);
+            y.WriteValueInto(statePtr, 0f);
+
+            return true;
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+            var x = delta.x;
+            var y = delta.y;
+
+            // Accumulate delta.
+            var oldDeltaX = x.ReadValueFrom(oldStatePtr);
+            var oldDeltaY = y.ReadValueFrom(oldStatePtr);
+            var newDeltaX = x.ReadValueFrom(newStatePtr);
+            var newDeltaY = y.ReadValueFrom(newStatePtr);
+
+            x.WriteValueInto(newStatePtr, oldDeltaX + newDeltaX);
+            y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
         }
     }
 }

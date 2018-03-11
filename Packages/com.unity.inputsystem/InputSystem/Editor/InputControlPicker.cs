@@ -208,7 +208,7 @@ namespace ISX.Editor
                 var id = 1;
                 var usageRoot = BuildTreeForUsages(ref id);
 
-                foreach (var template in EditorInputTemplateCache.allBaseDeviceTemplates)
+                foreach (var template in EditorInputTemplateCache.allNonProductTemplates)
                 {
                     // Skip templates that don't have any controls (like the "HID" template).
                     if (template.controls.Count == 0)

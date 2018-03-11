@@ -3,7 +3,16 @@ using ISX.Controls;
 using ISX.LowLevel;
 using ISX.Utilities;
 
-namespace ISX
+////TODO: reset and accumulate deltas of all touches
+
+//// Remaining things to sort out around touch:
+//// - How do we handle 'primary' touches? ATM the setup always makes touch0 the primary touch
+////   by hardwiring the pointer state to it but I have doubts this is a satisfactory solution.
+//// - How do we handle mouse simulation?
+//// - How do we implement deltas for touch when there is no delta information from the platform?
+//// - How do we implement click-detection for touch?
+
+namespace ISX.LowLevel
 {
     /// <summary>
     /// Default state layout for touch devices.
@@ -37,10 +46,11 @@ namespace ISX
         [InputControl(name = "delta", template = "Vector2", usage = "Secondary2DMotion", useStateFrom = "touch0/delta")]
         [InputControl(name = "pressure", template = "Axis", usage = "Pressure", useStateFrom = "touch0/pressure")]
         [InputControl(name = "radius", template = "Vector2", usage = "Radius", useStateFrom = "touch0/radius")]
-        [InputControl(name = "phase", template = "Digital", useStateFrom = "touch0/phase")]
+        [InputControl(name = "phase", template = "PointerPhase", useStateFrom = "touch0/phase")]
         [InputControl(name = "displayIndex", template = "Digital", useStateFrom = "touch0/displayIndex")]
         [InputControl(name = "twist", template = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", template = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
+        ////TODO: we want to the button to be pressed when there is a primary touch
         [InputControl(name = "button", template = "Button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, offset = InputStateBlock.kInvalidOffset)]
         [FieldOffset(0)]
         public Touch touch0;
@@ -97,7 +107,10 @@ namespace ISX
             return kFormat;
         }
     }
+}
 
+namespace ISX
+{
     ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?
     ////REVIEW: does it *actually* make sense to base this on Pointer?
     /// <summary>
@@ -107,12 +120,38 @@ namespace ISX
     public class Touchscreen : Pointer
     {
         /// <summary>
-        /// Array of touches.
+        /// Array of currently active touches.
         /// </summary>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries.
+        /// This array only contains touches that are in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
+        /// or <see cref="PointerPhase.Moved"/>.
         /// </remarks>
-        public ReadOnlyArray<TouchControl> touches { get; private set; }
+        public ReadOnlyArray<TouchControl> touches
+        {
+            get
+            {
+                var touchCount = 0;
+                for (var i = 0; i < allTouchControls.Count; ++i)
+                {
+                    var phase = allTouchControls[i].phase.value;
+                    if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
+                    {
+                        m_TouchesArray[touchCount] = allTouchControls[i];
+                        ++touchCount;
+                    }
+                }
+                return new ReadOnlyArray<TouchControl>(m_TouchesArray, 0, touchCount);
+            }
+        }
+
+        /// <summary>
+        /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
+        /// </summary>
+        /// <remarks>
+        /// Will always contain <see cref="TouchscreenState.kMaxTouches"/> entries regardless of
+        /// which touches (if any) are currently in progress.
+        /// </remarks>
+        public ReadOnlyArray<TouchControl> allTouchControls { get; private set; }
 
         /// <summary>
         /// The touchscreen that was added or updated last or null if there is no
@@ -141,9 +180,12 @@ namespace ISX
             touchArray[8] = setup.GetControl<TouchControl>(this, "touch8");
             touchArray[9] = setup.GetControl<TouchControl>(this, "touch9");
 
-            touches = new ReadOnlyArray<TouchControl>(touchArray);
+            allTouchControls = new ReadOnlyArray<TouchControl>(touchArray);
+            m_TouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
 
             base.FinishSetup(setup);
         }
+
+        private TouchControl[] m_TouchesArray;
     }
 }

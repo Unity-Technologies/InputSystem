@@ -7,7 +7,7 @@ namespace ISX.Controls
 {
     public class AudioControl : InputControl<AudioBuffer>
     {
-        protected override AudioBuffer ReadRawValueFrom(IntPtr statePtr)
+        public override AudioBuffer ReadRawValueFrom(IntPtr statePtr)
         {
             throw new NotImplementedException();
         }

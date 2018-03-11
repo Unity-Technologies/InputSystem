@@ -41,7 +41,7 @@ namespace ISX.Controls
             base.FinishSetup(setup);
         }
 
-        protected override Pose ReadRawValueFrom(IntPtr statePtr)
+        public override Pose ReadRawValueFrom(IntPtr statePtr)
         {
             return new Pose(position.ReadValueFrom(statePtr), rotation.ReadValueFrom(statePtr));
         }

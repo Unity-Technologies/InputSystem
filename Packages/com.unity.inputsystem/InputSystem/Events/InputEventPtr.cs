@@ -102,6 +102,11 @@ namespace ISX.LowLevel
             get { return new IntPtr(m_EventPtr); }
         }
 
+        public InputEvent* ToPointer()
+        {
+            return m_EventPtr;
+        }
+
         public bool IsA<TOtherEvent>()
             where TOtherEvent : struct, IInputEventTypeInfo
         {

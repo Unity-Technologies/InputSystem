@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using ISX.Utilities;
 using Unity.Collections;
@@ -23,6 +22,16 @@ namespace ISX.LowLevel
     public struct InputDeviceCommand : IInputDeviceCommandInfo
     {
         public const int kBaseCommandSize = 8;
+
+        /// <summary>
+        /// Generic failure code for <see cref="IOCTL"/> calls.
+        /// </summary>
+        /// <remarks>
+        /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
+        /// </remarks>
+        public const long kGenericFailure = -1;
+
+        public const long kGenericSuccess = 1;
 
         [FieldOffset(0)] public FourCC type;
         [FieldOffset(4)] public int sizeInBytes;

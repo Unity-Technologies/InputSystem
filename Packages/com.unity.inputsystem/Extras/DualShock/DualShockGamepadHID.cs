@@ -3,10 +3,11 @@ using System;
 using System.Runtime.InteropServices;
 using ISX.Controls;
 using ISX.LowLevel;
+using ISX.Plugins.DualShock.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
-namespace ISX.Plugins.DualShock
+namespace ISX.Plugins.DualShock.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
@@ -53,7 +54,7 @@ namespace ISX.Plugins.DualShock
         [InputControl(name = "select", displayName = "Share", bit = 4)]
         [InputControl(name = "start", displayName = "Options", bit = 5)]
         [InputControl(name = "leftStickPress", bit = 6)]
-        [InputControl(name = "rightStickPress", bit = 6)]
+        [InputControl(name = "rightStickPress", bit = 7)]
         [FieldOffset(6)] public byte buttons2;
         [InputControl(name = "systemButton", template = "Button", displayName = "System", bit = 0)]
         [InputControl(name = "touchpadButton", template = "Button", displayName = "Touchpad Press", bit = 1)]
@@ -69,14 +70,15 @@ namespace ISX.Plugins.DualShock
         [InputControl(name = "acceleration/x", format = "USHT", offset = 0)]
         [InputControl(name = "acceleration/y", format = "USHT", offset = 2)]
         [InputControl(name = "acceleration/z", format = "USHT", offset = 4)]
+        [InputControl(name = "angularVelocity", template = "Vector3", offset = InputStateBlock.kInvalidOffset)] ////TODO: figure out where this one is
         [FieldOffset(14)] public short accelerationX;
         [FieldOffset(16)] public short accelerationY;
         [FieldOffset(18)] public short accelerationZ;
 
-        [InputControl(name = "gyro", template = "Vector3", format = "VC3S")]
-        [InputControl(name = "gyro/x", format = "USHT", offset = 0)]
-        [InputControl(name = "gyro/y", format = "USHT", offset = 2)]
-        [InputControl(name = "gyro/z", format = "USHT", offset = 4)]
+        [InputControl(name = "orientation", template = "Vector3", format = "VC3S")]
+        [InputControl(name = "orientation/x", format = "USHT", offset = 0)]
+        [InputControl(name = "orientation/y", format = "USHT", offset = 2)]
+        [InputControl(name = "orientation/z", format = "USHT", offset = 4)]
         [FieldOffset(20)] public short gyroX;
         [FieldOffset(22)] public short gyroY;
         [FieldOffset(24)] public short gyroZ;
@@ -150,7 +152,10 @@ namespace ISX.Plugins.DualShock
             };
         }
     }
+}
 
+namespace ISX.Plugins.DualShock
+{
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>

@@ -119,6 +119,8 @@ namespace ISX
             s_Manager.RegisterTemplate(json, name);
         }
 
+        ////TODO: rename 'constructor' to 'factory' (or to 'builder'?)
+
         /// <summary>
         /// Register a constructor that delivers an <see cref="InputTemplate"/> instance on demand.
         /// </summary>
@@ -640,6 +642,8 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
+        ////REVIEW: consider moving these out into extension methods in ISX.LowLevel
+
         ////TODO: find a more elegant solution for this
         // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
         // structs. So we can't just stuff a generic TState into a StateEvent<TState> and enforce
@@ -695,7 +699,7 @@ namespace ISX
             public const int kMaxSize = 512;
             public fixed byte data[kMaxSize - 1]; // DeltaStateEvent already adds one.
         }
-        public static unsafe void QueueStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
+        public static unsafe void QueueDeltaStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
             where TDelta : struct
         {
             if (control == null)

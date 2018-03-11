@@ -5,9 +5,9 @@ using UnityEngine;
 namespace ISX.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryEditorWindowCoordinates : IInputDeviceCommandInfo
+    public struct QueryDimensionsCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('E', 'W', 'P', 'S'); } }
+        public static FourCC Type { get { return new FourCC('D', 'I', 'M', 'S'); } }
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 
@@ -15,19 +15,18 @@ namespace ISX.LowLevel
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        public Vector2 inOutCoordinates;
+        public Vector2 outDimensions;
 
         public FourCC GetTypeStatic()
         {
             return Type;
         }
 
-        public static QueryEditorWindowCoordinates Create(Vector2 playerWindowCoordinates)
+        public static QueryDimensionsCommand Create()
         {
-            return new QueryEditorWindowCoordinates
+            return new QueryDimensionsCommand
             {
-                baseCommand = new InputDeviceCommand(Type, kSize),
-                inOutCoordinates = playerWindowCoordinates
+                baseCommand = new InputDeviceCommand(Type, kSize)
             };
         }
     }

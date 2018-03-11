@@ -1,8 +1,9 @@
 using System.Runtime.InteropServices;
 using ISX.Controls;
+using ISX.LowLevel;
 using ISX.Utilities;
 
-namespace ISX
+namespace ISX.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct TrackingState : IInputStateTypeInfo
@@ -43,6 +44,28 @@ namespace ISX
         }
     }
 
+    /// <summary>
+    /// Default state layout for <see cref="XRController">XR controllers</see>.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct XRControllerState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('C', 'T', 'R', 'L'); }
+        }
+
+        [InputControl] public Pose pose;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+}
+
+namespace ISX
+{
     [InputTemplate(stateType = typeof(TrackingState))]
     public abstract class TrackedDevice : InputDevice
     {
@@ -67,25 +90,6 @@ namespace ISX
         {
             base.MakeCurrent();
             current = this;
-        }
-    }
-
-    /// <summary>
-    /// Default state layout for <see cref="XRController">XR controllers</see>.
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential)]
-    public struct XRControllerState : IInputStateTypeInfo
-    {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('C', 'T', 'R', 'L'); }
-        }
-
-        [InputControl] public Pose pose;
-
-        public FourCC GetFormat()
-        {
-            return kFormat;
         }
     }
 

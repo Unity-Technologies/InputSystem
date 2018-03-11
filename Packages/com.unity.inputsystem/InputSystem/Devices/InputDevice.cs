@@ -32,14 +32,6 @@ namespace ISX
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
-        /// Generic failure code for <see cref="IOCTL"/> calls.
-        /// </summary>
-        /// <remarks>
-        /// Any negative return value for an <see cref="IOCTL"/> call should be considered failure.
-        /// </remarks>
-        public const long kCommandResultFailure = -1;
-
-        /// <summary>
         /// Metadata describing the device (product name etc.).
         /// </summary>
         /// <remarks>
@@ -115,6 +107,24 @@ namespace ISX
             get { return m_LastUpdateTime; }
         }
 
+        /// <summary>
+        /// A flattened list of controls that make up the device.
+        /// </summary>
+        /// <remarks>
+        /// Does not allocate.
+        /// </remarks>
+        public ReadOnlyArray<InputControl> allControls
+        {
+            get
+            {
+                // Since m_ChildrenForEachControl contains the device's children as well as the children
+                // of each control in the hierarchy, and since each control can only have a single parent,
+                // this list will actually deliver a flattened list of all controls in the hierarchy (and without
+                // the device itself being listed).
+                return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
+            }
+        }
+
         // This has to be public for Activator.CreateInstance() to be happy.
         public InputDevice()
         {
@@ -152,7 +162,7 @@ namespace ISX
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
         /// <seealso cref="DeviceConfigurationEvent"/>
-        public virtual void OnConfigurationChanged()
+        internal void OnConfigurationChanged()
         {
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
@@ -177,7 +187,7 @@ namespace ISX
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public virtual long OnDeviceCommand<TCommand>(ref TCommand command)
+        public long OnDeviceCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
             return InputRuntime.s_Runtime.DeviceCommand(id, ref command);
@@ -195,9 +205,10 @@ namespace ISX
         internal enum Flags
         {
             UpdateBeforeRender = 1 << 0,
-            HasAutoResetControls = 1 << 1,////TODO: remove
-            Remote = 1 << 2, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 3, // It's a device created from data surfaced by NativeInputSystem.
+            HasStateCallbacks = 1 << 1,
+            HasNoisyControls = 1 << 2,
+            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 4, // It's a device created from data surfaced by NativeInputSystem.
         }
 
         internal Flags m_Flags;
@@ -231,10 +242,6 @@ namespace ISX
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
-
-        // List of state blocks in this device that require automatic resetting
-        // between frames.
-        internal InputStateBlock[] m_AutoResetStateBlocks;
 
         ////TODO: output is still in the works
         // Buffer that will receive state events for output generated from this device.

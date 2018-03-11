@@ -7,6 +7,8 @@ using UnityEditor;
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
+////TODO: add view to tweak InputConfiguration interactively in the editor
+
 ////REVIEW: make device and/or action list a treeview?
 
 ////REVIEW: browser for plugins? (allowing to disable/enable them; including assembly for build target?)
