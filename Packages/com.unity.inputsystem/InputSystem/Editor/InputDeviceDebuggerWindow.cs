@@ -25,6 +25,8 @@ namespace ISX.Editor
     // Can also be used to alter the state of a device by making up state events.
     internal class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
+        public const int kMaxNumEventsInTrace = 64;
+
         public static void CreateOrShowExisting(InputDevice device)
         {
             // See if we have an existing window for the device and if so pop it
@@ -163,11 +165,8 @@ namespace ISX.Editor
 
             GUILayout.EndHorizontal();
 
-            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
-            m_EventListScrollPosition = EditorGUILayout.BeginScrollView(m_EventListScrollPosition);
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_EventTree.OnGUI(rect);
-            EditorGUILayout.EndScrollView();
         }
 
         private void InitializeWith(InputDevice device)
@@ -193,7 +192,7 @@ namespace ISX.Editor
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * 64) {deviceId = device.id};
+                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.id};
             m_EventTrace.onEvent += _ =>
                 {
                     ////FIXME: this is very inefficient

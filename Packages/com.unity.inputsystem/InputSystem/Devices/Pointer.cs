@@ -5,6 +5,10 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
+////FIXME: pointer deltas in EditorWindows need to be Y *down*
+
+////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
+
 namespace ISX.LowLevel
 {
     /// <summary>

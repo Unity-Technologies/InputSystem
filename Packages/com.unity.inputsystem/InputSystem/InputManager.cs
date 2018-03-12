@@ -1678,6 +1678,7 @@ namespace ISX
                             InputDevice.Flags.HasStateCallbacks;
                         if (deviceHasStateCallbacks)
                         {
+                            ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
                             var currentState = InputStateBuffers.GetFrontBuffer(deviceIndex);
                             var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
 

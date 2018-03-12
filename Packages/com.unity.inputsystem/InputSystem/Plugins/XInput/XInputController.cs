@@ -92,7 +92,7 @@ namespace ISX.Plugins.XInput
         }
 
         [Flags]
-        public enum Flags
+        public enum CapabilityFlags
         {
             ForceFeedbackSupported = 0x01,
             Wireless = 0x02,
@@ -106,7 +106,7 @@ namespace ISX.Plugins.XInput
         {
             public DeviceType type;
             public DeviceSubType subType;
-            public Flags flags;
+            public CapabilityFlags flags;
         }
     }
 }

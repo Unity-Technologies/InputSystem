@@ -50,7 +50,7 @@ namespace ISX
         ///
         /// The value determines how much travel is generated on the delta for each percent of travel across the
         /// window space. If, for example, the mouse moves 15 pixels on the X axis and -20 pixels on the Y axis,
-        /// and if the player window is 640x480 pixels and the sensitivity setting is 6, then the generated
+        /// and if the player window is 640x480 pixels and the sensitivity setting is 0.5, then the generated
         /// pointer delta value will be (15/640*6, -20/480*6) = (0.14, -0.25).
         /// </remarks>
         /// <seealso cref="Pointer.delta"/>

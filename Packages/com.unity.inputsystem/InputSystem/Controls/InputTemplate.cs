@@ -11,13 +11,16 @@ using UnityEngine;
 using ISX.Net35Compatibility;
 #endif
 
-////TODO: rename 'overrides' to 'replaces'
+////TODO: turn 'overrides' into feature where templates can be registered as overrides and they get merged *into* the template
+////      they are overriding
 
 ////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
 
 ////TODO: ensure that if a template sets a device description, it is indeed a device template
 
 ////TODO: array support
+
+////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
 
 ////REVIEW: common usages are on all templates but only make sense for devices
 
