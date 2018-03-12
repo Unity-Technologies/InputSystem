@@ -1,10 +1,3 @@
-using UnityEngine;
-
-#if UNITY_EDITOR
-using UnityEditor;
-using ISX.Plugins.HID.Editor;
-#endif
-
 namespace ISX.Plugins.HID
 {
     /// <summary>
@@ -24,7 +17,6 @@ namespace ISX.Plugins.HID
     /// If there is an existing product-specific template for a HID, it will
     /// take precedence and HIDSupport will leave the device alone.
     /// </remarks>
-    [InputPlugin]
     public static class HIDSupport
     {
         /// <summary>
@@ -35,21 +27,5 @@ namespace ISX.Plugins.HID
             InputSystem.RegisterTemplate<HID>();
             InputSystem.onFindTemplateForDevice += HID.OnFindTemplateForDevice;
         }
-
-#if UNITY_EDITOR
-        public static void OnToolbarGUI(InputDevice device)
-        {
-            var hid = device as HID;
-            if (hid == null)
-                return;
-
-            if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
-            {
-                HIDDescriptorWindow.CreateOrShowExisting(hid);
-            }
-        }
-
-        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
-#endif
     }
 }

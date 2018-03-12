@@ -10,13 +10,6 @@ using UnityEngine;
 
 class DualShockTests : InputTestFixture
 {
-    public override void Setup()
-    {
-        base.Setup();
-
-        DualShockSupport.Initialize();
-    }
-
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
     [Test]
     [Category("Devices")]

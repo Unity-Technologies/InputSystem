@@ -19,13 +19,6 @@ using Unity.Collections.LowLevel.Unsafe;
 
 class HIDTests : InputTestFixture
 {
-    public override void Setup()
-    {
-        base.Setup();
-
-        HIDSupport.Initialize();
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateGenericHID()

@@ -1,8 +1,14 @@
 using System;
+using ISX.Editor;
 using ISX.LowLevel;
 using ISX.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using ISX.Plugins.HID.Editor;
+#endif
 
 ////REVIEW: how are we dealing with multiple different input reports on the same device?
 
@@ -22,6 +28,9 @@ namespace ISX.Plugins.HID
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
     public class HID : InputDevice
+#if UNITY_EDITOR
+        , IInputDeviceDebugUI
+#endif
     {
         public const string kHIDInterface = "HID";
         public const string kHIDNamespace = "HID";
@@ -54,6 +63,18 @@ namespace ISX.Plugins.HID
                 return m_HIDDescriptor;
             }
         }
+
+        #if UNITY_EDITOR
+        public void OnToolbarGUI()
+        {
+            if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
+            {
+                HIDDescriptorWindow.CreateOrShowExisting(this);
+            }
+        }
+
+        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
+        #endif
 
         private bool m_HaveParsedHIDDescriptor;
         private HIDDeviceDescriptor m_HIDDescriptor;

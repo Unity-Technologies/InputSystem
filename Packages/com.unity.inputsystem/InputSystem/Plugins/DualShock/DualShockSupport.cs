@@ -3,7 +3,6 @@ namespace ISX.Plugins.DualShock
     /// <summary>
     /// Adds support for PS4 DualShock controllers.
     /// </summary>
-    [InputPlugin]
     public static class DualShockSupport
     {
         public static void Initialize()

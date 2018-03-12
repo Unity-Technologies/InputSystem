@@ -6,13 +6,6 @@ using UnityEngine;
 
 class XInputTests : InputTestFixture
 {
-    public override void Setup()
-    {
-        base.Setup();
-
-        XInputSupport.Initialize();
-    }
-
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
     [Test]
