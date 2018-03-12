@@ -39,6 +39,11 @@ namespace ISX.iOS
         public const int kMaxButtons = 14;
         public const int kMaxAxis = 4;
         
+        [InputControl(name = "dpad", template = "Dpad")]
+        [InputControl(name = "dpad/up", template = "Button", bit = (uint)Button.DpadUp)]
+        [InputControl(name = "dpad/right", template = "Button", bit = (uint)Button.DpadRight)]
+        [InputControl(name = "dpad/down", template = "Button", bit = (uint)Button.DpadDown)]
+        [InputControl(name = "dpad/left", template = "Button", bit = (uint)Button.DpadLeft)]  
         [InputControl(name = "buttonSouth", template = "Button", bit = (uint)Button.A)]
         [InputControl(name = "buttonWest", template = "Button", bit = (uint)Button.X)]
         [InputControl(name = "buttonNorth", template = "Button", bit = (uint)Button.Y)]
@@ -47,6 +52,8 @@ namespace ISX.iOS
         [InputControl(name = "rightStickPress", template = "Button", bit = (uint)Button.RightStick)]
         [InputControl(name = "leftShoulder", template = "Button", bit = (uint)Button.LeftShoulder)]
         [InputControl(name = "rightShoulder", template = "Button", bit = (uint)Button.RightShoulder)]
+        [InputControl(name = "leftTrigger", template = "Button", bit = (uint)Button.LeftTrigger)]
+        [InputControl(name = "rightTrigger", template = "Button", bit = (uint)Button.RightTrigger)]
         public uint buttons;
         public fixed float buttonValues[kMaxButtons];
         
