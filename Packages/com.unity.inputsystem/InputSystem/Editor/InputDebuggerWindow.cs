@@ -15,10 +15,12 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: display icons on devices depending on type of device
 
+////TOOD: make configuration update when changed
+
 namespace ISX.Editor
 {
     // Allows looking at input activity in the editor.
-    internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IHasCustomMenu
+    internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
         private static InputDebuggerWindow s_Instance;
 
@@ -57,16 +59,6 @@ namespace ISX.Editor
             InputSystem.onDeviceChange -= OnDeviceChange;
             if (InputActionSet.s_OnEnabledActionsChanged != null)
                 InputActionSet.s_OnEnabledActionsChanged.Remove(Repaint);
-        }
-
-        public void AddItemsToMenu(GenericMenu menu)
-        {
-            menu.AddItem(Contents.lockInputToGameContent, InputConfiguration.LockInputToGame, ToggleLockInputToGame);
-        }
-
-        private void ToggleLockInputToGame()
-        {
-            InputConfiguration.LockInputToGame = !InputConfiguration.LockInputToGame;
         }
 
         private void Initialize()
@@ -109,51 +101,10 @@ namespace ISX.Editor
                 m_DebugMode = debugMode;
             }
 
+            InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
+                    Contents.lockInputToGameContent, EditorStyles.toolbarButton);
+
             GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
-        }
-
-        // Draw a button for each device. Clicking the button pops up an InputDeviceDebuggerWindow
-        // on the device.
-        private void DrawDevicesGUI(GUIContent label)
-        {
-            var devices = InputSystem.devices;
-            var deviceCount = devices.Count;
-
-            GUILayout.Label(label, EditorStyles.boldLabel);
-
-            EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
-
-            var displayedDeviceCount = 0;
-
-            ////TODO: make buttons overflow into subsequent lines if they don't fit across width
-
-            for (var i = 0; i < deviceCount; i++)
-            {
-                var device = devices[i];
-                ++displayedDeviceCount;
-
-                // Draw it.
-                var text = device.displayName;
-                var deviceLabel = new GUIContent(text);
-                var rect = GUILayoutUtility.GetRect(deviceLabel, Styles.deviceStyle, GUILayout.Width(kDeviceElementWidth));
-                var width = Styles.deviceStyle.CalcSize(deviceLabel).x;
-                var textOverflowingButton = width > rect.width;
-
-                if (rect.x + rect.width >= position.width)
-                {
-                    ////FIXME: this does not work; Unity just throws a bunch of exceptions when trying to break horizontal groups like this
-                    //EditorGUILayout.EndHorizontal();
-                    //EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
-                }
-
-                if (GUI.Button(rect, deviceLabel, textOverflowingButton ? Styles.deviceStyleLeftAligned : Styles.deviceStyle))
-                    InputDeviceDebuggerWindow.CreateOrShowExisting(device);
-            }
-
-            if (displayedDeviceCount == 0)
-                EditorGUILayout.LabelField(Contents.noneContent);
-
             EditorGUILayout.EndHorizontal();
         }
 
@@ -191,8 +142,6 @@ namespace ISX.Editor
             EditorGUILayout.EndHorizontal();
         }
         */
-
-        private const int kDeviceElementWidth = 150;
 
         [SerializeField] private bool m_DebugMode;
         [SerializeField] private TreeViewState m_TreeViewState;
