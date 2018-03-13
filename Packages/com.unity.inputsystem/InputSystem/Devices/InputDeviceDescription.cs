@@ -89,13 +89,44 @@ namespace ISX
 
                 return string.Format("{0} {1}", manufacturer, product);
             }
+
             if (haveProduct)
+            {
+                if (haveInterface)
+                    return string.Format("{0} ({1})", product, interfaceName);
+
                 return product;
+            }
 
             if (!string.IsNullOrEmpty(deviceClass))
-                return deviceClass;
+            {
+                if (haveInterface)
+                    return string.Format("{0} ({1})", deviceClass, interfaceName);
 
-            return string.Empty;
+                return deviceClass;
+            }
+
+            // For some HIDs on Windows, we don't get a product and manufacturer string even though
+            // the HID is guaranteed to have a product and vendor ID. Resort to printing capabilities
+            // which for HIDs at least include the product and vendor ID.
+            if (!string.IsNullOrEmpty(capabilities))
+            {
+                const int kMaxCapabilitiesLength = 40;
+
+                var caps = capabilities;
+                if (capabilities.Length > kMaxCapabilitiesLength)
+                    caps = caps.Substring(0, kMaxCapabilitiesLength) + "...";
+
+                if (haveInterface)
+                    return string.Format("{0} ({1})", caps, interfaceName);
+
+                return caps;
+            }
+
+            if (haveInterface)
+                return interfaceName;
+
+            return "<Empty Device Description>";
         }
 
         public bool Matches(InputDeviceDescription other)
