@@ -15,7 +15,9 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: display icons on devices depending on type of device
 
-////TOOD: make configuration update when changed
+////TODO: make configuration update when changed
+
+////TODO: refresh when unrecognized device pops up
 
 namespace ISX.Editor
 {
@@ -42,7 +44,12 @@ namespace ISX.Editor
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            Repaint();
+            if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)
+            {
+                if (m_TreeView != null)
+                    m_TreeView.Reload();
+                Repaint();
+            }
         }
 
         public void Awake()
@@ -63,11 +70,18 @@ namespace ISX.Editor
 
         private void Initialize()
         {
-            if (m_TreeViewState == null)
+            var newTreeViewState = m_TreeViewState == null;
+            if (newTreeViewState)
                 m_TreeViewState = new TreeViewState();
 
             m_TreeView = new InputSystemTreeView(m_TreeViewState);
             EditorInputTemplateCache.onRefresh += m_TreeView.Reload;
+
+            // Set default expansion states.
+            if (newTreeViewState)
+            {
+                m_TreeView.SetExpanded(m_TreeView.devicesItem.id, true);
+            }
         }
 
         public void OnGUI()
@@ -187,6 +201,10 @@ namespace ISX.Editor
 
         class InputSystemTreeView : TreeView
         {
+            public TreeViewItem devicesItem { get; private set; }
+            public TreeViewItem templatesItem { get; private set; }
+            public TreeViewItem configurationItem { get; private set; }
+
             public InputSystemTreeView(TreeViewState state)
                 : base(state)
             {
@@ -225,17 +243,17 @@ namespace ISX.Editor
                 //var actionsNode = AddChild(root, "Actions", ref id);
 
                 // Devices.
-                var devicesNode = AddChild(root, "Devices", ref id);
+                devicesItem = AddChild(root, "Devices", ref id);
                 var devices = InputSystem.devices;
                 var haveRemotes = devices.Any(x => x.remote);
                 if (haveRemotes)
                 {
                     // Split local and remote devices into groups.
 
-                    var localDevicesNode = AddChild(devicesNode, "Local", ref id);
+                    var localDevicesNode = AddChild(devicesItem, "Local", ref id);
                     AddDevices(localDevicesNode, devices, ref id);
 
-                    var remoteDevicesNode = AddChild(devicesNode, "Remote", ref id);
+                    var remoteDevicesNode = AddChild(devicesItem, "Remote", ref id);
                     foreach (var player in EditorConnection.instance.ConnectedPlayers)
                     {
                         var playerNode = AddChild(remoteDevicesNode, player.name, ref id);
@@ -246,7 +264,7 @@ namespace ISX.Editor
                 {
                     // We don't have remote devices so don't add an extra group for local devices.
                     // Put them all directly underneath the "Devices" node.
-                    AddDevices(devicesNode, devices, ref id);
+                    AddDevices(devicesItem, devices, ref id);
                 }
 
                 if (m_UnrecognizedDevices == null)
@@ -255,23 +273,23 @@ namespace ISX.Editor
                 InputSystem.GetUnrecognizedDevices(m_UnrecognizedDevices);
                 if (m_UnrecognizedDevices.Count > 0)
                 {
-                    var unrecognizedDevicesNode = AddChild(devicesNode, "Unrecognized", ref id);
+                    var unrecognizedDevicesNode = AddChild(devicesItem, "Unrecognized", ref id);
                     foreach (var device in m_UnrecognizedDevices)
                         AddChild(unrecognizedDevicesNode, device.ToString(), ref id);
                 }
 
                 // Templates.
-                var templatesNode = AddChild(root, "Templates", ref id);
-                AddTemplates(templatesNode, ref id);
+                templatesItem = AddChild(root, "Templates", ref id);
+                AddTemplates(templatesItem, ref id);
 
                 ////FIXME: this shows local configuration only
                 // Configuration.
-                var configurationNode = AddChild(root, "Configuration", ref id);
-                AddConfigurationItem(configurationNode, "ButtonPressPoint", InputConfiguration.ButtonPressPoint, ref id);
-                AddConfigurationItem(configurationNode, "DeadzoneMin", InputConfiguration.DeadzoneMin, ref id);
-                AddConfigurationItem(configurationNode, "DeadzoneMax", InputConfiguration.DeadzoneMax, ref id);
-                AddConfigurationItem(configurationNode, "LockInputToGame", InputConfiguration.LockInputToGame, ref id);
-                configurationNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                configurationItem = AddChild(root, "Configuration", ref id);
+                AddConfigurationItem(configurationItem, "ButtonPressPoint", InputConfiguration.ButtonPressPoint, ref id);
+                AddConfigurationItem(configurationItem, "DeadzoneMin", InputConfiguration.DeadzoneMin, ref id);
+                AddConfigurationItem(configurationItem, "DeadzoneMax", InputConfiguration.DeadzoneMax, ref id);
+                AddConfigurationItem(configurationItem, "LockInputToGame", InputConfiguration.LockInputToGame, ref id);
+                configurationItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
 
                 return root;
             }
@@ -298,7 +316,8 @@ namespace ISX.Editor
                     parent.AddChild(item);
                 }
 
-                parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                if (parent.children != null)
+                    parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
             ////TODO: split remote and local templates
