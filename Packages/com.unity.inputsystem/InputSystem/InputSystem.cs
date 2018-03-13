@@ -1008,6 +1008,10 @@ namespace ISX
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_UWP
             HIDSupport.Initialize();
             #endif
+
+            #if UNITY_EDITOR || UNITY_ANDROID
+            ISX.Android.GameControllerSupport.Initialize();
+            #endif
         }
 
 #endif
