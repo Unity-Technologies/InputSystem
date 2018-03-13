@@ -267,15 +267,15 @@ namespace ISX.Editor
                     AddDevices(devicesItem, devices, ref id);
                 }
 
-                if (m_UnrecognizedDevices == null)
-                    m_UnrecognizedDevices = new List<InputDeviceDescription>();
-                m_UnrecognizedDevices.Clear();
-                InputSystem.GetUnrecognizedDevices(m_UnrecognizedDevices);
-                if (m_UnrecognizedDevices.Count > 0)
+                if (m_UnsupportedDevices == null)
+                    m_UnsupportedDevices = new List<InputDeviceDescription>();
+                m_UnsupportedDevices.Clear();
+                InputSystem.GetUnsupportedDevices(m_UnsupportedDevices);
+                if (m_UnsupportedDevices.Count > 0)
                 {
-                    var unrecognizedDevicesNode = AddChild(devicesItem, "Unrecognized", ref id);
-                    foreach (var device in m_UnrecognizedDevices)
-                        AddChild(unrecognizedDevicesNode, device.ToString(), ref id);
+                    var unsupportedDevicesNode = AddChild(devicesItem, "Unsupported", ref id);
+                    foreach (var device in m_UnsupportedDevices)
+                        AddChild(unsupportedDevicesNode, device.ToString(), ref id);
                 }
 
                 // Templates.
@@ -492,7 +492,7 @@ namespace ISX.Editor
                 return item;
             }
 
-            private List<InputDeviceDescription> m_UnrecognizedDevices;
+            private List<InputDeviceDescription> m_UnsupportedDevices;
 
             class DeviceItem : TreeViewItem
             {

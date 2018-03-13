@@ -5585,13 +5585,13 @@ class FunctionalTests : InputTestFixture
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
 
-        var unrecognizedDevices = new List<InputDeviceDescription>();
-        InputSystem.GetUnrecognizedDevices(unrecognizedDevices);
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        InputSystem.GetUnsupportedDevices(unsupportedDevices);
 
-        Assert.That(unrecognizedDevices.Count, Is.EqualTo(1));
-        Assert.That(unrecognizedDevices[0].product, Is.EqualTo("Product"));
-        Assert.That(unrecognizedDevices[0].manufacturer, Is.EqualTo("Manufacturer"));
-        Assert.That(unrecognizedDevices[0].interfaceName, Is.EqualTo("Test"));
+        Assert.That(unsupportedDevices.Count, Is.EqualTo(1));
+        Assert.That(unsupportedDevices[0].product, Is.EqualTo("Product"));
+        Assert.That(unsupportedDevices[0].manufacturer, Is.EqualTo("Manufacturer"));
+        Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
     [Test]

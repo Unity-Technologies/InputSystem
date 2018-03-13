@@ -836,7 +836,7 @@ namespace ISX
 
         // Adds any device that's been reported to the system but could not be matched to
         // a template to the given list.
-        public int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
+        public int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
             if (descriptions == null)
                 throw new ArgumentNullException("descriptions");

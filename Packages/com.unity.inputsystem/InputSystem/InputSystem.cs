@@ -495,9 +495,9 @@ namespace ISX
             s_Manager.ReportAvailableDevice(description);
         }
 
-        public static int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
+        public static int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
-            return s_Manager.GetUnrecognizedDevices(descriptions);
+            return s_Manager.GetUnsupportedDevices(descriptions);
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
