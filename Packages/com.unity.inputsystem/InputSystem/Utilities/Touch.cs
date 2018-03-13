@@ -20,10 +20,8 @@ namespace ISX
         [FieldOffset(20)] public float pressure;
         [FieldOffset(24)] public Vector2 radius;
         [FieldOffset(32)] public ushort phaseId;
-        [FieldOffset(34)] public ushort displayIndex;
-        [FieldOffset(36)] public float stylusAzimuthAngle;
-        [FieldOffset(40)] public float stylusAltitudeAngle;
-        [FieldOffset(44)] public sbyte touchTypeId;
+        [FieldOffset(34)] public sbyte displayIndex;
+        [FieldOffset(35)] public sbyte touchTypeId;
 
         public PointerPhase phase
         {

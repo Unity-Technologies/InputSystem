@@ -48,6 +48,7 @@ namespace ISX.LowLevel
         [InputControl(name = "radius", template = "Vector2", usage = "Radius", useStateFrom = "touch0/radius")]
         [InputControl(name = "phase", template = "PointerPhase", useStateFrom = "touch0/phase")]
         [InputControl(name = "displayIndex", template = "Digital", useStateFrom = "touch0/displayIndex")]
+        [InputControl(name = "touchType", template = "TouchType", useStateFrom = "touch0/touchType")]
         [InputControl(name = "twist", template = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", template = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
         ////TODO: we want to the button to be pressed when there is a primary touch

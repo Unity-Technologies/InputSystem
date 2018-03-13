@@ -967,6 +967,7 @@ namespace ISX
             RegisterTemplate("Digital", typeof(IntegerControl));
             RegisterTemplate("Integer", typeof(IntegerControl));
             RegisterTemplate("PointerPhase", typeof(PointerPhaseControl));
+            RegisterTemplate("TouchType", typeof(TouchTypeControl));
             RegisterTemplate("Vector2", typeof(Vector2Control));
             RegisterTemplate("Vector3", typeof(Vector3Control));
             RegisterTemplate("Magnitude2", typeof(Magnitude2Control));
