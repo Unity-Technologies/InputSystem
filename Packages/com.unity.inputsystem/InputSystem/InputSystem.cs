@@ -7,6 +7,9 @@ using ISX.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using ISX.LowLevel;
+using ISX.Plugins.DualShock;
+using ISX.Plugins.HID;
+using ISX.Plugins.XInput;
 using ISX.Utilities;
 
 #if UNITY_EDITOR
@@ -870,15 +873,6 @@ namespace ISX
 
         #endregion
 
-        #region Plugins
-
-        public static void RegisterPluginManager(IInputPluginManager manager)
-        {
-            s_Manager.RegisterPluginManager(manager);
-        }
-
-        #endregion
-
         #region Remoting
 
         /// <summary>
@@ -983,6 +977,10 @@ namespace ISX
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance);
 
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+            PerformDefaultPluginInitialization();
+            #endif
+
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
             #if DEVELOPMENT_BUILD
@@ -996,6 +994,24 @@ namespace ISX
 
 #endif // UNITY_EDITOR
 
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+        internal static void PerformDefaultPluginInitialization()
+        {
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE
+            XInputSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4
+            DualShockSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_UWP
+            HIDSupport.Initialize();
+            #endif
+        }
+
+#endif
+
         // For testing, we want the ability to push/pop system state even in the player.
         // However, we don't want it in release players.
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -1007,6 +1023,9 @@ namespace ISX
             s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
             s_Manager = s_SystemObject.manager;
             s_Remote = s_SystemObject.remote;
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+            PerformDefaultPluginInitialization();
+            #endif
             #else
             if (s_Manager != null)
                 s_Manager.Destroy();

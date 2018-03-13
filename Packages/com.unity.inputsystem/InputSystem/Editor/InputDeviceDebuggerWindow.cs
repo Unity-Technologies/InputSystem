@@ -25,6 +25,8 @@ namespace ISX.Editor
     // Can also be used to alter the state of a device by making up state events.
     internal class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
+        public const int kMaxNumEventsInTrace = 64;
+
         public static void CreateOrShowExisting(InputDevice device)
         {
             // See if we have an existing window for the device and if so pop it
@@ -106,12 +108,8 @@ namespace ISX.Editor
             GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
-            if (m_OnToolbarGUIMethods != null)
-            {
-                var parameters = new object[] {m_Device};
-                foreach (var method in m_OnToolbarGUIMethods)
-                    method.Invoke(null, parameters);
-            }
+            if (m_DeviceDebugUI != null)
+                m_DeviceDebugUI.OnToolbarGUI();
 
             if (GUILayout.Button(Contents.stateContent, EditorStyles.toolbarButton))
             {
@@ -167,16 +165,14 @@ namespace ISX.Editor
 
             GUILayout.EndHorizontal();
 
-            ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
-            m_EventListScrollPosition = EditorGUILayout.BeginScrollView(m_EventListScrollPosition);
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_EventTree.OnGUI(rect);
-            EditorGUILayout.EndScrollView();
         }
 
         private void InitializeWith(InputDevice device)
         {
             m_Device = device;
+            m_DeviceDebugUI = device as IInputDeviceDebugUI;
             m_DeviceId = device.id;
             m_DeviceIdString = device.id.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
@@ -196,7 +192,7 @@ namespace ISX.Editor
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * 64) {deviceId = device.id};
+                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.id};
             m_EventTrace.onEvent += _ =>
                 {
                     ////FIXME: this is very inefficient
@@ -211,21 +207,18 @@ namespace ISX.Editor
             // Set up control tree.
             m_ControlTree = InputControlTreeView.Create(m_Device, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
             m_ControlTree.ExpandAll();
-
-            // Look for GUI extension methods in plugins.
-            m_OnToolbarGUIMethods = InputManager.ScanForPluginMethods("OnToolbarGUI");
         }
 
         // We will lose our device on domain reload and then look it back up the first
         // time we hit a repaint after a reload. By that time, the input system should have
         // fully come back to life as well.
         [NonSerialized] private InputDevice m_Device;
+        [NonSerialized] private IInputDeviceDebugUI m_DeviceDebugUI;
         [NonSerialized] private string m_DeviceIdString;
         [NonSerialized] private string m_DeviceUsagesString;
         [NonSerialized] private string m_DeviceFlagsString;
         [NonSerialized] private InputControlTreeView m_ControlTree;
         [NonSerialized] private InputEventTreeView m_EventTree;
-        [NonSerialized] private List<MethodInfo> m_OnToolbarGUIMethods;
 
         [SerializeField] private int m_DeviceId = InputDevice.kInvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
