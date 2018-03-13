@@ -1,6 +1,5 @@
 namespace ISX.iOS
 {
-    [InputPlugin]
     public static class GameControllerSupport
     {
         public static void Initialize()
