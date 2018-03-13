@@ -891,89 +891,6 @@ namespace ISX
             }
         }
 
-        public void RegisterPluginManager(IInputPluginManager manager)
-        {
-            if (manager == null)
-                throw new ArgumentNullException("manager");
-            m_PluginManagers.Append(manager);
-        }
-
-        ////TODO: this should happen *after* there's a change to register custom plugin managers but *before* any actions are enabled
-        ////      (i.e. before any MB's are enabled)
-        internal void InitializePlugins()
-        {
-            // If we have plugin managers, let them drive all our plugin initializations.
-            if (m_PluginManagers.Count > 0)
-            {
-                for (var i = 0; i < m_PluginManagers.Count; ++i)
-                    m_PluginManagers[i].InitializePlugins();
-
-                ////REVIEW: flush list?
-            }
-            else
-            {
-                // Fall back to scanning for all [InputPlugin]s in the system and calling
-                // their Initialize() methods if they are compatible with the current
-                // runtime platform.
-                var initMethods = ScanForPluginMethods("Initialize");
-                foreach (var method in initMethods)
-                {
-                    if (method.GetParameters().Length != 0)
-                        Debug.LogError(string.Format(
-                                "[InputPlugin] %s should not take parameters; skipping", method));
-                    method.Invoke(null, null);
-                }
-            }
-
-            m_PluginsInitialized = true;
-        }
-
-        // NOTE: This is a fallback path! Proper setup should have a plugin manager in place
-        //       that does not perform scanning but rather knows which plugins to initialize
-        //       and where they are.
-        internal static List<MethodInfo> ScanForPluginMethods(string methodName)
-        {
-            var currentPlatform = Application.platform;
-            var result = new List<MethodInfo>();
-
-            // Crawl through all public types in all loaded assemblies.
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-#if NET_4_0
-                foreach (var type in assembly.DefinedTypes)
-#else
-                Type[] types = null;
-                try
-                {
-                    types = assembly.GetTypes();
-                }
-                catch (ReflectionTypeLoadException)
-                {
-                    continue;
-                }
-                foreach (var type in types)
-#endif
-                {
-                    var pluginAttribute = type.GetCustomAttribute<InputPluginAttribute>(false);
-                    if (pluginAttribute == null)
-                        continue;
-
-                    ////TODO: make desktop player compatibility imply editor compatibility
-                    // Skip if platform doesn't match.
-                    if (pluginAttribute.supportedPlatforms != null
-                        && !ArrayHelpers.Contains(pluginAttribute.supportedPlatforms, currentPlatform))
-                        continue;
-
-                    // Look up Initialize() method.
-                    var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.Public);
-                    if (method != null)
-                        result.Add(method);
-                }
-            }
-
-            return result;
-        }
-
         public void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
@@ -1083,9 +1000,10 @@ namespace ISX
             RegisterProcessor("Normalize", typeof(NormalizeProcessor));
             RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
             RegisterProcessor("Curve", typeof(CurveProcessor));
+            RegisterProcessor("Sensitivity", typeof(SensitivityProcessor));
 
             #if UNITY_EDITOR
-            RegisterProcessor("AutoWindowSpace", typeof(AutoWindowSpaceProcessor));
+            RegisterProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
             // Register action modifiers.
@@ -1182,9 +1100,6 @@ namespace ISX
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
         [NonSerialized] private bool m_HaveDevicesWithStateCallbackReceivers;
-
-        [NonSerialized] private bool m_PluginsInitialized;
-        [NonSerialized] private InlinedArray<IInputPluginManager> m_PluginManagers;
 
         [NonSerialized] private IInputRuntime m_Runtime;
 
@@ -1460,9 +1375,6 @@ namespace ISX
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
-            if (!m_PluginsInitialized)
-                InitializePlugins();
-
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
@@ -1481,14 +1393,13 @@ namespace ISX
 
         private unsafe void OnBeforeUpdate(InputUpdateType updateType)
         {
-            if (!m_PluginsInitialized)
-                InitializePlugins();
-
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
-            if (m_HaveDevicesWithStateCallbackReceivers)
+            if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
                 var stateBuffers = m_StateBuffers.GetBuffers(updateType);
+                var isDynamicOrFixedUpdate =
+                    updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
 
                 // For the sake of action state monitors, we need to be able to detect when
                 // an OnCarryStateForward() method writes new values into a state buffer. To do
@@ -1504,6 +1415,29 @@ namespace ISX
                         var device = m_Devices[i];
                         if ((device.m_Flags & InputDevice.Flags.HasStateCallbacks) != InputDevice.Flags.HasStateCallbacks)
                             continue;
+
+                        // Depending on update ordering, we are writing events into *upcoming* updates inside of
+                        // OnUpdate(). E.g. we may receive an event in fixed update and write it concurrently into
+                        // the fixed and dynamic update buffer for the device.
+                        //
+                        // This means that we have to be extra careful here not to overwrite state which has already
+                        // been updated with events. To check for this, we simply determine whether the device's update
+                        // count for the current update type already corresponds to the count of the upcoming update.
+                        //
+                        // NOTE: This is only relevant for non-editor updates.
+                        if (isDynamicOrFixedUpdate)
+                        {
+                            if (updateType == InputUpdateType.Dynamic)
+                            {
+                                if (device.m_CurrentDynamicUpdateCount == m_CurrentDynamicUpdateCount + 1)
+                                    continue; // Device already received state for upcoming dynamic update.
+                            }
+                            else if (updateType == InputUpdateType.Fixed)
+                            {
+                                if (device.m_CurrentFixedUpdateCount == m_CurrentFixedUpdateCount + 1)
+                                    continue; // Device already received state for upcoming fixed update.
+                            }
+                        }
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset;
                         var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
@@ -1556,12 +1490,6 @@ namespace ISX
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 #endif
-
-            // First callback from native should initialize plugins. We don't know which callback (device
-            // discovery, before-update (which is only hooked if there's before-update listeners) or
-            // update) we will get first so we have the initialization check on all paths.
-            if (!m_PluginsInitialized)
-                InitializePlugins();
 
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
@@ -1750,6 +1678,7 @@ namespace ISX
                             InputDevice.Flags.HasStateCallbacks;
                         if (deviceHasStateCallbacks)
                         {
+                            ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
                             var currentState = InputStateBuffers.GetFrontBuffer(deviceIndex);
                             var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
 
@@ -2215,9 +2144,6 @@ namespace ISX
             [NonSerialized] public InlinedArray<TemplateChangeListener> templateChangeListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
 
-            [NonSerialized] public InlinedArray<IInputPluginManager> pluginManagers;
-            [NonSerialized] public bool pluginsInitialized;
-
             [NonSerialized] public IInputRuntime runtime;
 
             #if UNITY_EDITOR
@@ -2303,8 +2229,6 @@ namespace ISX
                 deviceFindTemplateCallbacks = m_DeviceFindTemplateCallbacks.Clone(),
                 templateChangeListeners = m_TemplateChangeListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
-                pluginManagers = m_PluginManagers.Clone(),
-                pluginsInitialized = m_PluginsInitialized,
                 updateMask = m_UpdateMask,
                 runtime = m_Runtime,
 
@@ -2332,8 +2256,6 @@ namespace ISX
             m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
             m_TemplateChangeListeners = state.templateChangeListeners;
             m_EventListeners = state.eventListeners;
-            m_PluginManagers = state.pluginManagers;
-            m_PluginsInitialized = state.pluginsInitialized;
             m_UpdateMask = state.updateMask;
 
             InitializeData();

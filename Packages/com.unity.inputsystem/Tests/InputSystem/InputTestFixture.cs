@@ -65,10 +65,6 @@ namespace ISX
             InputSystem.s_Manager.InstallRuntime(testRuntime);
             InputSystem.s_Manager.InstallGlobals();
 
-            // Install dummy plugin manager to get rid of default logic scanning
-            // for [InputPlugins].
-            InputSystem.RegisterPluginManager(new DummyInputPluginManager());
-
             #if UNITY_EDITOR
             // Make sure we're not affected by the user giving focus away from the
             // game view.
@@ -119,16 +115,6 @@ namespace ISX
                 else
                     Assert.That(controlAsButton.isPressed, Is.True,
                         string.Format("Expected button {0} to be pressed", controlAsButton));
-            }
-        }
-
-        // Dummy plugin manager we install to suppress the default logic of crawling through the code
-        // looking for [InputPlugins]. Since plugin managers are additive, this won't interfer with
-        // tests registering their own plugin managers.
-        private class DummyInputPluginManager : IInputPluginManager
-        {
-            public void InitializePlugins()
-            {
             }
         }
     }

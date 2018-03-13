@@ -10,6 +10,7 @@ using ISX.Utilities;
 ////   by hardwiring the pointer state to it but I have doubts this is a satisfactory solution.
 //// - How do we handle mouse simulation?
 //// - How do we implement deltas for touch when there is no delta information from the platform?
+//// - How do we implement click-detection for touch?
 
 namespace ISX.LowLevel
 {
@@ -49,6 +50,7 @@ namespace ISX.LowLevel
         [InputControl(name = "displayIndex", template = "Digital", useStateFrom = "touch0/displayIndex")]
         [InputControl(name = "twist", template = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", template = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
+        ////TODO: we want to the button to be pressed when there is a primary touch
         [InputControl(name = "button", template = "Button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, offset = InputStateBlock.kInvalidOffset)]
         [FieldOffset(0)]
         public Touch touch0;

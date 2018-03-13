@@ -5,6 +5,10 @@ using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEngine;
 
+////FIXME: pointer deltas in EditorWindows need to be Y *down*
+
+////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
+
 namespace ISX.LowLevel
 {
     /// <summary>
@@ -31,7 +35,7 @@ namespace ISX.LowLevel
 #endif
         public Vector2 position;
 
-        [InputControl(template = "Vector2", usage = "Secondary2DMotion")]
+        [InputControl(template = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
         [InputControl(template = "Analog", usage = "Pressure")]

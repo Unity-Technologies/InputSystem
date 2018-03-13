@@ -2470,7 +2470,7 @@ class FunctionalTests : InputTestFixture
                     }
                 }
 
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         Assert.That(device.userId, Is.Null);
@@ -2506,7 +2506,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         InputSystem.PauseHaptics();
@@ -2547,7 +2547,7 @@ class FunctionalTests : InputTestFixture
                     return 1;
                 }
                 Assert.Fail();
-                return InputDeviceCommand.kFailure;
+                return InputDeviceCommand.kGenericFailure;
             });
 
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
@@ -2640,13 +2640,43 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
 
         InputSystem.Update();
 
-        Assert.That(pointer.delta.value.x, Is.Zero);
-        Assert.That(pointer.delta.value.y, Is.Zero);
+        Assert.That(pointer.delta.x.value, Is.Zero);
+        Assert.That(pointer.delta.y.value, Is.Zero);
+    }
+
+    // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
+    // ECS version, all this should be thrown out entirely.
+    //
+    // This test here is another peculiarity we need to watch out for. Events received by the system will
+    // get written into either player or editor buffers. If written into player buffers, they get written
+    // into *both* dynamic and fixed update buffers. However, depending on what the *current* update is
+    // (fixed or dynamic) this means we are writing state into the *next* update of the other type. E.g.
+    // when receiving state during fixed update, we write it both into the current fixed update and into
+    // the *next* dynamic update.
+    //
+    // For the reset logic, this means we have to be extra careful to not overwrite that state we've written
+    // "for the future".
+    [Test]
+    [Category("Devices")]
+    public void Devices_PointerDeltaUpdatedInFixedUpdate_DoesNotGetResetInDynamicUpdate()
+    {
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
     }
 
     [Test]
@@ -2659,8 +2689,47 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(1).Within(0.0000001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.x.value, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.y.value, Is.EqualTo(1).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanAdjustSensitivityOnPointerDeltas()
+    {
+        var pointer = InputSystem.AddDevice<Pointer>();
+
+        const float kWindowWidth = 640f;
+        const float kWindowHeight = 480f;
+        const float kSensitivity = 6f;
+
+        InputConfiguration.PointerDeltaSensitivity = kSensitivity;
+
+        testRuntime.SetDeviceCommandCallback(pointer.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryDimensionsCommand.Type)
+                    {
+                        var windowDimensionsCommand = (QueryDimensionsCommand*)commandPtr;
+                        windowDimensionsCommand->outDimensions = new Vector2(kWindowWidth, kWindowHeight);
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+
+                    return InputDeviceCommand.kGenericFailure;
+                }
+            });
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
+        InputSystem.Update();
+
+        // NOTE: Whereas the tests above access .delta.x.value and .delta.y.value, here we access
+        //       delta.value.x and delta.value.y. This is because the sensitivity processor sits
+        //       on the vector control and not on the individual component axes.
+
+        Assert.That(pointer.delta.value.x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
+        Assert.That(pointer.delta.value.y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
     }
 
     [Test]
@@ -2744,7 +2813,7 @@ class FunctionalTests : InputTestFixture
                         return QueryKeyNameCommand.kSize;
                     }
 
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 
@@ -2780,7 +2849,7 @@ class FunctionalTests : InputTestFixture
                             return QueryKeyboardLayoutCommand.kMaxNameLength;
                     }
 
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 
@@ -2844,7 +2913,7 @@ class FunctionalTests : InputTestFixture
                     }
 
                     Assert.Fail();
-                    return InputDeviceCommand.kFailure;
+                    return InputDeviceCommand.kGenericFailure;
                 }
             });
 
@@ -4284,35 +4353,22 @@ class FunctionalTests : InputTestFixture
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.buttonSouth));
     }
 
-    ////REVIEW: what's the bahavior we want here?
-    /*
     [Test]
     [Category("Actions")]
-    public void Actions_ControlsUpdateWhenDeviceIsDisconnectedAndReconnected()
+    public void Actions_ControlsUpdateWhenDeviceIsRemoved()
     {
-        var gamepad = (Gamepad) InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var action = new InputAction(binding: "/<Gamepad>/leftTrigger");
         action.Enable();
 
-        InputSystem.QueueDisconnectEvent(gamepad);
-        InputSystem.Update();
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
+
+        InputSystem.RemoveDevice(gamepad);
 
         Assert.That(action.controls, Has.Count.Zero);
-
-        InputSystem.QueueConnectEvent(gamepad);
-        InputSystem.Update();
-
-        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
     }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_DoNotBindToDisconnectedDevices()
-    {
-        Assert.Fail();
-    }
-    */
 
     [Test]
     [Category("Actions")]
@@ -5176,6 +5232,9 @@ class FunctionalTests : InputTestFixture
         InputConfiguration.DeadzoneMin = 0f;
         InputConfiguration.DeadzoneMax = 1f;
 
+        // Same for pointer sensitivity.
+        InputConfiguration.PointerDeltaSensitivity = 1f;
+
         var action = new InputAction();
 
         action.AddBinding("/<Gamepad>/leftStick");
@@ -5495,80 +5554,6 @@ class FunctionalTests : InputTestFixture
         ////TODO: test disconnection
     }
 
-    // This is nested but should still be found by the type scanning.
-    [InputPlugin]
-    public static class TestPlugin
-    {
-        public static bool s_Initialized;
-        public static void Initialize()
-        {
-            s_Initialized = true;
-        }
-    }
-
-    // The plugin system is designed to provide a sensible (though not necessarily desirable) default -- initialize
-    // whatever we can find in the assemblies present in the system -- but to allow completely suppressing default
-    // behavior and have custom plugin management take control. It is targeted at a workflow where zero-setup provides
-    // sensible behavior out of the box while allowing users to explicitly take control and determine what gets
-    // shipped and enabled in a player.
-    [Test]
-    [Category("Plugins")]
-    public void Plugins_WhenNoPluginManagerIsRegistered_AutomaticallyInitializesPluginsInAllLoadedAssemblies()
-    {
-        // InputTestFixture installs a dummy plugin manager so we need
-        // to get rid of that.
-        InputSystem.Reset();
-
-        TestPlugin.s_Initialized = false;
-        InputSystem.s_Manager.InitializePlugins();
-        Assert.That(TestPlugin.s_Initialized, Is.True);
-    }
-
-    public class TestPluginManager : IInputPluginManager
-    {
-        public bool initialized;
-        public void InitializePlugins()
-        {
-            initialized = true;
-        }
-    }
-
-    [Test]
-    [Category("Plugins")]
-    public void Plugins_WhenAtLeastOnePluginManagerIsRegistered_LeavesPluginInitializationToManager()
-    {
-        var manager = new TestPluginManager();
-        InputSystem.RegisterPluginManager(manager);
-
-        InputSystem.s_Manager.InitializePlugins();
-
-        Assert.That(manager.initialized, Is.True);
-    }
-
-    // We need to give opportunity for InputSystem.RegisterPluginManager() being called before we attempt
-    // to initialize plugins. This means we cannot run plugin initialization directly as part of normal
-    // input system initialization. What we do instead is defer plugin initialization until we get the
-    // first callback from NativeInputSystem.
-    [Test]
-    [Category("Plugins")]
-    public void Plugins_AreInitializedOnFirstUpdate()
-    {
-        TestPlugin.s_Initialized = false;
-
-        // The way the Unity test runner executes [SetUp] it seems that will
-        // go back to native code in-between SetUp and running the actual test code.
-        // This means there will be native input updates happening in-between.
-        // Reset the system into a clean state (which also gets rid of the
-        // DummyInputPluginMananager installed by InputTestFixture).
-        InputSystem.Reset();
-
-        Assert.That(TestPlugin.s_Initialized, Is.False);
-
-        InputSystem.Update();
-
-        Assert.That(TestPlugin.s_Initialized, Is.True);
-    }
-
 #if UNITY_EDITOR
     [Test]
     [Category("Editor")]
@@ -5858,14 +5843,6 @@ class FunctionalTests : InputTestFixture
     {
         //make sure it reduces memory usage
         ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanLoadTemplateFromCSV()
-    {
-        //take device info from name and the csv data is just a flat list of controls
         Assert.Fail();
     }
 
