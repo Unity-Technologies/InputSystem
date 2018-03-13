@@ -5568,6 +5568,12 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterTemplate(json);
         InputSystem.AddDevice("MyDevice");
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription
+        {
+            product = "Product",
+            manufacturer = "Manufacturer",
+            interfaceName = "Test"
+        });
 
         InputSystem.Save();
         InputSystem.Reset();
@@ -5578,6 +5584,14 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
+
+        var unrecognizedDevices = new List<InputDeviceDescription>();
+        InputSystem.GetUnrecognizedDevices(unrecognizedDevices);
+
+        Assert.That(unrecognizedDevices.Count, Is.EqualTo(1));
+        Assert.That(unrecognizedDevices[0].product, Is.EqualTo("Product"));
+        Assert.That(unrecognizedDevices[0].manufacturer, Is.EqualTo("Manufacturer"));
+        Assert.That(unrecognizedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
     [Test]

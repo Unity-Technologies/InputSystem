@@ -2010,33 +2010,6 @@ namespace ISX
             return flipped;
         }
 
-        ////TODO: reset device states for dynamic and fixed updates when going in and out of play mode
-        ////REVIEW: shouldn't resets be visible to actions by generating proper change notifications?
-        ////        (might be a better idea to instead send an state event with default state)
-        private unsafe void ResetDeviceState(InputDevice device)
-        {
-            var offset = (int)device.m_StateBlock.byteOffset;
-            var sizeInBytes = device.m_StateBlock.alignedSizeInBytes;
-            var deviceIndex = device.m_DeviceIndex;
-
-            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
-            {
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            }
-
-            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
-            {
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            }
-
-#if UNITY_EDITOR
-            UnsafeUtility.MemClear((void*)(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            UnsafeUtility.MemClear((void*)(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-#endif
-        }
-
         // Domain reload survival logic. Also used for pushing and popping input system
         // state for testing.
 
@@ -2245,23 +2218,24 @@ namespace ISX
 
         internal void RestoreState(SerializedState state)
         {
-            m_SupportedDevices = state.supportedDevices.ToList();
-            m_StateBuffers = state.buffers;
-            m_CurrentUpdate = InputUpdateType.Dynamic;
-            m_AvailableDevices = state.availableDevices.ToList();
             m_Devices = null;
             m_HaveDevicesWithStateCallbackReceivers = false;
+            m_CurrentUpdate = InputUpdateType.Dynamic;
+
+            InitializeData();
+            if (state.runtime != null)
+                InstallRuntime(state.runtime);
+            InstallGlobals();
+
+            m_SupportedDevices = state.supportedDevices.ToList();
+            m_StateBuffers = state.buffers;
+            m_AvailableDevices = state.availableDevices.ToList();
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
             m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
             m_TemplateChangeListeners = state.templateChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
-
-            InitializeData();
-            if (state.runtime != null)
-                InstallRuntime(state.runtime);
-            InstallGlobals();
 
             #if UNITY_EDITOR
             m_Debugger = state.debugger;

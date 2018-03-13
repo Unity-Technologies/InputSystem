@@ -80,9 +80,15 @@ namespace ISX
         {
             var haveProduct = !string.IsNullOrEmpty(product);
             var haveManufacturer = !string.IsNullOrEmpty(manufacturer);
+            var haveInterface = !string.IsNullOrEmpty(interfaceName);
 
             if (haveProduct && haveManufacturer)
+            {
+                if (haveInterface)
+                    return string.Format("{0} {1} ({2})", manufacturer, product, interfaceName);
+
                 return string.Format("{0} {1}", manufacturer, product);
+            }
             if (haveProduct)
                 return product;
 
