@@ -935,6 +935,9 @@ namespace ISX
                 s_SystemObject.ReviveAfterDomainReload();
                 s_Manager = s_SystemObject.manager;
                 s_Remote = s_SystemObject.remote;
+                #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+                PerformDefaultPluginInitialization();
+                #endif
                 InputDebuggerWindow.ReviveAfterDomainReload();
             }
             else
