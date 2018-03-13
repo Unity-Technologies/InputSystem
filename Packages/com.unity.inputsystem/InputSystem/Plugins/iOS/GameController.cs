@@ -56,7 +56,14 @@ namespace ISX.iOS
         [InputControl(name = "rightTrigger", template = "Button", bit = (uint)Button.RightTrigger)]
         public uint buttons;
         public fixed float buttonValues[kMaxButtons];
-        
+
+        private const uint kAxisOffset = sizeof(uint) + sizeof(float) * kMaxButtons;
+        [InputControl(name = "leftStick", template = "Stick", format = "VC2F")]
+        [InputControl(name = "leftStick/x", format = "FLT", offset = (uint)Axis.LeftStickX * sizeof(float) + kAxisOffset)]
+        [InputControl(name = "leftStick/y", format = "FLT", offset = (uint)Axis.LeftStickY * sizeof(float) + kAxisOffset)]
+        [InputControl(name = "rightStick", template = "Stick", format = "VC2F")]
+        [InputControl(name = "rightStick/x", format = "FLT", offset = (uint)Axis.RightStickX * sizeof(float) + kAxisOffset)]
+        [InputControl(name = "rightStick/y", format = "FLT", offset = (uint)Axis.RightStickY * sizeof(float) + kAxisOffset)]
         public fixed float axisValues[kMaxAxis];
         
         public FourCC GetFormat()
