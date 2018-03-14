@@ -1,5 +1,4 @@
 using System;
-using ISX.Editor;
 using ISX.LowLevel;
 using ISX.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
@@ -7,6 +6,7 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using ISX.Editor;
 using ISX.Plugins.HID.Editor;
 #endif
 
