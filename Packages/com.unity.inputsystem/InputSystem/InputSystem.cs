@@ -935,7 +935,7 @@ namespace ISX
                 s_SystemObject.ReviveAfterDomainReload();
                 s_Manager = s_SystemObject.manager;
                 s_Remote = s_SystemObject.remote;
-                #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+                #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
                 PerformDefaultPluginInitialization();
                 #endif
                 InputDebuggerWindow.ReviveAfterDomainReload();
@@ -980,7 +980,7 @@ namespace ISX
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance);
 
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
             #endif
 
@@ -997,7 +997,7 @@ namespace ISX
 
 #endif // UNITY_EDITOR
 
-#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
         {
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE
@@ -1030,7 +1030,7 @@ namespace ISX
             s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
             s_Manager = s_SystemObject.manager;
             s_Remote = s_SystemObject.remote;
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
             #endif
             #else
