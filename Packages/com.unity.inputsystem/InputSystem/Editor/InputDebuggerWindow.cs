@@ -44,17 +44,41 @@ namespace ISX.Editor
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
+            // Update tree if devices are added or removed.
             if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)
-            {
-                if (m_TreeView != null)
-                    m_TreeView.Reload();
-                Repaint();
-            }
+                Refresh();
+        }
+
+        private void OnTemplateChange(string name, InputTemplateChange change)
+        {
+            // Update tree if template setup has changed.
+            Refresh();
+        }
+
+        private string OnFindTemplate(int deviceId, ref InputDeviceDescription description, string matchedTemplate,
+            IInputRuntime runtime)
+        {
+            // If there's no matched template, there's a chance this device will go in
+            // the unsupported list. There's no direct notification for that so we
+            // pre-emptively trigger a refresh.
+            if (string.IsNullOrEmpty(matchedTemplate))
+                Refresh();
+
+            return null;
+        }
+
+        private void Refresh()
+        {
+            if (m_TreeView != null)
+                m_TreeView.Reload();
+            Repaint();
         }
 
         public void Awake()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
+            InputSystem.onTemplateChange += OnTemplateChange;
+            InputSystem.onFindTemplateForDevice += OnFindTemplate;
 
             if (InputActionSet.s_OnEnabledActionsChanged == null)
                 InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
@@ -64,6 +88,9 @@ namespace ISX.Editor
         public void OnDestroy()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
+            InputSystem.onTemplateChange -= OnTemplateChange;
+            InputSystem.onFindTemplateForDevice -= OnFindTemplate;
+
             if (InputActionSet.s_OnEnabledActionsChanged != null)
                 InputActionSet.s_OnEnabledActionsChanged.Remove(Repaint);
         }
@@ -75,7 +102,6 @@ namespace ISX.Editor
                 m_TreeViewState = new TreeViewState();
 
             m_TreeView = new InputSystemTreeView(m_TreeViewState);
-            EditorInputTemplateCache.onRefresh += m_TreeView.Reload;
 
             // Set default expansion states.
             if (newTreeViewState)
