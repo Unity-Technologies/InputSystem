@@ -266,7 +266,7 @@ namespace ISX
 
                 if (description.Matches(m_AvailableDevices[i].description))
                 {
-                    AddDevice(template, deviceId, description, m_AvailableDevices[i].isNative);
+                    AddDevice(template, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
                 }
             }
         }

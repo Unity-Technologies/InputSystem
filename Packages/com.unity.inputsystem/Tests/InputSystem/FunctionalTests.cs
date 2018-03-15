@@ -2147,6 +2147,63 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_UnsupportedDevices_AreAddedToList()
+    {
+        const string json = @"
+            {
+                ""interface"" : ""TestInterface"",
+                ""product"" : ""TestProduct"",
+                ""manufacturer"" : ""TestManufacturer""
+            }
+        ";
+
+        testRuntime.ReportNewInputDevice(json);
+        InputSystem.Update();
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        var count = InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(count, Is.EqualTo(1));
+        Assert.That(unsupportedDevices.Count, Is.EqualTo(1));
+        Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(unsupportedDevices[0].product, Is.EqualTo("TestProduct"));
+        Assert.That(unsupportedDevices[0].manufacturer, Is.EqualTo("TestManufacturer"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_UnsupportedDevices_AreRemovedFromList_WhenMatchingTemplateIsAdded()
+    {
+        const string json = @"
+            {
+                ""interface"" : ""TestInterface"",
+                ""product"" : ""TestProduct"",
+                ""manufacturer"" : ""TestManufacturer""
+            }
+        ";
+
+        testRuntime.ReportNewInputDevice(json);
+        InputSystem.Update();
+
+        InputSystem.RegisterTemplate<TestTemplateType>(
+            deviceDescription: new InputDeviceDescription
+        {
+            interfaceName = "TestInterface"
+        });
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        var count = InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(count, Is.Zero);
+        Assert.That(unsupportedDevices.Count, Is.Zero);
+        Assert.That(InputSystem.devices.Count, Is.EqualTo(1));
+        Assert.That(InputSystem.devices[0].description.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(InputSystem.devices[0].description.product, Is.EqualTo("TestProduct"));
+        Assert.That(InputSystem.devices[0].description.manufacturer, Is.EqualTo("TestManufacturer"));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
         var device = InputSystem.AddDevice("Gamepad");
