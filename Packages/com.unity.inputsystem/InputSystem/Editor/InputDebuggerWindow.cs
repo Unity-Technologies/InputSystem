@@ -206,12 +206,10 @@ namespace ISX.Editor
         private static class Styles
         {
             public static GUIStyle deviceStyle = new GUIStyle("button");
-            public static GUIStyle deviceStyleLeftAligned = new GUIStyle(deviceStyle) {alignment = TextAnchor.MiddleLeft};
         }
 
         private static class Contents
         {
-            public static GUIContent noneContent = new GUIContent("None");
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
             public static GUIContent debugModeContent = new GUIContent("Debug Mode");
         }
@@ -269,8 +267,8 @@ namespace ISX.Editor
                 //var actionsNode = AddChild(root, "Actions", ref id);
 
                 // Devices.
-                devicesItem = AddChild(root, "Devices", ref id);
                 var devices = InputSystem.devices;
+                devicesItem = AddChild(root, string.Format("Devices ({0})", devices.Count), ref id);
                 var haveRemotes = devices.Any(x => x.remote);
                 if (haveRemotes)
                 {
@@ -299,9 +297,10 @@ namespace ISX.Editor
                 InputSystem.GetUnsupportedDevices(m_UnsupportedDevices);
                 if (m_UnsupportedDevices.Count > 0)
                 {
-                    var unsupportedDevicesNode = AddChild(devicesItem, "Unsupported", ref id);
+                    var unsupportedDevicesNode = AddChild(devicesItem, string.Format("Unsupported ({0})", m_UnsupportedDevices.Count), ref id);
                     foreach (var device in m_UnsupportedDevices)
                         AddChild(unsupportedDevicesNode, device.ToString(), ref id);
+                    unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 // Templates.

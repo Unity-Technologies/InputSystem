@@ -749,9 +749,10 @@ namespace ISX
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
+            var deviceId = device.id;
             ArrayHelpers.EraseAt(ref m_Devices, deviceIndex);
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
-            m_DevicesById.Remove(device.id);
+            m_DevicesById.Remove(deviceId);
 
             if (m_Devices != null)
             {
@@ -769,6 +770,20 @@ namespace ISX
             {
                 // No more devices. Kill state buffers.
                 m_StateBuffers.FreeAll();
+            }
+
+            // Remove from list of available devices if it's a device coming from
+            // the runtime.
+            if (device.native)
+            {
+                for (var i = 0; i < m_AvailableDevices.Count; ++i)
+                {
+                    if (m_AvailableDevices[i].deviceId == deviceId)
+                    {
+                        m_AvailableDevices.RemoveAt(i);
+                        break;
+                    }
+                }
             }
 
             // Unbake offset into global state buffers.
@@ -1039,14 +1054,6 @@ namespace ISX
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
             // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
             InputRuntime.s_Runtime = m_Runtime;
-        }
-
-        // Bundles a template name and a device description.
-        [Serializable]
-        internal struct SupportedDevice
-        {
-            public InputDeviceDescription description;
-            public InternedString template;
         }
 
         [Serializable]

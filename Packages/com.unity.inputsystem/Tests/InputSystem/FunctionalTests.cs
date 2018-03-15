@@ -2508,6 +2508,31 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
+    {
+        // Devices added directly via AddDevice() don't end up on the list of
+        // available devices. Devices reported by the runtime do.
+        testRuntime.ReportNewInputDevice(@"
+            {
+                ""type"" : ""Gamepad""
+            }
+        ");
+
+        InputSystem.Update();
+        var device = InputSystem.devices[0];
+
+        var inputEvent = DeviceRemoveEvent.Create(device.id, Time.time);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(unsupportedDevices.Count, Is.Zero);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanBeReadded()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

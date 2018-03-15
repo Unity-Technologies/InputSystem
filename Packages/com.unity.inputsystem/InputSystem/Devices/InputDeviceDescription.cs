@@ -4,6 +4,8 @@ using UnityEngine;
 
 ////REVIEW: should there be a way to make fields mandatory matches?
 
+////REVIEW: add a 'devicePath' field for a platform-dependent device path?
+
 namespace ISX
 {
     /// <summary>
