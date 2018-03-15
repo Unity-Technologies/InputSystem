@@ -295,16 +295,27 @@ namespace ISX.Android
         [InputControl(name = "rightShoulder", template = "Button", bit = (uint)KeyCode.BUTTON_R1)]
         [InputControl(name = "start", template = "Button", bit = (uint)KeyCode.BUTTON_START)]
         [InputControl(name = "select", template = "Button", bit = (uint)KeyCode.BUTTON_SELECT)]
+        [InputControl(name = "dpadButtons", template = "Dpad")]
+        [InputControl(name = "dpadButtons/up", template = "Button", bit = (uint)KeyCode.DPAD_UP)]
+        [InputControl(name = "dpadButtons/right", template = "Button", bit = (uint)KeyCode.DPAD_RIGHT)]
+        [InputControl(name = "dpadButtons/down", template = "Button", bit = (uint)KeyCode.DPAD_DOWN)]
+        [InputControl(name = "dpadButtons/left", template = "Button", bit = (uint)KeyCode.DPAD_LEFT)]
         public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
 
-        [InputControl(name = "leftTrigger", template = "Button", format = "FLT", offset = (uint)Axis.LTRIGGER * sizeof(float))]
-        [InputControl(name = "rightTrigger", template = "Button", format = "FLT", offset = (uint)Axis.RTRIGGER * sizeof(float))]
+        private const uint kAxisOffset = sizeof(uint) * (uint)((kMaxAndroidButtons + 31) / 32);
+        [InputControl(name = "leftTrigger", template = "Button", format = "FLT", offset = (uint)Axis.LTRIGGER * sizeof(float) + kAxisOffset)]
+        [InputControl(name = "rightTrigger", template = "Button", format = "FLT", offset = (uint)Axis.RTRIGGER * sizeof(float) + kAxisOffset)]
         [InputControl(name = "leftStick", template = "Stick", format = "VC2F")]
         [InputControl(name = "leftStick/x", format = "FLT", offset = (uint)Axis.X * sizeof(float))]
-        [InputControl(name = "leftStick/y", format = "FLT", offset = (uint)Axis.Y * sizeof(float))]
+        [InputControl(name = "leftStick/y", format = "FLT", offset = (uint)Axis.Y * sizeof(float) )]
         [InputControl(name = "rightStick", template = "Stick", format = "VC2F")]
         [InputControl(name = "rightStick/x", format = "FLT", offset = (uint)Axis.Z * sizeof(float))] 
         [InputControl(name = "rightStick/y", format = "FLT", offset = (uint)Axis.RZ * sizeof(float))]
+        [InputControl(name = "dpadAxes", template = "Dpad")]
+        [InputControl(name = "dpadAxes/up", template = "Button", format = "FLT", offset = (uint)Axis.HAT_Y * sizeof(float))]
+        [InputControl(name = "dpadAxes/right", template = "Button", format = "FLT", offset = (uint)Axis.HAT_X * sizeof(float))]
+        [InputControl(name = "dpadAxes/down", template = "Button", format = "FLT", offset = (uint)Axis.HAT_Y * sizeof(float))]
+        [InputControl(name = "dpadAxes/left", template = "Button", format = "FLT", offset = (uint)Axis.HAT_X * sizeof(float))]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
@@ -318,6 +329,8 @@ namespace ISX.Android
     {
         protected override void FinishSetup(InputControlSetup setup)
         {
+            // TODO: pick dpadAxes or dpadButtons? We don't upfront if dpad is bound to buttons or hat switch
+            //       only when we first receive event for ex., HAT_X or DPAD_UP, we can then assume that one or another should be used
             base.FinishSetup(setup);
         }
     }
