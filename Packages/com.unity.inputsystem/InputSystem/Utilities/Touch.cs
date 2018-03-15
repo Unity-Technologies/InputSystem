@@ -28,7 +28,7 @@ namespace ISX
             get { return (PointerPhase)phaseId; }
             set { phaseId = (ushort)value; }
         }
-        
+
         public TouchType type
         {
             get { return (TouchType)touchTypeId; }

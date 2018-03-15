@@ -1,4 +1,4 @@
-namespace ISX.iOS
+namespace ISX.Plugins.iOS
 {
     public static class GameControllerSupport
     {

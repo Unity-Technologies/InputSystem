@@ -1011,9 +1011,9 @@ namespace ISX
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_UWP
             HIDSupport.Initialize();
             #endif
-            
+
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            ISX.iOS.GameControllerSupport.Initialize();
+            Plugins.iOS.GameControllerSupport.Initialize();
             #endif
         }
 
