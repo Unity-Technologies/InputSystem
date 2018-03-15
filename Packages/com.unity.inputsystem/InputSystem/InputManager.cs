@@ -250,11 +250,7 @@ namespace ISX
 
         private void AddSupportedDevice(InputDeviceDescription description, InternedString template)
         {
-            m_SupportedDevices.Add(new SupportedDevice
-            {
-                description = description,
-                template = template
-            });
+            m_Templates.templateDeviceDescriptions[template] = description;
 
             // See if the new description to template mapping allows us to make
             // sense of a device we couldn't make sense of so far.
@@ -399,12 +395,9 @@ namespace ISX
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
-            for (var i = 0; i < m_SupportedDevices.Count; ++i)
-            {
-                ////REVIEW: we don't only want to find any match, we want to find the best match
-                if (m_SupportedDevices[i].description.Matches(deviceDescription))
-                    return m_SupportedDevices[i].template;
-            }
+            var templateName = m_Templates.TryFindMatchingTemplate(deviceDescription);
+            if (!templateName.IsEmpty())
+                return templateName;
 
             // No, so try to match by device class. If we have a "Gamepad" template,
             // for example, a device that classifies itself as a "Gamepad" will match
@@ -854,6 +847,7 @@ namespace ISX
             return numFound;
         }
 
+        ////TODO: remove this version
         // Report the availability of a device. The system will try to find a template that matches
         // the device and instantiate it. If no template matches but a template is added some time
         // in the future, the device will be created when the template becomes available.
@@ -942,7 +936,6 @@ namespace ISX
         internal void InitializeData()
         {
             m_Templates.Allocate();
-            m_SupportedDevices = new List<SupportedDevice>();
             m_Processors = new Dictionary<InternedString, Type>();
             m_Modifiers = new Dictionary<InternedString, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
@@ -1070,11 +1063,9 @@ namespace ISX
         [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
         [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
 
-        [NonSerialized] private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
-        [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
-
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
+        [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
         [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
@@ -2070,6 +2061,13 @@ namespace ISX
         }
 
         [Serializable]
+        internal struct TemplateDeviceState
+        {
+            public InputDeviceDescription deviceDescription;
+            public string templateName;
+        }
+
+        [Serializable]
         internal struct TypeRegistrationState
         {
             public string name;
@@ -2100,9 +2098,9 @@ namespace ISX
             public TemplateState[] templateStrings;
             public TemplateConstructorState[] templateConstructors;
             public BaseTemplateState[] baseTemplates;
+            public TemplateDeviceState[] templateDeviceDescriptions;
             public TypeRegistrationState[] processors;
             public TypeRegistrationState[] modifiers;
-            public SupportedDevice[] supportedDevices;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
@@ -2191,9 +2189,9 @@ namespace ISX
                 templateStrings = templateStringArray,
                 templateConstructors = templateConstructorArray,
                 baseTemplates = m_Templates.baseTemplateTable.Select(x => new BaseTemplateState { derivedTemplate = x.Key, baseTemplate = x.Value }).ToArray(),
+                templateDeviceDescriptions = m_Templates.templateDeviceDescriptions.Select(x => new TemplateDeviceState { deviceDescription = x.Value, templateName = x.Key }).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
                 modifiers = TypeRegistrationState.SaveState(m_Modifiers),
-                supportedDevices = m_SupportedDevices.ToArray(),
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
@@ -2227,7 +2225,6 @@ namespace ISX
                 InstallRuntime(state.runtime);
             InstallGlobals();
 
-            m_SupportedDevices = state.supportedDevices.ToList();
             m_StateBuffers = state.buffers;
             m_AvailableDevices = state.availableDevices.ToList();
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
@@ -2301,6 +2298,15 @@ namespace ISX
                     var name = new InternedString(entry.derivedTemplate);
                     if (!m_Templates.baseTemplateTable.ContainsKey(name))
                         m_Templates.baseTemplateTable[name] = new InternedString(entry.baseTemplate);
+                }
+
+            // Template device descriptions.
+            if (state.templateDeviceDescriptions != null)
+                foreach (var entry in state.templateDeviceDescriptions)
+                {
+                    var name = new InternedString(entry.templateName);
+                    if (!m_Templates.templateDeviceDescriptions.ContainsKey(name))
+                        m_Templates.templateDeviceDescriptions[name] = entry.deviceDescription;
                 }
 
             // Processors.

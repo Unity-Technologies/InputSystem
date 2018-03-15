@@ -489,15 +489,60 @@ class FunctionalTests : InputTestFixture
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
+    class TestTemplateType : Pointer
+    {
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_RegisteringTemplateType_UsesBaseTypeAsBaseTemplate()
     {
-        // The Mouse class uses the Pointer class as its base class.
-        // So the Mouse template should extend the Pointer template.
+        InputSystem.RegisterTemplate<TestTemplateType>();
 
-        var mouseTemplate = InputSystem.TryLoadTemplate("Mouse");
-        Assert.That(mouseTemplate.extendsTemplate, Is.EqualTo("Pointer"));
+        var template = InputSystem.TryLoadTemplate("TestTemplateType");
+
+        Assert.That(template.extendsTemplate, Is.EqualTo("Pointer"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_RegisteringTemplateType_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    {
+        InputSystem.RegisterTemplate<TestTemplateType>(deviceDescription: new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer"
+        });
+
+        var template = InputSystem.TryLoadTemplate("TestTemplateType");
+
+        Assert.That(template.deviceDescription.empty, Is.False);
+        Assert.That(template.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(template.deviceDescription.product, Is.EqualTo("TestProduct"));
+        Assert.That(template.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_RegisteringTemplateConstructor_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    {
+        var constructor = new TestTemplateConstructor {templateToLoad = "Mouse"};
+
+        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), name: "TestTemplate",
+            deviceDescription: new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer"
+        });
+
+        var template = InputSystem.TryLoadTemplate("TestTemplate");
+
+        Assert.That(template.deviceDescription.empty, Is.False);
+        Assert.That(template.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(template.deviceDescription.product, Is.EqualTo("TestProduct"));
+        Assert.That(template.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
