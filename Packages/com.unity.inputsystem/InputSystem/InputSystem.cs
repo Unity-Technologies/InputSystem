@@ -921,6 +921,14 @@ namespace ISX
             // We're using this method just to make sure the class constructor is called
             // so we don't need any code in here. When the engine calls this method, the
             // class constructor will be run if it hasn't been run already.
+
+            // IL2CPP has a bug that causes the class constructor to not be run when
+            // the RuntimeInitializeOnLoadMethod is invoked. So we need an explicit check
+            // here until that is fixed (case 1014293).
+#if !UNITY_EDITOR
+            if (s_Manager == null)
+                InitializeInPlayer();
+#endif
         }
 
 #if UNITY_EDITOR
