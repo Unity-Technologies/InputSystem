@@ -1,4 +1,4 @@
-namespace ISX.Android
+namespace ISX.Plugins.Android
 {
     public static class GameControllerSupport
     {
