@@ -7,6 +7,7 @@ using UnityEngine;
 #if UNITY_EDITOR
 using ISX.Editor;
 using UnityEditor;
+using ISX.Editor;
 using ISX.Plugins.HID.Editor;
 #endif
 

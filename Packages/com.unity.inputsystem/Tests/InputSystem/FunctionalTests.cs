@@ -489,15 +489,60 @@ class FunctionalTests : InputTestFixture
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
+    class TestTemplateType : Pointer
+    {
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_RegisteringTemplateType_UsesBaseTypeAsBaseTemplate()
     {
-        // The Mouse class uses the Pointer class as its base class.
-        // So the Mouse template should extend the Pointer template.
+        InputSystem.RegisterTemplate<TestTemplateType>();
 
-        var mouseTemplate = InputSystem.TryLoadTemplate("Mouse");
-        Assert.That(mouseTemplate.extendsTemplate, Is.EqualTo("Pointer"));
+        var template = InputSystem.TryLoadTemplate("TestTemplateType");
+
+        Assert.That(template.extendsTemplate, Is.EqualTo("Pointer"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_RegisteringTemplateType_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    {
+        InputSystem.RegisterTemplate<TestTemplateType>(deviceDescription: new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer"
+        });
+
+        var template = InputSystem.TryLoadTemplate("TestTemplateType");
+
+        Assert.That(template.deviceDescription.empty, Is.False);
+        Assert.That(template.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(template.deviceDescription.product, Is.EqualTo("TestProduct"));
+        Assert.That(template.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_RegisteringTemplateConstructor_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    {
+        var constructor = new TestTemplateConstructor {templateToLoad = "Mouse"};
+
+        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), name: "TestTemplate",
+            deviceDescription: new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer"
+        });
+
+        var template = InputSystem.TryLoadTemplate("TestTemplate");
+
+        Assert.That(template.deviceDescription.empty, Is.False);
+        Assert.That(template.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(template.deviceDescription.product, Is.EqualTo("TestProduct"));
+        Assert.That(template.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
@@ -2147,6 +2192,63 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_UnsupportedDevices_AreAddedToList()
+    {
+        const string json = @"
+            {
+                ""interface"" : ""TestInterface"",
+                ""product"" : ""TestProduct"",
+                ""manufacturer"" : ""TestManufacturer""
+            }
+        ";
+
+        testRuntime.ReportNewInputDevice(json);
+        InputSystem.Update();
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        var count = InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(count, Is.EqualTo(1));
+        Assert.That(unsupportedDevices.Count, Is.EqualTo(1));
+        Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(unsupportedDevices[0].product, Is.EqualTo("TestProduct"));
+        Assert.That(unsupportedDevices[0].manufacturer, Is.EqualTo("TestManufacturer"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_UnsupportedDevices_AreRemovedFromList_WhenMatchingTemplateIsAdded()
+    {
+        const string json = @"
+            {
+                ""interface"" : ""TestInterface"",
+                ""product"" : ""TestProduct"",
+                ""manufacturer"" : ""TestManufacturer""
+            }
+        ";
+
+        testRuntime.ReportNewInputDevice(json);
+        InputSystem.Update();
+
+        InputSystem.RegisterTemplate<TestTemplateType>(
+            deviceDescription: new InputDeviceDescription
+        {
+            interfaceName = "TestInterface"
+        });
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        var count = InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(count, Is.Zero);
+        Assert.That(unsupportedDevices.Count, Is.Zero);
+        Assert.That(InputSystem.devices.Count, Is.EqualTo(1));
+        Assert.That(InputSystem.devices[0].description.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(InputSystem.devices[0].description.product, Is.EqualTo("TestProduct"));
+        Assert.That(InputSystem.devices[0].description.manufacturer, Is.EqualTo("TestManufacturer"));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
         var device = InputSystem.AddDevice("Gamepad");
@@ -2402,6 +2504,31 @@ class FunctionalTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad2));
         Assert.That(Gamepad.current, Is.Not.SameAs(gamepad1));
         Assert.That(gamepad1WasRemoved, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
+    {
+        // Devices added directly via AddDevice() don't end up on the list of
+        // available devices. Devices reported by the runtime do.
+        testRuntime.ReportNewInputDevice(@"
+            {
+                ""type"" : ""Gamepad""
+            }
+        ");
+
+        InputSystem.Update();
+        var device = InputSystem.devices[0];
+
+        var inputEvent = DeviceRemoveEvent.Create(device.id, Time.time);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(unsupportedDevices.Count, Is.Zero);
     }
 
     [Test]
@@ -5568,6 +5695,12 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterTemplate(json);
         InputSystem.AddDevice("MyDevice");
+        InputSystem.ReportAvailableDevice(new InputDeviceDescription
+        {
+            product = "Product",
+            manufacturer = "Manufacturer",
+            interfaceName = "Test"
+        });
 
         InputSystem.Save();
         InputSystem.Reset();
@@ -5578,6 +5711,14 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
+
+        var unsupportedDevices = new List<InputDeviceDescription>();
+        InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        Assert.That(unsupportedDevices.Count, Is.EqualTo(1));
+        Assert.That(unsupportedDevices[0].product, Is.EqualTo("Product"));
+        Assert.That(unsupportedDevices[0].manufacturer, Is.EqualTo("Manufacturer"));
+        Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
     [Test]

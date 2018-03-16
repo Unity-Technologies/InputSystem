@@ -152,6 +152,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.unity.inputdemo
+    iOS: com.unity.inputdemo
   buildNumber: {}
   AndroidBundleVersionCode: 1
   AndroidMinSdkVersion: 16
@@ -605,7 +606,7 @@ PlayerSettings:
     iOS: 0
   scriptingBackend:
     Standalone: 1
-    iOS: 0
+    iOS: 1
   il2cppCompilerConfiguration: {}
   incrementalIl2cppBuild: {}
   allowUnsafeCode: 0

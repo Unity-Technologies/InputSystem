@@ -250,11 +250,7 @@ namespace ISX
 
         private void AddSupportedDevice(InputDeviceDescription description, InternedString template)
         {
-            m_SupportedDevices.Add(new SupportedDevice
-            {
-                description = description,
-                template = template
-            });
+            m_Templates.templateDeviceDescriptions[template] = description;
 
             // See if the new description to template mapping allows us to make
             // sense of a device we couldn't make sense of so far.
@@ -266,7 +262,7 @@ namespace ISX
 
                 if (description.Matches(m_AvailableDevices[i].description))
                 {
-                    AddDevice(template, deviceId, description, m_AvailableDevices[i].isNative);
+                    AddDevice(template, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
                 }
             }
         }
@@ -399,12 +395,9 @@ namespace ISX
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
-            for (var i = 0; i < m_SupportedDevices.Count; ++i)
-            {
-                ////REVIEW: we don't only want to find any match, we want to find the best match
-                if (m_SupportedDevices[i].description.Matches(deviceDescription))
-                    return m_SupportedDevices[i].template;
-            }
+            var templateName = m_Templates.TryFindMatchingTemplate(deviceDescription);
+            if (!templateName.IsEmpty())
+                return templateName;
 
             // No, so try to match by device class. If we have a "Gamepad" template,
             // for example, a device that classifies itself as a "Gamepad" will match
@@ -756,9 +749,10 @@ namespace ISX
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
+            var deviceId = device.id;
             ArrayHelpers.EraseAt(ref m_Devices, deviceIndex);
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
-            m_DevicesById.Remove(device.id);
+            m_DevicesById.Remove(deviceId);
 
             if (m_Devices != null)
             {
@@ -776,6 +770,20 @@ namespace ISX
             {
                 // No more devices. Kill state buffers.
                 m_StateBuffers.FreeAll();
+            }
+
+            // Remove from list of available devices if it's a device coming from
+            // the runtime.
+            if (device.native)
+            {
+                for (var i = 0; i < m_AvailableDevices.Count; ++i)
+                {
+                    if (m_AvailableDevices[i].deviceId == deviceId)
+                    {
+                        m_AvailableDevices.RemoveAt(i);
+                        break;
+                    }
+                }
             }
 
             // Unbake offset into global state buffers.
@@ -836,7 +844,7 @@ namespace ISX
 
         // Adds any device that's been reported to the system but could not be matched to
         // a template to the given list.
-        public int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
+        public int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
             if (descriptions == null)
                 throw new ArgumentNullException("descriptions");
@@ -854,6 +862,7 @@ namespace ISX
             return numFound;
         }
 
+        ////TODO: remove this version
         // Report the availability of a device. The system will try to find a template that matches
         // the device and instantiate it. If no template matches but a template is added some time
         // in the future, the device will be created when the template becomes available.
@@ -942,7 +951,6 @@ namespace ISX
         internal void InitializeData()
         {
             m_Templates.Allocate();
-            m_SupportedDevices = new List<SupportedDevice>();
             m_Processors = new Dictionary<InternedString, Type>();
             m_Modifiers = new Dictionary<InternedString, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
@@ -967,6 +975,7 @@ namespace ISX
             RegisterTemplate("Digital", typeof(IntegerControl));
             RegisterTemplate("Integer", typeof(IntegerControl));
             RegisterTemplate("PointerPhase", typeof(PointerPhaseControl));
+            RegisterTemplate("TouchType", typeof(TouchTypeControl));
             RegisterTemplate("Vector2", typeof(Vector2Control));
             RegisterTemplate("Vector3", typeof(Vector3Control));
             RegisterTemplate("Magnitude2", typeof(Magnitude2Control));
@@ -1047,14 +1056,6 @@ namespace ISX
             InputRuntime.s_Runtime = m_Runtime;
         }
 
-        // Bundles a template name and a device description.
-        [Serializable]
-        internal struct SupportedDevice
-        {
-            public InputDeviceDescription description;
-            public InternedString template;
-        }
-
         [Serializable]
         internal struct AvailableDevice
         {
@@ -1070,11 +1071,9 @@ namespace ISX
         [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
         [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
 
-        [NonSerialized] private List<SupportedDevice> m_SupportedDevices; // A record of all device descriptions found in templates.
-        [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
-
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
+        [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
         [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
@@ -2010,33 +2009,6 @@ namespace ISX
             return flipped;
         }
 
-        ////TODO: reset device states for dynamic and fixed updates when going in and out of play mode
-        ////REVIEW: shouldn't resets be visible to actions by generating proper change notifications?
-        ////        (might be a better idea to instead send an state event with default state)
-        private unsafe void ResetDeviceState(InputDevice device)
-        {
-            var offset = (int)device.m_StateBlock.byteOffset;
-            var sizeInBytes = device.m_StateBlock.alignedSizeInBytes;
-            var deviceIndex = device.m_DeviceIndex;
-
-            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
-            {
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            }
-
-            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
-            {
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-                UnsafeUtility.MemClear((void*)(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            }
-
-#if UNITY_EDITOR
-            UnsafeUtility.MemClear((void*)(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-            UnsafeUtility.MemClear((void*)(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() + offset), sizeInBytes);
-#endif
-        }
-
         // Domain reload survival logic. Also used for pushing and popping input system
         // state for testing.
 
@@ -2097,6 +2069,13 @@ namespace ISX
         }
 
         [Serializable]
+        internal struct TemplateDeviceState
+        {
+            public InputDeviceDescription deviceDescription;
+            public string templateName;
+        }
+
+        [Serializable]
         internal struct TypeRegistrationState
         {
             public string name;
@@ -2127,9 +2106,9 @@ namespace ISX
             public TemplateState[] templateStrings;
             public TemplateConstructorState[] templateConstructors;
             public BaseTemplateState[] baseTemplates;
+            public TemplateDeviceState[] templateDeviceDescriptions;
             public TypeRegistrationState[] processors;
             public TypeRegistrationState[] modifiers;
-            public SupportedDevice[] supportedDevices;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
@@ -2218,9 +2197,9 @@ namespace ISX
                 templateStrings = templateStringArray,
                 templateConstructors = templateConstructorArray,
                 baseTemplates = m_Templates.baseTemplateTable.Select(x => new BaseTemplateState { derivedTemplate = x.Key, baseTemplate = x.Value }).ToArray(),
+                templateDeviceDescriptions = m_Templates.templateDeviceDescriptions.Select(x => new TemplateDeviceState { deviceDescription = x.Value, templateName = x.Key }).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
                 modifiers = TypeRegistrationState.SaveState(m_Modifiers),
-                supportedDevices = m_SupportedDevices.ToArray(),
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
@@ -2245,23 +2224,23 @@ namespace ISX
 
         internal void RestoreState(SerializedState state)
         {
-            m_SupportedDevices = state.supportedDevices.ToList();
-            m_StateBuffers = state.buffers;
-            m_CurrentUpdate = InputUpdateType.Dynamic;
-            m_AvailableDevices = state.availableDevices.ToList();
             m_Devices = null;
             m_HaveDevicesWithStateCallbackReceivers = false;
+            m_CurrentUpdate = InputUpdateType.Dynamic;
+
+            InitializeData();
+            if (state.runtime != null)
+                InstallRuntime(state.runtime);
+            InstallGlobals();
+
+            m_StateBuffers = state.buffers;
+            m_AvailableDevices = state.availableDevices.ToList();
             m_TemplateSetupVersion = state.templateSetupVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
             m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
             m_TemplateChangeListeners = state.templateChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
-
-            InitializeData();
-            if (state.runtime != null)
-                InstallRuntime(state.runtime);
-            InstallGlobals();
 
             #if UNITY_EDITOR
             m_Debugger = state.debugger;
@@ -2327,6 +2306,15 @@ namespace ISX
                     var name = new InternedString(entry.derivedTemplate);
                     if (!m_Templates.baseTemplateTable.ContainsKey(name))
                         m_Templates.baseTemplateTable[name] = new InternedString(entry.baseTemplate);
+                }
+
+            // Template device descriptions.
+            if (state.templateDeviceDescriptions != null)
+                foreach (var entry in state.templateDeviceDescriptions)
+                {
+                    var name = new InternedString(entry.templateName);
+                    if (!m_Templates.templateDeviceDescriptions.ContainsKey(name))
+                        m_Templates.templateDeviceDescriptions[name] = entry.deviceDescription;
                 }
 
             // Processors.

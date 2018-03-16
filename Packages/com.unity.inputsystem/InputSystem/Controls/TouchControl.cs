@@ -29,8 +29,10 @@ namespace ISX.Controls
         public Vector2Control radius { get; private set; }
         [InputControl(format = "SHRT", offset = 32)]
         public PointerPhaseControl phase { get; private set; }
-        [InputControl(format = "SHRT", offset = 34)]
+        [InputControl(format = "SBYT", offset = 34)]
         public IntegerControl displayIndex { get; private set; }
+        [InputControl(format = "SBYT", offset = 35)]
+        public TouchTypeControl touchType { get; private set; }
 
         public TouchControl()
         {
@@ -48,7 +50,7 @@ namespace ISX.Controls
             radius = setup.GetControl<Vector2Control>(this, "radius");
             phase = setup.GetControl<PointerPhaseControl>(this, "phase");
             displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
-
+            touchType = setup.GetControl<TouchTypeControl>(this, "touchType");
             base.FinishSetup(setup);
         }
 
