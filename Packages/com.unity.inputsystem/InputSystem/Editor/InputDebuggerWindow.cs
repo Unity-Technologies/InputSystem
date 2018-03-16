@@ -74,17 +74,6 @@ namespace ISX.Editor
             Repaint();
         }
 
-        public void Awake()
-        {
-            InputSystem.onDeviceChange += OnDeviceChange;
-            InputSystem.onTemplateChange += OnTemplateChange;
-            InputSystem.onFindTemplateForDevice += OnFindTemplate;
-
-            if (InputActionSet.s_OnEnabledActionsChanged == null)
-                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionSet.s_OnEnabledActionsChanged.Add(Repaint);
-        }
-
         public void OnDestroy()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
@@ -97,6 +86,14 @@ namespace ISX.Editor
 
         private void Initialize()
         {
+            InputSystem.onDeviceChange += OnDeviceChange;
+            InputSystem.onTemplateChange += OnTemplateChange;
+            InputSystem.onFindTemplateForDevice += OnFindTemplate;
+
+            if (InputActionSet.s_OnEnabledActionsChanged == null)
+                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
+            InputActionSet.s_OnEnabledActionsChanged.Add(Repaint);
+
             var newTreeViewState = m_TreeViewState == null;
             if (newTreeViewState)
                 m_TreeViewState = new TreeViewState();
@@ -105,18 +102,20 @@ namespace ISX.Editor
 
             // Set default expansion states.
             if (newTreeViewState)
-            {
                 m_TreeView.SetExpanded(m_TreeView.devicesItem.id, true);
-            }
+
+            m_Initialized = true;
         }
 
         public void OnGUI()
         {
+            // This also brings us back online after a domain reload.
+            if (!m_Initialized)
+                Initialize();
+
             DrawToolbarGUI();
 
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
-            if (m_TreeView == null)
-                Initialize();
             m_TreeView.OnGUI(rect);
         }
 
@@ -188,6 +187,7 @@ namespace ISX.Editor
 
         [NonSerialized] private InputDebugger m_Debugger;
         [NonSerialized] private InputSystemTreeView m_TreeView;
+        [NonSerialized] private bool m_Initialized;
 
         internal static void ReviveAfterDomainReload()
         {

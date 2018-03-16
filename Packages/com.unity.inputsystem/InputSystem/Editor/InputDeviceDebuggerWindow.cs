@@ -2,14 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using ISX.LowLevel;
 
 ////FIXME: doesn't survive domain reload correctly
-///
+
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
 ////TODO: Add "Remote:" field in list that also has a button for local devices that allows to mirror them and their input
@@ -53,19 +52,17 @@ namespace ISX.Editor
             window.titleContent = new GUIContent(device.name);
         }
 
-        public void Awake()
-        {
-            AddToList();
-            InputSystem.onDeviceChange += OnDeviceChange;
-        }
-
         public void OnDestroy()
         {
-            RemoveFromList();
+            if (m_Device != null)
+            {
+                RemoveFromList();
 
-            if (m_EventTrace != null)
-                m_EventTrace.Dispose();
-            InputSystem.onDeviceChange -= OnDeviceChange;
+                if (m_EventTrace != null)
+                    m_EventTrace.Dispose();
+
+                InputSystem.onDeviceChange -= OnDeviceChange;
+            }
         }
 
         public void OnGUI()
@@ -207,6 +204,9 @@ namespace ISX.Editor
             // Set up control tree.
             m_ControlTree = InputControlTreeView.Create(m_Device, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
             m_ControlTree.ExpandAll();
+
+            AddToList();
+            InputSystem.onDeviceChange += OnDeviceChange;
         }
 
         // We will lose our device on domain reload and then look it back up the first
