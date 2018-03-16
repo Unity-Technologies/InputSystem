@@ -1,0 +1,10 @@
+{
+    "name": "InputSystemNPad",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true
+}
