@@ -579,6 +579,30 @@ class FunctionalTests : InputTestFixture
         Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeDouble));
     }
 
+    unsafe struct StateWithFixedArray : IInputStateTypeInfo
+    {
+        [InputControl] public fixed float buffer[2];
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+    [InputTemplate(stateType = typeof(StateWithFixedArray))]
+    class DeviceWithStateStructWithFixedArray : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_FormatOfControlWithFixedArrayType_IsNotInferredFromType()
+    {
+        InputSystem.RegisterTemplate<DeviceWithStateStructWithFixedArray>();
+
+        Assert.That(() => new InputControlSetup("DeviceWithStateStructWithFixedArray"),
+            Throws.Exception.With.Message.Contain("Template has not been set"));
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_CanHaveOneControlUseStateOfAnotherControl()
