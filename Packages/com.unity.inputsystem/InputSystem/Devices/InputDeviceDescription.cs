@@ -4,6 +4,8 @@ using UnityEngine;
 
 ////REVIEW: should there be a way to make fields mandatory matches?
 
+////REVIEW: add a 'devicePath' field for a platform-dependent device path?
+
 namespace ISX
 {
     /// <summary>
@@ -80,16 +82,53 @@ namespace ISX
         {
             var haveProduct = !string.IsNullOrEmpty(product);
             var haveManufacturer = !string.IsNullOrEmpty(manufacturer);
+            var haveInterface = !string.IsNullOrEmpty(interfaceName);
 
             if (haveProduct && haveManufacturer)
+            {
+                if (haveInterface)
+                    return string.Format("{0} {1} ({2})", manufacturer, product, interfaceName);
+
                 return string.Format("{0} {1}", manufacturer, product);
+            }
+
             if (haveProduct)
+            {
+                if (haveInterface)
+                    return string.Format("{0} ({1})", product, interfaceName);
+
                 return product;
+            }
 
             if (!string.IsNullOrEmpty(deviceClass))
-                return deviceClass;
+            {
+                if (haveInterface)
+                    return string.Format("{0} ({1})", deviceClass, interfaceName);
 
-            return string.Empty;
+                return deviceClass;
+            }
+
+            // For some HIDs on Windows, we don't get a product and manufacturer string even though
+            // the HID is guaranteed to have a product and vendor ID. Resort to printing capabilities
+            // which for HIDs at least include the product and vendor ID.
+            if (!string.IsNullOrEmpty(capabilities))
+            {
+                const int kMaxCapabilitiesLength = 40;
+
+                var caps = capabilities;
+                if (capabilities.Length > kMaxCapabilitiesLength)
+                    caps = caps.Substring(0, kMaxCapabilitiesLength) + "...";
+
+                if (haveInterface)
+                    return string.Format("{0} ({1})", caps, interfaceName);
+
+                return caps;
+            }
+
+            if (haveInterface)
+                return interfaceName;
+
+            return "<Empty Device Description>";
         }
 
         public bool Matches(InputDeviceDescription other)
