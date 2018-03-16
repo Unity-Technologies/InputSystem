@@ -382,16 +382,19 @@ namespace ISX.Plugins.Android
 
         protected override void FinishSetup(InputControlSetup setup)
         {
-            if (descriptor.motionAxes.Contains(Axis.HatX) || descriptor.motionAxes.Contains(Axis.HatY))
+            base.FinishSetup(setup);
+
+            Debug.Log(description.capabilities); // < --- null
+            if (descriptor.motionAxes != null && (descriptor.motionAxes.Contains(Axis.HatX) || descriptor.motionAxes.Contains(Axis.HatY)))
             {
-                // PICK DPAD set via axes
+                Debug.Log("dpadAxes");
+                dpad = setup.GetControl<DpadControl>(this, "dpadAxes");
             }
             else
             {
-                // PICK DPAD set via buttons
+                Debug.Log("dpadButtons");
+                dpad = setup.GetControl<DpadControl>(this, "dpadButtons");
             }
-
-            base.FinishSetup(setup);
         }
     }
 }

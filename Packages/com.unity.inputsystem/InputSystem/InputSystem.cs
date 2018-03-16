@@ -1024,7 +1024,7 @@ namespace ISX
             #if UNITY_EDITOR || UNITY_ANDROID
             ISX.Plugins.Android.GameControllerSupport.Initialize();
             #endif
-              
+
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
             Plugins.iOS.GameControllerSupport.Initialize();
             #endif
