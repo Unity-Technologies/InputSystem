@@ -5,8 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 #if UNITY_EDITOR
-using UnityEditor;
 using ISX.Editor;
+using UnityEditor;
 using ISX.Plugins.HID.Editor;
 #endif
 
