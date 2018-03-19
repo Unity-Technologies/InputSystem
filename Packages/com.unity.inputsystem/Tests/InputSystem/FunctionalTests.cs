@@ -5450,6 +5450,120 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanDriveMoveActionFromWASDKeys()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+
+        action.AddBinding("/<Keyboard>/a").WithModifiers("axisvector(x=-1,y=0)");
+        action.AddBinding("/<Keyboard>/d").WithModifiers("axisvector(x=1,y=0)");
+        action.AddBinding("/<Keyboard>/w").WithModifiers("axisvector(x=0,y=1)");
+        action.AddBinding("/<Keyboard>/s").WithModifiers("axisvector(x=0,y=-1)");
+
+        Vector2? vector = null;
+        action.performed +=
+            ctx => { vector = ctx.GetValue<Vector2>(); };
+
+        action.Enable();
+
+        //Have a concept of "composite bindings"?
+
+        //This leads to the bigger question of how the system handles an action
+        //that has multiple bindings where each may independently go through a
+        //full phase cycle.
+
+        ////TODO: need to have names on the bindings ("up", "down", "left", right")
+        ////      (so it becomes "Move Up" etc in a binding UI)
+
+        ////REVIEW: how should we handle mixed-device bindings? say there's an additional
+        ////        gamepad binding on the action above. what if both the gamepad and
+        ////        the keyboard trigger?
+
+        // A pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+        vector = null;
+
+        // D pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+        vector = null;
+
+        // W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        ////FIXME: these need to behave like Dpad vectors and be normalized
+
+        // A+W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // D+W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // A+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        // D+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        // A+D+W+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S, Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+    }
+
+    [Test]
     [Category("Remote")]
     public void Remote_CanConnectTwoInputSystemsOverNetwork()
     {
