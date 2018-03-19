@@ -2579,6 +2579,8 @@ class FunctionalTests : InputTestFixture
         var unsupportedDevices = new List<InputDeviceDescription>();
         InputSystem.GetUnsupportedDevices(unsupportedDevices);
 
+        ////TODO: also make sure that when the template support it is removed, the device goes back on the unsupported list
+
         Assert.That(unsupportedDevices.Count, Is.Zero);
     }
 
