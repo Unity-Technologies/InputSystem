@@ -2420,6 +2420,33 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanReadStateOfDeviceAsByteArray()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(device, new GamepadState { leftStick = new Vector2(0.123f, 0.456f) });
+        InputSystem.Update();
+
+        var state = device.valueAsObject;
+
+        Assert.That(state, Is.TypeOf<byte[]>());
+        var buffer = (byte[])state;
+
+        Assert.That(buffer.Length, Is.EqualTo(Marshal.SizeOf(typeof(GamepadState))));
+
+        unsafe
+        {
+            fixed(byte* bufferPtr = buffer)
+            {
+                var statePtr = (GamepadState*)bufferPtr;
+                Assert.That(statePtr->leftStick.x, Is.EqualTo(0.123).Within(0.00001));
+                Assert.That(statePtr->leftStick.y, Is.EqualTo(0.456).Within(0.00001));
+            }
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
     {
         InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "MyController"});
