@@ -1,15 +1,13 @@
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.LowLevel;
+using ISX.Plugins.iOS.LowLevel;
 using ISX.Utilities;
-using UnityEngine;
 
-namespace ISX.iOS
+namespace ISX.Plugins.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct GameControllerState : IInputStateTypeInfo
     {
-        enum Button 
+        enum Button
         {
             DpadUp,
             DpadDown,
@@ -27,7 +25,7 @@ namespace ISX.iOS
             B
         };
 
-        enum Axis 
+        enum Axis
         {
             LeftStickX,
             LeftStickY,
@@ -38,12 +36,12 @@ namespace ISX.iOS
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
         public const int kMaxButtons = 14;
         public const int kMaxAxis = 4;
-        
+
         [InputControl(name = "dpad", template = "Dpad")]
         [InputControl(name = "dpad/up", template = "Button", bit = (uint)Button.DpadUp)]
         [InputControl(name = "dpad/right", template = "Button", bit = (uint)Button.DpadRight)]
         [InputControl(name = "dpad/down", template = "Button", bit = (uint)Button.DpadDown)]
-        [InputControl(name = "dpad/left", template = "Button", bit = (uint)Button.DpadLeft)]  
+        [InputControl(name = "dpad/left", template = "Button", bit = (uint)Button.DpadLeft)]
         [InputControl(name = "buttonSouth", template = "Button", bit = (uint)Button.A)]
         [InputControl(name = "buttonWest", template = "Button", bit = (uint)Button.X)]
         [InputControl(name = "buttonNorth", template = "Button", bit = (uint)Button.Y)]
@@ -65,19 +63,18 @@ namespace ISX.iOS
         [InputControl(name = "rightStick/x", format = "FLT", offset = (uint)Axis.RightStickX * sizeof(float) + kAxisOffset)]
         [InputControl(name = "rightStick/y", format = "FLT", offset = (uint)Axis.RightStickY * sizeof(float) + kAxisOffset)]
         public fixed float axisValues[kMaxAxis];
-        
+
         public FourCC GetFormat()
         {
             return kFormat;
         }
     }
+}
 
+namespace ISX.Plugins.iOS
+{
     [InputTemplate(stateType = typeof(GameControllerState))]
     public class GameController : Gamepad
     {
-        protected override void FinishSetup(InputControlSetup setup)
-        {
-            base.FinishSetup(setup);
-        }
     }
 }

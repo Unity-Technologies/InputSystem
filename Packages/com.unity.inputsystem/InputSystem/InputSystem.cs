@@ -495,9 +495,9 @@ namespace ISX
             s_Manager.ReportAvailableDevice(description);
         }
 
-        public static int GetUnrecognizedDevices(List<InputDeviceDescription> descriptions)
+        public static int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
-            return s_Manager.GetUnrecognizedDevices(descriptions);
+            return s_Manager.GetUnsupportedDevices(descriptions);
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -921,6 +921,14 @@ namespace ISX
             // We're using this method just to make sure the class constructor is called
             // so we don't need any code in here. When the engine calls this method, the
             // class constructor will be run if it hasn't been run already.
+
+            // IL2CPP has a bug that causes the class constructor to not be run when
+            // the RuntimeInitializeOnLoadMethod is invoked. So we need an explicit check
+            // here until that is fixed (case 1014293).
+#if !UNITY_EDITOR
+            if (s_Manager == null)
+                InitializeInPlayer();
+#endif
         }
 
 #if UNITY_EDITOR
@@ -935,6 +943,9 @@ namespace ISX
                 s_SystemObject.ReviveAfterDomainReload();
                 s_Manager = s_SystemObject.manager;
                 s_Remote = s_SystemObject.remote;
+                #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+                PerformDefaultPluginInitialization();
+                #endif
                 InputDebuggerWindow.ReviveAfterDomainReload();
             }
             else
@@ -977,7 +988,7 @@ namespace ISX
             s_Manager = new InputManager();
             s_Manager.Initialize(NativeInputRuntime.instance);
 
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
             #endif
 
@@ -994,7 +1005,7 @@ namespace ISX
 
 #endif // UNITY_EDITOR
 
-#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
         {
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE
@@ -1008,9 +1019,14 @@ namespace ISX
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_UWP
             HIDSupport.Initialize();
             #endif
-            
+
+
+            #if UNITY_EDITOR || UNITY_ANDROID
+            ISX.Plugins.Android.GameControllerSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            ISX.iOS.GameControllerSupport.Initialize();
+            Plugins.iOS.GameControllerSupport.Initialize();
             #endif
         }
 
@@ -1027,7 +1043,7 @@ namespace ISX
             s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
             s_Manager = s_SystemObject.manager;
             s_Remote = s_SystemObject.remote;
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALZATION
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
             PerformDefaultPluginInitialization();
             #endif
             #else

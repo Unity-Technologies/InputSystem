@@ -105,17 +105,32 @@ namespace ISX.Utilities
                 {
                     if (EqualityComparer<TValue>.Default.Equals(additionalValues[i], value))
                     {
-                        if (i == numAdditionalProcessors - 1)
+                        if (numAdditionalProcessors == 1)
                         {
+                            // Remove only entry in array.
+                            additionalValues = null;
+                        }
+                        else if (i == numAdditionalProcessors - 1)
+                        {
+                            // Remove entry at end.
                             Array.Resize(ref additionalValues, numAdditionalProcessors - 1);
                         }
                         else
                         {
-                            var newAdditionalProcessors = new IInputProcessor<TValue>[numAdditionalProcessors - 1];
+                            // Remove entry at beginning or in middle by pasting together
+                            // into a new array.
+                            var newAdditionalProcessors = new TValue[numAdditionalProcessors - 1];
                             if (i > 0)
+                            {
+                                // Copy element before entry.
                                 Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, i);
-                            Array.Copy(additionalValues, i + 1, newAdditionalProcessors, i,
-                                numAdditionalProcessors - i);
+                            }
+                            if (i != numAdditionalProcessors - 1)
+                            {
+                                // Copy elements after entry.
+                                Array.Copy(additionalValues, i + 1, newAdditionalProcessors, i,
+                                    numAdditionalProcessors - i - 1);
+                            }
                         }
                         break;
                     }

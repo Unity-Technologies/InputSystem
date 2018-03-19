@@ -1,10 +1,10 @@
-namespace ISX.Plugins.iOS
+namespace ISX.Plugins.Android
 {
     public static class GameControllerSupport
     {
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<GameController>("iOSGameController");
+            InputSystem.RegisterTemplate<GameController>("AndroidGameController");
         }
     }
 }

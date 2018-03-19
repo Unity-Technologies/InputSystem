@@ -15,7 +15,9 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: display icons on devices depending on type of device
 
-////TOOD: make configuration update when changed
+////TODO: make configuration update when changed
+
+////TODO: refresh when unrecognized device pops up
 
 namespace ISX.Editor
 {
@@ -42,41 +44,78 @@ namespace ISX.Editor
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            Repaint();
+            // Update tree if devices are added or removed.
+            if (change == InputDeviceChange.Added || change == InputDeviceChange.Removed)
+                Refresh();
         }
 
-        public void Awake()
+        private void OnTemplateChange(string name, InputTemplateChange change)
         {
-            InputSystem.onDeviceChange += OnDeviceChange;
+            // Update tree if template setup has changed.
+            Refresh();
+        }
 
-            if (InputActionSet.s_OnEnabledActionsChanged == null)
-                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionSet.s_OnEnabledActionsChanged.Add(Repaint);
+        private string OnFindTemplate(int deviceId, ref InputDeviceDescription description, string matchedTemplate,
+            IInputRuntime runtime)
+        {
+            // If there's no matched template, there's a chance this device will go in
+            // the unsupported list. There's no direct notification for that so we
+            // pre-emptively trigger a refresh.
+            if (string.IsNullOrEmpty(matchedTemplate))
+                Refresh();
+
+            return null;
+        }
+
+        private void Refresh()
+        {
+            if (m_TreeView != null)
+                m_TreeView.Reload();
+            Repaint();
         }
 
         public void OnDestroy()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
+            InputSystem.onTemplateChange -= OnTemplateChange;
+            InputSystem.onFindTemplateForDevice -= OnFindTemplate;
+
             if (InputActionSet.s_OnEnabledActionsChanged != null)
                 InputActionSet.s_OnEnabledActionsChanged.Remove(Repaint);
         }
 
         private void Initialize()
         {
-            if (m_TreeViewState == null)
+            InputSystem.onDeviceChange += OnDeviceChange;
+            InputSystem.onTemplateChange += OnTemplateChange;
+            InputSystem.onFindTemplateForDevice += OnFindTemplate;
+
+            if (InputActionSet.s_OnEnabledActionsChanged == null)
+                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
+            InputActionSet.s_OnEnabledActionsChanged.Add(Repaint);
+
+            var newTreeViewState = m_TreeViewState == null;
+            if (newTreeViewState)
                 m_TreeViewState = new TreeViewState();
 
             m_TreeView = new InputSystemTreeView(m_TreeViewState);
-            EditorInputTemplateCache.onRefresh += m_TreeView.Reload;
+
+            // Set default expansion states.
+            if (newTreeViewState)
+                m_TreeView.SetExpanded(m_TreeView.devicesItem.id, true);
+
+            m_Initialized = true;
         }
 
         public void OnGUI()
         {
+            // This also brings us back online after a domain reload.
+            if (!m_Initialized)
+                Initialize();
+
             DrawToolbarGUI();
 
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
-            if (m_TreeView == null)
-                Initialize();
             m_TreeView.OnGUI(rect);
         }
 
@@ -148,6 +187,7 @@ namespace ISX.Editor
 
         [NonSerialized] private InputDebugger m_Debugger;
         [NonSerialized] private InputSystemTreeView m_TreeView;
+        [NonSerialized] private bool m_Initialized;
 
         internal static void ReviveAfterDomainReload()
         {
@@ -166,12 +206,10 @@ namespace ISX.Editor
         private static class Styles
         {
             public static GUIStyle deviceStyle = new GUIStyle("button");
-            public static GUIStyle deviceStyleLeftAligned = new GUIStyle(deviceStyle) {alignment = TextAnchor.MiddleLeft};
         }
 
         private static class Contents
         {
-            public static GUIContent noneContent = new GUIContent("None");
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
             public static GUIContent debugModeContent = new GUIContent("Debug Mode");
         }
@@ -187,6 +225,10 @@ namespace ISX.Editor
 
         class InputSystemTreeView : TreeView
         {
+            public TreeViewItem devicesItem { get; private set; }
+            public TreeViewItem templatesItem { get; private set; }
+            public TreeViewItem configurationItem { get; private set; }
+
             public InputSystemTreeView(TreeViewState state)
                 : base(state)
             {
@@ -225,17 +267,17 @@ namespace ISX.Editor
                 //var actionsNode = AddChild(root, "Actions", ref id);
 
                 // Devices.
-                var devicesNode = AddChild(root, "Devices", ref id);
                 var devices = InputSystem.devices;
+                devicesItem = AddChild(root, string.Format("Devices ({0})", devices.Count), ref id);
                 var haveRemotes = devices.Any(x => x.remote);
                 if (haveRemotes)
                 {
                     // Split local and remote devices into groups.
 
-                    var localDevicesNode = AddChild(devicesNode, "Local", ref id);
+                    var localDevicesNode = AddChild(devicesItem, "Local", ref id);
                     AddDevices(localDevicesNode, devices, ref id);
 
-                    var remoteDevicesNode = AddChild(devicesNode, "Remote", ref id);
+                    var remoteDevicesNode = AddChild(devicesItem, "Remote", ref id);
                     foreach (var player in EditorConnection.instance.ConnectedPlayers)
                     {
                         var playerNode = AddChild(remoteDevicesNode, player.name, ref id);
@@ -246,32 +288,33 @@ namespace ISX.Editor
                 {
                     // We don't have remote devices so don't add an extra group for local devices.
                     // Put them all directly underneath the "Devices" node.
-                    AddDevices(devicesNode, devices, ref id);
+                    AddDevices(devicesItem, devices, ref id);
                 }
 
-                if (m_UnrecognizedDevices == null)
-                    m_UnrecognizedDevices = new List<InputDeviceDescription>();
-                m_UnrecognizedDevices.Clear();
-                InputSystem.GetUnrecognizedDevices(m_UnrecognizedDevices);
-                if (m_UnrecognizedDevices.Count > 0)
+                if (m_UnsupportedDevices == null)
+                    m_UnsupportedDevices = new List<InputDeviceDescription>();
+                m_UnsupportedDevices.Clear();
+                InputSystem.GetUnsupportedDevices(m_UnsupportedDevices);
+                if (m_UnsupportedDevices.Count > 0)
                 {
-                    var unrecognizedDevicesNode = AddChild(devicesNode, "Unrecognized", ref id);
-                    foreach (var device in m_UnrecognizedDevices)
-                        AddChild(unrecognizedDevicesNode, device.ToString(), ref id);
+                    var unsupportedDevicesNode = AddChild(devicesItem, string.Format("Unsupported ({0})", m_UnsupportedDevices.Count), ref id);
+                    foreach (var device in m_UnsupportedDevices)
+                        AddChild(unsupportedDevicesNode, device.ToString(), ref id);
+                    unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 // Templates.
-                var templatesNode = AddChild(root, "Templates", ref id);
-                AddTemplates(templatesNode, ref id);
+                templatesItem = AddChild(root, "Templates", ref id);
+                AddTemplates(templatesItem, ref id);
 
                 ////FIXME: this shows local configuration only
                 // Configuration.
-                var configurationNode = AddChild(root, "Configuration", ref id);
-                AddConfigurationItem(configurationNode, "ButtonPressPoint", InputConfiguration.ButtonPressPoint, ref id);
-                AddConfigurationItem(configurationNode, "DeadzoneMin", InputConfiguration.DeadzoneMin, ref id);
-                AddConfigurationItem(configurationNode, "DeadzoneMax", InputConfiguration.DeadzoneMax, ref id);
-                AddConfigurationItem(configurationNode, "LockInputToGame", InputConfiguration.LockInputToGame, ref id);
-                configurationNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                configurationItem = AddChild(root, "Configuration", ref id);
+                AddConfigurationItem(configurationItem, "ButtonPressPoint", InputConfiguration.ButtonPressPoint, ref id);
+                AddConfigurationItem(configurationItem, "DeadzoneMin", InputConfiguration.DeadzoneMin, ref id);
+                AddConfigurationItem(configurationItem, "DeadzoneMax", InputConfiguration.DeadzoneMax, ref id);
+                AddConfigurationItem(configurationItem, "LockInputToGame", InputConfiguration.LockInputToGame, ref id);
+                configurationItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
 
                 return root;
             }
@@ -298,7 +341,8 @@ namespace ISX.Editor
                     parent.AddChild(item);
                 }
 
-                parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                if (parent.children != null)
+                    parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
             ////TODO: split remote and local templates
@@ -473,7 +517,7 @@ namespace ISX.Editor
                 return item;
             }
 
-            private List<InputDeviceDescription> m_UnrecognizedDevices;
+            private List<InputDeviceDescription> m_UnsupportedDevices;
 
             class DeviceItem : TreeViewItem
             {

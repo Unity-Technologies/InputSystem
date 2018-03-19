@@ -146,7 +146,7 @@ namespace ISX
         public ButtonControl startButton { get; private set; }
         public ButtonControl selectButton { get; private set; }
 
-        public DpadControl dpad { get; private set; }
+        public DpadControl dpad { get; protected set; }
 
         public ButtonControl leftShoulder { get; private set; }
         public ButtonControl rightShoulder { get; private set; }

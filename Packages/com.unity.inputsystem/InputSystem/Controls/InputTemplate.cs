@@ -1398,6 +1398,7 @@ namespace ISX
             public Dictionary<InternedString, string> templateStrings;
             public Dictionary<InternedString, Constructor> templateConstructors;
             public Dictionary<InternedString, InternedString> baseTemplateTable;
+            public Dictionary<InternedString, InputDeviceDescription> templateDeviceDescriptions;
 
             public void Allocate()
             {
@@ -1405,6 +1406,19 @@ namespace ISX
                 templateStrings = new Dictionary<InternedString, string>();
                 templateConstructors = new Dictionary<InternedString, Constructor>();
                 baseTemplateTable = new Dictionary<InternedString, InternedString>();
+                templateDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
+            }
+
+            public InternedString TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
+            {
+                foreach (var entry in templateDeviceDescriptions)
+                {
+                    ////REVIEW: we don't only want to find any match, we want to find the best match
+                    if (entry.Value.Matches(deviceDescription))
+                        return entry.Key;
+                }
+
+                return new InternedString();
             }
 
             public bool HasTemplate(InternedString name)
@@ -1418,7 +1432,12 @@ namespace ISX
                 // Check constructors.
                 Constructor constructor;
                 if (templateConstructors.TryGetValue(name, out constructor))
-                    return (InputTemplate)constructor.method.Invoke(constructor.instance, null);
+                {
+                    var template = (InputTemplate)constructor.method.Invoke(constructor.instance, null);
+                    if (template == null)
+                        throw new Exception(string.Format("Template constructor '{0}' returned null when invoked", name));
+                    return template;
+                }
 
                 // See if we have a string template for it. These
                 // always take precedence over ones from type so that we can
@@ -1460,6 +1479,12 @@ namespace ISX
                         template.MergeTemplate(baseTemplate);
                         template.m_ExtendsTemplate = baseTemplateName;
                     }
+
+                    // If the template has an associated device description,
+                    // put it on the template instance.
+                    InputDeviceDescription deviceDescription;
+                    if (templateDeviceDescriptions.TryGetValue(name, out deviceDescription))
+                        template.m_DeviceDescription = deviceDescription;
                 }
 
                 return template;
