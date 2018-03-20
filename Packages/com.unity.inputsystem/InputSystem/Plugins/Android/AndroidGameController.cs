@@ -36,7 +36,9 @@ namespace ISX.Plugins.Android.LowLevel
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset)]
         [InputControl(name = "leftStick")]
-        [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset)]
+        [InputControl(name = "rightStick")]
+        [InputControl(name = "rightStick/x", offset = (uint)AndroidAxis.Z * sizeof(float))]
+        [InputControl(name = "rightStick/y", offset = (uint)AndroidAxis.Rz * sizeof(float))]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
