@@ -134,6 +134,11 @@ namespace ISX
             get { return null; }
         }
 
+        public virtual object previousValueAsObject
+        {
+            get { return null; }
+        }
+
         /// <summary>
         /// The device that this control is a part of.
         /// </summary>
@@ -376,6 +381,11 @@ namespace ISX
         public override object valueAsObject
         {
             get { return value; }
+        }
+
+        public override object previousValueAsObject
+        {
+            get { return previous; }
         }
 
         // Read a control value directly from a state event.
