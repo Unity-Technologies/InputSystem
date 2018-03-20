@@ -365,7 +365,7 @@ namespace ISX.Plugins.Android.LowLevel
                 productId,
                 vendorId,
                 isVirtual,
-                string.Join(",", motionAxes.Select(i => i.ToString()).ToArray()));
+                motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()));
         }
     }
 }
