@@ -1,6 +1,7 @@
 using System;
 using ISX.LowLevel;
 using ISX.Utilities;
+using Unity.Collections.LowLevel.Unsafe;
 
 // per device functions:
 //  - update/poll
@@ -122,6 +123,23 @@ namespace ISX
                 // this list will actually deliver a flattened list of all controls in the hierarchy (and without
                 // the device itself being listed).
                 return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
+            }
+        }
+
+        /// <summary>
+        /// Return the current state of the device as byte array.
+        /// </summary>
+        public override unsafe object valueAsObject
+        {
+            get
+            {
+                var numBytes = stateBlock.alignedSizeInBytes;
+                var array = new byte[numBytes];
+                fixed(byte* arrayPtr = array)
+                {
+                    UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
+                }
+                return array;
             }
         }
 

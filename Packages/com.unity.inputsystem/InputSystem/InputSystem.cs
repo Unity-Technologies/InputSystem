@@ -1020,13 +1020,12 @@ namespace ISX
             HIDSupport.Initialize();
             #endif
 
-
             #if UNITY_EDITOR || UNITY_ANDROID
-            ISX.Plugins.Android.GameControllerSupport.Initialize();
+            Plugins.Android.AndroidSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            Plugins.iOS.GameControllerSupport.Initialize();
+            Plugins.iOS.IOSSupport.Initialize();
             #endif
         }
 
