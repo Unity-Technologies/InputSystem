@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ISX.LowLevel;
 using ISX.Utilities;
@@ -694,7 +695,8 @@ namespace ISX
 
             // Determine template.
             var template = attribute != null ? attribute.template : null;
-            if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath)
+            if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath &&
+                (!(member is FieldInfo) || member.GetCustomAttribute<FixedBufferAttribute>(false) == null)) // Ignore fixed buffer fields.
             {
                 var valueType = TypeHelpers.GetValueType(member);
                 template = InferTemplateFromValueType(valueType);
@@ -940,6 +942,7 @@ namespace ISX
             return parameter;
         }
 
+        ////REVIEW: this tends to cause surprises; is it worth its cost?
         private static string InferTemplateFromValueType(Type type)
         {
             var typeName = type.Name;

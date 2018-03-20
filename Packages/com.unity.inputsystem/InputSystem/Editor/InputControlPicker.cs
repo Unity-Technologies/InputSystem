@@ -10,6 +10,10 @@ using UnityEngine;
 
 ////TODO: prime picker with currently selected control (also with usage on device)
 
+////TODO: sort properly when search is active
+////      (the logic we inherit from TreeView sorts by displayName of items but our rendering logic
+////      tags additional text onto the items so the end result appears sorted incorrectly)
+
 namespace ISX.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate

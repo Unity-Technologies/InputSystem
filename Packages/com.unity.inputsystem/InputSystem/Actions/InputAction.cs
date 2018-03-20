@@ -251,6 +251,8 @@ namespace ISX
 
             m_CurrentPhase = Phase.Disabled;
             m_LastTrigger = new TriggerState();
+
+            ////TODO: reset all modifier states
         }
 
         internal void InstallStateChangeMonitors()
@@ -979,6 +981,12 @@ namespace ISX
                     InputBinding.Flags.ThisAndPreviousCombine;
 
                 return result;
+            }
+
+            public AddBindingSyntax WithModifiers(string modifiers)
+            {
+                action.m_Bindings[action.m_BindingsStartIndex + m_BindingIndex].modifiers = modifiers;
+                return this;
             }
         }
     }
