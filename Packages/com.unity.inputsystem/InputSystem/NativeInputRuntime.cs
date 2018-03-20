@@ -1,5 +1,4 @@
 using System;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngineInternal.Input;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -79,7 +78,7 @@ namespace ISX.LowLevel
             set { NativeInputSystem.onDeviceDiscovered = value; }
         }
 
-        public float PollingFrequency
+        public float pollingFrequency
         {
             set { NativeInputSystem.SetPollingFrequency(value); }
         }

@@ -191,8 +191,6 @@ namespace ISX.Editor
 
         internal static void ReviveAfterDomainReload()
         {
-            // ATM the onDeviceChange UnityEvent does not seem to properly survive reloads
-            // so we hook back in here.
             if (s_Instance != null)
             {
                 InputSystem.onDeviceChange += s_Instance.OnDeviceChange;
@@ -201,11 +199,6 @@ namespace ISX.Editor
                 // back to life.
                 s_Instance.Repaint();
             }
-        }
-
-        private static class Styles
-        {
-            public static GUIStyle deviceStyle = new GUIStyle("button");
         }
 
         private static class Contents
