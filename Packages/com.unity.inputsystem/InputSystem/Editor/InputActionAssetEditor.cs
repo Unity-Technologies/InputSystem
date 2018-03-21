@@ -138,11 +138,6 @@ namespace ISX.Editor
 
         [NonSerialized] private InputActionTreeView m_ActionTreeView;
 
-        private static class Styles
-        {
-            public static GUIStyle box = "Box";
-        }
-
         private static class Contents
         {
             public static GUIContent addNewSet = new GUIContent("Add New Set");
