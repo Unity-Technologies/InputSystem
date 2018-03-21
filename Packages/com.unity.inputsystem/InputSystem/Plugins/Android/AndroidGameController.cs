@@ -36,7 +36,9 @@ namespace ISX.Plugins.Android.LowLevel
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset)]
         [InputControl(name = "leftStick")]
-        [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset)]
+        [InputControl(name = "rightStick")]
+        [InputControl(name = "rightStick/x", offset = (uint)AndroidAxis.Z * sizeof(float))]
+        [InputControl(name = "rightStick/y", offset = (uint)AndroidAxis.Rz * sizeof(float))]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
@@ -288,7 +290,7 @@ namespace ISX.Plugins.Android.LowLevel
         Ro = 217,
         Kana = 218,
         Assist = 219,
-    };
+    }
 
     public enum AndroidAxis
     {
@@ -334,7 +336,22 @@ namespace ISX.Plugins.Android.LowLevel
         Generic14 = 45,
         Generic15 = 46,
         Generic16 = 47,
-    };
+    }
+
+    // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
+    [Flags]
+    public enum AndroidInputSource
+    {
+        Keyboard = 257,
+        Dpad = 513,
+        Gamepad = 1025,
+        Touchscreen = 4098,
+        Mouse = 8194,
+        Stylus = 16386,
+        Trackball = 65540,
+        Touchpad = 1048584,
+        Joystick = 16777232
+    }
 
     [Serializable]
     public struct AndroidDeviceCapabilities
@@ -344,6 +361,7 @@ namespace ISX.Plugins.Android.LowLevel
         public int vendorId;
         public bool isVirtual;
         public AndroidAxis[] motionAxes;
+        public AndroidInputSource inputSources;
 
         public string ToJson()
         {
@@ -360,12 +378,13 @@ namespace ISX.Plugins.Android.LowLevel
         public override string ToString()
         {
             return string.Format(
-                "deviceDescriptor = {0}, productId = {1}, vendorId = {2}, isVirtual = {3}, motionAxes = {4}",
+                "deviceDescriptor = {0}, productId = {1}, vendorId = {2}, isVirtual = {3}, motionAxes = {4}, inputSources = {5}",
                 deviceDescriptor,
                 productId,
                 vendorId,
                 isVirtual,
-                string.Join(",", motionAxes.Select(i => i.ToString()).ToArray()));
+                motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()),
+                inputSources);
         }
     }
 }
