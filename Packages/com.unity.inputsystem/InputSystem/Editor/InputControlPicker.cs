@@ -10,6 +10,10 @@ using UnityEngine;
 
 ////TODO: prime picker with currently selected control (also with usage on device)
 
+////TODO: sort properly when search is active
+////      (the logic we inherit from TreeView sorts by displayName of items but our rendering logic
+////      tags additional text onto the items so the end result appears sorted incorrectly)
+
 namespace ISX.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate
@@ -233,8 +237,6 @@ namespace ISX.Editor
                     depth = 0
                 };
 
-                ////TODO: filter out usages for output controls
-
                 foreach (var usage in EditorInputTemplateCache.allUsages)
                 {
                     var child = new Item
@@ -269,7 +271,6 @@ namespace ISX.Editor
 
             private void BuildControlsRecursive(Item parent, InputTemplate template, string prefix, ref int id)
             {
-                ////TODO: filter out output controls
                 foreach (var control in template.controls)
                 {
                     if (control.isModifyingChildControlByPath)

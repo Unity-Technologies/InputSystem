@@ -943,8 +943,8 @@ namespace ISX
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
 
-                if (ReferenceEquals(InputRuntime.s_Runtime, m_Runtime))
-                    InputRuntime.s_Runtime = null;
+                if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
+                    InputRuntime.s_Instance = null;
             }
         }
 
@@ -964,7 +964,6 @@ namespace ISX
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
-            m_CurrentUpdate = InputUpdateType.Dynamic;
 
             // Register templates.
             RegisterTemplate("Button", typeof(ButtonControl)); // Controls.
@@ -1053,7 +1052,7 @@ namespace ISX
 
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
             // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
-            InputRuntime.s_Runtime = m_Runtime;
+            InputRuntime.s_Instance = m_Runtime;
         }
 
         [Serializable]
@@ -1075,19 +1074,8 @@ namespace ISX
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
         [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
-        [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         [NonSerialized] internal InputStateBuffers m_StateBuffers;
-
-        // We track dynamic and fixed updates to know when we need to flip device front and back buffers.
-        // Because events are only sent once, we may need to flip dynamic update buffers in fixed updates
-        // and fixed update buffers in dynamic updates as we have to update both front buffers simultaneously.
-        // We apply the following rules to track this:
-        // 1) There can be dynamic updates without fixed updates BUT
-        // 2) There cannot be fixed updates without dynamic updates AND
-        // 3) Fixed updates precede dynamic updates.
-        [NonSerialized] internal uint m_CurrentDynamicUpdateCount;
-        [NonSerialized] internal uint m_CurrentFixedUpdateCount;
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
@@ -1367,7 +1355,7 @@ namespace ISX
             // Install the new buffers.
             oldBuffers.FreeAll();
             m_StateBuffers = newBuffers;
-            m_StateBuffers.SwitchTo(m_CurrentUpdate);
+            m_StateBuffers.SwitchTo(InputUpdate.lastUpdateType);
 
             ////TODO: need to update state change monitors
         }
@@ -1428,12 +1416,12 @@ namespace ISX
                         {
                             if (updateType == InputUpdateType.Dynamic)
                             {
-                                if (device.m_CurrentDynamicUpdateCount == m_CurrentDynamicUpdateCount + 1)
+                                if (device.m_CurrentDynamicUpdateCount == InputUpdate.dynamicUpdateCount + 1)
                                     continue; // Device already received state for upcoming dynamic update.
                             }
                             else if (updateType == InputUpdateType.Fixed)
                             {
-                                if (device.m_CurrentFixedUpdateCount == m_CurrentFixedUpdateCount + 1)
+                                if (device.m_CurrentFixedUpdateCount == InputUpdate.fixedUpdateCount + 1)
                                     continue; // Device already received state for upcoming fixed update.
                             }
                         }
@@ -1510,7 +1498,7 @@ namespace ISX
             }
 #endif
 
-            m_CurrentUpdate = updateType;
+            InputUpdate.lastUpdateType = updateType;
             m_StateBuffers.SwitchTo(buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
@@ -1519,9 +1507,9 @@ namespace ISX
 
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic)
-                ++m_CurrentDynamicUpdateCount;
+                ++InputUpdate.dynamicUpdateCount;
             else if (updateType == InputUpdateType.Fixed)
-                ++m_CurrentFixedUpdateCount;
+                ++InputUpdate.fixedUpdateCount;
             else if (updateType == InputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
 
@@ -1969,40 +1957,40 @@ namespace ISX
             // If it is *NOT* a fixed update, we need to flip for the *next* coming fixed
             // update if we haven't already.
             if (updateType != InputUpdateType.Fixed &&
-                device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount + 1)
+                device.m_CurrentFixedUpdateCount != InputUpdate.fixedUpdateCount + 1)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentFixedUpdateCount = m_CurrentFixedUpdateCount + 1;
+                device.m_CurrentFixedUpdateCount = InputUpdate.fixedUpdateCount + 1;
                 flipped = true;
             }
 
             // If it is *NOT* a dynamic update, we need to flip for the *next* coming
             // dynamic update if we haven't already.
             if (updateType != InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount + 1)
+                device.m_CurrentDynamicUpdateCount != InputUpdate.dynamicUpdateCount + 1)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = m_CurrentDynamicUpdateCount + 1;
+                device.m_CurrentDynamicUpdateCount = InputUpdate.dynamicUpdateCount + 1;
                 flipped = true;
             }
 
             // If it *is* a fixed update and we haven't flipped for the current update
             // yet, do it.
             if (updateType == InputUpdateType.Fixed &&
-                device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount)
+                device.m_CurrentFixedUpdateCount != InputUpdate.fixedUpdateCount)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentFixedUpdateCount = m_CurrentFixedUpdateCount;
+                device.m_CurrentFixedUpdateCount = InputUpdate.fixedUpdateCount;
                 flipped = true;
             }
 
             // If it *is* a dynamic update and we haven't flipped for the current update
             // yet, do it.
             if (updateType == InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount)
+                device.m_CurrentDynamicUpdateCount != InputUpdate.dynamicUpdateCount)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = m_CurrentDynamicUpdateCount;
+                device.m_CurrentDynamicUpdateCount = InputUpdate.dynamicUpdateCount;
                 flipped = true;
             }
 
@@ -2113,6 +2101,7 @@ namespace ISX
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
             public InputConfiguration.SerializedState configuration;
+            public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
 
             // The rest is state that we want to preserve across Save() and Restore() but
@@ -2204,6 +2193,7 @@ namespace ISX
                 availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
                 configuration = InputConfiguration.Save(),
+                updateState = InputUpdate.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
                 deviceFindTemplateCallbacks = m_DeviceFindTemplateCallbacks.Clone(),
                 templateChangeListeners = m_TemplateChangeListeners.Clone(),
@@ -2226,7 +2216,6 @@ namespace ISX
         {
             m_Devices = null;
             m_HaveDevicesWithStateCallbackReceivers = false;
-            m_CurrentUpdate = InputUpdateType.Dynamic;
 
             InitializeData();
             if (state.runtime != null)
@@ -2248,6 +2237,9 @@ namespace ISX
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);
+
+            // Update state.
+            InputUpdate.Restore(state.updateState);
 
             // Template types.
             foreach (var template in state.templateTypes)

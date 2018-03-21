@@ -579,6 +579,30 @@ class FunctionalTests : InputTestFixture
         Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeDouble));
     }
 
+    unsafe struct StateWithFixedArray : IInputStateTypeInfo
+    {
+        [InputControl] public fixed float buffer[2];
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+    [InputTemplate(stateType = typeof(StateWithFixedArray))]
+    class DeviceWithStateStructWithFixedArray : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_FormatOfControlWithFixedArrayType_IsNotInferredFromType()
+    {
+        InputSystem.RegisterTemplate<DeviceWithStateStructWithFixedArray>();
+
+        Assert.That(() => new InputControlSetup("DeviceWithStateStructWithFixedArray"),
+            Throws.Exception.With.Message.Contain("Template has not been set"));
+    }
+
     [Test]
     [Category("Templates")]
     public void Templates_CanHaveOneControlUseStateOfAnotherControl()
@@ -2017,7 +2041,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanDetectWhetherButtonStateHasChangedThisFrame()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
@@ -2027,6 +2051,12 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+
+        // Input update with no changes should make both properties go back to false.
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
@@ -2396,6 +2426,51 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_MarksDeviceAsUpdatedThisFrame()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(device, new GamepadState {rightTrigger = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReadStateOfDeviceAsByteArray()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(device, new GamepadState { leftStick = new Vector2(0.123f, 0.456f) });
+        InputSystem.Update();
+
+        var state = device.valueAsObject;
+
+        Assert.That(state, Is.TypeOf<byte[]>());
+        var buffer = (byte[])state;
+
+        Assert.That(buffer.Length, Is.EqualTo(Marshal.SizeOf(typeof(GamepadState))));
+
+        unsafe
+        {
+            fixed(byte* bufferPtr = buffer)
+            {
+                var statePtr = (GamepadState*)bufferPtr;
+                Assert.That(statePtr->leftStick.x, Is.EqualTo(0.123).Within(0.00001));
+                Assert.That(statePtr->leftStick.y, Is.EqualTo(0.456).Within(0.00001));
+            }
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
     {
         InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "MyController"});
@@ -2527,6 +2602,8 @@ class FunctionalTests : InputTestFixture
 
         var unsupportedDevices = new List<InputDeviceDescription>();
         InputSystem.GetUnsupportedDevices(unsupportedDevices);
+
+        ////TODO: also make sure that when the template support it is removed, the device goes back on the unsupported list
 
         Assert.That(unsupportedDevices.Count, Is.Zero);
     }
@@ -5394,6 +5471,120 @@ class FunctionalTests : InputTestFixture
         Assert.That(movement.HasValue, Is.True);
         Assert.That(movement.Value.x, Is.EqualTo(0).Within(0.000001));
         Assert.That(movement.Value.y, Is.EqualTo(0).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanDriveMoveActionFromWASDKeys()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+
+        action.AddBinding("/<Keyboard>/a").WithModifiers("axisvector(x=-1,y=0)");
+        action.AddBinding("/<Keyboard>/d").WithModifiers("axisvector(x=1,y=0)");
+        action.AddBinding("/<Keyboard>/w").WithModifiers("axisvector(x=0,y=1)");
+        action.AddBinding("/<Keyboard>/s").WithModifiers("axisvector(x=0,y=-1)");
+
+        Vector2? vector = null;
+        action.performed +=
+            ctx => { vector = ctx.GetValue<Vector2>(); };
+
+        action.Enable();
+
+        //Have a concept of "composite bindings"?
+
+        //This leads to the bigger question of how the system handles an action
+        //that has multiple bindings where each may independently go through a
+        //full phase cycle.
+
+        ////TODO: need to have names on the bindings ("up", "down", "left", right")
+        ////      (so it becomes "Move Up" etc in a binding UI)
+
+        ////REVIEW: how should we handle mixed-device bindings? say there's an additional
+        ////        gamepad binding on the action above. what if both the gamepad and
+        ////        the keyboard trigger?
+
+        // A pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+        vector = null;
+
+        // D pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+        vector = null;
+
+        // W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        ////FIXME: these need to behave like Dpad vectors and be normalized
+
+        // A+W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // D+W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // A+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        // D+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        // A+D+W+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S, Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
     }
 
     [Test]

@@ -30,13 +30,9 @@ namespace ISX.Controls
 
         protected bool IsValueConsideredPressed(float value)
         {
-            var point = pressPoint;
-            if (pressPoint <= 0.0f)
-                point = InputConfiguration.ButtonPressPoint;
-            return value >= point;
+            return value >= pressPointOrDefault;
         }
 
-        ////REVIEW: this may have to go into value itself; otherwise actions will trigger on the slightest value change
         public bool isPressed
         {
             get { return IsValueConsideredPressed(value); }
@@ -44,12 +40,12 @@ namespace ISX.Controls
 
         public bool wasJustPressed
         {
-            get { return IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous); }
+            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous); }
         }
 
         public bool wasJustReleased
         {
-            get { return !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous); }
+            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous); }
         }
     }
 }
