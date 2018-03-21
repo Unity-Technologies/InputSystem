@@ -21,7 +21,7 @@ namespace ISX.Processors
             if (zero < min)
                 zero = min;
             var minAbsolute = Mathf.Abs(min);
-            var percentage = (value + minAbsolute) / (max + minAbsolute);
+            var percentage = (value - minAbsolute) / (max - minAbsolute);
             if (min < zero)
                 return 2 * percentage - 1;
             return percentage;
