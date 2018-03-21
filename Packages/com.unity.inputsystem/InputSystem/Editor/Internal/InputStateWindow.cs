@@ -32,7 +32,27 @@ namespace ISX.Editor
         private const int kOffsetLabelWidth = 30;
         private const int kHexGroupWidth = 25;
 
-        public unsafe void InitializeWithEvent(InputEventPtr eventPtr, InputControl control)
+        public void InitializeWithEvent(InputEventPtr eventPtr, InputControl control)
+        {
+            m_Control = control;
+            m_StateBuffers = new byte[1][];
+            m_StateBuffers[0] = GetEventStateBuffer(eventPtr, control);
+            m_SelectedStateBuffer = 0;
+        }
+
+        public void InitializeWithEvents(InputEventPtr[] eventPtrs, InputControl control)
+        {
+            var numEvents = eventPtrs.Length;
+
+            m_Control = control;
+            m_StateBuffers = new byte[numEvents][];
+            for (var i = 0; i < numEvents; ++i)
+                m_StateBuffers[i] = GetEventStateBuffer(eventPtrs[i], control);
+            m_CompareStateBuffers = true;
+            m_ShowDifferentOnly = true;
+        }
+
+        private unsafe byte[] GetEventStateBuffer(InputEventPtr eventPtr, InputControl control)
         {
             // Must be an event carrying state.
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
@@ -66,16 +86,13 @@ namespace ISX.Editor
                 UnsafeUtility.MemCpy(bufferPtr + stateOffset, dataPtr, dataSize);
             }
 
-            m_Control = control;
-            m_StateBuffers = new byte[1][];
-            m_StateBuffers[0] = buffer;
-            m_SelectedStateBuffer = BufferSelector.Default;
+            return buffer;
         }
 
         public unsafe void InitializeWithControl(InputControl control)
         {
             m_Control = control;
-            m_SelectedStateBuffer = BufferSelector.Default;
+            m_SelectedStateBuffer = (int)BufferSelector.Default;
 
             var bufferChoices = new List<GUIContent>();
             var bufferChoiceValues = new List<int>();
@@ -99,8 +116,8 @@ namespace ISX.Editor
                 }
                 m_StateBuffers[i] = buffer;
 
-                if (m_StateBuffers[(int)m_SelectedStateBuffer] == null)
-                    m_SelectedStateBuffer = selector;
+                if (m_StateBuffers[m_SelectedStateBuffer] == null)
+                    m_SelectedStateBuffer = (int)selector;
 
                 bufferChoices.Add(Contents.bufferChoices[i]);
                 bufferChoiceValues.Add(i);
@@ -155,11 +172,24 @@ namespace ISX.Editor
             m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawMemory, EditorStyles.toolbarButton,
                     GUILayout.Width(150));
 
-            // If we have multiple state buffers to choose from, add dropdown that allows
-            // selecting which buffer to display.
-            if (m_StateBuffers.Length > 1)
+            if (m_CompareStateBuffers)
             {
-                var selectedBuffer = (BufferSelector)EditorGUILayout.IntPopup((int)m_SelectedStateBuffer, m_BufferChoices,
+                var showDifferentOnly = GUILayout.Toggle(m_ShowDifferentOnly, Contents.showDifferentOnly,
+                        EditorStyles.toolbarButton, GUILayout.Width(150));
+                if (showDifferentOnly != m_ShowDifferentOnly && m_ControlTree != null)
+                {
+                    m_ControlTree.showDifferentOnly = showDifferentOnly;
+                    m_ControlTree.Reload();
+                }
+
+                m_ShowDifferentOnly = showDifferentOnly;
+            }
+
+            // If we have multiple state buffers to choose from and we're not comparing them to each other,
+            // add dropdown that allows selecting which buffer to display.
+            if (m_StateBuffers.Length > 1 && !m_CompareStateBuffers)
+            {
+                var selectedBuffer = EditorGUILayout.IntPopup(m_SelectedStateBuffer, m_BufferChoices,
                         m_BufferChoiceValues, EditorStyles.toolbarPopup);
                 if (selectedBuffer != m_SelectedStateBuffer)
                 {
@@ -179,8 +209,18 @@ namespace ISX.Editor
             {
                 if (m_ControlTree == null)
                 {
-                    m_ControlTree = InputControlTreeView.Create(m_Control, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
-                    m_ControlTree.stateBuffer = m_StateBuffers[(int)m_SelectedStateBuffer];
+                    if (m_CompareStateBuffers)
+                    {
+                        m_ControlTree = InputControlTreeView.Create(m_Control, m_StateBuffers.Length, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
+                        m_ControlTree.multipleStateBuffers = m_StateBuffers;
+                        m_ControlTree.showDifferentOnly = m_ShowDifferentOnly;
+                    }
+                    else
+                    {
+                        m_ControlTree = InputControlTreeView.Create(m_Control, 1, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
+                        m_ControlTree.stateBuffer = m_StateBuffers[m_SelectedStateBuffer];
+                    }
+                    m_ControlTree.Reload();
                     m_ControlTree.ExpandAll();
                 }
 
@@ -189,11 +229,12 @@ namespace ISX.Editor
             }
         }
 
+        ////TODO: support dumping multiple state side-by-side when comparing
         public void DrawHexDump()
         {
             m_HexDumpScrollPosition = EditorGUILayout.BeginScrollView(m_HexDumpScrollPosition);
 
-            var stateBuffer = m_StateBuffers[(int)m_SelectedStateBuffer];
+            var stateBuffer = m_StateBuffers[m_SelectedStateBuffer];
             var numBytes = stateBuffer.Length;
             var numHexGroups = numBytes / kBytesPerHexGroup + (numBytes % kBytesPerHexGroup > 0 ? 1 : 0);
             var numLines = numHexGroups / kHexGroupsPerLine + (numHexGroups % kHexGroupsPerLine > 0 ? 1 : 0);
@@ -250,8 +291,9 @@ namespace ISX.Editor
         // When inspecting controls (as opposed to events), we copy all their various
         // state buffers and allow switching between them.
         [SerializeField] private byte[][] m_StateBuffers;
-        [SerializeField] private BufferSelector m_SelectedStateBuffer;
-
+        [SerializeField] private int m_SelectedStateBuffer;
+        [SerializeField] private bool m_CompareStateBuffers;
+        [SerializeField] private bool m_ShowDifferentOnly;
         [SerializeField] private bool m_ShowRawBytes;
         [SerializeField] private TreeViewState m_ControlTreeState;
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
@@ -291,6 +333,7 @@ namespace ISX.Editor
         private static class Contents
         {
             public static GUIContent showRawMemory = new GUIContent("Display Raw Memory");
+            public static GUIContent showDifferentOnly = new GUIContent("Show Only Differences");
             public static GUIContent[] bufferChoices =
             {
                 new GUIContent("Dynamic Update (Current)"),

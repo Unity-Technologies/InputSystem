@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using ISX.LowLevel;
+using UnityEditor;
 
 ////TODO: add information about which update type + update count an event came through in
 
@@ -122,6 +124,46 @@ namespace ISX.Editor
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                 return;
 
+            PopUpStateWindow(eventPtr);
+        }
+
+        protected override void ContextClickedItem(int id)
+        {
+            if (m_Events.Length == 0)
+                return;
+
+            var menu = new GenericMenu();
+
+            var selection = GetSelection();
+            if (selection.Count == 1)
+            {
+                menu.AddItem(new GUIContent("Inspect"), false, OnInspectMenuItem, id);
+            }
+            else if (selection.Count > 1)
+            {
+                menu.AddItem(new GUIContent("Compare"), false, OnCompareMenuItem, selection);
+            }
+
+            menu.ShowAsContext();
+        }
+
+        private void OnCompareMenuItem(object userData)
+        {
+            var selection = (IList<int>)userData;
+            var window = ScriptableObject.CreateInstance<InputStateWindow>();
+            window.InitializeWithEvents(selection.Select(GetEventPtrFromItemId).ToArray(), m_RootControl);
+            window.Show();
+        }
+
+        private void OnInspectMenuItem(object userData)
+        {
+            var itemId = (int)userData;
+            var eventPtr = GetEventPtrFromItemId(itemId);
+            PopUpStateWindow(eventPtr);
+        }
+
+        private void PopUpStateWindow(InputEventPtr eventPtr)
+        {
             var window = ScriptableObject.CreateInstance<InputStateWindow>();
             window.InitializeWithEvent(eventPtr, m_RootControl);
             window.Show();

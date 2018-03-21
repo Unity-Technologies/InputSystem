@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ISX.LowLevel;
 using ISX.Utilities;
 using UnityEditor.IMGUI.Controls;
@@ -10,6 +11,8 @@ using UnityEngine;
 
 ////TODO: show processors attached to controls
 
+////TODO: make controls that have different `value` and `previous` in bold
+
 namespace ISX.Editor
 {
     // Multi-column TreeView that shows control tree of device.
@@ -18,13 +21,15 @@ namespace ISX.Editor
         // If this is set, the controls won't display their current value but we'll
         // show their state data from this buffer instead.
         public byte[] stateBuffer;
+        public byte[][] multipleStateBuffers;
+        public bool showDifferentOnly;
 
-        public static InputControlTreeView Create(InputControl rootControl, ref TreeViewState treeState, ref MultiColumnHeaderState headerState)
+        public static InputControlTreeView Create(InputControl rootControl, int numValueColumns, ref TreeViewState treeState, ref MultiColumnHeaderState headerState)
         {
             if (treeState == null)
                 treeState = new TreeViewState();
 
-            var newHeaderState = CreateHeaderState();
+            var newHeaderState = CreateHeaderState(numValueColumns);
             if (headerState != null)
                 MultiColumnHeaderState.OverwriteSerializedFields(headerState, newHeaderState);
             headerState = newHeaderState;
@@ -34,11 +39,6 @@ namespace ISX.Editor
         }
 
         private const float kRowHeight = 20f;
-
-        private class Item : TreeViewItem
-        {
-            public InputControl control;
-        }
 
         private enum ColumnId
         {
@@ -55,11 +55,10 @@ namespace ISX.Editor
         }
 
         private InputControl m_RootControl;
-        private List<InputControl> m_Controls = new List<InputControl>();
 
-        private static MultiColumnHeaderState CreateHeaderState()
+        private static MultiColumnHeaderState CreateHeaderState(int numValueColumns)
         {
-            var columns = new MultiColumnHeaderState.Column[(int)ColumnId.COUNT];
+            var columns = new MultiColumnHeaderState.Column[(int)ColumnId.COUNT + numValueColumns - 1];
 
             columns[(int)ColumnId.Name] =
                 new MultiColumnHeaderState.Column
@@ -90,8 +89,22 @@ namespace ISX.Editor
                 new MultiColumnHeaderState.Column {width = 40, headerContent = new GUIContent("Bit")};
             columns[(int)ColumnId.Size] =
                 new MultiColumnHeaderState.Column {headerContent = new GUIContent("Size (Bits)")};
-            columns[(int)ColumnId.Value] =
-                new MultiColumnHeaderState.Column {width = 120, headerContent = new GUIContent("Value")};
+
+            if (numValueColumns == 1)
+            {
+                columns[(int)ColumnId.Value] =
+                    new MultiColumnHeaderState.Column {width = 120, headerContent = new GUIContent("Value")};
+            }
+            else
+            {
+                for (var i = 0; i < numValueColumns; ++i)
+                    columns[(int)ColumnId.Value + i] =
+                        new MultiColumnHeaderState.Column
+                    {
+                        width = 100,
+                        headerContent = new GUIContent("Value " + (char)('A' + i))
+                    };
+            }
 
             return new MultiColumnHeaderState(columns);
         }
@@ -102,55 +115,104 @@ namespace ISX.Editor
             m_RootControl = root;
             showBorder = false;
             rowHeight = kRowHeight;
-            Reload();
         }
 
         protected override TreeViewItem BuildRoot()
         {
+            var id = 1;
+
             // Build tree from control down the control hierarchy.
-            var rootItem = BuildControlTreeRecursive(m_RootControl, 0);
+            var rootItem = BuildControlTreeRecursive(m_RootControl, 0, ref id);
 
             // Wrap root control in invisible item required by TreeView.
-            return new Item
+            return new TreeViewItem
             {
-                displayName = "Root",
                 id = 0,
                 children = new List<TreeViewItem> {rootItem},
                 depth = -1
             };
         }
 
-        private TreeViewItem BuildControlTreeRecursive(InputControl control, int depth)
+        private ControlItem BuildControlTreeRecursive(InputControl control, int depth, ref int id)
         {
-            m_Controls.Add(control);
-            var id = m_Controls.Count;
-
-            ////TODO: come up with nice icons depicting different control types
-
-            var item = new Item
-            {
-                id = id,
-                displayName = control.name,
-                control = control,
-                depth = depth
-            };
-
             // Build children.
-            if (control.children.Count > 0)
+            List<TreeViewItem> children = null;
+            var isLeaf = control.children.Count == 0;
+            if (!isLeaf)
             {
-                var children = new List<TreeViewItem>();
+                children = new List<TreeViewItem>();
 
                 foreach (var child in control.children)
                 {
-                    var childItem = BuildControlTreeRecursive(child, depth + 1);
-                    childItem.parent = item;
-                    children.Add(childItem);
+                    var childItem = BuildControlTreeRecursive(child, depth + 1, ref id);
+                    if (childItem != null)
+                        children.Add(childItem);
                 }
+
+                // If none of our children returned an item, none of their data is different,
+                // so if we are supposed to show only controls that differ in value, we're sitting
+                // on a branch that has no changes. Cull the branch except if we're all the way
+                // at the root (we want to have at least one item).
+                if (children.Count == 0 && showDifferentOnly && depth != 0)
+                    return null;
 
                 // Sort children by name.
                 children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+            }
 
-                item.children = children;
+            // Read state.
+            GUIContent value = null;
+            GUIContent[] values = null;
+            if (stateBuffer != null)
+            {
+                ////TODO: switch to ReadValueFrom
+                var text = ReadRawValueAsString(control, stateBuffer);
+                if (text != null)
+                    value = new GUIContent(text);
+            }
+            else if (multipleStateBuffers != null)
+            {
+                var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
+                if (showDifferentOnly && isLeaf && valueStrings.Distinct().Count() == 1)
+                    return null;
+                values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
+            }
+            else
+            {
+                var valueObject = control.valueAsObject;
+                if (valueObject != null)
+                    value = new GUIContent(valueObject.ToString());
+            }
+
+            // Compute offset. Offsets on the controls are absolute. Make them relative to the
+            // root control.
+            var controlOffset = control.stateBlock.byteOffset;
+            var rootOffset = m_RootControl.stateBlock.byteOffset;
+            var offset = controlOffset - rootOffset;
+
+            ////TODO: come up with nice icons depicting different control types
+
+            var item = new ControlItem
+            {
+                id = id++,
+                displayName = control.name,
+                control = control,
+                depth = depth,
+                template = new GUIContent(control.template),
+                format = new GUIContent(control.stateBlock.format.ToString()),
+                offset = new GUIContent(offset.ToString()),
+                bit = new GUIContent(control.stateBlock.bitOffset.ToString()),
+                sizeInBits = new GUIContent(control.stateBlock.sizeInBits.ToString()),
+                type = new GUIContent(control.GetType().Name),
+                value = value,
+                values = values,
+                children = children
+            };
+
+            if (children != null)
+            {
+                foreach (var child in children)
+                    child.parent = item;
             }
 
             return item;
@@ -158,7 +220,7 @@ namespace ISX.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            var item = (Item)args.item;
+            var item = (ControlItem)args.item;
 
             var columnCount = args.GetNumVisibleColumns();
             for (var i = 0; i < columnCount; ++i)
@@ -167,7 +229,7 @@ namespace ISX.Editor
             }
         }
 
-        private void ColumnGUI(Rect cellRect, Item item, int column, ref RowGUIArgs args)
+        private void ColumnGUI(Rect cellRect, ControlItem item, int column, ref RowGUIArgs args)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 
@@ -178,50 +240,42 @@ namespace ISX.Editor
                     base.RowGUI(args);
                     break;
                 case (int)ColumnId.Template:
-                    GUI.Label(cellRect, item.control.template);
+                    GUI.Label(cellRect, item.template);
                     break;
                 case (int)ColumnId.Format:
-                    GUI.Label(cellRect, item.control.stateBlock.format.ToString());
+                    GUI.Label(cellRect, item.format);
                     break;
                 case (int)ColumnId.Offset:
-                    // Offsets on the controls are absolute. Make them relative to the
-                    // root control.
-                    var controlOffset = item.control.stateBlock.byteOffset;
-                    var rootOffset = m_RootControl.stateBlock.byteOffset;
-                    GUI.Label(cellRect, (controlOffset - rootOffset).ToString());
+                    GUI.Label(cellRect, item.offset);
                     break;
                 case (int)ColumnId.Bit:
-                    GUI.Label(cellRect, item.control.stateBlock.bitOffset.ToString());
+                    GUI.Label(cellRect, item.bit);
                     break;
                 case (int)ColumnId.Size:
-                    GUI.Label(cellRect, item.control.stateBlock.sizeInBits.ToString());
+                    GUI.Label(cellRect, item.sizeInBits);
                     break;
                 case (int)ColumnId.Type:
-                    GUI.Label(cellRect, item.control.GetType().Name);
+                    GUI.Label(cellRect, item.type);
                     break;
                 case (int)ColumnId.Value:
-                    if (stateBuffer != null)
-                    {
-                        ////TODO: switch to ReadValueFrom
-                        var text = ReadRawValueAsString(item.control);
-                        if (text != null)
-                            GUI.Label(cellRect, text);
-                    }
-                    else
-                    {
-                        var value = item.control.valueAsObject;
-                        if (value != null)
-                            GUI.Label(cellRect, value.ToString());
-                    }
+                    if (item.value != null)
+                        GUI.Label(cellRect, item.value);
+                    else if (item.values != null && item.values[0] != null)
+                        GUI.Label(cellRect, item.values[0]);
+                    break;
+                default:
+                    var valueIndex = column - (int)ColumnId.Value;
+                    if (item.values != null && item.values[valueIndex] != null)
+                        GUI.Label(cellRect, item.values[valueIndex]);
                     break;
             }
         }
 
-        private unsafe string ReadRawValueAsString(InputControl control)
+        private unsafe string ReadRawValueAsString(InputControl control, byte[] state)
         {
-            fixed(byte* state = stateBuffer)
+            fixed(byte* statePtr = state)
             {
-                var ptr = state + control.m_StateBlock.byteOffset - m_RootControl.m_StateBlock.byteOffset;
+                var ptr = statePtr + control.m_StateBlock.byteOffset - m_RootControl.m_StateBlock.byteOffset;
                 var format = control.m_StateBlock.format;
 
                 if (format == InputStateBlock.kTypeBit)
@@ -258,6 +312,19 @@ namespace ISX.Editor
 
                 return null;
             }
+        }
+
+        private class ControlItem : TreeViewItem
+        {
+            public InputControl control;
+            public GUIContent template;
+            public GUIContent format;
+            public GUIContent offset;
+            public GUIContent bit;
+            public GUIContent sizeInBits;
+            public GUIContent type;
+            public GUIContent value;
+            public GUIContent[] values;
         }
     }
 }
