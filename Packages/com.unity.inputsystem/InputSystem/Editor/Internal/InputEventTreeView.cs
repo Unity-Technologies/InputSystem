@@ -127,6 +127,7 @@ namespace ISX.Editor
             PopUpStateWindow(eventPtr);
         }
 
+        ////TODO: move inspect and compare from a context menu to the toolbar of the event view
         protected override void ContextClickedItem(int id)
         {
             if (m_Events.Length == 0)

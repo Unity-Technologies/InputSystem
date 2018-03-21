@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Linq;
+using ISX.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
@@ -112,16 +114,25 @@ namespace ISX.Editor
 
             // Look up properties on importer object.
             var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
-            var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
-            var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
             // Add settings UI.
             EditorGUILayout.PropertyField(generateWapperCodeProperty, Contents.generateWrapperCode);
             if (generateWapperCodeProperty.boolValue)
             {
+                var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
+                var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
+                var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
+
                 ////TODO: tie a file selector to this
                 EditorGUILayout.PropertyField(wrapperCodePathProperty);
+
+                EditorGUILayout.PropertyField(wrapperClassNameProperty);
+                if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
+                    EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
+
                 EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty);
+                if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
+                    EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
             }
 
             ApplyRevertGUI();

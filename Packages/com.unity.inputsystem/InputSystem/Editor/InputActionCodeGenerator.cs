@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ISX.Utilities;
 using UnityEditor;
 
 ////TODO: sanitize set and action names into C# identifiers
@@ -33,7 +34,7 @@ namespace ISX.Editor
         public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
         {
             if (string.IsNullOrEmpty(options.className))
-                options.className = asset.name;
+                options.className = CSharpCodeHelpers.MakeTypeName(asset.name);
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 options.sourceAssetPath = AssetDatabase.GetAssetPath(asset);
             return GenerateWrapperCode(asset.actionSets, options);
@@ -70,11 +71,12 @@ namespace ISX.Editor
             writer.BeginBlock();
             foreach (var set in sets)
             {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine(string.Format("// {0}", set.name));
-                writer.WriteLine(string.Format("m_{0} = asset.GetActionSet(\"{1}\");", set.name, set.name));
+                writer.WriteLine(string.Format("m_{0} = asset.GetActionSet(\"{1}\");", setName, set.name));
                 foreach (var action in set.actions)
-                    writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", set.name, action.name,
-                            set.name, action.name));
+                    writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", setName, CSharpCodeHelpers.MakeIdentifier(action.name),
+                            setName, action.name));
             }
             writer.WriteLine("m_Initialized = true;");
             writer.EndBlock();
@@ -83,14 +85,16 @@ namespace ISX.Editor
             foreach (var set in sets)
             {
                 writer.WriteLine(string.Format("// {0}", set.name));
-                var setStructName = MakeTypeName(set.name, "Actions");
+
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                var setStructName = CSharpCodeHelpers.MakeTypeName(setName, "Actions");
 
                 // Caching field for action set.
-                writer.WriteLine(string.Format("private ISX.InputActionSet m_{0};", set.name));
+                writer.WriteLine(string.Format("private ISX.InputActionSet m_{0};", setName));
 
                 // Caching fields for all actions.
                 foreach (var action in set.actions)
-                    writer.WriteLine(string.Format("private ISX.InputAction m_{0}_{1};", set.name, action.name));
+                    writer.WriteLine(string.Format("private ISX.InputAction m_{0}_{1};", setName, CSharpCodeHelpers.MakeIdentifier(action.name)));
 
                 // Struct wrapping access to action set.
                 writer.WriteLine(string.Format("public struct {0}", setStructName));
@@ -103,13 +107,16 @@ namespace ISX.Editor
 
                 // Getter for each action.
                 foreach (var action in set.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(string.Format(
-                            "public ISX.InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", action.name,
-                            set.name, action.name));
+                            "public ISX.InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", actionName,
+                            setName, actionName));
+                }
 
                 // Action set getter.
                 writer.WriteLine(string.Format("public ISX.InputActionSet Get() {{ return m_Wrapper.m_{0}; }}",
-                        set.name));
+                        setName));
 
                 // Enable/disable methods.
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
@@ -126,7 +133,7 @@ namespace ISX.Editor
                 writer.EndBlock();
 
                 // Getter for instance of struct.
-                writer.WriteLine(string.Format("public {0} @{1}", setStructName, set.name));
+                writer.WriteLine(string.Format("public {0} @{1}", setStructName, setName));
                 writer.BeginBlock();
 
                 writer.WriteLine("get");
@@ -182,13 +189,6 @@ namespace ISX.Editor
                         buffer.Append(' ');
                 }
             }
-        }
-
-        private static string MakeTypeName(string name, string suffix)
-        {
-            if (char.IsLower(name[0]))
-                name = char.ToUpper(name[0]).ToString() + name.Substring(1);
-            return string.Format("{0}{1}", name, suffix);
         }
 
         // Updates the given file with wrapper code generated for the given action sets.

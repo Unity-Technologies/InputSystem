@@ -6112,6 +6112,24 @@ class FunctionalTests : InputTestFixture
         Assert.That(code, Contains.Substring("public ISX.InputActionSet Clone()"));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
+    {
+        var set1 = new InputActionSet("set1");
+        set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
+        set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set1);
+        asset.name = "New Controls (4)";
+
+        var code = InputActionCodeGenerator.GenerateWrapperCode(asset);
+
+        Assert.That(code, Contains.Substring("class NewControls_4_"));
+        Assert.That(code, Contains.Substring("public ISX.InputAction @action__"));
+        Assert.That(code, Contains.Substring("public ISX.InputAction @_1thing"));
+    }
+
     class TestEditorWindow : EditorWindow
     {
         public Vector2 mousePosition;
