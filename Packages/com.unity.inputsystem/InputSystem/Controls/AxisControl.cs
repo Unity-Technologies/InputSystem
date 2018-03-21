@@ -3,6 +3,8 @@ using ISX.LowLevel;
 using ISX.Processors;
 using UnityEngine;
 
+////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
+
 namespace ISX.Controls
 {
     /// <summary>

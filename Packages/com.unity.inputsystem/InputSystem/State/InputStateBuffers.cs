@@ -136,19 +136,7 @@ namespace ISX.LowLevel
         internal DoubleBuffers m_EditorUpdateBuffers;
 #endif
 
-        private static DoubleBuffers s_CurrentBuffers;
-
-        public static IntPtr GetFrontBuffer(int deviceIndex)
-        {
-            return s_CurrentBuffers.GetFrontBuffer(deviceIndex);
-        }
-
-        public static IntPtr GetBackBuffer(int deviceIndex)
-        {
-            return s_CurrentBuffers.GetBackBuffer(deviceIndex);
-        }
-
-        public DoubleBuffers GetBuffers(InputUpdateType updateType)
+        public DoubleBuffers GetDoubleBuffersFor(InputUpdateType updateType)
         {
             switch (updateType)
             {
@@ -170,10 +158,22 @@ namespace ISX.LowLevel
             throw new Exception("Unrecognized InputUpdateType: " + updateType);
         }
 
-        // Switch the current set of buffers used by the system.
-        public void SwitchTo(InputUpdateType update)
+        private static DoubleBuffers s_CurrentBuffers;
+
+        public static IntPtr GetFrontBufferForDevice(int deviceIndex)
         {
-            s_CurrentBuffers = GetBuffers(update);
+            return s_CurrentBuffers.GetFrontBuffer(deviceIndex);
+        }
+
+        public static IntPtr GetBackBufferForDevice(int deviceIndex)
+        {
+            return s_CurrentBuffers.GetBackBuffer(deviceIndex);
+        }
+
+        // Switch the current set of buffers used by the system.
+        public static void SwitchTo(InputStateBuffers buffers, InputUpdateType update)
+        {
+            s_CurrentBuffers = buffers.GetDoubleBuffersFor(update);
         }
 
         // Allocates all buffers to serve the given updates and comes up with a spot
