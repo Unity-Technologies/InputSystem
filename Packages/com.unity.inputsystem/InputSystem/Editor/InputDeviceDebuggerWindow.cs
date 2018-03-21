@@ -202,7 +202,8 @@ namespace ISX.Editor
             m_EventTree = InputEventTreeView.Create(m_Device, m_EventTrace, ref m_EventTreeState, ref m_EventTreeHeaderState);
 
             // Set up control tree.
-            m_ControlTree = InputControlTreeView.Create(m_Device, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
+            m_ControlTree = InputControlTreeView.Create(m_Device, 1, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
+            m_ControlTree.Reload();
             m_ControlTree.ExpandAll();
 
             AddToList();

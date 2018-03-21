@@ -90,12 +90,12 @@ namespace ISX.LowLevel
         /// <summary>
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
-        float PollingFrequency { set; }
+        float pollingFrequency { set; }
     }
 
     internal static class InputRuntime
     {
-        public static IInputRuntime s_Runtime;
+        public static IInputRuntime s_Instance;
     }
 
     public static class InputRuntimeExtensions

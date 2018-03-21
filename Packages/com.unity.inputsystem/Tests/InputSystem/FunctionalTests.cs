@@ -2041,7 +2041,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanDetectWhetherButtonStateHasChangedThisFrame()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
@@ -2051,6 +2051,12 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+
+        // Input update with no changes should make both properties go back to false.
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
@@ -2416,6 +2422,24 @@ class FunctionalTests : InputTestFixture
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(device));
         Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.StateChanged));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_MarksDeviceAsUpdatedThisFrame()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(device, new GamepadState {rightTrigger = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.False);
     }
 
     [Test]
