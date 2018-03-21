@@ -153,6 +153,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.unity.inputdemo
     iOS: com.unity.inputdemo
+    tvOS: com.input.inputdemo
   buildNumber: {}
   AndroidBundleVersionCode: 1
   AndroidMinSdkVersion: 16
