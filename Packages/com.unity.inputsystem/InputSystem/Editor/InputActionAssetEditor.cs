@@ -136,7 +136,7 @@ namespace ISX.Editor
         [SerializeField] private TreeViewState m_ActionTreeViewState;
         [SerializeField] private MultiColumnHeaderState m_ActionTreeViewHeaderState;
 
-        [NonSerialized] private TreeView m_ActionTreeView;
+        [NonSerialized] private InputActionTreeView m_ActionTreeView;
 
         private static class Styles
         {

@@ -33,7 +33,6 @@ namespace ISX.Editor
         {
             Name,
             Bindings,
-            Groups,
             COUNT
         }
 
@@ -52,16 +51,9 @@ namespace ISX.Editor
             columns[(int)ColumnId.Bindings] =
                 new MultiColumnHeaderState.Column
             {
-                width = 280,
-                minWidth = 60,
+                width = 360,
+                minWidth = 280,
                 headerContent = new GUIContent("Bindings")
-            };
-            columns[(int)ColumnId.Groups] =
-                new MultiColumnHeaderState.Column
-            {
-                width = 110,
-                minWidth = 60,
-                headerContent = new GUIContent("Groups")
             };
 
             return new MultiColumnHeaderState(columns);
@@ -292,11 +284,6 @@ namespace ISX.Editor
             m_ApplyAction();
             Reload();
         }
-
-//        protected override Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
-//        {
-//            CenterRectUsingSingleLineHeight(ref cellRect);
-//        }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {

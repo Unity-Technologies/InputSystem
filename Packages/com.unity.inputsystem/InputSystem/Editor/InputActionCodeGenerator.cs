@@ -6,8 +6,6 @@ using System.Text;
 using ISX.Utilities;
 using UnityEditor;
 
-////TODO: sanitize set and action names into C# identifiers
-
 ////TODO: only generate @something if @ is really needed
 
 ////TODO: turn wrappers into structs, if possible (not sure how to make the property drawer stuff work with that)
@@ -33,8 +31,6 @@ namespace ISX.Editor
 
         public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
         {
-            if (string.IsNullOrEmpty(options.className))
-                options.className = CSharpCodeHelpers.MakeTypeName(asset.name);
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 options.sourceAssetPath = AssetDatabase.GetAssetPath(asset);
             return GenerateWrapperCode(asset.actionSets, options);
@@ -44,6 +40,15 @@ namespace ISX.Editor
         // action sets in code.
         public static string GenerateWrapperCode(IEnumerable<InputActionSet> sets, Options options)
         {
+            if (string.IsNullOrEmpty(options.sourceAssetPath))
+                throw new ArgumentException("options.sourceAssetPath");
+
+            if (string.IsNullOrEmpty(options.className))
+            {
+                options.className =
+                    CSharpCodeHelpers.MakeTypeName(Path.GetFileNameWithoutExtension(options.sourceAssetPath));
+            }
+
             var writer = new Writer
             {
                 buffer = new StringBuilder()
