@@ -719,15 +719,21 @@ namespace ISX
                 // Finalize arrays.
                 for (var i = 0; i < sets.Count; ++i)
                 {
+                    var set = sets[i];
+
                     var actionArray = actions[i].ToArray();
                     var bindingArray = bindings[i].ToArray();
 
-                    sets[i].m_Actions = actionArray;
-                    sets[i].m_Bindings = bindingArray;
+                    set.m_Actions = actionArray;
+                    set.m_Bindings = bindingArray;
 
                     // Install final binding arrays on actions.
                     for (var n = 0; n < actionArray.Length; ++n)
-                        actionArray[n].m_Bindings = bindingArray;
+                    {
+                        var action = actionArray[n];
+                        action.m_Bindings = bindingArray;
+                        action.m_ActionSet = set;
+                    }
                 }
 
                 return sets.ToArray();
@@ -805,6 +811,11 @@ namespace ISX
             var fileJson = ActionFileJson.FromSet(this);
             return JsonUtility.ToJson(fileJson);
         }
+
+        // The serialization solution here will only partially work. Any call to OnBeforeSerialize() will
+        // render the InputActionSet it got called on unusable until OnAfterDeserialize() is called. This
+        // means that writing a set through serialization will render it inoperable -- and the editor will
+        // do just that over and over internally on data that is being inspected.
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {

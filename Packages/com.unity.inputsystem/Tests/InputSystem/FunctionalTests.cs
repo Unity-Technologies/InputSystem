@@ -4414,6 +4414,8 @@ class FunctionalTests : InputTestFixture
         Assert.That(sets[0].actions[0].bindings[1].modifiers, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].group, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
+        Assert.That(sets[0].actions[0].set, Is.SameAs(sets[0]));
+        Assert.That(sets[0].actions[1].set, Is.SameAs(sets[0]));
     }
 
     [Test]
