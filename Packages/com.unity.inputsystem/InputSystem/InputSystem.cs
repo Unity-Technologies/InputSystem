@@ -995,11 +995,14 @@ namespace ISX
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
             #if DEVELOPMENT_BUILD
-            s_ConnectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
-            s_Remote = new InputRemoting(s_Manager, startSendingOnConnect: true);
-            s_Remote.Subscribe(s_ConnectionToEditor);
-            s_ConnectionToEditor.Subscribe(s_Remote);
-            s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
+            if (ShouldEnableRemoting())
+            {
+                s_ConnectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+                s_Remote = new InputRemoting(s_Manager, startSendingOnConnect: true);
+                s_Remote.Subscribe(s_ConnectionToEditor);
+                s_ConnectionToEditor.Subscribe(s_Remote);
+                s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
+            }
             #endif
         }
 
@@ -1073,6 +1076,18 @@ namespace ISX
                 s_SerializedStateStack.RemoveAt(index);
             }
         }
+
+        #if !UNITY_EDITOR
+        private static bool ShouldEnableRemoting()
+        {
+            ////FIXME: is there a better way to detect whether we are running tests?
+            var isRunningTests = Application.productName == "UnityTestFramework";
+            if (isRunningTests)
+                return false; // Don't remote while running tests.
+            return true;
+        }
+
+        #endif
 
 #endif
     }
