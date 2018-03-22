@@ -1,8 +1,11 @@
 using ISX;
 using ISX.Plugins.XInput;
-using ISX.Plugins.XInput.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
+
+#if UNITY_EDITOR || UNITY_XBOXONE
+using ISX.Plugins.XInput.LowLevel;
+#endif
 
 class XInputTests : InputTestFixture
 {
