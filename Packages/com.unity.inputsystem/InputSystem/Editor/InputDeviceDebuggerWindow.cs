@@ -123,7 +123,7 @@ namespace ISX.Editor
             try
             {
                 // Switch to buffers that we want to display in the control tree.
-                InputSystem.s_Manager.m_StateBuffers.SwitchTo(updateTypeToShow);
+                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
 
                 ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
                 m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
@@ -134,7 +134,7 @@ namespace ISX.Editor
             finally
             {
                 // Switch back to editor buffers.
-                InputSystem.s_Manager.m_StateBuffers.SwitchTo(InputUpdateType.Editor);
+                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, InputUpdateType.Editor);
             }
         }
 

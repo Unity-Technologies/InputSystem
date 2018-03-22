@@ -241,12 +241,12 @@ namespace ISX
 
         protected internal IntPtr currentStatePtr
         {
-            get { return InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()); }
+            get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
         }
 
         protected internal IntPtr previousStatePtr
         {
-            get { return InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()); }
+            get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
         }
 
         /// <summary>

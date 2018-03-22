@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ISX.Composites;
 using ISX.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -439,7 +440,7 @@ namespace ISX
             return templates.Count - countBefore;
         }
 
-        public void RegisterProcessor(string name, Type type)
+        public void RegisterControlProcessor(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -452,7 +453,7 @@ namespace ISX
             m_Processors[internedName] = type;
         }
 
-        public Type TryGetProcessor(string name)
+        public Type TryGetControlProcessor(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -464,7 +465,7 @@ namespace ISX
             return null;
         }
 
-        public void RegisterModifier(string name, Type type)
+        public void RegisterBindingModifier(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -475,7 +476,7 @@ namespace ISX
             m_Modifiers[internedName] = type;
         }
 
-        public Type TryGetModifier(string name)
+        public Type TryGetBindingModifier(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -487,9 +488,14 @@ namespace ISX
             return null;
         }
 
-        public IEnumerable<string> ListModifiers()
+        public IEnumerable<string> ListBindingModifiers()
         {
             return m_Modifiers.Keys.Select(x => x.ToString());
+        }
+
+        public void RegisterBindingComposite(string name, Type type)
+        {
+            //throw new NotImplementedException();
         }
 
         // Processes a path specification that may match more than a single control.
@@ -1003,24 +1009,28 @@ namespace ISX
             ////REVIEW: #if templates to the platforms they make sense on?
 
             // Register processors.
-            RegisterProcessor("Invert", typeof(InvertProcessor));
-            RegisterProcessor("Clamp", typeof(ClampProcessor));
-            RegisterProcessor("Normalize", typeof(NormalizeProcessor));
-            RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
-            RegisterProcessor("Curve", typeof(CurveProcessor));
-            RegisterProcessor("Sensitivity", typeof(SensitivityProcessor));
+            RegisterControlProcessor("Invert", typeof(InvertProcessor));
+            RegisterControlProcessor("Clamp", typeof(ClampProcessor));
+            RegisterControlProcessor("Normalize", typeof(NormalizeProcessor));
+            RegisterControlProcessor("Deadzone", typeof(DeadzoneProcessor));
+            RegisterControlProcessor("Curve", typeof(CurveProcessor));
+            RegisterControlProcessor("Sensitivity", typeof(SensitivityProcessor));
 
             #if UNITY_EDITOR
-            RegisterProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
+            RegisterControlProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
-            // Register action modifiers.
-            RegisterModifier("Press", typeof(PressModifier));
-            RegisterModifier("Hold", typeof(HoldModifier));
-            RegisterModifier("Tap", typeof(TapModifier));
-            RegisterModifier("SlowTap", typeof(SlowTapModifier));
-            RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
-            RegisterModifier("Swipe", typeof(SwipeModifier));
+            // Register modifiers.
+            RegisterBindingModifier("Press", typeof(PressModifier));
+            RegisterBindingModifier("Hold", typeof(HoldModifier));
+            RegisterBindingModifier("Tap", typeof(TapModifier));
+            RegisterBindingModifier("SlowTap", typeof(SlowTapModifier));
+            RegisterBindingModifier("DoubleTap", typeof(DoubleTapModifier));
+            RegisterBindingModifier("Swipe", typeof(SwipeModifier));
+
+            // Register composites.
+            RegisterBindingComposite("ButtonAxis", typeof(ButtonAxis));
+            RegisterBindingComposite("ButtonVector", typeof(ButtonVector));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1053,6 +1063,13 @@ namespace ISX
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
             // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
             InputRuntime.s_Instance = m_Runtime;
+
+            // Reset update state.
+            InputUpdate.lastUpdateType = 0;
+            InputUpdate.dynamicUpdateCount = 0;
+            InputUpdate.fixedUpdateCount = 0;
+
+            InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
         }
 
         [Serializable]
@@ -1069,6 +1086,7 @@ namespace ISX
         [NonSerialized] internal InputTemplate.Collection m_Templates;
         [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
         [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
+        [NonSerialized] private Dictionary<InternedString, Type> m_Composites;
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
@@ -1340,6 +1358,7 @@ namespace ISX
 
         // (Re)allocates state buffers and assigns each device that's been added
         // a segment of the buffer. Preserves the current state of devices.
+        // NOTE: Installs the buffers globally.
         private void ReallocateStateBuffers(int[] oldDeviceIndices = null)
         {
             var devices = m_Devices;
@@ -1355,7 +1374,8 @@ namespace ISX
             // Install the new buffers.
             oldBuffers.FreeAll();
             m_StateBuffers = newBuffers;
-            m_StateBuffers.SwitchTo(InputUpdate.lastUpdateType);
+            InputStateBuffers.SwitchTo(m_StateBuffers,
+                InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
 
             ////TODO: need to update state change monitors
         }
@@ -1384,7 +1404,7 @@ namespace ISX
             // into the next frame.
             if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
-                var stateBuffers = m_StateBuffers.GetBuffers(updateType);
+                var stateBuffers = m_StateBuffers.GetDoubleBuffersFor(updateType);
                 var isDynamicOrFixedUpdate =
                     updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
 
@@ -1499,7 +1519,7 @@ namespace ISX
 #endif
 
             InputUpdate.lastUpdateType = updateType;
-            m_StateBuffers.SwitchTo(buffersToUseForUpdate);
+            InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (m_ActionTimeouts != null && gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
@@ -1517,7 +1537,7 @@ namespace ISX
             if (eventCount <= 0)
             {
                 if (buffersToUseForUpdate != updateType)
-                    m_StateBuffers.SwitchTo(updateType);
+                    InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
@@ -1666,7 +1686,7 @@ namespace ISX
                         if (deviceHasStateCallbacks)
                         {
                             ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
-                            var currentState = InputStateBuffers.GetFrontBuffer(deviceIndex);
+                            var currentState = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
                             var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
 
                             ((IInputStateCallbackReceiver)device).OnBeforeWriteNewState(currentState, newState);
@@ -1681,7 +1701,7 @@ namespace ISX
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ProcessStateChangeMonitors(deviceIndex, statePtr,
-                                new IntPtr(InputStateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + stateBlock.byteOffset),
+                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlock.byteOffset),
                                 stateSize, stateOffset);
 
                         // Buffer flip.
@@ -1803,7 +1823,7 @@ namespace ISX
             ////TODO: fire event that allows code to update state *from* state we just updated
 
             if (buffersToUseForUpdate != updateType)
-                m_StateBuffers.SwitchTo((InputUpdateType)updateType);
+                InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
 #if ENABLE_PROFILER
             Profiler.EndSample();

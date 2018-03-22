@@ -19,15 +19,33 @@ namespace ISX
             // This binding and the previous one in the list are a combo. This one
             // can only trigger after the previous one already has.
             ThisAndPreviousCombine = 1 << 0,
+
+            Composite = 1 << 1,
         }
 
-        // Control path.
-        // Example: "/*/{PrimaryAction}"
+        public string name;
+
+        /// <summary>
+        /// Control path being bound to.
+        /// </summary>
+        /// <remarks>
+        /// If the binding is a composite (<see cref="isComposite"/>), the path is the composite
+        /// string instead.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// "/*/{PrimaryAction}"
+        /// </code>
+        /// </example>
         public string path;
 
-        // If the binding is overridden, this is the overriding path.
-        // Otherwise it is null.
-        // NOTE: Not serialized as overrides are considered temporary, runtime-only state.
+        /// <summary>
+        /// If the binding is overridden, this is the overriding path.
+        /// Otherwise it is null.
+        /// </summary>
+        /// <remarks>
+        /// Not serialized as overrides are considered temporary, runtime-only state.
+        /// </remarks>
         [NonSerialized] public string overridePath;
 
         // Modifier list.
@@ -69,6 +87,18 @@ namespace ISX
                     flags |= Flags.ThisAndPreviousCombine;
                 else
                     flags &= ~Flags.ThisAndPreviousCombine;
+            }
+        }
+
+        public bool isComposite
+        {
+            get { return (flags & Flags.Composite) == Flags.Composite; }
+            set
+            {
+                if (value)
+                    flags |= Flags.Composite;
+                else
+                    flags &= ~Flags.Composite;
             }
         }
     }

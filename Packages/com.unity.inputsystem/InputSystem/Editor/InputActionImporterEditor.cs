@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
+using ISX.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
@@ -8,6 +10,8 @@ using UnityEngine;
 ////TODO: replace "Apply" text on button with "Save"
 
 ////TODO: create custom editor for InputActionReference which prevents modifying the references
+
+////TODO: support for multi-editing
 
 ////FIXME: because of how .inputactions are structured, an asset with just a set and no actions in it will come out
 ////       as no set at all when deserialized and then cause exception in InputActionTreeView
@@ -29,6 +33,37 @@ namespace ISX.Editor
         // the last JSON version of the asset around.
         [SerializeField] private string m_Backup;
         [NonSerialized] private bool m_Initialized;
+
+        private static List<InputActionImporterEditor> s_EnabledEditors;
+
+        public static InputActionImporterEditor FindFor(SerializedObject obj)
+        {
+            if (s_EnabledEditors != null)
+            {
+                foreach (var editor in s_EnabledEditors)
+                    if (editor.assetSerializedObject == obj)
+                        return editor;
+            }
+
+            return null;
+        }
+
+        public override void OnEnable()
+        {
+            base.OnEnable();
+
+            if (s_EnabledEditors == null)
+                s_EnabledEditors = new List<InputActionImporterEditor>();
+            s_EnabledEditors.Add(this);
+        }
+
+        public override void OnDisable()
+        {
+            base.OnDisable();
+
+            if (s_EnabledEditors != null)
+                s_EnabledEditors.Remove(this);
+        }
 
         protected InputActionAsset GetAsset()
         {
@@ -112,16 +147,25 @@ namespace ISX.Editor
 
             // Look up properties on importer object.
             var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
-            var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
-            var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
 
             // Add settings UI.
             EditorGUILayout.PropertyField(generateWapperCodeProperty, Contents.generateWrapperCode);
             if (generateWapperCodeProperty.boolValue)
             {
+                var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
+                var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
+                var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
+
                 ////TODO: tie a file selector to this
                 EditorGUILayout.PropertyField(wrapperCodePathProperty);
+
+                EditorGUILayout.PropertyField(wrapperClassNameProperty);
+                if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
+                    EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
+
                 EditorGUILayout.PropertyField(wrapperCodeNamespaceProperty);
+                if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
+                    EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
             }
 
             ApplyRevertGUI();
@@ -132,7 +176,7 @@ namespace ISX.Editor
             return m_AssetIsDirty || base.HasModified();
         }
 
-        private void OnAssetModified()
+        public void OnAssetModified()
         {
             m_AssetIsDirty = true;
             Repaint();

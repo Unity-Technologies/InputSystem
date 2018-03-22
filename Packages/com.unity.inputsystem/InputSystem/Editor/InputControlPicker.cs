@@ -25,6 +25,8 @@ namespace ISX.Editor
     // Usages are discovered from all templates that are registered with the system.
     public class InputControlPicker : PopupWindowContent
     {
+        public Action<SerializedProperty> onPickCallback;
+
         public InputControlPicker(SerializedProperty pathProperty)
         {
             if (pathProperty == null)
@@ -164,7 +166,7 @@ namespace ISX.Editor
                 var item = FindItem(id, rootItem) as Item;
                 if (item != null)
                 {
-                    String path = null;
+                    string path = null;
                     if (item.usage != null)
                         path = string.Format("*/{{{0}}}", item.usage);
                     else
@@ -190,6 +192,9 @@ namespace ISX.Editor
                     {
                         m_Parent.m_PathProperty.stringValue = path;
                         m_Parent.m_PathProperty.serializedObject.ApplyModifiedProperties();
+
+                        if (m_Parent.onPickCallback != null)
+                            m_Parent.onPickCallback(m_Parent.m_PathProperty);
                     }
                 }
 
