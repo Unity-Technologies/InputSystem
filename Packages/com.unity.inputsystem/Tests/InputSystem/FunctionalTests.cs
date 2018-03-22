@@ -5638,7 +5638,7 @@ class FunctionalTests : InputTestFixture
         secondInputManager.InstallRuntime(secondInputRuntime);
         secondInputManager.InitializeData();
 
-        var local = InputSystem.remoting;
+        var local = new InputRemoting(InputSystem.s_Manager);
         var remote = new InputRemoting(secondInputManager);
 
         // We wire the two directly into each other effectively making function calls
@@ -5683,7 +5683,7 @@ class FunctionalTests : InputTestFixture
         secondInputManager.InstallRuntime(secondInputRuntime);
         secondInputManager.InitializeData();
 
-        var local = InputSystem.remoting;
+        var local = new InputRemoting(InputSystem.s_Manager);
         var remote = new InputRemoting(secondInputManager);
 
         local.Subscribe(remote);
@@ -5723,7 +5723,7 @@ class FunctionalTests : InputTestFixture
         var secondInputSystem = new InputManager();
         secondInputSystem.InitializeData();
 
-        var local = InputSystem.remoting;
+        var local = new InputRemoting(InputSystem.s_Manager);
         var remote = new InputRemoting(secondInputSystem);
 
         local.Subscribe(remote);
@@ -5882,9 +5882,10 @@ class FunctionalTests : InputTestFixture
         connectionToEditor.Bind(fakePlayerConnection, true);
         connectionToPlayer.Bind(fakeEditorConnection, true);
 
-        // Bind the local remote on the player side.
-        InputSystem.remoting.Subscribe(connectionToEditor);
-        InputSystem.remoting.StartSending();
+        // Bind a local remote on the player side.
+        var local = new InputRemoting(InputSystem.s_Manager);
+        local.Subscribe(connectionToEditor);
+        local.StartSending();
 
         connectionToPlayer.Subscribe(observer);
 
