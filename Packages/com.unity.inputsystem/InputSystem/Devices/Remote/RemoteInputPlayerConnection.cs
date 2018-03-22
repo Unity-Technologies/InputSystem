@@ -69,6 +69,8 @@ namespace ISX
             return subscriber;
         }
 
+        ////REVIEW: given that the PlayerConnection will connect to the editor regardless, we end up
+        ////        on this path whether input remoting is enabled or not
         private void OnConnected(int id)
         {
             if (m_ConnectedIds != null && ArrayHelpers.Contains(m_ConnectedIds, id))
@@ -84,7 +86,7 @@ namespace ISX
             if (m_ConnectedIds == null || !ArrayHelpers.Contains(m_ConnectedIds, id))
                 return;
 
-            ArrayHelpers.EraseAt(ref m_ConnectedIds, id);
+            ArrayHelpers.Erase(ref m_ConnectedIds, id);
 
             SendToSubscribers(InputRemoting.MessageType.Disconnect, new MessageEventArgs {playerId = id});
         }
