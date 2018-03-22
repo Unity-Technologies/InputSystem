@@ -399,11 +399,15 @@ namespace ISX
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
 
                 // Remove devices added by remote.
-                foreach (var remoteDevice in receiver.m_Senders[senderIndex].devices)
+                var devices = receiver.m_Senders[senderIndex].devices;
+                if (devices != null)
                 {
-                    var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
-                    if (device != null)
-                        receiver.m_LocalManager.RemoveDevice(device);
+                    foreach (var remoteDevice in receiver.m_Senders[senderIndex].devices)
+                    {
+                        var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
+                        if (device != null)
+                            receiver.m_LocalManager.RemoveDevice(device);
+                    }
                 }
 
                 ////TODO: remove templates added by remote
