@@ -20,6 +20,38 @@ using UnityEngine.Profiling;
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
 ////      a single start cycle
 
+// So, actions are set up to not have a contract. They just monitor state changes and then fire
+// in response to those.
+//
+// However, as a user, this is only half the story I'm interested in. Yeah, I want to monitor
+// state changes but I also want to control what values come in as a result.
+//
+// Actions don't carry values themselves. As such they don't have a value type. As a user, however,
+// in by far most of the cases, I will think of an action as giving me a specific type of value.
+// A "move" action, for example, is likely top represent a 2D planar motion vector. It can come from
+// a gamepad thumbstick, from pointer deltas, or from a combination of keyboard keys (usually WASD).
+// So the "move" action already has an aspect about it that's very much on my mind as a user but which
+// is not represented anywhere in the action itself.
+//
+// There are probably cases where I want an action to be "polymorphic" but those I think are far and
+// few between.
+//
+// Right now, actions just have a flat list of bindings. This works sufficiently well for bindings that
+// are going to controls that already generate values that both match the expected value as well as
+// the expected value *characteristics* (even with the right value type, if the value ranges and change
+// rates are not what's expected, binding to a control may have undesired behavior).
+//
+// When bindings are supposed to work in unison (as with WASD, for example), a flat list of bindings
+// is insufficient. A WASD setup is four distinct bindings that together form a single value. Also, even
+// when bindings are independent, to properly work across devices of different types, it is often necessary
+// to apply custom processing to values coming in through one binding and not to values coming in through
+// a different binding.
+//
+// It is possible to offload all this responsibility to the code running in action callbacks but I think
+// this will make for a very hard to use system at best. The promise of actions is that they abstract away
+// from the types of devices being used. If actions are to live up to that promise, they need to be able
+// to handle the above cases internally in their processing.
+
 namespace ISX
 {
     ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas
@@ -285,11 +317,23 @@ namespace ISX
         // NOTE: Actions must be disabled while altering their binding sets.
         public AddBindingSyntax AddBinding(string path, string modifiers = null, string groups = null)
         {
+            var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
+            var bindingIndex = AddBindingInternal(binding);
+            return new AddBindingSyntax(this, bindingIndex);
+        }
+
+        public AddCompositeSyntax AddCompositeBinding(string composite)
+        {
+            var binding = new InputBinding {path = composite, flags = InputBinding.Flags.Composite};
+            var bindingIndex = AddBindingInternal(binding);
+            return new AddCompositeSyntax(this, bindingIndex);
+        }
+
+        private int AddBindingInternal(InputBinding binding)
+        {
             if (enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot add binding to action '{0}' while the action is enabled", this));
-
-            var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
+                    string.Format("Cannot add bindings to action '{0}' while the action is enabled", this));
 
             var bindingIndex = 0;
             if (isSingletonAction)
@@ -338,7 +382,7 @@ namespace ISX
             }
 
             ++m_BindingsCount;
-            return new AddBindingSyntax(this, bindingIndex);
+            return bindingIndex;
         }
 
         ////TODO: support for removing bindings
@@ -916,6 +960,10 @@ namespace ISX
             }
         }
 
+        public struct CompositeBindingContext
+        {
+        }
+
         public struct CallbackContext
         {
             internal InputAction m_Action;
@@ -963,7 +1011,7 @@ namespace ISX
         public struct AddBindingSyntax
         {
             public InputAction action;
-            private int m_BindingIndex;
+            internal int m_BindingIndex;
 
             internal AddBindingSyntax(InputAction action, int bindingIndex)
             {
@@ -971,6 +1019,7 @@ namespace ISX
                 m_BindingIndex = bindingIndex;
             }
 
+            ////REVIEW: remove and replace with composite?
             public AddBindingSyntax CombinedWith(string binding, string modifiers = null, string group = null)
             {
                 if (action.m_BindingsCount - 1 != m_BindingIndex)
@@ -986,6 +1035,30 @@ namespace ISX
             public AddBindingSyntax WithModifiers(string modifiers)
             {
                 action.m_Bindings[action.m_BindingsStartIndex + m_BindingIndex].modifiers = modifiers;
+                return this;
+            }
+        }
+
+        public struct AddCompositeSyntax
+        {
+            public InputAction action;
+            internal int m_CompositeIndex;
+            internal int m_BindingIndex;
+
+            internal AddCompositeSyntax(InputAction action, int compositeIndex)
+            {
+                this.action = action;
+                m_CompositeIndex = compositeIndex;
+                m_BindingIndex = -1;
+            }
+
+            public AddCompositeSyntax With(string name, string binding, string modifiers = null)
+            {
+                ////TODO: check whether non-composite bindings have been added in-between
+
+                var result = action.AddBinding(path: binding, modifiers: modifiers);
+                action.m_Bindings[action.m_BindingsStartIndex + result.m_BindingIndex].name = name;
+
                 return this;
             }
         }

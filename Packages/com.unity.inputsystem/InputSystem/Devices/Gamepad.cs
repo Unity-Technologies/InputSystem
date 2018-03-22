@@ -121,6 +121,16 @@ namespace ISX.LowLevel
         {
             return kFormat;
         }
+
+        public GamepadState WithButton(Button button, bool value = true)
+        {
+            var bit = (uint)1 << (int)button;
+            if (value)
+                buttons |= bit;
+            else
+                buttons &= ~bit;
+            return this;
+        }
     }
 }
 

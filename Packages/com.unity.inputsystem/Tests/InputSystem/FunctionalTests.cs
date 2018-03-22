@@ -4414,6 +4414,8 @@ class FunctionalTests : InputTestFixture
         Assert.That(sets[0].actions[0].bindings[1].modifiers, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].group, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
+        Assert.That(sets[0].actions[0].set, Is.SameAs(sets[0]));
+        Assert.That(sets[0].actions[1].set, Is.SameAs(sets[0]));
     }
 
     [Test]
@@ -5102,6 +5104,35 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(wasPerformed);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanCreateCompositeBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("ButtonAxis")
+        .With("Negative", "/<Gamepad>/leftShoulder")
+        .With("Positive", "/<Gamepad>/rightShoulder");
+        action.Enable();
+
+        float? value = null;
+        action.performed += ctx => { value = ctx.GetValue<float>(); };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.LeftShoulder));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(-1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.RightShoulder));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
     }
 
     [Test]
@@ -6101,7 +6132,7 @@ class FunctionalTests : InputTestFixture
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace"});
+                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
         // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
         // is just perform some textual verification. Once we have the newest Mono, this should
@@ -6110,6 +6141,25 @@ class FunctionalTests : InputTestFixture
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
         Assert.That(code, Contains.Substring("public ISX.InputActionSet Clone()"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
+    {
+        var set1 = new InputActionSet("set1");
+        set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
+        set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set1);
+        asset.name = "New Controls (4)";
+
+        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
+                new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
+
+        Assert.That(code, Contains.Substring("class NewControls_4_"));
+        Assert.That(code, Contains.Substring("public ISX.InputAction @action__"));
+        Assert.That(code, Contains.Substring("public ISX.InputAction @_1thing"));
     }
 
     class TestEditorWindow : EditorWindow

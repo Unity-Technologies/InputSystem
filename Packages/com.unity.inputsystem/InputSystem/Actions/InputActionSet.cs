@@ -253,6 +253,11 @@ namespace ISX
             }
         }
 
+        internal struct ResolvedComposite
+        {
+            public object composite;
+        }
+
         ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
         // Resolve all bindings to their controls and also add any action modifiers
         // from the bindings. The best way is for this to happen once for each action
@@ -342,6 +347,13 @@ namespace ISX
             {
                 var binding = bindings[n];
                 var firstControl = controls.Count;
+
+                //
+                if (binding.isComposite)
+                {
+                    ////TODO
+                    continue;
+                }
 
                 // Use override path but fall back to default path if no
                 // override set.
@@ -719,15 +731,21 @@ namespace ISX
                 // Finalize arrays.
                 for (var i = 0; i < sets.Count; ++i)
                 {
+                    var set = sets[i];
+
                     var actionArray = actions[i].ToArray();
                     var bindingArray = bindings[i].ToArray();
 
-                    sets[i].m_Actions = actionArray;
-                    sets[i].m_Bindings = bindingArray;
+                    set.m_Actions = actionArray;
+                    set.m_Bindings = bindingArray;
 
                     // Install final binding arrays on actions.
                     for (var n = 0; n < actionArray.Length; ++n)
-                        actionArray[n].m_Bindings = bindingArray;
+                    {
+                        var action = actionArray[n];
+                        action.m_Bindings = bindingArray;
+                        action.m_ActionSet = set;
+                    }
                 }
 
                 return sets.ToArray();
@@ -805,6 +823,11 @@ namespace ISX
             var fileJson = ActionFileJson.FromSet(this);
             return JsonUtility.ToJson(fileJson);
         }
+
+        // The serialization solution here will only partially work. Any call to OnBeforeSerialize() will
+        // render the InputActionSet it got called on unusable until OnAfterDeserialize() is called. This
+        // means that writing a set through serialization will render it inoperable -- and the editor will
+        // do just that over and over internally on data that is being inspected.
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
