@@ -33,6 +33,9 @@ namespace ISX.Editor
         {
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 options.sourceAssetPath = AssetDatabase.GetAssetPath(asset);
+            if (string.IsNullOrEmpty(options.className) && !string.IsNullOrEmpty(asset.name))
+                options.className =
+                    CSharpCodeHelpers.MakeTypeName(asset.name);
             return GenerateWrapperCode(asset.actionSets, options);
         }
 
@@ -44,10 +47,8 @@ namespace ISX.Editor
                 throw new ArgumentException("options.sourceAssetPath");
 
             if (string.IsNullOrEmpty(options.className))
-            {
                 options.className =
                     CSharpCodeHelpers.MakeTypeName(Path.GetFileNameWithoutExtension(options.sourceAssetPath));
-            }
 
             var writer = new Writer
             {

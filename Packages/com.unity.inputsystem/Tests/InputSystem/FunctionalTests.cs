@@ -6132,7 +6132,7 @@ class FunctionalTests : InputTestFixture
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace"});
+                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
         // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
         // is just perform some textual verification. Once we have the newest Mono, this should
@@ -6154,7 +6154,8 @@ class FunctionalTests : InputTestFixture
         asset.AddActionSet(set1);
         asset.name = "New Controls (4)";
 
-        var code = InputActionCodeGenerator.GenerateWrapperCode(asset);
+        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
+                new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
         Assert.That(code, Contains.Substring("class NewControls_4_"));
         Assert.That(code, Contains.Substring("public ISX.InputAction @action__"));
