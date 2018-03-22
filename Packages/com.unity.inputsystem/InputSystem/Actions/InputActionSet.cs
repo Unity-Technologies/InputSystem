@@ -253,6 +253,11 @@ namespace ISX
             }
         }
 
+        internal struct ResolvedComposite
+        {
+            public object composite;
+        }
+
         ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
         // Resolve all bindings to their controls and also add any action modifiers
         // from the bindings. The best way is for this to happen once for each action
@@ -342,6 +347,13 @@ namespace ISX
             {
                 var binding = bindings[n];
                 var firstControl = controls.Count;
+
+                //
+                if (binding.isComposite)
+                {
+                    ////TODO
+                    continue;
+                }
 
                 // Use override path but fall back to default path if no
                 // override set.

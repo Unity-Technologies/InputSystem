@@ -5108,6 +5108,35 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
+    public void TODO_Actions_CanCreateCompositeBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("ButtonAxis")
+        .With("Negative", "/<Gamepad>/leftShoulder")
+        .With("Positive", "/<Gamepad>/rightShoulder");
+        action.Enable();
+
+        float? value = null;
+        action.performed += ctx => { value = ctx.GetValue<float>(); };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.LeftShoulder));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(-1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.RightShoulder));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhileActionIsEnabled_CannotApplyOverrides()
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");

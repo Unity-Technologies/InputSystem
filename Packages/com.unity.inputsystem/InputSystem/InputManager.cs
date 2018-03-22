@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ISX.Composites;
 using ISX.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -439,7 +440,7 @@ namespace ISX
             return templates.Count - countBefore;
         }
 
-        public void RegisterProcessor(string name, Type type)
+        public void RegisterControlProcessor(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -452,7 +453,7 @@ namespace ISX
             m_Processors[internedName] = type;
         }
 
-        public Type TryGetProcessor(string name)
+        public Type TryGetControlProcessor(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -464,7 +465,7 @@ namespace ISX
             return null;
         }
 
-        public void RegisterModifier(string name, Type type)
+        public void RegisterBindingModifier(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -475,7 +476,7 @@ namespace ISX
             m_Modifiers[internedName] = type;
         }
 
-        public Type TryGetModifier(string name)
+        public Type TryGetBindingModifier(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -487,9 +488,14 @@ namespace ISX
             return null;
         }
 
-        public IEnumerable<string> ListModifiers()
+        public IEnumerable<string> ListBindingModifiers()
         {
             return m_Modifiers.Keys.Select(x => x.ToString());
+        }
+
+        public void RegisterBindingComposite(string name, Type type)
+        {
+            //throw new NotImplementedException();
         }
 
         // Processes a path specification that may match more than a single control.
@@ -1003,24 +1009,28 @@ namespace ISX
             ////REVIEW: #if templates to the platforms they make sense on?
 
             // Register processors.
-            RegisterProcessor("Invert", typeof(InvertProcessor));
-            RegisterProcessor("Clamp", typeof(ClampProcessor));
-            RegisterProcessor("Normalize", typeof(NormalizeProcessor));
-            RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
-            RegisterProcessor("Curve", typeof(CurveProcessor));
-            RegisterProcessor("Sensitivity", typeof(SensitivityProcessor));
+            RegisterControlProcessor("Invert", typeof(InvertProcessor));
+            RegisterControlProcessor("Clamp", typeof(ClampProcessor));
+            RegisterControlProcessor("Normalize", typeof(NormalizeProcessor));
+            RegisterControlProcessor("Deadzone", typeof(DeadzoneProcessor));
+            RegisterControlProcessor("Curve", typeof(CurveProcessor));
+            RegisterControlProcessor("Sensitivity", typeof(SensitivityProcessor));
 
             #if UNITY_EDITOR
-            RegisterProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
+            RegisterControlProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
-            // Register action modifiers.
-            RegisterModifier("Press", typeof(PressModifier));
-            RegisterModifier("Hold", typeof(HoldModifier));
-            RegisterModifier("Tap", typeof(TapModifier));
-            RegisterModifier("SlowTap", typeof(SlowTapModifier));
-            RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
-            RegisterModifier("Swipe", typeof(SwipeModifier));
+            // Register modifiers.
+            RegisterBindingModifier("Press", typeof(PressModifier));
+            RegisterBindingModifier("Hold", typeof(HoldModifier));
+            RegisterBindingModifier("Tap", typeof(TapModifier));
+            RegisterBindingModifier("SlowTap", typeof(SlowTapModifier));
+            RegisterBindingModifier("DoubleTap", typeof(DoubleTapModifier));
+            RegisterBindingModifier("Swipe", typeof(SwipeModifier));
+
+            // Register composites.
+            RegisterBindingComposite("ButtonAxis", typeof(ButtonAxis));
+            RegisterBindingComposite("ButtonVector", typeof(ButtonVector));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1076,6 +1086,7 @@ namespace ISX
         [NonSerialized] internal InputTemplate.Collection m_Templates;
         [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
         [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
+        [NonSerialized] private Dictionary<InternedString, Type> m_Composites;
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;

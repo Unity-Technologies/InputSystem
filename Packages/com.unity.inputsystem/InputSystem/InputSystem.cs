@@ -325,7 +325,7 @@ namespace ISX
                     name = name.Substring(0, name.Length - "Processor".Length);
             }
 
-            s_Manager.RegisterProcessor(name, type);
+            s_Manager.RegisterControlProcessor(name, type);
         }
 
         public static void RegisterProcessor<T>(string name = null)
@@ -335,7 +335,7 @@ namespace ISX
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.TryGetProcessor(name);
+            return s_Manager.TryGetControlProcessor(name);
         }
 
         #endregion
@@ -812,7 +812,7 @@ namespace ISX
                     name = name.Substring(0, name.Length - "Modifier".Length);
             }
 
-            s_Manager.RegisterModifier(name, type);
+            s_Manager.RegisterBindingModifier(name, type);
         }
 
         public static void RegisterModifier<T>(string name = null)
@@ -822,12 +822,12 @@ namespace ISX
 
         public static Type TryGetModifier(string name)
         {
-            return s_Manager.TryGetModifier(name);
+            return s_Manager.TryGetBindingModifier(name);
         }
 
         public static IEnumerable<string> ListModifiers()
         {
-            return s_Manager.ListModifiers();
+            return s_Manager.ListBindingModifiers();
         }
 
         /// <summary>
