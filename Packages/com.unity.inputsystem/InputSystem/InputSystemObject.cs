@@ -2,6 +2,7 @@
 using System;
 using ISX.Editor;
 using ISX.LowLevel;
+using UnityEditor;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
 
@@ -27,7 +28,10 @@ namespace ISX
             manager.Initialize(NativeInputRuntime.instance);
 
             // In the editor, we always set up for remoting.
-            SetUpRemoting();
+            // NOTE: We use delayCall as our initial startup will run in editor initialization before
+            //       PlayerConnection is itself ready. If we call SetupRemote() directly here, we won't
+            //       see any errors but the callbacks we register for will not trigger.
+            EditorApplication.delayCall += SetUpRemoting;
         }
 
         public void ReviveAfterDomainReload()
