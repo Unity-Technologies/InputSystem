@@ -311,12 +311,15 @@ namespace ISX
         private int FindLocalDeviceId(int remoteDeviceId, int senderIndex)
         {
             var localDevices = m_Senders[senderIndex].devices;
-            var numLocalDevices = localDevices.Length;
-
-            for (var i = 0; i < numLocalDevices; ++i)
+            if (localDevices != null)
             {
-                if (localDevices[i].remoteId == remoteDeviceId)
-                    return localDevices[i].localId;
+                var numLocalDevices = localDevices.Length;
+
+                for (var i = 0; i < numLocalDevices; ++i)
+                {
+                    if (localDevices[i].remoteId == remoteDeviceId)
+                        return localDevices[i].localId;
+                }
             }
 
             return InputDevice.kInvalidDeviceId;
@@ -402,7 +405,7 @@ namespace ISX
                 var devices = receiver.m_Senders[senderIndex].devices;
                 if (devices != null)
                 {
-                    foreach (var remoteDevice in receiver.m_Senders[senderIndex].devices)
+                    foreach (var remoteDevice in devices)
                     {
                         var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
                         if (device != null)
@@ -526,6 +529,21 @@ namespace ISX
             {
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var data = DeserializeData<Data>(msg.data);
+
+                // Make sure we haven't already seen the device.
+                var devices = receiver.m_Senders[senderIndex].devices;
+                if (devices != null)
+                {
+                    foreach (var entry in devices)
+                        if (entry.remoteId == data.deviceId)
+                        {
+                            Debug.LogError(string.Format(
+                                    "Already received device with id {0} (template '{1}', description '{3}) from remote {2}",
+                                    data.deviceId,
+                                    data.template, msg.participantId, data.description));
+                            return;
+                        }
+                }
 
                 // Create device.
                 var template = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].templateNamespace,
