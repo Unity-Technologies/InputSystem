@@ -8,6 +8,8 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
 
+////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
+
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
@@ -263,11 +265,12 @@ namespace ISX.Editor
                 var devices = InputSystem.devices;
                 devicesItem = AddChild(root, string.Format("Devices ({0})", devices.Count), ref id);
                 var haveRemotes = devices.Any(x => x.remote);
+                TreeViewItem localDevicesNode = null;
                 if (haveRemotes)
                 {
                     // Split local and remote devices into groups.
 
-                    var localDevicesNode = AddChild(devicesItem, "Local", ref id);
+                    localDevicesNode = AddChild(devicesItem, "Local", ref id);
                     AddDevices(localDevicesNode, devices, ref id);
 
                     var remoteDevicesNode = AddChild(devicesItem, "Remote", ref id);
@@ -290,7 +293,8 @@ namespace ISX.Editor
                 InputSystem.GetUnsupportedDevices(m_UnsupportedDevices);
                 if (m_UnsupportedDevices.Count > 0)
                 {
-                    var unsupportedDevicesNode = AddChild(devicesItem, string.Format("Unsupported ({0})", m_UnsupportedDevices.Count), ref id);
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var unsupportedDevicesNode = AddChild(parent, string.Format("Unsupported ({0})", m_UnsupportedDevices.Count), ref id);
                     foreach (var device in m_UnsupportedDevices)
                         AddChild(unsupportedDevicesNode, device.ToString(), ref id);
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
