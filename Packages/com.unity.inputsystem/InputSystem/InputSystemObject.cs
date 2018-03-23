@@ -46,8 +46,10 @@ namespace ISX
             remote = new InputRemoting(manager);
             remote.RestoreState(m_RemotingState, manager);
 
-            if (playerConnection == null)
-                playerConnection = CreateInstance<RemoteInputPlayerConnection>();
+            if (playerConnection != null)
+                DestroyImmediate(playerConnection);
+
+            playerConnection = CreateInstance<RemoteInputPlayerConnection>();
 
             remote.Subscribe(playerConnection); // Feed messages from players into editor.
             playerConnection.Subscribe(remote); // Feed messages from editor into players.
@@ -65,6 +67,7 @@ namespace ISX
             InputActionSet.ResetGlobals();
             manager.Destroy();
             EditorInputTemplateCache.Clear();
+            DestroyImmediate(playerConnection);
 
             ////REVIEW: Find a mechanism that can do this without knowing about each class
             // Reset any current&all getters.
