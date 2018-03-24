@@ -1,7 +1,7 @@
-using ISX.Haptics;
+using UnityEngine.Experimental.Input.Haptics;
 using UnityEngine;
 
-namespace ISX.Plugins.DualShock
+namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>
     /// Extended haptics interface for DualShock controllers.

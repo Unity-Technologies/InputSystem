@@ -2,14 +2,14 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
 ////TODO: reordering support for modifiers
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
     // presents an interface that allows to automatically construct the path

@@ -1,7 +1,7 @@
 using System;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A button that is considered pressed if the underlying state has a value in the specific range.

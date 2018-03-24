@@ -1,6 +1,6 @@
-using ISX.Controls;
+using UnityEngine.Experimental.Input.Controls;
 
-namespace ISX.Composites
+namespace UnityEngine.Experimental.Input.Composites
 {
     /// <summary>
     /// A single axis value computed from a "negative" and a "positive" button.

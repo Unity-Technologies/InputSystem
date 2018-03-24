@@ -1,9 +1,9 @@
-using ISX.Controls;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine;
 
 ////TODO: add support for ramp up/down
 
-namespace ISX.Composites
+namespace UnityEngine.Experimental.Input.Composites
 {
     /// <summary>
     /// A 2D planar motion vector computed from an up+down button pair and a left+right

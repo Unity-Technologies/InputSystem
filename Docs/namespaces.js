@@ -1,4 +1,4 @@
 var namespaces =
 [
-    [ "ISX", "namespaceISX.html", "namespaceISX" ]
+    [ "ISX", "namespaceUnityEngine.Experimental.Input.html", "namespaceISX" ]
 ];

@@ -1,8 +1,8 @@
-using ISX;
-using ISX.LowLevel;
-using ISX.Plugins.DualShock;
-using ISX.Plugins.DualShock.LowLevel;
-using ISX.Processors;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
+using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
 

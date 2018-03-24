@@ -1,12 +1,12 @@
 #if UNITY_EDITOR
 using System;
-using ISX.Editor;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEngine;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // A hidden object we put in the editor to bundle input system state
     // and help us survive domain relods.

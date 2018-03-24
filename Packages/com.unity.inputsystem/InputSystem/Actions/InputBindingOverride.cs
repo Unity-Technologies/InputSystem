@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Used to override a default binding on an action.

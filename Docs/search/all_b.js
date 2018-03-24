@@ -1,14 +1,14 @@
 var searchData=
 [
-  ['makecurrent',['MakeCurrent',['../classISX_1_1InputDevice.html#a18d3a4551ab679910e7aca01bcda7ea2',1,'ISX::InputDevice']]],
-  ['manufacturer',['manufacturer',['../structISX_1_1InputDeviceDescription.html#a8410a0fe79708abd3e6c5d4132c2bc50',1,'ISX::InputDeviceDescription']]],
-  ['maxvalue',['maxValue',['../classISX_1_1Controls_1_1DiscreteButtonControl.html#a8b20d1c21ab7f3ff9f3081f235d5a14d',1,'ISX::Controls::DiscreteButtonControl']]],
-  ['merge',['Merge',['../structISX_1_1InputTemplate_1_1ControlTemplate.html#a91bdfffcf5bb1928a3b81a421182ae01',1,'ISX::InputTemplate::ControlTemplate']]],
-  ['message',['Message',['../structISX_1_1InputRemoting_1_1Message.html',1,'ISX::InputRemoting']]],
-  ['messagetype',['MessageType',['../classISX_1_1InputRemoting.html#a67a9a0f806eabe3bbc217639bf6d4042',1,'ISX::InputRemoting']]],
-  ['middlebutton',['middleButton',['../classISX_1_1Mouse.html#aea5adefa4bfcf8ab518334e5455c82aa',1,'ISX::Mouse']]],
-  ['min',['min',['../classISX_1_1Processors_1_1DeadzoneProcessor.html#a6a4ca131a44cff7567cc11b15bbd6fea',1,'ISX::Processors::DeadzoneProcessor']]],
-  ['minvalue',['minValue',['../classISX_1_1Controls_1_1DiscreteButtonControl.html#a228bc57dcf4ba8a5830ebab675276de6',1,'ISX::Controls::DiscreteButtonControl']]],
-  ['mouse',['Mouse',['../classISX_1_1Mouse.html',1,'ISX']]],
-  ['mousestate',['MouseState',['../structISX_1_1MouseState.html',1,'ISX']]]
+  ['makecurrent',['MakeCurrent',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc',1,'UnityEngine::Experimental::Input::InputDevice']]],
+  ['manufacturer',['manufacturer',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#aedcdc6adde44e6000bbe06947da5be82',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
+  ['maxvalue',['maxValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#a2b7e749822fb4d49dbbfba304d475d73',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]],
+  ['merge',['Merge',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html#a1f30e52c15e58e124b79c8caab6270fe',1,'UnityEngine::Experimental::Input::InputTemplate::ControlTemplate']]],
+  ['message',['Message',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting_1_1Message.html',1,'UnityEngine::Experimental::Input::InputRemoting']]],
+  ['messagetype',['MessageType',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html#ac6606ebe91c8ac66a2c314c79f5ab013',1,'UnityEngine::Experimental::Input::InputRemoting']]],
+  ['middlebutton',['middleButton',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html#a004b4b7c70de8732da4054e477431744',1,'UnityEngine::Experimental::Input::Mouse']]],
+  ['min',['min',['../classUnityEngine_1_1Experimental_1_1Input_1_1Processors_1_1DeadzoneProcessor.html#ad2e88d75f808e6d4e78d48bceb10c336',1,'UnityEngine::Experimental::Input::Processors::DeadzoneProcessor']]],
+  ['minvalue',['minValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#accb6134418c57f3811180b78e0fbeb7a',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]],
+  ['mouse',['Mouse',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html',1,'UnityEngine::Experimental::Input']]],
+  ['mousestate',['MouseState',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1MouseState.html',1,'UnityEngine::Experimental::Input::LowLevel']]]
 ];

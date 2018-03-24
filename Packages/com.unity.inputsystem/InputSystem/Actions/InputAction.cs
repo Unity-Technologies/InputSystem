@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -52,7 +52,7 @@ using UnityEngine.Profiling;
 // from the types of devices being used. If actions are to live up to that promise, they need to be able
 // to handle the above cases internally in their processing.
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     ////REVIEW: I'd like to pass the context as ref but that leads to ugliness on the lambdas
     public delegate void InputActionListener(InputAction.CallbackContext context);

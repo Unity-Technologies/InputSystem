@@ -1,6 +1,6 @@
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     public static class CommonUsages
     {

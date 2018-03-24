@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['manufacturer',['manufacturer',['../structISX_1_1InputDeviceDescription.html#a8410a0fe79708abd3e6c5d4132c2bc50',1,'ISX::InputDeviceDescription']]],
-  ['maxvalue',['maxValue',['../classISX_1_1Controls_1_1DiscreteButtonControl.html#a8b20d1c21ab7f3ff9f3081f235d5a14d',1,'ISX::Controls::DiscreteButtonControl']]],
-  ['min',['min',['../classISX_1_1Processors_1_1DeadzoneProcessor.html#a6a4ca131a44cff7567cc11b15bbd6fea',1,'ISX::Processors::DeadzoneProcessor']]],
-  ['minvalue',['minValue',['../classISX_1_1Controls_1_1DiscreteButtonControl.html#a228bc57dcf4ba8a5830ebab675276de6',1,'ISX::Controls::DiscreteButtonControl']]]
+  ['manufacturer',['manufacturer',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#aedcdc6adde44e6000bbe06947da5be82',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
+  ['maxvalue',['maxValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#a2b7e749822fb4d49dbbfba304d475d73',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]],
+  ['min',['min',['../classUnityEngine_1_1Experimental_1_1Input_1_1Processors_1_1DeadzoneProcessor.html#ad2e88d75f808e6d4e78d48bceb10c336',1,'UnityEngine::Experimental::Input::Processors::DeadzoneProcessor']]],
+  ['minvalue',['minValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#accb6134418c57f3811180b78e0fbeb7a',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]]
 ];

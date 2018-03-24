@@ -1,5 +1,5 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-namespace ISX.Plugins.iOS
+namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
     public static class IOSSupport
     {

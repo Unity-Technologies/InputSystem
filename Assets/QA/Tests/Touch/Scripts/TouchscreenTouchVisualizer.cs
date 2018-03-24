@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using ISX;
-using ISX.Controls;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 
 public class TouchscreenTouchVisualizer : MonoBehaviour
 {
@@ -31,7 +31,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Touchscreen touchscreen = ISX.Touchscreen.current;
+        Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
         Vector3 averagePosition = Vector2.zero;
         int numActiveTouches = 0;
 

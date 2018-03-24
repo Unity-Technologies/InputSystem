@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using ISX;
+using UnityEngine.Experimental.Input;
 using UnityEngine.UI;
 
 // This updates the color of a single image based on a specified Key enum.

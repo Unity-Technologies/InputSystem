@@ -1,9 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.Haptics;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
@@ -11,7 +11,7 @@ using UnityEngine;
 // use case: audio on GP (ps4 mic)
 // use case: player ID and change on same GP
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Default state layout for gamepads.
@@ -134,7 +134,7 @@ namespace ISX.LowLevel
     }
 }
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,

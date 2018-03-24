@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     // Work with substrings without actually allocating strings.
     internal struct Substring : IComparable<Substring>

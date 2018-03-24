@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////FIXME: doesn't survive domain reload correctly
 
@@ -18,7 +18,7 @@ using ISX.LowLevel;
 
 ////TODO: add toggle to that switches to displaying raw control values
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.

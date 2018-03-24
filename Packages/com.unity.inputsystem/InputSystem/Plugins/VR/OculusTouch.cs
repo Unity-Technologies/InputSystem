@@ -1,4 +1,4 @@
-namespace ISX.VR
+namespace UnityEngine.Experimental.Input.VR
 {
     public class OculusTouch : XRController
     {

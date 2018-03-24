@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Makes the activity and data of an InputManager observable in message form.

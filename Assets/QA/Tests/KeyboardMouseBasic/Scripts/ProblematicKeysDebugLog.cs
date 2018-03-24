@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using ISX;
+using UnityEngine.Experimental.Input;
 
 // This script specifically prints out debug statements for
 // a handful of keys that have been identified as functioning

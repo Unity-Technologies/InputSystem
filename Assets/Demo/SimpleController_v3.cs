@@ -1,6 +1,6 @@
 using System.Collections;
-using ISX;
-using ISX.Modifiers;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
 
 // Using simple actions with callbacks.

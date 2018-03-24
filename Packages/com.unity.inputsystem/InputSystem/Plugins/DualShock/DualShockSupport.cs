@@ -1,4 +1,4 @@
-namespace ISX.Plugins.DualShock
+namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>
     /// Adds support for PS4 DualShock controllers.

@@ -21,7 +21,7 @@
 
 using System;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// A buffer containing InputEvents.

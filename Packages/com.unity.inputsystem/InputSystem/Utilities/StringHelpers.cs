@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class StringHelpers
     {

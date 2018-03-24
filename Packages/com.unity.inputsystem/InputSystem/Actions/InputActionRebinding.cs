@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // Various pieces of logic that help with rebinding actions in various ways.
     public static class InputActionRebinding

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 
 ////TODO: add information about which update type + update count an event came through in
@@ -13,7 +13,7 @@ using UnityEditor;
 
 ////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Multi-column TreeView that shows the events in a trace.
     internal class InputEventTreeView : TreeView

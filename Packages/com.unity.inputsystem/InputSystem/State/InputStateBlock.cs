@@ -1,8 +1,8 @@
 using System;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Information about a memory region storing state.

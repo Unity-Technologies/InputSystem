@@ -1,6 +1,6 @@
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     public interface IInputDeviceCommandInfo
     {

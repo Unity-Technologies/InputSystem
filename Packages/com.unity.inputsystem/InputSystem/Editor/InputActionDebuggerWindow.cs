@@ -6,7 +6,7 @@ using UnityEngine;
 
 ////TODO: survive domain reload properly
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     public class InputActionDebuggerWindow : EditorWindow
     {

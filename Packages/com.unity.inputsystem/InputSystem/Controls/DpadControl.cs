@@ -1,8 +1,8 @@
 using System;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A control made up of four discrete, directional buttons. Forms a vector

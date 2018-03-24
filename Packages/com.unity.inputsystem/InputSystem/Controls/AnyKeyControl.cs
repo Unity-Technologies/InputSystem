@@ -1,7 +1,7 @@
 using System;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A control that simply checks the entire state it's been assigned

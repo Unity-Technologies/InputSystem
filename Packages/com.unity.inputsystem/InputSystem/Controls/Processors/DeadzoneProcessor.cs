@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ISX.Processors
+namespace UnityEngine.Experimental.Input.Processors
 {
     /// <summary>
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather

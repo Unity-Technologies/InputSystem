@@ -1,6 +1,6 @@
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A key on a <see cref="Keyboard"/>.

@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     [CustomPropertyDrawer(typeof(InputActionWrapper), useForChildren: true)]
     public class InputActionWrapperDrawer : PropertyDrawer

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// An implementation of <see cref="IInputRuntime"/> for use during tests.

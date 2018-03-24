@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using System.Runtime.InteropServices;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct QueryEditorWindowCoordinatesCommand : IInputDeviceCommandInfo

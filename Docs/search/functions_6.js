@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['parsereportdescriptor',['ParseReportDescriptor',['../classISX_1_1Plugins_1_1HID_1_1HIDParser.html#a4dd2254aa1e0fbc1485f3c82da14d4dc',1,'ISX::Plugins::HID::HIDParser']]],
-  ['pausehaptics',['PauseHaptics',['../interfaceISX_1_1Haptics_1_1IHaptics.html#a1b635267351e51bd0210b563d5371060',1,'ISX.Haptics.IHaptics.PauseHaptics()'],['../classISX_1_1InputSystem.html#a1dee94fbccae977bbc8386a1d890279f',1,'ISX.InputSystem.PauseHaptics()']]],
-  ['process',['Process',['../interfaceISX_1_1IInputProcessor.html#a087ae350b0915d42d16cad85f2b421b1',1,'ISX::IInputProcessor']]]
+  ['parsereportdescriptor',['ParseReportDescriptor',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDParser.html#abd864c4f353cbeee3b68a2cc8d995dc0',1,'UnityEngine::Experimental::Input::Plugins::HID::HIDParser']]],
+  ['pausehaptics',['PauseHaptics',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IHaptics.html#a5e330b3d653e971277d18f60981b5d96',1,'UnityEngine.Experimental.Input.Haptics.IHaptics.PauseHaptics()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad7640ab8aeeaeb7c5c80a30a3f6c947b',1,'UnityEngine.Experimental.Input.InputSystem.PauseHaptics()']]],
+  ['process',['Process',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html#a563d680455bc57b65e4ff0101a4ea71b',1,'UnityEngine::Experimental::Input::IInputProcessor']]]
 ];

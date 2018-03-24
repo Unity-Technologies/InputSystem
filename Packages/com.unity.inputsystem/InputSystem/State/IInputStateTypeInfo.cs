@@ -1,6 +1,6 @@
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // Allows to generically query information from a state struct.
     public interface IInputStateTypeInfo

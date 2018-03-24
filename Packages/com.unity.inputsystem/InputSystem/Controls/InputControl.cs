@@ -1,7 +1,7 @@
 using System;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ using UnityEngine;
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A typed and named value in a hierarchy of controls.

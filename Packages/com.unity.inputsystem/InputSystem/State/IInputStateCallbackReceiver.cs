@@ -1,6 +1,6 @@
 using System;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Allows a device to intercept operations performed on its state.

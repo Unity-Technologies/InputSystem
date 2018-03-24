@@ -1,5 +1,5 @@
 using System.Collections;
-using ISX.Modifiers;
+using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
 
 // Use action set asset instead of lose InputActions directly on component.

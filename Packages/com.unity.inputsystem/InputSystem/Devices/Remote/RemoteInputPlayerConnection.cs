@@ -1,13 +1,13 @@
 using System;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // Transports input remoting messages from and to players. Can be used to
     // make input on either side fully available on the other side. I.e. player

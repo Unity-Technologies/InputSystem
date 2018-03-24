@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ISX.Composites;
-using ISX.Controls;
+using UnityEngine.Experimental.Input.Composites;
+using UnityEngine.Experimental.Input.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Profiling;
-using ISX.LowLevel;
-using ISX.Modifiers;
-using ISX.Processors;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Modifiers;
+using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Debug = UnityEngine.Debug;
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
@@ -25,7 +25,7 @@ using ISX.Net35Compatibility;
 
 ////REVIEW: instead of RegisterModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using TemplateChangeListener = Action<string, InputTemplateChange>;

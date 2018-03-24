@@ -15,7 +15,7 @@ using UnityEngine;
 ////FIXME: ATM there is a bug in the ScriptedImporter feature where if you edit the .inputactions asset outside of Unity,
 ////       it will correctly re-import but the InputActionAssetEditor will not refresh
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Custom inspector that allows modifying action sets in InputActionAssets.
     [CustomEditor(typeof(InputActionAsset))]

@@ -1,6 +1,6 @@
-using ISX.Processors;
+using UnityEngine.Experimental.Input.Processors;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A two-axis thumbstick control that can act as both a vector and a four-way dpad.

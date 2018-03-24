@@ -4,12 +4,12 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 ////TODO: turn 'overrides' into feature where templates can be registered as overrides and they get merged *into* the template
@@ -25,7 +25,7 @@ using ISX.Net35Compatibility;
 
 ////REVIEW: common usages are on all templates but only make sense for devices
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A template lays out the composition of an input control.

@@ -1,12 +1,12 @@
 using System;
-using ISX.Controls;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine;
 
 ////TODO: expose user index
 
 ////TODO: set displayNames of the controls according to Xbox controller standards
 
-namespace ISX.Plugins.XInput
+namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
     /// <summary>
     /// An XInput compatible game controller.

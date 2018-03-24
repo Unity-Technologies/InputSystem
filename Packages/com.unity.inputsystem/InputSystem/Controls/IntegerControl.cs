@@ -1,7 +1,7 @@
 using System;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     ////TODO: allow format to be any integer format
     public class IntegerControl : InputControl<int>

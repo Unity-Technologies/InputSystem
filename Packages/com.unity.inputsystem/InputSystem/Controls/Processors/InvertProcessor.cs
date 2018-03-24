@@ -1,4 +1,4 @@
-namespace ISX.Processors
+namespace UnityEngine.Experimental.Input.Processors
 {
     public class InvertProcessor : IInputProcessor<float>
     {

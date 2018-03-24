@@ -2,7 +2,7 @@ using System;
 
 ////TODO: rename "combining" to "chaining"
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A combination of a control path and modifiers.

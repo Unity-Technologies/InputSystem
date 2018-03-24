@@ -14,7 +14,7 @@ using UnityEngine;
 ////      (the logic we inherit from TreeView sorts by displayName of items but our rendering logic
 ////      tags additional text onto the items so the end result appears sorted incorrectly)
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate
     // a path string as a result and store it in the given "path" property.

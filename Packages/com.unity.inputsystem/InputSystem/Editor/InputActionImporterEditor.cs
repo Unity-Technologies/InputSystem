@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
@@ -16,7 +16,7 @@ using UnityEngine;
 ////FIXME: because of how .inputactions are structured, an asset with just a set and no actions in it will come out
 ////       as no set at all when deserialized and then cause exception in InputActionTreeView
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Custom editor that allows modifying importer settings for an InputActionImporter.
     //

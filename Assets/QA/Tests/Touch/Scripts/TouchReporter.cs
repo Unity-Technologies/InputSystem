@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
-using ISX;
+using UnityEngine.Experimental.Input;
 
 public class TouchReporter : MonoBehaviour
 {
@@ -15,7 +15,7 @@ public class TouchReporter : MonoBehaviour
 
     void Update()
     {
-        Touchscreen touchscreen = ISX.Touchscreen.current;
+        Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
 
         coordinateText.text = touchscreen.allTouchControls[touchIndex].value.position.x.ToString("0000") + ", " +
             touchscreen.allTouchControls[touchIndex].value.position.y.ToString("0000");

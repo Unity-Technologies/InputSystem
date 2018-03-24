@@ -1,22 +1,22 @@
 using System;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using ISX.Editor;
-using ISX.Plugins.HID.Editor;
+using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 #endif
 
 ////REVIEW: how are we dealing with multiple different input reports on the same device?
 
-////REVIEW: move the enums and structs out of here and into ISX.HID? Or remove the "HID" name prefixes from them?
+////REVIEW: move the enums and structs out of here and into UnityEngine.Experimental.Input.HID? Or remove the "HID" name prefixes from them?
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
-namespace ISX.Plugins.HID
+namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
     /// A generic HID input device.

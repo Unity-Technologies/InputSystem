@@ -1,7 +1,7 @@
 using System;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides

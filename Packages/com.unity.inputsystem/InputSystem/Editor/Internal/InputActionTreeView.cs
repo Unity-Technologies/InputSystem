@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // A TreeView of one or more action sets.
     internal class InputActionTreeView : TreeView

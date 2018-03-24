@@ -1,8 +1,8 @@
 using System;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     public class TouchTypeControl : InputControl<TouchType>
     {

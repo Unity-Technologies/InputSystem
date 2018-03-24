@@ -1,11 +1,11 @@
 using System;
-using ISX.LowLevel;
-using ISX.Processors;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A floating-point axis control.

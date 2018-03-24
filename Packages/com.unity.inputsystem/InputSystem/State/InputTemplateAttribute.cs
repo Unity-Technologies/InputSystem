@@ -1,7 +1,7 @@
 using System;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Attribute to control template settings of a type used to generate an <see cref="InputTemplate"/>.

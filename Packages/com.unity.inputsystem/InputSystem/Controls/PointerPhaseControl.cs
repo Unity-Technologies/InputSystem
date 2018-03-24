@@ -1,5 +1,5 @@
 using System;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 // Unfortunately, C# (at least up to version 6) does not support enum type constraints. There's
 // ways to work around it in some situations (https://stackoverflow.com/questions/79126/create-generic-method-constraining-t-to-an-enum)
@@ -7,7 +7,7 @@ using ISX.LowLevel;
 
 ////TODO: allow this to be stored in less than 32bits
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     public class PointerPhaseControl : InputControl<PointerPhase>
     {

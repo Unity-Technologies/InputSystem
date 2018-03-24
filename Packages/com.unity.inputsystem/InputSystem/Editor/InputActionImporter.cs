@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Imports an InputActionAsset from JSON.
     // Can generate code wrappers for the contained action sets as a convenience.

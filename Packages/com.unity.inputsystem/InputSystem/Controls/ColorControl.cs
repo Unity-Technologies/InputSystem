@@ -3,7 +3,7 @@ using UnityEngine;
 
 ////REVIEW: do we want to have a separate control for this or should this just use Vector3Control?
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     public class ColorControl : InputControl<Color>
     {

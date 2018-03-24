@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['devicecommand_3c_20tcommand_20_3e',['DeviceCommand&lt; TCommand &gt;',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a78b180abb919e703ce8e4f15c511402b',1,'ISX::LowLevel::IInputRuntime']]],
-  ['disableallenabledactions',['DisableAllEnabledActions',['../classISX_1_1InputSystem.html#a8d10ef8c0d5255ba77cf23bbf979b1bd',1,'ISX::InputSystem']]]
+  ['devicecommand',['DeviceCommand',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a395257f9356b0d8d262cbd3e352dc8b0',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['disableallenabledactions',['DisableAllEnabledActions',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab218bcd4cf75952fce10b6d4aab1bbf0',1,'UnityEngine::Experimental::Input::InputSystem']]]
 ];

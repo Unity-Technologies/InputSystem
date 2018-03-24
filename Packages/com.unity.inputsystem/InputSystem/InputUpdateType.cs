@@ -1,6 +1,6 @@
 using System;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     [Flags]
     public enum InputUpdateType

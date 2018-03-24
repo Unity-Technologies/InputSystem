@@ -3,31 +3,31 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ISX.Haptics;
+using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using ISX.LowLevel;
-using ISX.Plugins.DualShock;
-using ISX.Plugins.HID;
-using ISX.Plugins.XInput;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
+using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Plugins.XInput;
+using UnityEngine.Experimental.Input.Utilities;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using ISX.Editor;
+using UnityEngine.Experimental.Input.Editor;
 #else
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 ////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// This is the central hub for the input system.
@@ -645,7 +645,7 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: consider moving these out into extension methods in ISX.LowLevel
+        ////REVIEW: consider moving these out into extension methods in UnityEngine.Experimental.Input.LowLevel
 
         ////TODO: find a more elegant solution for this
         // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
@@ -845,7 +845,7 @@ namespace ISX
         /// </summary>
         /// <returns>A new list instance containing all currently enabled actions.</returns>
         /// <remarks>
-        /// To avoid allocations, use <see cref="ListEnabledActions(List{ISX.InputAction})"/>.
+        /// To avoid allocations, use <see cref="ListEnabledActions(List{UnityEngine.Experimental.Input.InputAction})"/>.
         /// </remarks>
         /// <seealso cref="InputAction.enabled"/>
         public static List<InputAction> ListEnabledActions()

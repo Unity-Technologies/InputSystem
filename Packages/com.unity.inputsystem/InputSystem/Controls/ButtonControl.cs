@@ -1,8 +1,8 @@
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// An axis that has a trigger point beyond which it is considered to be pressed.

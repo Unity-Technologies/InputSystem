@@ -2,12 +2,12 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using ISX.LowLevel;
-using ISX.Plugins.Android.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
-namespace ISX.Plugins.Android.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
@@ -370,7 +370,7 @@ namespace ISX.Plugins.Android.LowLevel
     }
 }
 
-namespace ISX.Plugins.Android
+namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     ////REVIEW: Is this guaranteed to be a Gamepad? If both joystick and gamepad come through here, we need to split this up.
     ////        Also, probably should be called AndroidGamepad

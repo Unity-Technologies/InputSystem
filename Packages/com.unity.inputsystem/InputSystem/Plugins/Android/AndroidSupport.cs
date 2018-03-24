@@ -1,5 +1,5 @@
 #if UNITY_EDITOR || UNITY_ANDROID
-namespace ISX.Plugins.Android
+namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     public static class AndroidSupport
     {

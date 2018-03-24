@@ -3,7 +3,7 @@ using UnityEngineInternal.Input;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     internal class NativeInputRuntime : IInputRuntime
     {

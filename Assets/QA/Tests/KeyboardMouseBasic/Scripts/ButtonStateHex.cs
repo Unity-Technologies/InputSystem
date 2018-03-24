@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
-using ISX;
+using UnityEngine.Experimental.Input;
 
 // Print the last keyboard button state as a hex string.
 //

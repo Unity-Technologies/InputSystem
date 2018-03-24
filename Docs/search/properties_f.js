@@ -1,10 +1,10 @@
 var searchData=
 [
-  ['scancode',['scanCode',['../classISX_1_1Controls_1_1KeyControl.html#a2129f524ad3353b39f41443355735ab0',1,'ISX::Controls::KeyControl']]],
-  ['scroll',['scroll',['../classISX_1_1Mouse.html#a723616a83a423263646b301e316e44d6',1,'ISX::Mouse']]],
-  ['semicolonkey',['semicolonKey',['../classISX_1_1Keyboard.html#aa825545f2c26a0d42be5ae68a2d41a56',1,'ISX::Keyboard']]],
-  ['set',['set',['../classISX_1_1InputAction.html#af5e506b8aec9629a30abd5a266174221',1,'ISX::InputAction']]],
-  ['sizeinbytes',['sizeInBytes',['../structISX_1_1LowLevel_1_1InputEvent.html#ada42f63d144a448670b80e92815a5144',1,'ISX::LowLevel::InputEvent']]],
-  ['spacekey',['spaceKey',['../classISX_1_1Keyboard.html#a2d5d9fb150b869c9b080ba81cb92e60f',1,'ISX::Keyboard']]],
-  ['subtype',['subType',['../classISX_1_1Plugins_1_1XInput_1_1XInputController.html#a8385a59ad4d2a800741783ec2f7eb405',1,'ISX::Plugins::XInput::XInputController']]]
+  ['scancode',['scanCode',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1KeyControl.html#ab7aa114e896d310e8d34c4451a0bd5a0',1,'UnityEngine::Experimental::Input::Controls::KeyControl']]],
+  ['scroll',['scroll',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html#aad337b4f1985cc60ad243a4f91240b90',1,'UnityEngine::Experimental::Input::Mouse']]],
+  ['semicolonkey',['semicolonKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#aa9a8bfdcc85ee4a41b335418645043c9',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['set',['set',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputAction.html#a0baec37475845a3b736725222c36add1',1,'UnityEngine::Experimental::Input::InputAction']]],
+  ['sizeinbytes',['sizeInBytes',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#a0a6475044f1fd1fc6afb27bd06603b33',1,'UnityEngine::Experimental::Input::LowLevel::InputEvent']]],
+  ['spacekey',['spaceKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#a53388e6c0fb875fab8374f40258a18cf',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['subtype',['subType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputController.html#acc8028884d600238f790db244827b9c8',1,'UnityEngine::Experimental::Input::Plugins::XInput::XInputController']]]
 ];

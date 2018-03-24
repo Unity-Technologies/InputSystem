@@ -1,4 +1,4 @@
-using ISX;
+using UnityEngine.Experimental.Input;
 using UnityEngine;
 
 // Using state of gamepad device directly.

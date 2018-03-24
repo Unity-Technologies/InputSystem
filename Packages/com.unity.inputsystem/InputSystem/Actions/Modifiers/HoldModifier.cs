@@ -1,4 +1,4 @@
-namespace ISX.Modifiers
+namespace UnityEngine.Experimental.Input.Modifiers
 {
     // Performs the action if the control is pressed and *held* for at least the
     // set duration (which defaults to InputConfiguration.HoldTime).

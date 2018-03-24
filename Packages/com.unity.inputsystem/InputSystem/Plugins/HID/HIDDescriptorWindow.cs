@@ -7,7 +7,7 @@ using UnityEngine;
 
 ////TODO: use two columns for treeview and separate name and value
 
-namespace ISX.Plugins.HID.Editor
+namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
 {
     // A window that dumps a raw HID descriptor in a tree view.
     internal class HIDDescriptorWindow : EditorWindow, ISerializationCallbackReceiver

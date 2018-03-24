@@ -1,7 +1,7 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Demo/DemoControls.inputactions'
 
 [System.Serializable]
-public class DemoControls : ISX.InputActionWrapper
+public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
 {
     private bool m_Initialized;
     private void Initialize()
@@ -13,24 +13,23 @@ public class DemoControls : ISX.InputActionWrapper
         m_gameplay_look = m_gameplay.GetAction("look");
         m_Initialized = true;
     }
-
     // gameplay
-    private ISX.InputActionSet m_gameplay;
-    private ISX.InputAction m_gameplay_fire;
-    private ISX.InputAction m_gameplay_move;
-    private ISX.InputAction m_gameplay_look;
+    private UnityEngine.Experimental.Input.InputActionSet m_gameplay;
+    private UnityEngine.Experimental.Input.InputAction m_gameplay_fire;
+    private UnityEngine.Experimental.Input.InputAction m_gameplay_move;
+    private UnityEngine.Experimental.Input.InputAction m_gameplay_look;
     public struct GameplayActions
     {
         private DemoControls m_Wrapper;
         public GameplayActions(DemoControls wrapper) { m_Wrapper = wrapper; }
-        public ISX.InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
-        public ISX.InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
-        public ISX.InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
-        public ISX.InputActionSet Get() { return m_Wrapper.m_gameplay; }
+        public UnityEngine.Experimental.Input.InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
+        public UnityEngine.Experimental.Input.InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
+        public UnityEngine.Experimental.Input.InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
+        public UnityEngine.Experimental.Input.InputActionSet Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
-        public ISX.InputActionSet Clone() { return Get().Clone(); }
-        public static implicit operator ISX.InputActionSet(GameplayActions set) { return set.Get(); }
+        public UnityEngine.Experimental.Input.InputActionSet Clone() { return Get().Clone(); }
+        public static implicit operator UnityEngine.Experimental.Input.InputActionSet(GameplayActions set) { return set.Get(); }
     }
     public GameplayActions @gameplay
     {

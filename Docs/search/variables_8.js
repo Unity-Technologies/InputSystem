@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['name',['name',['../structISX_1_1InputTemplate_1_1ControlTemplate.html#a8a169f6e38bb6624fc8694b458d2a19c',1,'ISX::InputTemplate::ControlTemplate']]]
+  ['name',['name',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html#a35c38e3e4b843031de993bec8d151ff0',1,'UnityEngine::Experimental::Input::InputTemplate::ControlTemplate']]]
 ];

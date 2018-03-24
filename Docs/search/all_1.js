@@ -1,9 +1,11 @@
 var searchData=
 [
-  ['backquotekey',['backquoteKey',['../classISX_1_1Keyboard.html#a60127ea67a46d9704d1c9bac1e9eac9b',1,'ISX::Keyboard']]],
-  ['baseevent',['baseEvent',['../structISX_1_1LowLevel_1_1DeviceRemoveEvent.html#a5579f24734d06cb628f8c6d998abdc66',1,'ISX::LowLevel::DeviceRemoveEvent']]],
-  ['bindings',['bindings',['../classISX_1_1InputAction.html#ae6049b7415fdee3a18053720f7638a5b',1,'ISX::InputAction']]],
-  ['builder',['Builder',['../structISX_1_1InputTemplate_1_1Builder.html',1,'ISX::InputTemplate']]],
-  ['buttoncontrol',['ButtonControl',['../classISX_1_1Controls_1_1ButtonControl.html',1,'ISX::Controls']]],
-  ['buttons',['buttons',['../structISX_1_1GamepadState.html#a1dc4de63980cf43c6003fa8d689013f6',1,'ISX::GamepadState']]]
+  ['backquotekey',['backquoteKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#a7d0321bd34154a3ddc5f395abf5a0bd2',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['baseevent',['baseEvent',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html#a603bc25eb5120584cbee031ad7f59843',1,'UnityEngine::Experimental::Input::LowLevel::DeviceRemoveEvent']]],
+  ['bindings',['bindings',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputAction.html#ae2b2627083c14ea2518d7c76cf919d65',1,'UnityEngine::Experimental::Input::InputAction']]],
+  ['builder',['Builder',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1Builder.html',1,'UnityEngine::Experimental::Input::InputTemplate']]],
+  ['buttonaxis',['ButtonAxis',['../classUnityEngine_1_1Experimental_1_1Input_1_1Composites_1_1ButtonAxis.html',1,'UnityEngine::Experimental::Input::Composites']]],
+  ['buttoncontrol',['ButtonControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1ButtonControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
+  ['buttons',['buttons',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html#ad5e71724e2d05a933c0b0296d340b40e',1,'UnityEngine::Experimental::Input::LowLevel::GamepadState']]],
+  ['buttonvector',['ButtonVector',['../classUnityEngine_1_1Experimental_1_1Input_1_1Composites_1_1ButtonVector.html',1,'UnityEngine::Experimental::Input::Composites']]]
 ];

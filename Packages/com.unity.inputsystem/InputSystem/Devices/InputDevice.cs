@@ -1,6 +1,6 @@
 using System;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 
 // per device functions:
@@ -14,7 +14,7 @@ using Unity.Collections.LowLevel.Unsafe;
 // Ideally, these would *not* be virtual methods on InputDevice but use a different process (which?)
 // for associating responses with devices
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// The root of a control hierarchy.

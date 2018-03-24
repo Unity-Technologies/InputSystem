@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_ANDROID
-using ISX;
-using ISX.Plugins.Android;
-using ISX.Plugins.Android.LowLevel;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Plugins.Android;
+using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using NUnit.Framework;
 
 class AndroidTests : InputTestFixture

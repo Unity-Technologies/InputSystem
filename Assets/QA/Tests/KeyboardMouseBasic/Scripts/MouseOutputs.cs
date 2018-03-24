@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
-using ISX;
+using UnityEngine.Experimental.Input;
 
 // Updates images and text based on the state of the most current mouse.
 //

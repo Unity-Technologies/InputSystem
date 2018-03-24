@@ -5,7 +5,7 @@
 
 ////REVIEW: what about putting an instance of one of these on every resolved control instead of sharing it between all controls resolved from a binding?
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // By default, actions will start when a source control leaves its default state
     // and will be completed when the control goes back to that state. Modifiers can customize

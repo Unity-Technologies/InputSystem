@@ -1,4 +1,4 @@
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A binding composite arranges several bindings such that they form

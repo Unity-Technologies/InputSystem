@@ -1,15 +1,15 @@
 using System;
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
 ////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Default state structure for pointer devices.
@@ -64,7 +64,7 @@ namespace ISX.LowLevel
     }
 }
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     ////REVIEW: does it really make sense to have this at the pointer level
     public enum PointerPhase

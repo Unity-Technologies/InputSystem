@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['kcommandresultfailure',['kCommandResultFailure',['../classISX_1_1InputDevice.html#aacf15c254d0d0cf8e1279eb18950f6f3',1,'ISX::InputDevice']]]
+  ['kgenericfailure',['kGenericFailure',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputDeviceCommand.html#a37015a7956ac1f4196035989df42944b',1,'UnityEngine::Experimental::Input::LowLevel::InputDeviceCommand']]]
 ];

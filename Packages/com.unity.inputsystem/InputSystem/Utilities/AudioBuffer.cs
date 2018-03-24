@@ -1,4 +1,4 @@
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     // A buffer of audio samples in a specific format.
     public class AudioBuffer

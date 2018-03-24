@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -21,7 +21,7 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: refresh when unrecognized device pops up
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Allows looking at input activity in the editor.
     internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver

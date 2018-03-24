@@ -2,7 +2,7 @@ using UnityEngine;
 
 ////TODO: move clamping settings into struct and add process function; then embed both here and in AxisControl
 
-namespace ISX.Processors
+namespace UnityEngine.Experimental.Input.Processors
 {
     public class ClampProcessor : IInputProcessor<float>
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ISX.Processors
+namespace UnityEngine.Experimental.Input.Processors
 {
     // Normalizes input values in the range [min..max] to unsigned normalized
     // form [0..1] if min is >= 0 and to signed normalized form [-1..1] if

@@ -5,7 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: add ability to single-step through events
 
@@ -21,7 +21,7 @@ using ISX.LowLevel;
 
 ////FIXME: need to prevent extra controls appended at end from reading beyond the state buffer
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Additional window that we can pop open to inspect raw state (either on events or on controls/devices).
     internal class InputStateWindow : EditorWindow

@@ -1,9 +1,9 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
-using ISX.Plugins.iOS.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.Plugins.iOS.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct IOSGameControllerState : IInputStateTypeInfo
@@ -68,7 +68,7 @@ namespace ISX.Plugins.iOS.LowLevel
     }
 }
 
-namespace ISX.Plugins.iOS
+namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
     [InputTemplate(stateType = typeof(IOSGameControllerState))]
     public class IOSGameController : Gamepad

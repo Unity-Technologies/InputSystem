@@ -6,7 +6,7 @@ using UnityEngine;
 
 ////REVIEW: add a 'devicePath' field for a platform-dependent device path?
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Metadata for a device. Primarily used to find a matching template

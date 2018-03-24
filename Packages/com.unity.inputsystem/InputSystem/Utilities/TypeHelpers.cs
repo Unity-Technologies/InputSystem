@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class TypeHelpers
     {

@@ -2,10 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     // Variation of ReadOnlyArray that has the slicing ability but
     // does provide write access. Used only internally.

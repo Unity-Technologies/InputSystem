@@ -1,4 +1,4 @@
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     public interface IInputUpdateCallbackReceiver
     {

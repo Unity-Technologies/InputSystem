@@ -3,26 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using ISX;
-using ISX.Controls;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.TestTools;
-using ISX.LowLevel;
-using ISX.Modifiers;
-using ISX.Processors;
-using ISX.Utilities;
-using Touch = ISX.Touch;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Modifiers;
+using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Utilities;
+using Touch = UnityEngine.Experimental.Input.Touch;
 #if UNITY_EDITOR
-using ISX.Editor;
+using UnityEngine.Experimental.Input.Editor;
 using UnityEditor;
 #endif
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 // These tests rely on the default template setup present in the code
@@ -6141,7 +6141,7 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public ISX.InputActionSet Clone()"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputActionSet Clone()"));
     }
 
     [Test]
@@ -6159,8 +6159,8 @@ class FunctionalTests : InputTestFixture
                 new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
         Assert.That(code, Contains.Substring("class NewControls_4_"));
-        Assert.That(code, Contains.Substring("public ISX.InputAction @action__"));
-        Assert.That(code, Contains.Substring("public ISX.InputAction @_1thing"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @action__"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @_1thing"));
     }
 
     class TestEditorWindow : EditorWindow

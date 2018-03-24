@@ -1,6 +1,6 @@
 ////TODO: write a ScriptedImporter for VDF files which automatically generates a template
 
-namespace ISX.Plugins.Steam
+namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     public static class SteamSupport
     {

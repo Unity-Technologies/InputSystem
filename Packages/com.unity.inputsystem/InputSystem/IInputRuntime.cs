@@ -3,7 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////TODO: add API to send events in bulk rather than one by one
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.

@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['participantid',['participantId',['../structISX_1_1InputRemoting_1_1Message.html#a3436cb56d043290d5749f037f7402aa2',1,'ISX::InputRemoting::Message']]],
-  ['position',['position',['../structISX_1_1PointerState.html#a819de8b183fd3aab4c3761fc786dd89a',1,'ISX::PointerState']]],
-  ['product',['product',['../structISX_1_1InputDeviceDescription.html#a2158b45ddfefe0f03188b8d133c3dfaf',1,'ISX::InputDeviceDescription']]],
-  ['productid',['productId',['../structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a766567f49c92c3d1bc9a8b0445fe8ec8',1,'ISX::Plugins::HID::HID::HIDDeviceDescriptor']]]
+  ['participantid',['participantId',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting_1_1Message.html#acc6532145cb664f4a4f3a084c4532de8',1,'UnityEngine::Experimental::Input::InputRemoting::Message']]],
+  ['path',['path',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a46c20eb2a26abeb1e934cd66e1dd6484',1,'UnityEngine::Experimental::Input::InputBinding']]],
+  ['pointerdeltasensitivity',['PointerDeltaSensitivity',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputConfiguration.html#adaee83bd74761a60b8bd5ea98ea090cc',1,'UnityEngine::Experimental::Input::InputConfiguration']]],
+  ['position',['position',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html#a568c4f7cea202cebb7430ebac674107a',1,'UnityEngine::Experimental::Input::LowLevel::PointerState']]],
+  ['product',['product',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#a58de9a0b95b2dbaf8d82c5b784eb95bb',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
+  ['productid',['productId',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a02456527802573d53ea3958d1785f17e',1,'UnityEngine::Experimental::Input::Plugins::HID::HID::HIDDeviceDescriptor']]]
 ];

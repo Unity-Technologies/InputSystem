@@ -1,9 +1,9 @@
 using NUnit.Framework;
 using System.Linq;
-using ISX;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Plugins.HID;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Is there some way we can center axis controls of HIDs correctly and automatically?
