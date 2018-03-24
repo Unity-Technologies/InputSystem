@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 
 ////TODO: add hierarchical set of binding overrides to asset
 

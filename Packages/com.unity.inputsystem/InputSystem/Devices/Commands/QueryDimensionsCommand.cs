@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {

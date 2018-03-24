@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 using UnityEngine.Experimental.Input.LowLevel;
 
 ////FIXME: doesn't survive domain reload correctly

@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine;
 
 ////TODO: support vector of shorts
 

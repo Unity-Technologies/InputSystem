@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.Experimental.Input.Controls;
-using UnityEngine;
 
 ////TODO: expose user index
 

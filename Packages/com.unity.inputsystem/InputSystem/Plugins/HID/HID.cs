@@ -2,7 +2,6 @@ using System;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;

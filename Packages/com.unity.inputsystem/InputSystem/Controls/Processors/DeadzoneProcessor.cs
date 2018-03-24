@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace UnityEngine.Experimental.Input.Processors
 {
     /// <summary>

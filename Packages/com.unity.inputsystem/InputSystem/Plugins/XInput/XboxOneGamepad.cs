@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
-using UnityEngine;
 
 ////TODO: player ID
 

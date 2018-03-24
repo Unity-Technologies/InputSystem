@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: add ability to single-step through events

@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Editor
 {

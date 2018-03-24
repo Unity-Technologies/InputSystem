@@ -1,5 +1,4 @@
 using UnityEngine.Experimental.Input.Haptics;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {

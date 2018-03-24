@@ -5,7 +5,6 @@ using System.IO;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using UnityEngine;
 
 ////TODO: replace "Apply" text on button with "Save"
 

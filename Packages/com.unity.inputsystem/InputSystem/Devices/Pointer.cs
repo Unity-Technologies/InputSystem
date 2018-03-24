@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 

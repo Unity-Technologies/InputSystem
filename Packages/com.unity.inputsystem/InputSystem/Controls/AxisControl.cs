@@ -1,7 +1,6 @@
 using System;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
-using UnityEngine;
 
 ////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
 

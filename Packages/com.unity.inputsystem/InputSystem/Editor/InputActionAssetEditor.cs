@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 ////REVIEW: Ideally we'd have a view that can be switched dynamically between going by action and going by device/controls.
 ////        The second view would ideally look something like Steam's binding overlay where you see a graphical representation

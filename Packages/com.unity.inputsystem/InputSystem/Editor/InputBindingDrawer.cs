@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine;
 
 ////TODO: reordering support for modifiers
 

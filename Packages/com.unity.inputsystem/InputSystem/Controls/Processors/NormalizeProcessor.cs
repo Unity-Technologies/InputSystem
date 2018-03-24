@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace UnityEngine.Experimental.Input.Processors
 {
     // Normalizes input values in the range [min..max] to unsigned normalized

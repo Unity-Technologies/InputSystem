@@ -5,14 +5,12 @@ using System.Reflection;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Controls;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
-using Debug = UnityEngine.Debug;
 #if !(NET_4_0 || NET_4_6)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif

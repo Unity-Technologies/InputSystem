@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 

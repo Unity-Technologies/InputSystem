@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 
 ////TODO: we need editor window space conversion on the pen, too
 

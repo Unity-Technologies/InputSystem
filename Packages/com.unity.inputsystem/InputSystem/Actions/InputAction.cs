@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 using UnityEngine.Profiling;
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector

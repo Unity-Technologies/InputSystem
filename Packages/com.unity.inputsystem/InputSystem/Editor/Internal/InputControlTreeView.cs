@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 

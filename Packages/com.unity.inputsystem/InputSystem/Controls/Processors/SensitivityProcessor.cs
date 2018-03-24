@@ -1,5 +1,4 @@
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine;
 
 ////TODO: ideally, also take pointer DPI into account
 

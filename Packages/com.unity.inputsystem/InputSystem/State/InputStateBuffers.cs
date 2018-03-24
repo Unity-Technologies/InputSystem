@@ -2,7 +2,6 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {

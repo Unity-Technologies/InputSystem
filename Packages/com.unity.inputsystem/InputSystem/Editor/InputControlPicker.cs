@@ -2,7 +2,6 @@
 using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 ////TODO: add means to pick specific device index
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input
 {

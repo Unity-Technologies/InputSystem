@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 
 #if !(NET_4_0 || NET_4_6)
 using UnityEngine.Experimental.Input.Net35Compatibility;

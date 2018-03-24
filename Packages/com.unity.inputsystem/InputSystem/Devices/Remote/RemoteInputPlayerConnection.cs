@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 using UnityEngine.Networking.PlayerConnection;
 
 #if !(NET_4_0 || NET_4_6)

@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.Networking.PlayerConnection;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input
 {

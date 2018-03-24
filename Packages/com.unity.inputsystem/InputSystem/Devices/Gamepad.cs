@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Haptics;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine;
 
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 

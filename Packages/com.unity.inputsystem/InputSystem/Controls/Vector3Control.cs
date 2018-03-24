@@ -1,6 +1,5 @@
 using System;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Controls
 {

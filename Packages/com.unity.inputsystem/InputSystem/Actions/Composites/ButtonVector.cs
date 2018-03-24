@@ -1,5 +1,4 @@
 using UnityEngine.Experimental.Input.Controls;
-using UnityEngine;
 
 ////TODO: add support for ramp up/down
 
