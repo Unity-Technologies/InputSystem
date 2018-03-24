@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input
                 var touchCount = 0;
                 for (var i = 0; i < allTouchControls.Count; ++i)
                 {
-                    var phase = allTouchControls[i].phase.value;
+                    var phase = allTouchControls[i].phase.ReadValue();
                     if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
                     {
                         m_TouchesArray[touchCount] = allTouchControls[i];

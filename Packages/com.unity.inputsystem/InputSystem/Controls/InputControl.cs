@@ -125,15 +125,6 @@ namespace UnityEngine.Experimental.Input
             get { return m_Variant; }
         }
 
-        ////TODO: setting value (will it also go through the processor stack?)
-
-        // Current value as boxed object.
-        // NOTE: Calling this will cause garbage.
-        public virtual object valueAsObject
-        {
-            get { return null; }
-        }
-
         /// <summary>
         /// The device that this control is a part of.
         /// </summary>
@@ -198,14 +189,13 @@ namespace UnityEngine.Experimental.Input
             return string.Format("{0}:{1}", template, path);
         }
 
-        public TValue GetValue<TValue>()
+        ////TODO: setting value (will it also go through the processor stack?)
+
+        // Current value as boxed object.
+        // NOTE: Calling this will allocate.
+        public virtual object ReadValueAsObject()
         {
-            var controlOfType = this as InputControl<TValue>;
-            if (controlOfType == null)
-                throw new InvalidCastException(
-                    string.Format("Cannot query value of type '{0}' from control of type '{1}", typeof(TValue).Name,
-                        this.GetType().Name));
-            return controlOfType.value;
+            return null;
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -363,19 +353,19 @@ namespace UnityEngine.Experimental.Input
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
     {
-        public TValue value
+        public TValue ReadValue()
         {
-            get { return ReadValueFrom(currentStatePtr); }
+            return ReadValueFrom(currentStatePtr);
         }
 
-        public TValue previous
+        public TValue ReadPreviousValue()
         {
-            get { return ReadValueFrom(previousStatePtr); }
+            return ReadValueFrom(previousStatePtr);
         }
 
-        public override object valueAsObject
+        public override object ReadValueAsObject()
         {
-            get { return value; }
+            return ReadValue();
         }
 
         // Read a control value directly from a state event.

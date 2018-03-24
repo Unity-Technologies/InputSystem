@@ -28,8 +28,8 @@ namespace UnityEngine.Experimental.Input.Modifiers
                 var floatControl = control as InputControl<float>;
                 if (floatControl != null)
                 {
-                    var value = floatControl.value;
-                    var previous = floatControl.previous;
+                    var value = floatControl.ReadValue();
+                    var previous = floatControl.ReadPreviousValue();
                     var pressPoint = InputConfiguration.ButtonPressPoint;
 
                     if (previous < pressPoint && value >= pressPoint)

@@ -40,12 +40,12 @@ class DualShockTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(-NormalizeProcessor.Normalize(64 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.rightStick.x.value, Is.EqualTo(NormalizeProcessor.Normalize(128 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.rightStick.y.value, Is.EqualTo(-NormalizeProcessor.Normalize(255 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(NormalizeProcessor.Normalize(20 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
-        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(NormalizeProcessor.Normalize(40 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(-NormalizeProcessor.Normalize(64 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(128 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(-NormalizeProcessor.Normalize(255 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(20 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(40 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
         Assert.That(gamepad.buttonSouth.isPressed);
         Assert.That(gamepad.buttonEast.isPressed);
         Assert.That(gamepad.buttonWest.isPressed);
@@ -164,24 +164,24 @@ class DualShockTests : InputTestFixture
         Assert.That(gamepad.L3.isPressed);
         Assert.That(gamepad.R3.isPressed);
 
-        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123).Within(0.00001));
-        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456).Within(0.00001));
-        Assert.That(gamepad.rightStick.x.value, Is.EqualTo(0.789).Within(0.00001));
-        Assert.That(gamepad.rightStick.y.value, Is.EqualTo(0.234).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.567).Within(0.00001));
-        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.891).Within(0.00001));
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.456).Within(0.00001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.00001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.567).Within(0.00001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.891).Within(0.00001));
 
-        Assert.That(gamepad.acceleration.x.value, Is.EqualTo(0.987).Within(0.00001));
-        Assert.That(gamepad.acceleration.y.value, Is.EqualTo(0.654).Within(0.00001));
-        Assert.That(gamepad.acceleration.z.value, Is.EqualTo(0.321).Within(0.00001));
+        Assert.That(gamepad.acceleration.x.ReadValue(), Is.EqualTo(0.987).Within(0.00001));
+        Assert.That(gamepad.acceleration.y.ReadValue(), Is.EqualTo(0.654).Within(0.00001));
+        Assert.That(gamepad.acceleration.z.ReadValue(), Is.EqualTo(0.321).Within(0.00001));
 
-        Assert.That(gamepad.orientation.x.value, Is.EqualTo(0.111).Within(0.00001));
-        Assert.That(gamepad.orientation.y.value, Is.EqualTo(0.222).Within(0.00001));
-        Assert.That(gamepad.orientation.z.value, Is.EqualTo(0.333).Within(0.00001));
+        Assert.That(gamepad.orientation.x.ReadValue(), Is.EqualTo(0.111).Within(0.00001));
+        Assert.That(gamepad.orientation.y.ReadValue(), Is.EqualTo(0.222).Within(0.00001));
+        Assert.That(gamepad.orientation.z.ReadValue(), Is.EqualTo(0.333).Within(0.00001));
 
-        Assert.That(gamepad.angularVelocity.x.value, Is.EqualTo(0.444).Within(0.00001));
-        Assert.That(gamepad.angularVelocity.y.value, Is.EqualTo(0.555).Within(0.00001));
-        Assert.That(gamepad.angularVelocity.z.value, Is.EqualTo(0.666).Within(0.00001));
+        Assert.That(gamepad.angularVelocity.x.ReadValue(), Is.EqualTo(0.444).Within(0.00001));
+        Assert.That(gamepad.angularVelocity.y.ReadValue(), Is.EqualTo(0.555).Within(0.00001));
+        Assert.That(gamepad.angularVelocity.z.ReadValue(), Is.EqualTo(0.666).Within(0.00001));
 
         ////TODO: touch
     }

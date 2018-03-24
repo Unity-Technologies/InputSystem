@@ -144,18 +144,16 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Return the current state of the device as byte array.
         /// </summary>
-        public override unsafe object valueAsObject
+        public override unsafe object ReadValueAsObject()
         {
-            get
+            var numBytes = stateBlock.alignedSizeInBytes;
+            var array = new byte[numBytes];
+            fixed(byte* arrayPtr = array)
             {
-                var numBytes = stateBlock.alignedSizeInBytes;
-                var array = new byte[numBytes];
-                fixed(byte* arrayPtr = array)
-                {
-                    UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
-                }
-                return array;
+                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
             }
+
+            return array;
         }
 
         // This has to be public for Activator.CreateInstance() to be happy.

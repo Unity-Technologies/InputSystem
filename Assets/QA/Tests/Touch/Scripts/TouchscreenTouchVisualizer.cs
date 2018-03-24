@@ -43,8 +43,8 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
 
         for (int i = 0; i < TouchscreenState.kMaxTouches; i++)
         {
-            if (touchscreen.allTouchControls[i].value.phase != PointerPhase.None &&
-                touchscreen.allTouchControls[i].value.phase != PointerPhase.Ended)
+            if (touchscreen.allTouchControls[i].ReadValue().phase != PointerPhase.None &&
+                touchscreen.allTouchControls[i].ReadValue().phase != PointerPhase.Ended)
             {
                 numActiveTouches++;
             }
@@ -73,8 +73,8 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             }
 
             m_Touches[i].transform.position = m_MainCamera.ScreenToWorldPoint(
-                    new Vector3(touchscreen.allTouchControls[i].position.value.x,
-                        touchscreen.allTouchControls[i].position.value.y,
+                    new Vector3(touchscreen.allTouchControls[i].position.ReadValue().x,
+                        touchscreen.allTouchControls[i].position.ReadValue().y,
                         m_MainCamera.nearClipPlane));
 
 

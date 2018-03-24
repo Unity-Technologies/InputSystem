@@ -26,18 +26,18 @@ public class MouseOutputs : MonoBehaviour
 
         if (mouse == null) { return; }
 
-        SetImageColor(rightMouseButtonIndicator, !(mouse.rightButton.value == 0));
-        SetImageColor(leftMouseButtonIndicator, !(mouse.leftButton.value == 0));
-        SetImageColor(middleMouseButtonIndicator, !(mouse.middleButton.value == 0));
+        SetImageColor(rightMouseButtonIndicator, !(mouse.rightButton.ReadValue() == 0));
+        SetImageColor(leftMouseButtonIndicator, !(mouse.leftButton.ReadValue() == 0));
+        SetImageColor(middleMouseButtonIndicator, !(mouse.middleButton.ReadValue() == 0));
 
-        positionX.text = mouse.position.x.value.ToString();
-        positionY.text = mouse.position.y.value.ToString();
+        positionX.text = mouse.position.x.ReadValue().ToString();
+        positionY.text = mouse.position.y.ReadValue().ToString();
 
-        deltaX.text = mouse.delta.x.value.ToString();
-        deltaY.text = mouse.delta.y.value.ToString();
+        deltaX.text = mouse.delta.x.ReadValue().ToString();
+        deltaY.text = mouse.delta.y.ReadValue().ToString();
 
-        scrollX.text = mouse.scroll.x.value.ToString();
-        scrollY.text = mouse.scroll.y.value.ToString();
+        scrollX.text = mouse.scroll.x.ReadValue().ToString();
+        scrollY.text = mouse.scroll.y.ReadValue().ToString();
     }
 
     void SetImageColor(Image img, bool condition)

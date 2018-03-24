@@ -56,7 +56,7 @@ public class ButtonStateHex : MonoBehaviour
             {
                 if (i + offset != 0 && i + offset < ((int)(Key.Count)))
                 {
-                    workingInt |= _BoolHelper(keyboard[(Key)(offset + i)].value != 0f) << (i);
+                    workingInt |= _BoolHelper(keyboard[(Key)(offset + i)].ReadValue() != 0f) << (i);
                 }
             }
 

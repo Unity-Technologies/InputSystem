@@ -31,12 +31,12 @@ class AndroidTests : InputTestFixture
 
         InputSystem.Update();
 
-        Assert.That(controller.leftTrigger.value, Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(controller.rightTrigger.value, Is.EqualTo(0.456).Within(0.000001));
-        Assert.That(controller.leftStick.x.value, Is.EqualTo(0.789).Within(0.000001));
-        Assert.That(controller.leftStick.y.value, Is.EqualTo(0.987).Within(0.000001));
-        Assert.That(controller.rightStick.x.value, Is.EqualTo(0.654).Within(0.000001));
-        Assert.That(controller.rightStick.y.value, Is.EqualTo(0.321).Within(0.000001));
+        Assert.That(controller.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(controller.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.000001));
+        Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(0.987).Within(0.000001));
+        Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.654).Within(0.000001));
+        Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(0.321).Within(0.000001));
 
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonA), controller.buttonSouth);
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonX), controller.buttonWest);

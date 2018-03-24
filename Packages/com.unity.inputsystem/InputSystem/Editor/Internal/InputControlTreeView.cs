@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             else
             {
-                var valueObject = control.valueAsObject;
+                var valueObject = control.ReadValueAsObject();
                 if (valueObject != null)
                     value = new GUIContent(valueObject.ToString());
             }

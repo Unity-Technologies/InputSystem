@@ -989,7 +989,7 @@ namespace UnityEngine.Experimental.Input
 
             public TValue GetValue<TValue>()
             {
-                return ((InputControl<TValue>)control).value;
+                return ((InputControl<TValue>)control).ReadValue();
             }
 
             public double time

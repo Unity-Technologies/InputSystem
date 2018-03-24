@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input.Controls
     {
         public bool isPressed
         {
-            get { return value > 0.0f; }
+            get { return ReadValue() > 0.0f; }
         }
 
         public AnyKeyControl()
