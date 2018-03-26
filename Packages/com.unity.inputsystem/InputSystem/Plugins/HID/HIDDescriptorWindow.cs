@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
                 AddChild(item, "Report Type: " + element.reportType, ref id);
                 AddChild(item, "Report ID: " + element.reportId, ref id);
                 AddChild(item, "Report Size in Bits: " + element.reportSizeInBits, ref id);
-                AddChild(item, "Report Bit Offset: " + element.reportBitOffset, ref id);
+                AddChild(item, "Report Bit Offset: " + element.reportOffsetInBits, ref id);
                 AddChild(item, "Collection Index: " + element.collectionIndex, ref id);
                 AddChild(item, string.Format("Unit: {0:X}", element.unit), ref id);
                 AddChild(item, string.Format("Unit Exponent: {0:X}", element.unitExponent), ref id);

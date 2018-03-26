@@ -52,6 +52,8 @@ namespace UnityEngine.Experimental.Input.Utilities
             return result;
         }
 
+        ////TODO: this should use UTF-8 and not UTF-16
+
         public static bool WriteStringToBuffer(string text, IntPtr buffer, int bufferSize)
         {
             uint offset = 0;
