@@ -5,7 +5,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
     // A modifier for button-like behavior. Will perform action once
     // when control is pressed and then not perform again until control
     // is released again.
-    public class PressModifier : IInputActionModifier
+    public class PressModifier : IInputBindingModifier
     {
         public void Process(ref InputAction.ModifierContext context)
         {

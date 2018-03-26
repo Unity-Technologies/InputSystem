@@ -176,9 +176,11 @@ namespace UnityEngine.Experimental.Input
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
 
+        // Records the current state of a single modifier attached to a binding.
+        // Each modifier keeps track of its own trigger control and phase progression.
         internal struct ModifierState
         {
-            public IInputActionModifier modifier;
+            public IInputBindingModifier modifier;
             public InputControl control;
             public Flags flags;
             public double startTime;
@@ -255,6 +257,7 @@ namespace UnityEngine.Experimental.Input
         internal struct ResolvedComposite
         {
             public object composite;
+            public ReadOnlyArray<InputControl> controls;
         }
 
         ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
@@ -408,9 +411,9 @@ namespace UnityEngine.Experimental.Input
                             modifierString));
 
                 // Instantiate it.
-                var modifier = Activator.CreateInstance(type) as IInputActionModifier;
+                var modifier = Activator.CreateInstance(type) as IInputBindingModifier;
                 if (modifier == null)
-                    throw new Exception(string.Format("Modifier '{0}' is not an IInputActionModifier", list[i].name));
+                    throw new Exception(string.Format("Modifier '{0}' is not an IInputBindingModifier", list[i].name));
 
                 // Pass parameters to it.
                 InputControlSetup.SetParameters(modifier, list[i].parameters);

@@ -2,7 +2,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
 {
     // Performs the action if the control is pressed and *released* within the set
     // duration (which defaults to InputConfiguration.TapTime).
-    public class TapModifier : IInputActionModifier
+    public class TapModifier : IInputBindingModifier
     {
         public float duration;
         public float durationOrDefault

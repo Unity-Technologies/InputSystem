@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input
             get { return GetBinding(m_LastTrigger.bindingIndex); }
         }
 
-        public IInputActionModifier lastTriggerModifier
+        public IInputBindingModifier lastTriggerModifier
         {
             get { return GetModifier(m_LastTrigger.bindingIndex, m_LastTrigger.modifierIndex); }
         }
@@ -689,7 +689,7 @@ namespace UnityEngine.Experimental.Input
             if (listeners.firstValue == null)
                 return;
 
-            IInputActionModifier modifier = null;
+            IInputBindingModifier modifier = null;
             var startTime = 0.0;
 
             if (m_LastTrigger.modifierIndex != -1)
@@ -752,7 +752,7 @@ namespace UnityEngine.Experimental.Input
             return m_Bindings[m_BindingsStartIndex + bindingIndex];
         }
 
-        private IInputActionModifier GetModifier(int bindingIndex, int modifierIndex)
+        private IInputBindingModifier GetModifier(int bindingIndex, int modifierIndex)
         {
             if (bindingIndex == -1)
                 return null;
@@ -864,7 +864,7 @@ namespace UnityEngine.Experimental.Input
 
         // Data we pass to modifiers during processing. Encapsulates all the context
         // they have access to and allows us to extend that functionality without
-        // changing the IInputActionModifier interface.
+        // changing the IInputBindingModifier interface.
         public struct ModifierContext
         {
             // These are all set by NotifyControlValueChanged.
@@ -967,7 +967,7 @@ namespace UnityEngine.Experimental.Input
         {
             internal InputAction m_Action;
             internal InputControl m_Control;
-            internal IInputActionModifier m_Modifier;
+            internal IInputBindingModifier m_Modifier;
             internal double m_Time;
             internal double m_StartTime;
 
@@ -981,7 +981,7 @@ namespace UnityEngine.Experimental.Input
                 get { return m_Control; }
             }
 
-            public IInputActionModifier modifier
+            public IInputBindingModifier modifier
             {
                 get { return m_Modifier; }
             }

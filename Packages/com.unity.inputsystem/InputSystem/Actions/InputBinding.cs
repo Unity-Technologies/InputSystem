@@ -23,6 +23,9 @@ namespace UnityEngine.Experimental.Input
             Composite = 1 << 1,
         }
 
+        /// <summary>
+        /// Optional name for the binding.
+        /// </summary>
         public string name;
 
         /// <summary>
@@ -48,8 +51,14 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         [NonSerialized] public string overridePath;
 
-        // Modifier list.
-        // Example: "tap,slowTap(duration=1.2)"
+        /// <summary>
+        /// Optional list of modifiers and their parameters.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// "tap,slowTap(duration=1.2)"
+        /// </code>
+        /// </example>
         public string modifiers;
 
         ////TODO: allow more than one group

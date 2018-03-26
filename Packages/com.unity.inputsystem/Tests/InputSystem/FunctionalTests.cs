@@ -4590,7 +4590,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action2));
     }
 
-    private class TestModifier : IInputActionModifier
+    private class TestModifier : IInputBindingModifier
     {
         #pragma warning disable CS0649
         public float parm1; // Assigned through reflection
@@ -5899,6 +5899,9 @@ class FunctionalTests : InputTestFixture
         Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
 
         ////TODO: test disconnection
+
+        ScriptableObject.Destroy(connectionToEditor);
+        ScriptableObject.Destroy(connectionToPlayer);
     }
 
 #if UNITY_EDITOR
