@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 ////TODO: array support
 ////TODO: delimiter support
 ////TODO: designator support
 
-namespace ISX.Plugins.HID
+namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
     /// Turns binary HID descriptors into <see cref="HID.HIDDeviceDescriptor"/> instances.
@@ -211,7 +210,7 @@ namespace ISX.Plugins.HID
                                 usagePage = globalItemState.GetUsagePage(i, ref localItemState),
                                 reportType = reportType,
                                 reportSizeInBits = globalItemState.reportSize.GetValueOrDefault(8),
-                                reportBitOffset = report.currentBitOffset,
+                                reportOffsetInBits = report.currentBitOffset,
                                 reportId = globalItemState.reportId.GetValueOrDefault(1),
                                 flags = (HID.HIDElementFlags)flags,
                                 logicalMin = globalItemState.logicalMinimum.GetValueOrDefault(0),

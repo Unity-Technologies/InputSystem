@@ -1,13 +1,12 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using System;
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Plugins.DualShock.LowLevel;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.Plugins.DualShock.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 {
     /// <summary>
     /// Structure of HID input reports for PS4 DualShock controllers.
@@ -154,7 +153,7 @@ namespace ISX.Plugins.DualShock.LowLevel
     }
 }
 
-namespace ISX.Plugins.DualShock
+namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.

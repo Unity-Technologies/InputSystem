@@ -1,4 +1,4 @@
-namespace ISX.Plugins.Steam
+namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     public class SteamTests
     {

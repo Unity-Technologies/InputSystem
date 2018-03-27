@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     public interface IInputDeviceDebugUI
     {

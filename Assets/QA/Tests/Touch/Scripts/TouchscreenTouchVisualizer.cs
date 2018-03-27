@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using ISX;
-using ISX.Controls;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 
 public class TouchscreenTouchVisualizer : MonoBehaviour
 {
@@ -31,7 +31,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Touchscreen touchscreen = ISX.Touchscreen.current;
+        Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
         Vector3 averagePosition = Vector2.zero;
         int numActiveTouches = 0;
 
@@ -43,8 +43,8 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
 
         for (int i = 0; i < TouchscreenState.kMaxTouches; i++)
         {
-            if (touchscreen.allTouchControls[i].value.phase != PointerPhase.None &&
-                touchscreen.allTouchControls[i].value.phase != PointerPhase.Ended)
+            if (touchscreen.allTouchControls[i].ReadValue().phase != PointerPhase.None &&
+                touchscreen.allTouchControls[i].ReadValue().phase != PointerPhase.Ended)
             {
                 numActiveTouches++;
             }
@@ -73,8 +73,8 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             }
 
             m_Touches[i].transform.position = m_MainCamera.ScreenToWorldPoint(
-                    new Vector3(touchscreen.allTouchControls[i].position.value.x,
-                        touchscreen.allTouchControls[i].position.value.y,
+                    new Vector3(touchscreen.allTouchControls[i].position.ReadValue().x,
+                        touchscreen.allTouchControls[i].position.ReadValue().y,
                         m_MainCamera.nearClipPlane));
 
 

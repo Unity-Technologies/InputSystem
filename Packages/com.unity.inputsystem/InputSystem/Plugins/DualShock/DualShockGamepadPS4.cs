@@ -1,16 +1,15 @@
 #if UNITY_EDITOR || UNITY_PS4
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using System;
 using System.Runtime.InteropServices;
-using ISX.Plugins.DualShock.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 ////TODO: player ID
 
-namespace ISX.Plugins.DualShock.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -186,7 +185,7 @@ namespace ISX.Plugins.DualShock.LowLevel
     }
 }
 
-namespace ISX.Plugins.DualShock
+namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     ////TODO: Unify this with general touch support
     public class PS4TouchControl : InputControl<PS4Touch>

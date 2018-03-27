@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////REVIEW: rename to IInputDiagnostics and "Diagnostics Mode"?
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // Internal interface that allows monitoring the system for problems.
     // This is primarily meant to make it easier to diagnose problems in the event stream.

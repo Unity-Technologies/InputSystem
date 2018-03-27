@@ -1,14 +1,16 @@
 var searchData=
 [
-  ['onbeforeupdate',['onBeforeUpdate',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a21f9840d7756ac96e008612929eb8d84',1,'ISX::LowLevel::IInputRuntime']]],
-  ['onconfigurationchanged',['OnConfigurationChanged',['../classISX_1_1InputDevice.html#ae9dd251f614b05c750bd6257718b4803',1,'ISX::InputDevice']]],
-  ['ondevicechange',['onDeviceChange',['../classISX_1_1InputSystem.html#a2250d53984b8555f8b6f383782e7bfa4',1,'ISX::InputSystem']]],
-  ['ondevicecommand_3c_20tcommand_20_3e',['OnDeviceCommand&lt; TCommand &gt;',['../classISX_1_1InputDevice.html#a14f69f65e918a28c78aa14fd24545517',1,'ISX::InputDevice']]],
-  ['ondevicediscovered',['onDeviceDiscovered',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a2ac80ed70e70cb5b423b2c02ec578fa9',1,'ISX::LowLevel::IInputRuntime']]],
-  ['onfindtemplatefordevice',['onFindTemplateForDevice',['../classISX_1_1InputSystem.html#aba5d5e15243c14e0fc4d22ce68d5e118',1,'ISX::InputSystem']]],
-  ['onrefresh',['onRefresh',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#a3ad4bddd8ded0f22f780193f5d3db1db',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['ontemplatechange',['onTemplateChange',['../classISX_1_1InputSystem.html#aa62b4313f7dde01a0090287d2b1652d4',1,'ISX::InputSystem']]],
-  ['ontextinput',['OnTextInput',['../classISX_1_1InputDevice.html#a62ee625a6da383d2d54b279e017cc396',1,'ISX.InputDevice.OnTextInput()'],['../classISX_1_1Keyboard.html#a32208b6d941ae0dfd46a5291358d08e3',1,'ISX.Keyboard.onTextInput()']]],
-  ['onupdate',['onUpdate',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a156a840c825ff85b8234274a9bb534c8',1,'ISX::LowLevel::IInputRuntime']]],
-  ['outputreportsize',['outputReportSize',['../structISX_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a9c8ec0729dcc2d0db17186a7e581da7a',1,'ISX::Plugins::HID::HID::HIDDeviceDescriptor']]]
+  ['onbeforeupdate',['onBeforeUpdate',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#ad2a41f7521b440186429edd7b2f05f57',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['onbeforewritenewstate',['OnBeforeWriteNewState',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputStateCallbackReceiver.html#a476724d14b89301daf9a258b542a4c28',1,'UnityEngine::Experimental::Input::LowLevel::IInputStateCallbackReceiver']]],
+  ['oncarrystateforward',['OnCarryStateForward',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputStateCallbackReceiver.html#a817b7784ececd90c5ce9c6eaf837069f',1,'UnityEngine::Experimental::Input::LowLevel::IInputStateCallbackReceiver']]],
+  ['ondevicechange',['onDeviceChange',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#afa18c32ad2754e2e54ce3465fb63e558',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['ondevicecommand_3c_20tcommand_20_3e',['OnDeviceCommand&lt; TCommand &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a2412bf37f4ebad551b79910a38d6d0f5',1,'UnityEngine::Experimental::Input::InputDevice']]],
+  ['ondevicediscovered',['onDeviceDiscovered',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#ad5711edbd7f9ab3b2a80437d87a62ade',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['onfindtemplatefordevice',['onFindTemplateForDevice',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#acbdd662b6c468a0130272b21ca1d154a',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['onrefresh',['onRefresh',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#a83f8c6929ee5ad8160310a1d5e0bd77e',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['ontemplatechange',['onTemplateChange',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a9fc162cc2b044989ec44201ff4f338bb',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['ontextinput',['OnTextInput',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ad8bb013ace2ffafeaaecc1d4331df859',1,'UnityEngine.Experimental.Input.InputDevice.OnTextInput()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#add49599702de68ae2ce434128d49b131',1,'UnityEngine.Experimental.Input.Keyboard.onTextInput()']]],
+  ['onupdate',['onUpdate',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a30c5357411d1df73e7942b9573bea972',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['outputreportsize',['outputReportSize',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html#a5dc329ea4cdb74147aed3d8853c8f784',1,'UnityEngine::Experimental::Input::Plugins::HID::HID::HIDDeviceDescriptor']]],
+  ['overridepath',['overridePath',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a7baceb97d7a352281d125c11a950cdbd',1,'UnityEngine::Experimental::Input::InputBinding']]]
 ];

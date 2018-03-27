@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct DualMotorRumbleCommand : IInputDeviceCommandInfo

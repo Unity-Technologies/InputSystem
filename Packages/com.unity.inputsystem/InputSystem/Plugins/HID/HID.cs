@@ -1,22 +1,22 @@
 using System;
-using ISX.LowLevel;
-using ISX.Utilities;
+using System.Text;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using ISX.Editor;
-using ISX.Plugins.HID.Editor;
+using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 #endif
 
 ////REVIEW: how are we dealing with multiple different input reports on the same device?
 
-////REVIEW: move the enums and structs out of here and into ISX.HID? Or remove the "HID" name prefixes from them?
+////REVIEW: move the enums and structs out of here and into UnityEngine.Experimental.Input.HID? Or remove the "HID" name prefixes from them?
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
-namespace ISX.Plugins.HID
+namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
     /// A generic HID input device.
@@ -46,6 +46,8 @@ namespace ISX.Plugins.HID
         /// </summary>
         /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
         public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
+
+        public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'P'); } }
 
         /// <summary>
         /// The HID device descriptor as received from the system.
@@ -93,57 +95,103 @@ namespace ISX.Plugins.HID
             if (description.interfaceName != kHIDInterface)
                 return null;
 
-            // We require *some* product name to be supplied.
-            if (string.IsNullOrEmpty(description.product))
-                return null;
-
-            // If the description doesn't come with a HIDDeviceDescriptor in its capabilities field,
-            // we're not interested either.
-            if (string.IsNullOrEmpty(description.capabilities))
-                return null;
-
-            // Try to parse the HIDDeviceDescriptor.
-            HIDDeviceDescriptor hidDeviceDescriptor;
-            try
+            // See if we have to request a HID descriptor from the device.
+            // We support having the descriptor directly as a JSON string in the `capabilities`
+            // field of the device description.
+            var needToRequestDescriptor = true;
+            var hidDeviceDescriptor = new HIDDeviceDescriptor();
+            if (!string.IsNullOrEmpty(description.capabilities))
             {
-                hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(description.capabilities);
+                try
+                {
+                    hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(description.capabilities);
+
+                    // If there's elements in the descriptor, we're good with the descriptor. If there aren't,
+                    // we go and ask the device for a full descriptor.
+                    if (hidDeviceDescriptor.elements != null && hidDeviceDescriptor.elements.Length > 0)
+                        needToRequestDescriptor = false;
+                }
+                catch (Exception exception)
+                {
+                    Debug.Log(string.Format("Could not parse HID descriptor (exception: {0})", exception));
+                }
             }
-            catch (Exception exception)
-            {
-                Debug.Log(string.Format("Could not parse HID descriptor (exception: {0})", exception));
-                return null;
-            }
 
-            // If the descriptor has no elements associated with it, try to get a report descriptor
-            // directly from the device.
-            if (hidDeviceDescriptor.elements == null || hidDeviceDescriptor.elements.Length == 0)
+            ////REVIEW: we *could* switch to a single path here that supports *only* parsed descriptors but it'd
+            ////        mean having to switch *every* platform supporting HID to the hack we currently have to do
+            ////        on Windows
+
+            // Request descriptor, if necessary.
+            if (needToRequestDescriptor)
             {
-                // If the device has no assigned ID yet, we're not interested either.
-                // This isn't a device coming from the runtime.
-                if (deviceId == InputDevice.kInvalidDeviceId)
+                // If the device has no assigned ID yet, we can't perform IOCTLs on the
+                // device so no way to get a report descriptor.
+                if (deviceId == kInvalidDeviceId)
                     return null;
 
                 // Try to get the size of the HID descriptor from the device.
                 var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
                 var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
-                if (sizeOfDescriptorInBytes <= 0)
-                    return null;
-
-                // Now try to fetch the HID descriptor.
-                using (var buffer =
-                           InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
+                if (sizeOfDescriptorInBytes > 0)
                 {
-                    var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
-                    if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
-                        return null;
+                    // Now try to fetch the HID descriptor.
+                    using (var buffer =
+                               InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
+                    {
+                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
+                            return null;
 
-                    // Try to parse the HID report descriptor.
-                    if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
-                        return null;
+                        // Try to parse the HID report descriptor.
+                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
+                            return null;
+                    }
+
+                    // Update the descriptor on the device with the information we got.
+                    description.capabilities = hidDeviceDescriptor.ToJson();
                 }
+                else
+                {
+                    // The device may not support binary descriptors but may support parsed descriptors so
+                    // try the IOCTL for parsed descriptors next.
+                    //
+                    // This path exists pretty much only for the sake of Windows where it is not possible to get
+                    // unparsed/binary descriptors from the device (and where getting element offsets is only possible
+                    // with some dirty hacks we're performing in the native runtime).
 
-                // Update the descriptor on the device with the information we got.
-                description.capabilities = hidDeviceDescriptor.ToJson();
+                    const int kMaxDescriptorBufferSize = 2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
+                    using (var buffer =
+                               InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
+                    {
+                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
+                        if (utf8Length < 0)
+                            return null;
+
+                        // Turn UTF-8 buffer into string.
+                        ////TODO: is there a way to not have to copy here?
+                        var utf8 = new byte[utf8Length];
+                        fixed(byte* utf8Ptr = utf8)
+                        {
+                            UnsafeUtility.MemCpy(utf8Ptr, commandPtr->payloadPtr, utf8Length);
+                        }
+                        var descriptorJson = Encoding.UTF8.GetString(utf8, 0, (int)utf8Length);
+
+                        // Try to parse the HID report descriptor.
+                        try
+                        {
+                            hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(descriptorJson);
+                        }
+                        catch (Exception exception)
+                        {
+                            Debug.Log(string.Format("Could not parse HID descriptor JSON returned from runtime (exception: {0})", exception));
+                            return null;
+                        }
+
+                        // Update the descriptor on the device with the information we got.
+                        description.capabilities = descriptorJson;
+                    }
+                }
             }
 
             // Determine if there's any usable elements on the device.
@@ -160,6 +208,7 @@ namespace ISX.Plugins.HID
                 }
             }
 
+            // If not, there's nothing we can do with the device.
             if (!hasUsableElements)
                 return null;
 
@@ -256,8 +305,8 @@ namespace ISX.Plugins.HID
                         var control =
                             builder.AddControl(element.DetermineName())
                             .WithTemplate(template)
-                            .WithOffset((uint)element.reportBitOffset / 8)
-                            .WithBit((uint)element.reportBitOffset % 8)
+                            .WithOffset((uint)element.reportOffsetInBits / 8)
+                            .WithBit((uint)element.reportOffsetInBits % 8)
                             .WithFormat(element.DetermineFormat());
 
                         ////TODO: configure axis parameters from min/max limits
@@ -321,7 +370,7 @@ namespace ISX.Plugins.HID
             public int collectionIndex;
             public int reportId;
             public int reportSizeInBits;
-            public int reportBitOffset;
+            public int reportOffsetInBits;
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.

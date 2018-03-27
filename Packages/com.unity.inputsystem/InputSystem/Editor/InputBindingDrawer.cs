@@ -2,14 +2,13 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine;
 
 ////TODO: reordering support for modifiers
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Instead of letting users fiddle around with strings in the inspector, this
     // presents an interface that allows to automatically construct the path
@@ -51,16 +50,25 @@ namespace ISX.Editor
             // Pick button.
             if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
-                PopupWindow.Show(pickButtonRect, new InputControlPicker(pathProperty));
+                PopupWindow.Show(pickButtonRect,
+                    new InputControlPicker(pathProperty) {onPickCallback = OnBindingModified});
             }
 
             // Modify button.
             if (EditorGUI.DropdownButton(modifyButtonRect, Contents.modify, FocusType.Keyboard))
             {
-                PopupWindow.Show(modifyButtonRect, new ModifyPopupWindow(property));
+                PopupWindow.Show(modifyButtonRect,
+                    new ModifyPopupWindow(property) {onApplyCallback = OnBindingModified});
             }
 
             EditorGUI.EndProperty();
+        }
+
+        private void OnBindingModified(SerializedProperty property)
+        {
+            var importerEditor = InputActionImporterEditor.FindFor(property.serializedObject);
+            if (importerEditor != null)
+                importerEditor.OnAssetModified();
         }
 
         ////TODO: move this out into a general routine that can take a path and construct a display name
@@ -156,6 +164,8 @@ namespace ISX.Editor
             private int m_SelectedModifier;
             private ReorderableList m_ModifierListView;
 
+            public Action<SerializedProperty> onApplyCallback;
+
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
                 m_FlagsProperty = bindingProperty.FindPropertyRelative("flags");
@@ -210,6 +220,9 @@ namespace ISX.Editor
 
                     m_FlagsProperty.intValue = (int)m_Flags;
                     m_FlagsProperty.serializedObject.ApplyModifiedProperties();
+
+                    if (onApplyCallback != null)
+                        onApplyCallback(m_FlagsProperty);
                 }
 
                 GUI.EndScrollView();
@@ -229,6 +242,9 @@ namespace ISX.Editor
                 m_ModifiersProperty.stringValue = modifiers;
                 m_ModifiersProperty.serializedObject.ApplyModifiedProperties();
                 InitializeModifierListView();
+
+                if (onApplyCallback != null)
+                    onApplyCallback(m_ModifiersProperty);
             }
 
             private void InitializeModifierListView()

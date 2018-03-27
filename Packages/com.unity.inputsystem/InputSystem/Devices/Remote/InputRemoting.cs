@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Makes the activity and data of an InputManager observable in message form.
@@ -311,12 +310,15 @@ namespace ISX
         private int FindLocalDeviceId(int remoteDeviceId, int senderIndex)
         {
             var localDevices = m_Senders[senderIndex].devices;
-            var numLocalDevices = localDevices.Length;
-
-            for (var i = 0; i < numLocalDevices; ++i)
+            if (localDevices != null)
             {
-                if (localDevices[i].remoteId == remoteDeviceId)
-                    return localDevices[i].localId;
+                var numLocalDevices = localDevices.Length;
+
+                for (var i = 0; i < numLocalDevices; ++i)
+                {
+                    if (localDevices[i].remoteId == remoteDeviceId)
+                        return localDevices[i].localId;
+                }
             }
 
             return InputDevice.kInvalidDeviceId;
@@ -399,11 +401,15 @@ namespace ISX
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
 
                 // Remove devices added by remote.
-                foreach (var remoteDevice in receiver.m_Senders[senderIndex].devices)
+                var devices = receiver.m_Senders[senderIndex].devices;
+                if (devices != null)
                 {
-                    var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
-                    if (device != null)
-                        receiver.m_LocalManager.RemoveDevice(device);
+                    foreach (var remoteDevice in devices)
+                    {
+                        var device = receiver.m_LocalManager.TryGetDeviceById(remoteDevice.localId);
+                        if (device != null)
+                            receiver.m_LocalManager.RemoveDevice(device);
+                    }
                 }
 
                 ////TODO: remove templates added by remote
@@ -522,6 +528,21 @@ namespace ISX
             {
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var data = DeserializeData<Data>(msg.data);
+
+                // Make sure we haven't already seen the device.
+                var devices = receiver.m_Senders[senderIndex].devices;
+                if (devices != null)
+                {
+                    foreach (var entry in devices)
+                        if (entry.remoteId == data.deviceId)
+                        {
+                            Debug.LogError(string.Format(
+                                    "Already received device with id {0} (template '{1}', description '{3}) from remote {2}",
+                                    data.deviceId,
+                                    data.template, msg.participantId, data.description));
+                            return;
+                        }
+                }
 
                 // Create device.
                 var template = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].templateNamespace,

@@ -1,4 +1,4 @@
-using ISX;
+using UnityEngine.Experimental.Input;
 using UnityEngine;
 
 // Using state of gamepad device directly.
@@ -15,8 +15,8 @@ public class SimpleController_v1 : MonoBehaviour
         if (gamepad == null)
             return;
 
-        var leftStick = gamepad.leftStick.value;
-        var rightStick = gamepad.rightStick.value;
+        var leftStick = gamepad.leftStick.ReadValue();
+        var rightStick = gamepad.rightStick.ReadValue();
 
         Move(leftStick);
         Look(rightStick);

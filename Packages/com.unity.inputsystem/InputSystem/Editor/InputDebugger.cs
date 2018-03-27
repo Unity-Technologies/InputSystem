@@ -1,8 +1,7 @@
 #if UNITY_EDITOR
-using ISX.LowLevel;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     internal class InputDebugger : IInputDebugger
     {

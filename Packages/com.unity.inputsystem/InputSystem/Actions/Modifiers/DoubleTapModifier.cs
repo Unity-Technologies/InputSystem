@@ -1,4 +1,4 @@
-namespace ISX.Modifiers
+namespace UnityEngine.Experimental.Input.Modifiers
 {
     public class DoubleTapModifier
     {

@@ -1,11 +1,10 @@
-using ISX.Controls;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Controls;
 
 ////TODO: set displayNames of the controls according to PlayStation controller standards
 
 ////TODO: speaker, touchpad
 
-namespace ISX.Plugins.DualShock
+namespace UnityEngine.Experimental.Input.Plugins.DualShock
 {
     /// <summary>
     /// A PS4 DualShock controller.

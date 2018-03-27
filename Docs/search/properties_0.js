@@ -1,8 +1,11 @@
 var searchData=
 [
-  ['akey',['aKey',['../classISX_1_1Keyboard.html#a3a8d48c7a8ed9f62aab13af2ee981503',1,'ISX::Keyboard']]],
-  ['allbasedevicetemplates',['allBaseDeviceTemplates',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#ad6807bead965190f148c5428984d2036',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['alltemplates',['allTemplates',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#afe6b5723ed46187fba7e4ddc192dfc4d',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['allusages',['allUsages',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#a9be1328ec0cbde601798048fed3518c5',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['anykey',['anyKey',['../classISX_1_1Keyboard.html#a2a4efff801e9414fac5c6c0b544bc31d',1,'ISX::Keyboard']]]
+  ['akey',['aKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#aaff174d3c14f8d2291acefab0a01e4e0',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['allbasedevicetemplates',['allBaseDeviceTemplates',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#ad44c22e70fa45412d9f81ee45754cc4a',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['allcontrols',['allControls',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a1b4618163d91cdf2d2d22a234e700d05',1,'UnityEngine::Experimental::Input::InputDevice']]],
+  ['allnonproducttemplates',['allNonProductTemplates',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#ab5c1a36a80f4dc4233b45bf2476d3aea',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['alltemplates',['allTemplates',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#ac52a4db76ab9faa68d812c4a6cad7e27',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['alltouchcontrols',['allTouchControls',['../classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html#a25e6fe134ac2cdb015516ded4627dcfd',1,'UnityEngine::Experimental::Input::Touchscreen']]],
+  ['allusages',['allUsages',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#a7427bd9946c2dfa7ab89f62c7575ee0c',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['anykey',['anyKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#afaf8c88e37c3ba3715e763a040316460',1,'UnityEngine::Experimental::Input::Keyboard']]]
 ];

@@ -3,31 +3,30 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ISX.Haptics;
+using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
-using ISX.LowLevel;
-using ISX.Plugins.DualShock;
-using ISX.Plugins.HID;
-using ISX.Plugins.XInput;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.DualShock;
+using UnityEngine.Experimental.Input.Plugins.HID;
+using UnityEngine.Experimental.Input.Plugins.XInput;
+using UnityEngine.Experimental.Input.Utilities;
 
 #if UNITY_EDITOR
 using UnityEditor;
-using ISX.Editor;
+using UnityEngine.Experimental.Input.Editor;
 #else
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 ////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// This is the central hub for the input system.
@@ -325,7 +324,7 @@ namespace ISX
                     name = name.Substring(0, name.Length - "Processor".Length);
             }
 
-            s_Manager.RegisterProcessor(name, type);
+            s_Manager.RegisterControlProcessor(name, type);
         }
 
         public static void RegisterProcessor<T>(string name = null)
@@ -335,7 +334,7 @@ namespace ISX
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.TryGetProcessor(name);
+            return s_Manager.TryGetControlProcessor(name);
         }
 
         #endregion
@@ -645,7 +644,7 @@ namespace ISX
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: consider moving these out into extension methods in ISX.LowLevel
+        ////REVIEW: consider moving these out into extension methods in UnityEngine.Experimental.Input.LowLevel
 
         ////TODO: find a more elegant solution for this
         // Mono will ungracefully poop exceptions if we try to use LayoutKind.Explicit in generic
@@ -812,7 +811,7 @@ namespace ISX
                     name = name.Substring(0, name.Length - "Modifier".Length);
             }
 
-            s_Manager.RegisterModifier(name, type);
+            s_Manager.RegisterBindingModifier(name, type);
         }
 
         public static void RegisterModifier<T>(string name = null)
@@ -822,12 +821,12 @@ namespace ISX
 
         public static Type TryGetModifier(string name)
         {
-            return s_Manager.TryGetModifier(name);
+            return s_Manager.TryGetBindingModifier(name);
         }
 
         public static IEnumerable<string> ListModifiers()
         {
-            return s_Manager.ListModifiers();
+            return s_Manager.ListBindingModifiers();
         }
 
         /// <summary>
@@ -845,7 +844,7 @@ namespace ISX
         /// </summary>
         /// <returns>A new list instance containing all currently enabled actions.</returns>
         /// <remarks>
-        /// To avoid allocations, use <see cref="ListEnabledActions(List{ISX.InputAction})"/>.
+        /// To avoid allocations, use <see cref="ListEnabledActions(List{UnityEngine.Experimental.Input.InputAction})"/>.
         /// </remarks>
         /// <seealso cref="InputAction.enabled"/>
         public static List<InputAction> ListEnabledActions()
@@ -995,11 +994,14 @@ namespace ISX
             ////TODO: put this behind a switch so that it is off by default
             // Automatically enable remoting in development players.
             #if DEVELOPMENT_BUILD
-            s_ConnectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
-            s_Remote = new InputRemoting(s_Manager, startSendingOnConnect: true);
-            s_Remote.Subscribe(s_ConnectionToEditor);
-            s_ConnectionToEditor.Subscribe(s_Remote);
-            s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
+            if (ShouldEnableRemoting())
+            {
+                s_ConnectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+                s_Remote = new InputRemoting(s_Manager, startSendingOnConnect: true);
+                s_Remote.Subscribe(s_ConnectionToEditor);
+                s_ConnectionToEditor.Subscribe(s_Remote);
+                s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
+            }
             #endif
         }
 
@@ -1020,8 +1022,12 @@ namespace ISX
             HIDSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_ANDROID
+            Plugins.Android.AndroidSupport.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            Plugins.iOS.GameControllerSupport.Initialize();
+            Plugins.iOS.IOSSupport.Initialize();
             #endif
         }
 
@@ -1069,6 +1075,18 @@ namespace ISX
                 s_SerializedStateStack.RemoveAt(index);
             }
         }
+
+        #if !UNITY_EDITOR
+        private static bool ShouldEnableRemoting()
+        {
+            ////FIXME: is there a better way to detect whether we are running tests?
+            var isRunningTests = Application.productName == "UnityTestFramework";
+            if (isRunningTests)
+                return false; // Don't remote while running tests.
+            return true;
+        }
+
+        #endif
 
 #endif
     }

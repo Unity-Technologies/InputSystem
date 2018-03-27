@@ -1,9 +1,10 @@
 using System;
-using ISX.LowLevel;
-using ISX.Processors;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 
-namespace ISX.Controls
+////REVIEW: change 'clampToConstant' to simply 'clampToMin'?
+
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A floating-point axis control.
@@ -18,8 +19,10 @@ namespace ISX.Controls
         // build the functionality right into AxisControl to save us an
         // additional object and an additional virtual call.
         public bool clamp; // If true, force clamping to [min..max]
+        public bool clampToConstant; // If true, set value to clampConstant when incoming value is outside [min..max]
         public float clampMin;
         public float clampMax;
+        public float clampConstant;
         public bool invert; // If true, multiply by -1.
         public bool normalize;
         public float normalizeMin;
@@ -28,7 +31,12 @@ namespace ISX.Controls
 
         protected float Preprocess(float value)
         {
-            if (clamp)
+            if (clampToConstant)
+            {
+                if (value < clampMin || value > clampMax)
+                    value = clampConstant;
+            }
+            else if (clamp)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);

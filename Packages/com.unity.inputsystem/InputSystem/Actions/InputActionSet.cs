@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A set of input actions that can be enabled/disabled in bulk.
@@ -177,9 +176,11 @@ namespace ISX
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
 
+        // Records the current state of a single modifier attached to a binding.
+        // Each modifier keeps track of its own trigger control and phase progression.
         internal struct ModifierState
         {
-            public IInputActionModifier modifier;
+            public IInputBindingModifier modifier;
             public InputControl control;
             public Flags flags;
             public double startTime;
@@ -251,6 +252,12 @@ namespace ISX
             {
                 get { return chainsWithNext || isEndOfChain; }
             }
+        }
+
+        internal struct ResolvedComposite
+        {
+            public object composite;
+            public ReadOnlyArray<InputControl> controls;
         }
 
         ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
@@ -343,6 +350,13 @@ namespace ISX
                 var binding = bindings[n];
                 var firstControl = controls.Count;
 
+                //
+                if (binding.isComposite)
+                {
+                    ////TODO
+                    continue;
+                }
+
                 // Use override path but fall back to default path if no
                 // override set.
                 var path = binding.overridePath ?? binding.path;
@@ -397,9 +411,9 @@ namespace ISX
                             modifierString));
 
                 // Instantiate it.
-                var modifier = Activator.CreateInstance(type) as IInputActionModifier;
+                var modifier = Activator.CreateInstance(type) as IInputBindingModifier;
                 if (modifier == null)
-                    throw new Exception(string.Format("Modifier '{0}' is not an IInputActionModifier", list[i].name));
+                    throw new Exception(string.Format("Modifier '{0}' is not an IInputBindingModifier", list[i].name));
 
                 // Pass parameters to it.
                 InputControlSetup.SetParameters(modifier, list[i].parameters);
@@ -719,15 +733,21 @@ namespace ISX
                 // Finalize arrays.
                 for (var i = 0; i < sets.Count; ++i)
                 {
+                    var set = sets[i];
+
                     var actionArray = actions[i].ToArray();
                     var bindingArray = bindings[i].ToArray();
 
-                    sets[i].m_Actions = actionArray;
-                    sets[i].m_Bindings = bindingArray;
+                    set.m_Actions = actionArray;
+                    set.m_Bindings = bindingArray;
 
                     // Install final binding arrays on actions.
                     for (var n = 0; n < actionArray.Length; ++n)
-                        actionArray[n].m_Bindings = bindingArray;
+                    {
+                        var action = actionArray[n];
+                        action.m_Bindings = bindingArray;
+                        action.m_ActionSet = set;
+                    }
                 }
 
                 return sets.ToArray();
@@ -805,6 +825,11 @@ namespace ISX
             var fileJson = ActionFileJson.FromSet(this);
             return JsonUtility.ToJson(fileJson);
         }
+
+        // The serialization solution here will only partially work. Any call to OnBeforeSerialize() will
+        // render the InputActionSet it got called on unusable until OnAfterDeserialize() is called. This
+        // means that writing a set through serialization will render it inoperable -- and the editor will
+        // do just that over and over internally on data that is being inspected.
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {

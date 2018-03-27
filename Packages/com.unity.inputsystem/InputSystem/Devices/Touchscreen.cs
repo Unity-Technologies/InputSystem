@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: reset and accumulate deltas of all touches
 
@@ -12,7 +12,7 @@ using ISX.Utilities;
 //// - How do we implement deltas for touch when there is no delta information from the platform?
 //// - How do we implement click-detection for touch?
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Default state layout for touch devices.
@@ -110,7 +110,7 @@ namespace ISX.LowLevel
     }
 }
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?
     ////REVIEW: does it *actually* make sense to base this on Pointer?
@@ -134,7 +134,7 @@ namespace ISX
                 var touchCount = 0;
                 for (var i = 0; i < allTouchControls.Count; ++i)
                 {
-                    var phase = allTouchControls[i].phase.value;
+                    var phase = allTouchControls[i].phase.ReadValue();
                     if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
                     {
                         m_TouchesArray[touchCount] = allTouchControls[i];

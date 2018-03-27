@@ -2,9 +2,8 @@
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using UnityEngine;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Imports an InputActionAsset from JSON.
     // Can generate code wrappers for the contained action sets as a convenience.
@@ -14,6 +13,7 @@ namespace ISX.Editor
     {
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
+        [SerializeField] internal string m_WrapperClassName;
         [SerializeField] internal string m_WrapperCodeNamespace;
 
         public override void OnImportAsset(AssetImportContext ctx)
@@ -70,7 +70,7 @@ namespace ISX.Editor
                 {
                     sourceAssetPath = ctx.assetPath,
                     namespaceName = m_WrapperCodeNamespace,
-                    className = Path.GetFileNameWithoutExtension(ctx.assetPath)
+                    className = m_WrapperClassName
                 };
 
                 if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, sets, options))

@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add hierarchical set of binding overrides to asset
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // An asset containing one or more action sets.
     // Usually imported from JSON using InputActionImporter.

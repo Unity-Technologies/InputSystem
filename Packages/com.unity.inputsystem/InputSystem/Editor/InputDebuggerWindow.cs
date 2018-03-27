@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ISX.LowLevel;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
+
+////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
 ////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
 ////      be docked into the container window of InputDebuggerWindow
@@ -19,7 +20,7 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: refresh when unrecognized device pops up
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Allows looking at input activity in the editor.
     internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
@@ -191,8 +192,6 @@ namespace ISX.Editor
 
         internal static void ReviveAfterDomainReload()
         {
-            // ATM the onDeviceChange UnityEvent does not seem to properly survive reloads
-            // so we hook back in here.
             if (s_Instance != null)
             {
                 InputSystem.onDeviceChange += s_Instance.OnDeviceChange;
@@ -201,11 +200,6 @@ namespace ISX.Editor
                 // back to life.
                 s_Instance.Repaint();
             }
-        }
-
-        private static class Styles
-        {
-            public static GUIStyle deviceStyle = new GUIStyle("button");
         }
 
         private static class Contents
@@ -270,11 +264,12 @@ namespace ISX.Editor
                 var devices = InputSystem.devices;
                 devicesItem = AddChild(root, string.Format("Devices ({0})", devices.Count), ref id);
                 var haveRemotes = devices.Any(x => x.remote);
+                TreeViewItem localDevicesNode = null;
                 if (haveRemotes)
                 {
                     // Split local and remote devices into groups.
 
-                    var localDevicesNode = AddChild(devicesItem, "Local", ref id);
+                    localDevicesNode = AddChild(devicesItem, "Local", ref id);
                     AddDevices(localDevicesNode, devices, ref id);
 
                     var remoteDevicesNode = AddChild(devicesItem, "Remote", ref id);
@@ -297,7 +292,8 @@ namespace ISX.Editor
                 InputSystem.GetUnsupportedDevices(m_UnsupportedDevices);
                 if (m_UnsupportedDevices.Count > 0)
                 {
-                    var unsupportedDevicesNode = AddChild(devicesItem, string.Format("Unsupported ({0})", m_UnsupportedDevices.Count), ref id);
+                    var parent = haveRemotes ? localDevicesNode : devicesItem;
+                    var unsupportedDevicesNode = AddChild(parent, string.Format("Unsupported ({0})", m_UnsupportedDevices.Count), ref id);
                     foreach (var device in m_UnsupportedDevices)
                         AddChild(unsupportedDevicesNode, device.ToString(), ref id);
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));

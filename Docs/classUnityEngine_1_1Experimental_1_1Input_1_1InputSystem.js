@@ -1,0 +1,26 @@
+var classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem =
+[
+    [ "AddDevice", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7ee9e09917684f590f7687d99e424c6c", null ],
+    [ "DisableAllEnabledActions", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab218bcd4cf75952fce10b6d4aab1bbf0", null ],
+    [ "ListEnabledActions", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a9584e2791c0f11ab32cd0f7560c08a82", null ],
+    [ "ListEnabledActions", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a72337635911ca77f6b78a55edb7aa1e7", null ],
+    [ "ListTemplates", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a831a3e0e6064cb54bc59ce8684abca12", null ],
+    [ "ListTemplates", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ae06269f3369a36524f68b6c32278e59a", null ],
+    [ "PauseHaptics", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad7640ab8aeeaeb7c5c80a30a3f6c947b", null ],
+    [ "QueueTextEvent", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab592d66b4b2ec0b1ceae9986e3f08d1e", null ],
+    [ "RegisterProcessor", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab723070b2261a253c66d95550220e4a8", null ],
+    [ "RegisterTemplate", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#af19e8aac98d5144a888864c0172368a1", null ],
+    [ "RegisterTemplate", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a676fb82abe7b9dcdbf401135b5f1136b", null ],
+    [ "RegisterTemplate< T >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad55628e49c6315cdb3addc47e56e1115", null ],
+    [ "RegisterTemplateConstructor", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a1cea4bd82127b8e9f98952d42c4f1e3a", null ],
+    [ "RemoveTemplate", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a6751e5c450ceaef2ce7b4a6b1842bc78", null ],
+    [ "ResetHaptics", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a0799a018062141acd0128c77a79fa0fa", null ],
+    [ "ResumeHaptics", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a0ee7f50cf627a0f88db214c3af66b198", null ],
+    [ "TryFindMatchingTemplate", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#adbd8ff682d33ddb38be7b8955e3acaf5", null ],
+    [ "TryLoadTemplate", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a3ce21a4f225aeed8182c50ab57b57bbc", null ],
+    [ "devices", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#aefeaf6416fc2a54725e0fb273ebe8409", null ],
+    [ "onDeviceChange", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#afa18c32ad2754e2e54ce3465fb63e558", null ],
+    [ "onFindTemplateForDevice", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#acbdd662b6c468a0130272b21ca1d154a", null ],
+    [ "onTemplateChange", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a9fc162cc2b044989ec44201ff4f338bb", null ],
+    [ "remoting", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7852a0a3abd8dd03cffaa9e34c5fe9ee", null ]
+];

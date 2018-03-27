@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['deadzonemin',['DeadzoneMin',['../classISX_1_1InputConfiguration.html#a437daa2e412a93b5e3f417a459302713',1,'ISX::InputConfiguration']]],
-  ['deviceclass',['deviceClass',['../structISX_1_1InputDeviceDescription.html#a0a8d233ec188f6dceb68d36a2cc5b24b',1,'ISX::InputDeviceDescription']]],
-  ['displayname',['displayName',['../structISX_1_1InputTemplate_1_1ControlTemplate.html#a0b3b315ee7de0d9ba822508167730935',1,'ISX::InputTemplate::ControlTemplate']]]
+  ['deadzonemin',['DeadzoneMin',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputConfiguration.html#a73c3b5907426acf0a49a6225b7d2cc59',1,'UnityEngine::Experimental::Input::InputConfiguration']]],
+  ['deviceclass',['deviceClass',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#a3af4028153dffb860fbd70868883f15d',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
+  ['displayname',['displayName',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html#aa782ccbdf1d5af49aae11b97a526d56a',1,'UnityEngine::Experimental::Input::InputTemplate::ControlTemplate']]]
 ];

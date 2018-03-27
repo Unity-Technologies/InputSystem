@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     public struct JoystickState : IInputStateTypeInfo
     {
@@ -39,7 +38,7 @@ namespace ISX.LowLevel
     }
 }
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // A joystick with an arbitrary number of buttons and axes.
     // By default comes with just a trigger, a potentially twistable

@@ -1,14 +1,13 @@
 #if UNITY_EDITOR || UNITY_XBOXONE
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using System.Runtime.InteropServices;
-using ISX.Plugins.XInput.LowLevel;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 
 ////TODO: player ID
 
-namespace ISX.Plugins.XInput.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
@@ -144,7 +143,7 @@ namespace ISX.Plugins.XInput.LowLevel
     }
 }
 
-namespace ISX.Plugins.XInput
+namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
     [InputTemplate(stateType = typeof(XboxOneGamepadState))]
     public class XboxOneGamepad : XInputController, IXboxOneRumble

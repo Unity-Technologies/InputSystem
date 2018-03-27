@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct TrackingState : IInputStateTypeInfo
@@ -64,7 +64,7 @@ namespace ISX.LowLevel
     }
 }
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     [InputTemplate(stateType = typeof(TrackingState))]
     public abstract class TrackedDevice : InputDevice

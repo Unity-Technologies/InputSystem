@@ -2,7 +2,6 @@
 using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 ////TODO: add means to pick specific device index
 
@@ -10,7 +9,11 @@ using UnityEngine;
 
 ////TODO: prime picker with currently selected control (also with usage on device)
 
-namespace ISX.Editor
+////TODO: sort properly when search is active
+////      (the logic we inherit from TreeView sorts by displayName of items but our rendering logic
+////      tags additional text onto the items so the end result appears sorted incorrectly)
+
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Popup window that allows selecting controls to target in a binding. Will generate
     // a path string as a result and store it in the given "path" property.
@@ -21,6 +24,8 @@ namespace ISX.Editor
     // Usages are discovered from all templates that are registered with the system.
     public class InputControlPicker : PopupWindowContent
     {
+        public Action<SerializedProperty> onPickCallback;
+
         public InputControlPicker(SerializedProperty pathProperty)
         {
             if (pathProperty == null)
@@ -160,7 +165,7 @@ namespace ISX.Editor
                 var item = FindItem(id, rootItem) as Item;
                 if (item != null)
                 {
-                    String path = null;
+                    string path = null;
                     if (item.usage != null)
                         path = string.Format("*/{{{0}}}", item.usage);
                     else
@@ -186,6 +191,9 @@ namespace ISX.Editor
                     {
                         m_Parent.m_PathProperty.stringValue = path;
                         m_Parent.m_PathProperty.serializedObject.ApplyModifiedProperties();
+
+                        if (m_Parent.onPickCallback != null)
+                            m_Parent.onPickCallback(m_Parent.m_PathProperty);
                     }
                 }
 
@@ -233,8 +241,6 @@ namespace ISX.Editor
                     depth = 0
                 };
 
-                ////TODO: filter out usages for output controls
-
                 foreach (var usage in EditorInputTemplateCache.allUsages)
                 {
                     var child = new Item
@@ -269,7 +275,6 @@ namespace ISX.Editor
 
             private void BuildControlsRecursive(Item parent, InputTemplate template, string prefix, ref int id)
             {
-                ////TODO: filter out output controls
                 foreach (var control in template.controls)
                 {
                     if (control.isModifyingChildControlByPath)

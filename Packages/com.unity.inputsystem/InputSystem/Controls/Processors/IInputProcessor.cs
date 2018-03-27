@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A processor that conditions input values.

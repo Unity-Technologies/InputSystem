@@ -1,7 +1,7 @@
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Indicates what type of change related to an input device occurred.

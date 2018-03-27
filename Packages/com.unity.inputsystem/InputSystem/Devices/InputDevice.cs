@@ -1,6 +1,7 @@
 using System;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
+using Unity.Collections.LowLevel.Unsafe;
 
 // per device functions:
 //  - update/poll
@@ -13,7 +14,7 @@ using ISX.Utilities;
 // Ideally, these would *not* be virtual methods on InputDevice but use a different process (which?)
 // for associating responses with devices
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// The root of a control hierarchy.
@@ -107,6 +108,21 @@ namespace ISX
             get { return m_LastUpdateTime; }
         }
 
+        public bool wasUpdatedThisFrame
+        {
+            get
+            {
+                var updateType = InputUpdate.lastUpdateType;
+                if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.BeforeRender)
+                    return m_CurrentDynamicUpdateCount == InputUpdate.dynamicUpdateCount;
+                if (updateType == InputUpdateType.Fixed)
+                    return m_CurrentFixedUpdateCount == InputUpdate.fixedUpdateCount;
+
+                ////REVIEW: how should this behave in the editor
+                return false;
+            }
+        }
+
         /// <summary>
         /// A flattened list of controls that make up the device.
         /// </summary>
@@ -123,6 +139,21 @@ namespace ISX
                 // the device itself being listed).
                 return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
             }
+        }
+
+        /// <summary>
+        /// Return the current state of the device as byte array.
+        /// </summary>
+        public override unsafe object ReadValueAsObject()
+        {
+            var numBytes = stateBlock.alignedSizeInBytes;
+            var array = new byte[numBytes];
+            fixed(byte* arrayPtr = array)
+            {
+                UnsafeUtility.MemCpy(arrayPtr, currentStatePtr.ToPointer(), numBytes);
+            }
+
+            return array;
         }
 
         // This has to be public for Activator.CreateInstance() to be happy.
@@ -190,7 +221,7 @@ namespace ISX
         public long OnDeviceCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
-            return InputRuntime.s_Runtime.DeviceCommand(id, ref command);
+            return InputRuntime.s_Instance.DeviceCommand(id, ref command);
         }
 
         protected void RefreshUserId()
@@ -208,7 +239,7 @@ namespace ISX
             HasStateCallbacks = 1 << 1,
             HasNoisyControls = 1 << 2,
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 4, // It's a device created from data surfaced by NativeInputSystem.
+            Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
         }
 
         internal Flags m_Flags;

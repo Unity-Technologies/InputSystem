@@ -1,15 +1,17 @@
 var searchData=
 [
-  ['addcontrol',['AddControl',['../structISX_1_1InputTemplate_1_1Builder.html#a434b1f0ad88a69584ed0880d71f85f09',1,'ISX::InputTemplate::Builder']]],
-  ['adddevice',['AddDevice',['../classISX_1_1InputSystem.html#a384a36c99cab94886a0359083bd21b00',1,'ISX::InputSystem']]],
-  ['added',['Added',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1af29ddbfb905eb2593fdcdfb243f9af85',1,'ISX']]],
-  ['akey',['aKey',['../classISX_1_1Keyboard.html#a3a8d48c7a8ed9f62aab13af2ee981503',1,'ISX::Keyboard']]],
-  ['allbasedevicetemplates',['allBaseDeviceTemplates',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#ad6807bead965190f148c5428984d2036',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['allocatedeviceid',['AllocateDeviceId',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#a0104e1991e210017abaef664d4227ce4',1,'ISX::LowLevel::IInputRuntime']]],
-  ['alltemplates',['allTemplates',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#afe6b5723ed46187fba7e4ddc192dfc4d',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['allusages',['allUsages',['../classISX_1_1Editor_1_1EditorInputTemplateCache.html#a9be1328ec0cbde601798048fed3518c5',1,'ISX::Editor::EditorInputTemplateCache']]],
-  ['anykey',['anyKey',['../classISX_1_1Keyboard.html#a2a4efff801e9414fac5c6c0b544bc31d',1,'ISX::Keyboard']]],
-  ['anykeycontrol',['AnyKeyControl',['../classISX_1_1Controls_1_1AnyKeyControl.html',1,'ISX::Controls']]],
-  ['autowindowspaceprocessor',['AutoWindowSpaceProcessor',['../classISX_1_1Processors_1_1AutoWindowSpaceProcessor.html',1,'ISX::Processors']]],
-  ['axiscontrol',['AxisControl',['../classISX_1_1Controls_1_1AxisControl.html',1,'ISX::Controls']]]
+  ['addcontrol',['AddControl',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1Builder.html#a24952870fe757a959c15d6ede6dfd135',1,'UnityEngine::Experimental::Input::InputTemplate::Builder']]],
+  ['adddevice',['AddDevice',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7ee9e09917684f590f7687d99e424c6c',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['added',['Added',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dbaf29ddbfb905eb2593fdcdfb243f9af85',1,'UnityEngine::Experimental::Input']]],
+  ['akey',['aKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#aaff174d3c14f8d2291acefab0a01e4e0',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['allbasedevicetemplates',['allBaseDeviceTemplates',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#ad44c22e70fa45412d9f81ee45754cc4a',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['allcontrols',['allControls',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a1b4618163d91cdf2d2d22a234e700d05',1,'UnityEngine::Experimental::Input::InputDevice']]],
+  ['allnonproducttemplates',['allNonProductTemplates',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#ab5c1a36a80f4dc4233b45bf2476d3aea',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['allocatedeviceid',['AllocateDeviceId',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a109c31f17f74a37f3504752479a890c3',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['alltemplates',['allTemplates',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#ac52a4db76ab9faa68d812c4a6cad7e27',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['alltouchcontrols',['allTouchControls',['../classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html#a25e6fe134ac2cdb015516ded4627dcfd',1,'UnityEngine::Experimental::Input::Touchscreen']]],
+  ['allusages',['allUsages',['../classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html#a7427bd9946c2dfa7ab89f62c7575ee0c',1,'UnityEngine::Experimental::Input::Editor::EditorInputTemplateCache']]],
+  ['anykey',['anyKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#afaf8c88e37c3ba3715e763a040316460',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['anykeycontrol',['AnyKeyControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1AnyKeyControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
+  ['axiscontrol',['AxisControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1AxisControl.html',1,'UnityEngine::Experimental::Input::Controls']]]
 ];

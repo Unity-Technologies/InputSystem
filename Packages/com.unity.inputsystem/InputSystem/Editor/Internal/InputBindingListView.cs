@@ -3,11 +3,10 @@ using System;
 using System.Collections;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine;
 
 ////TODO: reordering support
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // A ReorderableList that displays an editable list of bindings for an action.
     internal class InputBindingListView : ReorderableList

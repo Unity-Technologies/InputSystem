@@ -1,9 +1,8 @@
 using System;
-using UnityEngine;
 
 ////REVIEW: akin to this, also have an InputActionSetReference? :(
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // Object that represents a specific action in a specific action
     // set *without* containing the action. This is useful for passing

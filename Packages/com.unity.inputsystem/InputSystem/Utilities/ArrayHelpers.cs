@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     // A collection of utility functions to work with arrays.
     internal static class ArrayHelpers

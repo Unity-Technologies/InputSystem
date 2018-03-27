@@ -3,7 +3,7 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////TODO: add API to send events in bulk rather than one by one
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.
@@ -90,12 +90,12 @@ namespace ISX.LowLevel
         /// <summary>
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
-        float PollingFrequency { set; }
+        float pollingFrequency { set; }
     }
 
     internal static class InputRuntime
     {
-        public static IInputRuntime s_Runtime;
+        public static IInputRuntime s_Instance;
     }
 
     public static class InputRuntimeExtensions

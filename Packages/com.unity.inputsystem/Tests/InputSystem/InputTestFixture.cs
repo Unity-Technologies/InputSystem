@@ -1,10 +1,10 @@
 using System.Linq;
-using ISX.Controls;
+using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
 
 ////TODO: when running tests in players, make sure that remoting is turned off
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A test fixture for writing tests that use the input system. Can be derived from

@@ -1,8 +1,8 @@
-namespace ISX.Modifiers
+namespace UnityEngine.Experimental.Input.Modifiers
 {
     // Performs the action if the control is pressed, held for at least the set duration
     // (which defaults to InputConfiguration.SlowTapTime) and then *released*.
-    public class SlowTapModifier : IInputActionModifier
+    public class SlowTapModifier : IInputBindingModifier
     {
         public float duration;
         ////REVIEW: this seems stupid; shouldn't a slow tap just be anything that takes longer than TapTime?

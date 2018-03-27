@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 ////REVIEW: Ideally we'd have a view that can be switched dynamically between going by action and going by device/controls.
 ////        The second view would ideally look something like Steam's binding overlay where you see a graphical representation
@@ -15,7 +14,7 @@ using UnityEngine;
 ////FIXME: ATM there is a bug in the ScriptedImporter feature where if you edit the .inputactions asset outside of Unity,
 ////       it will correctly re-import but the InputActionAssetEditor will not refresh
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Custom inspector that allows modifying action sets in InputActionAssets.
     [CustomEditor(typeof(InputActionAsset))]
@@ -136,12 +135,7 @@ namespace ISX.Editor
         [SerializeField] private TreeViewState m_ActionTreeViewState;
         [SerializeField] private MultiColumnHeaderState m_ActionTreeViewHeaderState;
 
-        [NonSerialized] private TreeView m_ActionTreeView;
-
-        private static class Styles
-        {
-            public static GUIStyle box = "Box";
-        }
+        [NonSerialized] private InputActionTreeView m_ActionTreeView;
 
         private static class Contents
         {

@@ -1,14 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     // Helper to simplify recording events. Can record events for a specific device
     // or all events coming in.

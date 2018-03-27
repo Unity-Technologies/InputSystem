@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Data header for a command send to an <see cref="InputDevice"/>.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     // Helper to avoid array allocations if there's only a single value in the
     // array.

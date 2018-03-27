@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['parent',['parent',['../classISX_1_1InputControl.html#a254b6b693502e19b517736f26197601f',1,'ISX::InputControl']]],
-  ['path',['path',['../classISX_1_1InputControl.html#ae444777a164e1626b625573943ecd61c',1,'ISX::InputControl']]],
-  ['pollingfrequency',['PollingFrequency',['../interfaceISX_1_1LowLevel_1_1IInputRuntime.html#ab8d48342d2eeb82bfd44a72520ed7f29',1,'ISX::LowLevel::IInputRuntime']]],
-  ['position',['position',['../classISX_1_1Pointer.html#aac9d31ee3054f74c73728976f78bc115',1,'ISX::Pointer']]]
+  ['parent',['parent',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#ad90f697954abe2b8f91858ff8685e085',1,'UnityEngine::Experimental::Input::InputControl']]],
+  ['path',['path',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#a46c20eb2a26abeb1e934cd66e1dd6484',1,'UnityEngine::Experimental::Input::InputControl']]],
+  ['pollingfrequency',['pollingFrequency',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a61c58de716bc19b745a0ea262db7f737',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['position',['position',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1TouchControl.html#a495c0c7ed8ef3f3183e11b9a89cb8930',1,'UnityEngine.Experimental.Input.Controls.TouchControl.position()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html#a495c0c7ed8ef3f3183e11b9a89cb8930',1,'UnityEngine.Experimental.Input.Pointer.position()']]]
 ];

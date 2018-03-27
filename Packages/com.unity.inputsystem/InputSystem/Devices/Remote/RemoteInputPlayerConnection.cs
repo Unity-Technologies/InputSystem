@@ -1,13 +1,12 @@
 using System;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // Transports input remoting messages from and to players. Can be used to
     // make input on either side fully available on the other side. I.e. player
@@ -69,6 +68,8 @@ namespace ISX
             return subscriber;
         }
 
+        ////REVIEW: given that the PlayerConnection will connect to the editor regardless, we end up
+        ////        on this path whether input remoting is enabled or not
         private void OnConnected(int id)
         {
             if (m_ConnectedIds != null && ArrayHelpers.Contains(m_ConnectedIds, id))
@@ -84,7 +85,7 @@ namespace ISX
             if (m_ConnectedIds == null || !ArrayHelpers.Contains(m_ConnectedIds, id))
                 return;
 
-            ArrayHelpers.EraseAt(ref m_ConnectedIds, id);
+            ArrayHelpers.Erase(ref m_ConnectedIds, id);
 
             SendToSubscribers(InputRemoting.MessageType.Disconnect, new MessageEventArgs {playerId = id});
         }

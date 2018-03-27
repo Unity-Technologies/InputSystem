@@ -1,8 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Custom inspector support for InputActions.
     //

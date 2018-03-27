@@ -1,7 +1,7 @@
 using System;
-using ISX.Processors;
+using UnityEngine.Experimental.Input.Processors;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Static configuration values that are picked up by the various pieces of logic.

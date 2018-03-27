@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
 ////TODO: allow stuff like "/gamepad/**/<button>"
@@ -11,7 +10,7 @@ using UnityEngine;
 
 ////REVIEW: change "*/{PrimaryAction}" to "*/**/{PrimaryAction}" so that the hierarchy crawling becomes explicit?
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Functions to working with control path specs (like "/gamepad/*stick").

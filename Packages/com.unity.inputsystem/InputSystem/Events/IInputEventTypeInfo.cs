@@ -1,6 +1,6 @@
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     // Allows retrieving information about event types from an instance of the type.
     // As structs can always be default instantiated, this allows us to get data on the struct

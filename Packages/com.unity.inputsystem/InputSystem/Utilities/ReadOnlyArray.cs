@@ -2,10 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
     /// Read-only access to an array or to a slice of an array.

@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['remote',['remote',['../classISX_1_1InputDevice.html#a87948035cec08321cbc1b6116f8df141',1,'ISX::InputDevice']]],
-  ['remoting',['remoting',['../classISX_1_1InputSystem.html#aaecc5e9aab6f76e726533003298628e7',1,'ISX::InputSystem']]],
-  ['right',['right',['../classISX_1_1Controls_1_1DpadControl.html#a2740d11d01ac91b0c30b82df84b3afd8',1,'ISX::Controls::DpadControl']]],
-  ['rightbutton',['rightButton',['../classISX_1_1Mouse.html#aefecc8e9f798c65acd021e19946d8c5c',1,'ISX::Mouse']]]
+  ['remote',['remote',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a02d6f3655b4ef4d41c3169419d6d316a',1,'UnityEngine::Experimental::Input::InputDevice']]],
+  ['remoting',['remoting',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7852a0a3abd8dd03cffaa9e34c5fe9ee',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['right',['right',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DpadControl.html#afed74e4661b02106a2d6e3e340a60ec8',1,'UnityEngine::Experimental::Input::Controls::DpadControl']]],
+  ['rightbutton',['rightButton',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html#a02a339473f1585f6fdec8d790643a249',1,'UnityEngine::Experimental::Input::Mouse']]]
 ];

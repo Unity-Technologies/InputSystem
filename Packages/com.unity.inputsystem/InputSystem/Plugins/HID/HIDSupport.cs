@@ -1,4 +1,4 @@
-namespace ISX.Plugins.HID
+namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
     /// Adds support for generic HID devices to the input system.

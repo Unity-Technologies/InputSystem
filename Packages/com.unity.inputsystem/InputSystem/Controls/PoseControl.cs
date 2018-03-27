@@ -1,7 +1,7 @@
 using System;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     public class PoseControl : InputControl<Pose>
     {

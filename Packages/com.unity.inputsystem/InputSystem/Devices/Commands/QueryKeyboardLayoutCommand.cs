@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Command to query the name of the current keyboard layout from a device.

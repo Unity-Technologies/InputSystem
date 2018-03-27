@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Generates a wrapper around an InputDeviceDatabaseAsset which automatically
     // ensures that all the C# plugins are initialized.

@@ -3,26 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using ISX;
-using ISX.Controls;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.TestTools;
-using ISX.LowLevel;
-using ISX.Modifiers;
-using ISX.Processors;
-using ISX.Utilities;
-using Touch = ISX.Touch;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Modifiers;
+using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Utilities;
+using Touch = UnityEngine.Experimental.Input.Touch;
 #if UNITY_EDITOR
-using ISX.Editor;
+using UnityEngine.Experimental.Input.Editor;
 using UnityEditor;
 #endif
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 // These tests rely on the default template setup present in the code
@@ -577,6 +577,30 @@ class FunctionalTests : InputTestFixture
         Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
         Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
         Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeDouble));
+    }
+
+    unsafe struct StateWithFixedArray : IInputStateTypeInfo
+    {
+        [InputControl] public fixed float buffer[2];
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+    [InputTemplate(stateType = typeof(StateWithFixedArray))]
+    class DeviceWithStateStructWithFixedArray : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Templates")]
+    public void Templates_FormatOfControlWithFixedArrayType_IsNotInferredFromType()
+    {
+        InputSystem.RegisterTemplate<DeviceWithStateStructWithFixedArray>();
+
+        Assert.That(() => new InputControlSetup("DeviceWithStateStructWithFixedArray"),
+            Throws.Exception.With.Message.Contain("Template has not been set"));
     }
 
     [Test]
@@ -1385,10 +1409,7 @@ class FunctionalTests : InputTestFixture
         var setup = new InputControlSetup("Gamepad");
         var device = (Gamepad)setup.Finish();
 
-        Assert.Throws<InvalidOperationException>(() =>
-            {
-                var value = device.leftStick.value;
-            });
+        Assert.Throws<InvalidOperationException>(() => { device.leftStick.ReadValue(); });
     }
 
     [Test]
@@ -1420,12 +1441,12 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(device, firstState);
         InputSystem.Update();
 
-        Assert.That(device.leftStick.value, Is.EqualTo(default(Vector2)));
+        Assert.That(device.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
 
         InputSystem.QueueStateEvent(device, secondState);
         InputSystem.Update();
 
-        Assert.That(device.leftStick.value, Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f), device.leftStick)));
+        Assert.That(device.leftStick.ReadValue(), Is.EqualTo(processor.Process(new Vector2(0.5f, 0.5f), device.leftStick)));
     }
 
     [Test]
@@ -1471,18 +1492,18 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.up.value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.down.value, Is.EqualTo(0.0).Within(0.000001));
-        Assert.That(gamepad.leftStick.right.value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.left.value, Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(-0.5f, -0.5f) });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.up.value, Is.EqualTo(0.0).Within(0.000001));
-        Assert.That(gamepad.leftStick.down.value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.right.value, Is.EqualTo(0.0).Within(0.000001));
-        Assert.That(gamepad.leftStick.left.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
     }
 
     [Test]
@@ -1528,53 +1549,53 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
-        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.up));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.up));
 
         // Up left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
 
         // Left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
-        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.left));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.left));
 
         // Down left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
 
         // Down.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
-        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.down));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.down));
 
         // Down right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
 
         // Down.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
-        Assert.That(gamepad.dpad.value, Is.EqualTo(Vector2.right));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.right));
 
         // Up right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.value.magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
     }
 
     struct DiscreteButtonDpadState : IInputStateTypeInfo
@@ -1734,13 +1755,13 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, oldState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.25f).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25f).Within(0.000001));
 
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75f).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.25f).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75f).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25f).Within(0.00001));
     }
 
     [Test]
@@ -1756,8 +1777,8 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.Update(InputUpdateType.Dynamic);
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.previous, Is.Zero);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.Zero);
     }
 
     [Test]
@@ -1773,8 +1794,8 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update(InputUpdateType.Dynamic); // Fixed: current=0.25, previous=0.75
         InputSystem.Update(InputUpdateType.Fixed); // Unchanged.
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.25).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.75).Within(0.000001));
     }
 
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
@@ -1796,7 +1817,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.Update();
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.25f).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25f).Within(0.000001));
     }
 
     // The state layout for a given device is not fixed. Even though Gamepad, for example, specifies
@@ -2017,7 +2038,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanDetectWhetherButtonStateHasChangedThisFrame()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
@@ -2027,6 +2048,12 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(gamepad.buttonEast.wasJustPressed, Is.True);
+        Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
+
+        // Input update with no changes should make both properties go back to false.
+        InputSystem.Update();
+
+        Assert.That(gamepad.buttonEast.wasJustPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasJustReleased, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
@@ -2086,7 +2113,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, state);
         InputSystem.Update();
 
-        Assert.That(gamepad.buttonSouth.value, Is.EqualTo(0.5f));
+        Assert.That(gamepad.buttonSouth.ReadValue(), Is.EqualTo(0.5f));
     }
 
     [Test]
@@ -2171,7 +2198,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.AddDevice("Keyboard");
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
     }
 
     [Test]
@@ -2396,6 +2423,51 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_ChangingStateOfDevice_MarksDeviceAsUpdatedThisFrame()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(device, new GamepadState {rightTrigger = 0.5f});
+        InputSystem.Update();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(device.wasUpdatedThisFrame, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReadStateOfDeviceAsByteArray()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(device, new GamepadState { leftStick = new Vector2(0.123f, 0.456f) });
+        InputSystem.Update();
+
+        var state = device.ReadValueAsObject();
+
+        Assert.That(state, Is.TypeOf<byte[]>());
+        var buffer = (byte[])state;
+
+        Assert.That(buffer.Length, Is.EqualTo(Marshal.SizeOf(typeof(GamepadState))));
+
+        unsafe
+        {
+            fixed(byte* bufferPtr = buffer)
+            {
+                var statePtr = (GamepadState*)bufferPtr;
+                Assert.That(statePtr->leftStick.x, Is.EqualTo(0.123).Within(0.00001));
+                Assert.That(statePtr->leftStick.y, Is.EqualTo(0.456).Within(0.00001));
+            }
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
     {
         InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "MyController"});
@@ -2528,6 +2600,8 @@ class FunctionalTests : InputTestFixture
         var unsupportedDevices = new List<InputDeviceDescription>();
         InputSystem.GetUnsupportedDevices(unsupportedDevices);
 
+        ////TODO: also make sure that when the template support it is removed, the device goes back on the unsupported list
+
         Assert.That(unsupportedDevices.Count, Is.Zero);
     }
 
@@ -2545,7 +2619,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad));
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5f).Within(0.0000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Within(0.0000001));
     }
 
     [Test]
@@ -2767,13 +2841,13 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
         InputSystem.Update();
 
-        Assert.That(pointer.delta.x.value, Is.Zero);
-        Assert.That(pointer.delta.y.value, Is.Zero);
+        Assert.That(pointer.delta.x.ReadValue(), Is.Zero);
+        Assert.That(pointer.delta.y.ReadValue(), Is.Zero);
     }
 
     // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
@@ -2797,13 +2871,13 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update(InputUpdateType.Fixed);
 
-        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
         InputSystem.Update(InputUpdateType.Dynamic);
 
-        Assert.That(pointer.delta.x.value, Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
     }
 
     [Test]
@@ -2816,8 +2890,8 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
-        Assert.That(pointer.delta.x.value, Is.EqualTo(1).Within(0.0000001));
-        Assert.That(pointer.delta.y.value, Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(1).Within(0.0000001));
+        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(1).Within(0.0000001));
     }
 
     [Test]
@@ -2855,8 +2929,8 @@ class FunctionalTests : InputTestFixture
         //       delta.value.x and delta.value.y. This is because the sensitivity processor sits
         //       on the vector control and not on the individual component axes.
 
-        Assert.That(pointer.delta.value.x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
-        Assert.That(pointer.delta.value.y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
+        Assert.That(pointer.delta.ReadValue().x, Is.EqualTo(32 / kWindowWidth * kSensitivity).Within(0.00001));
+        Assert.That(pointer.delta.ReadValue().y, Is.EqualTo(64 / kWindowHeight * kSensitivity).Within(0.00001));
     }
 
     [Test]
@@ -3016,8 +3090,8 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueDeltaStateEvent(mouse.scroll, new Vector2(10, 12));
         InputSystem.Update();
 
-        Assert.That(mouse.scroll.x.value, Is.EqualTo(10).Within(0.0000001));
-        Assert.That(mouse.scroll.y.value, Is.EqualTo(12).Within(0.0000001));
+        Assert.That(mouse.scroll.x.ReadValue(), Is.EqualTo(10).Within(0.0000001));
+        Assert.That(mouse.scroll.y.ReadValue(), Is.EqualTo(12).Within(0.0000001));
     }
 
     [Test]
@@ -3066,9 +3140,9 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.position.x.value, Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.position.y.value, Is.EqualTo(0.456).Within(0.000001));
-        Assert.That(device.phase.value, Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
     }
 
     [Test]
@@ -3090,10 +3164,10 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.touches.Count, Is.EqualTo(1));
-        Assert.That(device.touches[0].touchId.value, Is.EqualTo(4));
-        Assert.That(device.touches[0].phase.value, Is.EqualTo(PointerPhase.Began));
-        Assert.That(device.touches[0].position.x.value, Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.touches[0].position.y.value, Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.touches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.touches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.touches[0].position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.touches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new Touch
@@ -3112,10 +3186,10 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.touches.Count, Is.EqualTo(2));
-        Assert.That(device.touches[0].touchId.value, Is.EqualTo(4));
-        Assert.That(device.touches[1].touchId.value, Is.EqualTo(5));
-        Assert.That(device.touches[0].phase.value, Is.EqualTo(PointerPhase.Moved));
-        Assert.That(device.touches[1].phase.value, Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.touches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.touches[1].touchId.ReadValue(), Is.EqualTo(5));
+        Assert.That(device.touches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.touches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new Touch
@@ -3132,8 +3206,8 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.touches.Count, Is.Zero);
-        Assert.That(device.allTouchControls[0].phase.value, Is.EqualTo(PointerPhase.Ended));
-        Assert.That(device.allTouchControls[1].phase.value, Is.EqualTo(PointerPhase.Cancelled));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
     }
 
     [Test]
@@ -3159,7 +3233,7 @@ class FunctionalTests : InputTestFixture
         var device = (Gamepad)setup.Finish();
         InputSystem.AddDevice(device);
 
-        Assert.That(device.leftStick.value, Is.EqualTo(default(Vector2)));
+        Assert.That(device.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
     }
 
     [Test]
@@ -3366,8 +3440,8 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123f));
-        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456f));
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123f));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.456f));
     }
 
     [Test]
@@ -3386,10 +3460,10 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.5f, 0.5f));
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(gamepad.rightStick.x.value, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
     }
 
     [Test]
@@ -3425,7 +3499,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update(InputUpdateType.BeforeRender);
 
-        Assert.That(gamepad.leftStick.value, Is.EqualTo(default(Vector2)));
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
     }
 
     [Test]
@@ -3450,7 +3524,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, newState);
         InputSystem.Update(InputUpdateType.BeforeRender);
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.123f).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123f).Within(0.000001));
     }
 
     [Test]
@@ -3647,7 +3721,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(device, new GamepadState { rightTrigger = 0.45f });
         InputSystem.Update();
 
-        Assert.That(device.rightTrigger.value, Is.EqualTo(0.0).Within(0.00001));
+        Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
     }
 
     [Test]
@@ -3818,7 +3892,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, new GamepadState { rightTrigger = 0.75f }, 1.0);
         InputSystem.Update();
 
-        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.5f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.5f).Within(0.000001));
     }
 
     struct CustomNestedDeviceState : IInputStateTypeInfo
@@ -3896,7 +3970,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(device, new CustomDeviceState {axis = 0.5f});
         InputSystem.Update();
 
-        Assert.That(device.axis.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
     }
 
     struct ExtendedCustomDeviceState : IInputStateTypeInfo
@@ -3925,7 +3999,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.QueueStateEvent(device, state);
         InputSystem.Update();
 
-        Assert.That(device.axis.value, Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
     }
 
     [Test]
@@ -3939,7 +4013,7 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
         Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
-        Assert.That(device.axis.value, Is.EqualTo(0.234).Within(0.000001));
+        Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
     }
 
     [Test]
@@ -4337,6 +4411,8 @@ class FunctionalTests : InputTestFixture
         Assert.That(sets[0].actions[0].bindings[1].modifiers, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].group, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
+        Assert.That(sets[0].actions[0].set, Is.SameAs(sets[0]));
+        Assert.That(sets[0].actions[1].set, Is.SameAs(sets[0]));
     }
 
     [Test]
@@ -4514,7 +4590,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(enabledActions, Has.Exactly(1).SameAs(action2));
     }
 
-    private class TestModifier : IInputActionModifier
+    private class TestModifier : IInputBindingModifier
     {
         #pragma warning disable CS0649
         public float parm1; // Assigned through reflection
@@ -5029,6 +5105,35 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
+    public void TODO_Actions_CanCreateCompositeBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("ButtonAxis")
+        .With("Negative", "/<Gamepad>/leftShoulder")
+        .With("Positive", "/<Gamepad>/rightShoulder");
+        action.Enable();
+
+        float? value = null;
+        action.performed += ctx => { value = ctx.GetValue<float>(); };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.LeftShoulder));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(-1).Within(0.00001));
+
+        value = null;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.RightShoulder));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhileActionIsEnabled_CannotApplyOverrides()
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
@@ -5397,6 +5502,120 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanDriveMoveActionFromWASDKeys()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var action = new InputAction();
+
+        action.AddBinding("/<Keyboard>/a").WithModifiers("axisvector(x=-1,y=0)");
+        action.AddBinding("/<Keyboard>/d").WithModifiers("axisvector(x=1,y=0)");
+        action.AddBinding("/<Keyboard>/w").WithModifiers("axisvector(x=0,y=1)");
+        action.AddBinding("/<Keyboard>/s").WithModifiers("axisvector(x=0,y=-1)");
+
+        Vector2? vector = null;
+        action.performed +=
+            ctx => { vector = ctx.GetValue<Vector2>(); };
+
+        action.Enable();
+
+        //Have a concept of "composite bindings"?
+
+        //This leads to the bigger question of how the system handles an action
+        //that has multiple bindings where each may independently go through a
+        //full phase cycle.
+
+        ////TODO: need to have names on the bindings ("up", "down", "left", right")
+        ////      (so it becomes "Move Up" etc in a binding UI)
+
+        ////REVIEW: how should we handle mixed-device bindings? say there's an additional
+        ////        gamepad binding on the action above. what if both the gamepad and
+        ////        the keyboard trigger?
+
+        // A pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+        vector = null;
+
+        // D pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+        vector = null;
+
+        // W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        ////FIXME: these need to behave like Dpad vectors and be normalized
+
+        // A+W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // D+W pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
+        vector = null;
+
+        // A+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        // D+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
+        vector = null;
+
+        // A+D+W+S pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S, Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(vector, Is.Not.Null);
+        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
+        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
+    }
+
+    [Test]
     [Category("Remote")]
     public void Remote_CanConnectTwoInputSystemsOverNetwork()
     {
@@ -5416,7 +5635,7 @@ class FunctionalTests : InputTestFixture
         secondInputManager.InstallRuntime(secondInputRuntime);
         secondInputManager.InitializeData();
 
-        var local = InputSystem.remoting;
+        var local = new InputRemoting(InputSystem.s_Manager);
         var remote = new InputRemoting(secondInputManager);
 
         // We wire the two directly into each other effectively making function calls
@@ -5447,7 +5666,7 @@ class FunctionalTests : InputTestFixture
 
         var remoteGamepad = (Gamepad)secondInputManager.devices.First(x => x.template == remoteGamepadTemplate);
 
-        Assert.That(remoteGamepad.leftTrigger.value, Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(remoteGamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
         secondInputRuntime.Dispose();
     }
@@ -5461,7 +5680,7 @@ class FunctionalTests : InputTestFixture
         secondInputManager.InstallRuntime(secondInputRuntime);
         secondInputManager.InitializeData();
 
-        var local = InputSystem.remoting;
+        var local = new InputRemoting(InputSystem.s_Manager);
         var remote = new InputRemoting(secondInputManager);
 
         local.Subscribe(remote);
@@ -5501,7 +5720,7 @@ class FunctionalTests : InputTestFixture
         var secondInputSystem = new InputManager();
         secondInputSystem.InitializeData();
 
-        var local = InputSystem.remoting;
+        var local = new InputRemoting(InputSystem.s_Manager);
         var remote = new InputRemoting(secondInputSystem);
 
         local.Subscribe(remote);
@@ -5660,9 +5879,10 @@ class FunctionalTests : InputTestFixture
         connectionToEditor.Bind(fakePlayerConnection, true);
         connectionToPlayer.Bind(fakeEditorConnection, true);
 
-        // Bind the local remote on the player side.
-        InputSystem.remoting.Subscribe(connectionToEditor);
-        InputSystem.remoting.StartSending();
+        // Bind a local remote on the player side.
+        var local = new InputRemoting(InputSystem.s_Manager);
+        local.Subscribe(connectionToEditor);
+        local.StartSending();
 
         connectionToPlayer.Subscribe(observer);
 
@@ -5679,6 +5899,9 @@ class FunctionalTests : InputTestFixture
         Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
 
         ////TODO: test disconnection
+
+        ScriptableObject.Destroy(connectionToEditor);
+        ScriptableObject.Destroy(connectionToPlayer);
     }
 
 #if UNITY_EDITOR
@@ -5798,8 +6021,8 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.Update(InputUpdateType.Dynamic);
 
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.previous, Is.EqualTo(0.25).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadPreviousValue(), Is.EqualTo(0.25).Within(0.000001));
     }
 
     [Test]
@@ -5910,7 +6133,7 @@ class FunctionalTests : InputTestFixture
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace"});
+                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
         // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
         // is just perform some textual verification. Once we have the newest Mono, this should
@@ -5918,7 +6141,26 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public ISX.InputActionSet Clone()"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputActionSet Clone()"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
+    {
+        var set1 = new InputActionSet("set1");
+        set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
+        set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionSet(set1);
+        asset.name = "New Controls (4)";
+
+        var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
+                new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
+
+        Assert.That(code, Contains.Substring("class NewControls_4_"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @action__"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @_1thing"));
     }
 
     class TestEditorWindow : EditorWindow
@@ -5926,7 +6168,7 @@ class FunctionalTests : InputTestFixture
         public Vector2 mousePosition;
         public void OnGUI()
         {
-            mousePosition = Mouse.current.position.value;
+            mousePosition = Mouse.current.position.ReadValue();
         }
     }
 

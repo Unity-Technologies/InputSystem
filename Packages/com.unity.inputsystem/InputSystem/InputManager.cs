@@ -2,18 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using ISX.Controls;
+using UnityEngine.Experimental.Input.Composites;
+using UnityEngine.Experimental.Input.Controls;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 using UnityEngine.Profiling;
-using ISX.LowLevel;
-using ISX.Modifiers;
-using ISX.Processors;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Modifiers;
+using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
-using Debug = UnityEngine.Debug;
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
@@ -24,7 +23,7 @@ using ISX.Net35Compatibility;
 
 ////REVIEW: instead of RegisterModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using TemplateChangeListener = Action<string, InputTemplateChange>;
@@ -439,7 +438,7 @@ namespace ISX
             return templates.Count - countBefore;
         }
 
-        public void RegisterProcessor(string name, Type type)
+        public void RegisterControlProcessor(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -452,7 +451,7 @@ namespace ISX
             m_Processors[internedName] = type;
         }
 
-        public Type TryGetProcessor(string name)
+        public Type TryGetControlProcessor(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -464,7 +463,7 @@ namespace ISX
             return null;
         }
 
-        public void RegisterModifier(string name, Type type)
+        public void RegisterBindingModifier(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -475,7 +474,7 @@ namespace ISX
             m_Modifiers[internedName] = type;
         }
 
-        public Type TryGetModifier(string name)
+        public Type TryGetBindingModifier(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -487,9 +486,14 @@ namespace ISX
             return null;
         }
 
-        public IEnumerable<string> ListModifiers()
+        public IEnumerable<string> ListBindingModifiers()
         {
             return m_Modifiers.Keys.Select(x => x.ToString());
+        }
+
+        public void RegisterBindingComposite(string name, Type type)
+        {
+            //throw new NotImplementedException();
         }
 
         // Processes a path specification that may match more than a single control.
@@ -943,8 +947,8 @@ namespace ISX
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
 
-                if (ReferenceEquals(InputRuntime.s_Runtime, m_Runtime))
-                    InputRuntime.s_Runtime = null;
+                if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
+                    InputRuntime.s_Instance = null;
             }
         }
 
@@ -964,7 +968,6 @@ namespace ISX
 #if UNITY_EDITOR
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
-            m_CurrentUpdate = InputUpdateType.Dynamic;
 
             // Register templates.
             RegisterTemplate("Button", typeof(ButtonControl)); // Controls.
@@ -1004,24 +1007,28 @@ namespace ISX
             ////REVIEW: #if templates to the platforms they make sense on?
 
             // Register processors.
-            RegisterProcessor("Invert", typeof(InvertProcessor));
-            RegisterProcessor("Clamp", typeof(ClampProcessor));
-            RegisterProcessor("Normalize", typeof(NormalizeProcessor));
-            RegisterProcessor("Deadzone", typeof(DeadzoneProcessor));
-            RegisterProcessor("Curve", typeof(CurveProcessor));
-            RegisterProcessor("Sensitivity", typeof(SensitivityProcessor));
+            RegisterControlProcessor("Invert", typeof(InvertProcessor));
+            RegisterControlProcessor("Clamp", typeof(ClampProcessor));
+            RegisterControlProcessor("Normalize", typeof(NormalizeProcessor));
+            RegisterControlProcessor("Deadzone", typeof(DeadzoneProcessor));
+            RegisterControlProcessor("Curve", typeof(CurveProcessor));
+            RegisterControlProcessor("Sensitivity", typeof(SensitivityProcessor));
 
             #if UNITY_EDITOR
-            RegisterProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
+            RegisterControlProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
-            // Register action modifiers.
-            RegisterModifier("Press", typeof(PressModifier));
-            RegisterModifier("Hold", typeof(HoldModifier));
-            RegisterModifier("Tap", typeof(TapModifier));
-            RegisterModifier("SlowTap", typeof(SlowTapModifier));
-            RegisterModifier("DoubleTap", typeof(DoubleTapModifier));
-            RegisterModifier("Swipe", typeof(SwipeModifier));
+            // Register modifiers.
+            RegisterBindingModifier("Press", typeof(PressModifier));
+            RegisterBindingModifier("Hold", typeof(HoldModifier));
+            RegisterBindingModifier("Tap", typeof(TapModifier));
+            RegisterBindingModifier("SlowTap", typeof(SlowTapModifier));
+            RegisterBindingModifier("DoubleTap", typeof(DoubleTapModifier));
+            RegisterBindingModifier("Swipe", typeof(SwipeModifier));
+
+            // Register composites.
+            RegisterBindingComposite("ButtonAxis", typeof(ButtonAxis));
+            RegisterBindingComposite("ButtonVector", typeof(ButtonVector));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1053,7 +1060,14 @@ namespace ISX
 
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
             // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
-            InputRuntime.s_Runtime = m_Runtime;
+            InputRuntime.s_Instance = m_Runtime;
+
+            // Reset update state.
+            InputUpdate.lastUpdateType = 0;
+            InputUpdate.dynamicUpdateCount = 0;
+            InputUpdate.fixedUpdateCount = 0;
+
+            InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
         }
 
         [Serializable]
@@ -1070,24 +1084,14 @@ namespace ISX
         [NonSerialized] internal InputTemplate.Collection m_Templates;
         [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
         [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
+        [NonSerialized] private Dictionary<InternedString, Type> m_Composites;
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
         [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
-        [NonSerialized] internal InputUpdateType m_CurrentUpdate;
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         [NonSerialized] internal InputStateBuffers m_StateBuffers;
-
-        // We track dynamic and fixed updates to know when we need to flip device front and back buffers.
-        // Because events are only sent once, we may need to flip dynamic update buffers in fixed updates
-        // and fixed update buffers in dynamic updates as we have to update both front buffers simultaneously.
-        // We apply the following rules to track this:
-        // 1) There can be dynamic updates without fixed updates BUT
-        // 2) There cannot be fixed updates without dynamic updates AND
-        // 3) Fixed updates precede dynamic updates.
-        [NonSerialized] internal uint m_CurrentDynamicUpdateCount;
-        [NonSerialized] internal uint m_CurrentFixedUpdateCount;
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
@@ -1352,6 +1356,7 @@ namespace ISX
 
         // (Re)allocates state buffers and assigns each device that's been added
         // a segment of the buffer. Preserves the current state of devices.
+        // NOTE: Installs the buffers globally.
         private void ReallocateStateBuffers(int[] oldDeviceIndices = null)
         {
             var devices = m_Devices;
@@ -1367,7 +1372,8 @@ namespace ISX
             // Install the new buffers.
             oldBuffers.FreeAll();
             m_StateBuffers = newBuffers;
-            m_StateBuffers.SwitchTo(m_CurrentUpdate);
+            InputStateBuffers.SwitchTo(m_StateBuffers,
+                InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
 
             ////TODO: need to update state change monitors
         }
@@ -1396,7 +1402,7 @@ namespace ISX
             // into the next frame.
             if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
-                var stateBuffers = m_StateBuffers.GetBuffers(updateType);
+                var stateBuffers = m_StateBuffers.GetDoubleBuffersFor(updateType);
                 var isDynamicOrFixedUpdate =
                     updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
 
@@ -1428,12 +1434,12 @@ namespace ISX
                         {
                             if (updateType == InputUpdateType.Dynamic)
                             {
-                                if (device.m_CurrentDynamicUpdateCount == m_CurrentDynamicUpdateCount + 1)
+                                if (device.m_CurrentDynamicUpdateCount == InputUpdate.dynamicUpdateCount + 1)
                                     continue; // Device already received state for upcoming dynamic update.
                             }
                             else if (updateType == InputUpdateType.Fixed)
                             {
-                                if (device.m_CurrentFixedUpdateCount == m_CurrentFixedUpdateCount + 1)
+                                if (device.m_CurrentFixedUpdateCount == InputUpdate.fixedUpdateCount + 1)
                                     continue; // Device already received state for upcoming fixed update.
                             }
                         }
@@ -1510,8 +1516,8 @@ namespace ISX
             }
 #endif
 
-            m_CurrentUpdate = updateType;
-            m_StateBuffers.SwitchTo(buffersToUseForUpdate);
+            InputUpdate.lastUpdateType = updateType;
+            InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (m_ActionTimeouts != null && gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
@@ -1519,9 +1525,9 @@ namespace ISX
 
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic)
-                ++m_CurrentDynamicUpdateCount;
+                ++InputUpdate.dynamicUpdateCount;
             else if (updateType == InputUpdateType.Fixed)
-                ++m_CurrentFixedUpdateCount;
+                ++InputUpdate.fixedUpdateCount;
             else if (updateType == InputUpdateType.BeforeRender)
                 isBeforeRenderUpdate = true;
 
@@ -1529,7 +1535,7 @@ namespace ISX
             if (eventCount <= 0)
             {
                 if (buffersToUseForUpdate != updateType)
-                    m_StateBuffers.SwitchTo(updateType);
+                    InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
@@ -1678,7 +1684,7 @@ namespace ISX
                         if (deviceHasStateCallbacks)
                         {
                             ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
-                            var currentState = InputStateBuffers.GetFrontBuffer(deviceIndex);
+                            var currentState = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
                             var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
 
                             ((IInputStateCallbackReceiver)device).OnBeforeWriteNewState(currentState, newState);
@@ -1693,7 +1699,7 @@ namespace ISX
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ProcessStateChangeMonitors(deviceIndex, statePtr,
-                                new IntPtr(InputStateBuffers.GetFrontBuffer(deviceIndex).ToInt64() + stateBlock.byteOffset),
+                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlock.byteOffset),
                                 stateSize, stateOffset);
 
                         // Buffer flip.
@@ -1815,7 +1821,7 @@ namespace ISX
             ////TODO: fire event that allows code to update state *from* state we just updated
 
             if (buffersToUseForUpdate != updateType)
-                m_StateBuffers.SwitchTo((InputUpdateType)updateType);
+                InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
 #if ENABLE_PROFILER
             Profiler.EndSample();
@@ -1969,40 +1975,40 @@ namespace ISX
             // If it is *NOT* a fixed update, we need to flip for the *next* coming fixed
             // update if we haven't already.
             if (updateType != InputUpdateType.Fixed &&
-                device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount + 1)
+                device.m_CurrentFixedUpdateCount != InputUpdate.fixedUpdateCount + 1)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentFixedUpdateCount = m_CurrentFixedUpdateCount + 1;
+                device.m_CurrentFixedUpdateCount = InputUpdate.fixedUpdateCount + 1;
                 flipped = true;
             }
 
             // If it is *NOT* a dynamic update, we need to flip for the *next* coming
             // dynamic update if we haven't already.
             if (updateType != InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount + 1)
+                device.m_CurrentDynamicUpdateCount != InputUpdate.dynamicUpdateCount + 1)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = m_CurrentDynamicUpdateCount + 1;
+                device.m_CurrentDynamicUpdateCount = InputUpdate.dynamicUpdateCount + 1;
                 flipped = true;
             }
 
             // If it *is* a fixed update and we haven't flipped for the current update
             // yet, do it.
             if (updateType == InputUpdateType.Fixed &&
-                device.m_CurrentFixedUpdateCount != m_CurrentFixedUpdateCount)
+                device.m_CurrentFixedUpdateCount != InputUpdate.fixedUpdateCount)
             {
                 m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentFixedUpdateCount = m_CurrentFixedUpdateCount;
+                device.m_CurrentFixedUpdateCount = InputUpdate.fixedUpdateCount;
                 flipped = true;
             }
 
             // If it *is* a dynamic update and we haven't flipped for the current update
             // yet, do it.
             if (updateType == InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != m_CurrentDynamicUpdateCount)
+                device.m_CurrentDynamicUpdateCount != InputUpdate.dynamicUpdateCount)
             {
                 m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = m_CurrentDynamicUpdateCount;
+                device.m_CurrentDynamicUpdateCount = InputUpdate.dynamicUpdateCount;
                 flipped = true;
             }
 
@@ -2113,6 +2119,7 @@ namespace ISX
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
             public InputConfiguration.SerializedState configuration;
+            public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
 
             // The rest is state that we want to preserve across Save() and Restore() but
@@ -2204,6 +2211,7 @@ namespace ISX
                 availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
                 configuration = InputConfiguration.Save(),
+                updateState = InputUpdate.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
                 deviceFindTemplateCallbacks = m_DeviceFindTemplateCallbacks.Clone(),
                 templateChangeListeners = m_TemplateChangeListeners.Clone(),
@@ -2226,7 +2234,6 @@ namespace ISX
         {
             m_Devices = null;
             m_HaveDevicesWithStateCallbackReceivers = false;
-            m_CurrentUpdate = InputUpdateType.Dynamic;
 
             InitializeData();
             if (state.runtime != null)
@@ -2248,6 +2255,9 @@ namespace ISX
 
             // Configuration.
             InputConfiguration.Restore(state.configuration);
+
+            // Update state.
+            InputUpdate.Restore(state.updateState);
 
             // Template types.
             foreach (var template in state.templateTypes)

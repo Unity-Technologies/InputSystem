@@ -1,8 +1,7 @@
 using System;
-using ISX.LowLevel;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// A floating-point 2D vector control composed of two <see cref="AxisControl">AxisControls</see>.

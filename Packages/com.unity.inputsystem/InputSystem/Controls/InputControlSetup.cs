@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the template cache around instead of throwing
@@ -12,7 +12,7 @@ using ISX.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Turns a template into a control hierarchy.

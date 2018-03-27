@@ -3,11 +3,11 @@
 ////        all relevant controls so that the SwipeModifier itself can work off of
 ////        both a ButtonControl and a Vector2Control
 
-namespace ISX.Modifiers
+namespace UnityEngine.Experimental.Input.Modifiers
 {
     // Performs the action if the 2D control is pressed and then released within
     // 'minDistance' in the direction between 'minAngle' and 'maxAngle'.
-    public class SwipeModifier : IInputActionModifier
+    public class SwipeModifier : IInputBindingModifier
     {
         public float minAngle;
         public float maxAngle;

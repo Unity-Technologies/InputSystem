@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['initialize',['Initialize',['../classISX_1_1Plugins_1_1HID_1_1HIDSupport.html#a2374c994db41207644e5122e90aa7ea5',1,'ISX::Plugins::HID::HIDSupport']]]
+  ['initialize',['Initialize',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDSupport.html#a3b4e25ab4bd05797f543b6f7551fee48',1,'UnityEngine::Experimental::Input::Plugins::HID::HIDSupport']]]
 ];

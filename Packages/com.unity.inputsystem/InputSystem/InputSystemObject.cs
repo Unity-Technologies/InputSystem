@@ -1,11 +1,11 @@
 #if UNITY_EDITOR
 using System;
-using ISX.Editor;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEditor;
 using UnityEditor.Networking.PlayerConnection;
-using UnityEngine;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     // A hidden object we put in the editor to bundle input system state
     // and help us survive domain relods.
@@ -27,7 +27,10 @@ namespace ISX
             manager.Initialize(NativeInputRuntime.instance);
 
             // In the editor, we always set up for remoting.
-            SetUpRemoting();
+            // NOTE: We use delayCall as our initial startup will run in editor initialization before
+            //       PlayerConnection is itself ready. If we call SetupRemote() directly here, we won't
+            //       see any errors but the callbacks we register for will not trigger.
+            EditorApplication.delayCall += SetUpRemoting;
         }
 
         public void ReviveAfterDomainReload()
@@ -42,8 +45,10 @@ namespace ISX
             remote = new InputRemoting(manager);
             remote.RestoreState(m_RemotingState, manager);
 
-            if (playerConnection == null)
-                playerConnection = CreateInstance<RemoteInputPlayerConnection>();
+            if (playerConnection != null)
+                DestroyImmediate(playerConnection);
+
+            playerConnection = CreateInstance<RemoteInputPlayerConnection>();
 
             remote.Subscribe(playerConnection); // Feed messages from players into editor.
             playerConnection.Subscribe(remote); // Feed messages from editor into players.
@@ -61,6 +66,7 @@ namespace ISX
             InputActionSet.ResetGlobals();
             manager.Destroy();
             EditorInputTemplateCache.Clear();
+            DestroyImmediate(playerConnection);
 
             ////REVIEW: Find a mechanism that can do this without knowing about each class
             // Reset any current&all getters.

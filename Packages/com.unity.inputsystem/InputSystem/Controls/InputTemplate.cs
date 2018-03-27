@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ISX.LowLevel;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 #if !(NET_4_0 || NET_4_6)
-using ISX.Net35Compatibility;
+using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
 ////TODO: turn 'overrides' into feature where templates can be registered as overrides and they get merged *into* the template
@@ -24,7 +24,7 @@ using ISX.Net35Compatibility;
 
 ////REVIEW: common usages are on all templates but only make sense for devices
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A template lays out the composition of an input control.
@@ -694,7 +694,8 @@ namespace ISX
 
             // Determine template.
             var template = attribute != null ? attribute.template : null;
-            if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath)
+            if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath &&
+                (!(member is FieldInfo) || member.GetCustomAttribute<FixedBufferAttribute>(false) == null)) // Ignore fixed buffer fields.
             {
                 var valueType = TypeHelpers.GetValueType(member);
                 template = InferTemplateFromValueType(valueType);
@@ -940,6 +941,7 @@ namespace ISX
             return parameter;
         }
 
+        ////REVIEW: this tends to cause surprises; is it worth its cost?
         private static string InferTemplateFromValueType(Type type)
         {
             var typeName = type.Name;

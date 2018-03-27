@@ -4,8 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////FIXME: doesn't survive domain reload correctly
 
@@ -18,7 +17,7 @@ using ISX.LowLevel;
 
 ////TODO: add toggle to that switches to displaying raw control values
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
@@ -123,7 +122,7 @@ namespace ISX.Editor
             try
             {
                 // Switch to buffers that we want to display in the control tree.
-                InputSystem.s_Manager.m_StateBuffers.SwitchTo(updateTypeToShow);
+                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, updateTypeToShow);
 
                 ////REVIEW: I'm not sure tree view needs a scroll view or whether it does that automatically
                 m_ControlTreeScrollPosition = EditorGUILayout.BeginScrollView(m_ControlTreeScrollPosition);
@@ -134,7 +133,7 @@ namespace ISX.Editor
             finally
             {
                 // Switch back to editor buffers.
-                InputSystem.s_Manager.m_StateBuffers.SwitchTo(InputUpdateType.Editor);
+                InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, InputUpdateType.Editor);
             }
         }
 
@@ -202,7 +201,8 @@ namespace ISX.Editor
             m_EventTree = InputEventTreeView.Create(m_Device, m_EventTrace, ref m_EventTreeState, ref m_EventTreeHeaderState);
 
             // Set up control tree.
-            m_ControlTree = InputControlTreeView.Create(m_Device, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
+            m_ControlTree = InputControlTreeView.Create(m_Device, 1, ref m_ControlTreeState, ref m_ControlTreeHeaderState);
+            m_ControlTree.Reload();
             m_ControlTree.ExpandAll();
 
             AddToList();

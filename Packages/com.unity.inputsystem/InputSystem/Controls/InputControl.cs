@@ -1,16 +1,15 @@
 using System;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
 ////FIXME: Doxygen can't handle two classes 'Foo' and 'Foo<T>'; Foo won't show any of its members and Foo<T> won't get any docs at all
 ////       (also Doxygen doesn't understand usings and thus only finds types if they are qualified properly)
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A typed and named value in a hierarchy of controls.
@@ -125,15 +124,6 @@ namespace ISX
             get { return m_Variant; }
         }
 
-        ////TODO: setting value (will it also go through the processor stack?)
-
-        // Current value as boxed object.
-        // NOTE: Calling this will cause garbage.
-        public virtual object valueAsObject
-        {
-            get { return null; }
-        }
-
         /// <summary>
         /// The device that this control is a part of.
         /// </summary>
@@ -198,14 +188,13 @@ namespace ISX
             return string.Format("{0}:{1}", template, path);
         }
 
-        public TValue GetValue<TValue>()
+        ////TODO: setting value (will it also go through the processor stack?)
+
+        // Current value as boxed object.
+        // NOTE: Calling this will allocate.
+        public virtual object ReadValueAsObject()
         {
-            var controlOfType = this as InputControl<TValue>;
-            if (controlOfType == null)
-                throw new InvalidCastException(
-                    string.Format("Cannot query value of type '{0}' from control of type '{1}", typeof(TValue).Name,
-                        this.GetType().Name));
-            return controlOfType.value;
+            return null;
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -241,12 +230,12 @@ namespace ISX
 
         protected internal IntPtr currentStatePtr
         {
-            get { return InputStateBuffers.GetFrontBuffer(ResolveDeviceIndex()); }
+            get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
         }
 
         protected internal IntPtr previousStatePtr
         {
-            get { return InputStateBuffers.GetBackBuffer(ResolveDeviceIndex()); }
+            get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
         }
 
         /// <summary>
@@ -363,19 +352,19 @@ namespace ISX
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
     {
-        public TValue value
+        public TValue ReadValue()
         {
-            get { return ReadValueFrom(currentStatePtr); }
+            return ReadValueFrom(currentStatePtr);
         }
 
-        public TValue previous
+        public TValue ReadPreviousValue()
         {
-            get { return ReadValueFrom(previousStatePtr); }
+            return ReadValueFrom(previousStatePtr);
         }
 
-        public override object valueAsObject
+        public override object ReadValueAsObject()
         {
-            get { return value; }
+            return ReadValue();
         }
 
         // Read a control value directly from a state event.

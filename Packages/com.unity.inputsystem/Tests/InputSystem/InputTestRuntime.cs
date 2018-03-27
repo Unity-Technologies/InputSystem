@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// An implementation of <see cref="IInputRuntime"/> for use during tests.
@@ -32,6 +31,7 @@ namespace ISX
             return result;
         }
 
+        ////REVIEW: this behaves differently from NativeInputRuntime.Update() which allows a mask
         public unsafe void Update(InputUpdateType type)
         {
             lock (m_Lock)
@@ -128,7 +128,7 @@ namespace ISX
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
-        public float PollingFrequency { get; set; }
+        public float pollingFrequency { get; set; }
 
         public void Dispose()
         {

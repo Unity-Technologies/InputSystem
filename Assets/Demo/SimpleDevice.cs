@@ -1,7 +1,7 @@
 using System.Linq;
-using ISX;
-using ISX.Controls;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
 public struct MyDeviceState : IInputStateTypeInfo

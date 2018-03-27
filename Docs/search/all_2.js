@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['capabilities',['capabilities',['../structISX_1_1InputDeviceDescription.html#a7e0bf3cb0c02c87cb91ee612760baa1b',1,'ISX::InputDeviceDescription']]],
-  ['commakey',['commaKey',['../classISX_1_1Keyboard.html#a8a4b45e48f7a277ed4b50cf0ad65fa79',1,'ISX::Keyboard']]],
-  ['configurationchanged',['ConfigurationChanged',['../namespaceISX.html#a664a08fa4bdc226c4fecddb3f350d6a1a31e4c3ad63d178cb96c2a70ea23cbaf5',1,'ISX']]],
-  ['controltemplate',['ControlTemplate',['../structISX_1_1InputTemplate_1_1ControlTemplate.html',1,'ISX::InputTemplate']]],
-  ['count',['Count',['../structISX_1_1Utilities_1_1ReadOnlyArray.html#a6057f076a3cf5c7a37fb26fe0860119f',1,'ISX::Utilities::ReadOnlyArray']]],
-  ['current',['current',['../classISX_1_1Mouse.html#ac65c1ac5f84af5e011ab0eecc4130a9e',1,'ISX.Mouse.current()'],['../classISX_1_1Pointer.html#af26e3bddaee2d00e6547e32221704d22',1,'ISX.Pointer.current()'],['../classISX_1_1Touchscreen.html#ad1d7ded12d59ca962950469e48816465',1,'ISX.Touchscreen.current()']]]
+  ['capabilities',['capabilities',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#a1f1ee42ce28e8fe4d4ed2947ac69ac4b',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
+  ['character',['character',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html#af36ff273acc44c769de8e2f44a081dca',1,'UnityEngine::Experimental::Input::LowLevel::TextEvent']]],
+  ['commakey',['commaKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#ac7eea240b1f3f356f22296f4ec5c3c2a',1,'UnityEngine::Experimental::Input::Keyboard']]],
+  ['configurationchanged',['ConfigurationChanged',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba31e4c3ad63d178cb96c2a70ea23cbaf5',1,'UnityEngine::Experimental::Input']]],
+  ['controltemplate',['ControlTemplate',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html',1,'UnityEngine::Experimental::Input::InputTemplate']]],
+  ['count',['Count',['../structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html#aad462966ed963f892117056de1eba502',1,'UnityEngine::Experimental::Input::Utilities::ReadOnlyArray']]],
+  ['current',['current',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html#a57a97f27ce9866f467617fcc38d65de6',1,'UnityEngine.Experimental.Input.Mouse.current()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html#a72917d299f0a2d27425aa43043d62516',1,'UnityEngine.Experimental.Input.Pointer.current()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html#a2baf5c3f50cda004673ee3fe297788a0',1,'UnityEngine.Experimental.Input.Touchscreen.current()']]]
 ];

@@ -1,10 +1,11 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // A TreeView of one or more action sets.
     internal class InputActionTreeView : TreeView
@@ -33,7 +34,6 @@ namespace ISX.Editor
         {
             Name,
             Bindings,
-            Groups,
             COUNT
         }
 
@@ -52,16 +52,9 @@ namespace ISX.Editor
             columns[(int)ColumnId.Bindings] =
                 new MultiColumnHeaderState.Column
             {
-                width = 280,
-                minWidth = 60,
+                width = 360,
+                minWidth = 280,
                 headerContent = new GUIContent("Bindings")
-            };
-            columns[(int)ColumnId.Groups] =
-                new MultiColumnHeaderState.Column
-            {
-                width = 110,
-                minWidth = 60,
-                headerContent = new GUIContent("Groups")
             };
 
             return new MultiColumnHeaderState(columns);
@@ -251,52 +244,65 @@ namespace ISX.Editor
 
         protected override void ContextClickedItem(int id)
         {
-            var item = FindItem(id, rootItem);
-            if (item == null)
+            var selection = GetSelection();
+
+            if (!selection.Any(x =>
+                {
+                    var item = FindItem(x, rootItem);
+                    return item is ActionItem || item is ActionSetItem;
+                }))
                 return;
 
-            var actionItem = item as ActionItem;
-            if (actionItem != null)
-            {
-                var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Delete Action"), false, OnDeleteAction, actionItem);
-                menu.ShowAsContext();
-                return;
-            }
-
-            var actionSetItem = item as ActionSetItem;
-            if (actionSetItem != null)
-            {
-                var menu = new GenericMenu();
-                menu.AddItem(new GUIContent("Delete Set"), false, OnDeleteActionSet, actionSetItem);
-                menu.ShowAsContext();
-                return;
-            }
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Delete"), false, OnDelete, selection);
+            menu.ShowAsContext();
         }
 
-        // Context menu handler for "Delete Action".
-        private void OnDeleteAction(object actionItemObject)
+        private void OnDelete(object data)
         {
-            var actionItem = (ActionItem)actionItemObject;
-            var actionSetItem = (ActionSetItem)actionItem.parent;
-            InputActionSerializationHelpers.DeleteAction(actionSetItem.property, actionItem.actionIndex);
+            var list = (IList<int>)data;
+
+            // Sort actions by action index such that we delete actions from high to
+            // low indices. This way indices won't shift as we delete actions.
+            var array = list.Select(x => FindItem(x, rootItem)).ToArray();
+            Array.Sort(array, (a, b) =>
+                {
+                    var aActionItem = a as ActionItem;
+                    var bActionItem = b as ActionItem;
+
+                    if (aActionItem != null && bActionItem != null)
+                    {
+                        if (aActionItem.actionIndex < bActionItem.actionIndex)
+                            return 1;
+                        if (aActionItem.actionIndex > bActionItem.actionIndex)
+                            return -1;
+                    }
+
+                    return 0;
+                });
+
+            // First delete actions, then sets.
+            foreach (var item in array)
+            {
+                if (item is ActionItem)
+                {
+                    var actionItem = (ActionItem)item;
+                    var actionSetItem = (ActionSetItem)actionItem.parent;
+                    InputActionSerializationHelpers.DeleteAction(actionSetItem.property, actionItem.actionIndex);
+                }
+            }
+            foreach (var item in array)
+            {
+                if (item is ActionSetItem)
+                {
+                    var actionSetItem = (ActionSetItem)item;
+                    InputActionSerializationHelpers.DeleteActionSet(actionSetItem.property.serializedObject, actionSetItem.actionSetIndex);
+                }
+            }
+
             m_ApplyAction();
             Reload();
         }
-
-        // Context menu handler for "Delete Set".
-        private void OnDeleteActionSet(object actionSetItemObject)
-        {
-            var actionSetItem = (ActionSetItem)actionSetItemObject;
-            InputActionSerializationHelpers.DeleteActionSet(actionSetItem.property.serializedObject, actionSetItem.actionSetIndex);
-            m_ApplyAction();
-            Reload();
-        }
-
-//        protected override Rect GetRenameRect(Rect rowRect, int row, TreeViewItem item)
-//        {
-//            CenterRectUsingSingleLineHeight(ref cellRect);
-//        }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {

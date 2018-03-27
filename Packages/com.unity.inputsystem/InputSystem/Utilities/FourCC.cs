@@ -1,6 +1,4 @@
-using UnityEngine;
-
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     public struct FourCC
     {

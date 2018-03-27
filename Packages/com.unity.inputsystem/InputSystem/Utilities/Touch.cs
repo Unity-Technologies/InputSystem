@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
-using UnityEngine;
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     public enum TouchType
     {
@@ -9,6 +8,7 @@ namespace ISX
         Indirect,
         Stylus
     }
+
     // IMPORTANT: Must match FingerInputState in native code.
     // IMPORTANT: TouchControl is hardwired to the layout of this struct.
     [StructLayout(LayoutKind.Explicit, Size = 36)]

@@ -1,5 +1,5 @@
 using System.Collections;
-using ISX.Modifiers;
+using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
 
 ////TODO: transform from using action callbacks to using events

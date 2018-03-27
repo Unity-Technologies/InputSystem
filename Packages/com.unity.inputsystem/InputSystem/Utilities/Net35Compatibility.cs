@@ -9,7 +9,7 @@ using System.Reflection;
 // NOTE: When switching fully back to 4, also:
 //   - Get rid of all the .ToArray() expressions on string.Joins.
 
-namespace ISX.Net35Compatibility
+namespace UnityEngine.Experimental.Input.Net35Compatibility
 {
     public interface IObservable<out T>
     {

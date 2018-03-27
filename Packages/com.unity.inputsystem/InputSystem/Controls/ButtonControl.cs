@@ -1,8 +1,8 @@
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
-namespace ISX.Controls
+namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>
     /// An axis that has a trigger point beyond which it is considered to be pressed.
@@ -30,26 +30,22 @@ namespace ISX.Controls
 
         protected bool IsValueConsideredPressed(float value)
         {
-            var point = pressPoint;
-            if (pressPoint <= 0.0f)
-                point = InputConfiguration.ButtonPressPoint;
-            return value >= point;
+            return value >= pressPointOrDefault;
         }
 
-        ////REVIEW: this may have to go into value itself; otherwise actions will trigger on the slightest value change
         public bool isPressed
         {
-            get { return IsValueConsideredPressed(value); }
+            get { return IsValueConsideredPressed(ReadValue()); }
         }
 
         public bool wasJustPressed
         {
-            get { return IsValueConsideredPressed(value) && !IsValueConsideredPressed(previous); }
+            get { return device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadPreviousValue()); }
         }
 
         public bool wasJustReleased
         {
-            get { return !IsValueConsideredPressed(value) && IsValueConsideredPressed(previous); }
+            get { return device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadPreviousValue()); }
         }
     }
 }

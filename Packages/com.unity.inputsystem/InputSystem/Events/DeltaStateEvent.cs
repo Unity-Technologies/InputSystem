@@ -1,10 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: use deltastateevents as basis for ActionEvent
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Partial state update for an input device.

@@ -338,6 +338,7 @@ PlayerSettings:
     m_EncodingQuality: 1
   - m_BuildTarget: PS4
     m_EncodingQuality: 1
+  m_BuildTargetGroupLightmapSettings: []
   playModeTestRunnerEnabled: 1
   runPlayModeTestAsEditModeTest: 0
   actionOnDotNetUnhandledException: 1
@@ -605,7 +606,7 @@ PlayerSettings:
   platformArchitecture:
     iOS: 0
   scriptingBackend:
-    Standalone: 1
+    Standalone: 0
     iOS: 1
   il2cppCompilerConfiguration: {}
   incrementalIl2cppBuild: {}

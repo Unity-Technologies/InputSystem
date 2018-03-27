@@ -1,11 +1,10 @@
 using System.Runtime.InteropServices;
-using ISX.LowLevel;
-using ISX.Utilities;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: we need editor window space conversion on the pen, too
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// Default state layout for pen devices.
@@ -69,7 +68,7 @@ namespace ISX.LowLevel
     }
 }
 
-namespace ISX
+namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A pen/stylus input device.

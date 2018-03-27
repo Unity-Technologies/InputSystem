@@ -1,8 +1,11 @@
-using ISX;
-using ISX.Plugins.XInput;
-using ISX.Plugins.XInput.LowLevel;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
+
+#if UNITY_EDITOR || UNITY_XBOXONE
+using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
+#endif
 
 class XInputTests : InputTestFixture
 {
@@ -82,12 +85,12 @@ class XInputTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.x.value, Is.EqualTo(0.123).Within(0.00001));
-        Assert.That(gamepad.leftStick.y.value, Is.EqualTo(0.456).Within(0.00001));
-        Assert.That(gamepad.rightStick.x.value, Is.EqualTo(0.789).Within(0.00001));
-        Assert.That(gamepad.rightStick.y.value, Is.EqualTo(0.234).Within(0.00001));
-        Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.567).Within(0.00001));
-        Assert.That(gamepad.rightTrigger.value, Is.EqualTo(0.891).Within(0.00001));
+        Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
+        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.456).Within(0.00001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.00001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.567).Within(0.00001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.891).Within(0.00001));
 
         AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.A), gamepad.aButton);
         AssertButtonPress(gamepad, new XboxOneGamepadState().WithButton(XboxOneGamepadState.Button.A), gamepad.buttonSouth);

@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Reflection;
-using ISX;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 

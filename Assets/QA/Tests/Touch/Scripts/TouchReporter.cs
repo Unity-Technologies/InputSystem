@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
-using ISX;
+using UnityEngine.Experimental.Input;
 
 public class TouchReporter : MonoBehaviour
 {
@@ -15,13 +13,13 @@ public class TouchReporter : MonoBehaviour
 
     void Update()
     {
-        Touchscreen touchscreen = ISX.Touchscreen.current;
+        Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
 
-        coordinateText.text = touchscreen.allTouchControls[touchIndex].value.position.x.ToString("0000") + ", " +
-            touchscreen.allTouchControls[touchIndex].value.position.y.ToString("0000");
+        coordinateText.text = touchscreen.allTouchControls[touchIndex].ReadValue().position.x.ToString("0000") + ", " +
+            touchscreen.allTouchControls[touchIndex].ReadValue().position.y.ToString("0000");
 
-        if (touchscreen.allTouchControls[touchIndex].value.phase != PointerPhase.None &&
-            touchscreen.allTouchControls[touchIndex].value.phase != PointerPhase.Ended)
+        if (touchscreen.allTouchControls[touchIndex].ReadValue().phase != PointerPhase.None &&
+            touchscreen.allTouchControls[touchIndex].ReadValue().phase != PointerPhase.Ended)
         {
             image.color = Color.red;
         }

@@ -4,7 +4,7 @@ using System;
 ////      (this will probably also be useful for jobs)
 ////      when this is implemented, also allow interning directly from Substrings
 
-namespace ISX.Utilities
+namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
     /// Wraps around a string to allow for faster case-insensitive

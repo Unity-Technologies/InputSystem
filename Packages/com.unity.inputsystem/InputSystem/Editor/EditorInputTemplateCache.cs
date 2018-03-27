@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
     /// Caches <see cref="InputTemplate"/> instances.

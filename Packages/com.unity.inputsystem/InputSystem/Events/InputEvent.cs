@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: should this really implement IInputEventTypeInfo? it's essentially an "abstract" struct
 
-namespace ISX.LowLevel
+namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
     /// A chunk of memory signaling a data transfer in the input system.

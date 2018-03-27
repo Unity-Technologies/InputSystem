@@ -2,7 +2,7 @@
 using System;
 using UnityEditor;
 
-namespace ISX.Editor
+namespace UnityEngine.Experimental.Input.Editor
 {
     // Helpers for doctoring around in InputActions using SerializedProperties.
     internal static class InputActionSerializationHelpers

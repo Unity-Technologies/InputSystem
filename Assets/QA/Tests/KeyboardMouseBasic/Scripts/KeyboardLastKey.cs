@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-using ISX;
+using UnityEngine.Experimental.Input;
 
 using UnityEngine.UI;
 

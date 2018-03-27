@@ -1,9 +1,8 @@
-using ISX.LowLevel;
-using UnityEngine;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: ideally, also take pointer DPI into account
 
-namespace ISX.Processors
+namespace UnityEngine.Experimental.Input.Processors
 {
     public class SensitivityProcessor : IInputProcessor<Vector2>
     {

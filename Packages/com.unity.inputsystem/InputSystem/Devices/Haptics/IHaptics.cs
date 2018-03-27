@@ -1,7 +1,7 @@
 ////REVIEW: Devices usually will automatically shut down haptics if they haven't received a haptics command in some time.
 ////        How should we deal with that? Should haptics automatically refresh themselves periodically while they are set?
 
-namespace ISX.Haptics
+namespace UnityEngine.Experimental.Input.Haptics
 {
     /// <summary>
     /// Base interface for haptics on input devices.

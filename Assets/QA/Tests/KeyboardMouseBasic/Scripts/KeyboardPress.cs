@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using ISX;
+using UnityEngine.Experimental.Input;
 using UnityEngine.UI;
 
 // This updates the color of a single image based on a specified Key enum.
@@ -35,7 +35,7 @@ public class KeyboardPress : MonoBehaviour
 
         if (m_Keyboard == null) { return; }
 
-        if (m_Keyboard[reportKey].value != 0)
+        if (m_Keyboard[reportKey].ReadValue() != 0)
         {
             reportImage.color = m_RedTransparent;
         }

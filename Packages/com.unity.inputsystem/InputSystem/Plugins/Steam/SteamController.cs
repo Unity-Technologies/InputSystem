@@ -1,4 +1,4 @@
-namespace ISX.Plugins.Steam
+namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     /// <summary>
     /// Base class for controllers made available through the Steam controller API.

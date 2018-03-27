@@ -3,11 +3,10 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 
 ////TODO: use two columns for treeview and separate name and value
 
-namespace ISX.Plugins.HID.Editor
+namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
 {
     // A window that dumps a raw HID descriptor in a tree view.
     internal class HIDDescriptorWindow : EditorWindow, ISerializationCallbackReceiver
@@ -180,7 +179,7 @@ namespace ISX.Plugins.HID.Editor
                 AddChild(item, "Report Type: " + element.reportType, ref id);
                 AddChild(item, "Report ID: " + element.reportId, ref id);
                 AddChild(item, "Report Size in Bits: " + element.reportSizeInBits, ref id);
-                AddChild(item, "Report Bit Offset: " + element.reportBitOffset, ref id);
+                AddChild(item, "Report Bit Offset: " + element.reportOffsetInBits, ref id);
                 AddChild(item, "Collection Index: " + element.collectionIndex, ref id);
                 AddChild(item, string.Format("Unit: {0:X}", element.unit), ref id);
                 AddChild(item, string.Format("Unit Exponent: {0:X}", element.unitExponent), ref id);
