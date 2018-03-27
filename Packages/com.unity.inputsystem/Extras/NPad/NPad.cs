@@ -19,7 +19,7 @@ namespace ISX.Plugins.Switch
             return new FourCC('N', 'P', 'A', 'D');
         }
 
-		/// <summary>
+        /// <summary>
         /// Button bit mask.
         /// </summary>
         /// <seealso cref="Button"/>
@@ -34,13 +34,13 @@ namespace ISX.Plugins.Switch
         [InputControl(name = "rightShoulder", displayName = "R", bit = (uint)Button.R)]
         [InputControl(name = "leftTriggerButton", template = "Button", displayName = "ZL", bit = (uint)Button.ZL)]
         [InputControl(name = "rightTriggerButton", template = "Button", displayName = "ZR", bit = (uint)Button.ZR)]
-		[InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
-		[InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
-		[InputControl(name = "LSL", template = "Button", bit = (uint)Button.LSL)]
-		[InputControl(name = "LSR", template = "Button", bit = (uint)Button.LSR)]
-		[InputControl(name = "RSL", template = "Button", bit = (uint)Button.RSL)]
-		[InputControl(name = "RSR", template = "Button", bit = (uint)Button.RSR)]
-		[InputControl(name = "VK_LUp", template = "Button", bit = (uint)Button.VKey_LUp)]
+        [InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
+        [InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
+        [InputControl(name = "LSL", template = "Button", bit = (uint)Button.LSL)]
+        [InputControl(name = "LSR", template = "Button", bit = (uint)Button.LSR)]
+        [InputControl(name = "RSL", template = "Button", bit = (uint)Button.RSL)]
+        [InputControl(name = "RSR", template = "Button", bit = (uint)Button.RSR)]
+        [InputControl(name = "VK_LUp", template = "Button", bit = (uint)Button.VKey_LUp)]
         [InputControl(name = "VK_LDown", template = "Button", bit = (uint)Button.VKey_LDown)]
         [InputControl(name = "VK_LLeft", template = "Button", bit = (uint)Button.VKey_LLeft)]
         [InputControl(name = "VK_LRight", template = "Button", bit = (uint)Button.VKey_LRight)]
@@ -54,7 +54,7 @@ namespace ISX.Plugins.Switch
         /// <summary>
         /// Left stick position.
         /// </summary>
-		[InputControl(name = "leftStick", template = "Stick", format = "VC2S")]
+        [InputControl(name = "leftStick", template = "Stick", format = "VC2S")]
         [InputControl(variant = "Default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         [FieldOffset(4)]
@@ -63,7 +63,7 @@ namespace ISX.Plugins.Switch
         /// <summary>
         /// Right stick position.
         /// </summary>
-		[InputControl(name = "rightStick", template = "Stick", format = "VC2S")]
+        [InputControl(name = "rightStick", template = "Stick", format = "VC2S")]
         [InputControl(variant = "Default", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         [InputControl(variant = "Lefty", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [FieldOffset(12)]
@@ -93,15 +93,15 @@ namespace ISX.Plugins.Switch
 
             ZL,
             ZR,
-			Plus,
-			Minus,
+            Plus,
+            Minus,
 
-			LSL,
-			LSR,
-			RSL,
-			RSR,
+            LSL,
+            LSR,
+            RSL,
+            RSR,
 
-			VKey_LUp,
+            VKey_LUp,
             VKey_LDown,
             VKey_LLeft,
             VKey_LRight,
@@ -118,33 +118,33 @@ namespace ISX.Plugins.Switch
         }
     }
 
-	/// <summary>
-	/// Switch output report sent as command to the backend.
-	/// </summary>
-	[StructLayout(LayoutKind.Explicit, Size = kSize)]
-	public unsafe struct NPadOutputReport : IInputDeviceCommandInfo
-	{
-		public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'O'); } }
+    /// <summary>
+    /// Switch output report sent as command to the backend.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public unsafe struct NPadOutputReport : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'O'); } }
 
-		public const int kSize = InputDeviceCommand.kBaseCommandSize + 16;
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 16;
 
-		[Flags]
-		public enum Flags
-		{
-			SetPosition = (1 << 0),
-		}
+        [Flags]
+        public enum Flags
+        {
+            SetPosition = (1 << 0),
+        }
 
-		[FieldOffset(0)] public InputDeviceCommand baseCommand;
+        [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public uint flags;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte controllerId;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 5)] public byte npadId;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 6)] public byte position;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 7)] public byte pudding0;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public uint styleMask;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)] public int color;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public uint flags;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte controllerId;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 5)] public byte npadId;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 6)] public byte position;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 7)] public byte pudding0;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public uint styleMask;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)] public int color;
 
-		public FourCC GetTypeStatic()
+        public FourCC GetTypeStatic()
         {
             return Type;
         }
@@ -152,10 +152,10 @@ namespace ISX.Plugins.Switch
         public void SetPosition(NPad.Position pos)
         {
             flags |= (byte)Flags.SetPosition;
-			position = (byte)pos;
+            position = (byte)pos;
         }
 
-		public static NPadOutputReport Create()
+        public static NPadOutputReport Create()
         {
             return new NPadOutputReport
             {
@@ -164,92 +164,91 @@ namespace ISX.Plugins.Switch
         }
     }
 
-	[StructLayout(LayoutKind.Explicit, Size = kSize)]
-	public unsafe struct NPadShowControllerSupportUI : IInputDeviceCommandInfo
-	{
-		public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'U'); } }
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public unsafe struct NPadShowControllerSupportUI : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('N', 'P', 'D', 'U'); } }
 
-		public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
-		[FieldOffset(0)]
-		public InputDeviceCommand baseCommand;
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
 
-		public FourCC GetTypeStatic()
-		{
-			return Type;
-		}
+        public FourCC GetTypeStatic()
+        {
+            return Type;
+        }
 
-		public static NPadShowControllerSupportUI Create()
-		{
-			return new NPadShowControllerSupportUI
-			{
-				baseCommand = new InputDeviceCommand(Type, kSize),
-			};
-		}
-	}
+        public static NPadShowControllerSupportUI Create()
+        {
+            return new NPadShowControllerSupportUI
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+            };
+        }
+    }
 
-	/// <summary>
-	/// An NPad controller for Switch, which can be a Joy-Con.
-	/// </summary>
-	/// <seealso cref="NPadInputState"/>
-	[InputTemplate(stateType = typeof(NPadInputState))]
-	public class NPad : Gamepad
-	{
-		public enum Position
-		{
-			Vertical,
-			Sideways,
-			Default = Vertical,
-		}
+    /// <summary>
+    /// An NPad controller for Switch, which can be a Joy-Con.
+    /// </summary>
+    /// <seealso cref="NPadInputState"/>
+    [InputTemplate(stateType = typeof(NPadInputState))]
+    public class NPad : Gamepad
+    {
+        public enum Position
+        {
+            Vertical,
+            Sideways,
+            Default = Vertical,
+        }
 
-		public enum NpadId : int
-		{
-			No1 = 0x00,
-			No2 = 0x01,
-			No3 = 0x02,
-			No4 = 0x03,
-			No5 = 0x04,
-			No6 = 0x05,
-			No7 = 0x06,
-			No8 = 0x07,
-			Handheld = 0x20,
-			Debug = 0xFF,
-		}
+        public enum NpadId : int
+        {
+            No1 = 0x00,
+            No2 = 0x01,
+            No3 = 0x02,
+            No4 = 0x03,
+            No5 = 0x04,
+            No6 = 0x05,
+            No7 = 0x06,
+            No8 = 0x07,
+            Handheld = 0x20,
+            Debug = 0xFF,
+        }
 
-		[Flags]
-		public enum NpadStyle
-		{
-			FullKey = (1 << 0),
-			Handheld = (1 << 1),
-			JoyDual = (1 << 2),
-			JoyLeft = (1 << 3),
-			JoyRight = (1 << 4),
-		}
+        [Flags]
+        public enum NpadStyle
+        {
+            FullKey = (1 << 0),
+            Handheld = (1 << 1),
+            JoyDual = (1 << 2),
+            JoyLeft = (1 << 3),
+            JoyRight = (1 << 4),
+        }
 
-		public long ShowControllerSupportUI()
-		{
-			var command = NPadShowControllerSupportUI.Create();
+        public long ShowControllerSupportUI()
+        {
+            var command = NPadShowControllerSupportUI.Create();
 
-			return OnDeviceCommand(ref command);
-		}
+            return OnDeviceCommand(ref command);
+        }
 
-		public void SetPosition (Position position)
+        public void SetPosition(Position position)
         {
             var command = NPadOutputReport.Create();
 
-			command.SetPosition(position);
-			OnDeviceCommand(ref command);
+            command.SetPosition(position);
+            OnDeviceCommand(ref command);
         }
 
-		public Position GetPosition ()
-		{
-			var command = NPadOutputReport.Create();
+        public Position GetPosition()
+        {
+            var command = NPadOutputReport.Create();
 
-			if (OnDeviceCommand(ref command) < 0)
-				return Position.Default;
-			return (Position)command.position;
-		}
-	}
+            if (OnDeviceCommand(ref command) < 0)
+                return Position.Default;
+            return (Position)command.position;
+        }
+    }
 }
 #endif // UNITY_EDITOR || UNITY_SWITCH
-
