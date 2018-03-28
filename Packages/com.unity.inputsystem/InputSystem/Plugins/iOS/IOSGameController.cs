@@ -51,9 +51,10 @@ namespace ISX.Plugins.iOS.LowLevel
         [InputControl(name = "rightStickPress", bit = (uint)Button.RightStick)]
         [InputControl(name = "leftShoulder", bit = (uint)Button.LeftShoulder)]
         [InputControl(name = "rightShoulder", bit = (uint)Button.RightShoulder)]
-        [InputControl(name = "leftTrigger", bit = (uint)Button.LeftTrigger)]
-        [InputControl(name = "rightTrigger", bit = (uint)Button.RightTrigger)]
         public uint buttons;
+        
+        [InputControl(name = "leftTrigger", offset = sizeof(uint) + sizeof(float) * (uint)Button.LeftTrigger)]
+        [InputControl(name = "rightTrigger", offset = sizeof(uint) + sizeof(float) * (uint)Button.RightTrigger)]
         public fixed float buttonValues[kMaxButtons];
 
         private const uint kAxisOffset = sizeof(uint) + sizeof(float) * kMaxButtons;
