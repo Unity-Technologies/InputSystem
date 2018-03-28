@@ -3,7 +3,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// <summary>
     /// Adds support for Switch NPad controllers.
     /// </summary>
-    [InputPlugin]
     public static class NPadSupport
     {
         public static void Initialize()
