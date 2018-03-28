@@ -27,7 +27,7 @@ class AndroidTests : InputTestFixture
             .WithAxis(AndroidAxis.X, 0.789f)
             .WithAxis(AndroidAxis.Y, 0.987f)
             .WithAxis(AndroidAxis.Z, 0.654f)
-            .WithAxis(AndroidAxis.Rx, 0.321f));
+            .WithAxis(AndroidAxis.Rz, 0.321f));
 
         InputSystem.Update();
 
