@@ -1029,6 +1029,10 @@ namespace UnityEngine.Experimental.Input
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
             Plugins.iOS.IOSSupport.Initialize();
             #endif
+
+            #if UNITY_EDITOR || UNITY_SWITCH
+            Plugins.Switch.NPadSupport.Initialize();
+            #endif
         }
 
 #endif
