@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         RightStickX,
         RightStickY
     };
-    
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct IOSGameControllerState : IInputStateTypeInfo
     {
@@ -52,7 +52,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         [InputControl(name = "leftShoulder", bit = (uint)IOSButton.LeftShoulder)]
         [InputControl(name = "rightShoulder", bit = (uint)IOSButton.RightShoulder)]
         public uint buttons;
-        
+
         [InputControl(name = "leftTrigger", offset = sizeof(uint) + sizeof(float) * (uint)IOSButton.LeftTrigger)]
         [InputControl(name = "rightTrigger", offset = sizeof(uint) + sizeof(float) * (uint)IOSButton.RightTrigger)]
         public fixed float buttonValues[kMaxButtons];
@@ -66,7 +66,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         {
             return kFormat;
         }
-        
+
         public IOSGameControllerState WithButton(IOSButton button, bool value = true, float rawValue = 1.0f)
         {
             fixed(float* buttonsPtr = buttonValues)
@@ -75,10 +75,10 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
             }
 
             if (value)
-                buttons |= (uint) 1 << (int) button;
+                buttons |= (uint)1 << (int)button;
             else
-                buttons &= ~(uint) 1 << (int)button;
-            
+                buttons &= ~(uint)1 << (int)button;
+
             return this;
         }
 
