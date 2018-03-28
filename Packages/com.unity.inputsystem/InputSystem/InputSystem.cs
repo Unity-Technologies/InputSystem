@@ -1031,7 +1031,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #if UNITY_EDITOR || UNITY_SWITCH
-            Plugins.Switch.NPadSupport.Initialize();
+            Plugins.Switch.SwitchSupport.Initialize();
             #endif
         }
 
