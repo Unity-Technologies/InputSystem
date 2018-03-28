@@ -1,4 +1,4 @@
-namespace ISX.Plugins.Switch
+namespace UnityEngine.Experimental.Input.Plugins.Switch
 {
     /// <summary>
     /// Adds support for Switch NPad controllers.

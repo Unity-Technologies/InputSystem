@@ -1,12 +1,12 @@
 #if UNITY_EDITOR || UNITY_SWITCH
 using System;
 using System.Runtime.InteropServices;
-using ISX.Controls;
-using ISX.LowLevel;
-using ISX.Utilities;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine;
 
-namespace ISX.Plugins.Switch
+namespace UnityEngine.Experimental.Input.Plugins.Switch
 {
     /// <summary>
     /// Structure of HID input reports for Switch NPad controllers.
