@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
     /// <item><description>Constructed through reflection from InputControls classes.</description></item>
-    /// <item><description>Through template constructors using InputTemplate.Builder.</description></item>
+    /// <item><description>Through template factories using InputTemplate.Builder.</description></item>
     /// </list>
     ///
     /// Once constructed, templates are immutable (but you can always
@@ -328,10 +328,10 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Build a template programmatically. Primarily for use by template constructors
+        /// Build a template programmatically. Primarily for use by template factories
         /// registered with the system.
         /// </summary>
-        /// <seealso cref="InputSystem.RegisterTemplateConstructor"/>
+        /// <seealso cref="InputSystem.RegisterTemplateFactory"/>
         public struct Builder
         {
             public string name;
@@ -1398,7 +1398,7 @@ namespace UnityEngine.Experimental.Input
         {
             public Dictionary<InternedString, Type> templateTypes;
             public Dictionary<InternedString, string> templateStrings;
-            public Dictionary<InternedString, Constructor> templateConstructors;
+            public Dictionary<InternedString, Factory> templateFactories;
             public Dictionary<InternedString, InternedString> baseTemplateTable;
             public Dictionary<InternedString, InputDeviceDescription> templateDeviceDescriptions;
 
@@ -1406,7 +1406,7 @@ namespace UnityEngine.Experimental.Input
             {
                 templateTypes = new Dictionary<InternedString, Type>();
                 templateStrings = new Dictionary<InternedString, string>();
-                templateConstructors = new Dictionary<InternedString, Constructor>();
+                templateFactories = new Dictionary<InternedString, Factory>();
                 baseTemplateTable = new Dictionary<InternedString, InternedString>();
                 templateDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
             }
@@ -1426,18 +1426,18 @@ namespace UnityEngine.Experimental.Input
             public bool HasTemplate(InternedString name)
             {
                 return templateTypes.ContainsKey(name) || templateStrings.ContainsKey(name) ||
-                    templateConstructors.ContainsKey(name);
+                    templateFactories.ContainsKey(name);
             }
 
             private InputTemplate TryLoadTemplateInternal(InternedString name)
             {
-                // Check constructors.
-                Constructor constructor;
-                if (templateConstructors.TryGetValue(name, out constructor))
+                // Check factories.
+                Factory factory;
+                if (templateFactories.TryGetValue(name, out factory))
                 {
-                    var template = (InputTemplate)constructor.method.Invoke(constructor.instance, null);
+                    var template = (InputTemplate)factory.method.Invoke(factory.instance, null);
                     if (template == null)
-                        throw new Exception(string.Format("Template constructor '{0}' returned null when invoked", name));
+                        throw new Exception(string.Format("Template factory '{0}' returned null when invoked", name));
                     return template;
                 }
 
@@ -1532,7 +1532,7 @@ namespace UnityEngine.Experimental.Input
         // This collection is owned and managed by InputManager.
         internal static Collection s_Templates;
 
-        internal struct Constructor
+        internal struct Factory
         {
             public MethodInfo method;
             public object instance;

@@ -52,7 +52,7 @@ namespace UnityEngine.Experimental.Input
         /// An optional JSON string listing device-specific capabilities.
         /// </summary>
         /// <remarks>
-        /// The primary use of this field is to allow custom template constructors
+        /// The primary use of this field is to allow custom template factories
         /// to create templates on the fly from in-depth device descriptions delivered
         /// by external APIs.
         ///

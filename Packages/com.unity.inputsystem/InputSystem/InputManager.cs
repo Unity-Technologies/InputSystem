@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input
             PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement);
         }
 
-        public void RegisterTemplateConstructor(MethodInfo method, object instance, string name,
+        public void RegisterTemplateFactory(MethodInfo method, object instance, string name,
             string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
         {
             if (method == null)
@@ -216,7 +216,7 @@ namespace UnityEngine.Experimental.Input
             var internedName = new InternedString(name);
             var isReplacement = HaveTemplate(internedName);
 
-            m_Templates.templateConstructors[internedName] = new InputTemplate.Constructor
+            m_Templates.templateFactories[internedName] = new InputTemplate.Factory
             {
                 method = method,
                 instance = instance
@@ -373,7 +373,7 @@ namespace UnityEngine.Experimental.Input
             // Remove template record.
             m_Templates.templateTypes.Remove(internedName);
             m_Templates.templateStrings.Remove(internedName);
-            m_Templates.templateConstructors.Remove(internedName);
+            m_Templates.templateFactories.Remove(internedName);
             m_Templates.baseTemplateTable.Remove(internedName);
 
             ////TODO: check all template inheritance chain for whether they are based on the template and if so
@@ -419,7 +419,7 @@ namespace UnityEngine.Experimental.Input
         {
             return m_Templates.templateTypes.ContainsKey(name) ||
                 m_Templates.templateStrings.ContainsKey(name) ||
-                m_Templates.templateConstructors.ContainsKey(name);
+                m_Templates.templateFactories.ContainsKey(name);
         }
 
         public int ListTemplates(List<string> templates)
@@ -433,7 +433,7 @@ namespace UnityEngine.Experimental.Input
 
             templates.AddRange(m_Templates.templateTypes.Keys.Select(x => x.ToString()));
             templates.AddRange(m_Templates.templateStrings.Keys.Select(x => x.ToString()));
-            templates.AddRange(m_Templates.templateConstructors.Keys.Select(x => x.ToString()));
+            templates.AddRange(m_Templates.templateFactories.Keys.Select(x => x.ToString()));
 
             return templates.Count - countBefore;
         }
@@ -2163,12 +2163,12 @@ namespace UnityEngine.Experimental.Input
                     typeNameOrJson = entry.Value
                 };
 
-            // Template constructors.
-            var templateConstructorCount = m_Templates.templateConstructors.Count;
+            // Template factories.
+            var templateConstructorCount = m_Templates.templateFactories.Count;
             var templateConstructorArray = new TemplateConstructorState[templateConstructorCount];
 
             i = 0;
-            foreach (var entry in m_Templates.templateConstructors)
+            foreach (var entry in m_Templates.templateFactories)
                 templateConstructorArray[i++] = new TemplateConstructorState
                 {
                     name = entry.Key,
@@ -2282,7 +2282,7 @@ namespace UnityEngine.Experimental.Input
                 m_Templates.templateStrings[name] = template.typeNameOrJson;
             }
 
-            // Template constructors.
+            // Template factories.
             foreach (var template in state.templateConstructors)
             {
                 var name = new InternedString(template.name);
@@ -2292,7 +2292,7 @@ namespace UnityEngine.Experimental.Input
                 var type = Type.GetType(template.typeName, false);
                 if (type == null)
                 {
-                    Debug.Log(string.Format("Template constructor '{0}' has been removed (type '{1}' cannot be found)",
+                    Debug.Log(string.Format("Template factory '{0}' has been removed (type '{1}' cannot be found)",
                             name, template.typeName));
                     continue;
                 }
@@ -2302,7 +2302,7 @@ namespace UnityEngine.Experimental.Input
                 var method = type.GetMethod(template.methodName,
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-                m_Templates.templateConstructors[name] = new InputTemplate.Constructor
+                m_Templates.templateFactories[name] = new InputTemplate.Factory
                 {
                     method = method,
                     instance = template.instanceJson != null ? JsonUtility.FromJson(template.instanceJson, type) : null

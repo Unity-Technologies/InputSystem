@@ -83,7 +83,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
         // This is the workhorse for figuring out fallback options for HIDs attached to the system.
         // If the system cannot find a more specific template for a given HID, this method will try
-        // to produce a template constructor on the fly based on the HID descriptor received from
+        // to produce a template factory on the fly based on the HID descriptor received from
         // the device.
         internal static unsafe string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description, string matchedTemplate, IInputRuntime runtime)
         {
@@ -238,11 +238,11 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             ////TODO: make sure we don't produce name conflicts on the template name
 
-            // Register template constructor that will turn the HID descriptor into an
+            // Register template factory that will turn the HID descriptor into an
             // InputTemplate instance.
             var templateName = string.Format("{0}::{1}", kHIDNamespace, description.product);
             var template = new HIDTemplate {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForTemplate};
-            InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, baseTemplate, deviceDescriptionForTemplate);
+            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, baseTemplate, deviceDescriptionForTemplate);
 
             return templateName;
         }

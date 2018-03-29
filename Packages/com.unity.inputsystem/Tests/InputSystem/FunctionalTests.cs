@@ -525,11 +525,11 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
-    public void Templates_RegisteringTemplateConstructor_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    public void Templates_RegisteringTemplateFactory_WithDescription_PutsDescriptionInTemplateWhenLoaded()
     {
-        var constructor = new TestTemplateConstructor {templateToLoad = "Mouse"};
+        var factory = new TestTemplateFactory {templateToLoad = "Mouse"};
 
-        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), name: "TestTemplate",
+        InputSystem.RegisterTemplateFactory(() => factory.DoIt(), name: "TestTemplate",
             deviceDescription: new InputDeviceDescription
         {
             interfaceName = "TestInterface",
@@ -814,7 +814,7 @@ class FunctionalTests : InputTestFixture
     }
 
     [Serializable]
-    class TestTemplateConstructor
+    class TestTemplateFactory
     {
         [SerializeField] public string templateToLoad;
         [NonSerialized] public InputTemplate template;
@@ -829,16 +829,16 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Templates")]
-    public void Templates_CanAddCustomTemplateConstructor()
+    public void Templates_CanAddCustomTemplateFactory()
     {
-        var constructor = new TestTemplateConstructor {templateToLoad = "Gamepad"};
+        var factory = new TestTemplateFactory {templateToLoad = "Gamepad"};
 
-        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), "MyTemplate");
+        InputSystem.RegisterTemplateFactory(() => factory.DoIt(), "MyTemplate");
 
         var result = InputSystem.TryLoadTemplate("MyTemplate");
 
         Assert.That(result.name.ToString(), Is.EqualTo("MyTemplate"));
-        Assert.That(result, Is.SameAs(constructor.template));
+        Assert.That(result, Is.SameAs(factory.template));
     }
 
     [Test]
@@ -5988,10 +5988,10 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
-    public void Editor_RestoringStateWillRestoreObjectsOfTemplateConstructors()
+    public void Editor_RestoringStateWillRestoreObjectsOfTemplateFactory()
     {
-        var constructor = new TestTemplateConstructor {templateToLoad = "Gamepad"};
-        InputSystem.RegisterTemplateConstructor(() => constructor.DoIt(), "TestTemplate");
+        var factory = new TestTemplateFactory {templateToLoad = "Gamepad"};
+        InputSystem.RegisterTemplateFactory(() => factory.DoIt(), "TestTemplate");
 
         InputSystem.Save();
         InputSystem.Reset();

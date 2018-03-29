@@ -121,12 +121,10 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RegisterTemplate(json, name);
         }
 
-        ////TODO: rename 'constructor' to 'factory' (or to 'builder'?)
-
         /// <summary>
-        /// Register a constructor that delivers an <see cref="InputTemplate"/> instance on demand.
+        /// Register a factory that delivers an <see cref="InputTemplate"/> instance on demand.
         /// </summary>
-        /// <param name="constructor"></param>
+        /// <param name="factoryExpression"></param>
         /// <param name="name"></param>
         /// <param name="baseTemplate"></param>
         /// <param name="deviceDescription"></param>
@@ -138,7 +136,7 @@ namespace UnityEngine.Experimental.Input
         /// instance object must be serializable.
         ///
         /// The reason for these restrictions and for not taking an arbitrary delegate is that we
-        /// need to be able to persist the template constructor between domain reloads.
+        /// need to be able to persist the template factory between domain reloads.
         ///
         /// Note that the template that is being constructed must not vary over time (except between
         /// domain reloads).
@@ -146,7 +144,7 @@ namespace UnityEngine.Experimental.Input
         /// <example>
         /// <code>
         /// [Serializable]
-        /// class MyTemplateConstructor
+        /// class MyTemplateFactory
         /// {
         ///     public InputTemplate Build()
         ///     {
@@ -157,25 +155,25 @@ namespace UnityEngine.Experimental.Input
         ///     }
         /// }
         ///
-        /// var constructor = new MyTemplateConstructor();
-        /// InputSystem.RegisterTemplateConstructor(() => constructor.Build(), "MyTemplate");
+        /// var factory = new MyTemplateFactory();
+        /// InputSystem.RegisterTemplateFactory(() => factory.Build(), "MyTemplate");
         /// </code>
         /// </example>
-        public static void RegisterTemplateConstructor(Expression<Func<InputTemplate>> constructor, string name,
+        public static void RegisterTemplateFactory(Expression<Func<InputTemplate>> factoryExpression, string name,
             string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
         {
-            if (constructor == null)
-                throw new ArgumentNullException("constructor");
+            if (factoryExpression == null)
+                throw new ArgumentNullException("factoryExpression");
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
 
             // Grab method and (optional) instance from lambda expression.
-            var methodCall = constructor.Body as MethodCallExpression;
+            var methodCall = factoryExpression.Body as MethodCallExpression;
             if (methodCall == null)
                 throw new ArgumentException(
-                    string.Format("Body of template constructor must be a method call (is a {0} instead)",
-                        constructor.Body.NodeType),
-                    "constructor");
+                    string.Format("Body of template factory function must be a method call (is a {0} instead)",
+                        factoryExpression.Body.NodeType),
+                    "factoryExpression");
 
             var method = methodCall.Method;
 
@@ -201,8 +199,8 @@ namespace UnityEngine.Experimental.Input
                         if (constantExpr == null)
                             throw new ArgumentException(
                                 string.Format(
-                                    "Body of template constructor must be a method call on a constant or variable expression (accesses member of {0} instead)",
-                                    expr.NodeType), "constructor");
+                                    "Body of template factory function must be a method call on a constant or variable expression (accesses member of {0} instead)",
+                                    expr.NodeType), "factoryExpression");
 
                         // Get field.
                         var member = ((MemberExpression)methodCall.Object).Member;
@@ -210,8 +208,8 @@ namespace UnityEngine.Experimental.Input
                         if (field == null)
                             throw new ArgumentException(
                                 string.Format(
-                                    "Body of template constructor must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
-                                    member.GetType().Name, member.Name), "constructor");
+                                    "Body of template factory function must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
+                                    member.GetType().Name, member.Name), "factoryExpression");
 
                         // Read value.
                         instance = field.GetValue(constantExpr.Value);
@@ -223,7 +221,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Register.
-            s_Manager.RegisterTemplateConstructor(method, instance, name, baseTemplate: baseTemplate,
+            s_Manager.RegisterTemplateFactory(method, instance, name, baseTemplate: baseTemplate,
                 deviceDescription: deviceDescription);
         }
 
