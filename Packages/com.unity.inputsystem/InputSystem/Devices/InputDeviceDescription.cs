@@ -136,9 +136,8 @@ namespace UnityEngine.Experimental.Input
                 && MatchPair(deviceClass, other.deviceClass)
                 && MatchPair(manufacturer, other.manufacturer)
                 && MatchPair(product, other.product)
-                // We don't match serials; seems nonsense to do that.
-                && MatchPair(version, other.version)
-                && MatchPair(capabilities, other.capabilities);
+                // We don't match serials or capabilities; seems nonsense to do that.
+                && MatchPair(version, other.version);
         }
 
         private static bool MatchPair(string left, string right)

@@ -338,6 +338,7 @@ namespace UnityEngine.Experimental.Input
             public Type type;
             public FourCC stateFormat;
             public string extendsTemplate;
+            public bool updateBeforeRender;
             public InputDeviceDescription deviceDescription;
 
             private int m_ControlCount;
@@ -489,7 +490,8 @@ namespace UnityEngine.Experimental.Input
                     m_StateFormat = stateFormat,
                     m_ExtendsTemplate = new InternedString(extendsTemplate),
                     m_DeviceDescription = deviceDescription,
-                    m_Controls = controls
+                    m_Controls = controls,
+                    m_UpdateBeforeRender = updateBeforeRender
                 };
 
                 return template;

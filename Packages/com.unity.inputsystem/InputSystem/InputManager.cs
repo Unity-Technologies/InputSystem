@@ -629,7 +629,7 @@ namespace UnityEngine.Experimental.Input
         private InputDevice AddDevice(string template, int deviceId, InputDeviceDescription description, bool isNative)
         {
             var setup = new InputControlSetup(m_Templates);
-            setup.Setup(new InternedString(template), null, new InternedString());
+            setup.SetupWithDescription(new InternedString(template), description, new InternedString());
             var device = setup.Finish();
 
             device.m_Id = deviceId;
@@ -983,8 +983,6 @@ namespace UnityEngine.Experimental.Input
             RegisterTemplate("Mouse", typeof(Mouse));
             RegisterTemplate("Pen", typeof(Pen));
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
-            RegisterTemplate("HMD", typeof(HMD));
-            RegisterTemplate("XRController", typeof(XRController));
             RegisterTemplate("Accelerometer", typeof(Accelerometer));
             RegisterTemplate("Gyroscope", typeof(Gyroscope));
 
