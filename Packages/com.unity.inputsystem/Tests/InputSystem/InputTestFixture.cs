@@ -92,8 +92,6 @@ namespace UnityEngine.Experimental.Input
             testRuntime.Dispose();
         }
 
-        ////REVIEW: move into extension methods in a separate TestUtilities class?
-
         public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
             where TState : struct, IInputStateTypeInfo
         {
