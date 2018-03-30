@@ -124,20 +124,44 @@ namespace UnityEngine.Experimental.Input
         /// Array of currently active touches.
         /// </summary>
         /// <remarks>
-        /// This array only contains touches that are in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
-        /// or <see cref="PointerPhase.Moved"/>.
+        /// This array only contains touches that are either in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
+        /// or <see cref="PointerPhase.Moved"/>, or that have just ended, i.e. moved to <see cref="PointerPhase.Ended"/> or
+        /// <see cref="PointerPhase.Cancelled"/> this frame.
         /// </remarks>
-        public ReadOnlyArray<TouchControl> touches
+        public ReadOnlyArray<TouchControl> activeTouches
         {
             get
             {
                 var touchCount = 0;
+                bool? hadActivityThisFrame = null;
                 for (var i = 0; i < allTouchControls.Count; ++i)
                 {
-                    var phase = allTouchControls[i].phase.ReadValue();
+                    // Determine whether we consider the touch "active".
+                    var isActive = false;
+                    var touchControl = allTouchControls[i];
+                    var phaseControl = touchControl.phase;
+                    var phase = phaseControl.ReadValue();
                     if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
                     {
-                        m_TouchesArray[touchCount] = allTouchControls[i];
+                        isActive = true;
+                    }
+                    else if (phase == PointerPhase.Ended || phase == PointerPhase.Cancelled)
+                    {
+                        // Touch has ended but we want to have it on the active list for one frame
+                        // before "retiring" the touch again.
+                        if (hadActivityThisFrame == null)
+                            hadActivityThisFrame = device.wasUpdatedThisFrame;
+                        if (hadActivityThisFrame.Value)
+                        {
+                            var previousPhase = phaseControl.ReadPreviousValue();
+                            if (previousPhase != PointerPhase.Ended && previousPhase != PointerPhase.Cancelled)
+                                isActive = true;
+                        }
+                    }
+
+                    if (isActive)
+                    {
+                        m_TouchesArray[touchCount] = touchControl;
                         ++touchCount;
                     }
                 }

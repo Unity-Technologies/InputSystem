@@ -3147,11 +3147,11 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_TouchscreenReturnsActiveTouches()
+    public void Devices_TouchscreenReturnsActiveAndJustEndedTouches()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
 
-        Assert.That(device.touches.Count, Is.Zero);
+        Assert.That(device.activeTouches.Count, Is.Zero);
         Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
@@ -3163,11 +3163,11 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.touches.Count, Is.EqualTo(1));
-        Assert.That(device.touches[0].touchId.ReadValue(), Is.EqualTo(4));
-        Assert.That(device.touches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
-        Assert.That(device.touches[0].position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.touches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(device.activeTouches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.activeTouches[0].position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.activeTouches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new Touch
@@ -3185,11 +3185,11 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.touches.Count, Is.EqualTo(2));
-        Assert.That(device.touches[0].touchId.ReadValue(), Is.EqualTo(4));
-        Assert.That(device.touches[1].touchId.ReadValue(), Is.EqualTo(5));
-        Assert.That(device.touches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
-        Assert.That(device.touches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+        Assert.That(device.activeTouches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.activeTouches[1].touchId.ReadValue(), Is.EqualTo(5));
+        Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new Touch
@@ -3205,7 +3205,17 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.touches.Count, Is.Zero);
+        // For one frame, the ended and cancelled touches should stick around on the active touches list
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+
+        // But then they should disappear from the list.
+
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.Zero);
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
         Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
     }
