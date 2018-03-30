@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ISX.XR
+namespace UnityEngine.Experimental.Input.XR
 {
     static class XRUtilities
     {
@@ -74,7 +74,6 @@ namespace ISX.XR
     }
 #pragma warning restore 0649
 
-    [InputPlugin]
 	public static class XRSupport
 	{
 		public static void Initialize()

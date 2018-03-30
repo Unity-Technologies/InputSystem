@@ -1,9 +1,9 @@
 using System;
-using ISX.XR;
-using ISX.XR.LowLevel;
+using UnityEngine.Experimental.Input.XR;
+using UnityEngine.Experimental.Input.XR.LowLevel;
 using UnityEngine;
 
-namespace ISX.XR.Haptics
+namespace UnityEngine.Experimental.Input.XR.Haptics
 {
     public class SimpleXRRumble
     {

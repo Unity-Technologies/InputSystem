@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
-using ISX.Utilities;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
 
-namespace ISX.XR.LowLevel
+namespace UnityEngine.Experimental.Input.XR.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SimpleXRRumbleCommand : IInputDeviceCommandInfo

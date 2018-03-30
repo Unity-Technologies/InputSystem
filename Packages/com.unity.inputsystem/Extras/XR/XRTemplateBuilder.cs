@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ISX.LowLevel;
-using ISX.Utilities;
-using ISX.XR.Haptics;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.XR.Haptics;
 using System.Text;
 
-namespace ISX.XR
+namespace UnityEngine.Experimental.Input.XR
 {
     [Serializable]
     class XRTemplateBuilder
@@ -104,7 +104,7 @@ namespace ISX.XR
 
             string templateName = SanitizeTemplateName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
             XRTemplateBuilder template = new XRTemplateBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterTemplateConstructor(() => template.Build(), templateName, null, description);
+            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, null, description);
 
             return templateName;
         }

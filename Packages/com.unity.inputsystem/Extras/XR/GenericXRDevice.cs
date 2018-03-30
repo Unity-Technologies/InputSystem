@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using ISX.LowLevel;
-using ISX.Utilities;
-using ISX.XR.Haptics;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.XR.Haptics;
 using System.Text;
 
-namespace ISX.XR
+namespace UnityEngine.Experimental.Input.XR
 {
     public class XRHMD : InputDevice
     {

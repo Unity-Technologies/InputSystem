@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using ISX;
-using ISX.XR.Haptics;
-using ISX.Controls;
-using ISX.Utilities;
-using ISX.LowLevel;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.XR.Haptics;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine;
 
-namespace ISX.XR
+namespace UnityEngine.Experimental.Input.XR
 {
     internal static class OculusSupport
     {
