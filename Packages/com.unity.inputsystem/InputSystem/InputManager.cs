@@ -866,22 +866,6 @@ namespace UnityEngine.Experimental.Input
             return numFound;
         }
 
-        ////TODO: remove this version
-        // Report the availability of a device. The system will try to find a template that matches
-        // the device and instantiate it. If no template matches but a template is added some time
-        // in the future, the device will be created when the template becomes available.
-        public void ReportAvailableDevice(InputDeviceDescription description)
-        {
-            if (string.IsNullOrEmpty(description.product) && string.IsNullOrEmpty(description.manufacturer) &&
-                string.IsNullOrEmpty(description.deviceClass))
-                throw new ArgumentException(
-                    "Description must have at least one of 'product', 'manufacturer', or 'deviceClass'",
-                    "description");
-
-            var deviceId = m_Runtime.AllocateDeviceId();
-            ReportAvailableDevice(description, deviceId);
-        }
-
         private void ReportAvailableDevice(InputDeviceDescription description, int deviceId, bool isNative = false)
         {
             try

@@ -40,13 +40,14 @@ class HIDTests : InputTestFixture
             }
         };
 
-        InputSystem.ReportAvailableDevice(
+        testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
         {
             interfaceName = HID.kHIDInterface,
             product = "MyHIDThing",
             capabilities = hidDescriptor.ToJson()
-        });
+        }.ToJson());
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -306,13 +307,13 @@ class HIDTests : InputTestFixture
             }
         };
 
-        InputSystem.ReportAvailableDevice(
-            new InputDeviceDescription
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
             interfaceName = HID.kHIDInterface,
             product = "MyHIDThing",
             capabilities = hidDescriptor.ToJson()
-        });
+        }.ToJson());
+        InputSystem.Update();
 
         var device = InputSystem.devices.First(x => x is HID);
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(32));
@@ -334,13 +335,14 @@ class HIDTests : InputTestFixture
             }
         };
 
-        InputSystem.ReportAvailableDevice(
+        testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
         {
             interfaceName = HID.kHIDInterface,
             product = "MyHIDThing",
             capabilities = hidDescriptor.ToJson()
-        });
+        }.ToJson());
+        InputSystem.Update();
 
         var device = (HID)InputSystem.devices.First(x => x is HID);
         Assert.That(device.hidDescriptor.productId, Is.EqualTo(1234));

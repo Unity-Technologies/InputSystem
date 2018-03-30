@@ -486,12 +486,6 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.TryGetDeviceById(deviceId);
         }
 
-        ////REVIEW: this seems somewhat pointless without also agreeing on an ID for the device
-        public static void ReportAvailableDevice(InputDeviceDescription description)
-        {
-            s_Manager.ReportAvailableDevice(description);
-        }
-
         public static int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
             return s_Manager.GetUnsupportedDevices(descriptions);

@@ -451,7 +451,10 @@ class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterTemplate(initialJson);
-        InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "Test"});
+
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
+        InputSystem.Update();
+
         var oldDevice = InputSystem.devices.First(x => x.template == "MyDevice");
 
         var oldDeviceId = oldDevice.id;
@@ -2470,7 +2473,8 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
     {
-        InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "MyController"});
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "MyController"}.ToJson());
+        InputSystem.Update();
 
         var json = @"
             {
@@ -2492,12 +2496,14 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanMatchTemplateByDeviceClass()
     {
-        InputSystem.ReportAvailableDevice(new InputDeviceDescription {deviceClass = "Touchscreen"});
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Touchscreen"}.ToJson());
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
 
         // Should not try to use a control template.
-        InputSystem.ReportAvailableDevice(new InputDeviceDescription {deviceClass = "Touch"});
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Touch"}.ToJson());
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
     }
@@ -4886,7 +4892,9 @@ class FunctionalTests : InputTestFixture
         Assert.That(action.lastTriggerControl, Is.SameAs(gamepad1.leftTrigger));
 
         // Also make sure that this device creation path gets it right.
-        InputSystem.ReportAvailableDevice(new InputDeviceDescription {product = "Test", deviceClass = "Gamepad"});
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription {product = "Test", deviceClass = "Gamepad"}.ToJson());
+        InputSystem.Update();
         var gamepad2 = (Gamepad)InputSystem.devices.First(x => x.description.product == "Test");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
@@ -5928,12 +5936,13 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterTemplate(json);
         InputSystem.AddDevice("MyDevice");
-        InputSystem.ReportAvailableDevice(new InputDeviceDescription
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
             product = "Product",
             manufacturer = "Manufacturer",
             interfaceName = "Test"
-        });
+        }.ToJson());
+        InputSystem.Update();
 
         InputSystem.Save();
         InputSystem.Reset();
