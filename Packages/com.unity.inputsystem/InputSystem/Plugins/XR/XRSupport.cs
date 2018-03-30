@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityEngine.Experimental.Input.XR
+namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     static class XRUtilities
     {

@@ -6,21 +6,21 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine;
 
-namespace UnityEngine.Experimental.Input.XR
+namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    internal static class DaydreamSupport
+    internal static class WMRSupport
     {
         internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
         {
-            if (String.IsNullOrEmpty(deviceDescriptor.manufacturer))
+            if(deviceDescriptor.manufacturer == "Microsoft")
             {
-                if (deviceDescriptor.deviceName == "Daydream HMD" && deviceDescriptor.deviceRole == EDeviceRole.Generic)
+                if(deviceDescriptor.deviceName == "Windows Mixed Reality HMD" && deviceDescriptor.deviceRole == EDeviceRole.Generic)
                 {
-                    return "DaydreamHMD";
+                    return "WMRHMD";
                 }
-                else if (deviceDescriptor.deviceName == "Daydream Controller" && (deviceDescriptor.deviceRole == EDeviceRole.LeftHanded || deviceDescriptor.deviceRole == EDeviceRole.RightHanded))
+                else if(deviceDescriptor.deviceName == "Spatial Controller" && ( deviceDescriptor.deviceRole == EDeviceRole.LeftHanded || deviceDescriptor.deviceRole == EDeviceRole.RightHanded))
                 {
-                    return "DaydreamController";
+                    return "WMRSpatialController";
                 }
             }
 
@@ -28,43 +28,48 @@ namespace UnityEngine.Experimental.Input.XR
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 120)]
-    public struct DaydreamHMDState : IInputStateTypeInfo
+    [StructLayout(LayoutKind.Explicit, Size = 117)]
+    public struct WMRHMDState : IInputStateTypeInfo
     {
         [InputControl(template = "Integer")]
         [FieldOffset(0)]
         public int trackingState;
+
         [InputControl(template = "Button")]
         [FieldOffset(4)]
         public bool isTracked;
 
         [InputControl(template = "Vector3")]
-        [FieldOffset(8)]
+        [FieldOffset(5)]
         public Vector3 devicePosition;
+
         [InputControl(template = "Quaternion")]
-        [FieldOffset(20)]
-        public Quaternion deviceRotation;
+        [FieldOffset(17)]
+        public Vector3 deviceRotation;
 
         [InputControl(template = "Vector3")]
-        [FieldOffset(36)]
+        [FieldOffset(33)]
         public Vector3 leftEyePosition;
+
         [InputControl(template = "Quaternion")]
-        [FieldOffset(48)]
-        public Quaternion leftEyeRotation;
+        [FieldOffset(45)]
+        public Vector3 leftEyeRotation;
 
         [InputControl(template = "Vector3")]
-        [FieldOffset(64)]
+        [FieldOffset(61)]
         public Vector3 rightEyePosition;
+
         [InputControl(template = "Quaternion")]
-        [FieldOffset(76)]
-        public Quaternion rightEyeRotation;
+        [FieldOffset(73)]
+        public Vector3 rightEyeRotation;
 
         [InputControl(template = "Vector3")]
-        [FieldOffset(92)]
+        [FieldOffset(89)]
         public Vector3 centerEyePosition;
+
         [InputControl(template = "Quaternion")]
-        [FieldOffset(104)]
-        public Quaternion centerEyeRotation;
+        [FieldOffset(101)]
+        public Vector3 centerEyeRotation;
 
         public FourCC GetFormat()
         {
@@ -72,10 +77,10 @@ namespace UnityEngine.Experimental.Input.XR
         }
     }
 
-    [InputTemplate(stateType = typeof(DaydreamHMDState))]
-    public class DaydreamHMD : XRHMD
+    [InputTemplate(stateType = typeof(WMRHMDState))]
+    public class WMRHMD : XRHMD
     {
-        new public DaydreamHMD active { get; private set; }
+        new public WMRHMD active { get; private set; }
 
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -87,6 +92,7 @@ namespace UnityEngine.Experimental.Input.XR
         public QuaternionControl rightEyeRotation { get; private set; }
         public Vector3Control centerEyePosition { get; private set; }
         public QuaternionControl centerEyeRotation { get; private set; }
+
 
         protected override void FinishSetup(InputControlSetup setup)
         {
@@ -106,61 +112,68 @@ namespace UnityEngine.Experimental.Input.XR
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 100)]
-    public struct DaydreamControllerState : IInputStateTypeInfo
+    [StructLayout(LayoutKind.Explicit, Size = 67)]
+    public struct WMRSpatialControllerState : IInputStateTypeInfo
     {
-        [InputControl(template = "Vector2")]
+        [InputControl(template = "Analog")]
         [FieldOffset(0)]
-        public Vector2 touchpad;
-        [InputControl(template = "Button")]
-        [FieldOffset(8)]
-        public bool volumeUp;
-        [InputControl(template = "Button")]
+        public float combinedTrigger;
+
+        [InputControl(template = "Vector2")]
+        [FieldOffset(4)]
+        public Vector2 joystick;
+
+        [InputControl(template = "Analog")]
         [FieldOffset(12)]
-        public bool recentered;
-        [InputControl(template = "Button")]
+        public float trigger;
+
+        [InputControl(template = "Analog")]
         [FieldOffset(16)]
-        public bool volumeDown;
-        [InputControl(template = "Button")]
+        public float grip;
+
+        [InputControl(template = "Vector2")]
         [FieldOffset(20)]
-        public bool recentering;
-        [InputControl(template = "Button")]
-        [FieldOffset(24)]
-        public bool app;
+        public Vector2 touchpad;
+
         [InputControl(template = "Button")]
         [FieldOffset(28)]
-        public bool home;
+        public bool gripPressed;
+
+        [InputControl(template = "Button")]
+        [FieldOffset(29)]
+        public bool menu;
+
+        [InputControl(template = "Button")]
+        [FieldOffset(30)]
+        public bool joystickClick;
+
+        [InputControl(template = "Button")]
+        [FieldOffset(31)]
+        public bool triggerPressed;
+
         [InputControl(template = "Button")]
         [FieldOffset(32)]
         public bool touchpadClick;
+
         [InputControl(template = "Button")]
-        [FieldOffset(36)]
+        [FieldOffset(33)]
         public bool touchpadTouch;
 
-
         [InputControl(template = "Integer")]
-        [FieldOffset(40)]
+        [FieldOffset(34)]
         public int trackingState;
 
         [InputControl(template = "Button")]
-        [FieldOffset(44)]
+        [FieldOffset(38)]
         public bool isTracked;
 
         [InputControl(template = "Vector3")]
-        [FieldOffset(48)]
+        [FieldOffset(39)]
         public Vector3 devicePosition;
 
         [InputControl(template = "Quaternion")]
-        [FieldOffset(60)]
+        [FieldOffset(51)]
         public Quaternion deviceRotation;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(76)]
-        public Vector3 deviceVelocity;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(88)]
-        public Vector3 deviceAcceleration;
 
         public FourCC GetFormat()
         {
@@ -168,31 +181,30 @@ namespace UnityEngine.Experimental.Input.XR
         }
     }
 
-    [InputTemplate(stateType = typeof(DaydreamControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
-    public class DaydreamController : XRController
+    [InputTemplate(stateType = typeof(WMRSpatialControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    public class WMRSpatialController : XRController
     {
-        new public static DaydreamController leftHand { get; private set; }
-        new public static DaydreamController rightHand { get; private set; }
+        new public static WMRSpatialController leftHand { get; private set; }
+        new public static WMRSpatialController rightHand { get; private set; }
 
+        public AxisControl combinedTrigger { get; private set; }
+        public Vector2Control joystick { get; private set; }
+        public AxisControl trigger { get; private set; }
+        public AxisControl grip { get; private set; }
         public Vector2Control touchpad { get; private set; }
-        public ButtonControl volumeUp { get; private set; }
-        public ButtonControl recentered { get; private set; }
-        public ButtonControl volumeDown { get; private set; }
-        public ButtonControl recentering { get; private set; }
-        public ButtonControl app { get; private set; }
-        public ButtonControl home { get; private set; }
-        public ButtonControl touchpadClick { get; private set; }
-        public ButtonControl touchpadTouch { get; private set; }
-
+        public ButtonControl gripPressed { get; private set; }
+        public ButtonControl menu { get; private set; }
+        public ButtonControl joystickClick { get; private set; }
+        public ButtonControl triggerPressed { get; private set; }
+        public ButtonControl touchpadClicked { get; private set; }
+        public ButtonControl touchPadTouched { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
         public Vector3Control devicePosition { get; private set; }
         public QuaternionControl deviceRotation { get; private set; }
-        public Vector3Control deviceVelocity { get; private set; }
-        public Vector3Control deviceAcceleration { get; private set; }
 
         protected override void FinishSetup(InputControlSetup setup)
-        {
+        { 
             base.FinishSetup(setup);
 
             try
@@ -220,22 +232,21 @@ namespace UnityEngine.Experimental.Input.XR
             catch (Exception)
             { }
 
+            combinedTrigger = setup.GetControl<AxisControl>("combinedTrigger");
+            joystick = setup.GetControl<Vector2Control>("joystick");
+            trigger = setup.GetControl<AxisControl>("trigger");
+            grip = setup.GetControl<AxisControl>("grip");
             touchpad = setup.GetControl<Vector2Control>("touchpad");
-            volumeUp = setup.GetControl<ButtonControl>("volumeUp");
-            recentered = setup.GetControl<ButtonControl>("recentered");
-            volumeDown = setup.GetControl<ButtonControl>("volumeDown");
-            recentering = setup.GetControl<ButtonControl>("recentering");
-            app = setup.GetControl<ButtonControl>("app");
-            home = setup.GetControl<ButtonControl>("home");
-            touchpadClick = setup.GetControl<ButtonControl>("touchpadClick");
-            touchpadTouch = setup.GetControl<ButtonControl>("touchpadTouch");
-
+            gripPressed = setup.GetControl<ButtonControl>("gripPressed");
+            menu = setup.GetControl<ButtonControl>("menu");
+            joystickClick = setup.GetControl<ButtonControl>("joystickClick");
+            triggerPressed = setup.GetControl<ButtonControl>("triggerPressed");
+            touchpadClicked = setup.GetControl<ButtonControl>("touchpadClicked");
+            touchPadTouched = setup.GetControl<ButtonControl>("touchPadTouched");
             trackingState = setup.GetControl<IntegerControl>("trackingState");
             isTracked = setup.GetControl<ButtonControl>("isTracked");
             devicePosition = setup.GetControl<Vector3Control>("devicePosition");
             deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = setup.GetControl<Vector3Control>("deviceVelocity");
-            deviceAcceleration = setup.GetControl<Vector3Control>("deviceAcceleration");
         }
     }
 }

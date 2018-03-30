@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.LowLevel;
 
-namespace UnityEngine.Experimental.Input.XR.LowLevel
+namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SimpleXRRumbleCommand : IInputDeviceCommandInfo
