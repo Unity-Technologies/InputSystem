@@ -1018,6 +1018,7 @@ namespace UnityEngine.Experimental.Input
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
             RegisterTemplate("HMD", typeof(HMD));
             RegisterTemplate("XRController", typeof(XRController));
+            RegisterTemplate("Sensor", typeof(Sensor));
             RegisterTemplate("Accelerometer", typeof(Accelerometer));
             RegisterTemplate("Gyroscope", typeof(Gyroscope));
 

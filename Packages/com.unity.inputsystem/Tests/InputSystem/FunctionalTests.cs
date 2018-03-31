@@ -3328,6 +3328,62 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanGetSensorSamplingFrequency()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+
+        bool? receivedQueryFrequencyCommand = null;
+        testRuntime.SetDeviceCommandCallback(sensor.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QuerySamplingFrequencyCommand.Type)
+                    {
+                        Assert.That(receivedQueryFrequencyCommand, Is.Null);
+                        receivedQueryFrequencyCommand = true;
+                        ((QuerySamplingFrequencyCommand*)commandPtr)->frequency = 120.0f;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        Assert.That(sensor.samplingFrequency, Is.EqualTo(120.0).Within(0.000001));
+        Assert.That(receivedQueryFrequencyCommand, Is.Not.Null);
+        Assert.That(receivedQueryFrequencyCommand.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanSetSensorSamplingFrequency()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+
+        bool? receivedSetFrequencyCommand = null;
+        testRuntime.SetDeviceCommandCallback(sensor.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == SetSamplingFrequencyCommand.Type)
+                    {
+                        Assert.That(receivedSetFrequencyCommand, Is.Null);
+                        receivedSetFrequencyCommand = true;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        sensor.samplingFrequency = 30.0f;
+
+        Assert.That(receivedSetFrequencyCommand, Is.Not.Null);
+        Assert.That(receivedSetFrequencyCommand.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetAccelerometerReading()
     {
         var accelerometer = InputSystem.AddDevice<Accelerometer>();

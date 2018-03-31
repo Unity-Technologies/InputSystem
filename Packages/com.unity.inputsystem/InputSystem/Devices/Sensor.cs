@@ -1,6 +1,9 @@
+using System;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: hook up all sensor controls to noise suppression
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -25,6 +28,21 @@ namespace UnityEngine.Experimental.Input
 {
     public abstract class Sensor : InputDevice
     {
+        public float samplingFrequency
+        {
+            get
+            {
+                var command = QuerySamplingFrequencyCommand.Create();
+                if (OnDeviceCommand(ref command) >= 0)
+                    return command.frequency;
+                throw new NotSupportedException(string.Format("Device '{0}' does not support querying sampling frequency", this));
+            }
+            set
+            {
+                var command = SetSamplingFrequencyCommand.Create(value);
+                OnDeviceCommand(ref command);
+            }
+        }
     }
 
     [InputTemplate(stateType = typeof(AccelerometerState))]
