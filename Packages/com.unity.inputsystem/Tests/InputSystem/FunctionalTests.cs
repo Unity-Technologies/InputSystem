@@ -2950,6 +2950,7 @@ class FunctionalTests : InputTestFixture
     [TestCase("HMD")]
     [TestCase("XRController")]
     [TestCase("Joystick")]
+    [TestCase("Accelerometer")]
     public void Devices_CanCreateDevice(string template)
     {
         var device = InputSystem.AddDevice(template);
@@ -3224,6 +3225,22 @@ class FunctionalTests : InputTestFixture
         Assert.That(device.activeTouches.Count, Is.Zero);
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
         Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetAccelerometerReading()
+    {
+        var accelerometer = InputSystem.AddDevice<Accelerometer>();
+
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.123f, 0.456f, 0.789f) });
+        InputSystem.Update();
+
+        Assert.That(Accelerometer.current, Is.SameAs(accelerometer));
+
+        Assert.That(accelerometer.acceleration.ReadValue().x, Is.EqualTo(0.123).Within(0.00001));
+        Assert.That(accelerometer.acceleration.ReadValue().y, Is.EqualTo(0.456).Within(0.00001));
+        Assert.That(accelerometer.acceleration.ReadValue().z, Is.EqualTo(0.789).Within(0.00001));
     }
 
     [Test]

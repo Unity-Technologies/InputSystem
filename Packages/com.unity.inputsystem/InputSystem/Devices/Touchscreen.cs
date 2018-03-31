@@ -3,6 +3,8 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: add orientation
+
 ////TODO: reset and accumulate deltas of all touches
 
 //// Remaining things to sort out around touch:
