@@ -21,6 +21,10 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputSystem.RemoveDevice"/>
         Removed,
 
+        Enabled,
+
+        Disabled,
+
         /// <summary>
         /// The usages on a device have changed.
         /// </summary>

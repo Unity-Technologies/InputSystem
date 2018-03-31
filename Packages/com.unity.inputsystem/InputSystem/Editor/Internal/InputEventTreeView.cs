@@ -6,6 +6,8 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 
+////FIXME: this performs horribly; the constant rebuilding on every single event makes the debug view super slow when device is noisy
+
 ////TODO: add information about which update type + update count an event came through in
 
 ////TODO: add more information for each event (ideally, dump deltas that highlight control values that have changed)

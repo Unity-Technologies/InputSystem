@@ -165,6 +165,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_EventTree.OnGUI(rect);
         }
 
+        ////FIXME: some of the state in here doesn't get refreshed when it's changed on the device
         private void InitializeWith(InputDevice device)
         {
             m_Device = device;
@@ -182,6 +183,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 flags.Add("UpdateBeforeRender");
             if ((m_Device.m_Flags & InputDevice.Flags.HasStateCallbacks) == InputDevice.Flags.HasStateCallbacks)
                 flags.Add("HasStateCallbacks");
+            if ((m_Device.m_Flags & InputDevice.Flags.Disabled) == InputDevice.Flags.Disabled)
+                flags.Add("Disabled");
             m_DeviceFlagsString = string.Join(", ", flags.ToArray());
 
             // Set up event trace. The default trace size of 1mb fits a ton of events and will

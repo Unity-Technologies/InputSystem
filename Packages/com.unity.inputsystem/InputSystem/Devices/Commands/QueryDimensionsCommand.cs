@@ -3,6 +3,12 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    /// <summary>
+    /// Query dimensions of a device.
+    /// </summary>
+    /// <remarks>
+    /// This is usually used to query screen dimensions from pointer devices.
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct QueryDimensionsCommand : IInputDeviceCommandInfo
     {

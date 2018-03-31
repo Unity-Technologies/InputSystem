@@ -2630,6 +2630,105 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanBeDisabledAndReEnabled()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        bool? disabled = null;
+        testRuntime.SetDeviceCommandCallback(device.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == DisableDeviceCommand.Type)
+                    {
+                        Assert.That(disabled, Is.Null);
+                        disabled = true;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                    if (commandPtr->type == EnableDeviceCommand.Type)
+                    {
+                        Assert.That(disabled, Is.Null);
+                        disabled = false;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+
+        Assert.That(device.enabled, Is.True);
+        Assert.That(disabled, Is.Null);
+
+        InputSystem.DisableDevice(device);
+
+        Assert.That(device.enabled, Is.False);
+        Assert.That(disabled.HasValue, Is.True);
+        Assert.That(disabled.Value, Is.True);
+
+        // Make sure that state sent against the device is ignored.
+        InputSystem.QueueStateEvent(device, new MouseState { buttons = 0xffff });
+        InputSystem.Update();
+
+        Assert.That(device.CheckStateIsAllZeros(), Is.True);
+
+        // Re-enable device.
+
+        disabled = null;
+        InputSystem.EnableDevice(device);
+
+        Assert.That(device.enabled, Is.True);
+        Assert.That(disabled.HasValue, Is.True);
+        Assert.That(disabled.Value, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenDisabledOrReEnabled_TriggersNotification()
+    {
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedChange = null;
+
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+            {
+                receivedDevice = device;
+                receivedChange = change;
+            };
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.DisableDevice(mouse);
+
+        Assert.That(receivedDevice, Is.SameAs(mouse));
+        Assert.That(receivedChange.Value, Is.EqualTo(InputDeviceChange.Disabled));
+
+        receivedDevice = null;
+        receivedChange = null;
+
+        InputSystem.EnableDevice(mouse);
+
+        Assert.That(receivedDevice, Is.SameAs(mouse));
+        Assert.That(receivedChange.Value, Is.EqualTo(InputDeviceChange.Enabled));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_WhenDisabled_StateIsReset()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_WhenDisabled_RefreshActions()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
         var description = new InputDeviceDescription {deviceClass = "Gamepad"};
