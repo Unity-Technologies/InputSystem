@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.Plugins.XR;
 using Touch = UnityEngine.Experimental.Input.Touch;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
