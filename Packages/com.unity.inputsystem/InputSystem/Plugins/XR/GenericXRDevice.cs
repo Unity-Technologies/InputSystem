@@ -56,6 +56,29 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             base.FinishSetup(setup);
         }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+
+            if(usages.Contains(CommonUsages.LeftHand))
+            {
+                leftHand = this;
+            }
+            else if(leftHand == this)
+            {
+                leftHand = null;
+            }
+
+            if (usages.Contains(CommonUsages.RightHand))
+            {
+                rightHand = this;
+            }
+            else if (rightHand == this)
+            {
+                rightHand = null;
+            }
+        }
     }
 
     public class XRControllerWithRumble : XRController
