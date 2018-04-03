@@ -9,17 +9,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     {
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<AndroidGameController>(
+            InputSystem.RegisterTemplate<AndroidGamepad>(
                 deviceDescription: new InputDeviceDescription
                 {
                     interfaceName = "Android",
                     deviceClass = "AndroidGameController"
                 });
 
+            InputSystem.RegisterTemplate<AndroidJoystick>("AndroidJoystick");
+
             InputSystem.RegisterTemplate(@"
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
-    ""extend"" : ""AndroidGameController"",
+    ""extend"" : ""AndroidGamepad"",
     ""controls"" : [
         { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
         { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampMin=0,clampMax=0.5,normalize,normalizeMin=0,normalizeMax=0.5"" },
@@ -32,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             InputSystem.RegisterTemplate(@"
 {
     ""name"" : ""AndroidGamepadWithDpadButtons"",
-    ""extend"" : ""AndroidGameController"",
+    ""extend"" : ""AndroidGamepad"",
     ""controls"" : [
         { ""name"" : ""dpad"", ""offset"" : 0, ""bit"" : 19, ""sizeInBits"" : 4 },
         { ""name"" : ""dpad/left"", ""bit"" : 21 },
@@ -60,12 +62,18 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 case "AndroidGameController":
                 {
                     var caps = AndroidDeviceCapabilities.FromJson(description.capabilities);
-                    if (caps.motionAxes != null)
+                    if ((caps.inputSources & AndroidInputSource.Gamepad) == AndroidInputSource.Gamepad)
                     {
-                        if (caps.motionAxes.Contains(AndroidAxis.HatX) && caps.motionAxes.Contains(AndroidAxis.HatY))
-                            return "AndroidGamepadWithDpadAxes";
+                        if (caps.motionAxes != null)
+                        {
+                            if (caps.motionAxes.Contains(AndroidAxis.HatX) &&
+                                caps.motionAxes.Contains(AndroidAxis.HatY))
+                                return "AndroidGamepadWithDpadAxes";
+                        }
+                        return "AndroidGamepadWithDpadButtons";
                     }
-                    return "AndroidGamepadWithDpadButtons";
+
+                    return "AndroidJoystick";
                 }
                 case "AndroidSensor":
                 {

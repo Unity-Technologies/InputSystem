@@ -388,11 +388,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
-{
-    ////REVIEW: Is this guaranteed to be a Gamepad? If both joystick and gamepad come through here, we need to split this up.
-    ////        Also, probably should be called AndroidGamepad
+{ 
     [InputTemplate(stateType = typeof(AndroidGameControllerState))]
-    public class AndroidGameController : Gamepad
+    public class AndroidGamepad : Gamepad
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidGameControllerState))]
+    public class AndroidJoystick : Joystick
     {
     }
 }

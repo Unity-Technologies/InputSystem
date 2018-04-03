@@ -17,8 +17,8 @@ class AndroidTests : InputTestFixture
             deviceClass = "AndroidGameController"     ////TODO: have backend report this as just "Gamepad" or "Controller"
         });
 
-        Assert.That(device, Is.TypeOf<AndroidGameController>());
-        var controller = (AndroidGameController)device;
+        Assert.That(device, Is.TypeOf<AndroidGamepad>());
+        var controller = (AndroidGamepad)device;
 
         InputSystem.QueueStateEvent(controller,
             new AndroidGameControllerState()
