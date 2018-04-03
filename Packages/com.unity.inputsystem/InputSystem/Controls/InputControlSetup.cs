@@ -66,6 +66,20 @@ namespace UnityEngine.Experimental.Input
             m_Device.CallFinishSetupRecursive(this);
         }
 
+        internal void SetupWithDescription(InternedString template, InputDeviceDescription deviceDescription, InternedString variant)
+        {
+            if (variant.IsEmpty())
+                variant = new InternedString("Default");
+
+            InstantiateTemplate(template, variant, new InternedString(), null, null);
+            FinalizeControlHierarchy();
+
+            if (!deviceDescription.empty)
+                m_Device.m_Description = deviceDescription;
+
+            m_Device.CallFinishSetupRecursive(this);
+        }
+
         ////TODO: do away with this
         // Complete the setup and return the full control hierarchy setup
         // with its device root.

@@ -9,6 +9,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Plugins.XInput;
+using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.Experimental.Input.Utilities;
 
 #if UNITY_EDITOR
@@ -1034,6 +1035,10 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_SWITCH
             Plugins.Switch.SwitchSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR
+            Plugins.XR.XRSupport.Initialize();
             #endif
         }
 

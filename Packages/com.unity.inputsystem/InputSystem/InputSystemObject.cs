@@ -77,9 +77,6 @@ namespace UnityEngine.Experimental.Input
             Touchscreen.current = null;
             Pen.current = null;
             Joystick.current = null;
-            XRController.leftHand = null;
-            XRController.rightHand = null;
-            HMD.current = null;
         }
 
         public void OnBeforeSerialize()
