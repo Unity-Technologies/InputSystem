@@ -261,6 +261,11 @@ namespace UnityEngine.Experimental.Input
 
                 if (description.Matches(m_AvailableDevices[i].description))
                 {
+                    // Re-enable device.
+                    var command = EnableDeviceCommand.Create();
+                    m_Runtime.DeviceCommand(deviceId, ref command);
+
+                    // Create InputDevice instance.
                     AddDevice(template, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
                 }
             }
@@ -711,6 +716,7 @@ namespace UnityEngine.Experimental.Input
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoTemplateFound, int deviceId = InputDevice.kInvalidDeviceId, bool isNative = false)
         {
+            // Look for matching template.
             var template = TryFindMatchingTemplate(description);
 
             ////REVIEW: listeners registering new templates from in here may potentially lead to the creation of devices; should we disallow that?
@@ -725,10 +731,19 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            // If no template was found, bail out.
             if (template == null)
             {
                 if (throwIfNoTemplateFound)
                     throw new ArgumentException(string.Format("Cannot find template matching device description '{0}'", description), "description");
+
+                // If it's a device coming from the runtime, disable it.
+                if (deviceId != InputDevice.kInvalidDeviceId)
+                {
+                    var command = DisableDeviceCommand.Create();
+                    m_Runtime.DeviceCommand(deviceId, ref command);
+                }
+
                 return null;
             }
 

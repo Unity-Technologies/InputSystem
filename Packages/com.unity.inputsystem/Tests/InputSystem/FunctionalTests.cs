@@ -2705,6 +2705,69 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_ThatHaveNoMatchingTemplate_AreDisabled()
+    {
+        var deviceId = testRuntime.AllocateDeviceId();
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
+
+        bool? wasDisabled = null;
+        testRuntime.SetDeviceCommandCallback(deviceId,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == DisableDeviceCommand.Type)
+                    {
+                        Assert.That(wasDisabled, Is.Null);
+                        wasDisabled = true;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+
+                Assert.Fail("Should not get other IOCTLs");
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        InputSystem.Update();
+
+        Assert.That(wasDisabled.HasValue);
+        Assert.That(wasDisabled.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ThatHadNoMatchingTemplate_AreReEnabled_WhenTemplateBecomesAvailable()
+    {
+        var deviceId = testRuntime.AllocateDeviceId();
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
+        InputSystem.Update();
+
+        bool? wasEnabled = null;
+        testRuntime.SetDeviceCommandCallback(deviceId,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == EnableDeviceCommand.Type)
+                    {
+                        Assert.That(wasEnabled, Is.Null);
+                        wasEnabled = true;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+
+                Assert.Fail("Should not get other IOCTLs");
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        InputSystem.RegisterTemplate<Mouse>(deviceDescription: new InputDeviceDescription {deviceClass = "TestThing"});
+
+        Assert.That(wasEnabled.HasValue);
+        Assert.That(wasEnabled.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
         var description = new InputDeviceDescription {deviceClass = "Gamepad"};

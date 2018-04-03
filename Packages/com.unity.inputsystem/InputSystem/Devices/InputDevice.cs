@@ -210,6 +210,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
+        ////TODO: rename to `SendDeviceCommand` or something like that
         /// <summary>
         /// Perform a device-specific command.
         /// </summary>

@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: hook up all sensor controls to noise suppression
+////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -102,10 +102,10 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputControlSetup setup)
         {
-            orientation = setup.TryGetControl<QuaternionControl>("orientation");
-            acceleration = setup.TryGetControl<Vector3Control>("acceleration");
-            angularVelocity = setup.TryGetControl<Vector3Control>("angularVelocity");
-            gravity = setup.TryGetControl<Vector3Control>("gravity");
+            orientation = setup.GetControl<QuaternionControl>("orientation");
+            acceleration = setup.GetControl<Vector3Control>("acceleration");
+            angularVelocity = setup.GetControl<Vector3Control>("angularVelocity");
+            gravity = setup.GetControl<Vector3Control>("gravity");
             base.FinishSetup(setup);
         }
     }
