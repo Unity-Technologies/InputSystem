@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using System.Text;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
@@ -21,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             {
                 case EFeatureType.Binary:
 #if UNITY_ANDROID
-                        return 4;
+                    return 4;
 #else
                     return 1;
 #endif
@@ -43,7 +41,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         public static void RegisterTemplateFilter(Func<XRDeviceDescriptor, string> templateChecker)
         {
-            availableTemplates.Add(templateChecker);            
+            availableTemplates.Add(templateChecker);
         }
 
         static string SanitizeTemplateName(string templateName)
@@ -53,7 +51,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             for (int i = 0; i < stringLength; i++)
             {
                 char letter = templateName[i];
-                if(Char.IsUpper(letter) || Char.IsLower(letter) || Char.IsDigit(letter) || letter == ':')
+                if (Char.IsUpper(letter) || Char.IsLower(letter) || Char.IsDigit(letter) || letter == ':')
                 {
                     sanitizedTemplateName.Append(letter);
                 }
@@ -112,19 +110,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public InputTemplate Build()
         {
             Type deviceType = null;
-            switch(descriptor.deviceRole)
+            switch (descriptor.deviceRole)
             {
                 case EDeviceRole.LeftHanded:
                 case EDeviceRole.RightHanded:
-                    {
-                        deviceType = typeof(XRController);
-                    }
-                    break;
+                {
+                    deviceType = typeof(XRController);
+                }
+                break;
                 default:
-                    {
-                        deviceType = typeof(XRHMD);
-                    }
-                    break;
+                {
+                    deviceType = typeof(XRHMD);
+                }
+                break;
             }
 
             var builder = new InputTemplate.Builder
@@ -150,59 +148,59 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 switch (feature.featureType)
                 {
                     case EFeatureType.Binary:
-                        {
-                            builder.AddControl(feature.name)
-                                .WithTemplate("Button")
-                                .WithOffset(currentOffset)
-                                .WithFormat(InputStateBlock.kTypeBit)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(feature.name)
+                        .WithTemplate("Button")
+                        .WithOffset(currentOffset)
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithUsages(currentUsages);
+                        break;
+                    }
                     case EFeatureType.DiscreteStates:
-                        {
-                            builder.AddControl(feature.name)
-                                .WithTemplate("Integer")
-                                .WithOffset(currentOffset)
-                                .WithFormat(InputStateBlock.kTypeInt)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(feature.name)
+                        .WithTemplate("Integer")
+                        .WithOffset(currentOffset)
+                        .WithFormat(InputStateBlock.kTypeInt)
+                        .WithUsages(currentUsages);
+                        break;
+                    }
                     case EFeatureType.Axis1D:
-                        {
-                            builder.AddControl(feature.name)
-                                .WithTemplate("Analog")
-                                .WithOffset(currentOffset)
-                                .WithFormat(InputStateBlock.kTypeFloat)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(feature.name)
+                        .WithTemplate("Analog")
+                        .WithOffset(currentOffset)
+                        .WithFormat(InputStateBlock.kTypeFloat)
+                        .WithUsages(currentUsages);
+                        break;
+                    }
                     case EFeatureType.Axis2D:
-                        {
-                            builder.AddControl(feature.name)
-                                .WithTemplate("Vector2")
-                                .WithOffset(currentOffset)
-                                .WithFormat(InputStateBlock.kTypeVector2)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(feature.name)
+                        .WithTemplate("Vector2")
+                        .WithOffset(currentOffset)
+                        .WithFormat(InputStateBlock.kTypeVector2)
+                        .WithUsages(currentUsages);
+                        break;
+                    }
                     case EFeatureType.Axis3D:
-                        {
-                            builder.AddControl(feature.name)
-                                .WithTemplate("Vector3")
-                                .WithOffset(currentOffset)
-                                .WithFormat(InputStateBlock.kTypeVector3)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(feature.name)
+                        .WithTemplate("Vector3")
+                        .WithOffset(currentOffset)
+                        .WithFormat(InputStateBlock.kTypeVector3)
+                        .WithUsages(currentUsages);
+                        break;
+                    }
                     case EFeatureType.Rotation:
-                        {
-                            builder.AddControl(feature.name)
-                                .WithTemplate("Quaternion")
-                                .WithOffset(currentOffset)
-                                .WithFormat(InputStateBlock.kTypeQuaternion)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(feature.name)
+                        .WithTemplate("Quaternion")
+                        .WithOffset(currentOffset)
+                        .WithFormat(InputStateBlock.kTypeQuaternion)
+                        .WithUsages(currentUsages);
+                        break;
+                    }
                 }
                 currentOffset += nextOffset;
             }

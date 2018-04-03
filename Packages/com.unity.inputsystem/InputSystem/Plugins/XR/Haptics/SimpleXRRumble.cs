@@ -1,7 +1,3 @@
-using System;
-using UnityEngine.Experimental.Input.Plugins.XR;
-using UnityEngine;
-
 namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 {
     public class SimpleXRRumble
@@ -17,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             }
             set
             {
-                if(m_Intensity != value)
+                if (m_Intensity != value)
                 {
                     m_Intensity = value;
                     UpdateMotorSpeed();
@@ -34,7 +30,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             }
             set
             {
-                if(m_IsPaused != value)
+                if (m_IsPaused != value)
                 {
                     m_IsPaused = value;
                     UpdateMotorSpeed();
@@ -63,7 +59,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         }
 
         private void UpdateMotorSpeed()
-        {              
+        {
             float intensity = m_IsPaused ? 0f : m_Intensity;
             var command = SimpleXRRumbleCommand.Create(intensity);
             device.OnDeviceCommand(ref command);

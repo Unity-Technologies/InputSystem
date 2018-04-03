@@ -1238,28 +1238,6 @@ class FunctionalTests : InputTestFixture
         Assert.That(modifiedButton, Is.SameAs(initialButton)); // Button survives.
     }
 
-    ////TODO: make the same kind of functionality work for aliases
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanChangeHandednessOfXRController()
-    {
-        var controller = InputSystem.AddDevice("XRController");
-
-        Assert.That(controller.usages, Has.Count.EqualTo(0));
-
-        InputSystem.SetUsage(controller, CommonUsages.LeftHand);
-
-        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-        Assert.That(XRController.leftHand, Is.SameAs(controller));
-
-        InputSystem.SetUsage(controller, CommonUsages.RightHand);
-
-        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
-        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
-        Assert.That(XRController.rightHand, Is.SameAs(controller));
-        Assert.That(XRController.leftHand, Is.Not.SameAs(controller));
-    }
-
     [Test]
     [Category("Devices")]
     public void Devices_ChangingUsageOfDevice_SendsDeviceChangeNotification()
@@ -1286,34 +1264,31 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanFindDeviceByUsage()
     {
-        InputSystem.AddDevice("Gamepad");
-        InputSystem.AddDevice("XRController");
+        InputSystem.AddDevice<Gamepad>();
+        var device = InputSystem.AddDevice<Keyboard>();
 
-        var controller = InputSystem.AddDevice("XRController");
-        InputSystem.SetUsage(controller, CommonUsages.LeftHand);
+        InputSystem.SetUsage(device, CommonUsages.LeftHand);
 
         var controls = InputSystem.GetControls("/{LeftHand}");
 
         Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(controller));
+        Assert.That(controls, Has.Exactly(1).SameAs(device));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanFindDeviceByUsageAndTemplate()
     {
-        var gamepad = InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
 
-        InputSystem.AddDevice("XRController");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.SetUsage(keyboard, CommonUsages.LeftHand);
 
-        var controller = InputSystem.AddDevice("XRController");
-        InputSystem.SetUsage(controller, CommonUsages.LeftHand);
-
-        var controls = InputSystem.GetControls("/<XRController>{LeftHand}");
+        var controls = InputSystem.GetControls("/<Keyboard>{LeftHand}");
 
         Assert.That(controls, Has.Count.EqualTo(1));
-        Assert.That(controls, Has.Exactly(1).SameAs(controller));
+        Assert.That(controls, Has.Exactly(1).SameAs(keyboard));
     }
 
     [Test]
@@ -3047,8 +3022,6 @@ class FunctionalTests : InputTestFixture
     [TestCase("Mouse")]
     [TestCase("Pen")]
     [TestCase("Touchscreen")]
-    [TestCase("HMD")]
-    [TestCase("XRController")]
     [TestCase("Joystick")]
     [TestCase("Accelerometer")]
     public void Devices_CanCreateDevice(string template)

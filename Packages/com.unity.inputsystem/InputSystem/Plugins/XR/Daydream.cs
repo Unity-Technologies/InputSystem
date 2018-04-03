@@ -1,10 +1,7 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -202,23 +199,23 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 switch (deviceDescriptor.deviceRole)
                 {
                     case EDeviceRole.LeftHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                            leftHand = this;
-                            break;
-                        }
+                    {
+                        InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                        leftHand = this;
+                        break;
+                    }
                     case EDeviceRole.RightHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.RightHand);
-                            rightHand = this;
-                            break;
-                        }
+                    {
+                        InputSystem.SetUsage(this, CommonUsages.RightHand);
+                        rightHand = this;
+                        break;
+                    }
                     default:
                         break;
                 }
             }
             catch (Exception)
-            { }
+            {}
 
             touchpad = setup.GetControl<Vector2Control>("touchpad");
             volumeUp = setup.GetControl<ButtonControl>("volumeUp");

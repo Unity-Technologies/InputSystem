@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Experimental.Input.LowLevel;
+using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
-using System.Text;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -36,23 +32,23 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 switch (deviceDescriptor.deviceRole)
                 {
                     case EDeviceRole.LeftHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                            leftHand = this;
-                            break;
-                        }
+                    {
+                        InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                        leftHand = this;
+                        break;
+                    }
                     case EDeviceRole.RightHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.RightHand);
-                            rightHand = this;
-                            break;
-                        }
+                    {
+                        InputSystem.SetUsage(this, CommonUsages.RightHand);
+                        rightHand = this;
+                        break;
+                    }
                     default:
                         break;
                 }
             }
             catch (Exception)
-            { }
+            {}
 
             base.FinishSetup(setup);
         }
@@ -61,11 +57,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.MakeCurrent();
 
-            if(usages.Contains(CommonUsages.LeftHand))
+            if (usages.Contains(CommonUsages.LeftHand))
             {
                 leftHand = this;
             }
-            else if(leftHand == this)
+            else if (leftHand == this)
             {
                 leftHand = null;
             }

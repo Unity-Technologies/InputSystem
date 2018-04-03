@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -74,10 +73,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 #pragma warning restore 0649
 
-	public static class XRSupport
-	{
-		public static void Initialize()
-		{
+    public static class XRSupport
+    {
+        public static void Initialize()
+        {
             XRTemplateBuilder.RegisterTemplateFilter(WMRSupport.FilterTemplate);
             InputSystem.RegisterTemplate<WMRHMD>();
             InputSystem.RegisterTemplate<WMRSpatialController>();
@@ -95,6 +94,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterTemplate<DaydreamController>();
 
             InputSystem.onFindTemplateForDevice += XRTemplateBuilder.OnFindTemplateForDevice;
-		}
-	}
+        }
+    }
 }
