@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
+using UnityEngine.Experimental.Input.Haptics;
 using System.Text;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
@@ -75,14 +76,35 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    public class XRControllerWithRumble : XRController
+    public class XRControllerWithRumble : XRController, IHaptics
     {
-        public SimpleXRRumble rumble { get; private set; }
+        SimpleXRRumble m_Rumble;
+        public SimpleXRRumble rumble { get { return m_Rumble; } }
 
         protected override void FinishSetup(InputControlSetup setup)
         {
             base.FinishSetup(setup);
-            rumble = new SimpleXRRumble(this);
+            m_Rumble = new SimpleXRRumble(this);
+        }
+
+        public void SetIntensity(float intensity)
+        {
+            m_Rumble.intensity = intensity;
+        }
+
+        public void PauseHaptics()
+        {
+            m_Rumble.isPaused = true;
+        }
+
+        public void ResumeHaptics()
+        {
+            m_Rumble.isPaused = false;
+        }
+
+        public void ResetHaptics()
+        {
+            m_Rumble.Reset();
         }
     }
 }
