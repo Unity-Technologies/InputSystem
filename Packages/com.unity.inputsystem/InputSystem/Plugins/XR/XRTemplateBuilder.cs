@@ -93,13 +93,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return null;
             }
 
+            string templateMatch = null;
             for (int i = 0; i < availableTemplates.Count; i++)
             {
-                string templateMatch = availableTemplates[i](deviceDescriptor);
+                templateMatch = availableTemplates[i](deviceDescriptor);
                 if (templateMatch != null)
-                {
-                    return templateMatch;
-                }
+                    continue;
             }
 
             // We don't want to forward the Capabilities along due to how template fields are Regex compared.
@@ -108,7 +107,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             var templateName = SanitizeTemplateName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
             var template = new XRTemplateBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, null, templateMatchingDescription);
+            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, templateMatch, templateMatchingDescription);
 
             return templateName;
         }

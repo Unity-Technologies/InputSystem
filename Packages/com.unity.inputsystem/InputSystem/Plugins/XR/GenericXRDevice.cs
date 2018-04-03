@@ -11,12 +11,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     public class XRHMD : InputDevice
     {
-        public static XRHMD active { get; private set; }
+        public static XRHMD current { get; private set; }
 
         protected override void FinishSetup(InputControlSetup setup)
         {
             base.FinishSetup(setup);
-            active = this;
+        }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
         }
     }
 
@@ -36,20 +41,16 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 case DeviceRole.LeftHanded:
                 {
                     InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                    leftHand = this;
                     break;
                 }
                 case DeviceRole.RightHanded:
                 {
                     InputSystem.SetUsage(this, CommonUsages.RightHand);
-                    rightHand = this;
                     break;
                 }
                 default:
                     break;
             }
-
-            base.FinishSetup(setup);
         }
 
         public override void MakeCurrent()
