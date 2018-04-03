@@ -2631,6 +2631,105 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanBeDisabledAndReEnabled()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        bool? disabled = null;
+        testRuntime.SetDeviceCommandCallback(device.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == DisableDeviceCommand.Type)
+                    {
+                        Assert.That(disabled, Is.Null);
+                        disabled = true;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                    if (commandPtr->type == EnableDeviceCommand.Type)
+                    {
+                        Assert.That(disabled, Is.Null);
+                        disabled = false;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+
+        Assert.That(device.enabled, Is.True);
+        Assert.That(disabled, Is.Null);
+
+        InputSystem.DisableDevice(device);
+
+        Assert.That(device.enabled, Is.False);
+        Assert.That(disabled.HasValue, Is.True);
+        Assert.That(disabled.Value, Is.True);
+
+        // Make sure that state sent against the device is ignored.
+        InputSystem.QueueStateEvent(device, new MouseState { buttons = 0xffff });
+        InputSystem.Update();
+
+        Assert.That(device.CheckStateIsAllZeros(), Is.True);
+
+        // Re-enable device.
+
+        disabled = null;
+        InputSystem.EnableDevice(device);
+
+        Assert.That(device.enabled, Is.True);
+        Assert.That(disabled.HasValue, Is.True);
+        Assert.That(disabled.Value, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenDisabledOrReEnabled_TriggersNotification()
+    {
+        InputDevice receivedDevice = null;
+        InputDeviceChange? receivedChange = null;
+
+        InputSystem.onDeviceChange +=
+            (device, change) =>
+            {
+                receivedDevice = device;
+                receivedChange = change;
+            };
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.DisableDevice(mouse);
+
+        Assert.That(receivedDevice, Is.SameAs(mouse));
+        Assert.That(receivedChange.Value, Is.EqualTo(InputDeviceChange.Disabled));
+
+        receivedDevice = null;
+        receivedChange = null;
+
+        InputSystem.EnableDevice(mouse);
+
+        Assert.That(receivedDevice, Is.SameAs(mouse));
+        Assert.That(receivedChange.Value, Is.EqualTo(InputDeviceChange.Enabled));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_WhenDisabled_StateIsReset()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_WhenDisabled_RefreshActions()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
         var description = new InputDeviceDescription {deviceClass = "Gamepad"};
@@ -2951,6 +3050,7 @@ class FunctionalTests : InputTestFixture
     [TestCase("HMD")]
     [TestCase("XRController")]
     [TestCase("Joystick")]
+    [TestCase("Accelerometer")]
     public void Devices_CanCreateDevice(string template)
     {
         var device = InputSystem.AddDevice(template);
@@ -3154,11 +3254,11 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_TouchscreenReturnsActiveTouches()
+    public void Devices_TouchscreenReturnsActiveAndJustEndedTouches()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
 
-        Assert.That(device.touches.Count, Is.Zero);
+        Assert.That(device.activeTouches.Count, Is.Zero);
         Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
@@ -3170,11 +3270,11 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.touches.Count, Is.EqualTo(1));
-        Assert.That(device.touches[0].touchId.ReadValue(), Is.EqualTo(4));
-        Assert.That(device.touches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
-        Assert.That(device.touches[0].position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
-        Assert.That(device.touches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(device.activeTouches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.activeTouches[0].position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.activeTouches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new Touch
@@ -3192,11 +3292,11 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.touches.Count, Is.EqualTo(2));
-        Assert.That(device.touches[0].touchId.ReadValue(), Is.EqualTo(4));
-        Assert.That(device.touches[1].touchId.ReadValue(), Is.EqualTo(5));
-        Assert.That(device.touches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
-        Assert.That(device.touches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+        Assert.That(device.activeTouches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.activeTouches[1].touchId.ReadValue(), Is.EqualTo(5));
+        Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new Touch
@@ -3212,9 +3312,91 @@ class FunctionalTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device.touches.Count, Is.Zero);
+        // For one frame, the ended and cancelled touches should stick around on the active touches list
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
         Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+
+        // But then they should disappear from the list.
+
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.Zero);
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetSensorSamplingFrequency()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+
+        bool? receivedQueryFrequencyCommand = null;
+        testRuntime.SetDeviceCommandCallback(sensor.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QuerySamplingFrequencyCommand.Type)
+                    {
+                        Assert.That(receivedQueryFrequencyCommand, Is.Null);
+                        receivedQueryFrequencyCommand = true;
+                        ((QuerySamplingFrequencyCommand*)commandPtr)->frequency = 120.0f;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        Assert.That(sensor.samplingFrequency, Is.EqualTo(120.0).Within(0.000001));
+        Assert.That(receivedQueryFrequencyCommand, Is.Not.Null);
+        Assert.That(receivedQueryFrequencyCommand.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanSetSensorSamplingFrequency()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+
+        bool? receivedSetFrequencyCommand = null;
+        testRuntime.SetDeviceCommandCallback(sensor.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == SetSamplingFrequencyCommand.Type)
+                    {
+                        Assert.That(receivedSetFrequencyCommand, Is.Null);
+                        receivedSetFrequencyCommand = true;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        sensor.samplingFrequency = 30.0f;
+
+        Assert.That(receivedSetFrequencyCommand, Is.Not.Null);
+        Assert.That(receivedSetFrequencyCommand.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetAccelerometerReading()
+    {
+        var accelerometer = InputSystem.AddDevice<Accelerometer>();
+
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.123f, 0.456f, 0.789f) });
+        InputSystem.Update();
+
+        Assert.That(Accelerometer.current, Is.SameAs(accelerometer));
+
+        Assert.That(accelerometer.acceleration.ReadValue().x, Is.EqualTo(0.123).Within(0.00001));
+        Assert.That(accelerometer.acceleration.ReadValue().y, Is.EqualTo(0.456).Within(0.00001));
+        Assert.That(accelerometer.acceleration.ReadValue().z, Is.EqualTo(0.789).Within(0.00001));
     }
 
     [Test]

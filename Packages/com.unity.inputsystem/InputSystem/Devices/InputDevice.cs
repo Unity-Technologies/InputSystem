@@ -59,6 +59,12 @@ namespace UnityEngine.Experimental.Input
             protected set { m_UserId = value; }
         }
 
+        ////REVIEW: this might be useful even at the control level
+        public bool enabled
+        {
+            get { return (m_Flags & Flags.Disabled) != Flags.Disabled; }
+        }
+
         /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
@@ -240,6 +246,7 @@ namespace UnityEngine.Experimental.Input
             HasNoisyControls = 1 << 2,
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
             Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
+            Disabled = 1 << 5,
         }
 
         internal Flags m_Flags;

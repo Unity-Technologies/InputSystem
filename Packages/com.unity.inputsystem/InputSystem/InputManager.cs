@@ -888,6 +888,39 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public void EnableOrDisableDevice(InputDevice device, bool enable)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            // Ignore if device already enabled/disabled.
+            if (device.enabled == enable)
+                return;
+
+            // Set/clear flag.
+            if (!enable)
+                device.m_Flags |= InputDevice.Flags.Disabled;
+            else
+                device.m_Flags &= ~InputDevice.Flags.Disabled;
+
+            // Send command to tell backend about status change.
+            if (enable)
+            {
+                var command = EnableDeviceCommand.Create();
+                device.OnDeviceCommand(ref command);
+            }
+            else
+            {
+                var command = DisableDeviceCommand.Create();
+                device.OnDeviceCommand(ref command);
+            }
+
+            // Let listeners know.
+            var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
+            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                m_DeviceChangeListeners[i](device, deviceChange);
+        }
+
         public void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
@@ -983,6 +1016,7 @@ namespace UnityEngine.Experimental.Input
             RegisterTemplate("Mouse", typeof(Mouse));
             RegisterTemplate("Pen", typeof(Pen));
             RegisterTemplate("Touchscreen", typeof(Touchscreen));
+            RegisterTemplate("Sensor", typeof(Sensor));
             RegisterTemplate("Accelerometer", typeof(Accelerometer));
             RegisterTemplate("Gyroscope", typeof(Gyroscope));
 
@@ -1600,6 +1634,13 @@ namespace UnityEngine.Experimental.Input
                     case StateEvent.Type:
                     case DeltaStateEvent.Type:
 
+                        // Ignore state changes if device is disabled.
+                        if (!device.enabled)
+                        {
+                            doNotMakeDeviceCurrent = true;
+                            break;
+                        }
+
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is.
                         if (currentEventTime < device.m_LastUpdateTime)
@@ -1608,6 +1649,7 @@ namespace UnityEngine.Experimental.Input
                             if (m_Debugger != null)
                                 m_Debugger.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
                             #endif
+                            doNotMakeDeviceCurrent = true;
                             break;
                         }
 

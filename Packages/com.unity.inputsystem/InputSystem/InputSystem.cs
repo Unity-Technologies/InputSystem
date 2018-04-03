@@ -492,6 +492,16 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.GetUnsupportedDevices(descriptions);
         }
 
+        public static void EnableDevice(InputDevice device)
+        {
+            s_Manager.EnableOrDisableDevice(device, true);
+        }
+
+        public static void DisableDevice(InputDevice device)
+        {
+            s_Manager.EnableOrDisableDevice(device, false);
+        }
+
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
 
         /// <summary>
