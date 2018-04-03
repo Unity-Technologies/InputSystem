@@ -824,4 +824,8 @@ namespace UnityEngine.Experimental.Input
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_LayoutName;
     }
+
+    public class OnScreenKeyboard : Keyboard
+    {
+    }
 }

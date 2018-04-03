@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -14,8 +15,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('A', 'C', 'C', 'L'); }
         }
 
-        [InputControl]
-        public Vector3 acceleration;
+        [InputControl] public Vector3 acceleration;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 52)]
+    public struct GyroscopeState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('G', 'Y', 'R', 'O'); }
+        }
+
+        [InputControl][FieldOffset(0)] public Vector3 gravity;
+        [InputControl][FieldOffset(12)] public Vector3 angularVelocity;
+        [InputControl][FieldOffset(24)] public Quaternion orientation;
+        [InputControl][FieldOffset(40)] public Vector3 acceleration;
 
         public FourCC GetFormat()
         {
@@ -65,7 +84,33 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
+    [InputTemplate(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
+    {
+        public QuaternionControl orientation { get; private set; }
+        public Vector3Control acceleration { get; private set; }
+        public Vector3Control angularVelocity { get; private set; }
+        public Vector3Control gravity { get; private set; }
+
+        public static Gyroscope current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void FinishSetup(InputControlSetup setup)
+        {
+            orientation = setup.TryGetControl<QuaternionControl>("orientation");
+            acceleration = setup.TryGetControl<Vector3Control>("acceleration");
+            angularVelocity = setup.TryGetControl<Vector3Control>("angularVelocity");
+            gravity = setup.TryGetControl<Vector3Control>("gravity");
+            base.FinishSetup(setup);
+        }
+    }
+
+    public class GPS : Sensor
     {
     }
 }

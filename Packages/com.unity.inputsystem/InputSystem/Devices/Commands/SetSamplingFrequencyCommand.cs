@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: switch this to interval-in-seconds instead of Hz?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>
