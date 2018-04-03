@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -395,27 +394,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     [InputTemplate(stateType = typeof(AndroidGameControllerState))]
     public class AndroidGameController : Gamepad
     {
-        internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description,
-            string matchedTemplate, IInputRuntime runtime)
-        {
-            if (string.IsNullOrEmpty(matchedTemplate) || matchedTemplate != "AndroidGameController")
-                return null;
-
-            if (description.interfaceName != "Android" || description.deviceClass != "AndroidGameController")
-                return null;
-
-            if (!string.IsNullOrEmpty(description.capabilities))
-            {
-                var caps = AndroidDeviceCapabilities.FromJson(description.capabilities);
-                if (caps.motionAxes != null)
-                {
-                    if (caps.motionAxes.Contains(AndroidAxis.HatX) && caps.motionAxes.Contains(AndroidAxis.HatY))
-                        return "AndroidGamepadWithDpadAxes";
-                }
-            }
-
-            return "AndroidGamepadWithDpadButtons";
-        }
     }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

@@ -1,4 +1,8 @@
 #if UNITY_EDITOR || UNITY_ANDROID
+using System.Linq;
+using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
+
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     public static class AndroidSupport
@@ -7,10 +11,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         {
             InputSystem.RegisterTemplate<AndroidGameController>(
                 deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidGameController"
-            });
+                {
+                    interfaceName = "Android",
+                    deviceClass = "AndroidGameController"
+                });
 
             InputSystem.RegisterTemplate(@"
 {
@@ -39,7 +43,44 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 }
             ");
 
-            InputSystem.onFindTemplateForDevice += AndroidGameController.OnFindTemplateForDevice;
+            InputSystem.RegisterProcessor<AndroidAccelerationProcessor>();
+
+            InputSystem.RegisterTemplate<AndroidAccelerometer>("AndroidAccelerometer");
+            InputSystem.onFindTemplateForDevice += OnFindTemplateForDevice;
+        }
+
+        internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description,
+            string matchedTemplate, IInputRuntime runtime)
+        {
+            if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
+                return null;
+
+            switch (description.deviceClass)
+            {
+                case "AndroidGameController":
+                {
+                    var caps = AndroidDeviceCapabilities.FromJson(description.capabilities);
+                    if (caps.motionAxes != null)
+                    {
+                        if (caps.motionAxes.Contains(AndroidAxis.HatX) && caps.motionAxes.Contains(AndroidAxis.HatY))
+                            return "AndroidGamepadWithDpadAxes";
+                    }
+                    return "AndroidGamepadWithDpadButtons";
+                }
+                case "AndroidSensor":
+                {
+                    var caps = AndroidSensorCapabilities.FromJson(description.capabilities);
+                    switch (caps.sensorType)
+                    {
+                        case AndroidSenorType.Accelerometer:
+                            return "AndroidAccelerometer";
+                        default:
+                            return null;    
+                    }
+                }
+                default:
+                    return null;
+            }
         }
     }
 }
