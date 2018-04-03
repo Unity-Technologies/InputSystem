@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
-    enum EFeatureType
+    enum FeatureType
     {
         Custom = 0,
         Binary,
@@ -24,23 +24,23 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
 #pragma warning disable 0649
     [Serializable]
-    class UsageHint
+    struct UsageHint
     {
         public string content;
     }
 
     //Sync to XRInputFeatureDefinition in XRInputDeviceDefinition.h
     [Serializable]
-    class XRFeatureDescriptor
+    struct XRFeatureDescriptor
     {
         public string name;
         public List<UsageHint> usageHints;
-        public EFeatureType featureType;
+        public FeatureType featureType;
         public System.UInt32 customSize;
     }
 
     // Sync to UnityXRInputDeviceRole in IUnityXRInput.h
-    enum EDeviceRole
+    enum DeviceRole
     {
         Unknown = 0,
         Generic,
@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public string deviceName;
         public string manufacturer;
         public string serialNumber;
-        public EDeviceRole deviceRole;
+        public DeviceRole deviceRole;
         public int deviceId;
         public List<XRFeatureDescriptor> inputFeatures;
 
@@ -74,10 +74,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 #pragma warning restore 0649
 
-	public static class XRSupport
-	{
-		public static void Initialize()
-		{
+    public static class XRSupport
+    {
+        public static void Initialize()
+        {
             XRTemplateBuilder.RegisterTemplateFilter(WMRSupport.FilterTemplate);
             InputSystem.RegisterTemplate<WMRHMD>();
             InputSystem.RegisterTemplate<WMRSpatialController>();
@@ -95,6 +95,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterTemplate<DaydreamController>();
 
             InputSystem.onFindTemplateForDevice += XRTemplateBuilder.OnFindTemplateForDevice;
-		}
-	}
+        }
+    }
 }

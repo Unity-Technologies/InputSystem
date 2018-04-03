@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
@@ -14,11 +14,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             if (String.IsNullOrEmpty(deviceDescriptor.manufacturer))
             {
-                if (deviceDescriptor.deviceName == "Daydream HMD" && deviceDescriptor.deviceRole == EDeviceRole.Generic)
+                if (deviceDescriptor.deviceName == "Daydream HMD" && deviceDescriptor.deviceRole == DeviceRole.Generic)
                 {
                     return "DaydreamHMD";
                 }
-                else if (deviceDescriptor.deviceName == "Daydream Controller" && (deviceDescriptor.deviceRole == EDeviceRole.LeftHanded || deviceDescriptor.deviceRole == EDeviceRole.RightHanded))
+                else if (deviceDescriptor.deviceName == "Daydream Controller" && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
                 {
                     return "DaydreamController";
                 }
@@ -195,30 +195,25 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(setup);
 
-            try
-            {
-                XRDeviceDescriptor deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
+            var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
 
-                switch (deviceDescriptor.deviceRole)
+            switch (deviceDescriptor.deviceRole)
+            {
+                case DeviceRole.LeftHanded:
                 {
-                    case EDeviceRole.LeftHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                            leftHand = this;
-                            break;
-                        }
-                    case EDeviceRole.RightHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.RightHand);
-                            rightHand = this;
-                            break;
-                        }
-                    default:
-                        break;
+                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    leftHand = this;
+                    break;
                 }
+                case DeviceRole.RightHanded:
+                {
+                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    rightHand = this;
+                    break;
+                }
+                default:
+                    break;
             }
-            catch (Exception)
-            { }
 
             touchpad = setup.GetControl<Vector2Control>("touchpad");
             volumeUp = setup.GetControl<ButtonControl>("volumeUp");

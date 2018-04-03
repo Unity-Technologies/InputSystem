@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
@@ -15,11 +15,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             if (deviceDescriptor.manufacturer == "__Oculus__" || deviceDescriptor.manufacturer == "Oculus")
             {
-                if ((deviceDescriptor.deviceName == "Oculus Rift" || String.IsNullOrEmpty(deviceDescriptor.deviceName)) && deviceDescriptor.deviceRole == EDeviceRole.Generic)
+                if ((deviceDescriptor.deviceName == "Oculus Rift" || String.IsNullOrEmpty(deviceDescriptor.deviceName)) && deviceDescriptor.deviceRole == DeviceRole.Generic)
                 {
                     return "OculusHMD";
                 }
-                else if (deviceDescriptor.deviceName.StartsWith("Oculus Touch Controller") && (deviceDescriptor.deviceRole == EDeviceRole.LeftHanded || deviceDescriptor.deviceRole == EDeviceRole.RightHanded))
+                else if (deviceDescriptor.deviceName.StartsWith("Oculus Touch Controller") && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
                 {
                     return "OculusTouchController";
                 }
@@ -296,30 +296,25 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(setup);
 
-            try
-            {
-                XRDeviceDescriptor deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
+            var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
 
-                switch (deviceDescriptor.deviceRole)
+            switch (deviceDescriptor.deviceRole)
+            {
+                case DeviceRole.LeftHanded:
                 {
-                    case EDeviceRole.LeftHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                            leftHand = this;
-                            break;
-                        }
-                    case EDeviceRole.RightHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.RightHand);
-                            rightHand = this;
-                            break;
-                        }
-                    default:
-                        break;
+                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    leftHand = this;
+                    break;
                 }
+                case DeviceRole.RightHanded:
+                {
+                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    rightHand = this;
+                    break;
+                }
+                default:
+                    break;
             }
-            catch (Exception)
-            { }
 
             combinedTrigger = setup.GetControl<AxisControl>("combinedTrigger");
             joystick = setup.GetControl<Vector2Control>("joystick");

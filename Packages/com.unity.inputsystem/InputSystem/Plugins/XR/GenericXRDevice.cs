@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -29,30 +29,24 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(setup);
 
-            try
+            var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
+            switch (deviceDescriptor.deviceRole)
             {
-                XRDeviceDescriptor deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
-
-                switch (deviceDescriptor.deviceRole)
+                case DeviceRole.LeftHanded:
                 {
-                    case EDeviceRole.LeftHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                            leftHand = this;
-                            break;
-                        }
-                    case EDeviceRole.RightHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.RightHand);
-                            rightHand = this;
-                            break;
-                        }
-                    default:
-                        break;
+                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    leftHand = this;
+                    break;
                 }
+                case DeviceRole.RightHanded:
+                {
+                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    rightHand = this;
+                    break;
+                }
+                default:
+                    break;
             }
-            catch (Exception)
-            { }
 
             base.FinishSetup(setup);
         }
@@ -61,11 +55,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.MakeCurrent();
 
-            if(usages.Contains(CommonUsages.LeftHand))
+            if (usages.Contains(CommonUsages.LeftHand))
             {
                 leftHand = this;
             }
-            else if(leftHand == this)
+            else if (leftHand == this)
             {
                 leftHand = null;
             }

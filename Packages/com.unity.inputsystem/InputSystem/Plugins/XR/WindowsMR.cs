@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
@@ -12,13 +12,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
         {
-            if(deviceDescriptor.manufacturer == "Microsoft")
+            if (deviceDescriptor.manufacturer == "Microsoft")
             {
-                if(deviceDescriptor.deviceName == "Windows Mixed Reality HMD" && deviceDescriptor.deviceRole == EDeviceRole.Generic)
+                if (deviceDescriptor.deviceName == "Windows Mixed Reality HMD" && deviceDescriptor.deviceRole == DeviceRole.Generic)
                 {
                     return "WMRHMD";
                 }
-                else if(deviceDescriptor.deviceName == "Spatial Controller" && ( deviceDescriptor.deviceRole == EDeviceRole.LeftHanded || deviceDescriptor.deviceRole == EDeviceRole.RightHanded))
+                else if (deviceDescriptor.deviceName == "Spatial Controller" && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
                 {
                     return "WMRSpatialController";
                 }
@@ -182,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     [InputTemplate(stateType = typeof(WMRSpatialControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
-    public class WMRSpatialController : XRController
+    public class WMRSpatialController : XRControllerWithRumble
     {
         new public static WMRSpatialController leftHand { get; private set; }
         new public static WMRSpatialController rightHand { get; private set; }
@@ -204,33 +204,28 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public QuaternionControl deviceRotation { get; private set; }
 
         protected override void FinishSetup(InputControlSetup setup)
-        { 
+        {
             base.FinishSetup(setup);
 
-            try
-            {
-                XRDeviceDescriptor deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
+            var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
 
-                switch (deviceDescriptor.deviceRole)
+            switch (deviceDescriptor.deviceRole)
+            {
+                case DeviceRole.LeftHanded:
                 {
-                    case EDeviceRole.LeftHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                            leftHand = this;
-                            break;
-                        }
-                    case EDeviceRole.RightHanded:
-                        {
-                            InputSystem.SetUsage(this, CommonUsages.RightHand);
-                            rightHand = this;
-                            break;
-                        }
-                    default:
-                        break;
+                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    leftHand = this;
+                    break;
                 }
+                case DeviceRole.RightHanded:
+                {
+                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    rightHand = this;
+                    break;
+                }
+                default:
+                    break;
             }
-            catch (Exception)
-            { }
 
             combinedTrigger = setup.GetControl<AxisControl>("combinedTrigger");
             joystick = setup.GetControl<Vector2Control>("joystick");
