@@ -93,6 +93,108 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     public class AndroidAccelerometer : Accelerometer
     {
     }
+
+    ////FIXME: Setup InputControls for sensors below
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidMagneticField : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidOrientation : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidGyroscope : Gyroscope
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidLight : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidPressure : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidProximity : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidTemperature : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidGravity : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidLinearAcceleration : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidRotationVector : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidRelativeHumidity : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidAmbientTemperature : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidMagneticFieldUncalibrated : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidGameRotationVector : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidGyroscopeUncalibrated : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidSignificantMotion : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidStepDetector : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidStepCounter : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidGeomagneticRotationVector : Sensor
+    {
+    }
+
+    [InputTemplate(stateType = typeof(AndroidSensorState))]
+    public class AndroidHeartRate : Sensor
+    {
+    }
 }
 
 #endif

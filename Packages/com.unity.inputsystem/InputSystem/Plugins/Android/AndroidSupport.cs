@@ -1,4 +1,5 @@
 #if UNITY_EDITOR || UNITY_ANDROID
+using System;
 using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
@@ -47,7 +48,29 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
             InputSystem.RegisterProcessor<AndroidAccelerationProcessor>();
 
-            InputSystem.RegisterTemplate<AndroidAccelerometer>("AndroidAccelerometer");
+            // Add sensors
+            InputSystem.RegisterTemplate<AndroidAccelerometer>();
+            InputSystem.RegisterTemplate<AndroidMagneticField>();
+            InputSystem.RegisterTemplate<AndroidOrientation>();
+            InputSystem.RegisterTemplate<AndroidGyroscope>();
+            InputSystem.RegisterTemplate<AndroidLight>();
+            InputSystem.RegisterTemplate<AndroidPressure>();
+            InputSystem.RegisterTemplate<AndroidProximity>();
+            InputSystem.RegisterTemplate<AndroidTemperature>();
+            InputSystem.RegisterTemplate<AndroidGravity>();
+            InputSystem.RegisterTemplate<AndroidLinearAcceleration>();
+            InputSystem.RegisterTemplate<AndroidRotationVector>();
+            InputSystem.RegisterTemplate<AndroidRelativeHumidity>();
+            InputSystem.RegisterTemplate<AndroidAmbientTemperature>();
+            InputSystem.RegisterTemplate<AndroidMagneticFieldUncalibrated>();
+            InputSystem.RegisterTemplate<AndroidGameRotationVector>();
+            InputSystem.RegisterTemplate<AndroidGyroscopeUncalibrated>();
+            InputSystem.RegisterTemplate<AndroidSignificantMotion>();
+            InputSystem.RegisterTemplate<AndroidStepDetector>();
+            InputSystem.RegisterTemplate<AndroidStepCounter>();
+            InputSystem.RegisterTemplate<AndroidGeomagneticRotationVector>();
+            InputSystem.RegisterTemplate<AndroidHeartRate>();
+
             InputSystem.onFindTemplateForDevice += OnFindTemplateForDevice;
         }
 
@@ -78,13 +101,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 case "AndroidSensor":
                 {
                     var caps = AndroidSensorCapabilities.FromJson(description.capabilities);
-                    switch (caps.sensorType)
-                    {
-                        case AndroidSenorType.Accelerometer:
-                            return "AndroidAccelerometer";
-                        default:
-                            return null;    
-                    }
+                    if (Enum.IsDefined(typeof(AndroidSenorType), caps.sensorType))
+                        return "Android" + caps.sensorType.ToString();
+                    return null;
                 }
                 default:
                     return null;
