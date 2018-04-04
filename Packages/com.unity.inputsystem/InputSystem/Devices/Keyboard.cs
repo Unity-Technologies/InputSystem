@@ -26,6 +26,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
         public const int kSizeInBits = kSizeInBytes * 8;
 
+        ////REVIEW: the naming is inconsistent with other devices; control names here start with upper case, elsewhere with lower case
+
         [InputControl(name = "AnyKey", layout = "AnyKey", sizeInBits = kSizeInBits)]
         [InputControl(name = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "Space", layout = "Key", bit = (int)Key.Space)]
