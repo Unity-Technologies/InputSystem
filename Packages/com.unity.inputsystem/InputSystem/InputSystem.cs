@@ -587,9 +587,9 @@ namespace UnityEngine.Experimental.Input
 
         #region Controls
 
-        public static void SetVariant(InputControl control, string variant)
+        public static void SetLayoutVariant(InputControl control, string variant)
         {
-            s_Manager.SetVariant(control, variant);
+            s_Manager.SetLayoutVariant(control, variant);
         }
 
         public static void SetUsage(InputDevice device, string usage)

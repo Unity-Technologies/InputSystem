@@ -244,7 +244,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
             var layoutName = string.Format("{0}::{1}", kHIDNamespace, description.product);
-            var layout = new HIDLayout {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
+            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
 
             return layoutName;
@@ -280,7 +280,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         }
 
         [Serializable]
-        private class HIDLayout
+        private class HIDLayoutBuilder
         {
             public HIDDeviceDescriptor hidDescriptor;
             public InputDeviceDescription deviceDescription;

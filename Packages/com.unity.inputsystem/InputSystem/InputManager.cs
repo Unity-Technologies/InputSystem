@@ -545,7 +545,7 @@ namespace UnityEngine.Experimental.Input
             return numMatches;
         }
 
-        public void SetVariant(InputControl control, string variant)
+        public void SetLayoutVariant(InputControl control, string variant)
         {
             if (control == null)
                 throw new ArgumentNullException("control");

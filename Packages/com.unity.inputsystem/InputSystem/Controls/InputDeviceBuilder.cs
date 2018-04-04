@@ -20,19 +20,17 @@ namespace UnityEngine.Experimental.Input
     /// Ultimately produces a device but can also be used to query the control setup described
     /// by a layout.
     ///
-    /// Can be used to create setups as well as to adjust them later.
+    /// Can be used both to create control hierarchies from scratch as well as to re-create or
+    /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
-    /// Once a setup has been established, it yields an independent control hierarchy and the setup itself
-    /// is abandoned.
-    ///
-    /// Note InputDeviceBuilders generate garbage. They are meant to be used for initialization only. Don't
+    /// Note that InputDeviceBuilders generate garbage. They are meant to be used for initialization only. Don't
     /// use them during normal gameplay.
     ///
-    /// Running an *existing* device through another control setup is a *destructive* operation.
+    /// Running an *existing* device through another control build is a *destructive* operation.
     /// Existing controls may be reused while at the same time the hierarchy and even the device instance
     /// itself may change.
     /// </remarks>
