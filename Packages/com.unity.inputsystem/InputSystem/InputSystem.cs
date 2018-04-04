@@ -236,7 +236,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// This method can be used to remove both control or device layouts.
         /// </remarks>
-        public static void RemoveLayout(string name)
+        public static void RemoveControlLayout(string name)
         {
             s_Manager.RemoveControlLayout(name);
         }
@@ -263,7 +263,7 @@ namespace UnityEngine.Experimental.Input
         /// );
         /// </code>
         /// </example>
-        public static string TryFindMatchingLayout(InputDeviceDescription deviceDescription)
+        public static string TryFindMatchingControlLayout(InputDeviceDescription deviceDescription)
         {
             return s_Manager.TryFindMatchingControlLayout(deviceDescription);
         }
@@ -272,8 +272,8 @@ namespace UnityEngine.Experimental.Input
         /// Return a list with the names of all layouts that have been registered.
         /// </summary>
         /// <returns>A list of layout names.</returns>
-        /// <seealso cref="ListLayouts(List{string})"/>
-        public static List<string> ListLayouts()
+        /// <seealso cref="ListControlLayouts"/>
+        public static List<string> ListControlLayouts()
         {
             var list = new List<string>();
             s_Manager.ListControlLayouts(list);
@@ -288,7 +288,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// If the capacity of the given list is large enough, this method will not allocate.
         /// </remarks>
-        public static int ListLayouts(List<string> list)
+        public static int ListControlLayouts(List<string> list)
         {
             return s_Manager.ListControlLayouts(list);
         }

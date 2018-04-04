@@ -287,7 +287,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var layout = InputSystem.TryFindMatchingLayout(new InputDeviceDescription
+        var layout = InputSystem.TryFindMatchingControlLayout(new InputDeviceDescription
         {
             product = "MyThingy"
         });
@@ -363,7 +363,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(firstLayout);
         InputSystem.RegisterControlLayout(secondLayout);
 
-        var layout = InputSystem.TryFindMatchingLayout(new InputDeviceDescription {product = "MyProduct"});
+        var layout = InputSystem.TryFindMatchingControlLayout(new InputDeviceDescription {product = "MyProduct"});
 
         Assert.That(layout, Is.EqualTo("SecondLayout"));
     }
@@ -941,12 +941,12 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(json);
         var device = InputSystem.AddDevice("MyLayout");
 
-        Assert.That(InputSystem.ListLayouts(), Has.Exactly(1).EqualTo("MyLayout"));
+        Assert.That(InputSystem.ListControlLayouts(), Has.Exactly(1).EqualTo("MyLayout"));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(device));
 
-        InputSystem.RemoveLayout("MyLayout");
+        InputSystem.RemoveControlLayout("MyLayout");
 
-        Assert.That(InputSystem.ListLayouts(), Has.None.EqualTo("MyLayout"));
+        Assert.That(InputSystem.ListControlLayouts(), Has.None.EqualTo("MyLayout"));
         Assert.That(InputSystem.devices, Has.None.SameAs(device));
         Assert.That(InputSystem.devices, Has.None.With.Property("layout").EqualTo("MyLayout"));
     }
@@ -998,7 +998,7 @@ class FunctionalTests : InputTestFixture
         receivedLayout = null;
 
         // RemoveControlLayout.
-        InputSystem.RemoveLayout("MyLayout");
+        InputSystem.RemoveControlLayout("MyLayout");
 
         Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Removed));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
@@ -6016,7 +6016,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(layout.extendsLayout, Is.EqualTo("Keyboard"));
 
         // Remove layout.
-        InputSystem.RemoveLayout("MyLayout");
+        InputSystem.RemoveControlLayout("MyLayout");
 
         Assert.That(secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout")), Is.Null);
     }
