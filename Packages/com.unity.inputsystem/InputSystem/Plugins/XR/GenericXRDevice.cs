@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using UnityEngine.Experimental.Input.Haptics;
-using System.Text;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {

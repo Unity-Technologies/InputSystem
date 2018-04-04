@@ -1,10 +1,4 @@
-using System;
-using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {

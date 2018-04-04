@@ -1,7 +1,3 @@
-using System;
-using UnityEngine.Experimental.Input.Plugins.XR;
-using UnityEngine;
-
 namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 {
     public struct SimpleXRRumble
