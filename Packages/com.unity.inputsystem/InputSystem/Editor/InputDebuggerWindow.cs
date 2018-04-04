@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 Refresh();
         }
 
-        private void OnLayoutChange(string name, InputLayoutChange change)
+        private void OnLayoutChange(string name, InputControlLayoutChange change)
         {
             // Update tree if layout setup has changed.
             Refresh();

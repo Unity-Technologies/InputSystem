@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Event that is signalled when the layout setup in the system changes.
         /// </summary>
-        public static event Action<string, InputLayoutChange> onControlLayoutChange
+        public static event Action<string, InputControlLayoutChange> onControlLayoutChange
         {
             add { s_Manager.onLayoutChange += value; }
             remove { s_Manager.onLayoutChange -= value; }

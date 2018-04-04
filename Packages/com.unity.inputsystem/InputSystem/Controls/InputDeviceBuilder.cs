@@ -470,7 +470,7 @@ namespace UnityEngine.Experimental.Input
             var nameInterned = new InternedString(name);
             string path = null;
 
-            ////REVIEW: can we check this in InputLayout instead?
+            ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
                 throw new Exception(string.Format("Layout has not been set on control '{0}' in '{1}'",
                         controlItem.name, layout.name));

@@ -242,7 +242,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             ////TODO: make sure we don't produce name conflicts on the layout name
 
             // Register layout builder that will turn the HID descriptor into an
-            // InputLayout instance.
+            // InputControlLayout instance.
             var layoutName = string.Format("{0}::{1}", kHIDNamespace, description.product);
             var layout = new HIDLayout {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);

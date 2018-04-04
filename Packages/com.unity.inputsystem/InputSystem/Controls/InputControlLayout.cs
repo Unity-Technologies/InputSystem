@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
     /// <item><description>Constructed through reflection from InputControls classes.</description></item>
-    /// <item><description>Through layout factories using InputLayout.Builder.</description></item>
+    /// <item><description>Through layout factories using InputControlLayout.Builder.</description></item>
     /// </list>
     ///
     /// Once constructed, control layouts are immutable (but you can always
@@ -328,7 +328,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Build a layout programmatically. Primarily for use by layout factories
+        /// Build a layout programmatically. Primarily for use by layout builders
         /// registered with the system.
         /// </summary>
         /// <seealso cref="InputSystem.RegisterControlLayoutBuilder"/>
@@ -1104,7 +1104,7 @@ namespace UnityEngine.Experimental.Input
             public string[] commonUsages;
             public string displayName;
             public string resourceName;
-            public string type; // This is mostly for when we turn arbitrary InputLayouts into JSON; less for layouts *coming* from JSON.
+            public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
             public DeviceDescriptionJson device;
             public ControlItemJson[] controls;
 
@@ -1407,7 +1407,7 @@ namespace UnityEngine.Experimental.Input
         {
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
-            public Dictionary<InternedString, Builder> layoutFactories;
+            public Dictionary<InternedString, BuilderInfo> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InputDeviceDescription> layoutDeviceDescriptions;
 
@@ -1415,7 +1415,7 @@ namespace UnityEngine.Experimental.Input
             {
                 layoutTypes = new Dictionary<InternedString, Type>();
                 layoutStrings = new Dictionary<InternedString, string>();
-                layoutFactories = new Dictionary<InternedString, Builder>();
+                layoutBuilders = new Dictionary<InternedString, BuilderInfo>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
             }
@@ -1435,14 +1435,14 @@ namespace UnityEngine.Experimental.Input
             public bool HasLayout(InternedString name)
             {
                 return layoutTypes.ContainsKey(name) || layoutStrings.ContainsKey(name) ||
-                    layoutFactories.ContainsKey(name);
+                    layoutBuilders.ContainsKey(name);
             }
 
             private InputControlLayout TryLoadLayoutInternal(InternedString name)
             {
-                // Check factories.
-                Builder builder;
-                if (layoutFactories.TryGetValue(name, out builder))
+                // Check builders.
+                BuilderInfo builder;
+                if (layoutBuilders.TryGetValue(name, out builder))
                 {
                     var layout = (InputControlLayout)builder.method.Invoke(builder.instance, null);
                     if (layout == null)
@@ -1541,7 +1541,7 @@ namespace UnityEngine.Experimental.Input
         // This collection is owned and managed by InputManager.
         internal static Collection s_Layouts;
 
-        internal struct Builder
+        internal struct BuilderInfo
         {
             public MethodInfo method;
             public object instance;

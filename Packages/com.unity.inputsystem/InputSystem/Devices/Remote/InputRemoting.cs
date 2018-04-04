@@ -251,7 +251,7 @@ namespace UnityEngine.Experimental.Input
             Send(msg);
         }
 
-        private void SendLayoutChange(string layout, InputLayoutChange change)
+        private void SendLayoutChange(string layout, InputControlLayoutChange change)
         {
             if (m_Subscribers == null)
                 return;
@@ -263,14 +263,14 @@ namespace UnityEngine.Experimental.Input
             Message msg;
             switch (change)
             {
-                case InputLayoutChange.Added:
-                case InputLayoutChange.Replaced:
+                case InputControlLayoutChange.Added:
+                case InputControlLayoutChange.Replaced:
                     var message = NewLayoutMsg.Create(this, layout);
                     if (message == null)
                         return;
                     msg = message.Value;
                     break;
-                case InputLayoutChange.Removed:
+                case InputControlLayoutChange.Removed:
                     msg = RemoveLayoutMsg.Create(this, layout);
                     break;
                 default:

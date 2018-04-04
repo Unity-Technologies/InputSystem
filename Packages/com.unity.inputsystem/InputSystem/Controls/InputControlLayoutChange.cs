@@ -1,6 +1,6 @@
 namespace UnityEngine.Experimental.Input
 {
-    public enum InputLayoutChange
+    public enum InputControlLayoutChange
     {
         Added,
         Removed,

@@ -955,7 +955,7 @@ class FunctionalTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_ChangingLayouts_SendsNotifications()
     {
-        InputLayoutChange? receivedChange = null;
+        InputControlLayoutChange? receivedChange = null;
         string receivedLayout = null;
 
         InputSystem.onControlLayoutChange +=
@@ -975,7 +975,7 @@ class FunctionalTests : InputTestFixture
         // Add layout.
         InputSystem.RegisterControlLayout(jsonV1);
 
-        Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Added));
+        Assert.That(receivedChange, Is.EqualTo(InputControlLayoutChange.Added));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
 
         const string jsonV2 = @"
@@ -991,7 +991,7 @@ class FunctionalTests : InputTestFixture
         // Change layout.
         InputSystem.RegisterControlLayout(jsonV2);
 
-        Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Replaced));
+        Assert.That(receivedChange, Is.EqualTo(InputControlLayoutChange.Replaced));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
 
         receivedChange = null;
@@ -1000,7 +1000,7 @@ class FunctionalTests : InputTestFixture
         // RemoveControlLayout.
         InputSystem.RemoveControlLayout("MyLayout");
 
-        Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Removed));
+        Assert.That(receivedChange, Is.EqualTo(InputControlLayoutChange.Removed));
         Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
     }
 

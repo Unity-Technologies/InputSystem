@@ -152,7 +152,7 @@ namespace UnityEngine.Experimental.Input
 
         private static string FindControlLayoutRecursive(ref PathParser parser, string layoutName)
         {
-            ////TODO: add a static InputLayout.Cache instance that we look up layouts from and flush the cache every frame
+            ////TODO: add a static InputControlLayout.Cache instance that we look up layouts from and flush the cache every frame
 
             // Load layout.
             var layout = InputControlLayout.s_Layouts.TryLoadLayout(new InternedString(layoutName));

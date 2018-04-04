@@ -26,7 +26,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using LayoutChangeListener = Action<string, InputLayoutChange>;
+    using LayoutChangeListener = Action<string, InputControlLayoutChange>;
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
@@ -216,7 +216,7 @@ namespace UnityEngine.Experimental.Input
             var internedName = new InternedString(name);
             var isReplacement = DoesLayoutExist(internedName);
 
-            m_Layouts.layoutFactories[internedName] = new InputControlLayout.Builder
+            m_Layouts.layoutBuilders[internedName] = new InputControlLayout.BuilderInfo
             {
                 method = method,
                 instance = instance
@@ -242,7 +242,7 @@ namespace UnityEngine.Experimental.Input
                 AddSupportedDevice(deviceDescription.Value, name);
 
             // Let listeners know.
-            var change = isReplacement ? InputLayoutChange.Replaced : InputLayoutChange.Added;
+            var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
             for (var i = 0; i < m_LayoutChangeListeners.Count; ++i)
                 m_LayoutChangeListeners[i](name.ToString(), change);
         }
@@ -378,7 +378,7 @@ namespace UnityEngine.Experimental.Input
             // Remove layout record.
             m_Layouts.layoutTypes.Remove(internedName);
             m_Layouts.layoutStrings.Remove(internedName);
-            m_Layouts.layoutFactories.Remove(internedName);
+            m_Layouts.layoutBuilders.Remove(internedName);
             m_Layouts.baseLayoutTable.Remove(internedName);
 
             ////TODO: check all layout inheritance chain for whether they are based on the layout and if so
@@ -386,7 +386,7 @@ namespace UnityEngine.Experimental.Input
 
             // Let listeners know.
             for (var i = 0; i < m_LayoutChangeListeners.Count; ++i)
-                m_LayoutChangeListeners[i](name, InputLayoutChange.Removed);
+                m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
         }
 
         public InputControlLayout TryLoadControlLayout(InternedString name)
@@ -424,7 +424,7 @@ namespace UnityEngine.Experimental.Input
         {
             return m_Layouts.layoutTypes.ContainsKey(name) ||
                 m_Layouts.layoutStrings.ContainsKey(name) ||
-                m_Layouts.layoutFactories.ContainsKey(name);
+                m_Layouts.layoutBuilders.ContainsKey(name);
         }
 
         public int ListControlLayouts(List<string> layouts)
@@ -438,7 +438,7 @@ namespace UnityEngine.Experimental.Input
 
             layouts.AddRange(m_Layouts.layoutTypes.Keys.Select(x => x.ToString()));
             layouts.AddRange(m_Layouts.layoutStrings.Keys.Select(x => x.ToString()));
-            layouts.AddRange(m_Layouts.layoutFactories.Keys.Select(x => x.ToString()));
+            layouts.AddRange(m_Layouts.layoutBuilders.Keys.Select(x => x.ToString()));
 
             return layouts.Count - countBefore;
         }
@@ -2203,11 +2203,11 @@ namespace UnityEngine.Experimental.Input
                 };
 
             // Layout factories.
-            var layoutBuilderCount = m_Layouts.layoutFactories.Count;
+            var layoutBuilderCount = m_Layouts.layoutBuilders.Count;
             var layoutBuilderArray = new LayoutBuilderState[layoutBuilderCount];
 
             i = 0;
-            foreach (var entry in m_Layouts.layoutFactories)
+            foreach (var entry in m_Layouts.layoutBuilders)
                 layoutBuilderArray[i++] = new LayoutBuilderState
                 {
                     name = entry.Key,
@@ -2341,7 +2341,7 @@ namespace UnityEngine.Experimental.Input
                 var method = type.GetMethod(layout.methodName,
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-                m_Layouts.layoutFactories[name] = new InputControlLayout.Builder
+                m_Layouts.layoutBuilders[name] = new InputControlLayout.BuilderInfo
                 {
                     method = method,
                     instance = layout.instanceJson != null ? JsonUtility.FromJson(layout.instanceJson, type) : null
