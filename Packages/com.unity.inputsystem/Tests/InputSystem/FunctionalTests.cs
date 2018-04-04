@@ -818,6 +818,26 @@ class FunctionalTests : InputTestFixture
             .And.With.Message.Contains("TestLayout"));
     }
 
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_BuildingLayoutInCode_WithoutType_OnlySetsTypeIfNotExtendingLayout()
+    {
+        var builderExtendingLayout = new InputControlLayout.Builder()
+            .WithName("TestLayout")
+            .Extend("Pointer");
+        var builderNotExtendingLayout = new InputControlLayout.Builder()
+            .WithName("TestLayout");
+
+        builderExtendingLayout.AddControl("button").WithLayout("Button");
+        builderNotExtendingLayout.AddControl("button").WithLayout("Button");
+
+        var layout1 = builderExtendingLayout.Build();
+        var layout2 = builderNotExtendingLayout.Build();
+
+        Assert.That(layout1.type, Is.Null);
+        Assert.That(layout2.type, Is.SameAs(typeof(InputDevice)));
+    }
+
     [Serializable]
     class TestLayoutBuilder
     {

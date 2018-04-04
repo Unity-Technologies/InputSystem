@@ -492,7 +492,8 @@ namespace UnityEngine.Experimental.Input
                 // Allow layout to be unnamed. The system will automatically set the
                 // name that the layout has been registered under.
                 var layout =
-                    new InputControlLayout(new InternedString(name), type ?? typeof(InputDevice))
+                    new InputControlLayout(new InternedString(name),
+                        type == null && string.IsNullOrEmpty(extendsLayout) ? typeof(InputDevice) : type)
                 {
                     m_StateFormat = stateFormat,
                     m_ExtendsLayout = new InternedString(extendsLayout),
