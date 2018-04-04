@@ -7,14 +7,16 @@ var searchData=
   ['set',['set',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputAction.html#a0baec37475845a3b736725222c36add1',1,'UnityEngine::Experimental::Input::InputAction']]],
   ['setlightbarcolor',['SetLightBarColor',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html#a861b6d4afd25067920ca3528511c22f1',1,'UnityEngine::Experimental::Input::Plugins::DualShock::IDualShockHaptics']]],
   ['setmotorspeeds',['SetMotorSpeeds',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IDualMotorRumble.html#a5f4e601804e0fbfb1037b5121e80b167',1,'UnityEngine::Experimental::Input::Haptics::IDualMotorRumble']]],
+  ['setsamplingfrequencycommand',['SetSamplingFrequencyCommand',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1SetSamplingFrequencyCommand.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['setup',['Setup',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a969675a4b191e8c8de4cccfa9ca83ed4',1,'UnityEngine::Experimental::Input::InputTestFixture']]],
   ['sizeinbytes',['sizeInBytes',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#a0a6475044f1fd1fc6afb27bd06603b33',1,'UnityEngine::Experimental::Input::LowLevel::InputEvent']]],
   ['spacekey',['spaceKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#a53388e6c0fb875fab8374f40258a18cf',1,'UnityEngine::Experimental::Input::Keyboard']]],
   ['startsending',['StartSending',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html#a20235c8b33cf76b75d94f9fcd3e4ab22',1,'UnityEngine::Experimental::Input::InputRemoting']]],
   ['stateevent',['StateEvent',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['stateformat',['stateFormat',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html#a2d211a77faa58aad102d4a52582cdd89',1,'UnityEngine::Experimental::Input::LowLevel::StateEvent']]],
-  ['statetype',['stateType',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplateAttribute.html#a12de9e2ff4bc14138f57bcf612474d67',1,'UnityEngine::Experimental::Input::InputTemplateAttribute']]],
+  ['statetype',['stateType',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayoutAttribute.html#a12de9e2ff4bc14138f57bcf612474d67',1,'UnityEngine::Experimental::Input::InputControlLayoutAttribute']]],
   ['steamcontroller',['SteamController',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Steam_1_1SteamController.html',1,'UnityEngine::Experimental::Input::Plugins::Steam']]],
   ['stickcontrol',['StickControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1StickControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
-  ['subtype',['subType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputController.html#acc8028884d600238f790db244827b9c8',1,'UnityEngine::Experimental::Input::Plugins::XInput::XInputController']]]
+  ['subtype',['subType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputController.html#acc8028884d600238f790db244827b9c8',1,'UnityEngine::Experimental::Input::Plugins::XInput::XInputController']]],
+  ['switchsupport',['SwitchSupport',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1SwitchSupport.html',1,'UnityEngine::Experimental::Input::Plugins::Switch']]]
 ];

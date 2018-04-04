@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['pen',['Pen',['../classUnityEngine_1_1Experimental_1_1Input_1_1Pen.html',1,'UnityEngine::Experimental::Input']]],
-  ['penstate',['PenState',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PenState.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
-  ['pointer',['Pointer',['../classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html',1,'UnityEngine::Experimental::Input']]],
-  ['pointerstate',['PointerState',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html',1,'UnityEngine::Experimental::Input::LowLevel']]]
+  ['npad',['NPad',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1NPad.html',1,'UnityEngine::Experimental::Input::Plugins::Switch']]],
+  ['npadinputstate',['NPadInputState',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1LowLevel_1_1NPadInputState.html',1,'UnityEngine::Experimental::Input::Plugins::Switch::LowLevel']]],
+  ['npadoutputreport',['NPadOutputReport',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1LowLevel_1_1NPadOutputReport.html',1,'UnityEngine::Experimental::Input::Plugins::Switch::LowLevel']]]
 ];

@@ -117,7 +117,7 @@ namespace UnityEngine.Experimental.Input
         public void WarpCursorPosition(Vector2 position)
         {
             var command = WarpMousePositionCommand.Create(position);
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public override void MakeCurrent()

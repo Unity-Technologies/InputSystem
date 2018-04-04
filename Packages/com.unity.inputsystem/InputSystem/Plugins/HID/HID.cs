@@ -41,13 +41,13 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// <summary>
         /// Command code for querying the HID report descriptor from a device.
         /// </summary>
-        /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         public static FourCC QueryHIDReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'D'); } }
 
         /// <summary>
         /// Command code for querying the HID report descriptor size in bytes from a device.
         /// </summary>
-        /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
 
         public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'P'); } }
@@ -244,7 +244,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
             var layoutName = string.Format("{0}::{1}", kHIDNamespace, description.product);
-            var layout = new HIDLayout {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
+            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
 
             return layoutName;
@@ -280,7 +280,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         }
 
         [Serializable]
-        private class HIDLayout
+        private class HIDLayoutBuilder
         {
             public HIDDeviceDescriptor hidDescriptor;
             public InputDeviceDescription deviceDescription;

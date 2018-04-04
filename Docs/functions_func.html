@@ -90,10 +90,10 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 
 <h3><a id="index_a"></a>- a -</h3><ul>
 <li>AddControl()
-: <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1Builder.html#a24952870fe757a959c15d6ede6dfd135">InputTemplate.Builder</a>
+: <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1Builder.html#a24952870fe757a959c15d6ede6dfd135">InputControlLayout.Builder</a>
 </li>
 <li>AddDevice()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7ee9e09917684f590f7687d99e424c6c">InputSystem</a>
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a9b2e102f39774f8af83f0d359ba7c964">InputSystem</a>
 </li>
 <li>AllocateDeviceId()
 : <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a109c31f17f74a37f3504752479a890c3">IInputRuntime</a>
@@ -119,11 +119,11 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 
 
 <h3><a id="index_l"></a>- l -</h3><ul>
+<li>ListControlLayouts()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a47b5412de25f11e95228cef310b68e5e">InputSystem</a>
+</li>
 <li>ListEnabledActions()
 : <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a9584e2791c0f11ab32cd0f7560c08a82">InputSystem</a>
-</li>
-<li>ListTemplates()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a831a3e0e6064cb54bc59ce8684abca12">InputSystem</a>
 </li>
 </ul>
 
@@ -133,7 +133,7 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 : <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc">InputDevice</a>
 </li>
 <li>Merge()
-: <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html#a1f30e52c15e58e124b79c8caab6270fe">InputTemplate.ControlTemplate</a>
+: <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#a5e9cba5308f65a867c333c8841944edb">InputControlLayout.ControlItem</a>
 </li>
 </ul>
 
@@ -182,20 +182,23 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>ReadOnlyArray()
 : <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html#a259d0aed4c9049281743bd79db82c742">ReadOnlyArray&lt; TValue &gt;</a>
 </li>
+<li>ReadValueAsObject()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#aa9cb9bfa7d3d04cff020ebffd07fff10">InputDevice</a>
+</li>
+<li>RegisterControlLayout()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a8faf863ed7c71634955d3dc4387775fc">InputSystem</a>
+</li>
+<li>RegisterControlLayout&lt; T &gt;()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a3d391b2c675c450e4e9c7192bfdf750e">InputSystem</a>
+</li>
+<li>RegisterControlLayoutBuilder()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a1f571e9126061e5ec00d72ec195b0aef">InputSystem</a>
+</li>
 <li>RegisterProcessor()
 : <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab723070b2261a253c66d95550220e4a8">InputSystem</a>
 </li>
-<li>RegisterTemplate()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#af19e8aac98d5144a888864c0172368a1">InputSystem</a>
-</li>
-<li>RegisterTemplate&lt; T &gt;()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad55628e49c6315cdb3addc47e56e1115">InputSystem</a>
-</li>
-<li>RegisterTemplateConstructor()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a1cea4bd82127b8e9f98952d42c4f1e3a">InputSystem</a>
-</li>
-<li>RemoveTemplate()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a6751e5c450ceaef2ce7b4a6b1842bc78">InputSystem</a>
+<li>RemoveControlLayout()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#af06f90ad4ac574071c5a8111538ceee5">InputSystem</a>
 </li>
 <li>ResetHaptics()
 : <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IHaptics.html#aa355473c0130341560325c423610a3c4">IHaptics</a>
@@ -231,14 +234,14 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <li>ToArray()
 : <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html#acce24c57bd3ff43b3da1c57571c1c7b2">ReadOnlyArray&lt; TValue &gt;</a>
 </li>
-<li>TryFindMatchingTemplate()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#adbd8ff682d33ddb38be7b8955e3acaf5">InputSystem</a>
+<li>TryFindMatchingControlLayout()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#abb364ddcbef8dacf5ef473a983bb71fd">InputSystem</a>
 </li>
-<li>TryGetDeviceTemplate()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#a4814495cbd34ca141de4eb7914464873">InputControlPath</a>
+<li>TryGetDeviceLayout()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#ab39ab1047c8308cacf7e28ab78de7083">InputControlPath</a>
 </li>
-<li>TryLoadTemplate()
-: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a3ce21a4f225aeed8182c50ab57b57bbc">InputSystem</a>
+<li>TryLoadLayout()
+: <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#adbdfe4223869f653e31903ffff94a4cf">InputSystem</a>
 </li>
 </ul>
 
@@ -266,7 +269,7 @@ $(document).ready(function(){initNavTree('functions_func.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Fri Mar 23 2018 13:50:55 for Input System by
+    <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.14 </li>
   </ul>

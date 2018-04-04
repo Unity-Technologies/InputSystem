@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         {
             float intensity = m_IsPaused ? 0f : m_Intensity;
             var command = SimpleXRRumbleCommand.Create(intensity);
-            device.OnDeviceCommand(ref command);
+            device.ExecuteCommand(ref command);
         }
     }
 }

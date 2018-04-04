@@ -811,7 +811,7 @@ namespace UnityEngine.Experimental.Input
         {
             keyboardLayout = null;
             var command = QueryKeyboardLayoutCommand.Create();
-            if (OnDeviceCommand(ref command) >= 0)
+            if (ExecuteCommand(ref command) >= 0)
                 keyboardLayout = command.ReadLayoutName();
         }
 

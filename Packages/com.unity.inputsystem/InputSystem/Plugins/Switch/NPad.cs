@@ -252,7 +252,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         {
             var command = NPadShowControllerSupportUICommand.Create();
 
-            return OnDeviceCommand(ref command);
+            return ExecuteCommand(ref command);
         }
 
         public void SetPosition(Position position)
@@ -260,14 +260,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             var command = NPadOutputReport.Create();
 
             command.SetPosition(position);
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public Position GetPosition()
         {
             var command = NPadOutputReport.Create();
 
-            if (OnDeviceCommand(ref command) < 0)
+            if (ExecuteCommand(ref command) < 0)
                 return Position.Default;
             return (Position)command.position;
         }

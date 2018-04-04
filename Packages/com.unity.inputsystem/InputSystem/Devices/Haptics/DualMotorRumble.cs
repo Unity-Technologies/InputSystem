@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Haptics
                 return;
 
             var command = DualMotorRumbleCommand.Create(0f, 0f);
-            device.OnDeviceCommand(ref command);
+            device.ExecuteCommand(ref command);
         }
 
         public void ResumeHaptics(InputDevice device)
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Haptics
             highFrequencyMotorSpeed = Mathf.Clamp(highFrequency, 0.0f, 1.0f);
 
             var command = DualMotorRumbleCommand.Create(lowFrequencyMotorSpeed, highFrequencyMotorSpeed);
-            device.OnDeviceCommand(ref command);
+            device.ExecuteCommand(ref command);
         }
     }
 }
