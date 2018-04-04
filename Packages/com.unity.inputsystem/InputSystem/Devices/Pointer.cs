@@ -130,20 +130,20 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            position = setup.GetControl<Vector2Control>(this, "position");
-            delta = setup.GetControl<Vector2Control>(this, "delta");
-            tilt = setup.GetControl<Vector2Control>(this, "tilt");
-            radius = setup.GetControl<Vector2Control>(this, "radius");
-            pressure = setup.GetControl<AxisControl>(this, "pressure");
-            twist = setup.GetControl<AxisControl>(this, "twist");
-            pointerId = setup.GetControl<IntegerControl>(this, "pointerId");
-            phase = setup.GetControl<PointerPhaseControl>(this, "phase");
-            displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
-            button = setup.GetControl<ButtonControl>(this, "button");
+            position = builder.GetControl<Vector2Control>(this, "position");
+            delta = builder.GetControl<Vector2Control>(this, "delta");
+            tilt = builder.GetControl<Vector2Control>(this, "tilt");
+            radius = builder.GetControl<Vector2Control>(this, "radius");
+            pressure = builder.GetControl<AxisControl>(this, "pressure");
+            twist = builder.GetControl<AxisControl>(this, "twist");
+            pointerId = builder.GetControl<IntegerControl>(this, "pointerId");
+            phase = builder.GetControl<PointerPhaseControl>(this, "phase");
+            displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
+            button = builder.GetControl<ButtonControl>(this, "button");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)

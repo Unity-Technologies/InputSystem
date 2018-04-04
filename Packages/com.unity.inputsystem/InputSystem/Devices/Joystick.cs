@@ -67,7 +67,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Joystick current { get; internal set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
             var buttons = new List<ButtonControl>();
             var axes = new List<AxisControl>();
@@ -81,14 +81,14 @@ namespace UnityEngine.Experimental.Input
                 m_Axes = axes.ToArray();
 
             // Mandatory controls.
-            trigger = setup.GetControl<ButtonControl>("{PrimaryTrigger}");
-            stick = setup.GetControl<StickControl>("{Primary2DMotion}");
+            trigger = builder.GetControl<ButtonControl>("{PrimaryTrigger}");
+            stick = builder.GetControl<StickControl>("{Primary2DMotion}");
 
             // Optional controls.
-            twist = setup.TryGetControl<AxisControl>("{Twist}");
-            hat = setup.TryGetControl<DpadControl>("{Hatswitch}");
+            twist = builder.TryGetControl<AxisControl>("{Twist}");
+            hat = builder.TryGetControl<DpadControl>("{Hatswitch}");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         public override void MakeCurrent()

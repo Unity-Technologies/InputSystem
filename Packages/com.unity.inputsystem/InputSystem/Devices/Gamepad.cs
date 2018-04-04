@@ -181,31 +181,31 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            buttonWest = setup.GetControl<ButtonControl>(this, "buttonWest");
-            buttonNorth = setup.GetControl<ButtonControl>(this, "buttonNorth");
-            buttonSouth = setup.GetControl<ButtonControl>(this, "buttonSouth");
-            buttonEast = setup.GetControl<ButtonControl>(this, "buttonEast");
+            buttonWest = builder.GetControl<ButtonControl>(this, "buttonWest");
+            buttonNorth = builder.GetControl<ButtonControl>(this, "buttonNorth");
+            buttonSouth = builder.GetControl<ButtonControl>(this, "buttonSouth");
+            buttonEast = builder.GetControl<ButtonControl>(this, "buttonEast");
 
-            startButton = setup.GetControl<ButtonControl>(this, "start");
-            selectButton = setup.GetControl<ButtonControl>(this, "select");
+            startButton = builder.GetControl<ButtonControl>(this, "start");
+            selectButton = builder.GetControl<ButtonControl>(this, "select");
 
-            leftStickButton = setup.GetControl<ButtonControl>(this, "leftStickPress");
-            rightStickButton = setup.GetControl<ButtonControl>(this, "rightStickPress");
+            leftStickButton = builder.GetControl<ButtonControl>(this, "leftStickPress");
+            rightStickButton = builder.GetControl<ButtonControl>(this, "rightStickPress");
 
-            dpad = setup.GetControl<DpadControl>(this, "dpad");
+            dpad = builder.GetControl<DpadControl>(this, "dpad");
 
-            leftShoulder = setup.GetControl<ButtonControl>(this, "leftShoulder");
-            rightShoulder = setup.GetControl<ButtonControl>(this, "rightShoulder");
+            leftShoulder = builder.GetControl<ButtonControl>(this, "leftShoulder");
+            rightShoulder = builder.GetControl<ButtonControl>(this, "rightShoulder");
 
-            leftStick = setup.GetControl<StickControl>(this, "leftStick");
-            rightStick = setup.GetControl<StickControl>(this, "rightStick");
+            leftStick = builder.GetControl<StickControl>(this, "leftStick");
+            rightStick = builder.GetControl<StickControl>(this, "rightStick");
 
-            leftTrigger = setup.GetControl<ButtonControl>(this, "leftTrigger");
-            rightTrigger = setup.GetControl<ButtonControl>(this, "rightTrigger");
+            leftTrigger = builder.GetControl<ButtonControl>(this, "leftTrigger");
+            rightTrigger = builder.GetControl<ButtonControl>(this, "rightTrigger");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         protected override void RefreshConfiguration()

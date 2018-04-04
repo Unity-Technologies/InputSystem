@@ -192,25 +192,25 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
             var touchArray = new TouchControl[TouchscreenState.kMaxTouches];
 
-            touchArray[0] = setup.GetControl<TouchControl>(this, "touch0");
-            touchArray[1] = setup.GetControl<TouchControl>(this, "touch1");
-            touchArray[2] = setup.GetControl<TouchControl>(this, "touch2");
-            touchArray[3] = setup.GetControl<TouchControl>(this, "touch3");
-            touchArray[4] = setup.GetControl<TouchControl>(this, "touch4");
-            touchArray[5] = setup.GetControl<TouchControl>(this, "touch5");
-            touchArray[6] = setup.GetControl<TouchControl>(this, "touch6");
-            touchArray[7] = setup.GetControl<TouchControl>(this, "touch7");
-            touchArray[8] = setup.GetControl<TouchControl>(this, "touch8");
-            touchArray[9] = setup.GetControl<TouchControl>(this, "touch9");
+            touchArray[0] = builder.GetControl<TouchControl>(this, "touch0");
+            touchArray[1] = builder.GetControl<TouchControl>(this, "touch1");
+            touchArray[2] = builder.GetControl<TouchControl>(this, "touch2");
+            touchArray[3] = builder.GetControl<TouchControl>(this, "touch3");
+            touchArray[4] = builder.GetControl<TouchControl>(this, "touch4");
+            touchArray[5] = builder.GetControl<TouchControl>(this, "touch5");
+            touchArray[6] = builder.GetControl<TouchControl>(this, "touch6");
+            touchArray[7] = builder.GetControl<TouchControl>(this, "touch7");
+            touchArray[8] = builder.GetControl<TouchControl>(this, "touch8");
+            touchArray[9] = builder.GetControl<TouchControl>(this, "touch9");
 
             allTouchControls = new ReadOnlyArray<TouchControl>(touchArray);
             m_TouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         private TouchControl[] m_TouchesArray;

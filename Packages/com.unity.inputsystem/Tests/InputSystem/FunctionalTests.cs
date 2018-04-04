@@ -46,7 +46,7 @@ class FunctionalTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_CanCreatePrimitiveControlsFromLayout()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
 
         // The default ButtonControl layout has no constrols inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
@@ -59,7 +59,7 @@ class FunctionalTests : InputTestFixture
     {
         const int kNumControlsInAStick = 6;
 
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
 
         Assert.That(setup.GetControl("leftStick"), Is.TypeOf<StickControl>());
         Assert.That(setup.GetControl("leftStick").children, Has.Count.EqualTo(kNumControlsInAStick));
@@ -92,7 +92,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(deviceJson);
         InputSystem.RegisterControlLayout(controlJson);
 
-        var setup = new InputControlSetup("MyDevice");
+        var setup = new InputDeviceBuilder("MyDevice");
 
         Assert.That(setup.GetControl("myThing/x"), Is.TypeOf<AxisControl>());
         Assert.That(setup.GetControl("myThing"), Has.Property("layout").EqualTo("MyControl"));
@@ -105,7 +105,7 @@ class FunctionalTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_CannotUseControlLayoutAsToplevelLayout()
     {
-        Assert.That(() => new InputControlSetup("Button"), Throws.InvalidOperationException);
+        Assert.That(() => new InputDeviceBuilder("Button"), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -127,7 +127,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var setup = new InputControlSetup("MyDevice");
+        var setup = new InputDeviceBuilder("MyDevice");
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
@@ -238,7 +238,7 @@ class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterControlLayout(json);
-        var device = (Gamepad) new InputControlSetup("MyDevice").Finish();
+        var device = (Gamepad) new InputDeviceBuilder("MyDevice").Finish();
 
         Assert.That(device.leftStick.x.clamp, Is.True);
     }
@@ -575,7 +575,7 @@ class FunctionalTests : InputTestFixture
     public void Layouts_FormatOfControlWithPrimitiveTypeInStateStructInferredFromType()
     {
         InputSystem.RegisterControlLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
-        var setup = new InputControlSetup("Test");
+        var setup = new InputDeviceBuilder("Test");
 
         Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
         Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
@@ -603,7 +603,7 @@ class FunctionalTests : InputTestFixture
     {
         InputSystem.RegisterControlLayout<DeviceWithStateStructWithFixedArray>();
 
-        Assert.That(() => new InputControlSetup("DeviceWithStateStructWithFixedArray"),
+        Assert.That(() => new InputDeviceBuilder("DeviceWithStateStructWithFixedArray"),
             Throws.Exception.With.Message.Contain("Layout has not been set"));
     }
 
@@ -629,7 +629,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var setup = new InputControlSetup("MyDevice");
+        var setup = new InputDeviceBuilder("MyDevice");
         var testControl = setup.GetControl<AxisControl>("test");
         var device = (Gamepad)setup.Finish();
 
@@ -655,7 +655,7 @@ class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterControlLayout(json);
-        var device = (Gamepad) new InputControlSetup("TestLayout").Finish();
+        var device = (Gamepad) new InputDeviceBuilder("TestLayout").Finish();
 
         ////TODO: this ignores layouting; ATM there's a conflict between the automatic layout used by the added button
         ////      and the manual layouting employed by Gamepad; we don't detect conflicts between manual and automatic
@@ -696,7 +696,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(baseJson);
         InputSystem.RegisterControlLayout(derivedJson);
 
-        var setup = new InputControlSetup("Derived");
+        var setup = new InputDeviceBuilder("Derived");
         var stick = setup.GetControl<StickControl>("stick");
 
         Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
@@ -717,7 +717,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var setup = new InputControlSetup("MyGamepad");
+        var setup = new InputDeviceBuilder("MyGamepad");
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.dpad.up.layout, Is.EqualTo("DiscreteButton"));
@@ -747,7 +747,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var device = (Gamepad) new InputControlSetup("MyLayout").Finish();
+        var device = (Gamepad) new InputDeviceBuilder("MyLayout").Finish();
 
         Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
@@ -1031,7 +1031,7 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromLayout()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var device = setup.Finish();
 
         Assert.That(device, Is.TypeOf<Gamepad>());
@@ -1043,7 +1043,7 @@ class FunctionalTests : InputTestFixture
     public void Devices_CanCreateDeviceWithNestedState()
     {
         InputSystem.RegisterControlLayout<CustomDevice>();
-        var setup = new InputControlSetup("CustomDevice");
+        var setup = new InputDeviceBuilder("CustomDevice");
         var device = setup.Finish();
 
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1"));
@@ -1113,14 +1113,14 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromLayoutVariant()
     {
-        var leftyGamepadSetup = new InputControlSetup("Gamepad", variant: "Lefty");
+        var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variant: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
         var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
         //var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
         //var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
         //shoulder?
 
-        var defaultGamepadSetup = new InputControlSetup("Gamepad");
+        var defaultGamepadSetup = new InputDeviceBuilder("Gamepad");
         var defaultGamepadPrimary2DMotion = defaultGamepadSetup.GetControl("{Primary2DMotion}");
         var defaultGamepadSecondary2DMotion = defaultGamepadSetup.GetControl("{Secondary2DMotion}");
         //var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
@@ -1143,7 +1143,7 @@ class FunctionalTests : InputTestFixture
     {
         var device = InputSystem.AddDevice("Gamepad");
 
-        Assert.That(() => new InputControlSetup("Keyboard", device), Throws.InvalidOperationException);
+        Assert.That(() => new InputDeviceBuilder("Keyboard", device), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -1163,7 +1163,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(initialJson);
 
         // Create initial version of device.
-        var initialSetup = new InputControlSetup("MyDevice");
+        var initialSetup = new InputDeviceBuilder("MyDevice");
         var initialFirstControl = initialSetup.GetControl("first");
         var initialSecondControl = initialSetup.GetControl("second");
         var initialDevice = initialSetup.Finish();
@@ -1182,7 +1182,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(modifiedJson);
 
         // Modify device.
-        var modifiedSetup = new InputControlSetup("MyDevice", existingDevice: initialDevice);
+        var modifiedSetup = new InputDeviceBuilder("MyDevice", existingDevice: initialDevice);
         var modifiedFirstControl = modifiedSetup.GetControl("first");
         var modifiedSecondControl = modifiedSetup.GetControl("second");
         var modifiedThirdControl = modifiedSetup.GetControl("third");
@@ -1214,7 +1214,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(initialJson);
 
         // Create initial version of device.
-        var initialSetup = new InputControlSetup("MyDevice");
+        var initialSetup = new InputDeviceBuilder("MyDevice");
         var initialButton = initialSetup.GetControl<ButtonControl>("buttonSouth");
         var initialDevice = initialSetup.Finish();
 
@@ -1228,7 +1228,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.RegisterControlLayout(modifiedJson);
 
         // Modify device.
-        var modifiedSetup = new InputControlSetup("MyDevice", existingDevice: initialDevice);
+        var modifiedSetup = new InputDeviceBuilder("MyDevice", existingDevice: initialDevice);
         var modifiedButton = modifiedSetup.GetControl<ButtonControl>("buttonSouth");
         var modifiedDevice = modifiedSetup.Finish();
 
@@ -1295,7 +1295,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_CanFindControlsInSetupByPath()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
 
         Assert.That(setup.TryGetControl("leftStick"), Is.TypeOf<StickControl>());
         Assert.That(setup.TryGetControl("leftStick/x"), Is.TypeOf<AxisControl>());
@@ -1307,7 +1307,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_CanFindChildControlsByPath()
     {
-        var gamepad = (Gamepad) new InputControlSetup("Gamepad").Finish();
+        var gamepad = (Gamepad) new InputDeviceBuilder("Gamepad").Finish();
         Assert.That(gamepad["leftStick"], Is.SameAs(gamepad.leftStick));
         Assert.That(gamepad["leftStick/x"], Is.SameAs(gamepad.leftStick.x));
         Assert.That(gamepad.leftStick["x"], Is.SameAs(gamepad.leftStick.x));
@@ -1317,7 +1317,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_DeviceAndControlsRememberTheirLayouts()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.layout, Is.EqualTo("Gamepad"));
@@ -1328,7 +1328,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_ControlsReferToTheirParent()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.leftStick.parent, Is.SameAs(gamepad));
@@ -1339,7 +1339,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_ControlsReferToTheirDevices()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var leftStick = setup.GetControl("leftStick");
         var device = setup.Finish();
 
@@ -1368,7 +1368,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var device = new InputControlSetup("MyDevice").Finish();
+        var device = new InputDeviceBuilder("MyDevice").Finish();
 
         Assert.That(device.allControls.Count, Is.EqualTo(2 + 4 + 2)); // 2 toplevel controls, 4 added by Stick, 2 for X and Y
         Assert.That(device.allControls, Contains.Item(device["button"]));
@@ -1385,7 +1385,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var device = (Gamepad)setup.Finish();
 
         Assert.Throws<InvalidOperationException>(() => { device.leftStick.ReadValue(); });
@@ -1635,7 +1635,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>() * 8));
@@ -1648,7 +1648,7 @@ class FunctionalTests : InputTestFixture
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
         InputSystem.RegisterControlLayout<CustomDevice>();
-        var setup = new InputControlSetup("CustomDevice");
+        var setup = new InputDeviceBuilder("CustomDevice");
         var axis2 = setup.GetControl("axis2");
         setup.Finish();
 
@@ -1662,7 +1662,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanComputeStateLayoutForMultiByteBitfieldWithFixedOffset()
     {
-        var setup = new InputControlSetup("Keyboard");
+        var setup = new InputDeviceBuilder("Keyboard");
         var downArrow = setup.GetControl("DownArrow");
         var keyboard = setup.Finish();
 
@@ -1675,7 +1675,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_BeforeAddingDevice_OffsetsInStateLayoutsAreRelativeToRoot()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var device = (Gamepad)setup.Finish();
 
         var leftStickOffset = Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32();
@@ -1840,7 +1840,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(jsonLayout);
 
-        var setup = new InputControlSetup("CustomGamepad");
+        var setup = new InputDeviceBuilder("CustomGamepad");
         Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
 
         var device = (Gamepad)setup.Finish();
@@ -1903,7 +1903,7 @@ class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterControlLayout(json);
-        var device = (Gamepad) new InputControlSetup("MyDevice").Finish();
+        var device = (Gamepad) new InputDeviceBuilder("MyDevice").Finish();
 
         Assert.That(device.leftStick.stateBlock.byteOffset, Is.EqualTo(6));
         Assert.That(device.leftStick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
@@ -1942,7 +1942,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(jsonLayout);
 
-        var setup = new InputControlSetup("CustomGamepad");
+        var setup = new InputDeviceBuilder("CustomGamepad");
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
@@ -1971,7 +1971,7 @@ class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterControlLayout(json);
-        var setup = new InputControlSetup("MyDevice");
+        var setup = new InputDeviceBuilder("MyDevice");
 
         Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
 
@@ -2186,7 +2186,7 @@ class FunctionalTests : InputTestFixture
     {
         InputSystem.AddDevice("Gamepad");   // Add a gamepad so that when we add another, its name will have to get adjusted.
 
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var device = (Gamepad)setup.Finish();
 
         Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad/dpad/up"));
@@ -2357,10 +2357,10 @@ class FunctionalTests : InputTestFixture
     {
         public ButtonControl button { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            button = setup.GetControl<ButtonControl>(this, "button");
-            base.FinishSetup(setup);
+            button = builder.GetControl<ButtonControl>(this, "button");
+            base.FinishSetup(builder);
         }
 
         public bool OnCarryStateForward(IntPtr statePtr)
@@ -3472,7 +3472,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var leftStick = setup.GetControl("leftStick");
 
         Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
@@ -3487,7 +3487,7 @@ class FunctionalTests : InputTestFixture
     [Category("Controls")]
     public void Controls_AfterAddingDeviceCanQueryValueOfControls()
     {
-        var setup = new InputControlSetup("Gamepad");
+        var setup = new InputDeviceBuilder("Gamepad");
         var device = (Gamepad)setup.Finish();
         InputSystem.AddDevice(device);
 
@@ -3657,7 +3657,7 @@ class FunctionalTests : InputTestFixture
         ";
 
         InputSystem.RegisterControlLayout(json);
-        var gamepad = (Gamepad) new InputControlSetup("CustomGamepad").Finish();
+        var gamepad = (Gamepad) new InputDeviceBuilder("CustomGamepad").Finish();
 
         Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
     }
@@ -3680,7 +3680,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var setup = new InputControlSetup("MyDevice");
+        var setup = new InputDeviceBuilder("MyDevice");
         var control = setup.GetControl("control");
 
         Assert.That(control.displayName, Is.EqualTo("control"));
@@ -4185,10 +4185,10 @@ class FunctionalTests : InputTestFixture
     {
         public AxisControl axis { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            axis = setup.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(setup);
+            axis = builder.GetControl<AxisControl>(this, "axis");
+            base.FinishSetup(builder);
         }
     }
 
@@ -6517,7 +6517,7 @@ class FunctionalTests : InputTestFixture
 
         InputSystem.RegisterControlLayout(json);
 
-        var setup = new InputControlSetup("MyDevice");
+        var setup = new InputDeviceBuilder("MyDevice");
         var leftStickX = setup.GetControl<AxisControl>("leftStick/x");
 
         Assert.That(leftStickX.processors, Has.Length.EqualTo(2));

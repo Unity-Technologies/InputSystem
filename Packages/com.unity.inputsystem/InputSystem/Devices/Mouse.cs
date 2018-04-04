@@ -126,13 +126,13 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            scroll = setup.GetControl<Vector2Control>(this, "scroll");
-            leftButton = setup.GetControl<ButtonControl>(this, "leftButton");
-            middleButton = setup.GetControl<ButtonControl>(this, "middleButton");
-            rightButton = setup.GetControl<ButtonControl>(this, "rightButton");
-            base.FinishSetup(setup);
+            scroll = builder.GetControl<Vector2Control>(this, "scroll");
+            leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
+            middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
+            rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
+            base.FinishSetup(builder);
         }
     }
 }

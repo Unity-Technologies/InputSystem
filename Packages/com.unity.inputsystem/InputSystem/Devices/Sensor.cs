@@ -71,10 +71,10 @@ namespace UnityEngine.Experimental.Input
 
         public static Accelerometer current { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            acceleration = setup.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(setup);
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            base.FinishSetup(builder);
         }
 
         public override void MakeCurrent()
@@ -100,13 +100,13 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            orientation = setup.GetControl<QuaternionControl>("orientation");
-            acceleration = setup.GetControl<Vector3Control>("acceleration");
-            angularVelocity = setup.GetControl<Vector3Control>("angularVelocity");
-            gravity = setup.GetControl<Vector3Control>("gravity");
-            base.FinishSetup(setup);
+            orientation = builder.GetControl<QuaternionControl>("orientation");
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
+            gravity = builder.GetControl<Vector3Control>("gravity");
+            base.FinishSetup(builder);
         }
     }
 

@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the layout cache around instead of throwing
 ////        it away after the creation of every single device; best approach may be to just
-////        reuse the same InputControlSetup instance over and over
+////        reuse the same InputDeviceBuilder instance over and over
 
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
@@ -23,29 +22,29 @@ namespace UnityEngine.Experimental.Input
     ///
     /// Can be used to create setups as well as to adjust them later.
     ///
-    /// InputControlSetup is the only way to create control hierarchies.
+    /// InputDeviceBuilder is the only way to create control hierarchies.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
     /// Once a setup has been established, it yields an independent control hierarchy and the setup itself
     /// is abandoned.
     ///
-    /// Note InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
+    /// Note InputDeviceBuilders generate garbage. They are meant to be used for initialization only. Don't
     /// use them during normal gameplay.
     ///
     /// Running an *existing* device through another control setup is a *destructive* operation.
     /// Existing controls may be reused while at the same time the hierarchy and even the device instance
     /// itself may change.
     /// </remarks>
-    public class InputControlSetup
+    public class InputDeviceBuilder
     {
         // We use this constructor when we create devices in batches.
-        internal InputControlSetup(InputControlLayout.Collection layouts)
+        internal InputDeviceBuilder(InputControlLayout.Collection layouts)
         {
             m_LayoutCache.layouts = layouts;
         }
 
-        public InputControlSetup(string layout, InputDevice existingDevice = null, string variant = null)
+        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variant = null)
         {
             m_LayoutCache.layouts = InputControlLayout.s_Layouts;
             Setup(new InternedString(layout), existingDevice, new InternedString(variant));
@@ -287,11 +286,11 @@ namespace UnityEngine.Experimental.Input
             }
             else if (parent == null)
             {
-                // Someone did "new InputControlSetup(...)" with a control layout.
+                // Someone did "new InputDeviceBuilder(...)" with a control layout.
                 // We don't support creating control hierarchies without a device at the root.
                 throw new InvalidOperationException(
                     string.Format(
-                        "Toplevel layout used with InputControlSetup must be a device layout; '{0}' is a control layout",
+                        "Toplevel layout used with InputDeviceBuilder must be a device layout; '{0}' is a control layout",
                         layout.name));
             }
 

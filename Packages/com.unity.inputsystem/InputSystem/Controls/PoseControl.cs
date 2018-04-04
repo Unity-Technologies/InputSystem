@@ -30,15 +30,15 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = new FourCC('P', 'O', 'S', 'E');
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            position = setup.GetControl<Vector3Control>(this, "position");
-            rotation = setup.GetControl<QuaternionControl>(this, "rotation");
-            velocity = setup.GetControl<Vector3Control>(this, "velocity");
-            angularVelocity = setup.GetControl<Vector3Control>(this, "angularVelocity");
-            acceleration = setup.GetControl<Vector3Control>(this, "acceleration");
-            angularAcceleration = setup.GetControl<Vector3Control>(this, "angularAcceleration");
-            base.FinishSetup(setup);
+            position = builder.GetControl<Vector3Control>(this, "position");
+            rotation = builder.GetControl<QuaternionControl>(this, "rotation");
+            velocity = builder.GetControl<Vector3Control>(this, "velocity");
+            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
+            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
+            angularAcceleration = builder.GetControl<Vector3Control>(this, "angularAcceleration");
+            base.FinishSetup(builder);
         }
 
         public override Pose ReadRawValueFrom(IntPtr statePtr)

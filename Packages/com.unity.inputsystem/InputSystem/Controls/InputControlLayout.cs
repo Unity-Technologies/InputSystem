@@ -567,7 +567,7 @@ namespace UnityEngine.Experimental.Input
         ////        should the control layout alone determine the direction things are going in?
 
         private InternedString m_Name;
-        internal Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputControlSetup.
+        internal Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputDeviceBuilder.
         internal FourCC m_StateFormat;
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;

@@ -32,16 +32,16 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         public ButtonControl L1 { get; private set; }
         public ButtonControl R1 { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            touchpadButton = setup.GetControl<ButtonControl>(this, "touchpadButton");
+            touchpadButton = builder.GetControl<ButtonControl>(this, "touchpadButton");
             optionsButton = startButton;
 
-            acceleration = setup.GetControl<Vector3Control>(this, "acceleration");
-            orientation = setup.GetControl<Vector3Control>(this, "orientation");
-            angularVelocity = setup.GetControl<Vector3Control>(this, "angularVelocity");
+            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
+            orientation = builder.GetControl<Vector3Control>(this, "orientation");
+            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
 
             squareButton = buttonWest;
             triangleButton = buttonNorth;

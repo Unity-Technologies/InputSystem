@@ -416,7 +416,7 @@ namespace UnityEngine.Experimental.Input
                     throw new Exception(string.Format("Modifier '{0}' is not an IInputBindingModifier", list[i].name));
 
                 // Pass parameters to it.
-                InputControlSetup.SetParameters(modifier, list[i].parameters);
+                InputDeviceBuilder.SetParameters(modifier, list[i].parameters);
 
                 // Add to list.
                 if (modifiers == null)

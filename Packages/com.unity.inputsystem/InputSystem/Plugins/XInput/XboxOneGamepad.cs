@@ -153,14 +153,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         public ButtonControl paddle3 { get; private set; }
         public ButtonControl paddle4 { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            paddle1 = setup.GetControl<ButtonControl>(this, "paddle1");
-            paddle2 = setup.GetControl<ButtonControl>(this, "paddle2");
-            paddle3 = setup.GetControl<ButtonControl>(this, "paddle3");
-            paddle4 = setup.GetControl<ButtonControl>(this, "paddle4");
+            paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
+            paddle2 = builder.GetControl<ButtonControl>(this, "paddle2");
+            paddle3 = builder.GetControl<ButtonControl>(this, "paddle3");
+            paddle4 = builder.GetControl<ButtonControl>(this, "paddle4");
         }
 
         public new static XboxOneGamepad current { get; set; }

@@ -27,11 +27,11 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     public static MyDevice current { get; private set; }
 
-    protected override void FinishSetup(InputControlSetup setup)
+    protected override void FinishSetup(InputDeviceBuilder builder)
     {
-        button1 = setup.GetControl<ButtonControl>(this, "button1");
-        axis1 = setup.GetControl<AxisControl>(this, "axis1");
-        base.FinishSetup(setup);
+        button1 = builder.GetControl<ButtonControl>(this, "button1");
+        axis1 = builder.GetControl<AxisControl>(this, "axis1");
+        base.FinishSetup(builder);
     }
 
     public override void MakeCurrent()

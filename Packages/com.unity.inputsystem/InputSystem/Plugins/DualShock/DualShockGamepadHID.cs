@@ -165,13 +165,13 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            leftTriggerButton = setup.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = setup.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = setup.GetControl<ButtonControl>(this, "systemButton");
+            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
+            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
+            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         public override void PauseHaptics()

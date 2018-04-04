@@ -204,11 +204,11 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             m_StateBlock.format = new FourCC('P', '4', 'T', 'C');
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            touchId = setup.GetControl<IntegerControl>(this, "touchId");
-            position = setup.GetControl<Vector2Control>(this, "position");
-            base.FinishSetup(setup);
+            touchId = builder.GetControl<IntegerControl>(this, "touchId");
+            position = builder.GetControl<Vector2Control>(this, "position");
+            base.FinishSetup(builder);
         }
 
         public override unsafe PS4Touch ReadRawValueFrom(IntPtr statePtr)
@@ -231,14 +231,14 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
             var touchArray = new PS4TouchControl[2];
 
-            touchArray[0] = setup.GetControl<PS4TouchControl>(this, "touch0");
-            touchArray[1] = setup.GetControl<PS4TouchControl>(this, "touch1");
+            touchArray[0] = builder.GetControl<PS4TouchControl>(this, "touch0");
+            touchArray[1] = builder.GetControl<PS4TouchControl>(this, "touch1");
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
         }

@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input
     /// Controls can have children which in turn may have children. At the root of the child
     /// hierarchy is always an InputDevice (which themselves are InputControls).
     ///
-    /// Controls can be looked up by their path (see <see cref="InputControlSetup.GetControl"/> and
+    /// Controls can be looked up by their path (see <see cref="InputDeviceBuilder.GetControl"/> and
     /// <see cref="InputControlPath.TryFindControl"/>).
     ///
     /// Each control must have a unique name within its parent (see <see cref="name"/>). Multiple
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Input
         // Set up of the control has been finalized. This can be used, for example, to look up
         // child controls for fast access.
         // NOTE: This function will be called repeatedly in case the setup is changed repeatedly.
-        protected virtual void FinishSetup(InputControlSetup setup)
+        protected virtual void FinishSetup(InputDeviceBuilder builder)
         {
         }
 
@@ -267,7 +267,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        // This data is initialized by InputControlSetup.
+        // This data is initialized by InputDeviceBuilder.
         internal InternedString m_Name;
         internal string m_Path;
         internal string m_DisplayName; // Display name set by the control itself (may be null).
@@ -284,12 +284,12 @@ namespace UnityEngine.Experimental.Input
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().
-        internal void CallFinishSetupRecursive(InputControlSetup setup)
+        internal void CallFinishSetupRecursive(InputDeviceBuilder builder)
         {
             for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
-                m_ChildrenReadOnly[i].CallFinishSetupRecursive(setup);
+                m_ChildrenReadOnly[i].CallFinishSetupRecursive(builder);
 
-            FinishSetup(setup);
+            FinishSetup(builder);
         }
 
         internal string MakeChildPath(string path)

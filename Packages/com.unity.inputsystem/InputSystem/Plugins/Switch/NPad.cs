@@ -272,16 +272,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             return (Position)command.position;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            leftSL = setup.GetControl<ButtonControl>("leftSL");
-            leftSR = setup.GetControl<ButtonControl>("leftSR");
-            rightSL = setup.GetControl<ButtonControl>("rightSL");
-            rightSR = setup.GetControl<ButtonControl>("rightSR");
-            leftVK = setup.GetControl<DpadControl>("leftVK");
-            rightVK = setup.GetControl<DpadControl>("rightVK");
+            leftSL = builder.GetControl<ButtonControl>("leftSL");
+            leftSR = builder.GetControl<ButtonControl>("leftSR");
+            rightSL = builder.GetControl<ButtonControl>("rightSL");
+            rightSR = builder.GetControl<ButtonControl>("rightSR");
+            leftVK = builder.GetControl<DpadControl>("leftVK");
+            rightVK = builder.GetControl<DpadControl>("rightVK");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
     }
 }

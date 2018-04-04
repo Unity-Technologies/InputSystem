@@ -123,7 +123,7 @@ namespace UnityEngine.Experimental.Input
             var isReplacement = DoesLayoutExist(internedName);
 
             // All we do is enter the type into a map. We don't construct an InputControlLayout
-            // from it until we actually need it in an InputControlSetup to create a device.
+            // from it until we actually need it in an InputDeviceBuilder to create a device.
             // This not only avoids us creating a bunch of objects on the managed heap but
             // also avoids us laboriously constructing a XRController layout, for example,
             // in a game that never uses XR.
@@ -302,7 +302,7 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             // Remove and re-add the matching devices.
-            var setup = new InputControlSetup(m_Layouts);
+            var setup = new InputDeviceBuilder(m_Layouts);
             for (var i = 0; i < devicesUsingLayout.Count; ++i)
             {
                 var device = devicesUsingLayout[i];
@@ -618,7 +618,7 @@ namespace UnityEngine.Experimental.Input
 
             var internedLayoutName = new InternedString(layout);
 
-            var setup = new InputControlSetup(m_Layouts);
+            var setup = new InputDeviceBuilder(m_Layouts);
             setup.Setup(internedLayoutName, null, new InternedString());
             var device = setup.Finish();
 
@@ -633,7 +633,7 @@ namespace UnityEngine.Experimental.Input
         // Add device with a forced ID. Used when creating devices reported to us by native.
         private InputDevice AddDevice(string layout, int deviceId, InputDeviceDescription description, bool isNative)
         {
-            var setup = new InputControlSetup(m_Layouts);
+            var setup = new InputDeviceBuilder(m_Layouts);
             setup.SetupWithDescription(new InternedString(layout), description, new InternedString());
             var device = setup.Finish();
 
@@ -2397,7 +2397,7 @@ namespace UnityEngine.Experimental.Input
             // Re-create devices.
             var deviceCount = state.devices.Length;
             var devices = new InputDevice[deviceCount];
-            var setup = new InputControlSetup(m_Layouts);
+            var setup = new InputDeviceBuilder(m_Layouts);
             for (var i = 0; i < deviceCount; ++i)
             {
                 var deviceState = state.devices[i];

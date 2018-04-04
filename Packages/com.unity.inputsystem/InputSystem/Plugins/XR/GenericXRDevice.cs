@@ -8,9 +8,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public static XRHMD active { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
             active = this;
         }
     }
@@ -21,9 +21,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public static XRController leftHand { get; private set; }
         public static XRController rightHand { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
             try
             {
@@ -50,7 +50,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             catch (Exception)
             {}
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         public override void MakeCurrent()
@@ -81,9 +81,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public SimpleXRRumble rumble { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
             rumble = new SimpleXRRumble(this);
         }
     }
