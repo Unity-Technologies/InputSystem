@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
-    public delegate string DeviceFindLayoutCallback(int deviceId, ref InputDeviceDescription description, string matchedLayout,
+    public delegate string DeviceFindControlLayoutCallback(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
 
     // The hub of the input system.
@@ -66,7 +66,7 @@ namespace UnityEngine.Experimental.Input
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
-        public event DeviceFindLayoutCallback onFindLayoutForDevice
+        public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
         {
             add { m_DeviceFindLayoutCallbacks.Append(value); }
             remove { m_DeviceFindLayoutCallbacks.Remove(value); }
@@ -1128,7 +1128,7 @@ namespace UnityEngine.Experimental.Input
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        [NonSerialized] private InlinedArray<DeviceFindLayoutCallback> m_DeviceFindLayoutCallbacks;
+        [NonSerialized] private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
         [NonSerialized] private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
@@ -2165,7 +2165,7 @@ namespace UnityEngine.Experimental.Input
             // not across domain reloads.
 
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
-            [NonSerialized] public InlinedArray<DeviceFindLayoutCallback> deviceFindLayoutCallbacks;
+            [NonSerialized] public InlinedArray<DeviceFindControlLayoutCallback> deviceFindLayoutCallbacks;
             [NonSerialized] public InlinedArray<LayoutChangeListener> layoutChangeListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
 

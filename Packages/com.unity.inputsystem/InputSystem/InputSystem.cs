@@ -391,8 +391,9 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This event allows customizing the layout discovery process and to generate
         /// layouts on the fly, if need be. The system will invoke callbacks with the
-        /// name of the layout it has matched to the device based on the current layout setup.
-        /// If all the callbacks return <c>null</c>, that layout will be instantiated. If,
+        /// name of the layout it has matched (or <c>null</c> if it couldn't find any
+        /// matching layout to the device based on the current layout setup. If all
+        /// the callbacks return <c>null</c>, that layout will be instantiated. If,
         /// however, any of the callbacks returns a new name instead, the system will use that
         /// layout instead.
         ///
@@ -411,17 +412,17 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <example>
         /// <code>
-        /// InputSystem.onFindLayoutForDevice +=
+        /// InputSystem.onFindControlLayoutForDevice +=
         ///     (deviceId, description, matchedLayout, runtime) =>
         ///     {
         ///         ////TODO: complete example
         ///     };
         /// </code>
         /// </example>
-        public static event DeviceFindLayoutCallback onFindControlLayoutForDevice
+        public static event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
         {
-            add { s_Manager.onFindLayoutForDevice += value; }
-            remove { s_Manager.onFindLayoutForDevice -= value; }
+            add { s_Manager.onFindControlLayoutForDevice += value; }
+            remove { s_Manager.onFindControlLayoutForDevice -= value; }
         }
 
         /// <summary>
