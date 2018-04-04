@@ -139,10 +139,18 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             });
             InputSystem.RegisterControlLayout<ViveWand>(deviceDescription: new InputDeviceDescription
             {
-                product = @"^(OpenVR Controller\(Vive Controller MV\))",
+                product = @"^(OpenVR Controller\(Vive Controller)",
                 manufacturer = "HTC",
                 interfaceName = XRUtilities.kXRInterface
             });
+
+            InputSystem.RegisterControlLayout<KnucklesController>(deviceDescription: new InputDeviceDescription
+            {
+                product = @"^(OpenVR Controller\(Knuckles)",
+                manufacturer = "Valve",
+                interfaceName = XRUtilities.kXRInterface
+            });
+
 
             InputSystem.onFindControlLayoutForDevice += XRLayoutBuilder.OnFindControlLayoutForDevice;
         }
