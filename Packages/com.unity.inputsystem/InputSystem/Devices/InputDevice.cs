@@ -26,7 +26,6 @@ namespace UnityEngine.Experimental.Input
     /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
     /// without requiring a change to the device layout (<see cref="InputSystem.SetUsage"/>).
     /// </remarks>
-    /// \todo The entire control hierarchy should be a linear array; transition to that with InputData.
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;
@@ -91,7 +90,7 @@ namespace UnityEngine.Experimental.Input
         /// Unique numeric ID for the device.
         /// </summary>
         /// <remarks>
-        /// This is only assigned once a device has been added to the system. Not two devices will receive the same
+        /// This is only assigned once a device has been added to the system. No two devices will receive the same
         /// ID and no device will receive an ID that another device used before even if the device was removed.
         ///
         /// IDs are assigned by the input runtime.
@@ -210,7 +209,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
-        ////TODO: rename to `SendDeviceCommand` or something like that
         /// <summary>
         /// Perform a device-specific command.
         /// </summary>
@@ -225,7 +223,7 @@ namespace UnityEngine.Experimental.Input
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public long OnDeviceCommand<TCommand>(ref TCommand command)
+        public long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
@@ -235,7 +233,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_UserId = null;
             var command = QueryUserIdCommand.Create();
-            if (OnDeviceCommand(ref command) > 0)
+            if (ExecuteCommand(ref command) > 0)
                 m_UserId = command.ReadId();
         }
 

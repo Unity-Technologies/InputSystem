@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Processors
             var dimensions = new Vector2(1f, 1f);
             var device = control.device;
             var command = QueryDimensionsCommand.Create();
-            if (device.OnDeviceCommand(ref command) >= 0)
+            if (device.ExecuteCommand(ref command) >= 0)
                 dimensions = command.outDimensions;
 
             // Scale X and Y.

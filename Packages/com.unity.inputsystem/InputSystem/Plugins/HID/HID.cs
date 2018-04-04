@@ -41,13 +41,13 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// <summary>
         /// Command code for querying the HID report descriptor from a device.
         /// </summary>
-        /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         public static FourCC QueryHIDReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'D'); } }
 
         /// <summary>
         /// Command code for querying the HID report descriptor size in bytes from a device.
         /// </summary>
-        /// <seealso cref="InputDevice.OnDeviceCommand{TCommand}"/>
+        /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
 
         public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'P'); } }

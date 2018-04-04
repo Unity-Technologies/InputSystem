@@ -922,12 +922,12 @@ namespace UnityEngine.Experimental.Input
             if (enable)
             {
                 var command = EnableDeviceCommand.Create();
-                device.OnDeviceCommand(ref command);
+                device.ExecuteCommand(ref command);
             }
             else
             {
                 var command = DisableDeviceCommand.Create();
-                device.OnDeviceCommand(ref command);
+                device.ExecuteCommand(ref command);
             }
 
             // Let listeners know.

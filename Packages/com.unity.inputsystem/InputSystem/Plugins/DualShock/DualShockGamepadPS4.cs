@@ -253,7 +253,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public override void ResetHaptics()
@@ -267,7 +267,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.ResetColor();
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LargeMotor = null;
             m_SmallMotor = null;
@@ -286,7 +286,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.SetColor(m_LightBarColor.Value);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public override void SetLightBarColor(Color color)
@@ -294,7 +294,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             var command = DualShockPS4OuputCommand.Create();
             command.SetColor(color);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LightBarColor = color;
         }
@@ -304,7 +304,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             var command = DualShockPS4OuputCommand.Create();
             command.ResetColor();
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LightBarColor = null;
         }
@@ -314,7 +314,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             var command = DualShockPS4OuputCommand.Create();
             command.SetMotorSpeeds(largeMotor, smallMotor);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LargeMotor = largeMotor;
             m_SmallMotor = smallMotor;

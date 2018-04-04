@@ -52,14 +52,14 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 var command = QuerySamplingFrequencyCommand.Create();
-                if (OnDeviceCommand(ref command) >= 0)
+                if (ExecuteCommand(ref command) >= 0)
                     return command.frequency;
                 throw new NotSupportedException(string.Format("Device '{0}' does not support querying sampling frequency", this));
             }
             set
             {
                 var command = SetSamplingFrequencyCommand.Create(value);
-                OnDeviceCommand(ref command);
+                ExecuteCommand(ref command);
             }
         }
     }

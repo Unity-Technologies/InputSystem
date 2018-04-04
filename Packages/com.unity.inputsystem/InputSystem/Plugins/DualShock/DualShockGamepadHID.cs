@@ -184,7 +184,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public override void ResetHaptics()
@@ -197,7 +197,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_HighFrequenceyMotorSpeed = null;
             m_LowFrequencyMotorSpeed = null;
@@ -216,7 +216,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             if (m_LightBarColor.HasValue)
                 command.SetColor(m_LightBarColor.Value);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public override void SetLightBarColor(Color color)
@@ -224,7 +224,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             var command = DualShockHIDOutputReport.Create();
             command.SetColor(color);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LightBarColor = color;
         }
@@ -234,7 +234,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(lowFrequency, highFrequency);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LowFrequencyMotorSpeed = lowFrequency;
             m_HighFrequenceyMotorSpeed = highFrequency;

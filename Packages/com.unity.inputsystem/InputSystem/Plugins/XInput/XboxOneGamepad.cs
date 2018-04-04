@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             var command = XboxOneGamepadRumbleCommand.Create();
             command.SetMotorSpeeds(0f, 0f, 0f, 0f);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public override void ResetHaptics()
@@ -190,7 +190,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             var command = XboxOneGamepadRumbleCommand.Create();
             command.SetMotorSpeeds(0f, 0f, 0f, 0f);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LeftMotor = null;
             m_RightMotor = null;
@@ -208,7 +208,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             if (m_LeftMotor.HasValue || m_RightMotor.HasValue || m_LeftTriggerMotor.HasValue || m_RightTriggerMotor.HasValue)
                 command.SetMotorSpeeds(m_LeftMotor.Value, m_RightMotor.Value, m_LeftTriggerMotor.Value, m_RightTriggerMotor.Value);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
         }
 
         public void SetMotorSpeeds(float leftMotor, float rightMotor, float leftTriggerMotor, float rightTriggerMotor)
@@ -216,7 +216,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             var command = XboxOneGamepadRumbleCommand.Create();
             command.SetMotorSpeeds(leftMotor, rightMotor, leftTriggerMotor, rightTriggerMotor);
 
-            OnDeviceCommand(ref command);
+            ExecuteCommand(ref command);
 
             m_LeftMotor = leftMotor;
             m_RightMotor = rightMotor;

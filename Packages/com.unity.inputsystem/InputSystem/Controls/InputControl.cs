@@ -216,6 +216,7 @@ namespace UnityEngine.Experimental.Input
             m_StateBlock.bitOffset = 0;
         }
 
+        ////REVIEW: replace InputDeviceBuilder here with an interface?
         // Set up of the control has been finalized. This can be used, for example, to look up
         // child controls for fast access.
         // NOTE: This function will be called repeatedly in case the setup is changed repeatedly.

@@ -406,7 +406,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// Callbacks also receive a device ID and reference to the input runtime. For devices
         /// where more information has to be fetched from the runtime in order to generate a
-        /// layout, this allows issuing <see cref="IInputRuntime.IOCTL"/> calls for the device.
+        /// layout, this allows issuing <see cref="IInputRuntime.DeviceCommand"/> calls for the device.
         /// Note that for devices that are not coming from the runtime (i.e. devices created
         /// directly in script code), the device ID will be <see cref="InputDevice.kInvalidDeviceId"/>.
         /// </remarks>
