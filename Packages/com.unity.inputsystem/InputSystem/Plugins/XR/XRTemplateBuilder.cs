@@ -111,7 +111,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             var builder = new InputTemplate.Builder
             {
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
-                updateBeforeRender = true
             };
 
             var currentUsages = new List<string>();

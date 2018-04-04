@@ -9,6 +9,7 @@ using System.Text;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
+    [InputTemplate(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRHMD : InputDevice
     {
         public static XRHMD current { get; private set; }
@@ -25,7 +26,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputTemplate(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputTemplate(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : InputDevice
     {
         public static XRController leftHand { get; private set; }

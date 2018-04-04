@@ -338,7 +338,7 @@ namespace UnityEngine.Experimental.Input
             public Type type;
             public FourCC stateFormat;
             public string extendsTemplate;
-            public bool updateBeforeRender;
+            public bool? updateBeforeRender;
             public InputDeviceDescription deviceDescription;
 
             private int m_ControlCount;
@@ -535,6 +535,10 @@ namespace UnityEngine.Experimental.Input
             var template = new InputTemplate(name, type);
             template.m_Controls = controlTemplates.ToArray();
             template.m_StateFormat = stateFormat;
+
+            // Only apply before render to avoid overwriting the nullable type when updateBeforeRender is unset.
+            if (templateAttribute != null && templateAttribute.updateBeforeRender == true)
+                template.m_UpdateBeforeRender = templateAttribute.updateBeforeRender;
 
             if (templateAttribute != null && templateAttribute.commonUsages != null)
                 template.m_CommonUsages =
