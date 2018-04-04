@@ -21,7 +21,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterBindingModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
 
 namespace UnityEngine.Experimental.Input
 {

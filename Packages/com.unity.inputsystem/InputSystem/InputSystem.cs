@@ -805,7 +805,7 @@ namespace UnityEngine.Experimental.Input
 
         #region Actions
 
-        public static void RegisterModifier(Type type, string name)
+        public static void RegisterBindingModifier(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -817,17 +817,17 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RegisterBindingModifier(name, type);
         }
 
-        public static void RegisterModifier<T>(string name = null)
+        public static void RegisterBindingModifier<T>(string name = null)
         {
-            RegisterModifier(typeof(T), name);
+            RegisterBindingModifier(typeof(T), name);
         }
 
-        public static Type TryGetModifier(string name)
+        public static Type TryGetBindingModifier(string name)
         {
             return s_Manager.TryGetBindingModifier(name);
         }
 
-        public static IEnumerable<string> ListModifiers()
+        public static IEnumerable<string> ListBindingModifiers()
         {
             return s_Manager.ListBindingModifiers();
         }

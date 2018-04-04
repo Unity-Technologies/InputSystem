@@ -172,7 +172,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_ModifiersProperty = bindingProperty.FindPropertyRelative("modifiers");
                 m_Flags = (InputBinding.Flags)m_FlagsProperty.intValue;
 
-                var modifiers = InputSystem.ListModifiers().ToList();
+                var modifiers = InputSystem.ListBindingModifiers().ToList();
                 modifiers.Sort();
                 m_ModifierChoices = modifiers.Select(x => new GUIContent(x)).ToArray();
 

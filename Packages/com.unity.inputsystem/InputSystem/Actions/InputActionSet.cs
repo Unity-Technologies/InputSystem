@@ -404,7 +404,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < list.Length; ++i)
             {
                 // Look up modifier.
-                var type = InputSystem.TryGetModifier(list[i].name);
+                var type = InputSystem.TryGetBindingModifier(list[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
                             "No modifier with name '{0}' (mentioned in '{1}') has been registered", list[i].name,

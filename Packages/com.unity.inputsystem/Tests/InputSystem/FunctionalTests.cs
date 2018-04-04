@@ -4871,7 +4871,7 @@ class FunctionalTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanRegisterNewModifier()
     {
-        InputSystem.RegisterModifier<TestModifier>();
+        InputSystem.RegisterBindingModifier<TestModifier>();
         TestModifier.s_GotInvoked = false;
 
         var gamepad = InputSystem.AddDevice("Gamepad");
