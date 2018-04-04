@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputTemplate()]
+    [InputControlLayout()]
     public class DaydreamHMD : XRHMD
     {
         public IntegerControl trackingState { get; private set; }
@@ -22,24 +22,24 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control centerEyePosition { get; private set; }
         public QuaternionControl centerEyeRotation { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            trackingState = setup.GetControl<IntegerControl>("trackingState");
-            isTracked = setup.GetControl<ButtonControl>("isTracked");
-            devicePosition = setup.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            leftEyePosition = setup.GetControl<Vector3Control>("leftEyePosition");
-            leftEyeRotation = setup.GetControl<QuaternionControl>("leftEyeRotation");
-            rightEyePosition = setup.GetControl<Vector3Control>("rightEyePosition");
-            rightEyeRotation = setup.GetControl<QuaternionControl>("rightEyeRotation");
-            centerEyePosition = setup.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = setup.GetControl<QuaternionControl>("centerEyeRotation");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            leftEyePosition = builder.GetControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = builder.GetControl<QuaternionControl>("leftEyeRotation");
+            rightEyePosition = builder.GetControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = builder.GetControl<QuaternionControl>("rightEyeRotation");
+            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
         }
     }
 
-    [InputTemplate(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class DaydreamController : XRController
     {
         public Vector2Control touchpad { get; private set; }
@@ -59,26 +59,26 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control deviceVelocity { get; private set; }
         public Vector3Control deviceAcceleration { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            touchpad = setup.GetControl<Vector2Control>("touchpad");
-            volumeUp = setup.GetControl<ButtonControl>("volumeUp");
-            recentered = setup.GetControl<ButtonControl>("recentered");
-            volumeDown = setup.GetControl<ButtonControl>("volumeDown");
-            recentering = setup.GetControl<ButtonControl>("recentering");
-            app = setup.GetControl<ButtonControl>("app");
-            home = setup.GetControl<ButtonControl>("home");
-            touchpadClick = setup.GetControl<ButtonControl>("touchpadClick");
-            touchpadTouch = setup.GetControl<ButtonControl>("touchpadTouch");
+            touchpad = builder.GetControl<Vector2Control>("touchpad");
+            volumeUp = builder.GetControl<ButtonControl>("volumeUp");
+            recentered = builder.GetControl<ButtonControl>("recentered");
+            volumeDown = builder.GetControl<ButtonControl>("volumeDown");
+            recentering = builder.GetControl<ButtonControl>("recentering");
+            app = builder.GetControl<ButtonControl>("app");
+            home = builder.GetControl<ButtonControl>("home");
+            touchpadClick = builder.GetControl<ButtonControl>("touchpadClick");
+            touchpadTouch = builder.GetControl<ButtonControl>("touchpadTouch");
 
-            trackingState = setup.GetControl<IntegerControl>("trackingState");
-            isTracked = setup.GetControl<ButtonControl>("isTracked");
-            devicePosition = setup.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = setup.GetControl<Vector3Control>("deviceVelocity");
-            deviceAcceleration = setup.GetControl<Vector3Control>("deviceAcceleration");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAcceleration = builder.GetControl<Vector3Control>("deviceAcceleration");
         }
     }
 }

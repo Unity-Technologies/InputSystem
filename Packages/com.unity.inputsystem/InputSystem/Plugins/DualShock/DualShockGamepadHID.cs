@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
     {
         [FieldOffset(0)] public byte reportId;
 
-        [InputControl(name = "leftStick", template = "Stick", format = "VC2B")]
+        [InputControl(name = "leftStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "leftStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
         [InputControl(name = "leftStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
         [InputControl(name = "leftStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
@@ -26,7 +26,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(1)] public byte leftStickX;
         [FieldOffset(2)] public byte leftStickY;
 
-        [InputControl(name = "rightStick", template = "Stick", format = "VC2B")]
+        [InputControl(name = "rightStick", layout = "Stick", format = "VC2B")]
         [InputControl(name = "rightStick/x", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
         [InputControl(name = "rightStick/left", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
         [InputControl(name = "rightStick/right", offset = 0, format = "BYTE", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
@@ -36,11 +36,11 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(3)] public byte rightStickX;
         [FieldOffset(4)] public byte rightStickY;
 
-        [InputControl(name = "dpad", template = "Dpad", sizeInBits = 4)]
-        [InputControl(name = "dpad/up", template = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/right", template = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/down", template = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/left", template = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4)]
+        [InputControl(name = "dpad/up", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
         [InputControl(name = "buttonWest", displayName = "Square", bit = 4)]
         [InputControl(name = "buttonSouth", displayName = "Cross", bit = 5)]
         [InputControl(name = "buttonEast", displayName = "Circle", bit = 6)]
@@ -48,15 +48,15 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(5)] public byte buttons1;
         [InputControl(name = "leftShoulder", bit = 0)]
         [InputControl(name = "rightShoulder", bit = 1)]
-        [InputControl(name = "leftTriggerButton", template = "Button", bit = 2)]
-        [InputControl(name = "rightTriggerButton", template = "Button", bit = 3)]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3)]
         [InputControl(name = "select", displayName = "Share", bit = 4)]
         [InputControl(name = "start", displayName = "Options", bit = 5)]
         [InputControl(name = "leftStickPress", bit = 6)]
         [InputControl(name = "rightStickPress", bit = 7)]
         [FieldOffset(6)] public byte buttons2;
-        [InputControl(name = "systemButton", template = "Button", displayName = "System", bit = 0)]
-        [InputControl(name = "touchpadButton", template = "Button", displayName = "Touchpad Press", bit = 1)]
+        [InputControl(name = "systemButton", layout = "Button", displayName = "System", bit = 0)]
+        [InputControl(name = "touchpadButton", layout = "Button", displayName = "Touchpad Press", bit = 1)]
         [FieldOffset(7)] public byte buttons3;
 
         [InputControl(name = "leftTrigger", format = "BYTE")]
@@ -65,16 +65,16 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(9)] public byte rightTrigger;
 
         ////FIXME: gyro and accelerometer aren't read out correctly yet
-        [InputControl(name = "acceleration", template = "Vector3", format = "VC3S")]
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VC3S")]
         [InputControl(name = "acceleration/x", format = "USHT", offset = 0)]
         [InputControl(name = "acceleration/y", format = "USHT", offset = 2)]
         [InputControl(name = "acceleration/z", format = "USHT", offset = 4)]
-        [InputControl(name = "angularVelocity", template = "Vector3", offset = InputStateBlock.kInvalidOffset)] ////TODO: figure out where this one is
+        [InputControl(name = "angularVelocity", layout = "Vector3", offset = InputStateBlock.kInvalidOffset)] ////TODO: figure out where this one is
         [FieldOffset(14)] public short accelerationX;
         [FieldOffset(16)] public short accelerationY;
         [FieldOffset(18)] public short accelerationZ;
 
-        [InputControl(name = "orientation", template = "Vector3", format = "VC3S")]
+        [InputControl(name = "orientation", layout = "Vector3", format = "VC3S")]
         [InputControl(name = "orientation/x", format = "USHT", offset = 0)]
         [InputControl(name = "orientation/y", format = "USHT", offset = 2)]
         [InputControl(name = "orientation/z", format = "USHT", offset = 4)]
@@ -158,20 +158,20 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputTemplate(stateType = typeof(DualShockHIDInputReport))]
+    [InputControlLayout(stateType = typeof(DualShockHIDInputReport))]
     public class DualShockGamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; private set; }
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            leftTriggerButton = setup.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = setup.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = setup.GetControl<ButtonControl>(this, "systemButton");
+            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
+            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
+            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         public override void PauseHaptics()

@@ -20,12 +20,12 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeVector3;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            x = setup.GetControl<AxisControl>(this, "x");
-            y = setup.GetControl<AxisControl>(this, "y");
-            z = setup.GetControl<AxisControl>(this, "z");
-            base.FinishSetup(setup);
+            x = builder.GetControl<AxisControl>(this, "x");
+            y = builder.GetControl<AxisControl>(this, "y");
+            z = builder.GetControl<AxisControl>(this, "z");
+            base.FinishSetup(builder);
         }
 
         public override Vector3 ReadRawValueFrom(IntPtr statePtr)

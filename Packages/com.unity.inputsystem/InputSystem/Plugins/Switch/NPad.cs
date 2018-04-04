@@ -34,17 +34,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [InputControl(name = "rightTrigger", displayName = "ZR", format = "BIT", bit = (uint)Button.ZR)]
         [InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
         [InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
-        [InputControl(name = "leftSL", displayName = "SL (Left)", template = "Button", bit = (uint)Button.LSL)]
-        [InputControl(name = "leftSR", displayName = "SR (Left)", template = "Button", bit = (uint)Button.LSR)]
-        [InputControl(name = "rightSL", displayName = "SL (Right)", template = "Button", bit = (uint)Button.RSL)]
-        [InputControl(name = "rightSR", displayName = "SR (Right)", template = "Button", bit = (uint)Button.RSR)]
+        [InputControl(name = "leftSL", displayName = "SL (Left)", layout = "Button", bit = (uint)Button.LSL)]
+        [InputControl(name = "leftSR", displayName = "SR (Left)", layout = "Button", bit = (uint)Button.LSR)]
+        [InputControl(name = "rightSL", displayName = "SL (Right)", layout = "Button", bit = (uint)Button.RSL)]
+        [InputControl(name = "rightSR", displayName = "SR (Right)", layout = "Button", bit = (uint)Button.RSR)]
         ////TODO: clarify meaning of these buttons
-        [InputControl(name = "leftVK", template = "Dpad")]
+        [InputControl(name = "leftVK", layout = "Dpad")]
         [InputControl(name = "leftVK/up", bit = (uint)Button.VKey_LUp)]
         [InputControl(name = "leftVK/down", bit = (uint)Button.VKey_LDown)]
         [InputControl(name = "leftVK/left", bit = (uint)Button.VKey_LLeft)]
         [InputControl(name = "leftVK/right", bit = (uint)Button.VKey_LRight)]
-        [InputControl(name = "rightVK", template = "Dpad")]
+        [InputControl(name = "rightVK", layout = "Dpad")]
         [InputControl(name = "rightVK/up", bit = (uint)Button.VKey_RUp)]
         [InputControl(name = "rightVK/down", bit = (uint)Button.VKey_RDown)]
         [InputControl(name = "rightVK/left", bit = (uint)Button.VKey_RLeft)]
@@ -52,12 +52,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(0)]
         public uint buttons;
 
-        ////FIXME: it's so counterintuitive that we have to set "template" here even though we inherit the control from Gamepad
-        [InputControl(name = "leftStick", template = "Stick")]
+        ////FIXME: it's so counterintuitive that we have to set "layout" here even though we inherit the control from Gamepad
+        [InputControl(name = "leftStick", layout = "Stick")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
-        [InputControl(name = "rightStick", template = "Stick")]
+        [InputControl(name = "rightStick", layout = "Stick")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
@@ -207,7 +207,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
     /// <seealso cref="NPadInputState"/>
-    [InputTemplate(stateType = typeof(NPadInputState))]
+    [InputControlLayout(stateType = typeof(NPadInputState))]
     public class NPad : Gamepad
     {
         public ButtonControl leftSL { get; private set; }
@@ -272,16 +272,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             return (Position)command.position;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            leftSL = setup.GetControl<ButtonControl>("leftSL");
-            leftSR = setup.GetControl<ButtonControl>("leftSR");
-            rightSL = setup.GetControl<ButtonControl>("rightSL");
-            rightSR = setup.GetControl<ButtonControl>("rightSR");
-            leftVK = setup.GetControl<DpadControl>("leftVK");
-            rightVK = setup.GetControl<DpadControl>("rightVK");
+            leftSL = builder.GetControl<ButtonControl>("leftSL");
+            leftSR = builder.GetControl<ButtonControl>("leftSR");
+            rightSL = builder.GetControl<ButtonControl>("rightSL");
+            rightSR = builder.GetControl<ButtonControl>("rightSR");
+            leftVK = builder.GetControl<DpadControl>("leftVK");
+            rightVK = builder.GetControl<DpadControl>("rightVK");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
     }
 }

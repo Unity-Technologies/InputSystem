@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input
     /// Controls can have children which in turn may have children. At the root of the child
     /// hierarchy is always an InputDevice (which themselves are InputControls).
     ///
-    /// Controls can be looked up by their path (see <see cref="InputControlSetup.GetControl"/> and
+    /// Controls can be looked up by their path (see <see cref="InputDeviceBuilder.GetControl"/> and
     /// <see cref="InputControlPath.TryFindControl"/>).
     ///
     /// Each control must have a unique name within its parent (see <see cref="name"/>). Multiple
@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input
         /// from a QWERTY keyboard layout to an AZERTY keyboard layout, the "q" key (which will keep
         /// that <see cref="name"/>) will change its display name from "q" to "a".
         ///
-        /// By default, a control's display name will come from its template. If it is not assigned
+        /// By default, a control's display name will come from its layout. If it is not assigned
         /// a display name there, the display name will default to <see cref="name"/>. However, specific
         /// controls may override this behavior. <see cref="KeyControl"/>, for example, will set the
         /// display name to the actual key name corresponding to the current keyboard layout.
@@ -75,13 +75,13 @@ namespace UnityEngine.Experimental.Input
                 RefreshConfigurationIfNeeded();
                 if (m_DisplayName != null)
                     return m_DisplayName;
-                if (m_DisplayNameFromTemplate != null)
-                    return m_DisplayNameFromTemplate;
+                if (m_DisplayNameFromLayout != null)
+                    return m_DisplayNameFromLayout;
                 return m_Name;
             }
             // This is not public as a domain reload will wipe the change. This should really
             // come from the control itself *if* the control wants to have a custom display name
-            // not driven by its template.
+            // not driven by its layout.
             protected set { m_DisplayName = value; }
         }
 
@@ -105,20 +105,25 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Template the control is based on.
+        /// Layout the control is based on.
         /// </summary>
         /// <remarks>
-        /// This is the template name rather than a reference to an InputTemplate as
-        /// we only create template instances during device creation and treat them
+        /// This is the layout name rather than a reference to an <see cref="InputControlLayout"/> as
+        /// we only create layout instances during device creation and treat them
         /// as temporaries in general so as to not waste heap space during normal operation.
         /// </remarks>
-        public string template
+        public string layout
         {
-            get { return m_Template; }
+            get { return m_Layout; }
         }
 
-        // Variant of the template or "default".
-        // Example: "Lefty" when using the "Lefty" gamepad layout.
+
+        /// <summary>
+        /// Variant of the control layout or "default".
+        /// </summary>
+        /// <example>
+        /// "Lefty" when using the "Lefty" gamepad layout.
+        /// </example>
         public string variant
         {
             get { return m_Variant; }
@@ -145,7 +150,12 @@ namespace UnityEngine.Experimental.Input
             get { return m_Parent; }
         }
 
-        // Immediate children.
+        /// <summary>
+        /// List of immediate children.
+        /// </summary>
+        /// <remarks>
+        /// Does not allocate.
+        /// </remarks>
         public ReadOnlyArray<InputControl> children
         {
             get { return m_ChildrenReadOnly; }
@@ -185,7 +195,7 @@ namespace UnityEngine.Experimental.Input
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", template, path);
+            return string.Format("{0}:{1}", layout, path);
         }
 
         ////TODO: setting value (will it also go through the processor stack?)
@@ -209,7 +219,7 @@ namespace UnityEngine.Experimental.Input
         // Set up of the control has been finalized. This can be used, for example, to look up
         // child controls for fast access.
         // NOTE: This function will be called repeatedly in case the setup is changed repeatedly.
-        protected virtual void FinishSetup(InputControlSetup setup)
+        protected virtual void FinishSetup(InputDeviceBuilder builder)
         {
         }
 
@@ -257,12 +267,12 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        // This data is initialized by InputControlSetup.
+        // This data is initialized by InputDeviceBuilder.
         internal InternedString m_Name;
         internal string m_Path;
         internal string m_DisplayName; // Display name set by the control itself (may be null).
-        internal string m_DisplayNameFromTemplate; // Display name coming from template (may be null).
-        internal InternedString m_Template;
+        internal string m_DisplayNameFromLayout; // Display name coming from layout (may be null).
+        internal InternedString m_Layout;
         internal InternedString m_Variant;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
@@ -274,12 +284,12 @@ namespace UnityEngine.Experimental.Input
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().
-        internal void CallFinishSetupRecursive(InputControlSetup setup)
+        internal void CallFinishSetupRecursive(InputDeviceBuilder builder)
         {
             for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
-                m_ChildrenReadOnly[i].CallFinishSetupRecursive(setup);
+                m_ChildrenReadOnly[i].CallFinishSetupRecursive(builder);
 
-            FinishSetup(setup);
+            FinishSetup(builder);
         }
 
         internal string MakeChildPath(string path)
@@ -479,7 +489,7 @@ namespace UnityEngine.Experimental.Input
 
         internal InlinedArray<IInputProcessor<TValue>> m_ProcessorStack;
 
-        // Only templates are allowed to modify the processor stack.
+        // Only layouts are allowed to modify the processor stack.
         internal void AddProcessor(IInputProcessor<TValue> processor)
         {
             m_ProcessorStack.Append(processor);

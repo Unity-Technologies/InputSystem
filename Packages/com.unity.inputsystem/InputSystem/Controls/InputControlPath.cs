@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input
     /// The thinking here is somewhat similar to System.IO.Path, i.e. have a range
     /// of static methods that perform various operations on paths.
     ///
-    /// Has both methods that work just on paths themselves (like <see cref="TryGetControlTemplate"/>)
+    /// Has both methods that work just on paths themselves (like <see cref="TryGetControlLayout"/>)
     /// and methods that work on paths in combination with controls (like <see cref="TryFindControls"/>).
     /// </remarks>
     public static class InputControlPath
@@ -58,29 +58,29 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        // From the given control path, try to determine the device template being used.
+        // From the given control path, try to determine the device layout being used.
         /// </summary>
         /// <remarks>
         /// This function will only use information available in the path itself or
-        /// in templates referenced by the path. It will not look at actual devices
+        /// in layouts referenced by the path. It will not look at actual devices
         /// in the system. This is to make the behavior predictable and not dependent
         /// on whether you currently have the right device connected or not.
         ///
         /// Note that this function allocates and causes GC.
         /// </remarks>
         /// <param name="path">A control path (like "/<gamepad>/leftStick")</param>
-        /// <returns>The name of the device template used by the given control path or null
-        /// if the path does not specify a device template or does so in a way that is not
+        /// <returns>The name of the device layout used by the given control path or null
+        /// if the path does not specify a device layout or does so in a way that is not
         /// supported by the function.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="path"/> is null</exception>
         /// <example>
         /// <code>
-        /// InputControlPath.TryGetDeviceTemplate("/<gamepad>/leftStick"); // Returns "gamepad".
-        /// InputControlPath.TryGetDeviceTemplate("/*/leftStick"); // Returns "*".
-        /// InputControlPath.TryGetDeviceTemplate("/gamepad/leftStick"); // Returns null. "gamepad" is a device name here.
+        /// InputControlPath.TryGetDeviceLayout("/<gamepad>/leftStick"); // Returns "gamepad".
+        /// InputControlPath.TryGetDeviceLayout("/*/leftStick"); // Returns "*".
+        /// InputControlPath.TryGetDeviceLayout("/gamepad/leftStick"); // Returns null. "gamepad" is a device name here.
         /// </code>
         /// </example>
-        public static string TryGetDeviceTemplate(string path)
+        public static string TryGetDeviceLayout(string path)
         {
             if (path == null)
                 throw new ArgumentNullException("path");
@@ -89,8 +89,8 @@ namespace UnityEngine.Experimental.Input
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.template.length > 0)
-                return parser.current.template.ToString();
+            if (parser.current.layout.length > 0)
+                return parser.current.layout.ToString();
 
             if (parser.current.isWildcard)
                 return kWildcard;
@@ -98,14 +98,14 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        // From the given control path, try to determine the control template being used.
+        // From the given control path, try to determine the control layout being used.
         //
         // NOTE: This function will only use information available in the path itself or
-        //       in templates referenced by the path. It will not look at actual devices
+        //       in layouts referenced by the path. It will not look at actual devices
         //       in the system. This is to make the behavior predictable and not dependent
         //       on whether you currently have the right device connected or not.
         // NOTE: Allocates!
-        public static string TryGetControlTemplate(string path)
+        public static string TryGetControlLayout(string path)
         {
             if (path == null)
                 throw new ArgumentNullException("path");
@@ -119,14 +119,14 @@ namespace UnityEngine.Experimental.Input
                 return null;
             }
 
-            // Simplest case where control template is mentioned explicitly with '<..>'.
-            // Note this will only catch if the control is *only* referenced by template and not by anything else
+            // Simplest case where control layout is mentioned explicitly with '<..>'.
+            // Note this will only catch if the control is *only* referenced by layout and not by anything else
             // in addition (like usage or name).
             if (pathLength > indexOfLastSlash + 2 && path[indexOfLastSlash + 1] == '<' && path[pathLength - 1] == '>')
             {
-                var templateNameStart = indexOfLastSlash + 2;
-                var templateNameLength = pathLength - templateNameStart - 1;
-                return path.Substring(templateNameStart, templateNameLength);
+                var layoutNameStart = indexOfLastSlash + 2;
+                var layoutNameLength = pathLength - layoutNameStart - 1;
+                return path.Substring(layoutNameStart, layoutNameLength);
             }
 
             // Have to actually look at the path in detail.
@@ -137,83 +137,83 @@ namespace UnityEngine.Experimental.Input
             if (parser.current.isWildcard)
                 throw new NotImplementedException();
 
-            if (parser.current.template.length == 0)
+            if (parser.current.layout.length == 0)
                 return null;
 
-            var deviceTemplateName = parser.current.template.ToString();
+            var deviceLayoutName = parser.current.layout.ToString();
             if (!parser.MoveToNextComponent())
                 return null; // No control component.
 
             if (parser.current.isWildcard)
                 return kWildcard;
 
-            return FindControlTemplateRecursive(ref parser, deviceTemplateName);
+            return FindControlLayoutRecursive(ref parser, deviceLayoutName);
         }
 
-        private static string FindControlTemplateRecursive(ref PathParser parser, string templateName)
+        private static string FindControlLayoutRecursive(ref PathParser parser, string layoutName)
         {
-            ////TODO: add a static InputTemplate.Cache instance that we look up templates from and flush the cache every frame
+            ////TODO: add a static InputControlLayout.Cache instance that we look up layouts from and flush the cache every frame
 
-            // Load template.
-            var template = InputTemplate.s_Templates.TryLoadTemplate(new InternedString(templateName));
-            if (template == null)
+            // Load layout.
+            var layout = InputControlLayout.s_Layouts.TryLoadLayout(new InternedString(layoutName));
+            if (layout == null)
                 return null;
 
-            // Search for control template. May have to jump to other templates
+            // Search for control layout. May have to jump to other layouts
             // and search in them.
-            return FindControlTemplateRecursive(ref parser, template);
+            return FindControlLayoutRecursive(ref parser, layout);
         }
 
-        private static string FindControlTemplateRecursive(ref PathParser parser, InputTemplate template)
+        private static string FindControlLayoutRecursive(ref PathParser parser, InputControlLayout layout)
         {
             string currentResult = null;
 
-            var controlCount = template.controls.Count;
+            var controlCount = layout.controls.Count;
             for (var i = 0; i < controlCount; ++i)
             {
-                if (template.m_Controls[i].isModifyingChildControlByPath)
+                if (layout.m_Controls[i].isModifyingChildControlByPath)
                     throw new NotImplementedException();
 
                 ////TODO: shortcut the search if we have a match and there's no wildcards to consider
 
-                // Skip control template if it doesn't match.
-                if (!ControlTemplateMatchesPathComponent(ref template.m_Controls[i], ref parser))
+                // Skip control layout if it doesn't match.
+                if (!ControlLayoutMatchesPathComponent(ref layout.m_Controls[i], ref parser))
                     continue;
 
-                var controlTemplateName = template.m_Controls[i].template;
+                var controlLayoutName = layout.m_Controls[i].layout;
 
                 // If there's more in the path, try to dive into children by jumping to the
-                // control's template.
+                // control's layout.
                 if (!parser.isAtEnd)
                 {
                     var childPathParser = parser;
                     if (childPathParser.MoveToNextComponent())
                     {
-                        var childControlTemplateName = FindControlTemplateRecursive(ref childPathParser, controlTemplateName);
-                        if (childControlTemplateName != null)
+                        var childControlLayoutName = FindControlLayoutRecursive(ref childPathParser, controlLayoutName);
+                        if (childControlLayoutName != null)
                         {
-                            if (currentResult != null && childControlTemplateName != currentResult)
+                            if (currentResult != null && childControlLayoutName != currentResult)
                                 return null;
-                            currentResult = childControlTemplateName;
+                            currentResult = childControlLayoutName;
                         }
                     }
                 }
-                else if (currentResult != null && controlTemplateName != currentResult)
+                else if (currentResult != null && controlLayoutName != currentResult)
                     return null;
                 else
-                    currentResult = controlTemplateName.ToString();
+                    currentResult = controlLayoutName.ToString();
             }
 
             return currentResult;
         }
 
-        private static bool ControlTemplateMatchesPathComponent(ref InputTemplate.ControlTemplate controlTemplate, ref PathParser parser)
+        private static bool ControlLayoutMatchesPathComponent(ref InputControlLayout.ControlItem controlItem, ref PathParser parser)
         {
-            // Match template.
-            var template = parser.current.template;
-            if (template.length > 0)
+            // Match layout.
+            var layout = parser.current.layout;
+            if (layout.length > 0)
             {
-                if (!StringMatches(template, controlTemplate.template))
+                if (!StringMatches(layout, controlItem.layout))
                     return false;
             }
 
@@ -221,11 +221,11 @@ namespace UnityEngine.Experimental.Input
             var usage = parser.current.usage;
             if (usage.length > 0)
             {
-                var usageCount = controlTemplate.usages.Count;
+                var usageCount = controlItem.usages.Count;
                 var anyUsageMatches = false;
                 for (var i = 0; i < usageCount; ++i)
                 {
-                    if (StringMatches(usage, controlTemplate.usages[i]))
+                    if (StringMatches(usage, controlItem.usages[i]))
                     {
                         anyUsageMatches = true;
                         break;
@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input
             var name = parser.current.name;
             if (name.length > 0)
             {
-                if (!StringMatches(name, controlTemplate.name))
+                if (!StringMatches(name, controlItem.name))
                     return false;
             }
 
@@ -362,28 +362,28 @@ namespace UnityEngine.Experimental.Input
             var pathLength = path.Length;
 
             // Try to get a match. A path spec has three components:
-            //    "<template>{usage}name"
+            //    "<layout>{usage}name"
             // All are optional but at least one component must be present.
             // Names can be aliases, too.
 
             var controlIsMatch = true;
 
-            // Match by template.
+            // Match by layout.
             if (path[indexInPath] == '<')
             {
                 ++indexInPath;
                 controlIsMatch =
-                    MatchPathComponent(control.template, path, ref indexInPath, PathComponentType.Template);
+                    MatchPathComponent(control.layout, path, ref indexInPath, PathComponentType.Layout);
 
-                // If the template isn't a match, walk up the base template
-                // chain and match each base template.
+                // If the layout isn't a match, walk up the base layout
+                // chain and match each base layout.
                 if (!controlIsMatch)
                 {
-                    var baseTemplate = control.m_Template;
-                    while (InputTemplate.s_Templates.baseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
+                    var baseLayout = control.m_Layout;
+                    while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout))
                     {
-                        controlIsMatch = MatchPathComponent(baseTemplate, path, ref indexInPath,
-                                PathComponentType.Template);
+                        controlIsMatch = MatchPathComponent(baseLayout, path, ref indexInPath,
+                                PathComponentType.Layout);
                         if (controlIsMatch)
                             break;
                     }
@@ -579,7 +579,7 @@ namespace UnityEngine.Experimental.Input
         {
             Name,
             Usage,
-            Template
+            Layout
         }
 
         private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType)
@@ -599,7 +599,7 @@ namespace UnityEngine.Experimental.Input
                 var nextCharInPath = path[indexInPath];
                 if (nextCharInPath == '/')
                     break;
-                if ((nextCharInPath == '>' && componentType == PathComponentType.Template)
+                if ((nextCharInPath == '>' && componentType == PathComponentType.Layout)
                     || (nextCharInPath == '}' && componentType == PathComponentType.Usage))
                 {
                     ++indexInPath;
@@ -674,7 +674,7 @@ namespace UnityEngine.Experimental.Input
         // Parsed element between two '/../'.
         internal struct ParsedPathComponent
         {
-            public Substring template;
+            public Substring layout;
             public Substring usage;
             public Substring name;
 
@@ -733,10 +733,10 @@ namespace UnityEngine.Experimental.Input
                         return false;
                 }
 
-                // Parse <...> template part, if present.
-                var template = new Substring();
+                // Parse <...> layout part, if present.
+                var layout = new Substring();
                 if (rightIndexInPath < length && path[rightIndexInPath] == '<')
-                    template = ParseComponentPart('>');
+                    layout = ParseComponentPart('>');
 
                 // Parse {...} usage part, if present.
                 var usage = new Substring();
@@ -750,7 +750,7 @@ namespace UnityEngine.Experimental.Input
 
                 current = new ParsedPathComponent
                 {
-                    template = template,
+                    layout = layout,
                     usage = usage,
                     name = name
                 };

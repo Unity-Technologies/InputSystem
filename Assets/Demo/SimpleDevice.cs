@@ -6,10 +6,10 @@ using UnityEngine;
 
 public struct MyDeviceState : IInputStateTypeInfo
 {
-    [InputControl(name = "button1", template = "Button", bit = 0)]
+    [InputControl(name = "button1", layout = "Button", bit = 0)]
     public int buttons;
 
-    [InputControl(template = "Axis")]
+    [InputControl(layout = "Axis")]
     public float axis1;
 
     public FourCC GetFormat()
@@ -18,7 +18,7 @@ public struct MyDeviceState : IInputStateTypeInfo
     }
 }
 
-[InputTemplate(stateType = typeof(MyDeviceState))]
+[InputControlLayout(stateType = typeof(MyDeviceState))]
 //[InputPlugin]
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {
@@ -27,11 +27,11 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     public static MyDevice current { get; private set; }
 
-    protected override void FinishSetup(InputControlSetup setup)
+    protected override void FinishSetup(InputDeviceBuilder builder)
     {
-        button1 = setup.GetControl<ButtonControl>(this, "button1");
-        axis1 = setup.GetControl<AxisControl>(this, "axis1");
-        base.FinishSetup(setup);
+        button1 = builder.GetControl<ButtonControl>(this, "button1");
+        axis1 = builder.GetControl<AxisControl>(this, "axis1");
+        base.FinishSetup(builder);
     }
 
     public override void MakeCurrent()
@@ -54,7 +54,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     public static void Initialize()
     {
-        InputSystem.RegisterTemplate<MyDevice>();
+        InputSystem.RegisterControlLayout<MyDevice>();
 
         if (!InputSystem.devices.Any(x => x is MyDevice))
             InputSystem.AddDevice<MyDevice>();

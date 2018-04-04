@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// Can act as both the sender and receiver of these message so the flow is fully bidirectional,
-    /// i.e. the InputManager on either end can mirror its templates, devices, and events over
+    /// i.e. the InputManager on either end can mirror its layouts, devices, and events over
     /// to the other end. This permits streaming input not just from the player to the editor but
     /// also feeding input from the editor back into the player.
     ///
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
     public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
-        public const string kRemoteTemplateNamespacePrefix = "remote";
+        public const string kRemoteLayoutNamespacePrefix = "remote";
 
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
@@ -41,11 +41,11 @@ namespace UnityEngine.Experimental.Input
         {
             Connect,
             Disconnect,
-            NewTemplate,
+            NewLayout,
             NewDevice,
             NewEvents,
             RemoveDevice,
-            RemoveTemplate,
+            RemoveLayout,
             ChangeUsages,
         }
 
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input
             if (startSendingOnConnect)
                 m_Flags |= Flags.StartSendingOnConnect;
 
-            //when listening for newly added templates, must filter out ones we've added from remote
+            //when listening for newly added layouts, must filter out ones we've added from remote
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace UnityEngine.Experimental.Input
             ////TODO: send events in bulk rather than one-by-one
             m_LocalManager.onEvent += SendEvent;
             m_LocalManager.onDeviceChange += SendDeviceChange;
-            m_LocalManager.onTemplateChange += SendTemplateChange;
+            m_LocalManager.onLayoutChange += SendLayoutChange;
 
             sending = true;
 
@@ -116,7 +116,7 @@ namespace UnityEngine.Experimental.Input
 
             m_LocalManager.onEvent -= SendEvent;
             m_LocalManager.onDeviceChange -= SendDeviceChange;
-            m_LocalManager.onTemplateChange -= SendTemplateChange;
+            m_LocalManager.onLayoutChange -= SendLayoutChange;
 
             sending = false;
         }
@@ -131,11 +131,11 @@ namespace UnityEngine.Experimental.Input
                 case MessageType.Disconnect:
                     DisconnectMsg.Process(this, msg);
                     break;
-                case MessageType.NewTemplate:
-                    NewTemplateMsg.Process(this, msg);
+                case MessageType.NewLayout:
+                    NewLayoutMsg.Process(this, msg);
                     break;
-                case MessageType.RemoveTemplate:
-                    RemoveTemplateMsg.Process(this, msg);
+                case MessageType.RemoveLayout:
+                    RemoveLayoutMsg.Process(this, msg);
                     break;
                 case MessageType.NewDevice:
                     NewDeviceMsg.Process(this, msg);
@@ -173,22 +173,22 @@ namespace UnityEngine.Experimental.Input
 
         private void SendAllCurrentData(int recipientId = 0)
         {
-            SendAllTemplates();
+            SendAllLayouts();
             SendAllDevices();
         }
 
-        private void SendAllTemplates()
+        private void SendAllLayouts()
         {
-            var allTemplates = new List<string>();
-            m_LocalManager.ListTemplates(allTemplates);
+            var allLayouts = new List<string>();
+            m_LocalManager.ListControlLayouts(allLayouts);
 
-            foreach (var templateName in allTemplates)
-                SendTemplate(templateName);
+            foreach (var layoutName in allLayouts)
+                SendLayout(layoutName);
         }
 
-        private void SendTemplate(string templateName)
+        private void SendLayout(string layoutName)
         {
-            var message = NewTemplateMsg.Create(this, templateName);
+            var message = NewLayoutMsg.Create(this, layoutName);
             if (message != null)
                 Send(message.Value);
         }
@@ -251,27 +251,27 @@ namespace UnityEngine.Experimental.Input
             Send(msg);
         }
 
-        private void SendTemplateChange(string template, InputTemplateChange change)
+        private void SendLayoutChange(string layout, InputControlLayoutChange change)
         {
             if (m_Subscribers == null)
                 return;
 
-            // Don't mirror remoted templates to other remotes.
-            if (template.StartsWith(kRemoteTemplateNamespacePrefix))
+            // Don't mirror remoted layouts to other remotes.
+            if (layout.StartsWith(kRemoteLayoutNamespacePrefix))
                 return;
 
             Message msg;
             switch (change)
             {
-                case InputTemplateChange.Added:
-                case InputTemplateChange.Replaced:
-                    var message = NewTemplateMsg.Create(this, template);
+                case InputControlLayoutChange.Added:
+                case InputControlLayoutChange.Replaced:
+                    var message = NewLayoutMsg.Create(this, layout);
                     if (message == null)
                         return;
                     msg = message.Value;
                     break;
-                case InputTemplateChange.Removed:
-                    msg = RemoveTemplateMsg.Create(this, template);
+                case InputControlLayoutChange.Removed:
+                    msg = RemoveLayoutMsg.Create(this, layout);
                     break;
                 default:
                     return;
@@ -302,7 +302,7 @@ namespace UnityEngine.Experimental.Input
             var sender = new RemoteSender
             {
                 senderId = senderId,
-                templateNamespace = string.Format("{0}{1}", kRemoteTemplateNamespacePrefix, senderId)
+                layoutNamespace = string.Format("{0}{1}", kRemoteLayoutNamespacePrefix, senderId)
             };
             return ArrayHelpers.Append(ref m_Senders, sender);
         }
@@ -343,14 +343,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Data we keep about a unique sender that we receive input data
-        // from. We keep track of the templates and devices we added to
+        // from. We keep track of the layouts and devices we added to
         // the local system.
         [Serializable]
         internal struct RemoteSender
         {
             public int senderId;
-            public string templateNamespace;
-            public string[] templates;
+            public string layoutNamespace;
+            public string[] layouts;
             public RemoteInputDevice[] devices;
         }
 
@@ -362,15 +362,15 @@ namespace UnityEngine.Experimental.Input
 
             public InputDeviceDescription description;
 
-            // Senders give us the full templates in JSON for the devices they
+            // Senders give us the full layouts in JSON for the devices they
             // are using so we can recreate devices exactly like they appear
             // in the player. This also means that we don't need to have the same
-            // templates available that the player does.
+            // layouts available that the player does.
             //
-            // When registering templates from remote senders, we prefix them
+            // When registering layouts from remote senders, we prefix them
             // with "remote{senderId}::" to distinguish them from normal local
-            // templates.
-            public string templateName;
+            // layouts.
+            public string layoutName;
         }
 
         internal class Subscriber : IDisposable
@@ -412,7 +412,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                ////TODO: remove templates added by remote
+                ////TODO: remove layouts added by remote
 
                 ArrayHelpers.EraseAt(ref receiver.m_Senders, senderIndex);
 
@@ -420,39 +420,39 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        // Tell remote input system that there's a new template.
-        private static class NewTemplateMsg
+        // Tell remote input system that there's a new layout.
+        private static class NewLayoutMsg
         {
-            public static Message? Create(InputRemoting sender, string templateName)
+            public static Message? Create(InputRemoting sender, string layoutName)
             {
-                // Try to load the template. Ignore the template if it couldn't
+                // Try to load the layout. Ignore the layout if it couldn't
                 // be loaded.
-                InputTemplate template;
+                InputControlLayout layout;
                 try
                 {
-                    template = sender.m_LocalManager.TryLoadTemplate(new InternedString(templateName));
-                    if (template == null)
+                    layout = sender.m_LocalManager.TryLoadControlLayout(new InternedString(layoutName));
+                    if (layout == null)
                     {
                         Debug.Log(string.Format(
-                                "Could not find template '{0}' meant to be sent through remote connection; this should not happen",
-                                templateName));
+                                "Could not find layout '{0}' meant to be sent through remote connection; this should not happen",
+                                layoutName));
                         return null;
                     }
                 }
                 catch (Exception exception)
                 {
                     Debug.Log(string.Format(
-                            "Could not load template '{0}'; not sending to remote listeners (exception: {1})", templateName,
+                            "Could not load layout '{0}'; not sending to remote listeners (exception: {1})", layoutName,
                             exception));
                     return null;
                 }
 
-                var json = template.ToJson();
+                var json = layout.ToJson();
                 var bytes = Encoding.UTF8.GetBytes(json);
 
                 return new Message
                 {
-                    type = MessageType.NewTemplate,
+                    type = MessageType.NewLayout,
                     data = bytes
                 };
             }
@@ -461,21 +461,21 @@ namespace UnityEngine.Experimental.Input
             {
                 var json = Encoding.UTF8.GetString(msg.data);
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-                var @namespace = receiver.m_Senders[senderIndex].templateNamespace;
+                var @namespace = receiver.m_Senders[senderIndex].layoutNamespace;
 
-                receiver.m_LocalManager.RegisterTemplate(json, @namespace: @namespace);
-                ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].templates, json);
+                receiver.m_LocalManager.RegisterControlLayout(json, @namespace: @namespace);
+                ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].layouts, json);
             }
         }
 
-        private static class RemoveTemplateMsg
+        private static class RemoveLayoutMsg
         {
-            public static Message Create(InputRemoting sender, string templateName)
+            public static Message Create(InputRemoting sender, string layoutName)
             {
-                var bytes = Encoding.UTF8.GetBytes(templateName);
+                var bytes = Encoding.UTF8.GetBytes(layoutName);
                 return new Message
                 {
-                    type = MessageType.RemoveTemplate,
+                    type = MessageType.RemoveLayout,
                     data = bytes
                 };
             }
@@ -483,10 +483,10 @@ namespace UnityEngine.Experimental.Input
             public static void Process(InputRemoting receiver, Message msg)
             {
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-                var @namespace = receiver.m_Senders[senderIndex].templateNamespace;
+                var @namespace = receiver.m_Senders[senderIndex].layoutNamespace;
 
-                var templateName = Encoding.UTF8.GetString(msg.data);
-                receiver.m_LocalManager.RemoveTemplate(templateName, @namespace: @namespace);
+                var layoutName = Encoding.UTF8.GetString(msg.data);
+                receiver.m_LocalManager.RemoveControlLayout(layoutName, @namespace: @namespace);
             }
         }
 
@@ -497,7 +497,7 @@ namespace UnityEngine.Experimental.Input
             public struct Data
             {
                 public string name;
-                public string template;
+                public string layout;
                 public int deviceId;
                 public InputDeviceDescription description;
             }
@@ -509,7 +509,7 @@ namespace UnityEngine.Experimental.Input
                 var data = new Data
                 {
                     name = device.name,
-                    template = device.template,
+                    layout = device.layout,
                     deviceId = device.id,
                     description = device.description
                 };
@@ -537,28 +537,28 @@ namespace UnityEngine.Experimental.Input
                         if (entry.remoteId == data.deviceId)
                         {
                             Debug.LogError(string.Format(
-                                    "Already received device with id {0} (template '{1}', description '{3}) from remote {2}",
+                                    "Already received device with id {0} (layout '{1}', description '{3}) from remote {2}",
                                     data.deviceId,
-                                    data.template, msg.participantId, data.description));
+                                    data.layout, msg.participantId, data.description));
                             return;
                         }
                 }
 
                 // Create device.
-                var template = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].templateNamespace,
-                        data.template);
+                var layout = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].layoutNamespace,
+                        data.layout);
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(template,
+                    device = receiver.m_LocalManager.AddDevice(layout,
                             string.Format("Remote{0}::{1}", msg.participantId, data.name));
                 }
                 catch (Exception exception)
                 {
                     Debug.Log(
                         string.Format(
-                            "Could not create remote device '{0}' with template '{1}' locally (exception: {2})",
-                            data.description, data.template, exception));
+                            "Could not create remote device '{0}' with layout '{1}' locally (exception: {2})",
+                            data.description, data.layout, exception));
                     return;
                 }
                 device.m_Description = data.description;
@@ -570,7 +570,7 @@ namespace UnityEngine.Experimental.Input
                     remoteId = data.deviceId,
                     localId = device.id,
                     description = data.description,
-                    templateName = template
+                    layoutName = layout
                 };
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].devices, record);
             }

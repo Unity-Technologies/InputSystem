@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input
     internal class RemoteInputPlayerConnection : ScriptableObject, IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
     {
         public static readonly Guid kNewDeviceMsg = new Guid("fcd9651ded40425995dfa6aeb78f1f1c");
-        public static readonly Guid kNewTemplateMsg = new Guid("fccfec2b7369466d88502a9dd38505f4");
+        public static readonly Guid kNewLayoutMsg = new Guid("fccfec2b7369466d88502a9dd38505f4");
         public static readonly Guid kNewEventsMsg = new Guid("34d9b47f923142ff847c0d1f8b0554d9");
         public static readonly Guid kRemoveDeviceMsg = new Guid("e5e299b2d9e44255b8990bb71af8922d");
         public static readonly Guid kChangeUsagesMsg = new Guid("b9fe706dfc854d7ca109a5e38d7db730");
@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
             connection.RegisterDisconnection(OnDisconnected);
 
             connection.Register(kNewDeviceMsg, OnNewDevice);
-            connection.Register(kNewTemplateMsg, OnNewTemplate);
+            connection.Register(kNewLayoutMsg, OnNewLayout);
             connection.Register(kNewEventsMsg, OnNewEvents);
             connection.Register(kRemoveDeviceMsg, OnRemoveDevice);
             connection.Register(kChangeUsagesMsg, OnChangeUsages);
@@ -95,9 +95,9 @@ namespace UnityEngine.Experimental.Input
             SendToSubscribers(InputRemoting.MessageType.NewDevice, args);
         }
 
-        private void OnNewTemplate(MessageEventArgs args)
+        private void OnNewLayout(MessageEventArgs args)
         {
-            SendToSubscribers(InputRemoting.MessageType.NewTemplate, args);
+            SendToSubscribers(InputRemoting.MessageType.NewLayout, args);
         }
 
         private void OnNewEvents(MessageEventArgs args)
@@ -144,8 +144,8 @@ namespace UnityEngine.Experimental.Input
                 case InputRemoting.MessageType.NewDevice:
                     m_Connection.Send(kNewDeviceMsg, msg.data);
                     break;
-                case InputRemoting.MessageType.NewTemplate:
-                    m_Connection.Send(kNewTemplateMsg, msg.data);
+                case InputRemoting.MessageType.NewLayout:
+                    m_Connection.Send(kNewLayoutMsg, msg.data);
                     break;
                 case InputRemoting.MessageType.NewEvents:
                     m_Connection.Send(kNewEventsMsg, msg.data);

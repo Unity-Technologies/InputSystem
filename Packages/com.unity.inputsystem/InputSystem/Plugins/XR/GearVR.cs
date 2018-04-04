@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputTemplate()]
+    [InputControlLayout()]
     public class GearVRHMD : XRHMD
     {
         public Vector2Control touchpad { get; private set; }
@@ -39,41 +39,41 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control centerEyeAcceleration { get; private set; }
         public Vector3Control centerEyeAngularAcceleration { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            touchpad = setup.GetControl<Vector2Control>("touchpad");
-            trackingState = setup.GetControl<IntegerControl>("trackingState");
-            isTracked = setup.GetControl<ButtonControl>("isTracked");
-            devicePosition = setup.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = setup.GetControl<Vector3Control>("deviceVelocity");
-            deviceAngularVelocity = setup.GetControl<Vector3Control>("deviceAngularVelocity");
-            deviceAcceleration = setup.GetControl<Vector3Control>("deviceAcceleration");
-            deviceAngularAcceleration = setup.GetControl<Vector3Control>("deviceAngularAcceleration");
-            leftEyePosition = setup.GetControl<Vector3Control>("leftEyePosition");
-            leftEyeRotation = setup.GetControl<QuaternionControl>("leftEyeRotation");
-            leftEyeVelocity = setup.GetControl<Vector3Control>("leftEyeVelocity");
-            leftEyeAngularVelocity = setup.GetControl<Vector3Control>("leftEyeAngularVelocity");
-            leftEyeAcceleration = setup.GetControl<Vector3Control>("leftEyeAcceleration");
-            leftEyeAngularAcceleration = setup.GetControl<Vector3Control>("leftEyeAngularAcceleration");
-            rightEyePosition = setup.GetControl<Vector3Control>("rightEyePosition");
-            rightEyeRotation = setup.GetControl<QuaternionControl>("rightEyeRotation");
-            rightEyeVelocity = setup.GetControl<Vector3Control>("rightEyeVelocity");
-            rightEyeAngularVelocity = setup.GetControl<Vector3Control>("rightEyeAngularVelocity");
-            rightEyeAcceleration = setup.GetControl<Vector3Control>("rightEyeAcceleration");
-            rightEyeAngularAcceleration = setup.GetControl<Vector3Control>("rightEyeAngularAcceleration");
-            centerEyePosition = setup.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = setup.GetControl<QuaternionControl>("centerEyeRotation");
-            centerEyeVelocity = setup.GetControl<Vector3Control>("centerEyeVelocity");
-            centerEyeAngularVelocity = setup.GetControl<Vector3Control>("centerEyeAngularVelocity");
-            centerEyeAcceleration = setup.GetControl<Vector3Control>("centerEyeAcceleration");
-            centerEyeAngularAcceleration = setup.GetControl<Vector3Control>("centerEyeAngularAcceleration");
+            touchpad = builder.GetControl<Vector2Control>("touchpad");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
+            deviceAcceleration = builder.GetControl<Vector3Control>("deviceAcceleration");
+            deviceAngularAcceleration = builder.GetControl<Vector3Control>("deviceAngularAcceleration");
+            leftEyePosition = builder.GetControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = builder.GetControl<QuaternionControl>("leftEyeRotation");
+            leftEyeVelocity = builder.GetControl<Vector3Control>("leftEyeVelocity");
+            leftEyeAngularVelocity = builder.GetControl<Vector3Control>("leftEyeAngularVelocity");
+            leftEyeAcceleration = builder.GetControl<Vector3Control>("leftEyeAcceleration");
+            leftEyeAngularAcceleration = builder.GetControl<Vector3Control>("leftEyeAngularAcceleration");
+            rightEyePosition = builder.GetControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = builder.GetControl<QuaternionControl>("rightEyeRotation");
+            rightEyeVelocity = builder.GetControl<Vector3Control>("rightEyeVelocity");
+            rightEyeAngularVelocity = builder.GetControl<Vector3Control>("rightEyeAngularVelocity");
+            rightEyeAcceleration = builder.GetControl<Vector3Control>("rightEyeAcceleration");
+            rightEyeAngularAcceleration = builder.GetControl<Vector3Control>("rightEyeAngularAcceleration");
+            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
+            centerEyeVelocity = builder.GetControl<Vector3Control>("centerEyeVelocity");
+            centerEyeAngularVelocity = builder.GetControl<Vector3Control>("centerEyeAngularVelocity");
+            centerEyeAcceleration = builder.GetControl<Vector3Control>("centerEyeAcceleration");
+            centerEyeAngularAcceleration = builder.GetControl<Vector3Control>("centerEyeAngularAcceleration");
         }
     }
 
-    [InputTemplate(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
         public AxisControl combinedTrigger { get; private set; }
@@ -91,25 +91,25 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control deviceAcceleration { get; private set; }
         public Vector3Control deviceAngularAcceleration { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            combinedTrigger = setup.GetControl<AxisControl>("combinedTrigger");
-            joystick = setup.GetControl<Vector2Control>("joystick");
-            trigger = setup.GetControl<AxisControl>("trigger");
-            back = setup.GetControl<ButtonControl>("back");
-            touchpadClick = setup.GetControl<ButtonControl>("touchpadClick");
-            touchpadTouch = setup.GetControl<ButtonControl>("touchpadTouch");
+            combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
+            joystick = builder.GetControl<Vector2Control>("joystick");
+            trigger = builder.GetControl<AxisControl>("trigger");
+            back = builder.GetControl<ButtonControl>("back");
+            touchpadClick = builder.GetControl<ButtonControl>("touchpadClick");
+            touchpadTouch = builder.GetControl<ButtonControl>("touchpadTouch");
 
-            trackingState = setup.GetControl<IntegerControl>("trackingState");
-            isTracked = setup.GetControl<ButtonControl>("isTracked");
-            devicePosition = setup.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = setup.GetControl<Vector3Control>("deviceVelocity");
-            deviceAngularVelocity = setup.GetControl<Vector3Control>("deviceAngularVelocity");
-            deviceAcceleration = setup.GetControl<Vector3Control>("deviceAcceleration");
-            deviceAngularAcceleration = setup.GetControl<Vector3Control>("deviceAngularAcceleration");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
+            deviceAcceleration = builder.GetControl<Vector3Control>("deviceAcceleration");
+            deviceAngularAcceleration = builder.GetControl<Vector3Control>("deviceAngularAcceleration");
         }
     }
 }

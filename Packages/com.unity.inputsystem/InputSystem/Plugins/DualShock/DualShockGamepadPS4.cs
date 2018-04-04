@@ -42,35 +42,35 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 
         [InputControl(name = "leftStickPress", bit = (uint)Button.L3, displayName = "L3")]
         [InputControl(name = "rightStickPress", bit = (uint)Button.R3, displayName = "R3")]
-        [InputControl(name = "options", template = "Button", bit = (uint)Button.Options)]
-        [InputControl(name = "dpad", template = "Dpad", sizeInBits = 4)]
+        [InputControl(name = "options", layout = "Button", bit = (uint)Button.Options)]
+        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4)]
         [InputControl(name = "dpad/up", bit = (uint)Button.DpadUp)]
         [InputControl(name = "dpad/right", bit = (uint)Button.DpadRight)]
         [InputControl(name = "dpad/down", bit = (uint)Button.DpadDown)]
         [InputControl(name = "dpad/left", bit = (uint)Button.DpadLeft)]
-        [InputControl(name = "leftTriggerButton", template = "Button", bit = (uint)Button.L2, displayName = "L2")]
-        [InputControl(name = "rightTriggerButton", template = "Button", bit = (uint)Button.R2, displayName = "R2")]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = (uint)Button.L2, displayName = "L2")]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = (uint)Button.R2, displayName = "R2")]
         [InputControl(name = "leftShoulder", bit = (uint)Button.L1, displayName = "L1")]
         [InputControl(name = "rightShoulder", bit = (uint)Button.R1, displayName = "R1")]
         [InputControl(name = "buttonWest", bit = (uint)Button.Square, displayName = "Square")]
         [InputControl(name = "buttonSouth", bit = (uint)Button.Cross, displayName = "Cross")]
         [InputControl(name = "buttonEast", bit = (uint)Button.Circle, displayName = "Circle")]
         [InputControl(name = "buttonNorth", bit = (uint)Button.Triangle, displayName = "Triangle")]
-        [InputControl(name = "touchpadButton", template = "Button", bit = (uint)Button.TouchPad, displayName = "TouchPad")]
+        [InputControl(name = "touchpadButton", layout = "Button", bit = (uint)Button.TouchPad, displayName = "TouchPad")]
         [FieldOffset(0)]
         public uint buttons;
 
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(template = "Stick")]
+        [InputControl(layout = "Stick")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(template = "Stick")]
+        [InputControl(layout = "Stick")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
@@ -204,11 +204,11 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             m_StateBlock.format = new FourCC('P', '4', 'T', 'C');
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            touchId = setup.GetControl<IntegerControl>(this, "touchId");
-            position = setup.GetControl<Vector2Control>(this, "position");
-            base.FinishSetup(setup);
+            touchId = builder.GetControl<IntegerControl>(this, "touchId");
+            position = builder.GetControl<Vector2Control>(this, "position");
+            base.FinishSetup(builder);
         }
 
         public override unsafe PS4Touch ReadRawValueFrom(IntPtr statePtr)
@@ -225,20 +225,20 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     }
 
 
-    [InputTemplate(stateType = typeof(DualShockGamepadStatePS4))]
+    [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4))]
     public class DualShockGamepadPS4 : DualShockGamepad, IDualShockHaptics
     {
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
             var touchArray = new PS4TouchControl[2];
 
-            touchArray[0] = setup.GetControl<PS4TouchControl>(this, "touch0");
-            touchArray[1] = setup.GetControl<PS4TouchControl>(this, "touch1");
+            touchArray[0] = builder.GetControl<PS4TouchControl>(this, "touch0");
+            touchArray[1] = builder.GetControl<PS4TouchControl>(this, "touch1");
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
         }

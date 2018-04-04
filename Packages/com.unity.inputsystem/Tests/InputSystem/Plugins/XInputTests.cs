@@ -19,7 +19,7 @@ class XInputTests : InputTestFixture
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
-    public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string templateName)
+    public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
     {
         var description = new InputDeviceDescription
         {
@@ -31,8 +31,8 @@ class XInputTests : InputTestFixture
         InputDevice device = null;
         Assert.That(() => device = InputSystem.AddDevice(description), Throws.Nothing);
 
-        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", templateName)), Has.Exactly(1).SameAs(device));
-        Assert.That(device.name, Is.EqualTo(templateName));
+        Assert.That(InputSystem.GetControls(string.Format("/<{0}>", layoutName)), Has.Exactly(1).SameAs(device));
+        Assert.That(device.name, Is.EqualTo(layoutName));
         Assert.That(device.description.manufacturer, Is.EqualTo(manufacturer));
         Assert.That(device.description.interfaceName, Is.EqualTo(interfaceName));
         Assert.That(device.description.product, Is.EqualTo(product));

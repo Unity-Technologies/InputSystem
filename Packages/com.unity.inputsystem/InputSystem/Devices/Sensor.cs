@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: hook up all sensor controls to noise suppression
+////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -64,17 +64,17 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    [InputTemplate(stateType = typeof(AccelerometerState))]
+    [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor
     {
         public Vector3Control acceleration { get; private set; }
 
         public static Accelerometer current { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            acceleration = setup.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(setup);
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            base.FinishSetup(builder);
         }
 
         public override void MakeCurrent()
@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    [InputTemplate(stateType = typeof(GyroscopeState))]
+    [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
         public QuaternionControl orientation { get; private set; }
@@ -100,13 +100,13 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            orientation = setup.TryGetControl<QuaternionControl>("orientation");
-            acceleration = setup.TryGetControl<Vector3Control>("acceleration");
-            angularVelocity = setup.TryGetControl<Vector3Control>("angularVelocity");
-            gravity = setup.TryGetControl<Vector3Control>("gravity");
-            base.FinishSetup(setup);
+            orientation = builder.GetControl<QuaternionControl>("orientation");
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
+            gravity = builder.GetControl<Vector3Control>("gravity");
+            base.FinishSetup(builder);
         }
     }
 

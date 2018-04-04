@@ -50,29 +50,29 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [InputControl(name = "rightShoulder", bit = (uint)Button.RightShoulder)]
         [InputControl(name = "leftStickPress", bit = (uint)Button.LeftThumbstick)]
         [InputControl(name = "rightStickPress", bit = (uint)Button.RightThumbstick)]
-        [InputControl(name = "dpad", template = "Dpad", sizeInBits = 4, bit = 8)]
+        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4, bit = 8)]
         [InputControl(name = "dpad/up", bit = (uint)Button.DPadUp)]
         [InputControl(name = "dpad/right", bit = (uint)Button.DPadRight)]
         [InputControl(name = "dpad/down", bit = (uint)Button.DPadDown)]
         [InputControl(name = "dpad/left", bit = (uint)Button.DPadLeft)]
-        [InputControl(name = "paddle1", template = "Button", bit = (uint)Button.Paddle1)]
-        [InputControl(name = "paddle2", template = "Button", bit = (uint)Button.Paddle2)]
-        [InputControl(name = "paddle3", template = "Button", bit = (uint)Button.Paddle3)]
-        [InputControl(name = "paddle4", template = "Button", bit = (uint)Button.Paddle4)]
+        [InputControl(name = "paddle1", layout = "Button", bit = (uint)Button.Paddle1)]
+        [InputControl(name = "paddle2", layout = "Button", bit = (uint)Button.Paddle2)]
+        [InputControl(name = "paddle3", layout = "Button", bit = (uint)Button.Paddle3)]
+        [InputControl(name = "paddle4", layout = "Button", bit = (uint)Button.Paddle4)]
         [FieldOffset(0)]
         public uint buttons;
 
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(template = "Stick")]
+        [InputControl(layout = "Stick")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(template = "Stick")]
+        [InputControl(layout = "Stick")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
@@ -145,7 +145,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputTemplate(stateType = typeof(XboxOneGamepadState))]
+    [InputControlLayout(stateType = typeof(XboxOneGamepadState))]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         public ButtonControl paddle1 { get; private set; }
@@ -153,14 +153,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         public ButtonControl paddle3 { get; private set; }
         public ButtonControl paddle4 { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            paddle1 = setup.GetControl<ButtonControl>(this, "paddle1");
-            paddle2 = setup.GetControl<ButtonControl>(this, "paddle2");
-            paddle3 = setup.GetControl<ButtonControl>(this, "paddle3");
-            paddle4 = setup.GetControl<ButtonControl>(this, "paddle4");
+            paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
+            paddle2 = builder.GetControl<ButtonControl>(this, "paddle2");
+            paddle3 = builder.GetControl<ButtonControl>(this, "paddle3");
+            paddle4 = builder.GetControl<ButtonControl>(this, "paddle4");
         }
 
         public new static XboxOneGamepad current { get; set; }

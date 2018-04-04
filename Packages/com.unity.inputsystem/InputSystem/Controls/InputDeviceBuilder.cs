@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
-////        device discoveries from native and keep the template cache around instead of throwing
+////        device discoveries from native and keep the layout cache around instead of throwing
 ////        it away after the creation of every single device; best approach may be to just
-////        reuse the same InputControlSetup instance over and over
+////        reuse the same InputDeviceBuilder instance over and over
 
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
@@ -15,43 +14,43 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Turns a template into a control hierarchy.
+    /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
     /// </summary>
     /// <remarks>
     /// Ultimately produces a device but can also be used to query the control setup described
-    /// by a template.
+    /// by a layout.
     ///
     /// Can be used to create setups as well as to adjust them later.
     ///
-    /// InputControlSetup is the only way to create control hierarchies.
+    /// InputDeviceBuilder is the only way to create control hierarchies.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
     /// Once a setup has been established, it yields an independent control hierarchy and the setup itself
     /// is abandoned.
     ///
-    /// Note InputControlSetups generate garbage. They are meant to be used for initialization only. Don't
+    /// Note InputDeviceBuilders generate garbage. They are meant to be used for initialization only. Don't
     /// use them during normal gameplay.
     ///
     /// Running an *existing* device through another control setup is a *destructive* operation.
     /// Existing controls may be reused while at the same time the hierarchy and even the device instance
     /// itself may change.
     /// </remarks>
-    public class InputControlSetup
+    public class InputDeviceBuilder
     {
         // We use this constructor when we create devices in batches.
-        internal InputControlSetup(InputTemplate.Collection templates)
+        internal InputDeviceBuilder(InputControlLayout.Collection layouts)
         {
-            m_TemplateCache.templates = templates;
+            m_LayoutCache.layouts = layouts;
         }
 
-        public InputControlSetup(string template, InputDevice existingDevice = null, string variant = null)
+        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variant = null)
         {
-            m_TemplateCache.templates = InputTemplate.s_Templates;
-            Setup(new InternedString(template), existingDevice, new InternedString(variant));
+            m_LayoutCache.layouts = InputControlLayout.s_Layouts;
+            Setup(new InternedString(layout), existingDevice, new InternedString(variant));
         }
 
-        internal void Setup(InternedString template, InputDevice existingDevice, InternedString variant)
+        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variant)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
@@ -61,17 +60,17 @@ namespace UnityEngine.Experimental.Input
             if (variant.IsEmpty())
                 variant = new InternedString("Default");
 
-            InstantiateTemplate(template, variant, new InternedString(), null, existingDevice);
+            InstantiateLayout(layout, variant, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
         }
 
-        internal void SetupWithDescription(InternedString template, InputDeviceDescription deviceDescription, InternedString variant)
+        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variant)
         {
             if (variant.IsEmpty())
                 variant = new InternedString("Default");
 
-            InstantiateTemplate(template, variant, new InternedString(), null, null);
+            InstantiateLayout(layout, variant, new InternedString(), null, null);
             FinalizeControlHierarchy();
 
             if (!deviceDescription.empty)
@@ -197,14 +196,14 @@ namespace UnityEngine.Experimental.Input
 
         private InputDevice m_Device;
 
-        // We construct templates lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construt the same Button template
+        // We construct layouts lazily as we go but keep them cached while we
+        // set up hierarchies so that we don't re-construt the same Button layout
         // 256 times for a keyboard.
-        private InputTemplate.Cache m_TemplateCache;
+        private InputControlLayout.Cache m_LayoutCache;
 
-        // Table mapping (lower-cased) control paths to control templates that contain
+        // Table mapping (lower-cased) control paths to control layouts that contain
         // overrides for the control at the given path.
-        private Dictionary<string, InputTemplate.ControlTemplate> m_ChildControlOverrides;
+        private Dictionary<string, InputControlLayout.ControlItem> m_ChildControlOverrides;
 
         // Reset the setup in a way where it can be reused for another setup.
         // Should retain allocations that can be reused.
@@ -215,21 +214,21 @@ namespace UnityEngine.Experimental.Input
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl InstantiateTemplate(InternedString template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateLayout(InternedString layout, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
         {
-            // Look up template by name.
-            var templateInstance = FindOrLoadTemplate(template);
+            // Look up layout by name.
+            var layoutInstance = FindOrLoadLayout(layout);
 
             // Create control hierarchy.
-            return InstantiateTemplate(templateInstance, variant, name, parent, existingControl);
+            return InstantiateLayout(layoutInstance, variant, name, parent, existingControl);
         }
 
-        private InputControl InstantiateTemplate(InputTemplate template, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
         {
             InputControl control;
 
             // If we have an existing control, see whether it's usable.
-            if (existingControl != null && existingControl.template == template.name && existingControl.GetType() == template.type)
+            if (existingControl != null && existingControl.layout == layout.name && existingControl.GetType() == layout.type)
             {
                 control = existingControl;
 
@@ -239,15 +238,15 @@ namespace UnityEngine.Experimental.Input
             }
             else
             {
-                Debug.Assert(template.type != null);
+                Debug.Assert(layout.type != null);
 
                 // No, so create a new control.
-                var controlObject = Activator.CreateInstance(template.type);
+                var controlObject = Activator.CreateInstance(layout.type);
                 control = controlObject as InputControl;
                 if (control == null)
                 {
-                    throw new Exception(string.Format("Type '{0}' referenced by template '{1}' is not an InputControl",
-                            template.type.Name, template.name));
+                    throw new Exception(string.Format("Type '{0}' referenced by layout '{1}' is not an InputControl",
+                            layout.type.Name, layout.name));
                 }
             }
 
@@ -258,12 +257,12 @@ namespace UnityEngine.Experimental.Input
             {
                 if (parent != null)
                     throw new Exception(string.Format(
-                            "Cannot instantiate device template '{0}' as child of '{1}'; devices must be added at root",
-                            template.name, parent.path));
+                            "Cannot instantiate device layout '{0}' as child of '{1}'; devices must be added at root",
+                            layout.name, parent.path));
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
-                m_Device.m_StateBlock.format = template.stateFormat;
+                m_Device.m_StateBlock.format = layout.stateFormat;
 
                 // If we have an existing device, we'll start the various control arrays
                 // from scratch. Note that all the controls still refer to the existing
@@ -282,39 +281,39 @@ namespace UnityEngine.Experimental.Input
                     m_Device.m_Description = existingDevice.m_Description;
                 }
 
-                if (template.m_UpdateBeforeRender == true)
+                if (layout.m_UpdateBeforeRender == true)
                     m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
             }
             else if (parent == null)
             {
-                // Someone did "new InputControlSetup(...)" with a control template.
+                // Someone did "new InputDeviceBuilder(...)" with a control layout.
                 // We don't support creating control hierarchies without a device at the root.
                 throw new InvalidOperationException(
                     string.Format(
-                        "Toplevel template used with InputControlSetup must be a device template; '{0}' is a control template",
-                        template.name));
+                        "Toplevel layout used with InputDeviceBuilder must be a device layout; '{0}' is a control layout",
+                        layout.name));
             }
 
-            // Name defaults to name of template.
+            // Name defaults to name of layout.
             if (name.IsEmpty())
             {
-                name = template.name;
+                name = layout.name;
 
-                // If there's a namespace in the template name, snip it out.
+                // If there's a namespace in the layout name, snip it out.
                 var indexOfLastColon = name.ToString().LastIndexOf(':');
                 if (indexOfLastColon != -1)
                     name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
             }
 
             control.m_Name = name;
-            control.m_DisplayNameFromTemplate = template.m_DisplayName;
-            control.m_Template = template.name;
+            control.m_DisplayNameFromLayout = layout.m_DisplayName;
+            control.m_Layout = layout.name;
             control.m_Variant = variant;
             control.m_Parent = parent;
             control.m_Device = m_Device;
 
             // Create children and configure their settings from our
-            // template values.
+            // layout values.
             var haveChildrenUsingStateFromOtherControl = false;
             try
             {
@@ -322,7 +321,7 @@ namespace UnityEngine.Experimental.Input
                 // actually reuse the existing control (and thus control.m_ChildrenReadOnly will
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
-                AddChildControls(template, variant, control,
+                AddChildControls(layout, variant, control,
                     existingControl != null ? existingControl.m_ChildrenReadOnly : (ReadOnlyArray<InputControl>?)null,
                     ref haveChildrenUsingStateFromOtherControl);
             }
@@ -339,21 +338,21 @@ namespace UnityEngine.Experimental.Input
             // controls, assign them their blocks now.
             if (haveChildrenUsingStateFromOtherControl)
             {
-                foreach (var controlTemplate in template.controls)
+                foreach (var controlLayout in layout.controls)
                 {
-                    if (string.IsNullOrEmpty(controlTemplate.useStateFrom))
+                    if (string.IsNullOrEmpty(controlLayout.useStateFrom))
                         continue;
 
-                    var child = TryGetControl(control, controlTemplate.name);
+                    var child = TryGetControl(control, controlLayout.name);
                     Debug.Assert(child != null);
 
                     // Find the referenced control.
-                    var referencedControl = TryGetControl(control, controlTemplate.useStateFrom);
+                    var referencedControl = TryGetControl(control, controlLayout.useStateFrom);
                     if (referencedControl == null)
                         throw new Exception(
                             string.Format(
-                                "Cannot find control '{0}' referenced in 'useStateFrom' of control '{1}' in template '{2}'",
-                                controlTemplate.useStateFrom, controlTemplate.name, template.name));
+                                "Cannot find control '{0}' referenced in 'useStateFrom' of control '{1}' in layout '{2}'",
+                                controlLayout.useStateFrom, controlLayout.name, layout.name));
 
                     // Copy its state settings.
                     child.m_StateBlock = referencedControl.m_StateBlock;
@@ -371,34 +370,34 @@ namespace UnityEngine.Experimental.Input
 
         private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.kInvalidOffset;
 
-        private void AddChildControls(InputTemplate template, InternedString variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
+        private void AddChildControls(InputControlLayout layout, InternedString variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
         {
-            var controlTemplates = template.m_Controls;
-            if (controlTemplates == null)
+            var controlLayouts = layout.m_Controls;
+            if (controlLayouts == null)
                 return;
 
             // Find out how many direct children we will add.
             var childCount = 0;
-            var haveControlTemplateWithPath = false;
-            for (var i = 0; i < controlTemplates.Length; ++i)
+            var haveControlLayoutWithPath = false;
+            for (var i = 0; i < controlLayouts.Length; ++i)
             {
-                ////REVIEW: I'm not sure this is good enough. ATM if you have a control template with
+                ////REVIEW: I'm not sure this is good enough. ATM if you have a control layout with
                 ////        name "foo" and one with name "foo/bar", then the latter is taken as an override
                 ////        but the former isn't. However, whether it has a slash in the path or not shouldn't
-                ////        matter. If a control template of the same name already exists, it should be
+                ////        matter. If a control layout of the same name already exists, it should be
                 ////        considered an override, if not, it shouldn't.
-                // Not a new child if it's a template reaching in to the hierarchy to modify
+                // Not a new child if it's a layout reaching in to the hierarchy to modify
                 // an existing child.
-                if (controlTemplates[i].isModifyingChildControlByPath)
+                if (controlLayouts[i].isModifyingChildControlByPath)
                 {
-                    haveControlTemplateWithPath = true;
-                    InsertChildControlOverrides(parent, ref controlTemplates[i]);
+                    haveControlLayoutWithPath = true;
+                    InsertChildControlOverrides(parent, ref controlLayouts[i]);
                     continue;
                 }
 
                 // Skip if variant doesn't match.
-                if (!controlTemplates[i].variant.IsEmpty() &&
-                    controlTemplates[i].variant != variant)
+                if (!controlLayouts[i].variant.IsEmpty() &&
+                    controlLayouts[i].variant != variant)
                     continue;
 
                 ++childCount;
@@ -407,26 +406,26 @@ namespace UnityEngine.Experimental.Input
             // Add room for us in the device's child array.
             var firstChildIndex = ArrayHelpers.GrowBy(ref m_Device.m_ChildrenForEachControl, childCount);
 
-            // Add controls from all control templates except the ones that have
+            // Add controls from all control layouts except the ones that have
             // paths in them.
             var childIndex = firstChildIndex;
-            for (var i = 0; i < controlTemplates.Length; ++i)
+            for (var i = 0; i < controlLayouts.Length; ++i)
             {
-                var controlTemplate = controlTemplates[i];
+                var controlLayout = controlLayouts[i];
 
-                // Skip control templates that don't add controls but rather modify child
-                // controls of other controls added by the template. We do a second pass
+                // Skip control layouts that don't add controls but rather modify child
+                // controls of other controls added by the layout. We do a second pass
                 // to apply their settings.
-                if (controlTemplate.isModifyingChildControlByPath)
+                if (controlLayout.isModifyingChildControlByPath)
                     continue;
 
                 // If the control is part of a variant, skip it if it isn't the variant we're
                 // looking for.
-                if (!controlTemplate.variant.IsEmpty() && controlTemplate.variant != variant)
+                if (!controlLayout.variant.IsEmpty() && controlLayout.variant != variant)
                     continue;
 
-                AddChildControl(template, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
-                    ref controlTemplate, ref childIndex);
+                AddChildControl(layout, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
+                    ref controlLayout, ref childIndex);
             }
 
             // Install child array on parent. We will later patch up the array
@@ -434,7 +433,7 @@ namespace UnityEngine.Experimental.Input
             // will point to a valid child array all the same even while we are
             // constructing the hierarchy.
             //
-            // NOTE: It's important to do this *after* the loop above where we call InstantiateTemplate for each child
+            // NOTE: It's important to do this *after* the loop above where we call InstantiateLayout for each child
             //       as each child may end up moving the m_ChildrenForEachControl array around.
             parent.m_ChildrenReadOnly = new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, firstChildIndex, childCount);
 
@@ -442,56 +441,56 @@ namespace UnityEngine.Experimental.Input
             ////      (note that we have to *merge* into the table; if there's already overrides, only replace properties that haven't been set)
             ////      (however, this will also require moving the child insertion logic somewhere else)
 
-            // Apply control modifications from control templates with paths.
-            if (haveControlTemplateWithPath)
+            // Apply control modifications from control layouts with paths.
+            if (haveControlLayoutWithPath)
             {
-                for (var i = 0; i < controlTemplates.Length; ++i)
+                for (var i = 0; i < controlLayouts.Length; ++i)
                 {
-                    var controlTemplate = controlTemplates[i];
-                    if (!controlTemplate.isModifyingChildControlByPath)
+                    var controlLayout = controlLayouts[i];
+                    if (!controlLayout.isModifyingChildControlByPath)
                         continue;
 
                     // If the control is part of a variant, skip it if it isn't the variant we're
                     // looking for.
-                    if (!controlTemplate.variant.IsEmpty() && controlTemplate.variant != variant)
+                    if (!controlLayout.variant.IsEmpty() && controlLayout.variant != variant)
                         continue;
 
-                    ModifyChildControl(template, variant, parent, ref haveChildrenUsingStateFromOtherControls,
-                        ref controlTemplate);
+                    ModifyChildControl(layout, variant, parent, ref haveChildrenUsingStateFromOtherControls,
+                        ref controlLayout);
                 }
             }
         }
 
-        private InputControl AddChildControl(InputTemplate template, InternedString variant, InputControl parent,
+        private InputControl AddChildControl(InputControlLayout layout, InternedString variant, InputControl parent,
             ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls,
-            ref InputTemplate.ControlTemplate controlTemplate, ref int childIndex, string nameOverride = null)
+            ref InputControlLayout.ControlItem controlItem, ref int childIndex, string nameOverride = null)
         {
-            var name = nameOverride ?? controlTemplate.name;
+            var name = nameOverride ?? controlItem.name;
             var nameLowerCase = name.ToLower();
             var nameInterned = new InternedString(name);
             string path = null;
 
-            ////REVIEW: can we check this in InputTemplate instead?
-            if (string.IsNullOrEmpty(controlTemplate.template))
-                throw new Exception(string.Format("Template has not been set on control '{0}' in '{1}'",
-                        controlTemplate.name, template.name));
+            ////REVIEW: can we check this in InputControlLayout instead?
+            if (string.IsNullOrEmpty(controlItem.layout))
+                throw new Exception(string.Format("Layout has not been set on control '{0}' in '{1}'",
+                        controlItem.name, layout.name));
 
             // See if there is an override for the control.
-            InputTemplate.ControlTemplate? controlOverride = null;
+            InputControlLayout.ControlItem? controlOverride = null;
             if (m_ChildControlOverrides != null)
             {
                 path = string.Format("{0}/{1}", parent.path, name);
                 var pathLowerCase = path.ToLower();
 
-                InputTemplate.ControlTemplate match;
+                InputControlLayout.ControlItem match;
                 if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out match))
                     controlOverride = match;
             }
 
-            // Get name of template to use for control.
-            var templateName = controlTemplate.template;
-            if (controlOverride != null && !controlOverride.Value.template.IsEmpty())
-                templateName = controlOverride.Value.template;
+            // Get name of layout to use for control.
+            var layoutName = controlItem.layout;
+            if (controlOverride != null && !controlOverride.Value.layout.IsEmpty())
+                layoutName = controlOverride.Value.layout;
 
             // See if we have an existing control that we might be able to re-use.
             InputControl existingControl = null;
@@ -501,7 +500,7 @@ namespace UnityEngine.Experimental.Input
                 for (var n = 0; n < existingChildCount; ++n)
                 {
                     var existingChild = existingChildren.Value[n];
-                    if (existingChild.template == templateName
+                    if (existingChild.layout == layoutName
                         && existingChild.name.ToLower() == nameLowerCase)
                     {
                         existingControl = existingChild;
@@ -514,14 +513,14 @@ namespace UnityEngine.Experimental.Input
             InputControl control;
             try
             {
-                control = InstantiateTemplate(templateName, variant, nameInterned, parent, existingControl);
+                control = InstantiateLayout(layoutName, variant, nameInterned, parent, existingControl);
             }
-            catch (InputTemplate.TemplateNotFoundException exception)
+            catch (InputControlLayout.LayoutNotFoundException exception)
             {
                 // Throw better exception that gives more info.
                 throw new Exception(
-                    string.Format("Cannot find template '{0}' used in control '{1}' of template '{2}'",
-                        exception.template, name, template.name),
+                    string.Format("Cannot find layout '{0}' used in control '{1}' of layout '{2}'",
+                        exception.layout, name, layout.name),
                     exception);
             }
 
@@ -530,22 +529,22 @@ namespace UnityEngine.Experimental.Input
             ++childIndex;
 
             // Set display name.
-            control.m_DisplayNameFromTemplate = controlTemplate.displayName;
+            control.m_DisplayNameFromLayout = controlItem.displayName;
 
             // Set flags.
-            control.m_IsNoisy = controlTemplate.isNoisy;
+            control.m_IsNoisy = controlItem.isNoisy;
 
             // Pass state block config on to control.
-            var usesStateFromOtherControl = !string.IsNullOrEmpty(controlTemplate.useStateFrom);
+            var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
             if (!usesStateFromOtherControl)
             {
-                control.m_StateBlock.byteOffset = controlTemplate.offset;
-                if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
-                    control.m_StateBlock.bitOffset = controlTemplate.bit;
-                if (controlTemplate.sizeInBits != 0)
-                    control.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
-                if (controlTemplate.format != 0)
-                    SetFormat(control, controlTemplate);
+                control.m_StateBlock.byteOffset = controlItem.offset;
+                if (controlItem.bit != InputStateBlock.kInvalidOffset)
+                    control.m_StateBlock.bitOffset = controlItem.bit;
+                if (controlItem.sizeInBits != 0)
+                    control.m_StateBlock.sizeInBits = controlItem.sizeInBits;
+                if (controlItem.format != 0)
+                    SetFormat(control, controlItem);
             }
             else
             {
@@ -559,11 +558,11 @@ namespace UnityEngine.Experimental.Input
             ////        of successive re-allocations
 
             // Add usages.
-            if (controlTemplate.usages.Count > 0)
+            if (controlItem.usages.Count > 0)
             {
-                var usageCount = controlTemplate.usages.Count;
+                var usageCount = controlItem.usages.Count;
                 var usageIndex =
-                    ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlTemplate.usages.m_Array);
+                    ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlItem.usages.m_Array);
                 control.m_UsagesReadOnly =
                     new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
 
@@ -573,51 +572,51 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Add aliases.
-            if (controlTemplate.aliases.Count > 0)
+            if (controlItem.aliases.Count > 0)
             {
-                var aliasCount = controlTemplate.aliases.Count;
+                var aliasCount = controlItem.aliases.Count;
                 var aliasIndex =
-                    ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlTemplate.aliases.m_Array);
+                    ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlItem.aliases.m_Array);
                 control.m_AliasesReadOnly =
                     new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
             }
 
             // Set parameters.
-            if (controlTemplate.parameters.Count > 0)
-                SetParameters(control, controlTemplate.parameters);
+            if (controlItem.parameters.Count > 0)
+                SetParameters(control, controlItem.parameters);
 
             // Add processors.
-            if (controlTemplate.processors.Count > 0)
-                AddProcessors(control, ref controlTemplate, template.name);
+            if (controlItem.processors.Count > 0)
+                AddProcessors(control, ref controlItem, layout.name);
 
             return control;
         }
 
-        private void InsertChildControlOverrides(InputControl parent, ref InputTemplate.ControlTemplate controlTemplate)
+        private void InsertChildControlOverrides(InputControl parent, ref InputControlLayout.ControlItem controlItem)
         {
             if (m_ChildControlOverrides == null)
-                m_ChildControlOverrides = new Dictionary<string, InputTemplate.ControlTemplate>();
+                m_ChildControlOverrides = new Dictionary<string, InputControlLayout.ControlItem>();
 
-            var path = InputControlPath.Combine(parent, controlTemplate.name);
+            var path = InputControlPath.Combine(parent, controlItem.name);
             var pathLowerCase = path.ToLower();
 
             // See if there are existing overrides for the control.
-            InputTemplate.ControlTemplate existingOverrides;
+            InputControlLayout.ControlItem existingOverrides;
             if (!m_ChildControlOverrides.TryGetValue(pathLowerCase, out existingOverrides))
             {
                 // So, so just insert our overrides and we're done.
-                m_ChildControlOverrides[pathLowerCase] = controlTemplate;
+                m_ChildControlOverrides[pathLowerCase] = controlItem;
                 return;
             }
 
             // Yes, there's existing overrides so we have to merge.
-            existingOverrides = existingOverrides.Merge(controlTemplate);
+            existingOverrides = existingOverrides.Merge(controlItem);
             m_ChildControlOverrides[pathLowerCase] = existingOverrides;
         }
 
-        private void ModifyChildControl(InputTemplate template, InternedString variant, InputControl parent,
+        private void ModifyChildControl(InputControlLayout layout, InternedString variant, InputControl parent,
             ref bool haveChildrenUsingStateFromOtherControls,
-            ref InputTemplate.ControlTemplate controlTemplate)
+            ref InputControlLayout.ControlItem controlItem)
         {
             // Controls layout themselves as we come back up the hierarchy. However, when we
             // apply layout modifications reaching *into* the hierarchy, we need to retrigger
@@ -625,7 +624,7 @@ namespace UnityEngine.Experimental.Input
             var haveChangedLayoutOfParent = false;
 
             // Find the child control.
-            var child = TryGetControl(parent, controlTemplate.name);
+            var child = TryGetControl(parent, controlItem.name);
             if (child == null)
             {
                 // We're adding a child somewhere in the existing hierarchy. This is a tricky
@@ -634,21 +633,21 @@ namespace UnityEngine.Experimental.Input
 
                 ////TODO: this path does not support recovering existing controls? does it matter?
 
-                child = InsertChildControl(template, variant, parent,
-                        ref haveChildrenUsingStateFromOtherControls, ref controlTemplate);
+                child = InsertChildControl(layout, variant, parent,
+                        ref haveChildrenUsingStateFromOtherControls, ref controlItem);
                 haveChangedLayoutOfParent = true;
             }
             else
             {
                 // Apply modifications.
-                if (controlTemplate.sizeInBits != 0 &&
-                    child.m_StateBlock.sizeInBits != controlTemplate.sizeInBits)
+                if (controlItem.sizeInBits != 0 &&
+                    child.m_StateBlock.sizeInBits != controlItem.sizeInBits)
                 {
-                    child.m_StateBlock.sizeInBits = controlTemplate.sizeInBits;
+                    child.m_StateBlock.sizeInBits = controlItem.sizeInBits;
                 }
-                if (controlTemplate.format != 0 && child.m_StateBlock.format != controlTemplate.format)
+                if (controlItem.format != 0 && child.m_StateBlock.format != controlItem.format)
                 {
-                    SetFormat(child, controlTemplate);
+                    SetFormat(child, controlItem);
                     haveChangedLayoutOfParent = true;
                 }
                 ////REVIEW: ATM, when you move a child with a fixed offset, we only move the child
@@ -658,19 +657,19 @@ namespace UnityEngine.Experimental.Input
                 ////        is. If we opt to move parents along with children, we have to make sure we
                 ////        are not colliding with any other relocations of children (e.g. if you move
                 ////        both leftStick/x and leftStick/y, leftStick itself should move only once and
-                ////        not at all if there indeed is a leftStick control template with an offset;
+                ////        not at all if there indeed is a leftStick control layout with an offset;
                 ////        so, it'd get quite complicated)
-                if (controlTemplate.offset != InputStateBlock.kInvalidOffset)
-                    child.m_StateBlock.byteOffset = controlTemplate.offset;
-                if (controlTemplate.bit != InputStateBlock.kInvalidOffset)
-                    child.m_StateBlock.bitOffset = controlTemplate.bit;
-                if (controlTemplate.processors.Count > 0)
-                    AddProcessors(child, ref controlTemplate, template.name);
+                if (controlItem.offset != InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.byteOffset = controlItem.offset;
+                if (controlItem.bit != InputStateBlock.kInvalidOffset)
+                    child.m_StateBlock.bitOffset = controlItem.bit;
+                if (controlItem.processors.Count > 0)
+                    AddProcessors(child, ref controlItem, layout.name);
                 ////REVIEW: ATM parameters applied using this path add on top instead of just overriding existing parameters
-                if (controlTemplate.parameters.Count > 0)
-                    SetParameters(child, controlTemplate.parameters);
-                if (!string.IsNullOrEmpty(controlTemplate.displayName))
-                    child.m_DisplayNameFromTemplate = controlTemplate.displayName;
+                if (controlItem.parameters.Count > 0)
+                    SetParameters(child, controlItem.parameters);
+                if (!string.IsNullOrEmpty(controlItem.displayName))
+                    child.m_DisplayNameFromLayout = controlItem.displayName;
 
                 ////TODO: other modifications
             }
@@ -679,16 +678,16 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: not sure what's better here; trigger this immediately means we may trigger
             ////        it a number of times on the same parent but doing it as a final pass would
             ////        require either collecting the necessary parents or doing another pass through
-            ////        the list of control templates
+            ////        the list of control layouts
             if (haveChangedLayoutOfParent && !ReferenceEquals(child.parent, parent))
                 ComputeStateLayout(child.parent);
         }
 
-        private InputControl InsertChildControl(InputTemplate template, InternedString variant, InputControl parent,
+        private InputControl InsertChildControl(InputControlLayout layout, InternedString variant, InputControl parent,
             ref bool haveChildrenUsingStateFromOtherControls,
-            ref InputTemplate.ControlTemplate controlTemplate)
+            ref InputControlLayout.ControlItem controlItem)
         {
-            var path = controlTemplate.name.ToString();
+            var path = controlItem.name.ToString();
 
             // First we need to find the immediate parent from the given path.
             var indexOfSlash = path.LastIndexOf('/');
@@ -699,14 +698,14 @@ namespace UnityEngine.Experimental.Input
             var immediateParent = InputControlPath.TryFindChild(parent, immediateParentPath);
             if (immediateParent == null)
                 throw new Exception(
-                    string.Format("Cannot find parent '{0}' of control '{1}' in template '{2}'", immediateParentPath,
-                        controlTemplate.name, template.name));
+                    string.Format("Cannot find parent '{0}' of control '{1}' in layout '{2}'", immediateParentPath,
+                        controlItem.name, layout.name));
 
             var controlName = path.Substring(indexOfSlash + 1);
             if (controlName.Length == 0)
                 throw new Exception(
-                    string.Format("Path cannot end in '/' (control '{0}' in template '{1}')", controlTemplate.name,
-                        template.name));
+                    string.Format("Path cannot end in '/' (control '{0}' in layout '{1}')", controlItem.name,
+                        layout.name));
 
             // Make room in the device's child array.
             var childStartIndex = immediateParent.m_ChildrenReadOnly.m_StartIndex;
@@ -715,8 +714,8 @@ namespace UnityEngine.Experimental.Input
             ++immediateParent.m_ChildrenReadOnly.m_Length;
 
             // Insert the child.
-            var control = AddChildControl(template, variant, immediateParent, null,
-                    ref haveChildrenUsingStateFromOtherControls, ref controlTemplate, ref childIndex, controlName);
+            var control = AddChildControl(layout, variant, immediateParent, null,
+                    ref haveChildrenUsingStateFromOtherControls, ref controlItem, ref childIndex, controlName);
 
             // Adjust indices of control's that have been shifted around by our insertion.
             ShiftChildIndicesInHierarchyOneUp(parent, childIndex);
@@ -734,21 +733,21 @@ namespace UnityEngine.Experimental.Input
                 ShiftChildIndicesInHierarchyOneUp(child, startIndex);
         }
 
-        private static void AddProcessors(InputControl control, ref InputTemplate.ControlTemplate controlTemplate, string templateName)
+        private static void AddProcessors(InputControl control, ref InputControlLayout.ControlItem controlItem, string layoutName)
         {
-            var processorCount = controlTemplate.processors.Count;
+            var processorCount = controlItem.processors.Count;
             for (var n = 0; n < processorCount; ++n)
             {
-                var name = controlTemplate.processors[n].name;
+                var name = controlItem.processors[n].name;
                 var type = InputProcessor.TryGet(name);
                 if (type == null)
                     throw new Exception(
-                        string.Format("Cannot find processor '{0}' referenced by control '{1}' in template '{2}'", name,
-                            controlTemplate.name, templateName));
+                        string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,
+                            controlItem.name, layoutName));
 
                 var processor = Activator.CreateInstance(type);
 
-                var parameters = controlTemplate.processors[n].parameters;
+                var parameters = controlItem.processors[n].parameters;
                 if (parameters.Count > 0)
                     SetParameters(processor, parameters);
 
@@ -756,7 +755,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        internal static void SetParameters(object onObject, ReadOnlyArray<InputTemplate.ParameterValue> parameters)
+        internal static void SetParameters(object onObject, ReadOnlyArray<InputControlLayout.ParameterValue> parameters)
         {
             var objectType = onObject.GetType();
             for (var i = 0; i < parameters.Count; ++i)
@@ -775,13 +774,13 @@ namespace UnityEngine.Experimental.Input
                 {
                     switch (parameter.type)
                     {
-                        case InputTemplate.ParameterType.Boolean:
+                        case InputControlLayout.ParameterType.Boolean:
                             value = *((bool*)parameter.value);
                             break;
-                        case InputTemplate.ParameterType.Integer:
+                        case InputControlLayout.ParameterType.Integer:
                             value = *((int*)parameter.value);
                             break;
-                        case InputTemplate.ParameterType.Float:
+                        case InputControlLayout.ParameterType.Float:
                             value = *((float*)parameter.value);
                             break;
                     }
@@ -791,20 +790,20 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private static void SetFormat(InputControl control, InputTemplate.ControlTemplate controlTemplate)
+        private static void SetFormat(InputControl control, InputControlLayout.ControlItem controlItem)
         {
-            control.m_StateBlock.format = controlTemplate.format;
-            if (controlTemplate.sizeInBits == 0)
+            control.m_StateBlock.format = controlItem.format;
+            if (controlItem.sizeInBits == 0)
             {
-                var primitiveFormatSize = InputStateBlock.GetSizeOfPrimitiveFormatInBits(controlTemplate.format);
+                var primitiveFormatSize = InputStateBlock.GetSizeOfPrimitiveFormatInBits(controlItem.format);
                 if (primitiveFormatSize != -1)
                     control.m_StateBlock.sizeInBits = (uint)primitiveFormatSize;
             }
         }
 
-        private InputTemplate FindOrLoadTemplate(string name)
+        private InputControlLayout FindOrLoadLayout(string name)
         {
-            return m_TemplateCache.FindOrLoadTemplate(name);
+            return m_LayoutCache.FindOrLoadLayout(name);
         }
 
         private static void ComputeStateLayout(InputControl control)
@@ -826,8 +825,8 @@ namespace UnityEngine.Experimental.Input
             {
                 throw new Exception(
                     string.Format(
-                        "Control '{0}' with template '{1}' has no size set but has no children to compute size from",
-                        control.path, control.template));
+                        "Control '{0}' with layout '{1}' has no size set but has no children to compute size from",
+                        control.path, control.layout));
             }
 
             // If there's no children, our job is done.

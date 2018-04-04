@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
-        ////REVIEW: is this mapping something that Android *guarantees* for us or do we need per-product templates
+        ////REVIEW: is this mapping something that Android *guarantees* for us or do we need per-product layouts
         ////        to deal with specific gamepads individually?
         [InputControl(name = "buttonSouth", bit = (uint)AndroidKeyCode.ButtonA)]
         [InputControl(name = "buttonWest", bit = (uint)AndroidKeyCode.ButtonX)]
@@ -392,13 +392,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     ////REVIEW: Is this guaranteed to be a Gamepad? If both joystick and gamepad come through here, we need to split this up.
     ////        Also, probably should be called AndroidGamepad
-    [InputTemplate(stateType = typeof(AndroidGameControllerState))]
+    [InputControlLayout(stateType = typeof(AndroidGameControllerState))]
     public class AndroidGameController : Gamepad
     {
-        internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description,
-            string matchedTemplate, IInputRuntime runtime)
+        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description,
+            string matchedLayout, IInputRuntime runtime)
         {
-            if (string.IsNullOrEmpty(matchedTemplate) || matchedTemplate != "AndroidGameController")
+            if (string.IsNullOrEmpty(matchedLayout) || matchedLayout != "AndroidGameController")
                 return null;
 
             if (description.interfaceName != "Android" || description.deviceClass != "AndroidGameController")

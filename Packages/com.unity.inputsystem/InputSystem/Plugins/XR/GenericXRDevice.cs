@@ -9,14 +9,14 @@ using System.Text;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputTemplate(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRHMD : InputDevice
     {
         public static XRHMD current { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         public override void MakeCurrent()
@@ -26,15 +26,15 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputTemplate(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : InputDevice
     {
         public static XRController leftHand { get; private set; }
         public static XRController rightHand { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
             var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
             switch (deviceDescriptor.deviceRole)
@@ -83,9 +83,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         SimpleXRRumble m_Rumble;
         public SimpleXRRumble rumble { get { return m_Rumble; } }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
             m_Rumble = new SimpleXRRumble(this);
         }
 
