@@ -78,21 +78,58 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public static void Initialize()
         {
-            XRTemplateBuilder.RegisterTemplateFilter(WMRSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<WMRHMD>();
-            InputSystem.RegisterTemplate<WMRSpatialController>();
+            InputSystem.RegisterTemplate<XRHMD>();
+            InputSystem.RegisterTemplate<XRController>();
 
-            XRTemplateBuilder.RegisterTemplateFilter(OculusSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<OculusHMD>();
-            InputSystem.RegisterTemplate<OculusTouchController>();
+            InputSystem.RegisterTemplate<WMRHMD>(deviceDescription: new InputDeviceDescription
+            {
+                product = "Windows Mixed Reality HMD",
+                manufacturer = "Microsoft",
+                interfaceName = XRUtilities.kXRInterface
+            });
+            InputSystem.RegisterTemplate<WMRSpatialController>(deviceDescription: new InputDeviceDescription
+            {
+                product = "Spatial Controller",
+                manufacturer = "Microsoft",
+                interfaceName = XRUtilities.kXRInterface
+            });
 
-            XRTemplateBuilder.RegisterTemplateFilter(GearVRSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<GearVRHMD>();
-            InputSystem.RegisterTemplate<GearVRTrackedController>();
+            InputSystem.RegisterTemplate<OculusHMD>(deviceDescription: new InputDeviceDescription
+            {
+                product = "Oculus Rift",
+                manufacturer = "Oculus",
+                interfaceName = XRUtilities.kXRInterface
+            });
+            InputSystem.RegisterTemplate<OculusTouchController>(deviceDescription: new InputDeviceDescription
+            {
+                product = "^(Oculus Touch Controller)",
+                manufacturer = "Oculus",
+                interfaceName = XRUtilities.kXRInterface
+            });
 
-            XRTemplateBuilder.RegisterTemplateFilter(DaydreamSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<DaydreamHMD>();
-            InputSystem.RegisterTemplate<DaydreamController>();
+            InputSystem.RegisterTemplate<GearVRHMD>(deviceDescription: new InputDeviceDescription
+            {
+                product = "Oculus HMD",
+                manufacturer = "Samsung",
+                interfaceName = XRUtilities.kXRInterface
+            });
+            InputSystem.RegisterTemplate<GearVRTrackedController>(deviceDescription: new InputDeviceDescription
+            {
+                product = "^(Oculus Tracked Remote)",
+                manufacturer = "Samsung",
+                interfaceName = XRUtilities.kXRInterface
+            });
+
+            InputSystem.RegisterTemplate<DaydreamHMD>(deviceDescription: new InputDeviceDescription
+            {
+                product = "Daydream HMD",
+                interfaceName = XRUtilities.kXRInterface
+            });
+            InputSystem.RegisterTemplate<DaydreamController>(deviceDescription: new InputDeviceDescription
+            {
+                product = "Daydream Controller",
+                interfaceName = XRUtilities.kXRInterface
+            });
 
             InputSystem.onFindTemplateForDevice += XRTemplateBuilder.OnFindTemplateForDevice;
         }

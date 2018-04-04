@@ -8,26 +8,6 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    internal static class DaydreamSupport
-    {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
-        {
-            if (String.IsNullOrEmpty(deviceDescriptor.manufacturer))
-            {
-                if (deviceDescriptor.deviceName == "Daydream HMD" && deviceDescriptor.deviceRole == DeviceRole.Generic)
-                {
-                    return "DaydreamHMD";
-                }
-                else if (deviceDescriptor.deviceName == "Daydream Controller" && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
-                {
-                    return "DaydreamController";
-                }
-            }
-
-            return null;
-        }
-    }
-
     [InputTemplate()]
     public class DaydreamHMD : XRHMD
     {

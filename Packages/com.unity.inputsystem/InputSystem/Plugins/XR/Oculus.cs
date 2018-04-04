@@ -9,26 +9,6 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    internal static class OculusSupport
-    {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
-        {
-            if (deviceDescriptor.manufacturer == "__Oculus__" || deviceDescriptor.manufacturer == "Oculus")
-            {
-                if ((deviceDescriptor.deviceName == "Oculus Rift" || String.IsNullOrEmpty(deviceDescriptor.deviceName)) && deviceDescriptor.deviceRole == DeviceRole.Generic)
-                {
-                    return "OculusHMD";
-                }
-                else if (deviceDescriptor.deviceName.StartsWith("Oculus Touch Controller") && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
-                {
-                    return "OculusTouchController";
-                }
-            }
-
-            return null;
-        }
-    }
-
     [InputTemplate()]
     public class OculusHMD : XRHMD
     {

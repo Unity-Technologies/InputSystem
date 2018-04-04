@@ -11,8 +11,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [Serializable]
     class XRTemplateBuilder
     {
-        static List<Func<XRDeviceDescriptor, string>> availableTemplates = new List<Func<XRDeviceDescriptor, string>>();
-
         public XRDeviceDescriptor descriptor;
 
         static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
@@ -41,11 +39,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return 0;
         }
 
-        public static void RegisterTemplateFilter(Func<XRDeviceDescriptor, string> templateChecker)
-        {
-            availableTemplates.Add(templateChecker);
-        }
-
         static string SanitizeTemplateName(string templateName)
         {
             int stringLength = templateName.Length;
@@ -63,12 +56,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description, string matchedTemplate, IInputRuntime runtime)
         {
-            // If the system found a matching template, there's nothing for us to do.
-            if (!string.IsNullOrEmpty(matchedTemplate))
-            {
-                return null;
-            }
-
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.kXRInterface)
             {
@@ -93,12 +80,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return null;
             }
 
-            string templateMatch = null;
-            for (int i = 0; i < availableTemplates.Count; i++)
+            if (deviceDescriptor == null)
             {
-                templateMatch = availableTemplates[i](deviceDescriptor);
-                if (templateMatch != null)
-                    continue;
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(matchedTemplate))
+            {
+                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                    matchedTemplate = "XRController";
+                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+                    matchedTemplate = "XRHMD";
+                else
+                    return null;
             }
 
             // We don't want to forward the Capabilities along due to how template fields are Regex compared.
@@ -107,32 +101,15 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             var templateName = SanitizeTemplateName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
             var template = new XRTemplateBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, templateMatch, templateMatchingDescription);
+            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, matchedTemplate, templateMatchingDescription);
 
             return templateName;
         }
 
         public InputTemplate Build()
         {
-            Type deviceType = null;
-            switch (descriptor.deviceRole)
-            {
-                case DeviceRole.LeftHanded:
-                case DeviceRole.RightHanded:
-                {
-                    deviceType = typeof(XRController);
-                }
-                break;
-                default:
-                {
-                    deviceType = typeof(XRHMD);
-                }
-                break;
-            }
-
             var builder = new InputTemplate.Builder
             {
-                type = deviceType,
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
                 updateBeforeRender = true
             };

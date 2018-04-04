@@ -8,26 +8,6 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    internal static class WMRSupport
-    {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
-        {
-            if (deviceDescriptor.manufacturer == "Microsoft")
-            {
-                if (deviceDescriptor.deviceName == "Windows Mixed Reality HMD" && deviceDescriptor.deviceRole == DeviceRole.Generic)
-                {
-                    return "WMRHMD";
-                }
-                else if (deviceDescriptor.deviceName == "Spatial Controller" && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
-                {
-                    return "WMRSpatialController";
-                }
-            }
-
-            return null;
-        }
-    }
-
     [InputTemplate()]
     public class WMRHMD : XRHMD
     {

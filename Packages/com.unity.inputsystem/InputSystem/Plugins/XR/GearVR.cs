@@ -8,26 +8,6 @@ using UnityEngine;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    internal static class GearVRSupport
-    {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
-        {
-            if (deviceDescriptor.manufacturer == "__Samsung__" || deviceDescriptor.manufacturer == "Samsung")
-            {
-                if (deviceDescriptor.deviceName == "Oculus HMD" && deviceDescriptor.deviceRole == DeviceRole.Generic)
-                {
-                    return "GearVRHMD";
-                }
-                else if (deviceDescriptor.deviceName.StartsWith("Oculus Tracked Remote") && (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded))
-                {
-                    return "GearVRTrackedController";
-                }
-            }
-
-            return null;
-        }
-    }
-
     [InputTemplate()]
     public class GearVRHMD : XRHMD
     {
