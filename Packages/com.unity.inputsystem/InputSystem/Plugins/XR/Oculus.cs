@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(OculusHMDState))]
+    [InputControlLayout(stateType = typeof(OculusHMDState))]
     public class OculusHMD : XRHMD
     {
         new public OculusHMD active { get; private set; }
@@ -255,7 +255,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(OculusTouchControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(stateType = typeof(OculusTouchControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class OculusTouchController : XRControllerWithRumble
     {
         new public static OculusTouchController leftHand { get; private set; }
@@ -367,7 +367,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(OculusTouchControllerState))]
+    [InputControlLayout(stateType = typeof(OculusTouchControllerState))]
     public class OculusTrackingReference : InputDevice
     {
         public IntegerControl trackingState { get; private set; }

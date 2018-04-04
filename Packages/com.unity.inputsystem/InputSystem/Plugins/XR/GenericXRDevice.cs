@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : InputDevice
     {
         public static XRController leftHand { get; private set; }

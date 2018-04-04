@@ -76,7 +76,7 @@ namespace UnityEngine.Experimental.Input
     ///
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
-    [InputLayout(stateType = typeof(MouseState))]
+    [InputControlLayout(stateType = typeof(MouseState))]
     public class Mouse : Pointer
     {
         /// <summary>

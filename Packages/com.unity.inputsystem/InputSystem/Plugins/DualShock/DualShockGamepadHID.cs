@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     /// <summary>
     /// PS4 DualShock controller that is interfaced to a HID backend.
     /// </summary>
-    [InputLayout(stateType = typeof(DualShockHIDInputReport))]
+    [InputControlLayout(stateType = typeof(DualShockHIDInputReport))]
     public class DualShockGamepadHID : DualShockGamepad
     {
         public ButtonControl leftTriggerButton { get; private set; }

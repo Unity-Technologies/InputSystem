@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputLayout(stateType = typeof(PointerState))]
+    [InputControlLayout(stateType = typeof(PointerState))]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?

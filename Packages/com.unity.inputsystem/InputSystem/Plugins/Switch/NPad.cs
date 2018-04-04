@@ -207,7 +207,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
     /// <seealso cref="NPadInputState"/>
-    [InputLayout(stateType = typeof(NPadInputState))]
+    [InputControlLayout(stateType = typeof(NPadInputState))]
     public class NPad : Gamepad
     {
         public ButtonControl leftSL { get; private set; }

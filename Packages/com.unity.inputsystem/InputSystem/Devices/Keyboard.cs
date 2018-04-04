@@ -320,7 +320,7 @@ namespace UnityEngine.Experimental.Input
     /// <see cref="InputControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
-    [InputLayout(stateType = typeof(KeyboardState))]
+    [InputControlLayout(stateType = typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
         /// <summary>

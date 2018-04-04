@@ -510,9 +510,9 @@ namespace UnityEngine.Experimental.Input
         public static InputControlLayout FromType(string name, Type type)
         {
             var controlLayouts = new List<ControlItem>();
-            var layoutAttribute = type.GetCustomAttribute<InputLayoutAttribute>(true);
+            var layoutAttribute = type.GetCustomAttribute<InputControlLayoutAttribute>(true);
 
-            // If there's an InputLayoutAttribute on the type that has 'stateType' set,
+            // If there's an InputControlLayoutAttribute on the type that has 'stateType' set,
             // add control layouts from its state (if present) instead of from the type.
             var stateFormat = new FourCC();
             if (layoutAttribute != null && layoutAttribute.stateType != null)

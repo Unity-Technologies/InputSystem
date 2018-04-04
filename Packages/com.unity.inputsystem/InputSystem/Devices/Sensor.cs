@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    [InputLayout(stateType = typeof(AccelerometerState))]
+    [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor
     {
         public Vector3Control acceleration { get; private set; }
@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    [InputLayout(stateType = typeof(GyroscopeState))]
+    [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
         public QuaternionControl orientation { get; private set; }

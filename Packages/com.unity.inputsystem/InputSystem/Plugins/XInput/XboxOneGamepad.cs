@@ -145,7 +145,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
 {
-    [InputLayout(stateType = typeof(XboxOneGamepadState))]
+    [InputControlLayout(stateType = typeof(XboxOneGamepadState))]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         public ButtonControl paddle1 { get; private set; }

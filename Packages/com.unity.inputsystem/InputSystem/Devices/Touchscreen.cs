@@ -119,7 +119,7 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A multi-touch surface.
     /// </summary>
-    [InputLayout(stateType = typeof(TouchscreenState))]
+    [InputControlLayout(stateType = typeof(TouchscreenState))]
     public class Touchscreen : Pointer
     {
         /// <summary>

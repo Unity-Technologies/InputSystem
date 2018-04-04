@@ -243,7 +243,7 @@ class FunctionalTests : InputTestFixture
         Assert.That(device.leftStick.x.clamp, Is.True);
     }
 
-    [InputLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     class DeviceWithCommonUsages : InputDevice
     {
     }
@@ -565,7 +565,7 @@ class FunctionalTests : InputTestFixture
             return new FourCC('T', 'E', 'S', 'T');
         }
     }
-    [InputLayout(stateType = typeof(StateStructWithPrimitiveFields))]
+    [InputControlLayout(stateType = typeof(StateStructWithPrimitiveFields))]
     class DeviceWithStateStructWithPrimitiveFields : InputDevice
     {
     }
@@ -592,7 +592,7 @@ class FunctionalTests : InputTestFixture
             return new FourCC('T', 'E', 'S', 'T');
         }
     }
-    [InputLayout(stateType = typeof(StateWithFixedArray))]
+    [InputControlLayout(stateType = typeof(StateWithFixedArray))]
     class DeviceWithStateStructWithFixedArray : InputDevice
     {
     }
@@ -4180,7 +4180,7 @@ class FunctionalTests : InputTestFixture
         }
     }
 
-    [InputLayout(stateType = typeof(CustomDeviceState))]
+    [InputControlLayout(stateType = typeof(CustomDeviceState))]
     class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
@@ -6545,7 +6545,7 @@ class FunctionalTests : InputTestFixture
             return new FourCC("BASE");
         }
     }
-    [InputLayout(stateType = typeof(BaseInputState))]
+    [InputControlLayout(stateType = typeof(BaseInputState))]
     class BaseInputDevice : InputDevice
     {
     }
@@ -6557,7 +6557,7 @@ class FunctionalTests : InputTestFixture
             return new FourCC("DERI");
         }
     }
-    [InputLayout(stateType = typeof(DerivedInputState))]
+    [InputControlLayout(stateType = typeof(DerivedInputState))]
     class DerivedInputDevice : InputDevice
     {
     }

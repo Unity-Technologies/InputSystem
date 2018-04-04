@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input
         /// be instanted for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiate, the system will reflect on all public <see cref="InputControl"/>
-        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputLayoutAttribute"/>
+        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputControlLayoutAttribute"/>
         /// to provide additional information for the generated layout.
         /// </remarks>
         public static void RegisterControlLayout(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input
         /// be instanted for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiate, the system will reflect on all public <see cref="InputControl"/>
-        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputLayoutAttribute"/>
+        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputControlLayoutAttribute"/>
         /// to provide additional information for the generated layout.
         /// </remarks>
         public static void RegisterControlLayout<T>(string name = null, InputDeviceDescription? deviceDescription = null)

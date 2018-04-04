@@ -140,7 +140,7 @@ namespace UnityEngine.Experimental.Input
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
     /// <seealso cref="GamepadState"/>
-    [InputLayout(stateType = typeof(GamepadState))]
+    [InputControlLayout(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         ////REVEIEW: add PS4 and Xbox style alternate accessors?

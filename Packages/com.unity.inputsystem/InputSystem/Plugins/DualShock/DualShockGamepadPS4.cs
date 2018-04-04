@@ -225,7 +225,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     }
 
 
-    [InputLayout(stateType = typeof(DualShockGamepadStatePS4))]
+    [InputControlLayout(stateType = typeof(DualShockGamepadStatePS4))]
     public class DualShockGamepadPS4 : DualShockGamepad, IDualShockHaptics
     {
         ////TODO: move up into base

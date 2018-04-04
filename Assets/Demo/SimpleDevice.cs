@@ -18,7 +18,7 @@ public struct MyDeviceState : IInputStateTypeInfo
     }
 }
 
-[InputLayout(stateType = typeof(MyDeviceState))]
+[InputControlLayout(stateType = typeof(MyDeviceState))]
 //[InputPlugin]
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {

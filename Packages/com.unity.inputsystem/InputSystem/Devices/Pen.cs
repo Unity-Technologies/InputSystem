@@ -73,7 +73,7 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A pen/stylus input device.
     /// </summary>
-    [InputLayout(stateType = typeof(PenState))]
+    [InputControlLayout(stateType = typeof(PenState))]
     public class Pen : Pointer
     {
         public new static Pen current { get; internal set; }

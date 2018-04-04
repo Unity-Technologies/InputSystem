@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
     // A joystick with an arbitrary number of buttons and axes.
     // By default comes with just a trigger, a potentially twistable
     // stick and an optional single hatswitch.
-    [InputLayout(stateType = typeof(JoystickState))]
+    [InputControlLayout(stateType = typeof(JoystickState))]
     public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }

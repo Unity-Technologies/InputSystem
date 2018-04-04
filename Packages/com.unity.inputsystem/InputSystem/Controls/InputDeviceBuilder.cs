@@ -14,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Turns a layout into a control hierarchy.
+    /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
     /// </summary>
     /// <remarks>
     /// Ultimately produces a device but can also be used to query the control setup described

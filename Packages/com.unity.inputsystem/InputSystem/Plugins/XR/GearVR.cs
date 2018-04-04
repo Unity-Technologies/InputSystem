@@ -142,7 +142,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(GearVRHMDState))]
+    [InputControlLayout(stateType = typeof(GearVRHMDState))]
     public class GearVRHMD : XRHMD
     {
         new public GearVRHMD active { get; private set; }
@@ -275,7 +275,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(GearVRTrackedControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(stateType = typeof(GearVRTrackedControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
         new public static GearVRTrackedController leftHand { get; private set; }

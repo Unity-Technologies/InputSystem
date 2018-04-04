@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(WMRHMDState))]
+    [InputControlLayout(stateType = typeof(WMRHMDState))]
     public class WMRHMD : XRHMD
     {
         new public WMRHMD active { get; private set; }
@@ -178,7 +178,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(WMRSpatialControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(stateType = typeof(WMRSpatialControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class WMRSpatialController : XRController
     {
         new public static WMRSpatialController leftHand { get; private set; }

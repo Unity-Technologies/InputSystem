@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(DaydreamHMDState))]
+    [InputControlLayout(stateType = typeof(DaydreamHMDState))]
     public class DaydreamHMD : XRHMD
     {
         new public DaydreamHMD active { get; private set; }
@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputLayout(stateType = typeof(DaydreamControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(stateType = typeof(DaydreamControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class DaydreamController : XRController
     {
         new public static DaydreamController leftHand { get; private set; }

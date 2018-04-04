@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
-    [InputLayout(stateType = typeof(IOSGameControllerState))]
+    [InputControlLayout(stateType = typeof(IOSGameControllerState))]
     public class IOSGameController : Gamepad
     {
     }

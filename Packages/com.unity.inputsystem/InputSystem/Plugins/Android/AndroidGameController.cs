@@ -392,7 +392,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     ////REVIEW: Is this guaranteed to be a Gamepad? If both joystick and gamepad come through here, we need to split this up.
     ////        Also, probably should be called AndroidGamepad
-    [InputLayout(stateType = typeof(AndroidGameControllerState))]
+    [InputControlLayout(stateType = typeof(AndroidGameControllerState))]
     public class AndroidGameController : Gamepad
     {
         internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description,
