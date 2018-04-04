@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -309,9 +312,13 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             .WithBit((uint)element.reportOffsetInBits % 8)
                             .WithFormat(element.DetermineFormat());
 
-                        ////TODO: configure axis parameters from min/max limits
+                        var parameters = element.DetermineParameters();
+                        if (!string.IsNullOrEmpty(parameters))
+                            control.WithParameters(parameters);
 
-                        element.SetUsage(control);
+                        var usages = element.DetermineUsages();
+                        if (usages != null)
+                            control.WithUsages(usages);
                     }
                 }
 
@@ -412,6 +419,70 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 get { return (flags & HIDElementFlags.Wrap) == HIDElementFlags.Wrap; }
             }
 
+            public float resolution
+            {
+                get
+                {
+                    var min = physicalMin;
+                    var max = physicalMax;
+
+                    if (min == 0.0f && max == 0.0f)
+                    {
+                        min = logicalMin;
+                        max = logicalMax;
+                    }
+
+                    return (logicalMax - logicalMin) / ((max - min) * Mathf.Pow(10, unitExponent));
+                }
+            }
+
+            internal bool isSigned
+            {
+                get { return logicalMin < 0; }
+            }
+
+            internal float minFloat
+            {
+                get
+                {
+                    switch (reportSizeInBits)
+                    {
+                        case 8:
+                            if (isSigned)
+                                return (sbyte)logicalMin / 128.0f;
+                            return (byte)logicalMin / 255.0f;
+
+                        case 16:
+                            if (isSigned)
+                                return (short)logicalMin / 32768.0f;
+                            return (ushort)logicalMin / 65536.0f;
+                    }
+
+                    return 0.0f;
+                }
+            }
+
+            internal float maxFloat
+            {
+                get
+                {
+                    switch (reportSizeInBits)
+                    {
+                        case 8:
+                            if (isSigned)
+                                return (sbyte)logicalMax / 128.0f;
+                            return (byte)logicalMax / 255.0f;
+
+                        case 16:
+                            if (isSigned)
+                                return (short)logicalMax / 32768.0f;
+                            return (ushort)logicalMax / 65536.0f;
+                    }
+
+                    return 1.0f;
+                }
+            }
+
             internal string DetermineName()
             {
                 // It's rare for HIDs to declare string names for items and HID drivers may report weird strings
@@ -477,24 +548,70 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             internal FourCC DetermineFormat()
             {
-                ////TODO: do this properly instead of this nonsense; we need to look at the format that the usage+usagePage actually stands for
                 switch (reportSizeInBits)
                 {
                     case 1: return InputStateBlock.kTypeBit;
-                    case 8: return InputStateBlock.kTypeByte;
-                    case 16: return InputStateBlock.kTypeShort;
-                    case 32: return InputStateBlock.kTypeInt;
+                    case 8:
+                        if (isSigned)
+                            return InputStateBlock.kTypeSByte;
+                        return InputStateBlock.kTypeByte;
+                    case 16:
+                        if (isSigned)
+                            return InputStateBlock.kTypeShort;
+                        return InputStateBlock.kTypeUShort;
+                    case 32:
+                        if (isSigned)
+                            return InputStateBlock.kTypeInt;
+                        return InputStateBlock.kTypeUInt;
                 }
 
                 return new FourCC();
             }
 
-            internal void SetUsage(InputTemplate.Builder.ControlBuilder control)
+            internal InternedString[] DetermineUsages()
             {
                 if (usagePage == UsagePage.Button && usage == 0)
-                    control.WithUsages(new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction});
+                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
                 if (usagePage == UsagePage.Button && usage == 1)
-                    control.WithUsages(new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction});
+                    return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                return null;
+            }
+
+            internal string DetermineParameters()
+            {
+                if (usagePage == UsagePage.GenericDesktop)
+                {
+                    switch (usage)
+                    {
+                        case (int)GenericDesktop.X:
+                        case (int)GenericDesktop.Y:
+                        case (int)GenericDesktop.Z:
+                        case (int)GenericDesktop.Rx:
+                        case (int)GenericDesktop.Ry:
+                        case (int)GenericDesktop.Rz:
+                        case (int)GenericDesktop.Vx:
+                        case (int)GenericDesktop.Vy:
+                        case (int)GenericDesktop.Vz:
+                        case (int)GenericDesktop.Vbrx:
+                        case (int)GenericDesktop.Vbry:
+                        case (int)GenericDesktop.Vbrz:
+                        case (int)GenericDesktop.Slider:
+                        case (int)GenericDesktop.Dial:
+                        case (int)GenericDesktop.Wheel:
+                            // If we have min/max bounds on the axis values, set up normalization on the axis.
+                            // NOTE: We put the center in the middle between min/max as we can't know where the
+                            //       resting point of the axis is (may be on min if it's a trigger, for example).
+                            if (logicalMin == 0 && logicalMax == 0)
+                                return null;
+                            var min = minFloat;
+                            var max = maxFloat;
+                            var zero = min + (max - min) / 2.0f;
+                            return string.Format("normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min,
+                            max, zero);
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -566,6 +683,128 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 return JsonUtility.FromJson<HIDDeviceDescriptor>(json);
             }
+        }
+
+        /// <summary>
+        /// Helper to quickly build descriptors for arbitrary HIDs.
+        /// </summary>
+        public struct HIDDeviceDescriptorBuilder
+        {
+            public UsagePage usagePage;
+            public int usage;
+
+            public HIDDeviceDescriptorBuilder(UsagePage usagePage, int usage)
+                : this()
+            {
+                this.usagePage = usagePage;
+                this.usage = usage;
+            }
+
+            public HIDDeviceDescriptorBuilder(GenericDesktop usage)
+                : this(UsagePage.GenericDesktop, (int)usage)
+            {
+            }
+
+            public HIDDeviceDescriptorBuilder StartReport(HIDReportType reportType, int reportId = 1)
+            {
+                m_CurrentReportId = reportId;
+                m_CurrentReportType = reportType;
+                m_CurrentReportOffsetInBits = 8; // Report ID.
+                return this;
+            }
+
+            public HIDDeviceDescriptorBuilder AddElement(UsagePage usagePage, int usage, int sizeInBits)
+            {
+                if (m_Elements == null)
+                {
+                    m_Elements = new List<HIDElementDescriptor>();
+                }
+                else
+                {
+                    // Make sure the usage and usagePage combination is unique.
+                    foreach (var element in m_Elements)
+                    {
+                        // Skip elements that aren't in the same report.
+                        if (element.reportId != m_CurrentReportId || element.reportType != m_CurrentReportType)
+                            continue;
+
+                        if (element.usagePage == usagePage && element.usage == usage)
+                            throw new InvalidOperationException(string.Format(
+                                    "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
+                                    usagePage, usage));
+                    }
+                }
+
+                m_Elements.Add(new HIDElementDescriptor
+                {
+                    usage = usage,
+                    usagePage = usagePage,
+                    reportOffsetInBits = m_CurrentReportOffsetInBits,
+                    reportSizeInBits = sizeInBits,
+                    reportType = m_CurrentReportType,
+                    reportId = m_CurrentReportId
+                });
+                m_CurrentReportOffsetInBits += sizeInBits;
+
+                return this;
+            }
+
+            public HIDDeviceDescriptorBuilder AddElement(GenericDesktop usage, int sizeInBits)
+            {
+                return AddElement(UsagePage.GenericDesktop, (int)usage, sizeInBits);
+            }
+
+            public HIDDeviceDescriptorBuilder WithPhysicalMinMax(int min, int max)
+            {
+                var index = m_Elements.Count - 1;
+                if (index < 0)
+                    throw new InvalidOperationException("No element has been added to the descriptor yet");
+
+                var element = m_Elements[index];
+                element.physicalMin = min;
+                element.physicalMax = max;
+                m_Elements[index] = element;
+
+                return this;
+            }
+
+            public HIDDeviceDescriptorBuilder WithLogicalMinMax(int min, int max)
+            {
+                var index = m_Elements.Count - 1;
+                if (index < 0)
+                    throw new InvalidOperationException("No element has been added to the descriptor yet");
+
+                var element = m_Elements[index];
+                element.logicalMin = min;
+                element.logicalMax = max;
+                m_Elements[index] = element;
+
+                return this;
+            }
+
+            public HIDDeviceDescriptor Finish()
+            {
+                var descriptor = new HIDDeviceDescriptor
+                {
+                    usage = usage,
+                    usagePage = usagePage,
+                    elements = m_Elements != null ? m_Elements.ToArray() : null,
+                    collections = m_Collections != null ? m_Collections.ToArray() : null,
+                };
+
+                return descriptor;
+            }
+
+            private int m_CurrentReportId;
+            private HIDReportType m_CurrentReportType;
+            private int m_CurrentReportOffsetInBits;
+
+            private List<HIDElementDescriptor> m_Elements;
+            private List<HIDCollectionDescriptor> m_Collections;
+
+            private int m_InputReportSize;
+            private int m_OutputReportSize;
+            private int m_FeatureReportSize;
         }
 
         /// <summary>

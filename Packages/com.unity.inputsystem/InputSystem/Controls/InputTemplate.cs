@@ -407,6 +407,13 @@ namespace UnityEngine.Experimental.Input
                 {
                     return WithUsages((IEnumerable<string>)usages);
                 }
+
+                public ControlBuilder WithParameters(string parameters)
+                {
+                    var parsed = ParseParameters(parameters);
+                    controls[index].parameters = new ReadOnlyArray<ParameterValue>(parsed);
+                    return this;
+                }
             }
 
             // This invalidates the ControlBuilders from previous calls! (our array may move)

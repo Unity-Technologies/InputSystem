@@ -10,7 +10,9 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             InputSystem.RegisterTemplate<DualShockGamepad>();
 
             // HID version for platforms where we pick up the controller as a raw HID.
-            // This works without any PS4-specific drivers.
+            // This works without any PS4-specific drivers but does not support the full
+            // range of capabilities of the controller (the HID format is undocumented
+            // and only partially understood).
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR
             InputSystem.RegisterTemplate<DualShockGamepadHID>(deviceDescription: new InputDeviceDescription
             {
