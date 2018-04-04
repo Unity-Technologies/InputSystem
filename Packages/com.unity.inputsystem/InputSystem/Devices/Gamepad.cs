@@ -139,7 +139,6 @@ namespace UnityEngine.Experimental.Input
     /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
-    /// <seealso cref="GamepadState"/>
     [InputControlLayout(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
