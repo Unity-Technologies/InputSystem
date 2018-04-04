@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     internal static class GearVRSupport
     {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
+        internal static string FilterLayout(XRDeviceDescriptor deviceDescriptor)
         {
             if (deviceDescriptor.manufacturer == "__Samsung__" || deviceDescriptor.manufacturer == "Samsung")
             {
@@ -28,111 +28,111 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [StructLayout(LayoutKind.Explicit, Size = 320)]
     public struct GearVRHMDState : IInputStateTypeInfo
     {
-        [InputControl(template = "Vector2")]
+        [InputControl(layout = "Vector2")]
         [FieldOffset(0)]
         public Vector2 touchpad;
 
-        [InputControl(template = "Integer")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(8)]
         public int trackingState;
 
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(12)]
         public bool isTracked;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(16)]
         public Vector3 devicePosition;
 
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(28)]
         public Quaternion deviceRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(44)]
         public Vector3 deviceVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(56)]
         public Vector3 deviceAngularVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(68)]
         public Vector3 deviceAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(80)]
         public Vector3 deviceAngularAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(92)]
         public Vector3 leftEyePosition;
 
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(104)]
         public Quaternion leftEyeRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(120)]
         public Vector3 leftEyeVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(132)]
         public Vector3 leftEyeAngularVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(144)]
         public Vector3 leftEyeAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(156)]
         public Vector3 leftEyeAngularAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(168)]
         public Vector3 rightEyePosition;
 
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(180)]
         public Quaternion rightEyeRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(196)]
         public Vector3 rightEyeVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(208)]
         public Vector3 rightEyeAngularVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(220)]
         public Vector3 rightEyeAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(232)]
         public Vector3 rightEyeAngularAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(244)]
         public Vector3 centerEyePosition;
 
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(256)]
         public Quaternion centerEyeRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(272)]
         public Vector3 centerEyeVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(284)]
         public Vector3 centerEyeAngularVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(296)]
         public Vector3 centerEyeAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(308)]
         public Vector3 centerEyeAngularAcceleration;
 
@@ -142,7 +142,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputTemplate(stateType = typeof(GearVRHMDState))]
+    [InputLayout(stateType = typeof(GearVRHMDState))]
     public class GearVRHMD : XRHMD
     {
         new public GearVRHMD active { get; private set; }
@@ -213,59 +213,59 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [StructLayout(LayoutKind.Explicit, Size = 112)]
     public struct GearVRTrackedControllerState : IInputStateTypeInfo
     {
-        [InputControl(template = "Analog")]
+        [InputControl(layout = "Analog")]
         [FieldOffset(0)]
         public float combinedTrigger;
 
-        [InputControl(template = "Vector2")]
+        [InputControl(layout = "Vector2")]
         [FieldOffset(4)]
         public Vector2 joystick;
 
-        [InputControl(template = "Analog")]
+        [InputControl(layout = "Analog")]
         [FieldOffset(12)]
         public float trigger;
 
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(16)]
         public bool back;
 
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(20)]
         public bool touchpadClick;
 
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(24)]
         public bool touchpadTouch;
 
-        [InputControl(template = "Integer")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(28)]
         public int trackingState;
 
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(32)]
         public bool isTracked;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(36)]
         public Vector3 devicePosition;
 
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(48)]
         public Quaternion deviceRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(64)]
         public Vector3 deviceVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(76)]
         public Vector3 deviceAngularVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(88)]
         public Vector3 deviceAcceleration;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(100)]
         public Vector3 deviceAngularAcceleration;
 
@@ -275,7 +275,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputTemplate(stateType = typeof(GearVRTrackedControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputLayout(stateType = typeof(GearVRTrackedControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
         new public static GearVRTrackedController leftHand { get; private set; }

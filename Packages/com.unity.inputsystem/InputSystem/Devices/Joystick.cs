@@ -13,11 +13,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('J', 'O', 'Y'); }
         }
 
-        [InputControl(name = "hat", template = "Dpad", usage = "Hatswitch")]
-        [InputControl(name = "trigger", template = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
+        [InputControl(name = "hat", layout = "Dpad", usage = "Hatswitch")]
+        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
         public int buttons;
 
-        [InputControl(template = "Stick", usage = "Primary2DMotion")]
+        [InputControl(layout = "Stick", usage = "Primary2DMotion")]
         public Vector2 stick;
 
         public enum Button
@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
     // A joystick with an arbitrary number of buttons and axes.
     // By default comes with just a trigger, a potentially twistable
     // stick and an optional single hatswitch.
-    [InputTemplate(stateType = typeof(JoystickState))]
+    [InputLayout(stateType = typeof(JoystickState))]
     public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }

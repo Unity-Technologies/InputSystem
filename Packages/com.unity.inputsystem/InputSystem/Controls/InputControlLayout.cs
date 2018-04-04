@@ -11,47 +11,47 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-////TODO: turn 'overrides' into feature where templates can be registered as overrides and they get merged *into* the template
+////TODO: turn 'overrides' into feature where layouts can be registered as overrides and they get merged *into* the layout
 ////      they are overriding
 
-////TODO: make it so that a control with no variant set can act as the base template for controls with the same name that have a variant set
+////TODO: make it so that a control with no variant set can act as the base layout for controls with the same name that have a variant set
 
-////TODO: ensure that if a template sets a device description, it is indeed a device template
+////TODO: ensure that if a layout sets a device description, it is indeed a device layout
 
 ////TODO: array support
 
 ////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
 
-////REVIEW: common usages are on all templates but only make sense for devices
+////REVIEW: common usages are on all layouts but only make sense for devices
 
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// A template lays out the composition of an input control.
+    /// A control layout specifies the composition of an input control.
     /// </summary>
     /// <remarks>
-    /// Templates can be created in three ways:
+    /// Control layouts can be created in three ways:
     ///
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
     /// <item><description>Constructed through reflection from InputControls classes.</description></item>
-    /// <item><description>Through template factories using InputTemplate.Builder.</description></item>
+    /// <item><description>Through layout factories using InputLayout.Builder.</description></item>
     /// </list>
     ///
-    /// Once constructed, templates are immutable (but you can always
-    /// replace a registered template in the system and it will affect
-    /// everything constructed from the template).
+    /// Once constructed, control layouts are immutable (but you can always
+    /// replace a registered layout in the system and it will affect
+    /// everything constructed from the layout).
     ///
-    /// Templates can be for arbitrary control rigs or for entire
-    /// devices. Device templates can use the 'deviceDescriptor' field
+    /// Control layouts can be for arbitrary control rigs or for entire
+    /// devices. Device layouts can use the 'deviceDescriptor' field
     /// to specify regexs that are to match against compatible devices.
     ///
-    /// InputTemplate objects are considered temporaries. Except in the
+    /// InputControlLayout objects are considered temporaries. Except in the
     /// editor, we don't keep them around beyond device creation.
     /// </remarks>
-    public class InputTemplate
+    public class InputControlLayout
     {
-        // String that is used to separate names from namespaces in template names.
+        // String that is used to separate names from namespaces in layout names.
         public const string kNamespaceQualifier = "::";
 
         public enum ParameterType
@@ -62,7 +62,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Both controls and processors can have public fields that can be set
-        // directly from templates. The values are usually specified in strings
+        // directly from layouts. The values are usually specified in strings
         // (like "clampMin=-1") but we parse them ahead of time into instances
         // of this structure that tell us where to store the value in the control.
         public unsafe struct ParameterValue
@@ -127,7 +127,7 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Specification for the composition of a direct or indirect child control.
         /// </summary>
-        public struct ControlTemplate
+        public struct ControlItem
         {
             [Flags]
             public enum Flags
@@ -141,9 +141,9 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             /// <remarks>
             /// This may also be a path. This can be used to reach
-            /// inside another template and modify properties of a control inside
+            /// inside another layout and modify properties of a control inside
             /// of it. An example for this is adding a "leftStick" control using the
-            /// Stick template and then adding two control templates that refer to
+            /// Stick layout and then adding two control layouts that refer to
             /// "leftStick/x" and "leftStick/y" respectively to modify the state
             /// format used by the stick.
             ///
@@ -152,7 +152,7 @@ namespace UnityEngine.Experimental.Input
             /// <seealso cref="isModifyingChildControlByPath"/>
             public InternedString name;
 
-            public InternedString template;
+            public InternedString layout;
             public InternedString variant;
             public string useStateFrom;
 
@@ -173,12 +173,12 @@ namespace UnityEngine.Experimental.Input
             public FourCC format;
             public Flags flags;
 
-            // If true, the template will not add a control but rather a modify a control
-            // inside the hierarchy added by 'template'. This allows, for example, to modify
+            // If true, the layout will not add a control but rather a modify a control
+            // inside the hierarchy added by 'layout'. This allows, for example, to modify
             // just the X axis control of the left stick directly from within a gamepad
-            // template instead of having to have a custom stick template for the left stick
-            // than in turn would have to make use of a custom axis template for the X axis.
-            // Insted, you can just have a control template with the name "leftStick/x".
+            // layout instead of having to have a custom stick layout for the left stick
+            // than in turn would have to make use of a custom axis layout for the X axis.
+            // Insted, you can just have a control layout with the name "leftStick/x".
             public bool isModifyingChildControlByPath
             {
                 get { return (flags & Flags.IsModifyingChildControlByPath) == Flags.IsModifyingChildControlByPath; }
@@ -204,20 +204,20 @@ namespace UnityEngine.Experimental.Input
             }
 
             /// <summary>
-            /// For any property not set on this control template, take the setting from <paramref name="other"/>.
+            /// For any property not set on this control layout, take the setting from <paramref name="other"/>.
             /// </summary>
-            /// <param name="other">Control template providing settings.</param>
+            /// <param name="other">Control layout providing settings.</param>
             /// <remarks>
             /// <see cref="name"/> will not be touched.
             /// </remarks>
-            public ControlTemplate Merge(ControlTemplate other)
+            public ControlItem Merge(ControlItem other)
             {
-                var result = new ControlTemplate();
+                var result = new ControlItem();
 
                 result.name = name;
                 Debug.Assert(!name.IsEmpty());
 
-                result.template = template.IsEmpty() ? other.template : template;
+                result.layout = layout.IsEmpty() ? other.layout : layout;
                 result.variant = variant.IsEmpty() ? other.variant : variant;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
 
@@ -277,7 +277,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        // Unique name of the template.
+        // Unique name of the layout.
         // NOTE: Case-insensitive.
         public InternedString name
         {
@@ -294,9 +294,9 @@ namespace UnityEngine.Experimental.Input
             get { return m_StateFormat; }
         }
 
-        public string extendsTemplate
+        public string extendsLayout
         {
-            get { return m_ExtendsTemplate; }
+            get { return m_ExtendsLayout; }
         }
 
         public ReadOnlyArray<InternedString> commonUsages
@@ -312,50 +312,50 @@ namespace UnityEngine.Experimental.Input
             get { return m_DeviceDescription; }
         }
 
-        public ReadOnlyArray<ControlTemplate> controls
+        public ReadOnlyArray<ControlItem> controls
         {
-            get { return new ReadOnlyArray<ControlTemplate>(m_Controls); }
+            get { return new ReadOnlyArray<ControlItem>(m_Controls); }
         }
 
-        public bool isDeviceTemplate
+        public bool isDeviceLayout
         {
             get { return typeof(InputDevice).IsAssignableFrom(m_Type); }
         }
 
-        public bool isControlTemplate
+        public bool isControlLayout
         {
-            get { return !isDeviceTemplate; }
+            get { return !isDeviceLayout; }
         }
 
         /// <summary>
-        /// Build a template programmatically. Primarily for use by template factories
+        /// Build a layout programmatically. Primarily for use by layout factories
         /// registered with the system.
         /// </summary>
-        /// <seealso cref="InputSystem.RegisterTemplateFactory"/>
+        /// <seealso cref="InputSystem.RegisterControlLayoutFactory"/>
         public struct Builder
         {
             public string name;
             public Type type;
             public FourCC stateFormat;
-            public string extendsTemplate;
+            public string extendsLayout;
             public bool updateBeforeRender;
             public InputDeviceDescription deviceDescription;
 
             private int m_ControlCount;
-            private ControlTemplate[] m_Controls;
+            private ControlItem[] m_Controls;
 
             public struct ControlBuilder
             {
                 internal Builder builder;
-                internal ControlTemplate[] controls;
+                internal ControlItem[] controls;
                 internal int index;
 
-                public ControlBuilder WithTemplate(string template)
+                public ControlBuilder WithLayout(string layout)
                 {
-                    if (string.IsNullOrEmpty(template))
-                        throw new ArgumentException("Template name cannot be null or empty", "template");
+                    if (string.IsNullOrEmpty(layout))
+                        throw new ArgumentException("Layout name cannot be null or empty", "layout");
 
-                    controls[index].template = new InternedString(template);
+                    controls[index].layout = new InternedString(layout);
                     return this;
                 }
 
@@ -390,7 +390,7 @@ namespace UnityEngine.Experimental.Input
                     for (var i = 0; i < usages.Length; ++i)
                         if (usages[i].IsEmpty())
                             throw new ArgumentException(
-                                string.Format("Empty usage entry at index {0} for control '{1}' in template '{2}'", i,
+                                string.Format("Empty usage entry at index {0} for control '{1}' in layout '{2}'", i,
                                     controls[index].name, builder.name), "usages");
 
                     controls[index].usages = new ReadOnlyArray<InternedString>(usages);
@@ -418,14 +418,14 @@ namespace UnityEngine.Experimental.Input
 
             // This invalidates the ControlBuilders from previous calls! (our array may move)
             /// <summary>
-            /// Add a new control to the template.
+            /// Add a new control to the layout.
             /// </summary>
             /// <param name="name">Name or path of the control. If it is a path (e.g. <c>"leftStick/x"</c>,
-            /// then the control either modifies the setup of a child control of another control in the template
-            /// or adds a new child control to another control in the template. Modifying child control is useful,
-            /// for example, to alter the state format of controls coming from the base template. Likewise,
-            /// adding child controls to another control is useful to modify the setup of of the control template
-            /// being used without having to create and register a custom control template.</param>
+            /// then the control either modifies the setup of a child control of another control in the layout
+            /// or adds a new child control to another control in the layout. Modifying child control is useful,
+            /// for example, to alter the state format of controls coming from the base layout. Likewise,
+            /// adding child controls to another control is useful to modify the setup of of the control layout
+            /// being used without having to create and register a custom control layout.</param>
             /// <returns>A control builder that permits setting various parameters on the control.</returns>
             /// <exception cref="ArgumentException"><paramref name="name"/> is null or empty.</exception>
             public ControlBuilder AddControl(string name)
@@ -434,7 +434,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException(name);
 
                 var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
-                        new ControlTemplate {name = new InternedString(name)});
+                        new ControlItem {name = new InternedString(name)});
 
                 return new ControlBuilder
                 {
@@ -474,144 +474,144 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
-            public Builder Extend(string baseTemplateName)
+            public Builder Extend(string baseLayoutName)
             {
-                extendsTemplate = baseTemplateName;
+                extendsLayout = baseLayoutName;
                 return this;
             }
 
-            public InputTemplate Build()
+            public InputControlLayout Build()
             {
-                ControlTemplate[] controls = null;
+                ControlItem[] controls = null;
                 if (m_ControlCount > 0)
                 {
-                    controls = new ControlTemplate[m_ControlCount];
+                    controls = new ControlItem[m_ControlCount];
                     Array.Copy(m_Controls, controls, m_ControlCount);
                 }
 
-                // Allow template to be unnamed. The system will automatically set the
-                // name that the template has been registered under.
-                var template =
-                    new InputTemplate(new InternedString(name), type ?? typeof(InputDevice))
+                // Allow layout to be unnamed. The system will automatically set the
+                // name that the layout has been registered under.
+                var layout =
+                    new InputControlLayout(new InternedString(name), type ?? typeof(InputDevice))
                 {
                     m_StateFormat = stateFormat,
-                    m_ExtendsTemplate = new InternedString(extendsTemplate),
+                    m_ExtendsLayout = new InternedString(extendsLayout),
                     m_DeviceDescription = deviceDescription,
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender
                 };
 
-                return template;
+                return layout;
             }
         }
 
-        // Uses reflection to construct a template from the given type.
+        // Uses reflection to construct a layout from the given type.
         // Can be used with both control classes and state structs.
-        public static InputTemplate FromType(string name, Type type)
+        public static InputControlLayout FromType(string name, Type type)
         {
-            var controlTemplates = new List<ControlTemplate>();
-            var templateAttribute = type.GetCustomAttribute<InputTemplateAttribute>(true);
+            var controlLayouts = new List<ControlItem>();
+            var layoutAttribute = type.GetCustomAttribute<InputLayoutAttribute>(true);
 
-            // If there's an InputTemplateAttribute on the type that has 'stateType' set,
-            // add control templates from its state (if present) instead of from the type.
+            // If there's an InputLayoutAttribute on the type that has 'stateType' set,
+            // add control layouts from its state (if present) instead of from the type.
             var stateFormat = new FourCC();
-            if (templateAttribute != null && templateAttribute.stateType != null)
+            if (layoutAttribute != null && layoutAttribute.stateType != null)
             {
-                AddControlTemplates(templateAttribute.stateType, controlTemplates, name);
+                AddControlItems(layoutAttribute.stateType, controlLayouts, name);
 
                 // Get state type code from state struct.
-                if (typeof(IInputStateTypeInfo).IsAssignableFrom(templateAttribute.stateType))
+                if (typeof(IInputStateTypeInfo).IsAssignableFrom(layoutAttribute.stateType))
                 {
-                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(templateAttribute.stateType))
+                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType))
                         .GetFormat();
                 }
             }
             else
             {
-                // Add control templates from type contents.
-                AddControlTemplates(type, controlTemplates, name);
+                // Add control layouts from type contents.
+                AddControlItems(type, controlLayouts, name);
             }
 
-            if (templateAttribute != null && templateAttribute.stateFormat != new FourCC())
-                stateFormat = templateAttribute.stateFormat;
+            if (layoutAttribute != null && layoutAttribute.stateFormat != new FourCC())
+                stateFormat = layoutAttribute.stateFormat;
 
-            ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json templates as well)
-            ////TODO: make sure all paths are unique (only relevant for JSON templates?)
+            ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json layouts as well)
+            ////TODO: make sure all paths are unique (only relevant for JSON layouts?)
 
-            // Create template object.
-            var template = new InputTemplate(name, type);
-            template.m_Controls = controlTemplates.ToArray();
-            template.m_StateFormat = stateFormat;
+            // Create layout object.
+            var layout = new InputControlLayout(name, type);
+            layout.m_Controls = controlLayouts.ToArray();
+            layout.m_StateFormat = stateFormat;
 
-            if (templateAttribute != null && templateAttribute.commonUsages != null)
-                template.m_CommonUsages =
-                    ArrayHelpers.Select(templateAttribute.commonUsages, x => new InternedString(x));
+            if (layoutAttribute != null && layoutAttribute.commonUsages != null)
+                layout.m_CommonUsages =
+                    ArrayHelpers.Select(layoutAttribute.commonUsages, x => new InternedString(x));
 
-            return template;
+            return layout;
         }
 
         public string ToJson()
         {
-            var template = TemplateJson.FromTemplate(this);
-            return JsonUtility.ToJson(template);
+            var layout = LayoutJson.FromLayout(this);
+            return JsonUtility.ToJson(layout);
         }
 
-        // Constructs a template from the given JSON source.
-        public static InputTemplate FromJson(string json)
+        // Constructs a layout from the given JSON source.
+        public static InputControlLayout FromJson(string json)
         {
-            var templateJson = JsonUtility.FromJson<TemplateJson>(json);
-            return templateJson.ToTemplate();
+            var layoutJson = JsonUtility.FromJson<LayoutJson>(json);
+            return layoutJson.ToLayout();
         }
 
-        ////REVIEW: shouldn't state be split between input and output? how does output fit into the template picture in general?
-        ////        should the control template alone determine the direction things are going in?
+        ////REVIEW: shouldn't state be split between input and output? how does output fit into the layout picture in general?
+        ////        should the control layout alone determine the direction things are going in?
 
         private InternedString m_Name;
-        internal Type m_Type; // For extension chains, we can only discover types after loading multiple templates, so we make this accessible to InputControlSetup.
+        internal Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputControlSetup.
         internal FourCC m_StateFormat;
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;
-        private InternedString m_ExtendsTemplate;
-#pragma warning disable CS0414
-        private InternedString[] m_OverridesTemplates; ////TODO
-#pragma warning restore CS0414
+        private InternedString m_ExtendsLayout;
+#pragma warning disable 0414
+        private InternedString[] m_OverridesLayouts; ////TODO
+#pragma warning restore 0414
         private InternedString[] m_CommonUsages;
-        internal ControlTemplate[] m_Controls;
+        internal ControlItem[] m_Controls;
         private InputDeviceDescription m_DeviceDescription;
         internal string m_DisplayName;
         internal string m_ResourceName;
 
-        private InputTemplate(string name, Type type)
+        private InputControlLayout(string name, Type type)
         {
             m_Name = new InternedString(name);
             m_Type = type;
         }
 
-        private static void AddControlTemplates(Type type, List<ControlTemplate> controlTemplates, string templateName)
+        private static void AddControlItems(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
-            AddControlTemplatesFromFields(type, controlTemplates, templateName);
-            AddControlTemplatesFromProperties(type, controlTemplates, templateName);
+            AddControlItemsFromFields(type, controlLayouts, layoutName);
+            AddControlItemsFromProperties(type, controlLayouts, layoutName);
         }
 
-        // Add ControlTemplates for every public property in the given type thas has
+        // Add ControlLayouts for every public property in the given type thas has
         // InputControlAttribute applied to it or has an InputControl-derived value type.
-        private static void AddControlTemplatesFromFields(Type type, List<ControlTemplate> controlTemplates, string templateName)
+        private static void AddControlItemsFromFields(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
             var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            AddControlTemplatesFromMembers(fields, controlTemplates, templateName);
+            AddControlItemsFromMembers(fields, controlLayouts, layoutName);
         }
 
-        // Add ControlTemplates for every public property in the given type thas has
+        // Add ControlLayouts for every public property in the given type thas has
         // InputControlAttribute applied to it or has an InputControl-derived value type.
-        private static void AddControlTemplatesFromProperties(Type type, List<ControlTemplate> controlTemplates, string templateName)
+        private static void AddControlItemsFromProperties(Type type, List<ControlItem> controlLayouts, string layoutName)
         {
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            AddControlTemplatesFromMembers(properties, controlTemplates, templateName);
+            AddControlItemsFromMembers(properties, controlLayouts, layoutName);
         }
 
-        // Add ControlTemplates for every member in the list thas has InputControlAttribute applied to it
+        // Add ControlLayouts for every member in the list thas has InputControlAttribute applied to it
         // or has an InputControl-derived value type.
-        private static void AddControlTemplatesFromMembers(MemberInfo[] members, List<ControlTemplate> controlTemplates, string templateName)
+        private static void AddControlItemsFromMembers(MemberInfo[] members, List<ControlItem> controlLayouts, string layoutName)
         {
             foreach (var member in members)
             {
@@ -626,29 +626,29 @@ namespace UnityEngine.Experimental.Input
                 // interface, dive inside and look. This is useful for composing states of one another.
                 if (valueType != null && valueType.IsValueType && typeof(IInputStateTypeInfo).IsAssignableFrom(valueType))
                 {
-                    var controlCountBefore = controlTemplates.Count;
+                    var controlCountBefore = controlLayouts.Count;
 
-                    AddControlTemplates(valueType, controlTemplates, templateName);
+                    AddControlItems(valueType, controlLayouts, layoutName);
 
                     // If the current member is a field that is embedding the state structure, add
-                    // the field offset to all control templates that were added from the struct.
+                    // the field offset to all control layouts that were added from the struct.
                     var memberAsField = member as FieldInfo;
                     if (memberAsField != null)
                     {
                         var fieldOffset = Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
-                        var countrolCountAfter = controlTemplates.Count;
+                        var countrolCountAfter = controlLayouts.Count;
                         for (var i = controlCountBefore; i < countrolCountAfter; ++i)
                         {
-                            var controlTemplate = controlTemplates[i];
-                            if (controlTemplates[i].offset != InputStateBlock.kInvalidOffset)
+                            var controlLayout = controlLayouts[i];
+                            if (controlLayouts[i].offset != InputStateBlock.kInvalidOffset)
                             {
-                                controlTemplate.offset += (uint)fieldOffset;
-                                controlTemplates[i] = controlTemplate;
+                                controlLayout.offset += (uint)fieldOffset;
+                                controlLayouts[i] = controlLayout;
                             }
                         }
                     }
 
-                    ////TODO: allow attributes on the member to modify control templates inside the struct
+                    ////TODO: allow attributes on the member to modify control layouts inside the struct
                 }
 
                 // Look for InputControlAttributes. If they aren't there, the member has to be
@@ -660,37 +660,37 @@ namespace UnityEngine.Experimental.Input
                         continue;
                 }
 
-                AddControlTemplatesFromMember(member, attributes, controlTemplates, templateName);
+                AddControlItemsFromMember(member, attributes, controlLayouts, layoutName);
             }
         }
 
-        private static void AddControlTemplatesFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlTemplate> controlTemplates, string templateName)
+        private static void AddControlItemsFromMember(MemberInfo member,
+            InputControlAttribute[] attributes, List<ControlItem> controlLayouts, string layoutName)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each ocurrence. However, it can also
-            // not be applied at all in which case we still add a control template (the
+            // not be applied at all in which case we still add a control layout (the
             // logic that called us already made sure the member is eligible for this kind
             // of operation).
 
             if (attributes.Length == 0)
             {
-                var controlTemplate = CreateControlTemplateFromMember(member, null, templateName);
-                ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, templateName);
-                controlTemplates.Add(controlTemplate);
+                var controlLayout = CreateControlItemFromMember(member, null, layoutName);
+                ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layoutName);
+                controlLayouts.Add(controlLayout);
             }
             else
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlTemplate = CreateControlTemplateFromMember(member, attribute, templateName);
-                    ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, templateName);
-                    controlTemplates.Add(controlTemplate);
+                    var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
+                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layoutName);
+                    controlLayouts.Add(controlLayout);
                 }
             }
         }
 
-        private static ControlTemplate CreateControlTemplateFromMember(MemberInfo member, InputControlAttribute attribute, string templateName)
+        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute, string layoutName)
         {
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
@@ -701,13 +701,13 @@ namespace UnityEngine.Experimental.Input
 
             var isModifyingChildControlByPath = name.IndexOf('/') != -1;
 
-            // Determine template.
-            var template = attribute != null ? attribute.template : null;
-            if (string.IsNullOrEmpty(template) && !isModifyingChildControlByPath &&
+            // Determine layout.
+            var layout = attribute != null ? attribute.layout : null;
+            if (string.IsNullOrEmpty(layout) && !isModifyingChildControlByPath &&
                 (!(member is FieldInfo) || member.GetCustomAttribute<FixedBufferAttribute>(false) == null)) // Ignore fixed buffer fields.
             {
                 var valueType = TypeHelpers.GetValueType(member);
-                template = InferTemplateFromValueType(valueType);
+                layout = InferLayoutFromValueType(valueType);
             }
 
             // Determine variant.
@@ -781,10 +781,10 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
-            return new ControlTemplate
+            return new ControlItem
             {
                 name = new InternedString(name),
-                template = new InternedString(template),
+                layout = new InternedString(layout),
                 variant = new InternedString(variant),
                 useStateFrom = useStateFrom,
                 format = format,
@@ -951,7 +951,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: this tends to cause surprises; is it worth its cost?
-        private static string InferTemplateFromValueType(Type type)
+        private static string InferLayoutFromValueType(Type type)
         {
             var typeName = type.Name;
             if (typeName.EndsWith("Control"))
@@ -961,7 +961,7 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        internal void MergeTemplate(InputTemplate other)
+        internal void MergeLayout(InputControlLayout other)
         {
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
@@ -986,20 +986,20 @@ namespace UnityEngine.Experimental.Input
                 // set until we actually gone through both control lists and looked at
                 // the names.
 
-                var controls = new List<ControlTemplate>();
+                var controls = new List<ControlItem>();
                 var baseControlVariants = new List<string>();
 
                 var baseControlTable = CreateLookupTableForControls(baseControls, baseControlVariants);
                 var thisControlTable = CreateLookupTableForControls(m_Controls);
 
-                // First go through every control we have in this template.
+                // First go through every control we have in this layout.
                 foreach (var pair in thisControlTable)
                 {
-                    ControlTemplate baseControlTemplate;
-                    if (baseControlTable.TryGetValue(pair.Key, out baseControlTemplate))
+                    ControlItem baseControlItem;
+                    if (baseControlTable.TryGetValue(pair.Key, out baseControlItem))
                     {
-                        var mergedTemplate = pair.Value.Merge(baseControlTemplate);
-                        controls.Add(mergedTemplate);
+                        var mergedLayout = pair.Value.Merge(baseControlItem);
+                        controls.Add(mergedLayout);
 
                         // Remove the entry so we don't hit it again in the pass through
                         // baseControlTable below.
@@ -1007,24 +1007,24 @@ namespace UnityEngine.Experimental.Input
                     }
                     else
                     {
-                        // We may be looking at a control that is using variants on the base template but
-                        // isn't targeting a specific variant on the derived template. In that case, we
-                        // want to take each of the variants from the base template and merge them with
-                        // the control template in the derived template.
+                        // We may be looking at a control that is using variants on the base layout but
+                        // isn't targeting a specific variant on the derived layout. In that case, we
+                        // want to take each of the variants from the base layout and merge them with
+                        // the control layout in the derived layout.
                         var isTargetingVariants = false;
                         foreach (var variant in baseControlVariants)
                         {
                             var key = string.Format("{0}@{1}", pair.Key, variant);
-                            if (baseControlTable.TryGetValue(key, out baseControlTemplate))
+                            if (baseControlTable.TryGetValue(key, out baseControlItem))
                             {
-                                var mergedTemplate = pair.Value.Merge(baseControlTemplate);
-                                controls.Add(mergedTemplate);
+                                var mergedLayout = pair.Value.Merge(baseControlItem);
+                                controls.Add(mergedLayout);
                                 baseControlTable.Remove(key);
                                 isTargetingVariants = true;
                             }
                         }
 
-                        // Okay, this template isn't corresponding to anything in the base template
+                        // Okay, this layout isn't corresponding to anything in the base layout
                         // so just add it as is.
                         if (!isTargetingVariants)
                             controls.Add(pair.Value);
@@ -1040,47 +1040,47 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private static Dictionary<string, ControlTemplate> CreateLookupTableForControls(
-            ControlTemplate[] controlTemplates, List<string> variants = null)
+        private static Dictionary<string, ControlItem> CreateLookupTableForControls(
+            ControlItem[] controlItems, List<string> variants = null)
         {
-            var table = new Dictionary<string, ControlTemplate>();
-            for (var i = 0; i < controlTemplates.Length; ++i)
+            var table = new Dictionary<string, ControlItem>();
+            for (var i = 0; i < controlItems.Length; ++i)
             {
-                var key = controlTemplates[i].name.ToLower();
+                var key = controlItems[i].name.ToLower();
                 // Need to take variant into account as well. Otherwise two variants for
                 // "leftStick", for example, will overwrite each other.
-                if (!controlTemplates[i].variant.IsEmpty())
+                if (!controlItems[i].variant.IsEmpty())
                 {
-                    var variant = controlTemplates[i].variant.ToLower();
+                    var variant = controlItems[i].variant.ToLower();
                     key = string.Format("{0}@{1}", key, variant);
                     if (variants != null)
                         variants.Add(variant);
                 }
-                table[key] = controlTemplates[i];
+                table[key] = controlItems[i];
             }
             return table;
         }
 
-        private static void ThrowIfControlTemplateIsDuplicate(ref ControlTemplate controlTemplate,
-            IEnumerable<ControlTemplate> controlTemplates, string templateName)
+        private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
+            IEnumerable<ControlItem> controlLayouts, string layoutName)
         {
-            var name = controlTemplate.name;
-            foreach (var existing in controlTemplates)
+            var name = controlItem.name;
+            foreach (var existing in controlLayouts)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
-                    existing.variant == controlTemplate.variant)
-                    throw new Exception(string.Format("Duplicate control '{0}' in template '{1}'", name, templateName));
+                    existing.variant == controlItem.variant)
+                    throw new Exception(string.Format("Duplicate control '{0}' in layout '{1}'", name, layoutName));
         }
 
-        internal static string ParseHeaderFromJson(string json, out InputDeviceDescription deviceDescription, out string baseTemplate)
+        internal static string ParseHeaderFromJson(string json, out InputDeviceDescription deviceDescription, out string baseLayout)
         {
-            var templateJson = JsonUtility.FromJson<TemplateJsonNameAndDescriptorOnly>(json);
-            deviceDescription = templateJson.device.ToDescriptor();
-            baseTemplate = templateJson.extend;
-            return templateJson.name;
+            var layoutJson = JsonUtility.FromJson<LayoutJsonNameAndDescriptorOnly>(json);
+            deviceDescription = layoutJson.device.ToDescriptor();
+            baseLayout = layoutJson.extend;
+            return layoutJson.name;
         }
 
         [Serializable]
-        private struct TemplateJsonNameAndDescriptorOnly
+        private struct LayoutJsonNameAndDescriptorOnly
         {
             public string name;
             public string extend;
@@ -1088,11 +1088,11 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        private struct TemplateJson
+        private struct LayoutJson
         {
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
-            #pragma warning disable CS0649
+            #pragma warning disable 0649
             // ReSharper disable MemberCanBePrivate.Local
 
             public string name;
@@ -1104,17 +1104,17 @@ namespace UnityEngine.Experimental.Input
             public string[] commonUsages;
             public string displayName;
             public string resourceName;
-            public string type; // This is mostly for when we turn arbitrary InputTemplates into JSON; less for templates *coming* from JSON.
+            public string type; // This is mostly for when we turn arbitrary InputLayouts into JSON; less for layouts *coming* from JSON.
             public DeviceDescriptionJson device;
-            public ControlTemplateJson[] controls;
+            public ControlItemJson[] controls;
 
             // ReSharper restore MemberCanBePrivate.Local
-            #pragma warning restore CS0649
+            #pragma warning restore 0649
 
-            public InputTemplate ToTemplate()
+            public InputControlLayout ToLayout()
             {
-                // By default, the type of the template is determined from the first template
-                // in its 'extend' property chain that has a type set. However, if the template
+                // By default, the type of the layout is determined from the first layout
+                // in its 'extend' property chain that has a type set. However, if the layout
                 // extends nothing, we can't know what type to use for it so we default to
                 // InputDevice.
                 Type type = null;
@@ -1124,35 +1124,35 @@ namespace UnityEngine.Experimental.Input
                     if (type == null)
                     {
                         Debug.Log(string.Format(
-                                "Cannot find type '{0}' used by template '{1}'; falling back to using InputDevice",
+                                "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
                                 this.type, name));
                         type = typeof(InputDevice);
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
-                        throw new Exception(string.Format("'{0}' used by template '{1}' is not an InputControl",
+                        throw new Exception(string.Format("'{0}' used by layout '{1}' is not an InputControl",
                                 this.type, name));
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
                     type = typeof(InputDevice);
 
-                // Create template.
-                var template = new InputTemplate(name, type);
-                template.m_ExtendsTemplate = new InternedString(extend);
-                template.m_DeviceDescription = device.ToDescriptor();
-                template.m_DisplayName = displayName;
-                template.m_ResourceName = resourceName;
+                // Create layout.
+                var layout = new InputControlLayout(name, type);
+                layout.m_ExtendsLayout = new InternedString(extend);
+                layout.m_DeviceDescription = device.ToDescriptor();
+                layout.m_DisplayName = displayName;
+                layout.m_ResourceName = resourceName;
                 if (!string.IsNullOrEmpty(format))
-                    template.m_StateFormat = new FourCC(format);
+                    layout.m_StateFormat = new FourCC(format);
 
                 if (!string.IsNullOrEmpty(beforeRender))
                 {
                     var beforeRenderLowerCase = beforeRender.ToLower();
                     if (beforeRenderLowerCase == "ignore")
-                        template.m_UpdateBeforeRender = false;
+                        layout.m_UpdateBeforeRender = false;
                     else if (beforeRenderLowerCase == "update")
-                        template.m_UpdateBeforeRender = true;
+                        layout.m_UpdateBeforeRender = true;
                     else
                         throw new Exception(string.Format("Invalid beforeRender setting '{0}'", beforeRender));
                 }
@@ -1160,7 +1160,7 @@ namespace UnityEngine.Experimental.Input
                 // Add common usages.
                 if (commonUsages != null)
                 {
-                    template.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
+                    layout.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
                 }
 
                 // Add overrides.
@@ -1171,39 +1171,39 @@ namespace UnityEngine.Experimental.Input
                         names.Add(new InternedString(@override));
                     if (overrides != null)
                         names.AddRange(overrides.Select(x => new InternedString(x)));
-                    template.m_OverridesTemplates = names.ToArray();
+                    layout.m_OverridesLayouts = names.ToArray();
                 }
 
                 // Add controls.
                 if (controls != null)
                 {
-                    var controlTemplates = new List<ControlTemplate>();
+                    var controlLayouts = new List<ControlItem>();
                     foreach (var control in controls)
                     {
                         if (string.IsNullOrEmpty(control.name))
-                            throw new Exception(string.Format("Control with no name in template '{0}", name));
-                        var controlTemplate = control.ToTemplate();
-                        ThrowIfControlTemplateIsDuplicate(ref controlTemplate, controlTemplates, template.name);
-                        controlTemplates.Add(controlTemplate);
+                            throw new Exception(string.Format("Control with no name in layout '{0}", name));
+                        var controlLayout = control.ToLayout();
+                        ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layout.name);
+                        controlLayouts.Add(controlLayout);
                     }
-                    template.m_Controls = controlTemplates.ToArray();
+                    layout.m_Controls = controlLayouts.ToArray();
                 }
 
-                return template;
+                return layout;
             }
 
-            public static TemplateJson FromTemplate(InputTemplate template)
+            public static LayoutJson FromLayout(InputControlLayout layout)
             {
-                return new TemplateJson
+                return new LayoutJson
                 {
-                    name = template.m_Name,
-                    type = template.type.AssemblyQualifiedName,
-                    displayName = template.m_DisplayName,
-                    resourceName = template.m_ResourceName,
-                    extend = template.m_ExtendsTemplate,
-                    format = template.stateFormat.ToString(),
-                    device = DeviceDescriptionJson.FromDescription(template.m_DeviceDescription),
-                    controls = ControlTemplateJson.FromControlTemplates(template.m_Controls),
+                    name = layout.m_Name,
+                    type = layout.type.AssemblyQualifiedName,
+                    displayName = layout.m_DisplayName,
+                    resourceName = layout.m_ResourceName,
+                    extend = layout.m_ExtendsLayout,
+                    format = layout.stateFormat.ToString(),
+                    device = DeviceDescriptionJson.FromDescription(layout.m_DeviceDescription),
+                    controls = ControlItemJson.FromControlItems(layout.m_Controls),
                 };
             }
         }
@@ -1213,15 +1213,15 @@ namespace UnityEngine.Experimental.Input
         // or not (0 is a valid offset). Sucks, though, as we now get lots of allocations
         // from the control array.
         [Serializable]
-        private class ControlTemplateJson
+        private class ControlItemJson
         {
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
-            #pragma warning disable CS0649
+            #pragma warning disable 0649
             // ReSharper disable MemberCanBePrivate.Local
 
             public string name;
-            public string template;
+            public string layout;
             public string variant;
             public string usage; // Convenince to not have to create array for single usage.
             public string alias; // Same.
@@ -1239,20 +1239,20 @@ namespace UnityEngine.Experimental.Input
             public bool noisy;
 
             // ReSharper restore MemberCanBePrivate.Local
-            #pragma warning restore CS0649
+            #pragma warning restore 0649
 
-            public ControlTemplateJson()
+            public ControlItemJson()
             {
                 offset = InputStateBlock.kInvalidOffset;
                 bit = InputStateBlock.kInvalidOffset;
             }
 
-            public ControlTemplate ToTemplate()
+            public ControlItem ToLayout()
             {
-                var template = new ControlTemplate
+                var layout = new ControlItem
                 {
                     name = new InternedString(name),
-                    template = new InternedString(this.template),
+                    layout = new InternedString(this.layout),
                     variant = new InternedString(variant),
                     displayName = displayName,
                     resourceName = resourceName,
@@ -1265,7 +1265,7 @@ namespace UnityEngine.Experimental.Input
                 };
 
                 if (!string.IsNullOrEmpty(format))
-                    template.format = new FourCC(format);
+                    layout.format = new FourCC(format);
 
                 if (!string.IsNullOrEmpty(usage) || usages != null)
                 {
@@ -1274,7 +1274,7 @@ namespace UnityEngine.Experimental.Input
                         usagesList.Add(usage);
                     if (usages != null)
                         usagesList.AddRange(usages);
-                    template.usages = new ReadOnlyArray<InternedString>(usagesList.Select(x => new InternedString(x)).ToArray());
+                    layout.usages = new ReadOnlyArray<InternedString>(usagesList.Select(x => new InternedString(x)).ToArray());
                 }
 
                 if (!string.IsNullOrEmpty(alias) || aliases != null)
@@ -1284,45 +1284,45 @@ namespace UnityEngine.Experimental.Input
                         aliasesList.Add(alias);
                     if (aliases != null)
                         aliasesList.AddRange(aliases);
-                    template.aliases = new ReadOnlyArray<InternedString>(aliasesList.Select(x => new InternedString(x)).ToArray());
+                    layout.aliases = new ReadOnlyArray<InternedString>(aliasesList.Select(x => new InternedString(x)).ToArray());
                 }
 
                 if (!string.IsNullOrEmpty(parameters))
-                    template.parameters = new ReadOnlyArray<ParameterValue>(ParseParameters(parameters));
+                    layout.parameters = new ReadOnlyArray<ParameterValue>(ParseParameters(parameters));
 
                 if (!string.IsNullOrEmpty(processors))
-                    template.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
+                    layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
 
-                return template;
+                return layout;
             }
 
-            public static ControlTemplateJson[] FromControlTemplates(ControlTemplate[] templates)
+            public static ControlItemJson[] FromControlItems(ControlItem[] items)
             {
-                if (templates == null)
+                if (items == null)
                     return null;
 
-                var count = templates.Length;
-                var result = new ControlTemplateJson[count];
+                var count = items.Length;
+                var result = new ControlItemJson[count];
 
                 for (var i = 0; i < count; ++i)
                 {
-                    var template = templates[i];
-                    result[i] = new ControlTemplateJson
+                    var layout = items[i];
+                    result[i] = new ControlItemJson
                     {
-                        name = template.name,
-                        template = template.template,
-                        variant = template.variant,
-                        displayName = template.displayName,
-                        resourceName = template.resourceName,
-                        bit = template.bit,
-                        offset = template.offset,
-                        sizeInBits = template.sizeInBits,
-                        format = template.format.ToString(),
-                        parameters = string.Join(",", template.parameters.Select(x => x.ToString()).ToArray()),
-                        processors = string.Join(",", template.processors.Select(x => x.ToString()).ToArray()),
-                        usages = template.usages.Select(x => x.ToString()).ToArray(),
-                        aliases = template.aliases.Select(x => x.ToString()).ToArray(),
-                        noisy = template.isNoisy
+                        name = layout.name,
+                        layout = layout.layout,
+                        variant = layout.variant,
+                        displayName = layout.displayName,
+                        resourceName = layout.resourceName,
+                        bit = layout.bit,
+                        offset = layout.offset,
+                        sizeInBits = layout.sizeInBits,
+                        format = layout.format.ToString(),
+                        parameters = string.Join(",", layout.parameters.Select(x => x.ToString()).ToArray()),
+                        processors = string.Join(",", layout.processors.Select(x => x.ToString()).ToArray()),
+                        usages = layout.usages.Select(x => x.ToString()).ToArray(),
+                        aliases = layout.aliases.Select(x => x.ToString()).ToArray(),
+                        noisy = layout.isNoisy
                     };
                 }
 
@@ -1335,7 +1335,7 @@ namespace UnityEngine.Experimental.Input
         {
             // Disable warnings that these fields are never assigned to. They are set
             // by JsonUtility.
-            #pragma warning disable CS0649
+            #pragma warning disable 0649
             // ReSharper disable MemberCanBePrivate.Local
 
             public string @interface;
@@ -1350,7 +1350,7 @@ namespace UnityEngine.Experimental.Input
             public string[] versions;
 
             // ReSharper restore MemberCanBePrivate.Local
-            #pragma warning restore CS0649
+            #pragma warning restore 0649
 
             public static DeviceDescriptionJson FromDescription(InputDeviceDescription description)
             {
@@ -1405,24 +1405,24 @@ namespace UnityEngine.Experimental.Input
 
         internal struct Collection
         {
-            public Dictionary<InternedString, Type> templateTypes;
-            public Dictionary<InternedString, string> templateStrings;
-            public Dictionary<InternedString, Factory> templateFactories;
-            public Dictionary<InternedString, InternedString> baseTemplateTable;
-            public Dictionary<InternedString, InputDeviceDescription> templateDeviceDescriptions;
+            public Dictionary<InternedString, Type> layoutTypes;
+            public Dictionary<InternedString, string> layoutStrings;
+            public Dictionary<InternedString, Factory> layoutFactories;
+            public Dictionary<InternedString, InternedString> baseLayoutTable;
+            public Dictionary<InternedString, InputDeviceDescription> layoutDeviceDescriptions;
 
             public void Allocate()
             {
-                templateTypes = new Dictionary<InternedString, Type>();
-                templateStrings = new Dictionary<InternedString, string>();
-                templateFactories = new Dictionary<InternedString, Factory>();
-                baseTemplateTable = new Dictionary<InternedString, InternedString>();
-                templateDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
+                layoutTypes = new Dictionary<InternedString, Type>();
+                layoutStrings = new Dictionary<InternedString, string>();
+                layoutFactories = new Dictionary<InternedString, Factory>();
+                baseLayoutTable = new Dictionary<InternedString, InternedString>();
+                layoutDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
             }
 
-            public InternedString TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
+            public InternedString TryFindMatchingLayout(InputDeviceDescription deviceDescription)
             {
-                foreach (var entry in templateDeviceDescriptions)
+                foreach (var entry in layoutDeviceDescriptions)
                 {
                     ////REVIEW: we don't only want to find any match, we want to find the best match
                     if (entry.Value.Matches(deviceDescription))
@@ -1432,114 +1432,114 @@ namespace UnityEngine.Experimental.Input
                 return new InternedString();
             }
 
-            public bool HasTemplate(InternedString name)
+            public bool HasLayout(InternedString name)
             {
-                return templateTypes.ContainsKey(name) || templateStrings.ContainsKey(name) ||
-                    templateFactories.ContainsKey(name);
+                return layoutTypes.ContainsKey(name) || layoutStrings.ContainsKey(name) ||
+                    layoutFactories.ContainsKey(name);
             }
 
-            private InputTemplate TryLoadTemplateInternal(InternedString name)
+            private InputControlLayout TryLoadLayoutInternal(InternedString name)
             {
                 // Check factories.
                 Factory factory;
-                if (templateFactories.TryGetValue(name, out factory))
+                if (layoutFactories.TryGetValue(name, out factory))
                 {
-                    var template = (InputTemplate)factory.method.Invoke(factory.instance, null);
-                    if (template == null)
-                        throw new Exception(string.Format("Template factory '{0}' returned null when invoked", name));
-                    return template;
+                    var layout = (InputControlLayout)factory.method.Invoke(factory.instance, null);
+                    if (layout == null)
+                        throw new Exception(string.Format("Layout factory '{0}' returned null when invoked", name));
+                    return layout;
                 }
 
-                // See if we have a string template for it. These
+                // See if we have a string layout for it. These
                 // always take precedence over ones from type so that we can
                 // override what's in the code using data.
                 string json;
-                if (templateStrings.TryGetValue(name, out json))
+                if (layoutStrings.TryGetValue(name, out json))
                     return FromJson(json);
 
-                // No, but maybe we have a type template for it.
+                // No, but maybe we have a type layout for it.
                 Type type;
-                if (templateTypes.TryGetValue(name, out type))
+                if (layoutTypes.TryGetValue(name, out type))
                     return FromType(name, type);
 
                 return null;
             }
 
-            public InputTemplate TryLoadTemplate(InternedString name, Dictionary<InternedString, InputTemplate> table = null)
+            public InputControlLayout TryLoadLayout(InternedString name, Dictionary<InternedString, InputControlLayout> table = null)
             {
-                var template = TryLoadTemplateInternal(name);
-                if (template != null)
+                var layout = TryLoadLayoutInternal(name);
+                if (layout != null)
                 {
-                    template.m_Name = name;
+                    layout.m_Name = name;
                     if (table != null)
-                        table[name] = template;
+                        table[name] = layout;
 
-                    // If the template extends another template, we need to merge the
-                    // base template into the final template.
-                    // NOTE: We go through the baseTemplateTable here instead of looking at
-                    //       the extendsTemplate property so as to make this work for all types
-                    //       of templates (FromType() does not set the property, for example).
-                    var baseTemplateName = new InternedString();
-                    if (baseTemplateTable.TryGetValue(name, out baseTemplateName))
+                    // If the layout extends another layout, we need to merge the
+                    // base layout into the final layout.
+                    // NOTE: We go through the baseLayoutTable here instead of looking at
+                    //       the extendsLayout property so as to make this work for all types
+                    //       of layouts (FromType() does not set the property, for example).
+                    var baseLayoutName = new InternedString();
+                    if (baseLayoutTable.TryGetValue(name, out baseLayoutName))
                     {
                         ////TODO: catch cycles
-                        var baseTemplate = TryLoadTemplate(baseTemplateName, table);
-                        if (baseTemplate == null)
-                            throw new TemplateNotFoundException(string.Format(
-                                    "Cannot find base template '{0}' of template '{1}'", baseTemplateName, name));
-                        template.MergeTemplate(baseTemplate);
-                        template.m_ExtendsTemplate = baseTemplateName;
+                        var baseLayout = TryLoadLayout(baseLayoutName, table);
+                        if (baseLayout == null)
+                            throw new LayoutNotFoundException(string.Format(
+                                    "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
+                        layout.MergeLayout(baseLayout);
+                        layout.m_ExtendsLayout = baseLayoutName;
                     }
 
-                    // If the template has an associated device description,
-                    // put it on the template instance.
+                    // If the layout has an associated device description,
+                    // put it on the layout instance.
                     InputDeviceDescription deviceDescription;
-                    if (templateDeviceDescriptions.TryGetValue(name, out deviceDescription))
-                        template.m_DeviceDescription = deviceDescription;
+                    if (layoutDeviceDescriptions.TryGetValue(name, out deviceDescription))
+                        layout.m_DeviceDescription = deviceDescription;
                 }
 
-                return template;
+                return layout;
             }
 
-            // Return name of template at root of "extend" chain of given template.
-            public InternedString GetRootTemplateName(InternedString templateName)
+            // Return name of layout at root of "extend" chain of given layout.
+            public InternedString GetRootLayoutName(InternedString layoutName)
             {
-                InternedString baseTemplate;
-                while (baseTemplateTable.TryGetValue(templateName, out baseTemplate))
-                    templateName = baseTemplate;
-                return templateName;
+                InternedString baseLayout;
+                while (baseLayoutTable.TryGetValue(layoutName, out baseLayout))
+                    layoutName = baseLayout;
+                return layoutName;
             }
 
-            // Get the type which will be instantiated for the given template.
-            // Returns null if no template with the given name exists.
-            public Type GetControlTypeForTemplate(InternedString templateName)
+            // Get the type which will be instantiated for the given layout.
+            // Returns null if no layout with the given name exists.
+            public Type GetControlTypeForLayout(InternedString layoutName)
             {
-                // Try template strings.
-                while (templateStrings.ContainsKey(templateName))
+                // Try layout strings.
+                while (layoutStrings.ContainsKey(layoutName))
                 {
-                    InternedString baseTemplate;
-                    if (baseTemplateTable.TryGetValue(templateName, out baseTemplate))
+                    InternedString baseLayout;
+                    if (baseLayoutTable.TryGetValue(layoutName, out baseLayout))
                     {
                         // Work our way up the inheritance chain.
-                        templateName = baseTemplate;
+                        layoutName = baseLayout;
                     }
                     else
                     {
-                        // Template doesn't extend anything and ATM we don't support setting
-                        // types explicitly from JSON templates. So has to be InputDevice.
+                        // Layout doesn't extend anything and ATM we don't support setting
+                        // types explicitly from JSON layouts. So has to be InputDevice.
                         return typeof(InputDevice);
                     }
                 }
 
-                // Try template types.
+                // Try layout types.
                 Type result;
-                templateTypes.TryGetValue(templateName, out result);
+                layoutTypes.TryGetValue(layoutName, out result);
                 return result;
             }
         }
 
         // This collection is owned and managed by InputManager.
-        internal static Collection s_Templates;
+        internal static Collection s_Layouts;
 
         internal struct Factory
         {
@@ -1547,40 +1547,40 @@ namespace UnityEngine.Experimental.Input
             public object instance;
         }
 
-        internal class TemplateNotFoundException : Exception
+        internal class LayoutNotFoundException : Exception
         {
-            public string template { get; private set; }
-            public TemplateNotFoundException(string name, string message = null)
-                : base(message ?? string.Format("Cannot find template '{0}'", name))
+            public string layout { get; private set; }
+            public LayoutNotFoundException(string name, string message = null)
+                : base(message ?? string.Format("Cannot find control layout '{0}'", name))
             {
-                template = name;
+                layout = name;
             }
         }
 
-        // Constructs InputTemplate instances and caches them.
+        // Constructs InputControlLayout instances and caches them.
         internal struct Cache
         {
-            public Collection templates;
-            public Dictionary<InternedString, InputTemplate> table;
+            public Collection layouts;
+            public Dictionary<InternedString, InputControlLayout> table;
 
-            public InputTemplate FindOrLoadTemplate(string name)
+            public InputControlLayout FindOrLoadLayout(string name)
             {
                 var internedName = new InternedString(name);
 
                 // See if we have it cached.
-                InputTemplate template;
-                if (table != null && table.TryGetValue(internedName, out template))
-                    return template;
+                InputControlLayout layout;
+                if (table != null && table.TryGetValue(internedName, out layout))
+                    return layout;
 
                 if (table == null)
-                    table = new Dictionary<InternedString, InputTemplate>();
+                    table = new Dictionary<InternedString, InputControlLayout>();
 
-                template = templates.TryLoadTemplate(internedName, table);
-                if (template != null)
-                    return template;
+                layout = layouts.TryLoadLayout(internedName, table);
+                if (layout != null)
+                    return layout;
 
                 // Nothing.
-                throw new TemplateNotFoundException(name);
+                throw new LayoutNotFoundException(name);
             }
         }
     }

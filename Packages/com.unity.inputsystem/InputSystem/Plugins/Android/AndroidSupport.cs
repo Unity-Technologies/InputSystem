@@ -5,14 +5,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     {
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<AndroidGameController>(
+            InputSystem.RegisterControlLayout<AndroidGameController>(
                 deviceDescription: new InputDeviceDescription
             {
                 interfaceName = "Android",
                 deviceClass = "AndroidGameController"
             });
 
-            InputSystem.RegisterTemplate(@"
+            InputSystem.RegisterControlLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
     ""extend"" : ""AndroidGameController"",
@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     ]
 }
             ");
-            InputSystem.RegisterTemplate(@"
+            InputSystem.RegisterControlLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadButtons"",
     ""extend"" : ""AndroidGameController"",
@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 }
             ");
 
-            InputSystem.onFindTemplateForDevice += AndroidGameController.OnFindTemplateForDevice;
+            InputSystem.onFindControlLayoutForDevice += AndroidGameController.OnFindControlLayoutForDevice;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     internal static class DaydreamSupport
     {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
+        internal static string FilterLayout(XRDeviceDescriptor deviceDescriptor)
         {
             if (String.IsNullOrEmpty(deviceDescriptor.manufacturer))
             {
@@ -28,38 +28,38 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [StructLayout(LayoutKind.Explicit, Size = 120)]
     public struct DaydreamHMDState : IInputStateTypeInfo
     {
-        [InputControl(template = "Integer")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(0)]
         public int trackingState;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(4)]
         public bool isTracked;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(8)]
         public Vector3 devicePosition;
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(20)]
         public Quaternion deviceRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(36)]
         public Vector3 leftEyePosition;
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(48)]
         public Quaternion leftEyeRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(64)]
         public Vector3 rightEyePosition;
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(76)]
         public Quaternion rightEyeRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(92)]
         public Vector3 centerEyePosition;
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(104)]
         public Quaternion centerEyeRotation;
 
@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputTemplate(stateType = typeof(DaydreamHMDState))]
+    [InputLayout(stateType = typeof(DaydreamHMDState))]
     public class DaydreamHMD : XRHMD
     {
         new public DaydreamHMD active { get; private set; }
@@ -106,56 +106,56 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [StructLayout(LayoutKind.Explicit, Size = 100)]
     public struct DaydreamControllerState : IInputStateTypeInfo
     {
-        [InputControl(template = "Vector2")]
+        [InputControl(layout = "Vector2")]
         [FieldOffset(0)]
         public Vector2 touchpad;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(8)]
         public bool volumeUp;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(12)]
         public bool recentered;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(16)]
         public bool volumeDown;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(20)]
         public bool recentering;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(24)]
         public bool app;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(28)]
         public bool home;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(32)]
         public bool touchpadClick;
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(36)]
         public bool touchpadTouch;
 
 
-        [InputControl(template = "Integer")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(40)]
         public int trackingState;
 
-        [InputControl(template = "Button")]
+        [InputControl(layout = "Button")]
         [FieldOffset(44)]
         public bool isTracked;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(48)]
         public Vector3 devicePosition;
 
-        [InputControl(template = "Quaternion")]
+        [InputControl(layout = "Quaternion")]
         [FieldOffset(60)]
         public Quaternion deviceRotation;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(76)]
         public Vector3 deviceVelocity;
 
-        [InputControl(template = "Vector3")]
+        [InputControl(layout = "Vector3")]
         [FieldOffset(88)]
         public Vector3 deviceAcceleration;
 
@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputTemplate(stateType = typeof(DaydreamControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputLayout(stateType = typeof(DaydreamControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
     public class DaydreamController : XRController
     {
         new public static DaydreamController leftHand { get; private set; }

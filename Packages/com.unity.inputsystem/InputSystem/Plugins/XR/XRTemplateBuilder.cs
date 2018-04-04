@@ -7,9 +7,9 @@ using System.Text;
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     [Serializable]
-    class XRTemplateBuilder
+    class XRLayoutBuilder
     {
-        static List<Func<XRDeviceDescriptor, string>> availableTemplates = new List<Func<XRDeviceDescriptor, string>>();
+        static List<Func<XRDeviceDescriptor, string>> availableLayouts = new List<Func<XRDeviceDescriptor, string>>();
 
         public XRDeviceDescriptor descriptor;
 
@@ -39,30 +39,30 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return 0;
         }
 
-        public static void RegisterTemplateFilter(Func<XRDeviceDescriptor, string> templateChecker)
+        public static void RegisterLayoutFilter(Func<XRDeviceDescriptor, string> layoutChecker)
         {
-            availableTemplates.Add(templateChecker);
+            availableLayouts.Add(layoutChecker);
         }
 
-        static string SanitizeTemplateName(string templateName)
+        static string SanitizeLayoutName(string layoutName)
         {
-            int stringLength = templateName.Length;
-            StringBuilder sanitizedTemplateName = new StringBuilder(stringLength);
+            int stringLength = layoutName.Length;
+            StringBuilder sanitizedLayoutName = new StringBuilder(stringLength);
             for (int i = 0; i < stringLength; i++)
             {
-                char letter = templateName[i];
+                char letter = layoutName[i];
                 if (Char.IsUpper(letter) || Char.IsLower(letter) || Char.IsDigit(letter) || letter == ':')
                 {
-                    sanitizedTemplateName.Append(letter);
+                    sanitizedLayoutName.Append(letter);
                 }
             }
-            return sanitizedTemplateName.ToString();
+            return sanitizedLayoutName.ToString();
         }
 
-        internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description, string matchedTemplate, IInputRuntime runtime)
+        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
-            // If the system found a matching template, there's nothing for us to do.
-            if (!string.IsNullOrEmpty(matchedTemplate))
+            // If the system found a matching layout, there's nothing for us to do.
+            if (!string.IsNullOrEmpty(matchedLayout))
             {
                 return null;
             }
@@ -91,23 +91,23 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return null;
             }
 
-            for (int i = 0; i < availableTemplates.Count; i++)
+            for (int i = 0; i < availableLayouts.Count; i++)
             {
-                string templateMatch = availableTemplates[i](deviceDescriptor);
-                if (templateMatch != null)
+                string layoutMatch = availableLayouts[i](deviceDescriptor);
+                if (layoutMatch != null)
                 {
-                    return templateMatch;
+                    return layoutMatch;
                 }
             }
 
-            string templateName = SanitizeTemplateName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
-            XRTemplateBuilder template = new XRTemplateBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, null, description);
+            string layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
+            XRLayoutBuilder layout = new XRLayoutBuilder { descriptor = deviceDescriptor };
+            InputSystem.RegisterControlLayoutFactory(() => layout.Build(), layoutName, null, description);
 
-            return templateName;
+            return layoutName;
         }
 
-        public InputTemplate Build()
+        public InputControlLayout Build()
         {
             Type deviceType = null;
             switch (descriptor.deviceRole)
@@ -125,7 +125,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 break;
             }
 
-            var builder = new InputTemplate.Builder
+            var builder = new InputControlLayout.Builder
             {
                 type = deviceType,
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
@@ -150,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case EFeatureType.Binary:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Button")
+                        .WithLayout("Button")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeBit)
                         .WithUsages(currentUsages);
@@ -159,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case EFeatureType.DiscreteStates:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Integer")
+                        .WithLayout("Integer")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeInt)
                         .WithUsages(currentUsages);
@@ -168,7 +168,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case EFeatureType.Axis1D:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Analog")
+                        .WithLayout("Analog")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeFloat)
                         .WithUsages(currentUsages);
@@ -177,7 +177,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case EFeatureType.Axis2D:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Vector2")
+                        .WithLayout("Vector2")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeVector2)
                         .WithUsages(currentUsages);
@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case EFeatureType.Axis3D:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Vector3")
+                        .WithLayout("Vector3")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeVector3)
                         .WithUsages(currentUsages);
@@ -195,7 +195,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case EFeatureType.Rotation:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Quaternion")
+                        .WithLayout("Quaternion")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeQuaternion)
                         .WithUsages(currentUsages);

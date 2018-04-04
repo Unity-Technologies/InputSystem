@@ -26,14 +26,14 @@ using UnityEditor;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-// These tests rely on the default template setup present in the code
+// These tests rely on the default layout setup present in the code
 // of the system (e.g. they make assumptions about how Gamepad is set up).
 class FunctionalTests : InputTestFixture
 {
     // The test categories give the feature area associated with the test:
     //
     //     a) Controls
-    //     b) Templates
+    //     b) Layouts
     //     c) Devices
     //     d) State
     //     e) Events
@@ -43,19 +43,19 @@ class FunctionalTests : InputTestFixture
     //     i) Plugins
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanCreatePrimitiveControlsFromTemplate()
+    [Category("Layouts")]
+    public void Layouts_CanCreatePrimitiveControlsFromLayout()
     {
         var setup = new InputControlSetup("Gamepad");
 
-        // The default ButtonControl template has no constrols inside of it.
+        // The default ButtonControl layout has no constrols inside of it.
         Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
         Assert.That(setup.GetControl("start").children, Is.Empty);
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanCreateCompoundControlsFromTemplate()
+    [Category("Layouts")]
+    public void Layouts_CanCreateCompoundControlsFromLayout()
     {
         const int kNumControlsInAStick = 6;
 
@@ -67,8 +67,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSetUpDeviceFromJsonTemplate()
+    [Category("Layouts")]
+    public void Layouts_CanSetUpDeviceFromJsonLayout()
     {
         const string controlJson = @"
             {
@@ -82,35 +82,35 @@ class FunctionalTests : InputTestFixture
                 ""controls"" : [
                     {
                         ""name"" : ""myThing"",
-                        ""template"" : ""MyControl"",
+                        ""layout"" : ""MyControl"",
                         ""usage"" : ""LeftStick""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(deviceJson);
-        InputSystem.RegisterTemplate(controlJson);
+        InputSystem.RegisterControlLayout(deviceJson);
+        InputSystem.RegisterControlLayout(controlJson);
 
         var setup = new InputControlSetup("MyDevice");
 
         Assert.That(setup.GetControl("myThing/x"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.GetControl("myThing"), Has.Property("template").EqualTo("MyControl"));
+        Assert.That(setup.GetControl("myThing"), Has.Property("layout").EqualTo("MyControl"));
 
         var device = setup.Finish();
         Assert.That(device, Is.TypeOf<InputDevice>());
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CannotUseControlTemplateAsToplevelTemplate()
+    [Category("Layouts")]
+    public void Layouts_CannotUseControlLayoutAsToplevelLayout()
     {
         Assert.That(() => new InputControlSetup("Button"), Throws.InvalidOperationException);
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanExtendControlInBaseTemplateUsingPath()
+    [Category("Layouts")]
+    public void Layouts_CanExtendControlInBaseLayoutUsingPath()
     {
         const string json = @"
             {
@@ -125,7 +125,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var setup = new InputControlSetup("MyDevice");
         var device = (Gamepad)setup.Finish();
@@ -134,8 +134,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSetControlParametersThroughControlAttribute()
+    [Category("Layouts")]
+    public void Layouts_CanSetControlParametersThroughControlAttribute()
     {
         // StickControl sets parameters on its axis controls. Check that they are
         // there.
@@ -148,8 +148,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSetUsagesThroughControlAttribute()
+    [Category("Layouts")]
+    public void Layouts_CanSetUsagesThroughControlAttribute()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
@@ -157,8 +157,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSetAliasesThroughControlAttribute()
+    [Category("Layouts")]
+    public void Layouts_CanSetAliasesThroughControlAttribute()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
@@ -167,8 +167,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSetParametersOnControlInJson()
+    [Category("Layouts")]
+    public void Layouts_CanSetParametersOnControlInJson()
     {
         const string json = @"
             {
@@ -183,7 +183,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
@@ -193,8 +193,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanAddProcessorsToControlInJson()
+    [Category("Layouts")]
+    public void Layouts_CanAddProcessorsToControlInJson()
     {
         const string json = @"
             {
@@ -209,7 +209,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
@@ -221,8 +221,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_BooleanParameterDefaultsToTrueIfValueOmitted()
+    [Category("Layouts")]
+    public void Layouts_BooleanParameterDefaultsToTrueIfValueOmitted()
     {
         const string json = @"
             {
@@ -237,20 +237,20 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = (Gamepad) new InputControlSetup("MyDevice").Finish();
 
         Assert.That(device.leftStick.x.clamp, Is.True);
     }
 
-    [InputTemplate(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     class DeviceWithCommonUsages : InputDevice
     {
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSpecifyCommonUsagesForDevices()
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyCommonUsagesForDevices()
     {
         const string derivedJson = @"
             {
@@ -260,20 +260,20 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(typeof(DeviceWithCommonUsages), "BaseDevice");
-        InputSystem.RegisterTemplate(derivedJson);
+        InputSystem.RegisterControlLayout(typeof(DeviceWithCommonUsages), "BaseDevice");
+        InputSystem.RegisterControlLayout(derivedJson);
 
-        var template = InputSystem.TryLoadTemplate("DerivedDevice");
+        var layout = InputSystem.TryLoadLayout("DerivedDevice");
 
-        Assert.That(template.commonUsages, Has.Count.EqualTo(3));
-        Assert.That(template.commonUsages[0], Is.EqualTo(CommonUsages.LeftHand));
-        Assert.That(template.commonUsages[1], Is.EqualTo(CommonUsages.RightHand));
-        Assert.That(template.commonUsages[2], Is.EqualTo(new InternedString("LeftToe")));
+        Assert.That(layout.commonUsages, Has.Count.EqualTo(3));
+        Assert.That(layout.commonUsages[0], Is.EqualTo(CommonUsages.LeftHand));
+        Assert.That(layout.commonUsages[1], Is.EqualTo(CommonUsages.RightHand));
+        Assert.That(layout.commonUsages[2], Is.EqualTo(new InternedString("LeftToe")));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanFindTemplateFromDeviceDescription()
+    [Category("Layouts")]
+    public void Layouts_CanFindLayoutFromDeviceDescription()
     {
         const string json = @"
             {
@@ -285,38 +285,38 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
-        var template = InputSystem.TryFindMatchingTemplate(new InputDeviceDescription
+        var layout = InputSystem.TryFindMatchingLayout(new InputDeviceDescription
         {
             product = "MyThingy"
         });
 
-        Assert.That(template, Is.EqualTo("MyDevice"));
+        Assert.That(layout, Is.EqualTo("MyDevice"));
     }
 
     [Test]
-    [Category("Template")]
-    public void Templates_CanOverrideTemplateMatchesForDiscoveredDevices()
+    [Category("Layout")]
+    public void Layouts_CanOverrideLayoutMatchesForDiscoveredDevices()
     {
-        InputSystem.onFindTemplateForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string templateMatch, IInputRuntime runtime) => "Keyboard";
+        InputSystem.onFindControlLayoutForDevice +=
+            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) => "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
         Assert.That(device, Is.TypeOf<Keyboard>());
     }
 
-    // If a template only specifies an interface in its descriptor, it is considered
-    // a fallback for when there is no more specific template that is able to match
+    // If a layout only specifies an interface in its descriptor, it is considered
+    // a fallback for when there is no more specific layout that is able to match
     // by product.
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanHaveTemplateFallbackForInterface()
+    [Category("Layouts")]
+    public void TODO_Layouts_CanHaveLayoutFallbackForInterface()
     {
         const string fallbackJson = @"
             {
-                ""name"" : ""FallbackTemplate"",
+                ""name"" : ""FallbackLayout"",
                 ""device"" : {
                     ""interface"" : ""MyInterface""
                 }
@@ -324,7 +324,7 @@ class FunctionalTests : InputTestFixture
         ";
         const string productJson = @"
             {
-                ""name"" : ""ProductTemplate"",
+                ""name"" : ""ProductLayout"",
                 ""device"" : {
                     ""interface"" : ""MyInterface"",
                     ""product"" : ""MyProduct""
@@ -332,45 +332,45 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(fallbackJson);
-        InputSystem.RegisterTemplate(productJson);
+        InputSystem.RegisterControlLayout(fallbackJson);
+        InputSystem.RegisterControlLayout(productJson);
 
         Assert.Fail();
     }
 
     ////REVIEW: if this behavior is guaranteed, we also have to make sure we preserve it across domain reloads
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_WhenTwoTemplatesConflict_LastOneRegisteredWins()
+    [Category("Layouts")]
+    public void TODO_Layouts_WhenTwoLayoutsConflict_LastOneRegisteredWins()
     {
-        const string firstTemplate = @"
+        const string firstLayout = @"
             {
-                ""name"" : ""FirstTemplate"",
+                ""name"" : ""FirstLayout"",
                 ""device"" : {
                     ""product"" : ""MyProduct""
                 }
             }
         ";
-        const string secondTemplate = @"
+        const string secondLayout = @"
             {
-                ""name"" : ""SecondTemplate"",
+                ""name"" : ""SecondLayout"",
                 ""device"" : {
                     ""product"" : ""MyProduct""
                 }
             }
         ";
 
-        InputSystem.RegisterTemplate(firstTemplate);
-        InputSystem.RegisterTemplate(secondTemplate);
+        InputSystem.RegisterControlLayout(firstLayout);
+        InputSystem.RegisterControlLayout(secondLayout);
 
-        var template = InputSystem.TryFindMatchingTemplate(new InputDeviceDescription {product = "MyProduct"});
+        var layout = InputSystem.TryFindMatchingLayout(new InputDeviceDescription {product = "MyProduct"});
 
-        Assert.That(template, Is.EqualTo("SecondTemplate"));
+        Assert.That(layout, Is.EqualTo("SecondLayout"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_AddingTwoControlsWithSameName_WillCauseException()
+    [Category("Layouts")]
+    public void Layouts_AddingTwoControlsWithSameName_WillCauseException()
     {
         const string json = @"
             {
@@ -379,37 +379,37 @@ class FunctionalTests : InputTestFixture
                 ""controls"" : [
                     {
                         ""name"" : ""MyControl"",
-                        ""template"" : ""Button""
+                        ""layout"" : ""Button""
                     },
                     {
                         ""name"" : ""MyControl"",
-                        ""template"" : ""Button""
+                        ""layout"" : ""Button""
                     }
                 ]
             }
         ";
 
-        // We do minimal processing when adding a template so verification
-        // only happens when we actually try to instantiate the template.
-        InputSystem.RegisterTemplate(json);
+        // We do minimal processing when adding a layout so verification
+        // only happens when we actually try to instantiate the layout.
+        InputSystem.RegisterControlLayout(json);
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
             Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_ReplacingDeviceTemplateAffectsAllDevicesUsingTemplate()
+    [Category("Layouts")]
+    public void Layouts_ReplacingDeviceLayoutAffectsAllDevicesUsingLayout()
     {
-        // Create a device hiearchy and then replace the base template. We can't easily use
-        // the gamepad (or something similar) as a base template as it will use the Gamepad
+        // Create a device hiearchy and then replace the base layout. We can't easily use
+        // the gamepad (or something similar) as a base layout as it will use the Gamepad
         // class which will expect a number of controls to be present on the device.
         const string baseDeviceJson = @"
             {
                 ""name"" : ""MyBase"",
                 ""controls"" : [
-                    { ""name"" : ""first"", ""template"" : ""Button"" },
-                    { ""name"" : ""second"", ""template"" : ""Button"" }
+                    { ""name"" : ""first"", ""layout"" : ""Button"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"" }
                 ]
             }
         ";
@@ -423,25 +423,25 @@ class FunctionalTests : InputTestFixture
             {
                 ""name"" : ""MyBase"",
                 ""controls"" : [
-                    { ""name"" : ""yeah"", ""template"" : ""Stick"" }
+                    { ""name"" : ""yeah"", ""layout"" : ""Stick"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(derivedDeviceJson);
-        InputSystem.RegisterTemplate(baseDeviceJson);
+        InputSystem.RegisterControlLayout(derivedDeviceJson);
+        InputSystem.RegisterControlLayout(baseDeviceJson);
 
         var device = InputSystem.AddDevice("MyDerived");
 
-        InputSystem.RegisterTemplate(newBaseDeviceJson);
+        InputSystem.RegisterControlLayout(newBaseDeviceJson);
 
         Assert.That(device.children, Has.Count.EqualTo(1));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("yeah").And.Property("template").EqualTo("Stick"));
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("yeah").And.Property("layout").EqualTo("Stick"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_ReplacingDeviceTemplateWithTemplateUsingDifferentType_PreservesDeviceIdAndDescription()
+    [Category("Layouts")]
+    public void Layouts_ReplacingDeviceLayoutWithLayoutUsingDifferentType_PreservesDeviceIdAndDescription()
     {
         const string initialJson = @"
             {
@@ -451,12 +451,12 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(initialJson);
+        InputSystem.RegisterControlLayout(initialJson);
 
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
         InputSystem.Update();
 
-        var oldDevice = InputSystem.devices.First(x => x.template == "MyDevice");
+        var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 
         var oldDeviceId = oldDevice.id;
         var oldDeviceDescription = oldDevice.description;
@@ -468,10 +468,10 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(newJson);
-        Assert.That(InputSystem.devices, Has.Exactly(1).With.Property("template").EqualTo("MyDevice"));
+        InputSystem.RegisterControlLayout(newJson);
+        Assert.That(InputSystem.devices, Has.Exactly(1).With.Property("layout").EqualTo("MyDevice"));
 
-        var newDevice = InputSystem.devices.First(x => x.template == "MyDevice");
+        var newDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 
         Assert.That(newDevice.id, Is.EqualTo(oldDeviceId));
         Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
@@ -482,58 +482,58 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_ReplacingControlTemplateAffectsAllDevicesUsingTemplate()
+    [Category("Layouts")]
+    public void Layouts_ReplacingControlLayoutAffectsAllDevicesUsingLayout()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        // Replace "Button" template.
-        InputSystem.RegisterTemplate<MyButtonControl>("Button");
+        // Replace "Button" layout.
+        InputSystem.RegisterControlLayout<MyButtonControl>("Button");
 
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
-    class TestTemplateType : Pointer
+    class TestLayoutType : Pointer
     {
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_RegisteringTemplateType_UsesBaseTypeAsBaseTemplate()
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutType_UsesBaseTypeAsBaseLayout()
     {
-        InputSystem.RegisterTemplate<TestTemplateType>();
+        InputSystem.RegisterControlLayout<TestLayoutType>();
 
-        var template = InputSystem.TryLoadTemplate("TestTemplateType");
+        var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
-        Assert.That(template.extendsTemplate, Is.EqualTo("Pointer"));
+        Assert.That(layout.extendsLayout, Is.EqualTo("Pointer"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_RegisteringTemplateType_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutType_WithDescription_PutsDescriptionInLayoutWhenLoaded()
     {
-        InputSystem.RegisterTemplate<TestTemplateType>(deviceDescription: new InputDeviceDescription
+        InputSystem.RegisterControlLayout<TestLayoutType>(deviceDescription: new InputDeviceDescription
         {
             interfaceName = "TestInterface",
             product = "TestProduct",
             manufacturer = "TestManufacturer"
         });
 
-        var template = InputSystem.TryLoadTemplate("TestTemplateType");
+        var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
-        Assert.That(template.deviceDescription.empty, Is.False);
-        Assert.That(template.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
-        Assert.That(template.deviceDescription.product, Is.EqualTo("TestProduct"));
-        Assert.That(template.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
+        Assert.That(layout.deviceDescription.empty, Is.False);
+        Assert.That(layout.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(layout.deviceDescription.product, Is.EqualTo("TestProduct"));
+        Assert.That(layout.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_RegisteringTemplateFactory_WithDescription_PutsDescriptionInTemplateWhenLoaded()
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutFactory_WithDescription_PutsDescriptionInLayoutWhenLoaded()
     {
-        var factory = new TestTemplateFactory {templateToLoad = "Mouse"};
+        var factory = new TestLayoutFactory {layoutToLoad = "Mouse"};
 
-        InputSystem.RegisterTemplateFactory(() => factory.DoIt(), name: "TestTemplate",
+        InputSystem.RegisterControlLayoutFactory(() => factory.DoIt(), name: "TestLayout",
             deviceDescription: new InputDeviceDescription
         {
             interfaceName = "TestInterface",
@@ -541,40 +541,40 @@ class FunctionalTests : InputTestFixture
             manufacturer = "TestManufacturer"
         });
 
-        var template = InputSystem.TryLoadTemplate("TestTemplate");
+        var layout = InputSystem.TryLoadLayout("TestLayout");
 
-        Assert.That(template.deviceDescription.empty, Is.False);
-        Assert.That(template.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
-        Assert.That(template.deviceDescription.product, Is.EqualTo("TestProduct"));
-        Assert.That(template.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
+        Assert.That(layout.deviceDescription.empty, Is.False);
+        Assert.That(layout.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
+        Assert.That(layout.deviceDescription.product, Is.EqualTo("TestProduct"));
+        Assert.That(layout.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
-    // assigns it then Axis template (which has a default format of float), the AxisControl
+    // assigns it then Axis layout (which has a default format of float), the AxisControl
     // comes out with an "INT" format and not a "FLT" format.
     struct StateStructWithPrimitiveFields : IInputStateTypeInfo
     {
-        [InputControl(template = "Axis")] public byte byteAxis;
-        [InputControl(template = "Axis")] public short shortAxis;
-        [InputControl(template = "Axis")] public int intAxis;
+        [InputControl(layout = "Axis")] public byte byteAxis;
+        [InputControl(layout = "Axis")] public short shortAxis;
+        [InputControl(layout = "Axis")] public int intAxis;
         // No float as that is the default format for Axis anyway.
-        [InputControl(template = "Axis")] public double doubleAxis;
+        [InputControl(layout = "Axis")] public double doubleAxis;
 
         public FourCC GetFormat()
         {
             return new FourCC('T', 'E', 'S', 'T');
         }
     }
-    [InputTemplate(stateType = typeof(StateStructWithPrimitiveFields))]
+    [InputLayout(stateType = typeof(StateStructWithPrimitiveFields))]
     class DeviceWithStateStructWithPrimitiveFields : InputDevice
     {
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_FormatOfControlWithPrimitiveTypeInStateStructInferredFromType()
+    [Category("Layouts")]
+    public void Layouts_FormatOfControlWithPrimitiveTypeInStateStructInferredFromType()
     {
-        InputSystem.RegisterTemplate<DeviceWithStateStructWithPrimitiveFields>("Test");
+        InputSystem.RegisterControlLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
         var setup = new InputControlSetup("Test");
 
         Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
@@ -592,24 +592,24 @@ class FunctionalTests : InputTestFixture
             return new FourCC('T', 'E', 'S', 'T');
         }
     }
-    [InputTemplate(stateType = typeof(StateWithFixedArray))]
+    [InputLayout(stateType = typeof(StateWithFixedArray))]
     class DeviceWithStateStructWithFixedArray : InputDevice
     {
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_FormatOfControlWithFixedArrayType_IsNotInferredFromType()
+    [Category("Layouts")]
+    public void Layouts_FormatOfControlWithFixedArrayType_IsNotInferredFromType()
     {
-        InputSystem.RegisterTemplate<DeviceWithStateStructWithFixedArray>();
+        InputSystem.RegisterControlLayout<DeviceWithStateStructWithFixedArray>();
 
         Assert.That(() => new InputControlSetup("DeviceWithStateStructWithFixedArray"),
-            Throws.Exception.With.Message.Contain("Template has not been set"));
+            Throws.Exception.With.Message.Contain("Layout has not been set"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanHaveOneControlUseStateOfAnotherControl()
+    [Category("Layouts")]
+    public void Layouts_CanHaveOneControlUseStateOfAnotherControl()
     {
         // It's useful to be able to say that control X should simply use the same state as control
         // Y. An example of this is the up/down/left/right controls of sticks that simply want to reuse
@@ -622,12 +622,12 @@ class FunctionalTests : InputTestFixture
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""Gamepad"",
                 ""controls"" : [
-                    { ""name"" : ""test"", ""template"" : ""Axis"", ""useStateFrom"" : ""leftStick/x"" }
+                    { ""name"" : ""test"", ""layout"" : ""Axis"", ""useStateFrom"" : ""leftStick/x"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var setup = new InputControlSetup("MyDevice");
         var testControl = setup.GetControl<AxisControl>("test");
@@ -641,21 +641,21 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanAddChildControlToExistingControl()
+    [Category("Layouts")]
+    public void Layouts_CanAddChildControlToExistingControl()
     {
         const string json = @"
             {
-                ""name"" : ""TestTemplate"",
+                ""name"" : ""TestLayout"",
                 ""extend"" : ""Gamepad"",
                 ""controls"" : [
-                    { ""name"" : ""leftStick/enabled"", ""template"" : ""Button"" }
+                    { ""name"" : ""leftStick/enabled"", ""layout"" : ""Button"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
-        var device = (Gamepad) new InputControlSetup("TestTemplate").Finish();
+        InputSystem.RegisterControlLayout(json);
+        var device = (Gamepad) new InputControlSetup("TestLayout").Finish();
 
         ////TODO: this ignores layouting; ATM there's a conflict between the automatic layout used by the added button
         ////      and the manual layouting employed by Gamepad; we don't detect conflicts between manual and automatic
@@ -663,19 +663,19 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(device.leftStick.children, Has.Exactly(1).With.Property("name").EqualTo("enabled"));
         Assert.That(device.leftStick.children.Count, Is.EqualTo(device.rightStick.children.Count + 1));
-        Assert.That(device.leftStick["enabled"].template, Is.EqualTo("Button"));
+        Assert.That(device.leftStick["enabled"].layout, Is.EqualTo("Button"));
         Assert.That(device.leftStick["enabled"].parent, Is.SameAs(device.leftStick));
     }
 
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
+    [Category("Layouts")]
+    public void TODO_Layouts_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
     {
         const string baseJson = @"
             {
                 ""name"" : ""Base"",
                 ""controls"" : [
-                    { ""name"" : ""stick"", ""template"" : ""Stick"" }
+                    { ""name"" : ""stick"", ""layout"" : ""Stick"" }
                 ]
             }
         ";
@@ -693,8 +693,8 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(baseJson);
-        InputSystem.RegisterTemplate(derivedJson);
+        InputSystem.RegisterControlLayout(baseJson);
+        InputSystem.RegisterControlLayout(derivedJson);
 
         var setup = new InputControlSetup("Derived");
         var stick = setup.GetControl<StickControl>("stick");
@@ -703,33 +703,33 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanModifyTemplateOfChildControlUsingPath()
+    [Category("Layouts")]
+    public void Layouts_CanModifyLayoutOfChildControlUsingPath()
     {
         const string json = @"
         {
             ""name"" : ""MyGamepad"",
             ""extend"" : ""Gamepad"",
             ""controls"" : [
-                { ""name"" : ""dpad/up"", ""template"" : ""DiscreteButton"" }
+                { ""name"" : ""dpad/up"", ""layout"" : ""DiscreteButton"" }
             ]
         }";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var setup = new InputControlSetup("MyGamepad");
         var gamepad = (Gamepad)setup.Finish();
 
-        Assert.That(gamepad.dpad.up.template, Is.EqualTo("DiscreteButton"));
+        Assert.That(gamepad.dpad.up.layout, Is.EqualTo("DiscreteButton"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanSpecifyDisplayNameForControl()
+    [Category("Layouts")]
+    public void Layouts_CanSpecifyDisplayNameForControl()
     {
         const string json = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""extend"" : ""Gamepad"",
                 ""displayName"" : ""Test Gamepad"",
                 ""controls"" : [
@@ -745,9 +745,9 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
-        var device = (Gamepad) new InputControlSetup("MyTemplate").Finish();
+        var device = (Gamepad) new InputControlSetup("MyLayout").Finish();
 
         Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
@@ -755,281 +755,281 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanMarkControlAsNoisy()
+    [Category("Layouts")]
+    public void Layouts_CanMarkControlAsNoisy()
     {
         const string json = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""controls"" : [
                     {
                         ""name"" : ""button"",
-                        ""template"" : ""Button"",
+                        ""layout"" : ""Button"",
                         ""noisy"" : true
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
-        var device = InputSystem.AddDevice("MyTemplate");
+        var device = InputSystem.AddDevice("MyLayout");
 
         Assert.That(device["button"].noisy, Is.True);
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanBuildTemplatesInCode()
+    [Category("Layouts")]
+    public void Layouts_CanBuildLayoutsInCode()
     {
-        var builder = new InputTemplate.Builder()
-            .WithName("MyTemplate")
+        var builder = new InputControlLayout.Builder()
+            .WithName("MyLayout")
             .WithType<Gamepad>()
             .Extend("Pointer")
             .WithFormat("CUST");
 
         builder.AddControl("button")
-        .WithTemplate("Button")
+        .WithLayout("Button")
         .WithUsages("Foo", "Bar");
 
-        var template = builder.Build();
+        var layout = builder.Build();
 
-        Assert.That(template.name.ToString(), Is.EqualTo("MyTemplate"));
-        Assert.That(template.type, Is.SameAs(typeof(Gamepad)));
-        Assert.That(template.stateFormat, Is.EqualTo(new FourCC("CUST")));
-        Assert.That(template.extendsTemplate, Is.EqualTo("Pointer"));
-        Assert.That(template.controls, Has.Count.EqualTo(1));
-        Assert.That(template.controls[0].name.ToString(), Is.EqualTo("button"));
-        Assert.That(template.controls[0].template.ToString(), Is.EqualTo("Button"));
-        Assert.That(template.controls[0].usages.Count, Is.EqualTo(2));
-        Assert.That(template.controls[0].usages[0].ToString(), Is.EqualTo("Foo"));
-        Assert.That(template.controls[0].usages[1].ToString(), Is.EqualTo("Bar"));
+        Assert.That(layout.name.ToString(), Is.EqualTo("MyLayout"));
+        Assert.That(layout.type, Is.SameAs(typeof(Gamepad)));
+        Assert.That(layout.stateFormat, Is.EqualTo(new FourCC("CUST")));
+        Assert.That(layout.extendsLayout, Is.EqualTo("Pointer"));
+        Assert.That(layout.controls, Has.Count.EqualTo(1));
+        Assert.That(layout.controls[0].name.ToString(), Is.EqualTo("button"));
+        Assert.That(layout.controls[0].layout.ToString(), Is.EqualTo("Button"));
+        Assert.That(layout.controls[0].usages.Count, Is.EqualTo(2));
+        Assert.That(layout.controls[0].usages[0].ToString(), Is.EqualTo("Foo"));
+        Assert.That(layout.controls[0].usages[1].ToString(), Is.EqualTo("Bar"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_BuildingTemplateInCode_WithEmptyUsageString_Throws()
+    [Category("Layouts")]
+    public void Layouts_BuildingLayoutInCode_WithEmptyUsageString_Throws()
     {
-        var builder = new InputTemplate.Builder().WithName("TestTemplate");
+        var builder = new InputControlLayout.Builder().WithName("TestLayout");
 
         Assert.That(() => builder.AddControl("TestControl").WithUsages(""),
             Throws.ArgumentException.With.Message.Contains("TestControl")
-            .And.With.Message.Contains("TestTemplate"));
+            .And.With.Message.Contains("TestLayout"));
     }
 
     [Serializable]
-    class TestTemplateFactory
+    class TestLayoutFactory
     {
-        [SerializeField] public string templateToLoad;
-        [NonSerialized] public InputTemplate template;
+        [SerializeField] public string layoutToLoad;
+        [NonSerialized] public InputControlLayout layout;
 
-        public InputTemplate DoIt()
+        public InputControlLayout DoIt()
         {
-            // To make this as simple as possible, just load another template.
-            template = InputSystem.TryLoadTemplate(templateToLoad);
-            return template;
+            // To make this as simple as possible, just load another layout.
+            layout = InputSystem.TryLoadLayout(layoutToLoad);
+            return layout;
         }
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanAddCustomTemplateFactory()
+    [Category("Layouts")]
+    public void Layouts_CanAddCustomLayoutFactory()
     {
-        var factory = new TestTemplateFactory {templateToLoad = "Gamepad"};
+        var factory = new TestLayoutFactory {layoutToLoad = "Gamepad"};
 
-        InputSystem.RegisterTemplateFactory(() => factory.DoIt(), "MyTemplate");
+        InputSystem.RegisterControlLayoutFactory(() => factory.DoIt(), "MyLayout");
 
-        var result = InputSystem.TryLoadTemplate("MyTemplate");
+        var result = InputSystem.TryLoadLayout("MyLayout");
 
-        Assert.That(result.name.ToString(), Is.EqualTo("MyTemplate"));
-        Assert.That(result, Is.SameAs(factory.template));
+        Assert.That(result.name.ToString(), Is.EqualTo("MyLayout"));
+        Assert.That(result, Is.SameAs(factory.layout));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanTurnTemplateIntoJson()
+    [Category("Layouts")]
+    public void Layouts_CanTurnLayoutIntoJson()
     {
-        var template = InputSystem.TryLoadTemplate("Gamepad");
-        var json = template.ToJson();
-        var deserializedTemplate = InputTemplate.FromJson(json);
+        var layout = InputSystem.TryLoadLayout("Gamepad");
+        var json = layout.ToJson();
+        var deserializedLayout = InputControlLayout.FromJson(json);
 
-        Assert.That(deserializedTemplate.name, Is.EqualTo(template.name));
-        Assert.That(deserializedTemplate.controls, Has.Count.EqualTo(template.controls.Count));
-        Assert.That(deserializedTemplate.stateFormat, Is.EqualTo(template.stateFormat));
+        Assert.That(deserializedLayout.name, Is.EqualTo(layout.name));
+        Assert.That(deserializedLayout.controls, Has.Count.EqualTo(layout.controls.Count));
+        Assert.That(deserializedLayout.stateFormat, Is.EqualTo(layout.stateFormat));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanGetControlTemplateFromControlPath()
+    [Category("Layouts")]
+    public void Layouts_CanGetControlLayoutFromControlPath()
     {
         InputSystem.AddDevice("gamepad"); // Just to make sure we don't use this.
 
-        // Control template mentioned explicitly.
-        Assert.That(InputControlPath.TryGetControlTemplate("*/<button>"), Is.EqualTo("button")); // Does not "correct" casing.
-        // Control template can be looked up from device template.
-        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/leftStick"), Is.EqualTo("Stick"));
-        // With multiple controls, only returns result if all controls use the same template.
-        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*Stick"), Is.EqualTo("Stick"));
-        // Except if we match all controls on the device in which case it's taken to mean "any template goes".
-        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>/*"), Is.EqualTo("*"));
+        // Control layout mentioned explicitly.
+        Assert.That(InputControlPath.TryGetControlLayout("*/<button>"), Is.EqualTo("button")); // Does not "correct" casing.
+        // Control layout can be looked up from device layout.
+        Assert.That(InputControlPath.TryGetControlLayout("/<gamepad>/leftStick"), Is.EqualTo("Stick"));
+        // With multiple controls, only returns result if all controls use the same layout.
+        Assert.That(InputControlPath.TryGetControlLayout("/<gamepad>/*Stick"), Is.EqualTo("Stick"));
+        // Except if we match all controls on the device in which case it's taken to mean "any layout goes".
+        Assert.That(InputControlPath.TryGetControlLayout("/<gamepad>/*"), Is.EqualTo("*"));
         ////TODO
-        // However, having a wildcard on the device path is taken to mean "all device templates" in this case.
-        //Assert.That(InputControlPath.TryGetControlTemplate("/*/*Stick"), Is.EqualTo("Stick"));
-        // Can determine template used by child control.
-        Assert.That(InputControlPath.TryGetControlTemplate("<gamepad>/leftStick/x"), Is.EqualTo("Axis"));
-        // Can determine template from control with usage.
-        Assert.That(InputControlPath.TryGetControlTemplate("<gamepad>/{PrimaryAction}"), Is.EqualTo("Button"));
-        // Will not look up from instanced devices at runtime so can't know device template from this path.
-        Assert.That(InputControlPath.TryGetControlTemplate("/gamepad/leftStick"), Is.Null);
-        // If only a device template is given, can't know control template.
-        Assert.That(InputControlPath.TryGetControlTemplate("/<gamepad>"), Is.Null);
+        // However, having a wildcard on the device path is taken to mean "all device layouts" in this case.
+        //Assert.That(InputControlPath.TryGetControlLayout("/*/*Stick"), Is.EqualTo("Stick"));
+        // Can determine layout used by child control.
+        Assert.That(InputControlPath.TryGetControlLayout("<gamepad>/leftStick/x"), Is.EqualTo("Axis"));
+        // Can determine layout from control with usage.
+        Assert.That(InputControlPath.TryGetControlLayout("<gamepad>/{PrimaryAction}"), Is.EqualTo("Button"));
+        // Will not look up from instanced devices at runtime so can't know device layout from this path.
+        Assert.That(InputControlPath.TryGetControlLayout("/gamepad/leftStick"), Is.Null);
+        // If only a device layout is given, can't know control layout.
+        Assert.That(InputControlPath.TryGetControlLayout("/<gamepad>"), Is.Null);
 
-        ////TODO: make sure we can find templates from control template modifying child paths
+        ////TODO: make sure we can find layouts from control layout modifying child paths
         ////TODO: make sure that finding by usage can look arbitrarily deep into the hierarchy
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanGetDeviceTemplateFromControlPath()
+    [Category("Layouts")]
+    public void Layouts_CanGetDeviceLayoutFromControlPath()
     {
         InputSystem.AddDevice("gamepad"); // Just to make sure we don't use this.
 
-        Assert.That(InputControlPath.TryGetDeviceTemplate("<gamepad>/leftStick"), Is.EqualTo("gamepad"));
-        Assert.That(InputControlPath.TryGetDeviceTemplate("/<gamepad>"), Is.EqualTo("gamepad"));
-        Assert.That(InputControlPath.TryGetDeviceTemplate("/*/*Stick"), Is.EqualTo("*"));
-        Assert.That(InputControlPath.TryGetDeviceTemplate("/*"), Is.EqualTo("*"));
-        Assert.That(InputControlPath.TryGetDeviceTemplate("/gamepad/leftStick"), Is.Null);
+        Assert.That(InputControlPath.TryGetDeviceLayout("<gamepad>/leftStick"), Is.EqualTo("gamepad"));
+        Assert.That(InputControlPath.TryGetDeviceLayout("/<gamepad>"), Is.EqualTo("gamepad"));
+        Assert.That(InputControlPath.TryGetDeviceLayout("/*/*Stick"), Is.EqualTo("*"));
+        Assert.That(InputControlPath.TryGetDeviceLayout("/*"), Is.EqualTo("*"));
+        Assert.That(InputControlPath.TryGetDeviceLayout("/gamepad/leftStick"), Is.Null);
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanLoadTemplate()
+    [Category("Layouts")]
+    public void Layouts_CanLoadLayout()
     {
         var json = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""controls"" : [ { ""name"" : ""MyControl"" } ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
-        var jsonTemplate = InputSystem.TryLoadTemplate("MyTemplate");
+        var jsonLayout = InputSystem.TryLoadLayout("MyLayout");
 
-        Assert.That(jsonTemplate, Is.Not.Null);
-        Assert.That(jsonTemplate.name, Is.EqualTo(new InternedString("MyTemplate")));
-        Assert.That(jsonTemplate.controls, Has.Count.EqualTo(1));
-        Assert.That(jsonTemplate.controls[0].name, Is.EqualTo(new InternedString("MyControl")));
+        Assert.That(jsonLayout, Is.Not.Null);
+        Assert.That(jsonLayout.name, Is.EqualTo(new InternedString("MyLayout")));
+        Assert.That(jsonLayout.controls, Has.Count.EqualTo(1));
+        Assert.That(jsonLayout.controls[0].name, Is.EqualTo(new InternedString("MyControl")));
 
-        var gamepadTemplate = InputSystem.TryLoadTemplate("Gamepad");
+        var gamepadLayout = InputSystem.TryLoadLayout("Gamepad");
 
-        Assert.That(gamepadTemplate, Is.Not.Null);
-        Assert.That(gamepadTemplate.name, Is.EqualTo(new InternedString("Gamepad")));
+        Assert.That(gamepadLayout, Is.Not.Null);
+        Assert.That(gamepadLayout.name, Is.EqualTo(new InternedString("Gamepad")));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanRemoveTemplate()
+    [Category("Layouts")]
+    public void Layouts_CanRemoveLayout()
     {
         var json = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""extend"" : ""Gamepad""
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
-        var device = InputSystem.AddDevice("MyTemplate");
+        InputSystem.RegisterControlLayout(json);
+        var device = InputSystem.AddDevice("MyLayout");
 
-        Assert.That(InputSystem.ListTemplates(), Has.Exactly(1).EqualTo("MyTemplate"));
+        Assert.That(InputSystem.ListLayouts(), Has.Exactly(1).EqualTo("MyLayout"));
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(device));
 
-        InputSystem.RemoveTemplate("MyTemplate");
+        InputSystem.RemoveLayout("MyLayout");
 
-        Assert.That(InputSystem.ListTemplates(), Has.None.EqualTo("MyTemplate"));
+        Assert.That(InputSystem.ListLayouts(), Has.None.EqualTo("MyLayout"));
         Assert.That(InputSystem.devices, Has.None.SameAs(device));
-        Assert.That(InputSystem.devices, Has.None.With.Property("template").EqualTo("MyTemplate"));
+        Assert.That(InputSystem.devices, Has.None.With.Property("layout").EqualTo("MyLayout"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_ChangingTemplates_SendsNotifications()
+    [Category("Layouts")]
+    public void Layouts_ChangingLayouts_SendsNotifications()
     {
-        InputTemplateChange? receivedChange = null;
-        string receivedTemplate = null;
+        InputLayoutChange? receivedChange = null;
+        string receivedLayout = null;
 
-        InputSystem.onTemplateChange +=
-            (template, change) =>
+        InputSystem.onControlLayoutChange +=
+            (layout, change) =>
             {
                 receivedChange = change;
-                receivedTemplate = template;
+                receivedLayout = layout;
             };
 
         const string jsonV1 = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""extend"" : ""Gamepad""
             }
         ";
 
-        // Add template.
-        InputSystem.RegisterTemplate(jsonV1);
+        // Add layout.
+        InputSystem.RegisterControlLayout(jsonV1);
 
-        Assert.That(receivedChange, Is.EqualTo(InputTemplateChange.Added));
-        Assert.That(receivedTemplate, Is.EqualTo("MyTemplate"));
+        Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Added));
+        Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
 
         const string jsonV2 = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""extend"" : ""Keyboard""
             }
         ";
 
         receivedChange = null;
-        receivedTemplate = null;
+        receivedLayout = null;
 
-        // Change template.
-        InputSystem.RegisterTemplate(jsonV2);
+        // Change layout.
+        InputSystem.RegisterControlLayout(jsonV2);
 
-        Assert.That(receivedChange, Is.EqualTo(InputTemplateChange.Replaced));
-        Assert.That(receivedTemplate, Is.EqualTo("MyTemplate"));
+        Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Replaced));
+        Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
 
         receivedChange = null;
-        receivedTemplate = null;
+        receivedLayout = null;
 
-        // RemoveTemplate.
-        InputSystem.RemoveTemplate("MyTemplate");
+        // RemoveControlLayout.
+        InputSystem.RemoveLayout("MyLayout");
 
-        Assert.That(receivedChange, Is.EqualTo(InputTemplateChange.Removed));
-        Assert.That(receivedTemplate, Is.EqualTo("MyTemplate"));
+        Assert.That(receivedChange, Is.EqualTo(InputLayoutChange.Removed));
+        Assert.That(receivedLayout, Is.EqualTo("MyLayout"));
     }
 
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_RemovingTemplates_RemovesAllTemplatesBasedOnIt()
+    [Category("Layouts")]
+    public void TODO_Layouts_RemovingLayouts_RemovesAllLayoutsBasedOnIt()
     {
         Assert.Fail();
     }
 
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanQueryResourceNameFromControl()
+    [Category("Layouts")]
+    public void TODO_Layouts_CanQueryResourceNameFromControl()
     {
         var json = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""controls"" : [ { ""name"" : ""MyControl"",  } ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         Assert.Fail();
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromTemplate()
+    public void Devices_CanCreateDeviceFromLayout()
     {
         var setup = new InputControlSetup("Gamepad");
         var device = setup.Finish();
@@ -1042,7 +1042,7 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanCreateDeviceWithNestedState()
     {
-        InputSystem.RegisterTemplate<CustomDevice>();
+        InputSystem.RegisterControlLayout<CustomDevice>();
         var setup = new InputControlSetup("CustomDevice");
         var device = setup.Finish();
 
@@ -1051,7 +1051,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromTemplateMatchedByDeviceDescription()
+    public void Devices_CanCreateDeviceFromLayoutMatchedByDeviceDescription()
     {
         const string json = @"
             {
@@ -1064,7 +1064,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var description = new InputDeviceDescription
         {
@@ -1074,7 +1074,7 @@ class FunctionalTests : InputTestFixture
 
         var device = InputSystem.AddDevice(description);
 
-        Assert.That(device.template, Is.EqualTo("MyDevice"));
+        Assert.That(device.layout, Is.EqualTo("MyDevice"));
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
@@ -1092,7 +1092,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var description = new InputDeviceDescription
         {
@@ -1111,7 +1111,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromTemplateVariant()
+    public void Devices_CanCreateDeviceFromLayoutVariant()
     {
         var leftyGamepadSetup = new InputControlSetup("Gamepad", variant: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
@@ -1154,13 +1154,13 @@ class FunctionalTests : InputTestFixture
             {
                 ""name"" : ""MyDevice"",
                 ""controls"" : [
-                    { ""name"" : ""first"", ""template"" : ""Button"" },
-                    { ""name"" : ""second"", ""template"" : ""Button"" }
+                    { ""name"" : ""first"", ""layout"" : ""Button"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(initialJson);
+        InputSystem.RegisterControlLayout(initialJson);
 
         // Create initial version of device.
         var initialSetup = new InputControlSetup("MyDevice");
@@ -1168,18 +1168,18 @@ class FunctionalTests : InputTestFixture
         var initialSecondControl = initialSetup.GetControl("second");
         var initialDevice = initialSetup.Finish();
 
-        // Change template.
+        // Change layout.
         const string modifiedJson = @"
             {
                 ""name"" : ""MyDevice"",
                 ""controls"" : [
-                    { ""name"" : ""first"", ""template"" : ""Button"" },
-                    { ""name"" : ""second"", ""template"" : ""Axis"" },
-                    { ""name"" : ""third"", ""template"" : ""Button"" }
+                    { ""name"" : ""first"", ""layout"" : ""Button"" },
+                    { ""name"" : ""second"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""third"", ""layout"" : ""Button"" }
                 ]
             }
         ";
-        InputSystem.RegisterTemplate(modifiedJson);
+        InputSystem.RegisterControlLayout(modifiedJson);
 
         // Modify device.
         var modifiedSetup = new InputControlSetup("MyDevice", existingDevice: initialDevice);
@@ -1201,31 +1201,31 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanChangeDeviceTypeAfterCreation()
     {
-        // Device template for a generic InputDevice.
+        // Device layout for a generic InputDevice.
         const string initialJson = @"
             {
                 ""name"" : ""MyDevice"",
                 ""controls"" : [
-                    { ""name"" : ""buttonSouth"", ""template"" : ""Button"" }
+                    { ""name"" : ""buttonSouth"", ""layout"" : ""Button"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(initialJson);
+        InputSystem.RegisterControlLayout(initialJson);
 
         // Create initial version of device.
         var initialSetup = new InputControlSetup("MyDevice");
         var initialButton = initialSetup.GetControl<ButtonControl>("buttonSouth");
         var initialDevice = initialSetup.Finish();
 
-        // Change template to now be a gamepad.
+        // Change layout to now be a gamepad.
         const string modifiedJson = @"
             {
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""Gamepad""
             }
         ";
-        InputSystem.RegisterTemplate(modifiedJson);
+        InputSystem.RegisterControlLayout(modifiedJson);
 
         // Modify device.
         var modifiedSetup = new InputControlSetup("MyDevice", existingDevice: initialDevice);
@@ -1277,7 +1277,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanFindDeviceByUsageAndTemplate()
+    public void Devices_CanFindDeviceByUsageAndLayout()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
@@ -1315,13 +1315,13 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
-    public void Controls_DeviceAndControlsRememberTheirTemplates()
+    public void Controls_DeviceAndControlsRememberTheirLayouts()
     {
         var setup = new InputControlSetup("Gamepad");
         var gamepad = (Gamepad)setup.Finish();
 
-        Assert.That(gamepad.template, Is.EqualTo("Gamepad"));
-        Assert.That(gamepad.leftStick.template, Is.EqualTo("Stick"));
+        Assert.That(gamepad.layout, Is.EqualTo("Gamepad"));
+        Assert.That(gamepad.leftStick.layout, Is.EqualTo("Stick"));
     }
 
     [Test]
@@ -1356,17 +1356,17 @@ class FunctionalTests : InputTestFixture
                 ""controls"" : [
                     {
                         ""name"" : ""stick"",
-                        ""template"" : ""Stick""
+                        ""layout"" : ""Stick""
                     },
                     {
                         ""name"" : ""button"",
-                        ""template"" : ""Button""
+                        ""layout"" : ""Button""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var device = new InputControlSetup("MyDevice").Finish();
 
@@ -1408,7 +1408,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         ////NOTE: Unfortunately, this relies on an internal method ATM.
@@ -1447,7 +1447,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
         var processor = device.leftStick.TryGetProcessor<DeadzoneProcessor>();
@@ -1602,15 +1602,15 @@ class FunctionalTests : InputTestFixture
             ""name"" : ""MyDevice"",
             ""format"" : ""CUST"",
             ""controls"" : [
-                { ""name"" : ""dpad"", ""template"" : ""Dpad"" },
-                { ""name"" : ""dpad/up"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=2,maxValue=4"", ""bit"" : 0, ""sizeInBits"" : 4 },
-                { ""name"" : ""dpad/down"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=6,maxValue=8"", ""bit"" : 0, ""sizeInBits"" : 4 },
-                { ""name"" : ""dpad/left"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=8, maxValue=2"", ""bit"" : 0, ""sizeInBits"" : 4 },
-                { ""name"" : ""dpad/right"", ""template"" : ""DiscreteButton"", ""parameters"" : ""minValue=4,maxValue=6"", ""bit"" : 0, ""sizeInBits"" : 4 }
+                { ""name"" : ""dpad"", ""layout"" : ""Dpad"" },
+                { ""name"" : ""dpad/up"", ""layout"" : ""DiscreteButton"", ""parameters"" : ""minValue=2,maxValue=4"", ""bit"" : 0, ""sizeInBits"" : 4 },
+                { ""name"" : ""dpad/down"", ""layout"" : ""DiscreteButton"", ""parameters"" : ""minValue=6,maxValue=8"", ""bit"" : 0, ""sizeInBits"" : 4 },
+                { ""name"" : ""dpad/left"", ""layout"" : ""DiscreteButton"", ""parameters"" : ""minValue=8, maxValue=2"", ""bit"" : 0, ""sizeInBits"" : 4 },
+                { ""name"" : ""dpad/right"", ""layout"" : ""DiscreteButton"", ""parameters"" : ""minValue=4,maxValue=6"", ""bit"" : 0, ""sizeInBits"" : 4 }
             ]
         }";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = InputSystem.AddDevice("MyDevice");
         var dpad = (DpadControl)device["dpad"];
 
@@ -1647,7 +1647,7 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
-        InputSystem.RegisterTemplate<CustomDevice>();
+        InputSystem.RegisterControlLayout<CustomDevice>();
         var setup = new InputControlSetup("CustomDevice");
         var axis2 = setup.GetControl("axis2");
         setup.Finish();
@@ -1804,7 +1804,7 @@ class FunctionalTests : InputTestFixture
     // will actually end up with that specific state layout. This is why Gamepad should not assume
     // that 'currentValuePtr' is a pointer to a GamepadState.
     //
-    // Templates can be used to re-arrange the state layout of their base template. One case where
+    // Layouts can be used to re-arrange the state layout of their base layout. One case where
     // this is useful are HIDs. On OSX, for example, gamepad state data does not arrive in its own
     // distinct format but rather comes in as the same generic state data as any other HID device.
     // Yet we still want a gamepad to come out as a Gamepad and not as a generic InputDevice. If we
@@ -1812,9 +1812,9 @@ class FunctionalTests : InputTestFixture
     // along the way that takes the incoming HID data, interprets it to determine that it is in
     // fact coming from a gamepad HID, and re-arranges it into a GamepadState-compatible format
     // (which requires knowledge of the specific layout used by the HID). By having flexible state
-    // layouts we can do this entirely through data using just templates.
+    // layouts we can do this entirely through data using just layouts.
     //
-    // A template that customizes state layout can also "park" unused controls outside the block of
+    // A layout that customizes state layout can also "park" unused controls outside the block of
     // data that will actually be sent in via state events. Space for the unused controls will still
     // be allocated in the state buffers (since InputControls still refer to it) but InputManager
     // is okay with sending StateEvents that are shorter than the full state block of a device.
@@ -1823,8 +1823,8 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_CanCustomizeStateLayoutOfDevice()
     {
-        // Create a custom template that moves the offsets of some controls around.
-        var jsonTemplate = @"
+        // Create a custom layout that moves the offsets of some controls around.
+        var jsonLayout = @"
             {
                 ""name"" : ""CustomGamepad"",
                 ""extend"" : ""Gamepad"",
@@ -1838,7 +1838,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(jsonTemplate);
+        InputSystem.RegisterControlLayout(jsonLayout);
 
         var setup = new InputControlSetup("CustomGamepad");
         Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
@@ -1851,20 +1851,20 @@ class FunctionalTests : InputTestFixture
     [Category("State")]
     public void State_DoesNotNeedToBe4ByteAligned()
     {
-        var jsonTemplate = @"
+        var jsonLayout = @"
             {
                 ""name"" : ""TestDevice"",
                 ""format"" : ""CUST"",
                 ""controls"" : [
                     {
                         ""name"" : ""button1"",
-                        ""template"" : ""Button""
+                        ""layout"" : ""Button""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(jsonTemplate);
+        InputSystem.RegisterControlLayout(jsonLayout);
 
         var device1 = InputSystem.AddDevice("TestDevice");
         var device2 = InputSystem.AddDevice("TestDevice");
@@ -1881,8 +1881,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void Templates_CanReformatAndResizeControlHierarchy()
+    [Category("Layouts")]
+    public void Layouts_CanReformatAndResizeControlHierarchy()
     {
         // Turn left stick into a 2D vector of shorts.
         // NOTE: Child offsets are not absolute! They are relative to their parent.
@@ -1902,7 +1902,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = (Gamepad) new InputControlSetup("MyDevice").Finish();
 
         Assert.That(device.leftStick.stateBlock.byteOffset, Is.EqualTo(6));
@@ -1926,7 +1926,7 @@ class FunctionalTests : InputTestFixture
     public void State_CanStoreAxisAsShort()
     {
         // Make right trigger be represented as just a short and force it to different offset.
-        var jsonTemplate = @"
+        var jsonLayout = @"
             {
                 ""name"" : ""CustomGamepad"",
                 ""extend"" : ""Gamepad"",
@@ -1940,7 +1940,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(jsonTemplate);
+        InputSystem.RegisterControlLayout(jsonLayout);
 
         var setup = new InputControlSetup("CustomGamepad");
         var device = (Gamepad)setup.Finish();
@@ -1958,19 +1958,19 @@ class FunctionalTests : InputTestFixture
                 ""controls"" : [
                     {
                         ""name"" : ""controlWithFixedOffset"",
-                        ""template"" : ""Analog"",
+                        ""layout"" : ""Analog"",
                         ""offset"" : ""10"",
                         ""format"" : ""FLT""
                     },
                     {
                         ""name"" : ""controlWithAutomaticOffset"",
-                        ""template"" : ""Button""
+                        ""layout"" : ""Button""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var setup = new InputControlSetup("MyDevice");
 
         Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
@@ -2084,7 +2084,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var state = new GamepadState {leftStick = new Vector2(0.5f, 0.0f)};
@@ -2097,7 +2097,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanAddDeviceFromTemplate()
+    public void Devices_CanAddDeviceFromLayout()
     {
         var device = InputSystem.AddDevice("Gamepad");
 
@@ -2107,12 +2107,12 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanAddDeviceFromTemplate_LookedUpFromType()
+    public void Devices_CanAddDeviceFromLayout_LookedUpFromType()
     {
-        // Register template with name different from name of type
-        // so that trying to find the template using the type name
+        // Register layout with name different from name of type
+        // so that trying to find the layout using the type name
         // would fail.
-        InputSystem.RegisterTemplate<CustomDevice>("MyDevice");
+        InputSystem.RegisterControlLayout<CustomDevice>("MyDevice");
 
         var device = InputSystem.AddDevice<CustomDevice>();
 
@@ -2223,7 +2223,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_UnsupportedDevices_AreRemovedFromList_WhenMatchingTemplateIsAdded()
+    public void Devices_UnsupportedDevices_AreRemovedFromList_WhenMatchingLayoutIsAdded()
     {
         const string json = @"
             {
@@ -2236,7 +2236,7 @@ class FunctionalTests : InputTestFixture
         testRuntime.ReportNewInputDevice(json);
         InputSystem.Update();
 
-        InputSystem.RegisterTemplate<TestTemplateType>(
+        InputSystem.RegisterControlLayout<TestLayoutType>(
             deviceDescription: new InputDeviceDescription
         {
             interfaceName = "TestInterface"
@@ -2264,7 +2264,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanLookUpDeviceByTemplate()
+    public void Devices_CanLookUpDeviceByLayout()
     {
         var device = InputSystem.AddDevice("Gamepad", "test"); // Give name to make sure we're not matching by name.
         var result = InputSystem.GetDevice("Gamepad");
@@ -2294,7 +2294,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_NameDefaultsToNameOfTemplate()
+    public void Devices_NameDefaultsToNameOfLayout()
     {
         var device = InputSystem.AddDevice<Mouse>();
 
@@ -2378,7 +2378,7 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_ChangingStateOfDevice_InStateCallback_TriggersNotification()
     {
-        InputSystem.RegisterTemplate<TestDeviceThatResetsStateInCallback>();
+        InputSystem.RegisterControlLayout<TestDeviceThatResetsStateInCallback>();
         var device = InputSystem.AddDevice<TestDeviceThatResetsStateInCallback>();
 
         var receivedCalls = 0;
@@ -2447,7 +2447,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanAddTemplateForDeviceThatsAlreadyBeenReported()
+    public void Devices_CanAddLayoutForDeviceThatsAlreadyBeenReported()
     {
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "MyController"}.ToJson());
         InputSystem.Update();
@@ -2462,39 +2462,39 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         Assert.That(InputSystem.devices,
-            Has.Exactly(1).With.Property("template").EqualTo("CustomGamepad").And.TypeOf<Gamepad>());
+            Has.Exactly(1).With.Property("layout").EqualTo("CustomGamepad").And.TypeOf<Gamepad>());
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanMatchTemplateByDeviceClass()
+    public void Devices_CanMatchLayoutByDeviceClass()
     {
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Touchscreen"}.ToJson());
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
 
-        // Should not try to use a control template.
+        // Should not try to use a control layout.
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Touch"}.ToJson());
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
     }
 
-    // For some devices, we need to discover their setup at runtime and cannot create templates
+    // For some devices, we need to discover their setup at runtime and cannot create layouts
     // in advance. HID joysticks are one such case. We want to be able to turn any HID joystick
     // into a Joystick device and accurately represent all the axes and buttons the device
-    // actually has. If we couldn't make up templates on the fly, we would have to have a fallback
-    // joystick template that simply has N buttons and M axes.
+    // actually has. If we couldn't make up layouts on the fly, we would have to have a fallback
+    // joystick layout that simply has N buttons and M axes.
     //
     // So, instead we have a callback that tells us when a device has been discovered. We can use
-    // this callback to generate a template on the fly.
+    // this callback to generate a layout on the fly.
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanDetermineWhichTemplateIsChosenOnDeviceDiscovery()
+    public void TODO_Devices_CanDetermineWhichLayoutIsChosenOnDeviceDiscovery()
     {
         Assert.Fail();
     }
@@ -2582,7 +2582,7 @@ class FunctionalTests : InputTestFixture
         var unsupportedDevices = new List<InputDeviceDescription>();
         InputSystem.GetUnsupportedDevices(unsupportedDevices);
 
-        ////TODO: also make sure that when the template support it is removed, the device goes back on the unsupported list
+        ////TODO: also make sure that when the layout support it is removed, the device goes back on the unsupported list
 
         Assert.That(unsupportedDevices.Count, Is.Zero);
     }
@@ -2705,7 +2705,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ThatHaveNoMatchingTemplate_AreDisabled()
+    public void Devices_ThatHaveNoMatchingLayout_AreDisabled()
     {
         var deviceId = testRuntime.AllocateDeviceId();
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
@@ -2736,7 +2736,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ThatHadNoMatchingTemplate_AreReEnabled_WhenTemplateBecomesAvailable()
+    public void Devices_ThatHadNoMatchingLayout_AreReEnabled_WhenLayoutBecomesAvailable()
     {
         var deviceId = testRuntime.AllocateDeviceId();
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
@@ -2760,7 +2760,7 @@ class FunctionalTests : InputTestFixture
                 return InputDeviceCommand.kGenericFailure;
             });
 
-        InputSystem.RegisterTemplate<Mouse>(deviceDescription: new InputDeviceDescription {deviceClass = "TestThing"});
+        InputSystem.RegisterControlLayout<Mouse>(deviceDescription: new InputDeviceDescription {deviceClass = "TestThing"});
 
         Assert.That(wasEnabled.HasValue);
         Assert.That(wasEnabled.Value, Is.True);
@@ -2952,16 +2952,16 @@ class FunctionalTests : InputTestFixture
                 ""name"" : ""MyJoystick"",
                 ""extend"" : ""Joystick"",
                 ""controls"" : [
-                    { ""name"" : ""button1"", ""template"" : ""Button"" },
-                    { ""name"" : ""button2"", ""template"" : ""Button"" },
-                    { ""name"" : ""axis1"", ""template"" : ""Axis"" },
-                    { ""name"" : ""axis2"", ""template"" : ""Axis"" },
-                    { ""name"" : ""discrete"", ""template"" : ""Digital"" }
+                    { ""name"" : ""button1"", ""layout"" : ""Button"" },
+                    { ""name"" : ""button2"", ""layout"" : ""Button"" },
+                    { ""name"" : ""axis1"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""axis2"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""discrete"", ""layout"" : ""Digital"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var device = InputSystem.AddDevice("MyJoystick");
 
@@ -3087,12 +3087,12 @@ class FunctionalTests : InputTestFixture
     [TestCase("Touchscreen")]
     [TestCase("Joystick")]
     [TestCase("Accelerometer")]
-    public void Devices_CanCreateDevice(string template)
+    public void Devices_CanCreateDevice(string layout)
     {
-        var device = InputSystem.AddDevice(template);
+        var device = InputSystem.AddDevice(layout);
 
         Assert.That(device, Is.InstanceOf<InputDevice>());
-        Assert.That(device.template, Is.EqualTo(template));
+        Assert.That(device.layout, Is.EqualTo(layout));
     }
 
     [Test]
@@ -3197,13 +3197,13 @@ class FunctionalTests : InputTestFixture
                 }
             });
 
-        Assert.That(keyboard.layout, Is.EqualTo("default"));
+        Assert.That(keyboard.keyboardLayout, Is.EqualTo("default"));
 
         currentLayoutName = "new";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
-        Assert.That(keyboard.layout, Is.EqualTo("new"));
+        Assert.That(keyboard.keyboardLayout, Is.EqualTo("new"));
     }
 
     [Test]
@@ -3540,7 +3540,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindControlsByTemplate()
+    public void Controls_CanFindControlsByLayout()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var matches = InputSystem.GetControls("/gamepad/<stick>");
@@ -3552,7 +3552,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanFindDevicesByTemplates()
+    public void Devices_CanFindDevicesByLayouts()
     {
         var gamepad1 = InputSystem.AddDevice("Gamepad");
         var gamepad2 = InputSystem.AddDevice("Gamepad");
@@ -3567,7 +3567,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindControlsByBaseTemplate()
+    public void Controls_CanFindControlsByBaseLayout()
     {
         const string json = @"
             {
@@ -3576,7 +3576,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = InputSystem.AddDevice("MyGamepad");
 
         var matches = InputSystem.GetControls("/<gamepad>");
@@ -3656,7 +3656,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var gamepad = (Gamepad) new InputControlSetup("CustomGamepad").Finish();
 
         Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
@@ -3672,13 +3672,13 @@ class FunctionalTests : InputTestFixture
                 ""controls"" : [
                     {
                         ""name"" : ""control"",
-                        ""template"" : ""Button""
+                        ""layout"" : ""Button""
                     }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var setup = new InputControlSetup("MyDevice");
         var control = setup.GetControl("control");
@@ -3764,8 +3764,8 @@ class FunctionalTests : InputTestFixture
     [Category("Events")]
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
-        // Could use one of the tracking templates but let's do it with a
-        // custom template that enables before render updates on a gamepad.
+        // Could use one of the tracking layouts but let's do it with a
+        // custom layout that enables before render updates on a gamepad.
         const string deviceJson = @"
             {
                 ""name"" : ""CustomGamepad"",
@@ -3774,7 +3774,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(deviceJson);
+        InputSystem.RegisterControlLayout(deviceJson);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var newState = new GamepadState { leftTrigger = 0.123f };
@@ -3925,7 +3925,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         var device = InputSystem.AddDevice("CustomGamepad");
 
         InputSystem.onEvent +=
@@ -4155,10 +4155,10 @@ class FunctionalTests : InputTestFixture
 
     struct CustomNestedDeviceState : IInputStateTypeInfo
     {
-        [InputControl(name = "button1", template = "Button")]
+        [InputControl(name = "button1", layout = "Button")]
         public int buttons;
 
-        [InputControl(template = "Axis")]
+        [InputControl(layout = "Axis")]
         public float axis2;
 
         public FourCC GetFormat()
@@ -4169,7 +4169,7 @@ class FunctionalTests : InputTestFixture
 
     struct CustomDeviceState : IInputStateTypeInfo
     {
-        [InputControl(template = "Axis")]
+        [InputControl(layout = "Axis")]
         public float axis;
 
         public CustomNestedDeviceState nested;
@@ -4180,7 +4180,7 @@ class FunctionalTests : InputTestFixture
         }
     }
 
-    [InputTemplate(stateType = typeof(CustomDeviceState))]
+    [InputLayout(stateType = typeof(CustomDeviceState))]
     class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
@@ -4213,17 +4213,17 @@ class FunctionalTests : InputTestFixture
     {
         const string json = @"
             {
-                ""name"" : ""TestTemplate"",
+                ""name"" : ""TestLayout"",
                 ""extend"" : ""CustomDevice"",
                 ""controls"" : [
-                    { ""name"" : ""extra"", ""template"" : ""Button"" }
+                    { ""name"" : ""extra"", ""layout"" : ""Button"" }
                 ]
             }
         ";
 
-        InputSystem.RegisterTemplate<CustomDevice>();
-        InputSystem.RegisterTemplate(json);
-        var device = (CustomDevice)InputSystem.AddDevice("TestTemplate");
+        InputSystem.RegisterControlLayout<CustomDevice>();
+        InputSystem.RegisterControlLayout(json);
+        var device = (CustomDevice)InputSystem.AddDevice("TestLayout");
 
         InputSystem.QueueStateEvent(device, new CustomDeviceState {axis = 0.5f});
         InputSystem.Update();
@@ -4249,7 +4249,7 @@ class FunctionalTests : InputTestFixture
     [Category("Events")]
     public void Events_CandSendLargerStateToDeviceWithSmallerState()
     {
-        InputSystem.RegisterTemplate<CustomDevice>();
+        InputSystem.RegisterControlLayout<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
 
         var state = new ExtendedCustomDeviceState();
@@ -4264,7 +4264,7 @@ class FunctionalTests : InputTestFixture
     [Category("Events")]
     public void Events_CanUpdateDeviceWithEventsFromUpdateCallback()
     {
-        InputSystem.RegisterTemplate<CustomDeviceWithUpdate>();
+        InputSystem.RegisterControlLayout<CustomDeviceWithUpdate>();
         var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
 
         InputSystem.Update();
@@ -4278,7 +4278,7 @@ class FunctionalTests : InputTestFixture
     [Category("Devices")]
     public void Devices_RemovingDeviceCleansUpUpdateCallback()
     {
-        InputSystem.RegisterTemplate<CustomDeviceWithUpdate>();
+        InputSystem.RegisterControlLayout<CustomDeviceWithUpdate>();
         var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
         InputSystem.RemoveDevice(device);
 
@@ -5881,7 +5881,7 @@ class FunctionalTests : InputTestFixture
     {
         // Add some data to the local input system.
         InputSystem.AddDevice("Gamepad");
-        InputSystem.RegisterTemplate(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
+        InputSystem.RegisterControlLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
         var localGamepad = (Gamepad)InputSystem.AddDevice("MyGamepad");
 
         // Now create another input system instance and connect it
@@ -5906,13 +5906,13 @@ class FunctionalTests : InputTestFixture
 
         local.StartSending();
 
-        var remoteGamepadTemplate =
-            string.Format("{0}0::{1}", InputRemoting.kRemoteTemplateNamespacePrefix, localGamepad.template);
+        var remoteGamepadLayout =
+            string.Format("{0}0::{1}", InputRemoting.kRemoteLayoutNamespacePrefix, localGamepad.layout);
 
         // Make sure that our "remote" system now has the data we initially
         // set up on the local system.
         Assert.That(secondInputManager.devices,
-            Has.Exactly(1).With.Property("template").EqualTo(remoteGamepadTemplate));
+            Has.Exactly(1).With.Property("layout").EqualTo(remoteGamepadLayout));
         Assert.That(secondInputManager.devices, Has.Exactly(2).TypeOf<Gamepad>());
         Assert.That(secondInputManager.devices, Has.All.With.Property("remote").True);
 
@@ -5924,7 +5924,7 @@ class FunctionalTests : InputTestFixture
         // NOTE: This will also switch the system to the state buffers from the second input manager.
         secondInputManager.Update();
 
-        var remoteGamepad = (Gamepad)secondInputManager.devices.First(x => x.template == remoteGamepadTemplate);
+        var remoteGamepad = (Gamepad)secondInputManager.devices.First(x => x.layout == remoteGamepadLayout);
 
         Assert.That(remoteGamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
@@ -5956,7 +5956,7 @@ class FunctionalTests : InputTestFixture
         var remoteGamepad = secondInputManager.devices[0];
         Assert.That(remoteGamepad, Is.TypeOf<Gamepad>());
         Assert.That(remoteGamepad.remote, Is.True);
-        Assert.That(remoteGamepad.template, Contains.Substring("Gamepad"));
+        Assert.That(remoteGamepad.layout, Contains.Substring("Gamepad"));
 
         // Change usage.
         InputSystem.SetUsage(localGamepad, CommonUsages.LeftHand);
@@ -5975,7 +5975,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Remote")]
-    public void Remote_ChangingTemplatesWhileRemoting_WillSendChangesToRemote()
+    public void Remote_ChangingLayoutsWhileRemoting_WillSendChangesToRemote()
     {
         var secondInputSystem = new InputManager();
         secondInputSystem.InitializeData();
@@ -5990,39 +5990,39 @@ class FunctionalTests : InputTestFixture
 
         const string jsonV1 = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""extend"" : ""Gamepad""
             }
         ";
 
-        // Add template.
-        InputSystem.RegisterTemplate(jsonV1);
+        // Add layout.
+        InputSystem.RegisterControlLayout(jsonV1);
 
-        var template = secondInputSystem.TryLoadTemplate(new InternedString("remote0::MyTemplate"));
-        Assert.That(template, Is.Not.Null);
-        Assert.That(template.extendsTemplate, Is.EqualTo("Gamepad"));
+        var layout = secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout"));
+        Assert.That(layout, Is.Not.Null);
+        Assert.That(layout.extendsLayout, Is.EqualTo("Gamepad"));
 
         const string jsonV2 = @"
             {
-                ""name"" : ""MyTemplate"",
+                ""name"" : ""MyLayout"",
                 ""extend"" : ""Keyboard""
             }
         ";
 
-        // Change template.
-        InputSystem.RegisterTemplate(jsonV2);
+        // Change layout.
+        InputSystem.RegisterControlLayout(jsonV2);
 
-        template = secondInputSystem.TryLoadTemplate(new InternedString("remote0::MyTemplate"));
-        Assert.That(template.extendsTemplate, Is.EqualTo("Keyboard"));
+        layout = secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout"));
+        Assert.That(layout.extendsLayout, Is.EqualTo("Keyboard"));
 
-        // Remove template.
-        InputSystem.RemoveTemplate("MyTemplate");
+        // Remove layout.
+        InputSystem.RemoveLayout("MyLayout");
 
-        Assert.That(secondInputSystem.TryLoadTemplate(new InternedString("remote0::MyTemplate")), Is.Null);
+        Assert.That(secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout")), Is.Null);
     }
 
-    // If we have more than two players connected, for example, and we add a template from player A
-    // to the system, we don't want to send the template to player B in turn. I.e. all data mirrored
+    // If we have more than two players connected, for example, and we add a layout from player A
+    // to the system, we don't want to send the layout to player B in turn. I.e. all data mirrored
     // from remotes should stay local.
     [Test]
     [Category("Remote")]
@@ -6151,7 +6151,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.Update();
         InputSystem.RemoveDevice(device);
 
-        ////TODO: make sure that we also get the connection sequence right and send our initial templates and devices
+        ////TODO: make sure that we also get the connection sequence right and send our initial layouts and devices
         Assert.That(observer.messages, Has.Count.EqualTo(4));
         Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
         Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
@@ -6176,7 +6176,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
         InputSystem.AddDevice("MyDevice");
         testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
@@ -6194,7 +6194,7 @@ class FunctionalTests : InputTestFixture
         InputSystem.Restore();
 
         Assert.That(InputSystem.devices,
-            Has.Exactly(1).With.Property("template").EqualTo("MyDevice").And.TypeOf<Gamepad>());
+            Has.Exactly(1).With.Property("layout").EqualTo("MyDevice").And.TypeOf<Gamepad>());
 
         var unsupportedDevices = new List<InputDeviceDescription>();
         InputSystem.GetUnsupportedDevices(unsupportedDevices);
@@ -6219,7 +6219,7 @@ class FunctionalTests : InputTestFixture
 
         var newDevice = InputSystem.devices.First(x => x is Gamepad);
 
-        Assert.That(newDevice.template, Is.EqualTo("Gamepad"));
+        Assert.That(newDevice.layout, Is.EqualTo("Gamepad"));
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
         Assert.That(Gamepad.current, Is.SameAs(newDevice));
@@ -6249,16 +6249,16 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
-    public void Editor_RestoringStateWillRestoreObjectsOfTemplateFactory()
+    public void Editor_RestoringStateWillRestoreObjectsOfLayoutFactory()
     {
-        var factory = new TestTemplateFactory {templateToLoad = "Gamepad"};
-        InputSystem.RegisterTemplateFactory(() => factory.DoIt(), "TestTemplate");
+        var factory = new TestLayoutFactory {layoutToLoad = "Gamepad"};
+        InputSystem.RegisterControlLayoutFactory(() => factory.DoIt(), "TestLayout");
 
         InputSystem.Save();
         InputSystem.Reset();
         InputSystem.Restore();
 
-        var device = InputSystem.AddDevice("TestTemplate");
+        var device = InputSystem.AddDevice("TestLayout");
 
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
@@ -6495,11 +6495,11 @@ class FunctionalTests : InputTestFixture
     ////      on the *sticks* so modifying that requires a Vector2 type processor which invert
     ////      isn't.
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_CanMoveProcessorFromBaseTemplateInProcessorStack()
+    [Category("Layouts")]
+    public void TODO_Layouts_CanMoveProcessorFromBaseLayoutInProcessorStack()
     {
-        // The base gamepad template is adding deadzone processors to sticks. However, a
-        // template based on that one may want to add processors *before* deadzoning is
+        // The base gamepad layout is adding deadzone processors to sticks. However, a
+        // layout based on that one may want to add processors *before* deadzoning is
         // applied. It can do so very simply by listing where the deadzone processor should
         // occur.
         const string json = @"
@@ -6515,7 +6515,7 @@ class FunctionalTests : InputTestFixture
             }
         ";
 
-        InputSystem.RegisterTemplate(json);
+        InputSystem.RegisterControlLayout(json);
 
         var setup = new InputControlSetup("MyDevice");
         var leftStickX = setup.GetControl<AxisControl>("leftStick/x");
@@ -6526,8 +6526,8 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
-    [Category("Templates")]
-    public void TODO_Template_CustomizedStateLayoutWillNotUseFormatCodeFromBaseTemplate()
+    [Category("Layouts")]
+    public void TODO_Layout_CustomizedStateLayoutWillNotUseFormatCodeFromBaseLayout()
     {
         //make sure that if you customize a gamepad layout, you don't end up with the "GPAD" format on the device
         //in fact, the system should require a format code to be specified in that case
@@ -6538,14 +6538,14 @@ class FunctionalTests : InputTestFixture
     ////        May even be safer to *not* support this as it may inject controls at offsets where you don't expect them.
     struct BaseInputState : IInputStateTypeInfo
     {
-        [InputControl(template = "Axis")] public float axis;
+        [InputControl(layout = "Axis")] public float axis;
         public int padding;
         public FourCC GetFormat()
         {
             return new FourCC("BASE");
         }
     }
-    [InputTemplate(stateType = typeof(BaseInputState))]
+    [InputLayout(stateType = typeof(BaseInputState))]
     class BaseInputDevice : InputDevice
     {
     }
@@ -6557,14 +6557,14 @@ class FunctionalTests : InputTestFixture
             return new FourCC("DERI");
         }
     }
-    [InputTemplate(stateType = typeof(DerivedInputState))]
+    [InputLayout(stateType = typeof(DerivedInputState))]
     class DerivedInputDevice : InputDevice
     {
     }
 
     [Test]
-    [Category("Templates")]
-    public void TODO_Templates_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
+    [Category("Layouts")]
+    public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
         Assert.Fail();

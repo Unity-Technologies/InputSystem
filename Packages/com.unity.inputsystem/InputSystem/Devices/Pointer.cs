@@ -21,39 +21,39 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('P', 'T', 'R'); }
         }
 
-        [InputControl(template = "Digital")]
+        [InputControl(layout = "Digital")]
         public uint pointerId;
 
         /// <summary>
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(template = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
 #else
-        [InputControl(template = "Vector2", usage = "Point")]
+        [InputControl(layout = "Vector2", usage = "Point")]
 #endif
         public Vector2 position;
 
-        [InputControl(template = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
-        [InputControl(template = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure")]
         public float pressure;
 
-        [InputControl(template = "Axis", usage = "Twist")]
+        [InputControl(layout = "Axis", usage = "Twist")]
         public float twist;
 
-        [InputControl(template = "Vector2", usage = "Tilt")]
+        [InputControl(layout = "Vector2", usage = "Tilt")]
         public Vector2 tilt;
 
-        [InputControl(template = "Vector2", usage = "Radius")]
+        [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", template = "PointerPhase", sizeInBits = 4)]
-        [InputControl(name = "button", template = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "phase", layout = "PointerPhase", sizeInBits = 4)]
+        [InputControl(name = "button", layout = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
-        [InputControl(template = "Digital")]
+        [InputControl(layout = "Digital")]
         public ushort displayIndex;
 
         public FourCC GetFormat()
@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputTemplate(stateType = typeof(PointerState))]
+    [InputLayout(stateType = typeof(PointerState))]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?

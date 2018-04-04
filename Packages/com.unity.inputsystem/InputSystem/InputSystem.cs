@@ -38,78 +38,78 @@ namespace UnityEngine.Experimental.Input
 #endif
     public static class InputSystem
     {
-        #region Templates
+        #region Layouts
 
         /// <summary>
-        /// Event that is signalled when the template setup in the system changes.
+        /// Event that is signalled when the layout setup in the system changes.
         /// </summary>
-        public static event Action<string, InputTemplateChange> onTemplateChange
+        public static event Action<string, InputLayoutChange> onControlLayoutChange
         {
-            add { s_Manager.onTemplateChange += value; }
-            remove { s_Manager.onTemplateChange -= value; }
+            add { s_Manager.onLayoutChange += value; }
+            remove { s_Manager.onLayoutChange -= value; }
         }
 
         /// <summary>
-        /// Register a type as an input template.
+        /// Register a type as a control layout.
         /// </summary>
-        /// <param name="type">Type to derive an input template from. Must be derived from <see cref="InputControl"/>.</param>
-        /// <param name="name">Name to use for the template. If null or empty, the short name of the type will be used.</param>
-        /// <param name="deviceDescription">Optional device description. If this is supplied, the template will automatically
+        /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
+        /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
+        /// <param name="deviceDescription">Optional device description. If this is supplied, the layout will automatically
         /// be instanted for newly discovered devices that match the description.</param>
         /// <remarks>
-        /// When the template is instantiate, the system will reflect on all public <see cref="InputControl"/>
-        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputTemplateAttribute"/>
-        /// to provide additional information for the generated template.
+        /// When the layout is instantiate, the system will reflect on all public <see cref="InputControl"/>
+        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputLayoutAttribute"/>
+        /// to provide additional information for the generated layout.
         /// </remarks>
-        public static void RegisterTemplate(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
+        public static void RegisterControlLayout(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
         {
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
-            s_Manager.RegisterTemplate(name, type, deviceDescription);
+            s_Manager.RegisterControlLayout(name, type, deviceDescription);
         }
 
         /// <summary>
-        /// Register a type as an input template.
+        /// Register a type as an control layout.
         /// </summary>
-        /// <typeparam name="T">Type to derive an input template from.</typeparam>
-        /// <param name="name">Name to use for the template. If null or empty, the short name of the type will be used.</param>
-        /// <param name="deviceDescription">Optional device description. If this is supplied, the template will automatically
+        /// <typeparam name="T">Type to derive a control layout from.</typeparam>
+        /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
+        /// <param name="deviceDescription">Optional device description. If this is supplied, the layout will automatically
         /// be instanted for newly discovered devices that match the description.</param>
         /// <remarks>
-        /// When the template is instantiate, the system will reflect on all public <see cref="InputControl"/>
-        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputTemplateAttribute"/>
-        /// to provide additional information for the generated template.
+        /// When the layout is instantiate, the system will reflect on all public <see cref="InputControl"/>
+        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputLayoutAttribute"/>
+        /// to provide additional information for the generated layout.
         /// </remarks>
-        public static void RegisterTemplate<T>(string name = null, InputDeviceDescription? deviceDescription = null)
+        public static void RegisterControlLayout<T>(string name = null, InputDeviceDescription? deviceDescription = null)
             where T : InputControl
         {
-            RegisterTemplate(typeof(T), name, deviceDescription);
+            RegisterControlLayout(typeof(T), name, deviceDescription);
         }
 
         /// <summary>
-        /// Register a template in JSON format.
+        /// Register a layout in JSON format.
         /// </summary>
-        /// <param name="json">Template in JSON format.</param>
-        /// <param name="name">Optional name of the template. If null or empty, the name is taken from the "name"
+        /// <param name="json">Layout in JSON format.</param>
+        /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
         /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
         /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
         /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
         /// or the "name" JSON property.</exception>
         /// <remarks>
-        /// Note that most errors in templates will only be detected when instantiated (i.e. when a device or control is
-        /// being created from a template). The JSON data will, however, be parsed once on registration to check for a
-        /// device description in the template. JSON format errors will thus be detected during registration.
+        /// Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
+        /// being created from a layout). The JSON data will, however, be parsed once on registration to check for a
+        /// device description in the layout. JSON format errors will thus be detected during registration.
         /// </remarks>
         /// <example>
         /// <code>
-        /// InputSystem.RegisterTemplate(@"
+        /// InputSystem.RegisterControlLayout(@"
         ///    {
         ///        ""name"" : ""MyDevice"",
         ///        ""controls"" : [
         ///            {
         ///                ""name"" : ""myThing"",
-        ///                ""template"" : ""MyControl"",
+        ///                ""layout"" : ""MyControl"",
         ///                ""usage"" : ""LeftStick""
         ///            }
         ///        ]
@@ -117,17 +117,17 @@ namespace UnityEngine.Experimental.Input
         ///");
         /// </code>
         /// </example>
-        public static void RegisterTemplate(string json, string name = null)
+        public static void RegisterControlLayout(string json, string name = null)
         {
-            s_Manager.RegisterTemplate(json, name);
+            s_Manager.RegisterControlLayout(json, name);
         }
 
         /// <summary>
-        /// Register a factory that delivers an <see cref="InputTemplate"/> instance on demand.
+        /// Register a factory that delivers an <see cref="InputControlLayout"/> instance on demand.
         /// </summary>
         /// <param name="factoryExpression"></param>
         /// <param name="name"></param>
-        /// <param name="baseTemplate"></param>
+        /// <param name="baseLayout"></param>
         /// <param name="deviceDescription"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
@@ -137,31 +137,31 @@ namespace UnityEngine.Experimental.Input
         /// instance object must be serializable.
         ///
         /// The reason for these restrictions and for not taking an arbitrary delegate is that we
-        /// need to be able to persist the template factory between domain reloads.
+        /// need to be able to persist the layout factory between domain reloads.
         ///
-        /// Note that the template that is being constructed must not vary over time (except between
+        /// Note that the layout that is being constructed must not vary over time (except between
         /// domain reloads).
         /// </remarks>
         /// <example>
         /// <code>
         /// [Serializable]
-        /// class MyTemplateFactory
+        /// class MyLayoutFactory
         /// {
-        ///     public InputTemplate Build()
+        ///     public InputControlLayout Build()
         ///     {
-        ///         var builder = new InputTemplate.Builder()
+        ///         var builder = new InputControlLayout.Builder()
         ///             .WithType<MyDevice>();
-        ///         builder.AddControl("button1").WithTemplate("Button");
+        ///         builder.AddControl("button1").WithLayout("Button");
         ///         return builder.Build();
         ///     }
         /// }
         ///
-        /// var factory = new MyTemplateFactory();
-        /// InputSystem.RegisterTemplateFactory(() => factory.Build(), "MyTemplate");
+        /// var factory = new MyLayoutFactory();
+        /// InputSystem.RegisterControlLayoutFactory(() => factory.Build(), "MyLayout");
         /// </code>
         /// </example>
-        public static void RegisterTemplateFactory(Expression<Func<InputTemplate>> factoryExpression, string name,
-            string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
+        public static void RegisterControlLayoutFactory(Expression<Func<InputControlLayout>> factoryExpression, string name,
+            string baseLayout = null, InputDeviceDescription? deviceDescription = null)
         {
             if (factoryExpression == null)
                 throw new ArgumentNullException("factoryExpression");
@@ -172,7 +172,7 @@ namespace UnityEngine.Experimental.Input
             var methodCall = factoryExpression.Body as MethodCallExpression;
             if (methodCall == null)
                 throw new ArgumentException(
-                    string.Format("Body of template factory function must be a method call (is a {0} instead)",
+                    string.Format("Body of layout factory function must be a method call (is a {0} instead)",
                         factoryExpression.Body.NodeType),
                     "factoryExpression");
 
@@ -200,7 +200,7 @@ namespace UnityEngine.Experimental.Input
                         if (constantExpr == null)
                             throw new ArgumentException(
                                 string.Format(
-                                    "Body of template factory function must be a method call on a constant or variable expression (accesses member of {0} instead)",
+                                    "Body of layout factory function must be a method call on a constant or variable expression (accesses member of {0} instead)",
                                     expr.NodeType), "factoryExpression");
 
                         // Get field.
@@ -209,7 +209,7 @@ namespace UnityEngine.Experimental.Input
                         if (field == null)
                             throw new ArgumentException(
                                 string.Format(
-                                    "Body of template factory function must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
+                                    "Body of layout factory function must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
                                     member.GetType().Name, member.Name), "factoryExpression");
 
                         // Read value.
@@ -222,39 +222,39 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Register.
-            s_Manager.RegisterTemplateFactory(method, instance, name, baseTemplate: baseTemplate,
+            s_Manager.RegisterControlLayoutFactory(method, instance, name, baseLayout: baseLayout,
                 deviceDescription: deviceDescription);
         }
 
         /// <summary>
-        /// Remove an already registered template from the system.
+        /// Remove an already registered layout from the system.
         /// </summary>
-        /// <param name="name">Name of the template to remove. Note that template names are case-insensitive.</param>
+        /// <param name="name">Name of the layout to remove. Note that layout names are case-insensitive.</param>
         /// <remarks>
-        /// Note that removing a template also removes all devices that directly or indirectly
-        /// use the template.
+        /// Note that removing a layout also removes all devices that directly or indirectly
+        /// use the layout.
         ///
-        /// This method can be used to remove both control or device templates.
+        /// This method can be used to remove both control or device layouts.
         /// </remarks>
-        public static void RemoveTemplate(string name)
+        public static void RemoveLayout(string name)
         {
-            s_Manager.RemoveTemplate(name);
+            s_Manager.RemoveControlLayout(name);
         }
 
         /// <summary>
-        /// Try to match a description for an input device to a template.
+        /// Try to match a description for an input device to a layout.
         /// </summary>
         /// <param name="deviceDescription">Description of an input device.</param>
-        /// <returns>Name of the template that has been matched to the given description or null if no
-        /// matching template was found.</returns>
+        /// <returns>Name of the layout that has been matched to the given description or null if no
+        /// matching layout was found.</returns>
         /// <remarks>
-        /// Templates are matched by the <see cref="InputDeviceDescription"/> they were registered with (if any).
-        /// The fields in a template's device description are considered regular expressions which are matched
+        /// Layouts are matched by the <see cref="InputDeviceDescription"/> they were registered with (if any).
+        /// The fields in a layout's device description are considered regular expressions which are matched
         /// against the values supplied in the given <paramref name="deviceDescription"/>.
         /// </remarks>
         /// <example>
         /// <code>
-        /// var templateName = InputSystem.TryFindMatchingTemplate(
+        /// var layoutName = InputSystem.TryFindMatchingControlLayout(
         ///     new InputDeviceDescription
         ///     {
         ///         product = "Xbox Wired Controller",
@@ -263,45 +263,45 @@ namespace UnityEngine.Experimental.Input
         /// );
         /// </code>
         /// </example>
-        public static string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
+        public static string TryFindMatchingLayout(InputDeviceDescription deviceDescription)
         {
-            return s_Manager.TryFindMatchingTemplate(deviceDescription);
+            return s_Manager.TryFindMatchingControlLayout(deviceDescription);
         }
 
         /// <summary>
-        /// Return a list with the names of all templates that have been registered.
+        /// Return a list with the names of all layouts that have been registered.
         /// </summary>
-        /// <returns>A list of template names.</returns>
-        /// <seealso cref="ListTemplates(List{string})"/>
-        public static List<string> ListTemplates()
+        /// <returns>A list of layout names.</returns>
+        /// <seealso cref="ListLayouts(List{string})"/>
+        public static List<string> ListLayouts()
         {
             var list = new List<string>();
-            s_Manager.ListTemplates(list);
+            s_Manager.ListControlLayouts(list);
             return list;
         }
 
         /// <summary>
-        /// Add the names of all templates that have been registered to the given list.
+        /// Add the names of all layouts that have been registered to the given list.
         /// </summary>
-        /// <param name="list">List to add the template names to.</param>
+        /// <param name="list">List to add the layout names to.</param>
         /// <returns>The number of names added to <paramref name="list"/>.</returns>
         /// <remarks>
         /// If the capacity of the given list is large enough, this method will not allocate.
         /// </remarks>
-        public static int ListTemplates(List<string> list)
+        public static int ListLayouts(List<string> list)
         {
-            return s_Manager.ListTemplates(list);
+            return s_Manager.ListControlLayouts(list);
         }
 
         /// <summary>
-        /// Try to load a template instance.
+        /// Try to load a layout instance.
         /// </summary>
-        /// <param name="name">Name of the template to load. Note that template names are case-insensitive.</param>
-        /// <returns>The constructed template instance or null if no template of the given name could be found.</returns>
-        public static InputTemplate TryLoadTemplate(string name)
+        /// <param name="name">Name of the layout to load. Note that layout names are case-insensitive.</param>
+        /// <returns>The constructed layout instance or null if no layout of the given name could be found.</returns>
+        public static InputControlLayout TryLoadLayout(string name)
         {
             ////FIXME: this will intern the name even if the operation fails
-            return s_Manager.TryLoadTemplate(new InternedString(name));
+            return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
         #endregion
@@ -386,51 +386,51 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Event that is signalled when the system is trying to match a template to
+        /// Event that is signalled when the system is trying to match a layout to
         /// a device it has discovered.
         /// </summary>
         /// <remarks>
-        /// This event allows customizing the template discovery process and to generate
-        /// templates on the fly, if need be. The system will invoke callbacks with the
-        /// name of the template it has matched to the device based on the current template setup.
-        /// If all the callbacks return <c>null</c>, that template will be instantiated. If,
+        /// This event allows customizing the layout discovery process and to generate
+        /// layouts on the fly, if need be. The system will invoke callbacks with the
+        /// name of the layout it has matched to the device based on the current layout setup.
+        /// If all the callbacks return <c>null</c>, that layout will be instantiated. If,
         /// however, any of the callbacks returns a new name instead, the system will use that
-        /// template instead.
+        /// layout instead.
         ///
-        /// To generate templates on the fly, register them with the system in the callback and
-        /// then return the name of the newly generated template from the callback.
+        /// To generate layouts on the fly, register them with the system in the callback and
+        /// then return the name of the newly generated layout from the callback.
         ///
         /// Note that this callback will also be invoked if the system could not match any
-        /// existing template to the device. In that case, the <c>matchedTemplate</c> argument
+        /// existing layout to the device. In that case, the <c>matchedLayout</c> argument
         /// to the callback will be <c>null</c>.
         ///
         /// Callbacks also receive a device ID and reference to the input runtime. For devices
         /// where more information has to be fetched from the runtime in order to generate a
-        /// template, this allows issuing <see cref="IInputRuntime.IOCTL"/> calls for the device.
+        /// layout, this allows issuing <see cref="IInputRuntime.IOCTL"/> calls for the device.
         /// Note that for devices that are not coming from the runtime (i.e. devices created
         /// directly in script code), the device ID will be <see cref="InputDevice.kInvalidDeviceId"/>.
         /// </remarks>
         /// <example>
         /// <code>
-        /// InputSystem.onFindTemplateForDevice +=
-        ///     (deviceId, description, matchedTemplate, runtime) =>
+        /// InputSystem.onFindLayoutForDevice +=
+        ///     (deviceId, description, matchedLayout, runtime) =>
         ///     {
         ///         ////TODO: complete example
         ///     };
         /// </code>
         /// </example>
-        public static event DeviceFindTemplateCallback onFindTemplateForDevice
+        public static event DeviceFindLayoutCallback onFindControlLayoutForDevice
         {
-            add { s_Manager.onFindTemplateForDevice += value; }
-            remove { s_Manager.onFindTemplateForDevice -= value; }
+            add { s_Manager.onFindLayoutForDevice += value; }
+            remove { s_Manager.onFindLayoutForDevice -= value; }
         }
 
         /// <summary>
-        /// Add a new device by instantiating the given device template.
+        /// Add a new device by instantiating the given device layout.
         /// </summary>
-        /// <param name="template">Name of the template to instantiate. Must be a device template. Note that
-        /// template names are case-insensitive.</param>
-        /// <param name="name">Name to assign to the device. If null, the template name is used instead. Note that
+        /// <param name="layout">Name of the layout to instantiate. Must be a device layout. Note that
+        /// layout names are case-insensitive.</param>
+        /// <param name="name">Name to assign to the device. If null, the layout name is used instead. Note that
         /// device names are made unique automatically by the system by appending numbers to them (e.g. "gamepad",
         /// "gamepad1", "gamepad2", etc.).</param>
         /// <returns>The newly created input device.</returns>
@@ -442,9 +442,9 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.AddDevice("Gamepad");
         /// </code>
         /// </example>
-        public static InputDevice AddDevice(string template, string name = null)
+        public static InputDevice AddDevice(string layout, string name = null)
         {
-            return s_Manager.AddDevice(template, name);
+            return s_Manager.AddDevice(layout, name);
         }
 
         public static TDevice AddDevice<TDevice>(string name = null)
@@ -452,7 +452,7 @@ namespace UnityEngine.Experimental.Input
         {
             var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
             if (device == null)
-                throw new Exception(string.Format("Template registered for type '{0}' did not produce a device of that type; template probably has been overridden",
+                throw new Exception(string.Format("Layout registered for type '{0}' did not produce a device of that type; layout probably has been overridden",
                         typeof(TDevice).Name));
             return device;
         }
@@ -472,14 +472,14 @@ namespace UnityEngine.Experimental.Input
             s_Manager.RemoveDevice(device);
         }
 
-        public static InputDevice TryGetDevice(string nameOrTemplate)
+        public static InputDevice TryGetDevice(string nameOrLayout)
         {
-            return s_Manager.TryGetDevice(nameOrTemplate);
+            return s_Manager.TryGetDevice(nameOrLayout);
         }
 
-        public static InputDevice GetDevice(string nameOrTemplate)
+        public static InputDevice GetDevice(string nameOrLayout)
         {
-            return s_Manager.GetDevice(nameOrTemplate);
+            return s_Manager.GetDevice(nameOrLayout);
         }
 
         public static InputDevice TryGetDeviceById(int deviceId)
@@ -958,11 +958,11 @@ namespace UnityEngine.Experimental.Input
             EditorApplication.playModeStateChanged += OnPlayModeChange;
         }
 
-        // We don't want play mode modifications to templates and controls to seep
+        // We don't want play mode modifications to layouts and controls to seep
         // back out into edit so we take a snapshot of the InputManager state before
         // going into play mode and then restore it when going back to edit mode.
         // NOTE: We *do* want device discoveries that have happened to still show
-        //       through in edit mode, though not with any template settings made by
+        //       through in edit mode, though not with any layout settings made by
         //       the game code.
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {

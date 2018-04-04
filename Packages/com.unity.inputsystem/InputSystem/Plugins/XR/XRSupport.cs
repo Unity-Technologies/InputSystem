@@ -77,23 +77,23 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public static void Initialize()
         {
-            XRTemplateBuilder.RegisterTemplateFilter(WMRSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<WMRHMD>();
-            InputSystem.RegisterTemplate<WMRSpatialController>();
+            XRLayoutBuilder.RegisterLayoutFilter(WMRSupport.FilterLayout);
+            InputSystem.RegisterControlLayout<WMRHMD>();
+            InputSystem.RegisterControlLayout<WMRSpatialController>();
 
-            XRTemplateBuilder.RegisterTemplateFilter(OculusSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<OculusHMD>();
-            InputSystem.RegisterTemplate<OculusTouchController>();
+            XRLayoutBuilder.RegisterLayoutFilter(OculusSupport.FilterLayout);
+            InputSystem.RegisterControlLayout<OculusHMD>();
+            InputSystem.RegisterControlLayout<OculusTouchController>();
 
-            XRTemplateBuilder.RegisterTemplateFilter(GearVRSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<GearVRHMD>();
-            InputSystem.RegisterTemplate<GearVRTrackedController>();
+            XRLayoutBuilder.RegisterLayoutFilter(GearVRSupport.FilterLayout);
+            InputSystem.RegisterControlLayout<GearVRHMD>();
+            InputSystem.RegisterControlLayout<GearVRTrackedController>();
 
-            XRTemplateBuilder.RegisterTemplateFilter(DaydreamSupport.FilterTemplate);
-            InputSystem.RegisterTemplate<DaydreamHMD>();
-            InputSystem.RegisterTemplate<DaydreamController>();
+            XRLayoutBuilder.RegisterLayoutFilter(DaydreamSupport.FilterLayout);
+            InputSystem.RegisterControlLayout<DaydreamHMD>();
+            InputSystem.RegisterControlLayout<DaydreamController>();
 
-            InputSystem.onFindTemplateForDevice += XRTemplateBuilder.OnFindTemplateForDevice;
+            InputSystem.onFindControlLayoutForDevice += XRLayoutBuilder.OnFindControlLayoutForDevice;
         }
     }
 }

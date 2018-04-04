@@ -17,5 +17,5 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     {
     }
 
-    //add support for constructing InputTemplates from Steam VDF files
+    //add support for constructing InputLayouts from Steam VDF files
 }

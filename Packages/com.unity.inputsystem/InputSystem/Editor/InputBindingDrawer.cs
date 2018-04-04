@@ -107,7 +107,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var deviceUsage = controlMatch.Groups[kDeviceUsageGroup].Value;
                     var control = controlMatch.Groups[kControlPathGroup].Value;
 
-                    ////TODO: would be nice to include template name to print something like "Gamepad A Button" instead of "Gamepad A" (or whatever)
+                    ////TODO: would be nice to include layout name to print something like "Gamepad A Button" instead of "Gamepad A" (or whatever)
 
                     if (!string.IsNullOrEmpty(deviceUsage))
                         text = string.Format("{0} {1} {2}", deviceUsage, device, control);
@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Show modifiers.
             if (!string.IsNullOrEmpty(modifiers))
             {
-                var modifierList = InputTemplate.ParseNameAndParameterList(modifiers);
+                var modifierList = InputControlLayout.ParseNameAndParameterList(modifiers);
                 var modifierString = string.Join(" OR ", modifierList.Select(x => x.name).ToArray());
                 text = string.Format("{0} {1}", modifierString, text);
             }
@@ -158,7 +158,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private SerializedProperty m_FlagsProperty;
             private SerializedProperty m_ModifiersProperty;
             private InputBinding.Flags m_Flags;
-            private InputTemplate.NameAndParameters[] m_Modifiers;
+            private InputControlLayout.NameAndParameters[] m_Modifiers;
             private Vector2 m_ScrollPosition;
             private GUIContent[] m_ModifierChoices;
             private int m_SelectedModifier;
@@ -178,9 +178,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 var modifierString = m_ModifiersProperty.stringValue;
                 if (!string.IsNullOrEmpty(modifierString))
-                    m_Modifiers = InputTemplate.ParseNameAndParameterList(modifierString);
+                    m_Modifiers = InputControlLayout.ParseNameAndParameterList(modifierString);
                 else
-                    m_Modifiers = new InputTemplate.NameAndParameters[0];
+                    m_Modifiers = new InputControlLayout.NameAndParameters[0];
 
                 InitializeModifierListView();
             }
@@ -231,7 +231,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private void AddModifier(object modifierNameString)
             {
                 ArrayHelpers.Append(ref m_Modifiers,
-                    new InputTemplate.NameAndParameters {name = (string)modifierNameString});
+                    new InputControlLayout.NameAndParameters {name = (string)modifierNameString});
                 m_ModifierListView.list = m_Modifiers;
                 ApplyModifiers();
             }
@@ -249,7 +249,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             private void InitializeModifierListView()
             {
-                m_ModifierListView = new ReorderableList(m_Modifiers, typeof(InputTemplate.NameAndParameters));
+                m_ModifierListView = new ReorderableList(m_Modifiers, typeof(InputControlLayout.NameAndParameters));
 
                 m_ModifierListView.drawHeaderCallback =
                     (rect) => EditorGUI.LabelField(rect, Contents.modifiers);
@@ -278,7 +278,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             --list.index;
                         ArrayHelpers.EraseAt(ref m_Modifiers, indexToRemove);
                         if (m_Modifiers == null)
-                            m_Modifiers = new InputTemplate.NameAndParameters[0];
+                            m_Modifiers = new InputControlLayout.NameAndParameters[0];
                         list.list = m_Modifiers;
                         ApplyModifiers();
                     };

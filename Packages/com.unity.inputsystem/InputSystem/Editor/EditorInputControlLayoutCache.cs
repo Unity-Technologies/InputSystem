@@ -1,0 +1,173 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.Experimental.Input.Utilities;
+
+namespace UnityEngine.Experimental.Input.Editor
+{
+    /// <summary>
+    /// Caches <see cref="InputControlLayout"/> instances.
+    /// </summary>
+    /// <remarks>
+    /// In the editor we need access to the <see cref="InputControlLayout">InputControlLayouts</see>
+    /// registered with the system in order to facilitate various UI features. Instead of
+    /// constructing layout instances over and over, we keep them around in here.
+    ///
+    /// This class is only available in the editor (when <c>UNITY_EDITOR</c> is true).
+    /// </remarks>
+    public static class EditorInputControlLayoutCache
+    {
+        /// <summary>
+        /// Iterate over all control layouts in the system.
+        /// </summary>
+        public static IEnumerable<InputControlLayout> allLayouts
+        {
+            get
+            {
+                Refresh();
+                return s_Cache.table.Values;
+            }
+        }
+
+        /// <summary>
+        /// Iterate over all unique usages and their respective lists of layouts that use them.
+        /// </summary>
+        public static IEnumerable<KeyValuePair<string, IEnumerable<string>>> allUsages
+        {
+            get
+            {
+                Refresh();
+                return s_Usages.Select(pair => new KeyValuePair<string, IEnumerable<string>>(pair.Key, pair.Value.Select(x => x.ToString())));
+            }
+        }
+
+        /// <summary>
+        /// Iterate over all device layouts that do not extend other layouts.
+        /// </summary>
+        public static IEnumerable<InputControlLayout> allBaseDeviceLayouts
+        {
+            get
+            {
+                foreach (var layout in allLayouts)
+                    if (string.IsNullOrEmpty(layout.extendsLayout) &&
+                        typeof(InputDevice).IsAssignableFrom(layout.type))
+                        yield return layout;
+            }
+        }
+
+        /// <summary>
+        /// Iterate over all device layouts that don't try to match specific products.
+        /// </summary>
+        public static IEnumerable<InputControlLayout> allNonProductLayouts
+        {
+            get
+            {
+                foreach (var layout in allLayouts)
+                {
+                    if (!typeof(InputDevice).IsAssignableFrom(layout.type))
+                        continue;
+
+                    var deviceDescription = layout.deviceDescription;
+                    if (string.IsNullOrEmpty(deviceDescription.product) &&
+                        string.IsNullOrEmpty(deviceDescription.manufacturer))
+                        yield return layout;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Event that is triggered whenever the layout setup in the system changes.
+        /// </summary>
+        public static event Action onRefresh
+        {
+            add
+            {
+                if (s_RefreshListeners == null)
+                    s_RefreshListeners = new List<Action>();
+                s_RefreshListeners.Add(value);
+            }
+            remove
+            {
+                if (s_RefreshListeners != null)
+                    s_RefreshListeners.Remove(value);
+            }
+        }
+
+        public static InputControlLayout TryGetLayout(string name)
+        {
+            return s_Cache.FindOrLoadLayout(name);
+        }
+
+        internal static void Clear()
+        {
+            s_LayoutRegistrationVersion = 0;
+            if (s_Cache.table != null)
+                s_Cache.table.Clear();
+            s_Usages.Clear();
+        }
+
+        // If our layout data is outdated, rescan all the layouts in the system.
+        internal static void Refresh()
+        {
+            var manager = InputSystem.s_Manager;
+            if (manager.m_LayoutRegistrationVersion == s_LayoutRegistrationVersion)
+                return;
+
+            Clear();
+
+            var layoutNames = new List<string>();
+            manager.ListControlLayouts(layoutNames);
+
+            s_Cache.layouts = manager.m_Layouts;
+            for (var i = 0; i < layoutNames.Count; ++i)
+            {
+                var layout = s_Cache.FindOrLoadLayout(layoutNames[i]);
+                ScanLayout(layout);
+            }
+
+            s_LayoutRegistrationVersion = manager.m_LayoutRegistrationVersion;
+
+            if (s_RefreshListeners != null)
+                foreach (var listener in s_RefreshListeners)
+                    listener();
+        }
+
+        private static int s_LayoutRegistrationVersion;
+        private static InputControlLayout.Cache s_Cache;
+        private static List<Action> s_RefreshListeners;
+
+        // We keep a map of all unique usages we find in layouts and also
+        // retain a list of the layouts they are used with.
+        private static SortedDictionary<InternedString, List<InternedString>> s_Usages =
+            new SortedDictionary<InternedString, List<InternedString>>();
+
+        private static void ScanLayout(InputControlLayout layout)
+        {
+            foreach (var control in layout.controls)
+            {
+                // Collect unique usages and the layouts used with them.
+                foreach (var usage in control.usages)
+                {
+                    var internedUsage = new InternedString(usage);
+                    var internedLayout = new InternedString(control.layout);
+
+                    List<InternedString> layoutList;
+                    if (!s_Usages.TryGetValue(internedUsage, out layoutList))
+                    {
+                        layoutList = new List<InternedString> {internedLayout};
+                        s_Usages[internedUsage] = layoutList;
+                    }
+                    else
+                    {
+                        var layoutAlreadyInList =
+                            layoutList.Any(x => x == internedLayout);
+                        if (!layoutAlreadyInList)
+                            layoutList.Add(internedLayout);
+                    }
+                }
+            }
+        }
+    }
+}
+#endif // UNITY_EDITOR

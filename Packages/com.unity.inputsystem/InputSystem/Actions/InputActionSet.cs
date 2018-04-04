@@ -266,7 +266,7 @@ namespace UnityEngine.Experimental.Input
         // set at the beginning of the game and to then enable and disable the sets
         // as needed. However, the system will also re-resolve bindings if the control
         // setup in the system changes (i.e. if devices are added or removed or if
-        // templates in the system are changed).
+        // layouts in the system are changed).
         internal void ResolveBindings()
         {
             if (m_Actions == null && m_SingletonAction == null)
@@ -400,7 +400,7 @@ namespace UnityEngine.Experimental.Input
             var firstModifierIndex = modifiers != null ? modifiers.Count : 0;
 
             ////TODO: get rid of the extra array allocations here
-            var list = InputTemplate.ParseNameAndParameterList(modifierString);
+            var list = InputControlLayout.ParseNameAndParameterList(modifierString);
             for (var i = 0; i < list.Length; ++i)
             {
                 // Look up modifier.

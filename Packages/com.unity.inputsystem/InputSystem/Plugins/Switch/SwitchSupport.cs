@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     {
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<NPad>(deviceDescription: new InputDeviceDescription
+            InputSystem.RegisterControlLayout<NPad>(deviceDescription: new InputDeviceDescription
             {
                 interfaceName = "NPad",
                 manufacturer = "Nintendo",

@@ -8,7 +8,7 @@ using UnityEngine.Experimental.Input.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add test to make sure we're not grabbing HIDs that have more specific templates
+////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
 class HIDTests : InputTestFixture
 {
@@ -371,7 +371,7 @@ class HIDTests : InputTestFixture
     // ending up being centered when have pressed). This way we can at least make joysticks behave correctly
     // out of the box.
     //
-    // The only reliable fix for a device is to put a template in place that provides the missing data
+    // The only reliable fix for a device is to put a layout in place that provides the missing data
     // (i.e. how to interpret axis values) to the system.
     [Test]
     [Category("Devices")]

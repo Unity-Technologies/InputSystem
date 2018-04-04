@@ -6,10 +6,10 @@ using UnityEngine;
 
 public struct MyDeviceState : IInputStateTypeInfo
 {
-    [InputControl(name = "button1", template = "Button", bit = 0)]
+    [InputControl(name = "button1", layout = "Button", bit = 0)]
     public int buttons;
 
-    [InputControl(template = "Axis")]
+    [InputControl(layout = "Axis")]
     public float axis1;
 
     public FourCC GetFormat()
@@ -18,7 +18,7 @@ public struct MyDeviceState : IInputStateTypeInfo
     }
 }
 
-[InputTemplate(stateType = typeof(MyDeviceState))]
+[InputLayout(stateType = typeof(MyDeviceState))]
 //[InputPlugin]
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {
@@ -54,7 +54,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     public static void Initialize()
     {
-        InputSystem.RegisterTemplate<MyDevice>();
+        InputSystem.RegisterControlLayout<MyDevice>();
 
         if (!InputSystem.devices.Any(x => x is MyDevice))
             InputSystem.AddDevice<MyDevice>();

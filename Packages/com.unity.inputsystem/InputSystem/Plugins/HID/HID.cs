@@ -85,13 +85,13 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         private HIDDeviceDescriptor m_HIDDescriptor;
 
         // This is the workhorse for figuring out fallback options for HIDs attached to the system.
-        // If the system cannot find a more specific template for a given HID, this method will try
-        // to produce a template factory on the fly based on the HID descriptor received from
+        // If the system cannot find a more specific layout for a given HID, this method will try
+        // to produce a layout factory on the fly based on the HID descriptor received from
         // the device.
-        internal static unsafe string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description, string matchedTemplate, IInputRuntime runtime)
+        internal static unsafe string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
-            // If the system found a matching template, there's nothing for us to do.
-            if (!string.IsNullOrEmpty(matchedTemplate))
+            // If the system found a matching layout, there's nothing for us to do.
+            if (!string.IsNullOrEmpty(matchedLayout))
                 return null;
 
             // If the device isn't a HID, we're not interested.
@@ -203,7 +203,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 foreach (var element in hidDeviceDescriptor.elements)
                 {
-                    if (element.DetermineTemplate() != null)
+                    if (element.DetermineLayout() != null)
                     {
                         hasUsableElements = true;
                         break;
@@ -215,39 +215,39 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             if (!hasUsableElements)
                 return null;
 
-            // Determine base template.
-            var baseTemplate = "HID";
+            // Determine base layout.
+            var baseLayout = "HID";
             if (hidDeviceDescriptor.usagePage == UsagePage.GenericDesktop)
             {
                 /*
                 ////TODO: there's some work to be done to make the HID *actually* compatible with these devices
                 if (hidDeviceDescriptor.usage == (int)GenericDesktop.Joystick)
-                    baseTemplate = "Joystick";
+                    baseLayout = "Joystick";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Gamepad)
-                    baseTemplate = "Gamepad";
+                    baseLayout = "Gamepad";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Mouse)
-                    baseTemplate = "Mouse";
+                    baseLayout = "Mouse";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Pointer)
-                    baseTemplate = "Pointer";
+                    baseLayout = "Pointer";
                 else if (hidDeviceDescriptor.usage == (int)GenericDesktop.Keyboard)
-                    baseTemplate = "Keyboard";
+                    baseLayout = "Keyboard";
                 */
             }
 
             // We don't want the capabilities field in the description to be matched
-            // when the input system is looking for matching templates so null it out.
-            var deviceDescriptionForTemplate = description;
-            deviceDescriptionForTemplate.capabilities = null;
+            // when the input system is looking for matching layouts so null it out.
+            var deviceDescriptionForLayout = description;
+            deviceDescriptionForLayout.capabilities = null;
 
-            ////TODO: make sure we don't produce name conflicts on the template name
+            ////TODO: make sure we don't produce name conflicts on the layout name
 
-            // Register template factory that will turn the HID descriptor into an
-            // InputTemplate instance.
-            var templateName = string.Format("{0}::{1}", kHIDNamespace, description.product);
-            var template = new HIDTemplate {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForTemplate};
-            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, baseTemplate, deviceDescriptionForTemplate);
+            // Register layout factory that will turn the HID descriptor into an
+            // InputLayout instance.
+            var layoutName = string.Format("{0}::{1}", kHIDNamespace, description.product);
+            var layout = new HIDLayout {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
+            InputSystem.RegisterControlLayoutFactory(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
 
-            return templateName;
+            return layoutName;
         }
 
         public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
@@ -280,14 +280,14 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         }
 
         [Serializable]
-        private class HIDTemplate
+        private class HIDLayout
         {
             public HIDDeviceDescriptor hidDescriptor;
             public InputDeviceDescription deviceDescription;
 
-            public InputTemplate Build()
+            public InputControlLayout Build()
             {
-                var builder = new InputTemplate.Builder
+                var builder = new InputControlLayout.Builder
                 {
                     type = typeof(HID),
                     stateFormat = new FourCC('H', 'I', 'D'),
@@ -302,12 +302,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     if (element.reportType != HIDReportType.Input)
                         continue;
 
-                    var template = element.DetermineTemplate();
-                    if (template != null)
+                    var layout = element.DetermineLayout();
+                    if (layout != null)
                     {
                         var control =
                             builder.AddControl(element.DetermineName())
-                            .WithTemplate(template)
+                            .WithLayout(layout)
                             .WithOffset((uint)element.reportOffsetInBits / 8)
                             .WithBit((uint)element.reportOffsetInBits % 8)
                             .WithFormat(element.DetermineFormat());
@@ -500,7 +500,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
             }
 
-            internal string DetermineTemplate()
+            internal string DetermineLayout()
             {
                 ////TODO: support output elements
                 if (reportType != HIDReportType.Input)

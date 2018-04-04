@@ -26,30 +26,30 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(8)]
         public Vector2 delta;
 
-        [InputControl(template = "Vector2", usage = "Tilt")]
+        [InputControl(layout = "Vector2", usage = "Tilt")]
         [FieldOffset(16)]
         public Vector2 tilt;
 
-        [InputControl(template = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure")]
         [FieldOffset(24)]
         public float pressure;
 
-        [InputControl(template = "Axis", usage = "Twist")]
+        [InputControl(layout = "Axis", usage = "Twist")]
         [FieldOffset(28)]
         public float twist;
 
-        [InputControl(name = "tip", template = "Button", bit = (int)Button.Tip, alias = "button")]
-        [InputControl(name = "eraser", template = "Button", bit = (int)Button.Eraser)]
-        [InputControl(name = "barrelFirst", template = "Button", bit = (int)Button.BarrelFirst, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        [InputControl(name = "barrelSecond", template = "Button", bit = (int)Button.BarrelSecond, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
+        [InputControl(name = "tip", layout = "Button", bit = (int)Button.Tip, alias = "button")]
+        [InputControl(name = "eraser", layout = "Button", bit = (int)Button.Eraser)]
+        [InputControl(name = "barrelFirst", layout = "Button", bit = (int)Button.BarrelFirst, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "barrelSecond", layout = "Button", bit = (int)Button.BarrelSecond, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
         // "Park" unused controls.
-        [InputControl(name = "radius", template = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "pointerId", template = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", template = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////TODO: this should be used
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "pointerId", layout = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
+        [InputControl(name = "phase", layout = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////TODO: this should be used
         [FieldOffset(32)]
         public ushort buttons;
 
-        [InputControl(template = "Digital")]
+        [InputControl(layout = "Digital")]
         [FieldOffset(34)]
         public ushort displayIndex;
 
@@ -73,7 +73,7 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A pen/stylus input device.
     /// </summary>
-    [InputTemplate(stateType = typeof(PenState))]
+    [InputLayout(stateType = typeof(PenState))]
     public class Pen : Pointer
     {
         public new static Pen current { get; internal set; }

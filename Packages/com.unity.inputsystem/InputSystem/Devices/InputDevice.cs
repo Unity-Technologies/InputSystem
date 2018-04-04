@@ -24,7 +24,7 @@ namespace UnityEngine.Experimental.Input
     /// a device at the root. Devices cannot occur inside of hierarchies.
     ///
     /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    /// without requiring a change to the device template (<see cref="InputSystem.SetUsage"/>).
+    /// without requiring a change to the device layout (<see cref="InputSystem.SetUsage"/>).
     /// </remarks>
     /// \todo The entire control hierarchy should be a linear array; transition to that with InputData.
     public class InputDevice : InputControl

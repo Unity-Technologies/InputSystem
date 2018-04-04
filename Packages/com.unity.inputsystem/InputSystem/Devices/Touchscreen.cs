@@ -36,61 +36,61 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public const int kMaxTouches = 10;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         // Add controls compatible with what Pointer expects and redirect their
         // state to the state of touch0 so that this essentially becomes our
         // pointer control.
         // NOTE: Some controls from Pointer don't make sense for touch and we "park"
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
-        [InputControl(name = "fingerId", template = "Digital", alias = "pointerId", useStateFrom = "touch0/touchId")]
-        [InputControl(name = "position", template = "Vector2", usage = "Point", useStateFrom = "touch0/position")]
-        [InputControl(name = "delta", template = "Vector2", usage = "Secondary2DMotion", useStateFrom = "touch0/delta")]
-        [InputControl(name = "pressure", template = "Axis", usage = "Pressure", useStateFrom = "touch0/pressure")]
-        [InputControl(name = "radius", template = "Vector2", usage = "Radius", useStateFrom = "touch0/radius")]
-        [InputControl(name = "phase", template = "PointerPhase", useStateFrom = "touch0/phase")]
-        [InputControl(name = "displayIndex", template = "Digital", useStateFrom = "touch0/displayIndex")]
-        [InputControl(name = "touchType", template = "TouchType", useStateFrom = "touch0/touchType")]
-        [InputControl(name = "twist", template = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "tilt", template = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "fingerId", layout = "Digital", alias = "pointerId", useStateFrom = "touch0/touchId")]
+        [InputControl(name = "position", layout = "Vector2", usage = "Point", useStateFrom = "touch0/position")]
+        [InputControl(name = "delta", layout = "Vector2", usage = "Secondary2DMotion", useStateFrom = "touch0/delta")]
+        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", useStateFrom = "touch0/pressure")]
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", useStateFrom = "touch0/radius")]
+        [InputControl(name = "phase", layout = "PointerPhase", useStateFrom = "touch0/phase")]
+        [InputControl(name = "displayIndex", layout = "Digital", useStateFrom = "touch0/displayIndex")]
+        [InputControl(name = "touchType", layout = "TouchType", useStateFrom = "touch0/touchType")]
+        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
         ////TODO: we want to the button to be pressed when there is a primary touch
-        [InputControl(name = "button", template = "Button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "button", layout = "Button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, offset = InputStateBlock.kInvalidOffset)]
         [FieldOffset(0)]
         public Touch touch0;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(36)]
         public Touch touch1;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(72)]
         public Touch touch2;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(108)]
         public Touch touch3;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(144)]
         public Touch touch4;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(180)]
         public Touch touch5;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(216)]
         public Touch touch6;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(252)]
         public Touch touch7;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(288)]
         public Touch touch8;
 
-        [InputControl(template = "Touch")]
+        [InputControl(layout = "Touch")]
         [FieldOffset(324)]
         public Touch touch9;
 
@@ -119,7 +119,7 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// A multi-touch surface.
     /// </summary>
-    [InputTemplate(stateType = typeof(TouchscreenState))]
+    [InputLayout(stateType = typeof(TouchscreenState))]
     public class Touchscreen : Pointer
     {
         /// <summary>
