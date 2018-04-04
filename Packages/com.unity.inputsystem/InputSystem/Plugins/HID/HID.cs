@@ -86,7 +86,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
         // This is the workhorse for figuring out fallback options for HIDs attached to the system.
         // If the system cannot find a more specific layout for a given HID, this method will try
-        // to produce a layout factory on the fly based on the HID descriptor received from
+        // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
         internal static unsafe string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
@@ -241,11 +241,11 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             ////TODO: make sure we don't produce name conflicts on the layout name
 
-            // Register layout factory that will turn the HID descriptor into an
+            // Register layout builder that will turn the HID descriptor into an
             // InputLayout instance.
             var layoutName = string.Format("{0}::{1}", kHIDNamespace, description.product);
             var layout = new HIDLayout {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
-            InputSystem.RegisterControlLayoutFactory(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
 
             return layoutName;
         }

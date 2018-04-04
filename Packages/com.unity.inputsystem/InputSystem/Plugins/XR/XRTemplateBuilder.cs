@@ -102,7 +102,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             string layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
             XRLayoutBuilder layout = new XRLayoutBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterControlLayoutFactory(() => layout.Build(), layoutName, null, description);
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, null, description);
 
             return layoutName;
         }

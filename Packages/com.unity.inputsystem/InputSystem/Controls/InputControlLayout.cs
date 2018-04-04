@@ -331,7 +331,7 @@ namespace UnityEngine.Experimental.Input
         /// Build a layout programmatically. Primarily for use by layout factories
         /// registered with the system.
         /// </summary>
-        /// <seealso cref="InputSystem.RegisterControlLayoutFactory"/>
+        /// <seealso cref="InputSystem.RegisterControlLayoutBuilder"/>
         public struct Builder
         {
             public string name;
@@ -1407,7 +1407,7 @@ namespace UnityEngine.Experimental.Input
         {
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
-            public Dictionary<InternedString, Factory> layoutFactories;
+            public Dictionary<InternedString, Builder> layoutFactories;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InputDeviceDescription> layoutDeviceDescriptions;
 
@@ -1415,7 +1415,7 @@ namespace UnityEngine.Experimental.Input
             {
                 layoutTypes = new Dictionary<InternedString, Type>();
                 layoutStrings = new Dictionary<InternedString, string>();
-                layoutFactories = new Dictionary<InternedString, Factory>();
+                layoutFactories = new Dictionary<InternedString, Builder>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
             }
@@ -1441,12 +1441,12 @@ namespace UnityEngine.Experimental.Input
             private InputControlLayout TryLoadLayoutInternal(InternedString name)
             {
                 // Check factories.
-                Factory factory;
-                if (layoutFactories.TryGetValue(name, out factory))
+                Builder builder;
+                if (layoutFactories.TryGetValue(name, out builder))
                 {
-                    var layout = (InputControlLayout)factory.method.Invoke(factory.instance, null);
+                    var layout = (InputControlLayout)builder.method.Invoke(builder.instance, null);
                     if (layout == null)
-                        throw new Exception(string.Format("Layout factory '{0}' returned null when invoked", name));
+                        throw new Exception(string.Format("Layout builder '{0}' returned null when invoked", name));
                     return layout;
                 }
 
@@ -1541,7 +1541,7 @@ namespace UnityEngine.Experimental.Input
         // This collection is owned and managed by InputManager.
         internal static Collection s_Layouts;
 
-        internal struct Factory
+        internal struct Builder
         {
             public MethodInfo method;
             public object instance;

@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input
             PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement);
         }
 
-        public void RegisterControlLayoutFactory(MethodInfo method, object instance, string name,
+        public void RegisterControlLayoutBuilder(MethodInfo method, object instance, string name,
             string baseLayout = null, InputDeviceDescription? deviceDescription = null)
         {
             if (method == null)
@@ -216,7 +216,7 @@ namespace UnityEngine.Experimental.Input
             var internedName = new InternedString(name);
             var isReplacement = DoesLayoutExist(internedName);
 
-            m_Layouts.layoutFactories[internedName] = new InputControlLayout.Factory
+            m_Layouts.layoutFactories[internedName] = new InputControlLayout.Builder
             {
                 method = method,
                 instance = instance
@@ -2105,7 +2105,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        internal struct LayoutFactoryState
+        internal struct LayoutBuilderState
         {
             public string name;
             public string typeName;
@@ -2149,7 +2149,7 @@ namespace UnityEngine.Experimental.Input
             public int layoutRegistrationVersion;
             public LayoutState[] layoutTypes;
             public LayoutState[] layoutStrings;
-            public LayoutFactoryState[] layoutFactories;
+            public LayoutBuilderState[] layoutFactories;
             public BaseLayoutState[] baseLayouts;
             public LayoutDeviceState[] layoutDeviceDescriptions;
             public TypeRegistrationState[] processors;
@@ -2203,12 +2203,12 @@ namespace UnityEngine.Experimental.Input
                 };
 
             // Layout factories.
-            var layoutFactoryCount = m_Layouts.layoutFactories.Count;
-            var layoutFactoryArray = new LayoutFactoryState[layoutFactoryCount];
+            var layoutBuilderCount = m_Layouts.layoutFactories.Count;
+            var layoutBuilderArray = new LayoutBuilderState[layoutBuilderCount];
 
             i = 0;
             foreach (var entry in m_Layouts.layoutFactories)
-                layoutFactoryArray[i++] = new LayoutFactoryState
+                layoutBuilderArray[i++] = new LayoutBuilderState
                 {
                     name = entry.Key,
                     typeName = entry.Value.method.DeclaringType.AssemblyQualifiedName,
@@ -2241,7 +2241,7 @@ namespace UnityEngine.Experimental.Input
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
                 layoutTypes = layoutTypeArray,
                 layoutStrings = layoutStringArray,
-                layoutFactories = layoutFactoryArray,
+                layoutFactories = layoutBuilderArray,
                 baseLayouts = m_Layouts.baseLayoutTable.Select(x => new BaseLayoutState { derivedLayout = x.Key, baseLayout = x.Value }).ToArray(),
                 layoutDeviceDescriptions = m_Layouts.layoutDeviceDescriptions.Select(x => new LayoutDeviceState { deviceDescription = x.Value, layoutName = x.Key }).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
@@ -2331,7 +2331,7 @@ namespace UnityEngine.Experimental.Input
                 var type = Type.GetType(layout.typeName, false);
                 if (type == null)
                 {
-                    Debug.Log(string.Format("Layout factory '{0}' has been removed (type '{1}' cannot be found)",
+                    Debug.Log(string.Format("Layout builder '{0}' has been removed (type '{1}' cannot be found)",
                             name, layout.typeName));
                     continue;
                 }
@@ -2341,7 +2341,7 @@ namespace UnityEngine.Experimental.Input
                 var method = type.GetMethod(layout.methodName,
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-                m_Layouts.layoutFactories[name] = new InputControlLayout.Factory
+                m_Layouts.layoutFactories[name] = new InputControlLayout.Builder
                 {
                     method = method,
                     instance = layout.instanceJson != null ? JsonUtility.FromJson(layout.instanceJson, type) : null

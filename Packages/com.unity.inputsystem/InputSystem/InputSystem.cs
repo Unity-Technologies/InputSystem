@@ -9,7 +9,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Plugins.XInput;
-using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.Experimental.Input.Utilities;
 
 #if UNITY_EDITOR
@@ -123,9 +122,9 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Register a factory that delivers an <see cref="InputControlLayout"/> instance on demand.
+        /// Register a builder that delivers an <see cref="InputControlLayout"/> instance on demand.
         /// </summary>
-        /// <param name="factoryExpression"></param>
+        /// <param name="builderExpression"></param>
         /// <param name="name"></param>
         /// <param name="baseLayout"></param>
         /// <param name="deviceDescription"></param>
@@ -137,7 +136,7 @@ namespace UnityEngine.Experimental.Input
         /// instance object must be serializable.
         ///
         /// The reason for these restrictions and for not taking an arbitrary delegate is that we
-        /// need to be able to persist the layout factory between domain reloads.
+        /// need to be able to persist the layout builder between domain reloads.
         ///
         /// Note that the layout that is being constructed must not vary over time (except between
         /// domain reloads).
@@ -145,7 +144,7 @@ namespace UnityEngine.Experimental.Input
         /// <example>
         /// <code>
         /// [Serializable]
-        /// class MyLayoutFactory
+        /// class MyLayoutBuilder
         /// {
         ///     public InputControlLayout Build()
         ///     {
@@ -156,25 +155,25 @@ namespace UnityEngine.Experimental.Input
         ///     }
         /// }
         ///
-        /// var factory = new MyLayoutFactory();
-        /// InputSystem.RegisterControlLayoutFactory(() => factory.Build(), "MyLayout");
+        /// var builder = new MyLayoutBuilder();
+        /// InputSystem.RegisterControlLayoutBuilder(() => builder.Build(), "MyLayout");
         /// </code>
         /// </example>
-        public static void RegisterControlLayoutFactory(Expression<Func<InputControlLayout>> factoryExpression, string name,
+        public static void RegisterControlLayoutBuilder(Expression<Func<InputControlLayout>> builderExpression, string name,
             string baseLayout = null, InputDeviceDescription? deviceDescription = null)
         {
-            if (factoryExpression == null)
-                throw new ArgumentNullException("factoryExpression");
+            if (builderExpression == null)
+                throw new ArgumentNullException("builderExpression");
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
 
             // Grab method and (optional) instance from lambda expression.
-            var methodCall = factoryExpression.Body as MethodCallExpression;
+            var methodCall = builderExpression.Body as MethodCallExpression;
             if (methodCall == null)
                 throw new ArgumentException(
-                    string.Format("Body of layout factory function must be a method call (is a {0} instead)",
-                        factoryExpression.Body.NodeType),
-                    "factoryExpression");
+                    string.Format("Body of layout builder function must be a method call (is a {0} instead)",
+                        builderExpression.Body.NodeType),
+                    "builderExpression");
 
             var method = methodCall.Method;
 
@@ -200,8 +199,8 @@ namespace UnityEngine.Experimental.Input
                         if (constantExpr == null)
                             throw new ArgumentException(
                                 string.Format(
-                                    "Body of layout factory function must be a method call on a constant or variable expression (accesses member of {0} instead)",
-                                    expr.NodeType), "factoryExpression");
+                                    "Body of layout builder function must be a method call on a constant or variable expression (accesses member of {0} instead)",
+                                    expr.NodeType), "builderExpression");
 
                         // Get field.
                         var member = ((MemberExpression)methodCall.Object).Member;
@@ -209,8 +208,8 @@ namespace UnityEngine.Experimental.Input
                         if (field == null)
                             throw new ArgumentException(
                                 string.Format(
-                                    "Body of layout factory function must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
-                                    member.GetType().Name, member.Name), "factoryExpression");
+                                    "Body of layout builder function must be a method call on a constant or variable expression (member access does not access field but rather {0} {1})",
+                                    member.GetType().Name, member.Name), "builderExpression");
 
                         // Read value.
                         instance = field.GetValue(constantExpr.Value);
@@ -222,7 +221,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Register.
-            s_Manager.RegisterControlLayoutFactory(method, instance, name, baseLayout: baseLayout,
+            s_Manager.RegisterControlLayoutBuilder(method, instance, name, baseLayout: baseLayout,
                 deviceDescription: deviceDescription);
         }
 

@@ -529,11 +529,11 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_RegisteringLayoutFactory_WithDescription_PutsDescriptionInLayoutWhenLoaded()
+    public void Layouts_RegisteringLayoutBuilder_WithDescription_PutsDescriptionInLayoutWhenLoaded()
     {
-        var factory = new TestLayoutFactory {layoutToLoad = "Mouse"};
+        var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
 
-        InputSystem.RegisterControlLayoutFactory(() => factory.DoIt(), name: "TestLayout",
+        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "TestLayout",
             deviceDescription: new InputDeviceDescription
         {
             interfaceName = "TestInterface",
@@ -818,7 +818,7 @@ class FunctionalTests : InputTestFixture
     }
 
     [Serializable]
-    class TestLayoutFactory
+    class TestLayoutBuilder
     {
         [SerializeField] public string layoutToLoad;
         [NonSerialized] public InputControlLayout layout;
@@ -833,16 +833,16 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanAddCustomLayoutFactory()
+    public void Layouts_CanAddCustomLayoutBuilder()
     {
-        var factory = new TestLayoutFactory {layoutToLoad = "Gamepad"};
+        var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
 
-        InputSystem.RegisterControlLayoutFactory(() => factory.DoIt(), "MyLayout");
+        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), "MyLayout");
 
         var result = InputSystem.TryLoadLayout("MyLayout");
 
         Assert.That(result.name.ToString(), Is.EqualTo("MyLayout"));
-        Assert.That(result, Is.SameAs(factory.layout));
+        Assert.That(result, Is.SameAs(builder.layout));
     }
 
     [Test]
@@ -6249,10 +6249,10 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
-    public void Editor_RestoringStateWillRestoreObjectsOfLayoutFactory()
+    public void Editor_RestoringStateWillRestoreObjectsOfLayoutBuilder()
     {
-        var factory = new TestLayoutFactory {layoutToLoad = "Gamepad"};
-        InputSystem.RegisterControlLayoutFactory(() => factory.DoIt(), "TestLayout");
+        var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
+        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
         InputSystem.Save();
         InputSystem.Reset();
