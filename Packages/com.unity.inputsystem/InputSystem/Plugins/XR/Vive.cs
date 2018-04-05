@@ -1,4 +1,3 @@
-
 using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
