@@ -289,6 +289,11 @@ namespace UnityEngine.Experimental.Input
             get { return m_Type; }
         }
 
+        public InternedString variant
+        {
+            get { return m_Variant; }
+        }
+
         public FourCC stateFormat
         {
             get { return m_StateFormat; }
@@ -536,6 +541,11 @@ namespace UnityEngine.Experimental.Input
             if (layoutAttribute != null && layoutAttribute.stateFormat != new FourCC())
                 stateFormat = layoutAttribute.stateFormat;
 
+            // Determine variant (if any).
+            var variant = new InternedString();
+            if (layoutAttribute != null)
+                variant = new InternedString(layoutAttribute.variant);
+
             ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json layouts as well)
             ////TODO: make sure all paths are unique (only relevant for JSON layouts?)
 
@@ -543,6 +553,7 @@ namespace UnityEngine.Experimental.Input
             var layout = new InputControlLayout(name, type);
             layout.m_Controls = controlLayouts.ToArray();
             layout.m_StateFormat = stateFormat;
+            layout.m_Variant = variant;
 
             if (layoutAttribute != null && layoutAttribute.commonUsages != null)
                 layout.m_CommonUsages =
@@ -569,6 +580,7 @@ namespace UnityEngine.Experimental.Input
 
         private InternedString m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputDeviceBuilder.
+        internal InternedString m_Variant;
         internal FourCC m_StateFormat;
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;

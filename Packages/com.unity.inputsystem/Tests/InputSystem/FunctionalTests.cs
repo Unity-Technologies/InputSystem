@@ -1047,6 +1047,53 @@ class FunctionalTests : InputTestFixture
         Assert.Fail();
     }
 
+    struct StateWithTwoLayoutVariants : IInputStateTypeInfo
+    {
+        [InputControl(name = "button", layout = "Button", variant = "A")]
+        public int buttons;
+        [InputControl(name = "axis", layout = "Axis", variant = "B")]
+        public float axis;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(variant = "A", stateType = typeof(StateWithTwoLayoutVariants))]
+    class DeviceWithLayoutVariantA : InputDevice
+    {
+    }
+    [InputControlLayout(variant = "B", stateType = typeof(StateWithTwoLayoutVariants))]
+    class DeviceWithLayoutVariantB : InputDevice
+    {
+    }
+
+    // Sometimes you have a single state format that you want to use with multiple
+    // different types of devices that each have a different control setup. For example,
+    // a given state may just be a generic set of axis and button values with the
+    // assignment of axis and button controls depending on which type of device the
+    // state is used with.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSetUpMultipleLayoutsFromSingleState_UsingVariants()
+    {
+        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
+        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantB>();
+
+        var deviceA = InputSystem.AddDevice<DeviceWithLayoutVariantA>();
+        var deviceB = InputSystem.AddDevice<DeviceWithLayoutVariantB>();
+
+        Assert.That(deviceA.allControls.Count, Is.EqualTo(1));
+        Assert.That(deviceB.allControls.Count, Is.EqualTo(1));
+
+        Assert.That(deviceA["button"], Is.TypeOf<ButtonControl>());
+        Assert.That(deviceB["axis"], Is.TypeOf<AxisControl>());
+
+        Assert.That(deviceA["button"].variant, Is.EqualTo("A"));
+        Assert.That(deviceB["axis"].variant, Is.EqualTo("B"));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromLayout()

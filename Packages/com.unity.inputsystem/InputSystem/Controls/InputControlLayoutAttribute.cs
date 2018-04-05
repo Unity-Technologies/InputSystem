@@ -23,5 +23,7 @@ namespace UnityEngine.Experimental.Input
         public FourCC stateFormat;
 
         public string[] commonUsages;
+
+        public string variant;
     }
 }
