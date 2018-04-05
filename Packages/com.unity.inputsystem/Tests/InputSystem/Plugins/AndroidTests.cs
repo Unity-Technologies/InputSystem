@@ -25,7 +25,7 @@ class AndroidTests : InputTestFixture
         return new InputDeviceDescription
         {
             interfaceName = "Android",
-            deviceClass = "AndroidGameController",     
+            deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
                 inputSources = AndroidInputSource.Joystick
@@ -85,7 +85,7 @@ class AndroidTests : InputTestFixture
     [Test]
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad_WithAxisDpad()
-    { 
+    {
         var gamepad = (Gamepad)InputSystem.AddDevice(GetGamepadDeviceDescriptor(new[]
         {
             AndroidAxis.Generic1, // Noise
@@ -121,7 +121,7 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad_WithButtonDpad()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice(GetGamepadDeviceDescriptor(new[]{
+        var gamepad = (Gamepad)InputSystem.AddDevice(GetGamepadDeviceDescriptor(new[] {
             AndroidAxis.Generic1, // Noise
             AndroidAxis.Generic2, // Noise
         }));

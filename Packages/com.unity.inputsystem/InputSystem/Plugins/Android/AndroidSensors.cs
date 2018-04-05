@@ -67,11 +67,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         public AndroidSensorState WithData(float[] data)
         {
-            fixed (float* dataPtr = this.data)
+            fixed(float* dataPtr = this.data)
             {
                 for (int i = 0; i < data.Length && i < 16; i++)
                     dataPtr[i] = data[i];
-                
+
                 // Fill the rest with zeroes
                 for (int i = data.Length; i < 16; i++)
                     dataPtr[i] = 0.0f;

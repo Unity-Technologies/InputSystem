@@ -391,7 +391,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
-{ 
+{
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variant = AndroidGameControllerState.kVariantGamepad)]
     public class AndroidGamepad : Gamepad
     {

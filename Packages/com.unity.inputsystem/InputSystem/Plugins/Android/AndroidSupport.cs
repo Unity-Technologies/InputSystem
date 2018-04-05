@@ -13,10 +13,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             InputSystem.RegisterControlLayout<AndroidGamepad>(
 
                 deviceDescription: new InputDeviceDescription
-                {
-                    interfaceName = "Android",
-                    deviceClass = "AndroidGameController"
-                });
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidGameController"
+            });
 
             InputSystem.RegisterControlLayout<AndroidJoystick>("AndroidJoystick");
 
