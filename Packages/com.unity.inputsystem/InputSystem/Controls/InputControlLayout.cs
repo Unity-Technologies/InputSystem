@@ -544,10 +544,6 @@ namespace UnityEngine.Experimental.Input
             layout.m_Controls = controlLayouts.ToArray();
             layout.m_StateFormat = stateFormat;
 
-            // Only apply before render to avoid overwriting the nullable type when updateBeforeRender is unset.
-            if (layoutAttribute != null && layoutAttribute.updateBeforeRender == true)
-                layout.m_UpdateBeforeRender = layoutAttribute.updateBeforeRender;
-
             if (layoutAttribute != null && layoutAttribute.commonUsages != null)
                 layout.m_CommonUsages =
                     ArrayHelpers.Select(layoutAttribute.commonUsages, x => new InternedString(x));
