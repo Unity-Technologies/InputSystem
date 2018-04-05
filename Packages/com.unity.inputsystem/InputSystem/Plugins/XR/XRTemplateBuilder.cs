@@ -110,7 +110,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             var builder = new InputControlLayout.Builder
             {
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
-                extendsLayout = parentLayout
+                extendsLayout = parentLayout,
+                updateBeforeRender = true
             };
 
             var currentUsages = new List<string>();

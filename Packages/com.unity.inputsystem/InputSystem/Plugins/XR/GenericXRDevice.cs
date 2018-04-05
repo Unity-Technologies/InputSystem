@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Haptics;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputControlLayout(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRHMD : InputDevice
     {
         public static XRHMD current { get; private set; }
@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputControlLayout(updateBeforeRender = true, commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : InputDevice
     {
         public static XRController leftHand { get; private set; }
