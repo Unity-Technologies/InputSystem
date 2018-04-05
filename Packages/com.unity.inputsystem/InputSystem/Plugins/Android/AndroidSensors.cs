@@ -65,6 +65,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "androidacceleration", variant = "Accelerometer")]
         public fixed float data[16];
 
+        public AndroidSensorState WithData(float[] data)
+        {
+            fixed (float* dataPtr = this.data)
+            {
+                for (int i = 0; i < data.Length && i < 16; i++)
+                    dataPtr[i] = data[i];
+                
+                // Fill the rest with zeroes
+                for (int i = data.Length; i < 16; i++)
+                    dataPtr[i] = 0.0f;
+            }
+
+            return this;
+        }
+
         public FourCC GetFormat()
         {
             return kFormat;
