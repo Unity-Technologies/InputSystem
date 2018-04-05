@@ -624,7 +624,7 @@ namespace UnityEngine.Experimental.Input
 
         // Add ControlLayouts for every member in the list thas has InputControlAttribute applied to it
         // or has an InputControl-derived value type.
-        private static void AddControlItemsFromMembers(MemberInfo[] members, List<ControlItem> controlLayouts, string layoutName)
+        private static void AddControlItemsFromMembers(MemberInfo[] members, List<ControlItem> controlItems, string layoutName)
         {
             foreach (var member in members)
             {
@@ -639,9 +639,9 @@ namespace UnityEngine.Experimental.Input
                 // interface, dive inside and look. This is useful for composing states of one another.
                 if (valueType != null && valueType.IsValueType && typeof(IInputStateTypeInfo).IsAssignableFrom(valueType))
                 {
-                    var controlCountBefore = controlLayouts.Count;
+                    var controlCountBefore = controlItems.Count;
 
-                    AddControlItems(valueType, controlLayouts, layoutName);
+                    AddControlItems(valueType, controlItems, layoutName);
 
                     // If the current member is a field that is embedding the state structure, add
                     // the field offset to all control layouts that were added from the struct.
@@ -649,14 +649,14 @@ namespace UnityEngine.Experimental.Input
                     if (memberAsField != null)
                     {
                         var fieldOffset = Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
-                        var countrolCountAfter = controlLayouts.Count;
+                        var countrolCountAfter = controlItems.Count;
                         for (var i = controlCountBefore; i < countrolCountAfter; ++i)
                         {
-                            var controlLayout = controlLayouts[i];
-                            if (controlLayouts[i].offset != InputStateBlock.kInvalidOffset)
+                            var controlLayout = controlItems[i];
+                            if (controlItems[i].offset != InputStateBlock.kInvalidOffset)
                             {
                                 controlLayout.offset += (uint)fieldOffset;
-                                controlLayouts[i] = controlLayout;
+                                controlItems[i] = controlLayout;
                             }
                         }
                     }
@@ -673,12 +673,12 @@ namespace UnityEngine.Experimental.Input
                         continue;
                 }
 
-                AddControlItemsFromMember(member, attributes, controlLayouts, layoutName);
+                AddControlItemsFromMember(member, attributes, controlItems, layoutName);
             }
         }
 
         private static void AddControlItemsFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlItem> controlLayouts, string layoutName)
+            InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each ocurrence. However, it can also
@@ -689,16 +689,16 @@ namespace UnityEngine.Experimental.Input
             if (attributes.Length == 0)
             {
                 var controlLayout = CreateControlItemFromMember(member, null, layoutName);
-                ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layoutName);
-                controlLayouts.Add(controlLayout);
+                ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
+                controlItems.Add(controlLayout);
             }
             else
             {
                 foreach (var attribute in attributes)
                 {
                     var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
-                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layoutName);
-                    controlLayouts.Add(controlLayout);
+                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
+                    controlItems.Add(controlLayout);
                 }
             }
         }
@@ -978,6 +978,9 @@ namespace UnityEngine.Experimental.Input
         {
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
+
+            if (m_Variant.IsEmpty())
+                m_Variant = other.m_Variant;
 
             if (m_StateFormat == new FourCC())
                 m_StateFormat = other.m_StateFormat;

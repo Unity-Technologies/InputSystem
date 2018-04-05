@@ -1096,6 +1096,25 @@ class FunctionalTests : InputTestFixture
     }
 
     [Test]
+    [Category("Layouts")]
+    public void Layouts_SettingLayoutVariantOnType_WillComeThroughWhenMergedIntoOtherLayout()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""extend"" : ""DeviceWithLayoutVariantA""
+            }
+        ";
+
+        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
+        InputSystem.RegisterControlLayout(json);
+
+        var layout = InputSystem.TryLoadLayout("TestLayout");
+
+        Assert.That(layout.variant, Is.EqualTo(new InternedString("A")));
+    }
+
+    [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromLayout()
     {
@@ -2061,7 +2080,7 @@ class FunctionalTests : InputTestFixture
     // should add the base offset of the field itself.
     [Test]
     [Category("State")]
-    public void TODO_State_SpecifyingOffsetOnControlProperty_AddsBaseOffset()
+    public void TODO_State_SpecifyingOffsetOnControlAttribute_AddsBaseOffset()
     {
         Assert.Fail();
     }
