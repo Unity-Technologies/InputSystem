@@ -13,30 +13,33 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         private const int kMaxAndroidAxes = 48;
         private const int kMaxAndroidButtons = 220;
 
+        public const string kVariantGamepad = "Gamepad";
+        public const string kVariantJoystick = "Joystick";
+
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
         ////REVIEW: is this mapping something that Android *guarantees* for us or do we need per-product layouts
         ////        to deal with specific gamepads individually?
-        [InputControl(name = "buttonSouth", bit = (uint)AndroidKeyCode.ButtonA)]
-        [InputControl(name = "buttonWest", bit = (uint)AndroidKeyCode.ButtonX)]
-        [InputControl(name = "buttonNorth", bit = (uint)AndroidKeyCode.ButtonY)]
-        [InputControl(name = "buttonEast", bit = (uint)AndroidKeyCode.ButtonB)]
-        [InputControl(name = "leftStickPress", bit = (uint)AndroidKeyCode.ButtonThumbl)]
-        [InputControl(name = "rightStickPress", bit = (uint)AndroidKeyCode.ButtonThumbr)]
-        [InputControl(name = "leftShoulder", bit = (uint)AndroidKeyCode.ButtonL1)]
-        [InputControl(name = "rightShoulder", bit = (uint)AndroidKeyCode.ButtonR1)]
-        [InputControl(name = "start", bit = (uint)AndroidKeyCode.ButtonStart)]
-        [InputControl(name = "select", bit = (uint)AndroidKeyCode.ButtonSelect)]
+        [InputControl(name = "buttonSouth", bit = (uint)AndroidKeyCode.ButtonA, variant = kVariantGamepad)]
+        [InputControl(name = "buttonWest", bit = (uint)AndroidKeyCode.ButtonX, variant = kVariantGamepad)]
+        [InputControl(name = "buttonNorth", bit = (uint)AndroidKeyCode.ButtonY, variant = kVariantGamepad)]
+        [InputControl(name = "buttonEast", bit = (uint)AndroidKeyCode.ButtonB, variant = kVariantGamepad)]
+        [InputControl(name = "leftStickPress", bit = (uint)AndroidKeyCode.ButtonThumbl, variant = kVariantGamepad)]
+        [InputControl(name = "rightStickPress", bit = (uint)AndroidKeyCode.ButtonThumbr, variant = kVariantGamepad)]
+        [InputControl(name = "leftShoulder", bit = (uint)AndroidKeyCode.ButtonL1, variant = kVariantGamepad)]
+        [InputControl(name = "rightShoulder", bit = (uint)AndroidKeyCode.ButtonR1, variant = kVariantGamepad)]
+        [InputControl(name = "start", bit = (uint)AndroidKeyCode.ButtonStart, variant = kVariantGamepad)]
+        [InputControl(name = "select", bit = (uint)AndroidKeyCode.ButtonSelect, variant = kVariantGamepad)]
         public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
 
         private const uint kAxisOffset = sizeof(uint) * (uint)((kMaxAndroidButtons + 31) / 32);
 
-        [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset)]
-        [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset)]
-        [InputControl(name = "leftStick")]
-        [InputControl(name = "rightStick")]
-        [InputControl(name = "rightStick/x", offset = (uint)AndroidAxis.Z * sizeof(float))]
-        [InputControl(name = "rightStick/y", offset = (uint)AndroidAxis.Rz * sizeof(float))]
+        [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
+        [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
+        [InputControl(name = "leftStick", variant = kVariantGamepad)]
+        [InputControl(name = "rightStick", variant = kVariantGamepad)]
+        [InputControl(name = "rightStick/x", offset = (uint)AndroidAxis.Z * sizeof(float), variant = kVariantGamepad)]
+        [InputControl(name = "rightStick/y", offset = (uint)AndroidAxis.Rz * sizeof(float), variant = kVariantGamepad)]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
@@ -389,12 +392,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 { 
-    [InputControlLayout(stateType = typeof(AndroidGameControllerState))]
+    [InputControlLayout(stateType = typeof(AndroidGameControllerState), variant = AndroidGameControllerState.kVariantGamepad)]
     public class AndroidGamepad : Gamepad
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidGameControllerState))]
+    [InputControlLayout(stateType = typeof(AndroidGameControllerState), variant = AndroidGameControllerState.kVariantJoystick)]
     public class AndroidJoystick : Joystick
     {
     }
