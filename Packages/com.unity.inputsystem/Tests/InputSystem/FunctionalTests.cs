@@ -2725,7 +2725,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ThatHaveNoMatchingLayout_AreDisabled()
+    public void Devices_ThatHaveNoKnownLayout_AreDisabled()
     {
         var deviceId = testRuntime.AllocateDeviceId();
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
@@ -2756,7 +2756,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ThatHadNoMatchingLayout_AreReEnabled_WhenLayoutBecomesAvailable()
+    public void Devices_ThatHadNoKnownLayout_AreReEnabled_WhenLayoutBecomesKnown()
     {
         var deviceId = testRuntime.AllocateDeviceId();
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
@@ -2784,6 +2784,66 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(wasEnabled.HasValue);
         Assert.That(wasEnabled.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_QueryTheirEnabledStateFromRuntime()
+    {
+        var deviceId = testRuntime.AllocateDeviceId();
+
+        var queryEnabledStateResult = false;
+        bool? receivedQueryEnabledStateCommand = null;
+        testRuntime.SetDeviceCommandCallback(deviceId,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryEnabledStateCommand.Type)
+                    {
+                        Assert.That(receivedQueryEnabledStateCommand, Is.Null);
+                        receivedQueryEnabledStateCommand = true;
+                        ((QueryEnabledStateCommand*)commandPtr)->isEnabled = queryEnabledStateResult;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+
+                Assert.Fail("Should not get other IOCTLs");
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Mouse"}.ToJson(), deviceId);
+        InputSystem.Update();
+        var device = InputSystem.devices.First(x => x.id == deviceId);
+
+        var isEnabled = device.enabled;
+
+        Assert.That(isEnabled, Is.False);
+        Assert.That(receivedQueryEnabledStateCommand, Is.Not.Null);
+        Assert.That(receivedQueryEnabledStateCommand.Value, Is.True);
+
+        receivedQueryEnabledStateCommand = null;
+        queryEnabledStateResult = true;
+
+        // A configuration change event should cause the cached state to become invalid
+        // and thus cause InputDevice.enabled to issue another IOCTL.
+        InputSystem.QueueConfigChangeEvent(device);
+        InputSystem.Update();
+
+        isEnabled = device.enabled;
+
+        Assert.That(isEnabled, Is.True);
+        Assert.That(receivedQueryEnabledStateCommand, Is.Not.Null);
+        Assert.That(receivedQueryEnabledStateCommand.Value, Is.True);
+
+        // Make sure that querying the state *again* does not lead to another IOCTL.
+
+        receivedQueryEnabledStateCommand = null;
+
+        isEnabled = device.enabled;
+
+        Assert.That(isEnabled, Is.True);
+        Assert.That(receivedQueryEnabledStateCommand, Is.Null);
     }
 
     [Test]

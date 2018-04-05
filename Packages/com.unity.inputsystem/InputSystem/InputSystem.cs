@@ -54,11 +54,10 @@ namespace UnityEngine.Experimental.Input
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
         /// <param name="deviceDescription">Optional device description. If this is supplied, the layout will automatically
-        /// be instanted for newly discovered devices that match the description.</param>
+        /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
-        /// When the layout is instantiate, the system will reflect on all public <see cref="InputControl"/>
-        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputControlLayoutAttribute"/>
-        /// to provide additional information for the generated layout.
+        /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
+        /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
         /// </remarks>
         public static void RegisterControlLayout(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
         {
@@ -69,16 +68,15 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Register a type as an control layout.
+        /// Register a type as a control layout.
         /// </summary>
         /// <typeparam name="T">Type to derive a control layout from.</typeparam>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
         /// <param name="deviceDescription">Optional device description. If this is supplied, the layout will automatically
-        /// be instanted for newly discovered devices that match the description.</param>
+        /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
-        /// When the layout is instantiate, the system will reflect on all public <see cref="InputControl"/>
-        /// fields and properties on the type. Also, the type may be annotated with <see cref="InputControlLayoutAttribute"/>
-        /// to provide additional information for the generated layout.
+        /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
+        /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
         /// </remarks>
         public static void RegisterControlLayout<T>(string name = null, InputDeviceDescription? deviceDescription = null)
             where T : InputControl
@@ -216,7 +214,10 @@ namespace UnityEngine.Experimental.Input
                         break;
 
                     default:
-                        throw new ArgumentException();
+                        throw new ArgumentException(
+                        string.Format(
+                            "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
+                            methodCall.Object.NodeType), "builderExpression");
                 }
             }
 
