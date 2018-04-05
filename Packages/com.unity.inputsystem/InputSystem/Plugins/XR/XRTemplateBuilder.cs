@@ -9,6 +9,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [Serializable]
     class XRLayoutBuilder
     {
+        public string parentLayout;
         public XRDeviceDescriptor descriptor;
 
         static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
@@ -98,7 +99,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             layoutMatchingDescription.capabilities = null;
 
             var layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
-            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor };
+            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
 
             return layoutName;
@@ -109,6 +110,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             var builder = new InputControlLayout.Builder
             {
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
+                extendsLayout = parentLayout
             };
 
             var currentUsages = new List<string>();
