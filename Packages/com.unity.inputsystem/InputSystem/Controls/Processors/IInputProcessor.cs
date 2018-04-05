@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         ""name"" : ""MyDevice"",
     ///         ""controls"" : [
-    ///             { ""name"" : ""axis"", ""template"" : ""Axis"", ""processors"" : ""scale(factor=4)"" }
+    ///             { ""name"" : ""axis"", ""layout"" : ""Axis"", ""processors"" : ""scale(factor=4)"" }
     ///         ]
     ///     }
     /// ";
@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input
     /// // Use processor on C# state struct:
     /// public struct MyDeviceState : IInputStateTypeInfo
     /// {
-    ///     [InputControl(template = "Axis", processors = "scale(factor=4)"]
+    ///     [InputControl(layout = "Axis", processors = "scale(factor=4)"]
     ///     public float axis;
     /// }
     /// </code>

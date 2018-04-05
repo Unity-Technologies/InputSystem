@@ -3,6 +3,8 @@ var namespaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel =
     [ "DeltaStateEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeltaStateEvent.html", null ],
     [ "DeviceConfigurationEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceConfigurationEvent.html", null ],
     [ "DeviceRemoveEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent" ],
+    [ "DisableDeviceCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html", null ],
+    [ "EnableDeviceCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1EnableDeviceCommand.html", null ],
     [ "GamepadState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState" ],
     [ "IInputRuntime", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime" ],
     [ "IInputStateCallbackReceiver", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputStateCallbackReceiver.html", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputStateCallbackReceiver" ],
@@ -15,10 +17,11 @@ var namespaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel =
     [ "MouseState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1MouseState.html", null ],
     [ "PenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PenState.html", null ],
     [ "PointerState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState" ],
+    [ "QueryDimensionsCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryDimensionsCommand.html", null ],
     [ "QueryKeyboardLayoutCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyboardLayoutCommand.html", null ],
     [ "QueryKeyNameCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyNameCommand.html", null ],
+    [ "SetSamplingFrequencyCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1SetSamplingFrequencyCommand.html", null ],
     [ "StateEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent" ],
     [ "TextEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent" ],
-    [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", null ],
-    [ "XRControllerState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1XRControllerState.html", null ]
+    [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", null ]
 ];

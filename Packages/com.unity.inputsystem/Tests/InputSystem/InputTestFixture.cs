@@ -12,7 +12,7 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// The fixture will put the input system into a known state where it has only the
-    /// built-in set of basic templates and no devices. The state of the system before
+    /// built-in set of basic layouts and no devices. The state of the system before
     /// starting a test is recorded and restored when the test finishes.
     /// </remarks>
     /// <example>
@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterTemplate<MyDevice>();
+    ///         InputSystem.RegisterControlLayout<MyDevice>();
     ///     }
     ///
     ///     [Test]
@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input
 
         /// <summary>
         /// Put InputSystem into a known state where it only has a basic set of
-        /// templates and does not have any input devices.
+        /// layouts and does not have any input devices.
         /// </summary>
         /// <remarks>
         /// If you derive your own test fixture directly from InputTestFixture, this
@@ -56,7 +56,7 @@ namespace UnityEngine.Experimental.Input
         {
             InputSystem.Save();
 
-            // Put system in a blank state where it has all the templates but has
+            // Put system in a blank state where it has all the layouts but has
             // none of the native devices.
             InputSystem.Reset();
 

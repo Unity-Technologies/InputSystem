@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         void QueueEvent(IntPtr ptr);
 
-        //NOTE: This method takes an IntPtr instead of a generic ref type parameter (like InputDevice.OnDeviceCommand)
+        //NOTE: This method takes an IntPtr instead of a generic ref type parameter (like InputDevice.ExecuteCommand)
         //      to avoid issues with AOT where generic interface methods can lead to problems. Il2cpp can handle it here
         //      just fine but Mono will run into issues.
         /// <summary>

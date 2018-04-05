@@ -6,7 +6,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// <remarks>
     /// Even without this module, HIDs can be used on platforms where we
     /// support HID has a native backend (Windows and OSX, at the moment).
-    /// However, each supported HID requires a template specifically targeting
+    /// However, each supported HID requires a layout specifically targeting
     /// it as a product.
     ///
     /// What this module adds is the ability to turn any HID with usable
@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// out a suitable class for the device and will use the HID elements
     /// present in the HID report descriptor to populate the device.
     ///
-    /// If there is an existing product-specific template for a HID, it will
+    /// If there is an existing product-specific layout for a HID, it will
     /// take precedence and HIDSupport will leave the device alone.
     /// </remarks>
     public static class HIDSupport
@@ -24,8 +24,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// </summary>
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<HID>();
-            InputSystem.onFindTemplateForDevice += HID.OnFindTemplateForDevice;
+            InputSystem.RegisterControlLayout<HID>();
+            InputSystem.onFindControlLayoutForDevice += HID.OnFindControlLayoutForDevice;
         }
     }
 }

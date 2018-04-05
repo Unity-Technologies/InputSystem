@@ -56,13 +56,13 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeBit;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            up = setup.GetControl<ButtonControl>(this, "up");
-            down = setup.GetControl<ButtonControl>(this, "down");
-            left = setup.GetControl<ButtonControl>(this, "left");
-            right = setup.GetControl<ButtonControl>(this, "right");
-            base.FinishSetup(setup);
+            up = builder.GetControl<ButtonControl>(this, "up");
+            down = builder.GetControl<ButtonControl>(this, "down");
+            left = builder.GetControl<ButtonControl>(this, "left");
+            right = builder.GetControl<ButtonControl>(this, "right");
+            base.FinishSetup(builder);
         }
 
         public override Vector2 ReadRawValueFrom(IntPtr statePtr)

@@ -18,8 +18,7 @@ namespace UnityEngine.Experimental.Input.Processors
         {
             if (zero < min)
                 zero = min;
-            var minAbsolute = Mathf.Abs(min);
-            var percentage = (value - minAbsolute) / (max - minAbsolute);
+            var percentage = (value - min) / (max - min);
             if (min < zero)
                 return 2 * percentage - 1;
             return percentage;

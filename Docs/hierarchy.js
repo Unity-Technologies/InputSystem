@@ -1,20 +1,23 @@
 var hierarchy =
 [
-    [ "InputTemplate.Builder", "structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1Builder.html", null ],
-    [ "InputTemplate.ControlTemplate", "structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html", null ],
+    [ "InputControlLayout.Builder", "structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1Builder.html", null ],
+    [ "InputControlLayout.ControlItem", "structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html", null ],
     [ "DeltaStateEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeltaStateEvent.html", null ],
     [ "DeviceConfigurationEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceConfigurationEvent.html", null ],
     [ "DeviceRemoveEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html", null ],
+    [ "DisableDeviceCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html", null ],
     [ "DualMotorRumble", "structUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1DualMotorRumble.html", null ],
     [ "DualShockHIDInputReport", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1DualShockHIDInputReport.html", null ],
     [ "DualShockHIDOutputReport", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1DualShockHIDOutputReport.html", null ],
     [ "DualShockPS4OuputCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1DualShockPS4OuputCommand.html", null ],
     [ "DualShockSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockSupport.html", null ],
-    [ "EditorInputTemplateCache", "classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputTemplateCache.html", null ],
+    [ "EditorInputControlLayoutCache", "classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputControlLayoutCache.html", null ],
+    [ "EnableDeviceCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1EnableDeviceCommand.html", null ],
     [ "GamepadState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html", null ],
     [ "HID", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID.html", null ],
     [ "HID.HIDCollectionDescriptor", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDCollectionDescriptor.html", null ],
     [ "HID.HIDDeviceDescriptor", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptor.html", null ],
+    [ "HID.HIDDeviceDescriptorBuilder", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDDeviceDescriptorBuilder.html", null ],
     [ "HID.HIDElementDescriptor", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID_1_1HIDElementDescriptor.html", null ],
     [ "HIDParser", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDParser.html", null ],
     [ "HIDSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDSupport.html", null ],
@@ -24,6 +27,7 @@ var hierarchy =
           [ "DualShockGamepad", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockGamepad.html", [
             [ "DualShockGamepadHID", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockGamepadHID.html", null ]
           ] ],
+          [ "NPad", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1NPad.html", null ],
           [ "XInputController", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputController.html", null ]
         ] ],
         [ "IDualShockHaptics", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html", [
@@ -38,6 +42,9 @@ var hierarchy =
     ] ],
     [ "IInputBindingComposite< Vector2 >", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingComposite.html", [
       [ "ButtonVector", "classUnityEngine_1_1Experimental_1_1Input_1_1Composites_1_1ButtonVector.html", null ]
+    ] ],
+    [ "IInputBindingModifier", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingModifier.html", [
+      [ "IInputBindingModifier< TValue >", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingModifier.html", null ]
     ] ],
     [ "IInputProcessor< TValue >", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html", null ],
     [ "IInputProcessor< float >", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html", null ],
@@ -99,8 +106,10 @@ var hierarchy =
       [ "Vector3Control", "classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1Vector3Control.html", null ]
     ] ],
     [ "InputControlAttribute", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControlAttribute.html", null ],
+    [ "InputControlLayout", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html", null ],
+    [ "InputControlLayoutAttribute", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayoutAttribute.html", null ],
     [ "InputControlPath", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html", null ],
-    [ "InputControlSetup", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControlSetup.html", null ],
+    [ "InputDeviceBuilder", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceBuilder.html", null ],
     [ "InputDeviceCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputDeviceCommand.html", null ],
     [ "InputDeviceDescription", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html", null ],
     [ "InputEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html", null ],
@@ -109,15 +118,16 @@ var hierarchy =
     [ "InputRemoting", "classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html", null ],
     [ "InputStateBlock", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputStateBlock.html", null ],
     [ "InputSystem", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html", null ],
-    [ "InputTemplate", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate.html", null ],
-    [ "InputTemplateAttribute", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplateAttribute.html", null ],
     [ "InputTestFixture", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html", null ],
     [ "InternedString", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1InternedString.html", null ],
     [ "KeyboardState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1KeyboardState.html", null ],
     [ "InputRemoting.Message", "structUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting_1_1Message.html", null ],
     [ "MouseState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1MouseState.html", null ],
+    [ "NPadInputState", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1LowLevel_1_1NPadInputState.html", null ],
+    [ "NPadOutputReport", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1LowLevel_1_1NPadOutputReport.html", null ],
     [ "PenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PenState.html", null ],
     [ "PointerState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html", null ],
+    [ "QueryDimensionsCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryDimensionsCommand.html", null ],
     [ "QueryKeyboardLayoutCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyboardLayoutCommand.html", null ],
     [ "QueryKeyNameCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyNameCommand.html", null ],
     [ "ReadOnlyArray< TValue >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
@@ -126,11 +136,11 @@ var hierarchy =
     [ "ReadOnlyArray< ParameterValue >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ReadOnlyArray< UnityEngine.Experimental.Input.InputActionSet.ResolvedBinding >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ReadOnlyArray< UnityEngine.Experimental.Input.InputControl >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
+    [ "SetSamplingFrequencyCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1SetSamplingFrequencyCommand.html", null ],
     [ "StateEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html", null ],
+    [ "SwitchSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1SwitchSupport.html", null ],
     [ "TextEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html", null ],
     [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", null ],
     [ "XboxOneGamepadRumbleCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1LowLevel_1_1XboxOneGamepadRumbleCommand.html", null ],
-    [ "XInputSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputSupport.html", null ],
-    [ "XRController", "classUnityEngine_1_1Experimental_1_1Input_1_1XRController.html", null ],
-    [ "XRControllerState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1XRControllerState.html", null ]
+    [ "XInputSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputSupport.html", null ]
 ];

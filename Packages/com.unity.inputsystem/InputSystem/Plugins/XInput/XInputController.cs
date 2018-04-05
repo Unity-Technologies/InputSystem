@@ -44,9 +44,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             }
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
             aButton = buttonSouth;
             bButton = buttonEast;

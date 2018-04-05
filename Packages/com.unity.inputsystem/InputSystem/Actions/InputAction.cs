@@ -986,6 +986,7 @@ namespace UnityEngine.Experimental.Input
                 get { return m_Modifier; }
             }
 
+            ////REVIEW: rename to ReadValue?
             public TValue GetValue<TValue>()
             {
                 return ((InputControl<TValue>)control).ReadValue();

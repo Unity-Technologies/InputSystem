@@ -82,14 +82,14 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////REVIEW: actually pre-populate with some stuff?
-        private const string kDefaultAssetTemplate = "{}";
+        private const string kDefaultAssetLayout = "{}";
 
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
             ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.kExtension,
-                kDefaultAssetTemplate);
+                kDefaultAssetLayout);
         }
     }
 }

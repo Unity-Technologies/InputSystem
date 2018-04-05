@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
@@ -48,19 +46,19 @@ public class ButtonStateHex : MonoBehaviour
         int offset = 0;
         string retVal = "";
 
-        for (int j = ((int)(Key.Count)) / 16; j >= 0; j--)
+        for (int j = ((int)(Keyboard.KeyCount)) / 16; j >= 0; j--)
         {
             workingInt = 0;
             offset = j * 16;
             for (int i = 15; i >= 0; i--)
             {
-                if (i + offset != 0 && i + offset < ((int)(Key.Count)))
+                if (i + offset != 0 && i + offset < ((int)(Keyboard.KeyCount)))
                 {
                     workingInt |= _BoolHelper(keyboard[(Key)(offset + i)].ReadValue() != 0f) << (i);
                 }
             }
 
-            if (j != ((int)(Key.Count)) / 16) { retVal += "."; } // Don't put a trailing period because it looks dumb
+            if (j != ((int)(Keyboard.KeyCount)) / 16) { retVal += "."; } // Don't put a trailing period because it looks dumb
             retVal += workingInt.ToString("X4");
         }
 

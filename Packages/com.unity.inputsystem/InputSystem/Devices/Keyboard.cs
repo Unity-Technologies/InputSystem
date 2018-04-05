@@ -22,121 +22,121 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         // Number of keys rounded up to nearest size of 4.
-        private const int kSizeInBytesUnrounded = ((int)Key.Count) / 8 + (((int)Key.Count) % 8 > 0 ? 1 : 0);
+        private const int kSizeInBytesUnrounded = ((int)Keyboard.KeyCount) / 8 + (((int)Keyboard.KeyCount) % 8 > 0 ? 1 : 0);
         public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
         public const int kSizeInBits = kSizeInBytes * 8;
 
-        [InputControl(name = "AnyKey", template = "AnyKey", sizeInBits = kSizeInBits)]
-        [InputControl(name = "Escape", template = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
-        [InputControl(name = "Space", template = "Key", bit = (int)Key.Space)]
-        [InputControl(name = "Enter", template = "Key", usage = "Accept", bit = (int)Key.Enter)]
-        [InputControl(name = "Tab", template = "Key", bit = (int)Key.Tab)]
-        [InputControl(name = "Backquote", template = "Key", bit = (int)Key.Backquote)]
-        [InputControl(name = "Quote", template = "Key", bit = (int)Key.Quote)]
-        [InputControl(name = "Semicolon", template = "Key", bit = (int)Key.Semicolon)]
-        [InputControl(name = "Comma", template = "Key", bit = (int)Key.Comma)]
-        [InputControl(name = "Period", template = "Key", bit = (int)Key.Period)]
-        [InputControl(name = "Slash", template = "Key", bit = (int)Key.Slash)]
-        [InputControl(name = "Backslash", template = "Key", bit = (int)Key.Backslash)]
-        [InputControl(name = "LeftBracket", template = "Key", bit = (int)Key.LeftBracket)]
-        [InputControl(name = "RightBracket", template = "Key", bit = (int)Key.RightBracket)]
-        [InputControl(name = "Minus", template = "Key", bit = (int)Key.Minus)]
-        [InputControl(name = "Equals", template = "Key", bit = (int)Key.Equals)]
-        [InputControl(name = "UpArrow", template = "Key", bit = (int)Key.UpArrow)]
-        [InputControl(name = "DownArrow", template = "Key", bit = (int)Key.DownArrow)]
-        [InputControl(name = "LeftArrow", template = "Key", bit = (int)Key.LeftArrow)]
-        [InputControl(name = "RightArrow", template = "Key", bit = (int)Key.RightArrow)]
-        [InputControl(name = "A", template = "Key", bit = (int)Key.A)]
-        [InputControl(name = "B", template = "Key", bit = (int)Key.B)]
-        [InputControl(name = "C", template = "Key", bit = (int)Key.C)]
-        [InputControl(name = "D", template = "Key", bit = (int)Key.D)]
-        [InputControl(name = "E", template = "Key", bit = (int)Key.E)]
-        [InputControl(name = "F", template = "Key", bit = (int)Key.F)]
-        [InputControl(name = "G", template = "Key", bit = (int)Key.G)]
-        [InputControl(name = "H", template = "Key", bit = (int)Key.H)]
-        [InputControl(name = "I", template = "Key", bit = (int)Key.I)]
-        [InputControl(name = "J", template = "Key", bit = (int)Key.J)]
-        [InputControl(name = "K", template = "Key", bit = (int)Key.K)]
-        [InputControl(name = "L", template = "Key", bit = (int)Key.L)]
-        [InputControl(name = "M", template = "Key", bit = (int)Key.M)]
-        [InputControl(name = "N", template = "Key", bit = (int)Key.N)]
-        [InputControl(name = "O", template = "Key", bit = (int)Key.O)]
-        [InputControl(name = "P", template = "Key", bit = (int)Key.P)]
-        [InputControl(name = "Q", template = "Key", bit = (int)Key.Q)]
-        [InputControl(name = "R", template = "Key", bit = (int)Key.R)]
-        [InputControl(name = "S", template = "Key", bit = (int)Key.S)]
-        [InputControl(name = "T", template = "Key", bit = (int)Key.T)]
-        [InputControl(name = "U", template = "Key", bit = (int)Key.U)]
-        [InputControl(name = "V", template = "Key", bit = (int)Key.V)]
-        [InputControl(name = "W", template = "Key", bit = (int)Key.W)]
-        [InputControl(name = "X", template = "Key", bit = (int)Key.X)]
-        [InputControl(name = "Y", template = "Key", bit = (int)Key.Y)]
-        [InputControl(name = "Z", template = "Key", bit = (int)Key.Z)]
-        [InputControl(name = "1", template = "Key", bit = (int)Key.Digit1)]
-        [InputControl(name = "2", template = "Key", bit = (int)Key.Digit2)]
-        [InputControl(name = "3", template = "Key", bit = (int)Key.Digit3)]
-        [InputControl(name = "4", template = "Key", bit = (int)Key.Digit4)]
-        [InputControl(name = "5", template = "Key", bit = (int)Key.Digit5)]
-        [InputControl(name = "6", template = "Key", bit = (int)Key.Digit6)]
-        [InputControl(name = "7", template = "Key", bit = (int)Key.Digit7)]
-        [InputControl(name = "8", template = "Key", bit = (int)Key.Digit8)]
-        [InputControl(name = "9", template = "Key", bit = (int)Key.Digit9)]
-        [InputControl(name = "0", template = "Key", bit = (int)Key.Digit0)]
-        [InputControl(name = "LeftShift", template = "Key", usage = "Modifier", bit = (int)Key.LeftShift)]
-        [InputControl(name = "RightShift", template = "Key", usage = "Modifier", bit = (int)Key.RightShift)]
-        [InputControl(name = "LeftAlt", template = "Key", usage = "Modifier", bit = (int)Key.LeftAlt)]
-        [InputControl(name = "RightAlt", template = "Key", usage = "Modifier", bit = (int)Key.RightAlt, alias = "AltGr")]
-        [InputControl(name = "LeftCtrl", template = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl)]
-        [InputControl(name = "RightCtrl", template = "Key", usage = "Modifier", bit = (int)Key.RightCtrl)]
-        [InputControl(name = "LeftMeta", template = "Key", usage = "Modifier", bit = (int)Key.LeftMeta, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
-        [InputControl(name = "RightMeta", template = "Key", usage = "Modifier", bit = (int)Key.RightMeta, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
-        [InputControl(name = "ContextMenu", template = "Key", usage = "Modifier", bit = (int)Key.ContextMenu)]
-        [InputControl(name = "Backspace", template = "Key", bit = (int)Key.Backspace)]
-        [InputControl(name = "PageDown", template = "Key", bit = (int)Key.PageDown)]
-        [InputControl(name = "PageUp", template = "Key", bit = (int)Key.PageUp)]
-        [InputControl(name = "Home", template = "Key", bit = (int)Key.Home)]
-        [InputControl(name = "End", template = "Key", bit = (int)Key.End)]
-        [InputControl(name = "Insert", template = "Key", bit = (int)Key.Insert)]
-        [InputControl(name = "Delete", template = "Key", bit = (int)Key.Delete)]
-        [InputControl(name = "CapsLock", template = "Key", bit = (int)Key.CapsLock)]
-        [InputControl(name = "NumLock", template = "Key", bit = (int)Key.NumLock)]
-        [InputControl(name = "PrintScreen", template = "Key", bit = (int)Key.PrintScreen)]
-        [InputControl(name = "ScrollLock", template = "Key", bit = (int)Key.ScrollLock)]
-        [InputControl(name = "Pause", template = "Key", bit = (int)Key.Pause)]
-        [InputControl(name = "NumpadEnter", template = "Key", bit = (int)Key.NumpadEnter)]
-        [InputControl(name = "NumpadDivide", template = "Key", bit = (int)Key.NumpadDivide)]
-        [InputControl(name = "NumpadMultiply", template = "Key", bit = (int)Key.NumpadMultiply)]
-        [InputControl(name = "NumpadPlus", template = "Key", bit = (int)Key.NumpadPlus)]
-        [InputControl(name = "NumpadMinus", template = "Key", bit = (int)Key.NumpadMinus)]
-        [InputControl(name = "NumpadPeriod", template = "Key", bit = (int)Key.NumpadPeriod)]
-        [InputControl(name = "NumpadEquals", template = "Key", bit = (int)Key.NumpadEquals)]
-        [InputControl(name = "Numpad1", template = "Key", bit = (int)Key.Numpad1)]
-        [InputControl(name = "Numpad2", template = "Key", bit = (int)Key.Numpad2)]
-        [InputControl(name = "Numpad3", template = "Key", bit = (int)Key.Numpad3)]
-        [InputControl(name = "Numpad4", template = "Key", bit = (int)Key.Numpad4)]
-        [InputControl(name = "Numpad5", template = "Key", bit = (int)Key.Numpad5)]
-        [InputControl(name = "Numpad6", template = "Key", bit = (int)Key.Numpad6)]
-        [InputControl(name = "Numpad7", template = "Key", bit = (int)Key.Numpad7)]
-        [InputControl(name = "Numpad8", template = "Key", bit = (int)Key.Numpad8)]
-        [InputControl(name = "Numpad9", template = "Key", bit = (int)Key.Numpad9)]
-        [InputControl(name = "Numpad0", template = "Key", bit = (int)Key.Numpad0)]
-        [InputControl(name = "F1", template = "Key", bit = (int)Key.F1)]
-        [InputControl(name = "F2", template = "Key", bit = (int)Key.F2)]
-        [InputControl(name = "F3", template = "Key", bit = (int)Key.F3)]
-        [InputControl(name = "F4", template = "Key", bit = (int)Key.F4)]
-        [InputControl(name = "F5", template = "Key", bit = (int)Key.F5)]
-        [InputControl(name = "F6", template = "Key", bit = (int)Key.F6)]
-        [InputControl(name = "F7", template = "Key", bit = (int)Key.F7)]
-        [InputControl(name = "F8", template = "Key", bit = (int)Key.F8)]
-        [InputControl(name = "F9", template = "Key", bit = (int)Key.F9)]
-        [InputControl(name = "F10", template = "Key", bit = (int)Key.F10)]
-        [InputControl(name = "F11", template = "Key", bit = (int)Key.F11)]
-        [InputControl(name = "F12", template = "Key", bit = (int)Key.F12)]
-        [InputControl(name = "OEM1", template = "Key", bit = (int)Key.OEM1)]
-        [InputControl(name = "OEM2", template = "Key", bit = (int)Key.OEM2)]
-        [InputControl(name = "OEM3", template = "Key", bit = (int)Key.OEM3)]
-        [InputControl(name = "OEM4", template = "Key", bit = (int)Key.OEM4)]
-        [InputControl(name = "OEM5", template = "Key", bit = (int)Key.OEM5)]
+        [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits)]
+        [InputControl(name = "escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
+        [InputControl(name = "space", layout = "Key", bit = (int)Key.Space)]
+        [InputControl(name = "enter", layout = "Key", usage = "Accept", bit = (int)Key.Enter)]
+        [InputControl(name = "tab", layout = "Key", bit = (int)Key.Tab)]
+        [InputControl(name = "backquote", layout = "Key", bit = (int)Key.Backquote)]
+        [InputControl(name = "quote", layout = "Key", bit = (int)Key.Quote)]
+        [InputControl(name = "semicolon", layout = "Key", bit = (int)Key.Semicolon)]
+        [InputControl(name = "comma", layout = "Key", bit = (int)Key.Comma)]
+        [InputControl(name = "period", layout = "Key", bit = (int)Key.Period)]
+        [InputControl(name = "slash", layout = "Key", bit = (int)Key.Slash)]
+        [InputControl(name = "backslash", layout = "Key", bit = (int)Key.Backslash)]
+        [InputControl(name = "leftBracket", layout = "Key", bit = (int)Key.LeftBracket)]
+        [InputControl(name = "rightBracket", layout = "Key", bit = (int)Key.RightBracket)]
+        [InputControl(name = "minus", layout = "Key", bit = (int)Key.Minus)]
+        [InputControl(name = "equals", layout = "Key", bit = (int)Key.Equals)]
+        [InputControl(name = "upArrow", layout = "Key", bit = (int)Key.UpArrow)]
+        [InputControl(name = "downArrow", layout = "Key", bit = (int)Key.DownArrow)]
+        [InputControl(name = "leftArrow", layout = "Key", bit = (int)Key.LeftArrow)]
+        [InputControl(name = "rightArrow", layout = "Key", bit = (int)Key.RightArrow)]
+        [InputControl(name = "a", layout = "Key", bit = (int)Key.A)]
+        [InputControl(name = "b", layout = "Key", bit = (int)Key.B)]
+        [InputControl(name = "c", layout = "Key", bit = (int)Key.C)]
+        [InputControl(name = "d", layout = "Key", bit = (int)Key.D)]
+        [InputControl(name = "e", layout = "Key", bit = (int)Key.E)]
+        [InputControl(name = "f", layout = "Key", bit = (int)Key.F)]
+        [InputControl(name = "g", layout = "Key", bit = (int)Key.G)]
+        [InputControl(name = "h", layout = "Key", bit = (int)Key.H)]
+        [InputControl(name = "i", layout = "Key", bit = (int)Key.I)]
+        [InputControl(name = "j", layout = "Key", bit = (int)Key.J)]
+        [InputControl(name = "k", layout = "Key", bit = (int)Key.K)]
+        [InputControl(name = "l", layout = "Key", bit = (int)Key.L)]
+        [InputControl(name = "m", layout = "Key", bit = (int)Key.M)]
+        [InputControl(name = "n", layout = "Key", bit = (int)Key.N)]
+        [InputControl(name = "o", layout = "Key", bit = (int)Key.O)]
+        [InputControl(name = "p", layout = "Key", bit = (int)Key.P)]
+        [InputControl(name = "q", layout = "Key", bit = (int)Key.Q)]
+        [InputControl(name = "r", layout = "Key", bit = (int)Key.R)]
+        [InputControl(name = "s", layout = "Key", bit = (int)Key.S)]
+        [InputControl(name = "t", layout = "Key", bit = (int)Key.T)]
+        [InputControl(name = "u", layout = "Key", bit = (int)Key.U)]
+        [InputControl(name = "v", layout = "Key", bit = (int)Key.V)]
+        [InputControl(name = "w", layout = "Key", bit = (int)Key.W)]
+        [InputControl(name = "x", layout = "Key", bit = (int)Key.X)]
+        [InputControl(name = "y", layout = "Key", bit = (int)Key.Y)]
+        [InputControl(name = "z", layout = "Key", bit = (int)Key.Z)]
+        [InputControl(name = "1", layout = "Key", bit = (int)Key.Digit1)]
+        [InputControl(name = "2", layout = "Key", bit = (int)Key.Digit2)]
+        [InputControl(name = "3", layout = "Key", bit = (int)Key.Digit3)]
+        [InputControl(name = "4", layout = "Key", bit = (int)Key.Digit4)]
+        [InputControl(name = "5", layout = "Key", bit = (int)Key.Digit5)]
+        [InputControl(name = "6", layout = "Key", bit = (int)Key.Digit6)]
+        [InputControl(name = "7", layout = "Key", bit = (int)Key.Digit7)]
+        [InputControl(name = "8", layout = "Key", bit = (int)Key.Digit8)]
+        [InputControl(name = "9", layout = "Key", bit = (int)Key.Digit9)]
+        [InputControl(name = "0", layout = "Key", bit = (int)Key.Digit0)]
+        [InputControl(name = "leftShift", layout = "Key", usage = "Modifier", bit = (int)Key.LeftShift)]
+        [InputControl(name = "rightShift", layout = "Key", usage = "Modifier", bit = (int)Key.RightShift)]
+        [InputControl(name = "leftAlt", layout = "Key", usage = "Modifier", bit = (int)Key.LeftAlt)]
+        [InputControl(name = "rightAlt", layout = "Key", usage = "Modifier", bit = (int)Key.RightAlt, alias = "AltGr")]
+        [InputControl(name = "leftCtrl", layout = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl)]
+        [InputControl(name = "rightCtrl", layout = "Key", usage = "Modifier", bit = (int)Key.RightCtrl)]
+        [InputControl(name = "leftMeta", layout = "Key", usage = "Modifier", bit = (int)Key.LeftMeta, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
+        [InputControl(name = "rightMeta", layout = "Key", usage = "Modifier", bit = (int)Key.RightMeta, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
+        [InputControl(name = "contextMenu", layout = "Key", usage = "Modifier", bit = (int)Key.ContextMenu)]
+        [InputControl(name = "backspace", layout = "Key", bit = (int)Key.Backspace)]
+        [InputControl(name = "pageDown", layout = "Key", bit = (int)Key.PageDown)]
+        [InputControl(name = "pageUp", layout = "Key", bit = (int)Key.PageUp)]
+        [InputControl(name = "home", layout = "Key", bit = (int)Key.Home)]
+        [InputControl(name = "end", layout = "Key", bit = (int)Key.End)]
+        [InputControl(name = "insert", layout = "Key", bit = (int)Key.Insert)]
+        [InputControl(name = "delete", layout = "Key", bit = (int)Key.Delete)]
+        [InputControl(name = "capsLock", layout = "Key", bit = (int)Key.CapsLock)]
+        [InputControl(name = "numLock", layout = "Key", bit = (int)Key.NumLock)]
+        [InputControl(name = "printScreen", layout = "Key", bit = (int)Key.PrintScreen)]
+        [InputControl(name = "scrollLock", layout = "Key", bit = (int)Key.ScrollLock)]
+        [InputControl(name = "pause", layout = "Key", bit = (int)Key.Pause)]
+        [InputControl(name = "numpadEnter", layout = "Key", bit = (int)Key.NumpadEnter)]
+        [InputControl(name = "numpadDivide", layout = "Key", bit = (int)Key.NumpadDivide)]
+        [InputControl(name = "numpadMultiply", layout = "Key", bit = (int)Key.NumpadMultiply)]
+        [InputControl(name = "numpadPlus", layout = "Key", bit = (int)Key.NumpadPlus)]
+        [InputControl(name = "numpadMinus", layout = "Key", bit = (int)Key.NumpadMinus)]
+        [InputControl(name = "numpadPeriod", layout = "Key", bit = (int)Key.NumpadPeriod)]
+        [InputControl(name = "numpadEquals", layout = "Key", bit = (int)Key.NumpadEquals)]
+        [InputControl(name = "numpad1", layout = "Key", bit = (int)Key.Numpad1)]
+        [InputControl(name = "numpad2", layout = "Key", bit = (int)Key.Numpad2)]
+        [InputControl(name = "numpad3", layout = "Key", bit = (int)Key.Numpad3)]
+        [InputControl(name = "numpad4", layout = "Key", bit = (int)Key.Numpad4)]
+        [InputControl(name = "numpad5", layout = "Key", bit = (int)Key.Numpad5)]
+        [InputControl(name = "numpad6", layout = "Key", bit = (int)Key.Numpad6)]
+        [InputControl(name = "numpad7", layout = "Key", bit = (int)Key.Numpad7)]
+        [InputControl(name = "numpad8", layout = "Key", bit = (int)Key.Numpad8)]
+        [InputControl(name = "numpad9", layout = "Key", bit = (int)Key.Numpad9)]
+        [InputControl(name = "numpad0", layout = "Key", bit = (int)Key.Numpad0)]
+        [InputControl(name = "f1", layout = "Key", bit = (int)Key.F1)]
+        [InputControl(name = "f2", layout = "Key", bit = (int)Key.F2)]
+        [InputControl(name = "f3", layout = "Key", bit = (int)Key.F3)]
+        [InputControl(name = "f4", layout = "Key", bit = (int)Key.F4)]
+        [InputControl(name = "f5", layout = "Key", bit = (int)Key.F5)]
+        [InputControl(name = "f6", layout = "Key", bit = (int)Key.F6)]
+        [InputControl(name = "f7", layout = "Key", bit = (int)Key.F7)]
+        [InputControl(name = "f8", layout = "Key", bit = (int)Key.F8)]
+        [InputControl(name = "f9", layout = "Key", bit = (int)Key.F9)]
+        [InputControl(name = "f10", layout = "Key", bit = (int)Key.F10)]
+        [InputControl(name = "f11", layout = "Key", bit = (int)Key.F11)]
+        [InputControl(name = "f12", layout = "Key", bit = (int)Key.F12)]
+        [InputControl(name = "OEM1", layout = "Key", bit = (int)Key.OEM1)]
+        [InputControl(name = "OEM2", layout = "Key", bit = (int)Key.OEM2)]
+        [InputControl(name = "OEM3", layout = "Key", bit = (int)Key.OEM3)]
+        [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
+        [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
         public fixed byte keys[kSizeInBytes];
 
         public KeyboardState(params Key[] pressedKeys)
@@ -303,8 +303,6 @@ namespace UnityEngine.Experimental.Input
         OEM3,
         OEM4,
         OEM5,
-
-        Count
     }
 
     /// <summary>
@@ -320,9 +318,11 @@ namespace UnityEngine.Experimental.Input
     /// <see cref="InputControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
     /// <see cref="KeyControl.altDisplayName"/>.
     /// </remarks>
-    [InputTemplate(stateType = typeof(KeyboardState))]
+    [InputControlLayout(stateType = typeof(KeyboardState))]
     public class Keyboard : InputDevice
     {
+        public const int KeyCount = (int)Key.OEM5;
+
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
         /// </summary>
@@ -344,14 +344,14 @@ namespace UnityEngine.Experimental.Input
         /// To determine what a key represents in the current layout, use <see cref="InputControl.displayName"/>,
         /// <see cref="KeyControl.shiftDisplayName"/>, and <see cref="KeyControl.altDisplayName"/>.
         /// </remarks>
-        public string layout
+        public string keyboardLayout
         {
             get
             {
                 RefreshConfigurationIfNeeded();
-                return m_LayoutName;
+                return m_KeyboardLayoutName;
             }
-            protected set { m_LayoutName = value; }
+            protected set { m_KeyboardLayoutName = value; }
         }
 
         /// <summary>
@@ -677,142 +677,142 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            anyKey = setup.GetControl<AnyKeyControl>("AnyKey");
-            spaceKey = setup.GetControl<KeyControl>("Space");
-            enterKey = setup.GetControl<KeyControl>("Enter");
-            tabKey = setup.GetControl<KeyControl>("Tab");
-            backquoteKey = setup.GetControl<KeyControl>("Backquote");
-            quoteKey = setup.GetControl<KeyControl>("Quote");
-            semicolonKey = setup.GetControl<KeyControl>("Semicolon");
-            commaKey = setup.GetControl<KeyControl>("Comma");
-            periodKey = setup.GetControl<KeyControl>("Period");
-            slashKey = setup.GetControl<KeyControl>("Slash");
-            backslashKey = setup.GetControl<KeyControl>("Backslash");
-            leftBracketKey = setup.GetControl<KeyControl>("LeftBracket");
-            rightBracketKey = setup.GetControl<KeyControl>("RightBracket");
-            minusKey = setup.GetControl<KeyControl>("Minus");
-            equalsKey = setup.GetControl<KeyControl>("Equals");
-            aKey = setup.GetControl<KeyControl>("A");
-            bKey = setup.GetControl<KeyControl>("B");
-            cKey = setup.GetControl<KeyControl>("C");
-            dKey = setup.GetControl<KeyControl>("D");
-            eKey = setup.GetControl<KeyControl>("E");
-            fKey = setup.GetControl<KeyControl>("F");
-            gKey = setup.GetControl<KeyControl>("G");
-            hKey = setup.GetControl<KeyControl>("H");
-            iKey = setup.GetControl<KeyControl>("I");
-            jKey = setup.GetControl<KeyControl>("J");
-            kKey = setup.GetControl<KeyControl>("K");
-            lKey = setup.GetControl<KeyControl>("L");
-            mKey = setup.GetControl<KeyControl>("M");
-            nKey = setup.GetControl<KeyControl>("N");
-            oKey = setup.GetControl<KeyControl>("O");
-            pKey = setup.GetControl<KeyControl>("P");
-            qKey = setup.GetControl<KeyControl>("Q");
-            rKey = setup.GetControl<KeyControl>("R");
-            sKey = setup.GetControl<KeyControl>("S");
-            tKey = setup.GetControl<KeyControl>("T");
-            uKey = setup.GetControl<KeyControl>("U");
-            vKey = setup.GetControl<KeyControl>("V");
-            wKey = setup.GetControl<KeyControl>("W");
-            xKey = setup.GetControl<KeyControl>("X");
-            yKey = setup.GetControl<KeyControl>("Y");
-            zKey = setup.GetControl<KeyControl>("Z");
-            digit1Key = setup.GetControl<KeyControl>("1");
-            digit2Key = setup.GetControl<KeyControl>("2");
-            digit3Key = setup.GetControl<KeyControl>("3");
-            digit4Key = setup.GetControl<KeyControl>("4");
-            digit5Key = setup.GetControl<KeyControl>("5");
-            digit6Key = setup.GetControl<KeyControl>("6");
-            digit7Key = setup.GetControl<KeyControl>("7");
-            digit8Key = setup.GetControl<KeyControl>("8");
-            digit9Key = setup.GetControl<KeyControl>("9");
-            digit0Key = setup.GetControl<KeyControl>("0");
-            leftShiftKey = setup.GetControl<KeyControl>("LeftShift");
-            rightShiftKey = setup.GetControl<KeyControl>("RightShift");
-            leftAltKey = setup.GetControl<KeyControl>("LeftAlt");
-            rightAltKey = setup.GetControl<KeyControl>("RightAlt");
-            leftCtrlKey = setup.GetControl<KeyControl>("LeftCtrl");
-            rightCtrlKey = setup.GetControl<KeyControl>("RightCtrl");
-            leftMetaKey = setup.GetControl<KeyControl>("LeftMeta");
-            rightMetaKey = setup.GetControl<KeyControl>("RightMeta");
-            leftWindowsKey = setup.GetControl<KeyControl>("LeftWindows");
-            rightWindowsKey = setup.GetControl<KeyControl>("RightWindows");
-            leftAppleKey = setup.GetControl<KeyControl>("LeftApple");
-            rightAppleKey = setup.GetControl<KeyControl>("RightApple");
-            leftCommandKey = setup.GetControl<KeyControl>("LeftCommand");
-            rightCommandKey = setup.GetControl<KeyControl>("RightCommand");
-            contextMenuKey = setup.GetControl<KeyControl>("ContextMenu");
-            escapeKey = setup.GetControl<KeyControl>("Escape");
-            leftArrowKey = setup.GetControl<KeyControl>("LeftArrow");
-            rightArrowKey = setup.GetControl<KeyControl>("RightArrow");
-            upArrowKey = setup.GetControl<KeyControl>("UpArrow");
-            downArrowKey = setup.GetControl<KeyControl>("DownArrow");
-            backspaceKey = setup.GetControl<KeyControl>("Backspace");
-            pageDownKey = setup.GetControl<KeyControl>("PageDown");
-            pageUpKey = setup.GetControl<KeyControl>("PageUp");
-            homeKey = setup.GetControl<KeyControl>("Home");
-            endKey = setup.GetControl<KeyControl>("End");
-            insertKey = setup.GetControl<KeyControl>("Insert");
-            deleteKey = setup.GetControl<KeyControl>("Delete");
-            numpadEnterKey = setup.GetControl<KeyControl>("NumpadEnter");
-            numpadDivideKey = setup.GetControl<KeyControl>("NumpadDivide");
-            numpadMultiplyKey = setup.GetControl<KeyControl>("NumpadMultiply");
-            numpadPlusKey = setup.GetControl<KeyControl>("NumpadPlus");
-            numpadMinusKey = setup.GetControl<KeyControl>("NumpadMinus");
-            numpadPeriodKey = setup.GetControl<KeyControl>("NumpadPeriod");
-            numpadEqualsKey = setup.GetControl<KeyControl>("NumpadEquals");
-            numpad0Key = setup.GetControl<KeyControl>("Numpad0");
-            numpad1Key = setup.GetControl<KeyControl>("Numpad1");
-            numpad2Key = setup.GetControl<KeyControl>("Numpad2");
-            numpad3Key = setup.GetControl<KeyControl>("Numpad3");
-            numpad4Key = setup.GetControl<KeyControl>("Numpad4");
-            numpad5Key = setup.GetControl<KeyControl>("Numpad5");
-            numpad6Key = setup.GetControl<KeyControl>("Numpad6");
-            numpad7Key = setup.GetControl<KeyControl>("Numpad7");
-            numpad8Key = setup.GetControl<KeyControl>("Numpad8");
-            numpad9Key = setup.GetControl<KeyControl>("Numpad9");
-            f1Key = setup.GetControl<KeyControl>("F1");
-            f2Key = setup.GetControl<KeyControl>("F2");
-            f3Key = setup.GetControl<KeyControl>("F3");
-            f4Key = setup.GetControl<KeyControl>("F4");
-            f5Key = setup.GetControl<KeyControl>("F5");
-            f6Key = setup.GetControl<KeyControl>("F6");
-            f7Key = setup.GetControl<KeyControl>("F7");
-            f8Key = setup.GetControl<KeyControl>("F8");
-            f9Key = setup.GetControl<KeyControl>("F9");
-            f10Key = setup.GetControl<KeyControl>("F10");
-            f11Key = setup.GetControl<KeyControl>("F11");
-            f12Key = setup.GetControl<KeyControl>("F12");
-            capsLockKey = setup.GetControl<KeyControl>("CapsLock");
-            numLockKey = setup.GetControl<KeyControl>("NumLock");
-            scrollLockKey = setup.GetControl<KeyControl>("ScrollLock");
-            printScreenKey = setup.GetControl<KeyControl>("PrintScreen");
-            pauseKey = setup.GetControl<KeyControl>("Pause");
-            oem1Key = setup.GetControl<KeyControl>("OEM1");
-            oem2Key = setup.GetControl<KeyControl>("OEM2");
-            oem3Key = setup.GetControl<KeyControl>("OEM3");
-            oem4Key = setup.GetControl<KeyControl>("OEM4");
-            oem5Key = setup.GetControl<KeyControl>("OEM5");
+            anyKey = builder.GetControl<AnyKeyControl>("AnyKey");
+            spaceKey = builder.GetControl<KeyControl>("Space");
+            enterKey = builder.GetControl<KeyControl>("Enter");
+            tabKey = builder.GetControl<KeyControl>("Tab");
+            backquoteKey = builder.GetControl<KeyControl>("Backquote");
+            quoteKey = builder.GetControl<KeyControl>("Quote");
+            semicolonKey = builder.GetControl<KeyControl>("Semicolon");
+            commaKey = builder.GetControl<KeyControl>("Comma");
+            periodKey = builder.GetControl<KeyControl>("Period");
+            slashKey = builder.GetControl<KeyControl>("Slash");
+            backslashKey = builder.GetControl<KeyControl>("Backslash");
+            leftBracketKey = builder.GetControl<KeyControl>("LeftBracket");
+            rightBracketKey = builder.GetControl<KeyControl>("RightBracket");
+            minusKey = builder.GetControl<KeyControl>("Minus");
+            equalsKey = builder.GetControl<KeyControl>("Equals");
+            aKey = builder.GetControl<KeyControl>("A");
+            bKey = builder.GetControl<KeyControl>("B");
+            cKey = builder.GetControl<KeyControl>("C");
+            dKey = builder.GetControl<KeyControl>("D");
+            eKey = builder.GetControl<KeyControl>("E");
+            fKey = builder.GetControl<KeyControl>("F");
+            gKey = builder.GetControl<KeyControl>("G");
+            hKey = builder.GetControl<KeyControl>("H");
+            iKey = builder.GetControl<KeyControl>("I");
+            jKey = builder.GetControl<KeyControl>("J");
+            kKey = builder.GetControl<KeyControl>("K");
+            lKey = builder.GetControl<KeyControl>("L");
+            mKey = builder.GetControl<KeyControl>("M");
+            nKey = builder.GetControl<KeyControl>("N");
+            oKey = builder.GetControl<KeyControl>("O");
+            pKey = builder.GetControl<KeyControl>("P");
+            qKey = builder.GetControl<KeyControl>("Q");
+            rKey = builder.GetControl<KeyControl>("R");
+            sKey = builder.GetControl<KeyControl>("S");
+            tKey = builder.GetControl<KeyControl>("T");
+            uKey = builder.GetControl<KeyControl>("U");
+            vKey = builder.GetControl<KeyControl>("V");
+            wKey = builder.GetControl<KeyControl>("W");
+            xKey = builder.GetControl<KeyControl>("X");
+            yKey = builder.GetControl<KeyControl>("Y");
+            zKey = builder.GetControl<KeyControl>("Z");
+            digit1Key = builder.GetControl<KeyControl>("1");
+            digit2Key = builder.GetControl<KeyControl>("2");
+            digit3Key = builder.GetControl<KeyControl>("3");
+            digit4Key = builder.GetControl<KeyControl>("4");
+            digit5Key = builder.GetControl<KeyControl>("5");
+            digit6Key = builder.GetControl<KeyControl>("6");
+            digit7Key = builder.GetControl<KeyControl>("7");
+            digit8Key = builder.GetControl<KeyControl>("8");
+            digit9Key = builder.GetControl<KeyControl>("9");
+            digit0Key = builder.GetControl<KeyControl>("0");
+            leftShiftKey = builder.GetControl<KeyControl>("LeftShift");
+            rightShiftKey = builder.GetControl<KeyControl>("RightShift");
+            leftAltKey = builder.GetControl<KeyControl>("LeftAlt");
+            rightAltKey = builder.GetControl<KeyControl>("RightAlt");
+            leftCtrlKey = builder.GetControl<KeyControl>("LeftCtrl");
+            rightCtrlKey = builder.GetControl<KeyControl>("RightCtrl");
+            leftMetaKey = builder.GetControl<KeyControl>("LeftMeta");
+            rightMetaKey = builder.GetControl<KeyControl>("RightMeta");
+            leftWindowsKey = builder.GetControl<KeyControl>("LeftWindows");
+            rightWindowsKey = builder.GetControl<KeyControl>("RightWindows");
+            leftAppleKey = builder.GetControl<KeyControl>("LeftApple");
+            rightAppleKey = builder.GetControl<KeyControl>("RightApple");
+            leftCommandKey = builder.GetControl<KeyControl>("LeftCommand");
+            rightCommandKey = builder.GetControl<KeyControl>("RightCommand");
+            contextMenuKey = builder.GetControl<KeyControl>("ContextMenu");
+            escapeKey = builder.GetControl<KeyControl>("Escape");
+            leftArrowKey = builder.GetControl<KeyControl>("LeftArrow");
+            rightArrowKey = builder.GetControl<KeyControl>("RightArrow");
+            upArrowKey = builder.GetControl<KeyControl>("UpArrow");
+            downArrowKey = builder.GetControl<KeyControl>("DownArrow");
+            backspaceKey = builder.GetControl<KeyControl>("Backspace");
+            pageDownKey = builder.GetControl<KeyControl>("PageDown");
+            pageUpKey = builder.GetControl<KeyControl>("PageUp");
+            homeKey = builder.GetControl<KeyControl>("Home");
+            endKey = builder.GetControl<KeyControl>("End");
+            insertKey = builder.GetControl<KeyControl>("Insert");
+            deleteKey = builder.GetControl<KeyControl>("Delete");
+            numpadEnterKey = builder.GetControl<KeyControl>("NumpadEnter");
+            numpadDivideKey = builder.GetControl<KeyControl>("NumpadDivide");
+            numpadMultiplyKey = builder.GetControl<KeyControl>("NumpadMultiply");
+            numpadPlusKey = builder.GetControl<KeyControl>("NumpadPlus");
+            numpadMinusKey = builder.GetControl<KeyControl>("NumpadMinus");
+            numpadPeriodKey = builder.GetControl<KeyControl>("NumpadPeriod");
+            numpadEqualsKey = builder.GetControl<KeyControl>("NumpadEquals");
+            numpad0Key = builder.GetControl<KeyControl>("Numpad0");
+            numpad1Key = builder.GetControl<KeyControl>("Numpad1");
+            numpad2Key = builder.GetControl<KeyControl>("Numpad2");
+            numpad3Key = builder.GetControl<KeyControl>("Numpad3");
+            numpad4Key = builder.GetControl<KeyControl>("Numpad4");
+            numpad5Key = builder.GetControl<KeyControl>("Numpad5");
+            numpad6Key = builder.GetControl<KeyControl>("Numpad6");
+            numpad7Key = builder.GetControl<KeyControl>("Numpad7");
+            numpad8Key = builder.GetControl<KeyControl>("Numpad8");
+            numpad9Key = builder.GetControl<KeyControl>("Numpad9");
+            f1Key = builder.GetControl<KeyControl>("F1");
+            f2Key = builder.GetControl<KeyControl>("F2");
+            f3Key = builder.GetControl<KeyControl>("F3");
+            f4Key = builder.GetControl<KeyControl>("F4");
+            f5Key = builder.GetControl<KeyControl>("F5");
+            f6Key = builder.GetControl<KeyControl>("F6");
+            f7Key = builder.GetControl<KeyControl>("F7");
+            f8Key = builder.GetControl<KeyControl>("F8");
+            f9Key = builder.GetControl<KeyControl>("F9");
+            f10Key = builder.GetControl<KeyControl>("F10");
+            f11Key = builder.GetControl<KeyControl>("F11");
+            f12Key = builder.GetControl<KeyControl>("F12");
+            capsLockKey = builder.GetControl<KeyControl>("CapsLock");
+            numLockKey = builder.GetControl<KeyControl>("NumLock");
+            scrollLockKey = builder.GetControl<KeyControl>("ScrollLock");
+            printScreenKey = builder.GetControl<KeyControl>("PrintScreen");
+            pauseKey = builder.GetControl<KeyControl>("Pause");
+            oem1Key = builder.GetControl<KeyControl>("OEM1");
+            oem2Key = builder.GetControl<KeyControl>("OEM2");
+            oem3Key = builder.GetControl<KeyControl>("OEM3");
+            oem4Key = builder.GetControl<KeyControl>("OEM4");
+            oem5Key = builder.GetControl<KeyControl>("OEM5");
 
-            ////REVIEW: Ideally, we'd have a way to do this through templates; this way nested key controls could work, too,
+            ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
             ////        and it just seems somewhat dirty to jam the data into the control here
 
             // Assign key code to all keys.
-            for (var key = 1; key < (int)Key.Count; ++key)
+            for (var key = 1; key < (int)Keyboard.KeyCount; ++key)
                 this[(Key)key].keyCode = (Key)key;
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
-        protected override unsafe void RefreshConfiguration()
+        protected override void RefreshConfiguration()
         {
-            layout = null;
+            keyboardLayout = null;
             var command = QueryKeyboardLayoutCommand.Create();
-            if (OnDeviceCommand(ref command) >= 0)
-                layout = command.ReadLayoutName();
+            if (ExecuteCommand(ref command) >= 0)
+                keyboardLayout = command.ReadLayoutName();
         }
 
         public override void OnTextInput(char character)
@@ -822,7 +822,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
-        private string m_LayoutName;
+        private string m_KeyboardLayoutName;
     }
 
     public class OnScreenKeyboard : Keyboard

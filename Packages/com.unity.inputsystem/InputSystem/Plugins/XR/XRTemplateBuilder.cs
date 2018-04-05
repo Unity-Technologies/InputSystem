@@ -7,66 +7,54 @@ using System.Text;
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
     [Serializable]
-    class XRTemplateBuilder
+    class XRLayoutBuilder
     {
-        static List<Func<XRDeviceDescriptor, string>> availableTemplates = new List<Func<XRDeviceDescriptor, string>>();
-
+        public string parentLayout;
         public XRDeviceDescriptor descriptor;
 
-        static uint GetOffsetForFeatureType(XRFeatureDescriptor featureDescriptor)
+        static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
         {
             switch (featureDescriptor.featureType)
             {
-                case EFeatureType.Binary:
+                case FeatureType.Binary:
 #if UNITY_ANDROID
                     return 4;
 #else
                     return 1;
 #endif
-                case EFeatureType.DiscreteStates:
+                case FeatureType.DiscreteStates:
                     return sizeof(int);
-                case EFeatureType.Axis1D:
+                case FeatureType.Axis1D:
                     return sizeof(float);
-                case EFeatureType.Axis2D:
+                case FeatureType.Axis2D:
                     return sizeof(float) * 2;
-                case EFeatureType.Axis3D:
+                case FeatureType.Axis3D:
                     return sizeof(float) * 3;
-                case EFeatureType.Rotation:
+                case FeatureType.Rotation:
                     return sizeof(float) * 4;
-                case EFeatureType.Custom:
+                case FeatureType.Custom:
                     return featureDescriptor.customSize;
             }
             return 0;
         }
 
-        public static void RegisterTemplateFilter(Func<XRDeviceDescriptor, string> templateChecker)
+        static string SanitizeLayoutName(string layoutName)
         {
-            availableTemplates.Add(templateChecker);
-        }
-
-        static string SanitizeTemplateName(string templateName)
-        {
-            int stringLength = templateName.Length;
-            StringBuilder sanitizedTemplateName = new StringBuilder(stringLength);
+            int stringLength = layoutName.Length;
+            var sanitizedLayoutName = new StringBuilder(stringLength);
             for (int i = 0; i < stringLength; i++)
             {
-                char letter = templateName[i];
-                if (Char.IsUpper(letter) || Char.IsLower(letter) || Char.IsDigit(letter) || letter == ':')
+                char letter = layoutName[i];
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == ':')
                 {
-                    sanitizedTemplateName.Append(letter);
+                    sanitizedLayoutName.Append(letter);
                 }
             }
-            return sanitizedTemplateName.ToString();
+            return sanitizedLayoutName.ToString();
         }
 
-        internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description, string matchedTemplate, IInputRuntime runtime)
+        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
-            // If the system found a matching template, there's nothing for us to do.
-            if (!string.IsNullOrEmpty(matchedTemplate))
-            {
-                return null;
-            }
-
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.kXRInterface)
             {
@@ -91,111 +79,109 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return null;
             }
 
-            for (int i = 0; i < availableTemplates.Count; i++)
+            if (deviceDescriptor == null)
             {
-                string templateMatch = availableTemplates[i](deviceDescriptor);
-                if (templateMatch != null)
-                {
-                    return templateMatch;
-                }
+                return null;
             }
 
-            string templateName = SanitizeTemplateName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
-            XRTemplateBuilder template = new XRTemplateBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterTemplateFactory(() => template.Build(), templateName, null, description);
+            if (string.IsNullOrEmpty(matchedLayout))
+            {
+                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                    matchedLayout = "XRController";
+                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+                    matchedLayout = "XRHMD";
+                else
+                    return null;
+            }
 
-            return templateName;
+            // We don't want to forward the Capabilities along due to how template fields are Regex compared.
+            var layoutMatchingDescription = description;
+            layoutMatchingDescription.capabilities = null;
+
+            var layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
+            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
+
+            return layoutName;
         }
 
-        public InputTemplate Build()
+        public InputControlLayout Build()
         {
-            Type deviceType = null;
-            switch (descriptor.deviceRole)
+            var builder = new InputControlLayout.Builder
             {
-                case EDeviceRole.LeftHanded:
-                case EDeviceRole.RightHanded:
-                {
-                    deviceType = typeof(XRController);
-                }
-                break;
-                default:
-                {
-                    deviceType = typeof(XRHMD);
-                }
-                break;
-            }
-
-            var builder = new InputTemplate.Builder
-            {
-                type = deviceType,
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
+                extendsLayout = parentLayout,
                 updateBeforeRender = true
             };
 
-            List<string> currentUsages = new List<string>();
+            var currentUsages = new List<string>();
 
             uint currentOffset = 0;
             foreach (var feature in descriptor.inputFeatures)
             {
                 currentUsages.Clear();
-                foreach (var usageHint in feature.usageHints)
+
+                if (feature.usageHints != null)
                 {
-                    if (usageHint.content != null && usageHint.content.Length > 0)
-                        currentUsages.Add(usageHint.content);
+                    foreach (var usageHint in feature.usageHints)
+                    {
+                        if (string.IsNullOrEmpty(usageHint.content))
+                            currentUsages.Add(usageHint.content);
+                    }
                 }
 
-                uint nextOffset = GetOffsetForFeatureType(feature);
+                uint nextOffset = GetSizeOfFeature(feature);
                 switch (feature.featureType)
                 {
-                    case EFeatureType.Binary:
+                    case FeatureType.Binary:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Button")
+                        .WithLayout("Button")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeBit)
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.DiscreteStates:
+                    case FeatureType.DiscreteStates:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Integer")
+                        .WithLayout("Integer")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeInt)
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Axis1D:
+                    case FeatureType.Axis1D:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Analog")
+                        .WithLayout("Analog")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeFloat)
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Axis2D:
+                    case FeatureType.Axis2D:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Vector2")
+                        .WithLayout("Vector2")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeVector2)
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Axis3D:
+                    case FeatureType.Axis3D:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Vector3")
+                        .WithLayout("Vector3")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeVector3)
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Rotation:
+                    case FeatureType.Rotation:
                     {
                         builder.AddControl(feature.name)
-                        .WithTemplate("Quaternion")
+                        .WithLayout("Quaternion")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeQuaternion)
                         .WithUsages(currentUsages);

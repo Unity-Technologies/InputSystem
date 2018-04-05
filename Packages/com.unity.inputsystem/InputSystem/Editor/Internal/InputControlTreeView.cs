@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private enum ColumnId
         {
             Name,
-            Template,
+            Layout,
             Type,
             Format,
             Offset,
@@ -66,12 +66,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 minWidth = 60,
                 headerContent = new GUIContent("Name")
             };
-            columns[(int)ColumnId.Template] =
+            columns[(int)ColumnId.Layout] =
                 new MultiColumnHeaderState.Column
             {
                 width = 100,
                 minWidth = 60,
-                headerContent = new GUIContent("Template")
+                headerContent = new GUIContent("Layout")
             };
             columns[(int)ColumnId.Type] =
                 new MultiColumnHeaderState.Column
@@ -197,7 +197,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 displayName = control.name,
                 control = control,
                 depth = depth,
-                template = new GUIContent(control.template),
+                layout = new GUIContent(control.layout),
                 format = new GUIContent(control.stateBlock.format.ToString()),
                 offset = new GUIContent(offset.ToString()),
                 bit = new GUIContent(control.stateBlock.bitOffset.ToString()),
@@ -238,8 +238,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     args.rowRect = cellRect;
                     base.RowGUI(args);
                     break;
-                case (int)ColumnId.Template:
-                    GUI.Label(cellRect, item.template);
+                case (int)ColumnId.Layout:
+                    GUI.Label(cellRect, item.layout);
                     break;
                 case (int)ColumnId.Format:
                     GUI.Label(cellRect, item.format);
@@ -316,7 +316,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private class ControlItem : TreeViewItem
         {
             public InputControl control;
-            public GUIContent template;
+            public GUIContent layout;
             public GUIContent format;
             public GUIContent offset;
             public GUIContent bit;
