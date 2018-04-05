@@ -11,6 +11,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         public static void Initialize()
         {
             InputSystem.RegisterControlLayout<AndroidGamepad>(
+
                 deviceDescription: new InputDeviceDescription
                 {
                     interfaceName = "Android",
