@@ -343,7 +343,7 @@ namespace UnityEngine.Experimental.Input
             public Type type;
             public FourCC stateFormat;
             public string extendsLayout;
-            public bool updateBeforeRender;
+            public bool? updateBeforeRender;
             public InputDeviceDescription deviceDescription;
 
             private int m_ControlCount;

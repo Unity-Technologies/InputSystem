@@ -9,49 +9,43 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [Serializable]
     class XRLayoutBuilder
     {
-        static List<Func<XRDeviceDescriptor, string>> availableLayouts = new List<Func<XRDeviceDescriptor, string>>();
-
+        public string parentLayout;
         public XRDeviceDescriptor descriptor;
 
-        static uint GetOffsetForFeatureType(XRFeatureDescriptor featureDescriptor)
+        static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
         {
             switch (featureDescriptor.featureType)
             {
-                case EFeatureType.Binary:
+                case FeatureType.Binary:
 #if UNITY_ANDROID
                     return 4;
 #else
                     return 1;
 #endif
-                case EFeatureType.DiscreteStates:
+                case FeatureType.DiscreteStates:
                     return sizeof(int);
-                case EFeatureType.Axis1D:
+                case FeatureType.Axis1D:
                     return sizeof(float);
-                case EFeatureType.Axis2D:
+                case FeatureType.Axis2D:
                     return sizeof(float) * 2;
-                case EFeatureType.Axis3D:
+                case FeatureType.Axis3D:
                     return sizeof(float) * 3;
-                case EFeatureType.Rotation:
+                case FeatureType.Rotation:
                     return sizeof(float) * 4;
-                case EFeatureType.Custom:
+                case FeatureType.Custom:
                     return featureDescriptor.customSize;
             }
             return 0;
         }
 
-        public static void RegisterLayoutFilter(Func<XRDeviceDescriptor, string> layoutChecker)
-        {
-            availableLayouts.Add(layoutChecker);
-        }
-
         static string SanitizeLayoutName(string layoutName)
         {
             int stringLength = layoutName.Length;
-            StringBuilder sanitizedLayoutName = new StringBuilder(stringLength);
+            var sanitizedLayoutName = new StringBuilder(stringLength);
             for (int i = 0; i < stringLength; i++)
             {
                 char letter = layoutName[i];
-                if (Char.IsUpper(letter) || Char.IsLower(letter) || Char.IsDigit(letter) || letter == ':')
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == ':')
                 {
                     sanitizedLayoutName.Append(letter);
                 }
@@ -61,12 +55,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
-            // If the system found a matching layout, there's nothing for us to do.
-            if (!string.IsNullOrEmpty(matchedLayout))
-            {
-                return null;
-            }
-
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.kXRInterface)
             {
@@ -91,63 +79,61 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 return null;
             }
 
-            for (int i = 0; i < availableLayouts.Count; i++)
+            if (deviceDescriptor == null)
             {
-                string layoutMatch = availableLayouts[i](deviceDescriptor);
-                if (layoutMatch != null)
-                {
-                    return layoutMatch;
-                }
+                return null;
             }
 
-            string layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
-            XRLayoutBuilder layout = new XRLayoutBuilder { descriptor = deviceDescriptor };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, null, description);
+            if (string.IsNullOrEmpty(matchedLayout))
+            {
+                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                    matchedLayout = "XRController";
+                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+                    matchedLayout = "XRHMD";
+                else
+                    return null;
+            }
+
+            // We don't want to forward the Capabilities along due to how template fields are Regex compared.
+            var layoutMatchingDescription = description;
+            layoutMatchingDescription.capabilities = null;
+
+            var layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
+            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
 
             return layoutName;
         }
 
         public InputControlLayout Build()
         {
-            Type deviceType = null;
-            switch (descriptor.deviceRole)
-            {
-                case EDeviceRole.LeftHanded:
-                case EDeviceRole.RightHanded:
-                {
-                    deviceType = typeof(XRController);
-                }
-                break;
-                default:
-                {
-                    deviceType = typeof(XRHMD);
-                }
-                break;
-            }
-
             var builder = new InputControlLayout.Builder
             {
-                type = deviceType,
                 stateFormat = new FourCC('X', 'R', 'S', '0'),
+                extendsLayout = parentLayout,
                 updateBeforeRender = true
             };
 
-            List<string> currentUsages = new List<string>();
+            var currentUsages = new List<string>();
 
             uint currentOffset = 0;
             foreach (var feature in descriptor.inputFeatures)
             {
                 currentUsages.Clear();
-                foreach (var usageHint in feature.usageHints)
+
+                if (feature.usageHints != null)
                 {
-                    if (usageHint.content != null && usageHint.content.Length > 0)
-                        currentUsages.Add(usageHint.content);
+                    foreach (var usageHint in feature.usageHints)
+                    {
+                        if (string.IsNullOrEmpty(usageHint.content))
+                            currentUsages.Add(usageHint.content);
+                    }
                 }
 
-                uint nextOffset = GetOffsetForFeatureType(feature);
+                uint nextOffset = GetSizeOfFeature(feature);
                 switch (feature.featureType)
                 {
-                    case EFeatureType.Binary:
+                    case FeatureType.Binary:
                     {
                         builder.AddControl(feature.name)
                         .WithLayout("Button")
@@ -156,7 +142,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.DiscreteStates:
+                    case FeatureType.DiscreteStates:
                     {
                         builder.AddControl(feature.name)
                         .WithLayout("Integer")
@@ -165,7 +151,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Axis1D:
+                    case FeatureType.Axis1D:
                     {
                         builder.AddControl(feature.name)
                         .WithLayout("Analog")
@@ -174,7 +160,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Axis2D:
+                    case FeatureType.Axis2D:
                     {
                         builder.AddControl(feature.name)
                         .WithLayout("Vector2")
@@ -183,7 +169,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Axis3D:
+                    case FeatureType.Axis3D:
                     {
                         builder.AddControl(feature.name)
                         .WithLayout("Vector3")
@@ -192,7 +178,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         .WithUsages(currentUsages);
                         break;
                     }
-                    case EFeatureType.Rotation:
+                    case FeatureType.Rotation:
                     {
                         builder.AddControl(feature.name)
                         .WithLayout("Quaternion")

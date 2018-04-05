@@ -15,6 +15,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.Plugins.XR;
 using Touch = UnityEngine.Experimental.Input.Touch;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 #if UNITY_EDITOR
