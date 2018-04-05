@@ -62,7 +62,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     {
         public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
 
-        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "androidacceleration")]
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "androidacceleration", variant = "Accelerometer")]
         public fixed float data[16];
 
         public FourCC GetFormat()
@@ -89,109 +89,109 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Accelerometer")]
     public class AndroidAccelerometer : Accelerometer
     {
     }
 
     ////FIXME: Setup InputControls for sensors below
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticField")]
     public class AndroidMagneticField : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Orientation")]
     public class AndroidOrientation : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gyroscope")]
     public class AndroidGyroscope : Gyroscope
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Light")]
     public class AndroidLight : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Pressure")]
     public class AndroidPressure : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Proximity")]
     public class AndroidProximity : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Temperature")]
     public class AndroidTemperature : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gravity")]
     public class AndroidGravity : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "LinearAcceleration")]
     public class AndroidLinearAcceleration : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "RotationVector")]
     public class AndroidRotationVector : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "RelativeHumidity")]
     public class AndroidRelativeHumidity : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "AmbientTemperature")]
     public class AndroidAmbientTemperature : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticFieldUncalibrated")]
     public class AndroidMagneticFieldUncalibrated : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GameRotationVector")]
     public class AndroidGameRotationVector : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GyroscopeUncalibrated")]
     public class AndroidGyroscopeUncalibrated : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "SignificantMotion")]
     public class AndroidSignificantMotion : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "StepDetector")]
     public class AndroidStepDetector : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "StepCounter")]
     public class AndroidStepCounter : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GeomagneticRotationVector")]
     public class AndroidGeomagneticRotationVector : Sensor
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState))]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "HeartRate")]
     public class AndroidHeartRate : Sensor
     {
     }
