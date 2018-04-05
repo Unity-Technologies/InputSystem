@@ -6,19 +6,51 @@ using NUnit.Framework;
 
 class AndroidTests : InputTestFixture
 {
+    private InputDeviceDescription GetGamepadDeviceDescriptor(AndroidAxis[] supportedMotionAxes = null)
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                motionAxes = supportedMotionAxes
+            }.ToJson()
+        };
+    }
+
+    private InputDeviceDescription GetJoystickDeviceDescriptor()
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Joystick
+            }.ToJson()
+        };
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CorrectControllerTypeIsCreated()
+    {
+        var gamepad = InputSystem.AddDevice(GetGamepadDeviceDescriptor());
+        var joystick = InputSystem.AddDevice(GetJoystickDeviceDescriptor());
+        Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
+        Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad()
     {
-        var device = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController"     ////TODO: have backend report this as just "Gamepad" or "Controller"
-        });
+        var device = InputSystem.AddDevice(GetGamepadDeviceDescriptor());
 
-        Assert.That(device, Is.TypeOf<AndroidGameController>());
-        var controller = (AndroidGameController)device;
+        Assert.That(device, Is.TypeOf<AndroidGamepad>());
+        var controller = (AndroidGamepad)device;
 
         InputSystem.QueueStateEvent(controller,
             new AndroidGameControllerState()
@@ -54,22 +86,13 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad_WithAxisDpad()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice(
-                new InputDeviceDescription
+        var gamepad = (Gamepad)InputSystem.AddDevice(GetGamepadDeviceDescriptor(new[]
         {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                motionAxes = new[]
-                {
-                    AndroidAxis.Generic1, // Noise
-                    AndroidAxis.HatX,
-                    AndroidAxis.Generic2, // Noise
-                    AndroidAxis.HatY
-                }
-            }.ToJson()
-        });
+            AndroidAxis.Generic1, // Noise
+            AndroidAxis.HatX,
+            AndroidAxis.Generic2, // Noise
+            AndroidAxis.HatY
+        }));
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
@@ -98,20 +121,10 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad_WithButtonDpad()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                motionAxes = new[]
-                {
-                    AndroidAxis.Generic1, // Noise
-                    AndroidAxis.Generic2, // Noise
-                }
-            }.ToJson()
-        });
+        var gamepad = (Gamepad)InputSystem.AddDevice(GetGamepadDeviceDescriptor(new[] {
+            AndroidAxis.Generic1, // Noise
+            AndroidAxis.Generic2, // Noise
+        }));
 
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadDown), gamepad.dpad.down);
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadUp), gamepad.dpad.up);
