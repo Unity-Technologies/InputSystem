@@ -1097,21 +1097,54 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_SettingLayoutVariantOnType_WillComeThroughWhenMergedIntoOtherLayout()
+    public void Layouts_SettingVariantOnLayout_MergesAwayNonMatchingControlInformationFromBaseLayouts()
     {
-        const string json = @"
+        const string jsonBase = @"
             {
-                ""name"" : ""TestLayout"",
-                ""extend"" : ""DeviceWithLayoutVariantA""
+                ""name"" : ""BaseLayout"",
+                ""extend"" : ""DeviceWithLayoutVariantA"",
+                ""controls"" : [
+                    { ""name"" : ""ControlFromBase"", ""layout"" : ""Button"" },
+                    { ""name"" : ""OtherControlFromBase"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""ControlWithExplicitDefaultVariant"", ""layout"" : ""Axis"", ""variant"" : ""default"" }
+                ]
+            }
+        ";
+        const string jsonDerived = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""ControlFromBase"", ""variant"" : ""A"", ""offset"" : 20 }
+                ]
             }
         ";
 
         InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterControlLayout(jsonBase);
+        InputSystem.RegisterControlLayout(jsonDerived);
 
-        var layout = InputSystem.TryLoadLayout("TestLayout");
+        var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
+        // The variant setting here is coming all the way from the base layout so itself already has
+        // to come through properly in the merge.
         Assert.That(layout.variant, Is.EqualTo(new InternedString("A")));
+
+        // Not just the variant setting itself should come through but it also should affect the
+        // merging of control items. `ControlFromBase` has a layout set on it which should get picked
+        // up by the variant defined for it in `DerivedLayout`. Also, controls that don't have the right
+        // variant should have been removed.
+        Assert.That(layout.controls.Count, Is.EqualTo(4));
+        Assert.That(layout.controls, Has.None.Matches<InputControlLayout.ControlItem>(
+                x => x.name == new InternedString("axis"))); // Axis control should have disappeared.
+        Assert.That(layout.controls, Has.Exactly(1).Matches<InputControlLayout.ControlItem>(
+                x => x.name == new InternedString("OtherControlFromBase"))); // But this one targeting no specific variant should be included.
+        Assert.That(layout.controls, Has.Exactly(1)
+            .Matches<InputControlLayout.ControlItem>(x =>
+                x.name == new InternedString("ControlFromBase") && x.layout == new InternedString("Button") && x.offset == 20 && x.variant == new InternedString("A")));
+        Assert.That(layout.controls, Has.Exactly(1)
+            .Matches<InputControlLayout.ControlItem>(x =>
+                x.name == new InternedString("ControlWithExplicitDefaultVariant")));
     }
 
     [Test]

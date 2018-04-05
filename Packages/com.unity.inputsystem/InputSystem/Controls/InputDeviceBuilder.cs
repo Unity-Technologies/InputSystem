@@ -303,7 +303,7 @@ namespace UnityEngine.Experimental.Input
                 variant = layout.variant;
 
                 if (variant.IsEmpty())
-                    variant = InputControl.DefaultVariant;
+                    variant = InputControlLayout.DefaultVariant;
             }
 
             control.m_Name = name;
