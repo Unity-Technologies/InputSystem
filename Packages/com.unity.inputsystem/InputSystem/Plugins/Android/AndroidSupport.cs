@@ -10,16 +10,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     {
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<AndroidGamepad>(
+            InputSystem.RegisterControlLayout<AndroidGamepad>(
                 deviceDescription: new InputDeviceDescription
                 {
                     interfaceName = "Android",
                     deviceClass = "AndroidGameController"
                 });
 
-            InputSystem.RegisterTemplate<AndroidJoystick>("AndroidJoystick");
+            InputSystem.RegisterControlLayout<AndroidJoystick>("AndroidJoystick");
 
-            InputSystem.RegisterTemplate(@"
+            InputSystem.RegisterControlLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
     ""extend"" : ""AndroidGamepad"",
@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     ]
 }
             ");
-            InputSystem.RegisterTemplate(@"
+            InputSystem.RegisterControlLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadButtons"",
     ""extend"" : ""AndroidGamepad"",
@@ -49,32 +49,32 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             InputSystem.RegisterProcessor<AndroidAccelerationProcessor>();
 
             // Add sensors
-            InputSystem.RegisterTemplate<AndroidAccelerometer>();
-            InputSystem.RegisterTemplate<AndroidMagneticField>();
-            InputSystem.RegisterTemplate<AndroidOrientation>();
-            InputSystem.RegisterTemplate<AndroidGyroscope>();
-            InputSystem.RegisterTemplate<AndroidLight>();
-            InputSystem.RegisterTemplate<AndroidPressure>();
-            InputSystem.RegisterTemplate<AndroidProximity>();
-            InputSystem.RegisterTemplate<AndroidTemperature>();
-            InputSystem.RegisterTemplate<AndroidGravity>();
-            InputSystem.RegisterTemplate<AndroidLinearAcceleration>();
-            InputSystem.RegisterTemplate<AndroidRotationVector>();
-            InputSystem.RegisterTemplate<AndroidRelativeHumidity>();
-            InputSystem.RegisterTemplate<AndroidAmbientTemperature>();
-            InputSystem.RegisterTemplate<AndroidMagneticFieldUncalibrated>();
-            InputSystem.RegisterTemplate<AndroidGameRotationVector>();
-            InputSystem.RegisterTemplate<AndroidGyroscopeUncalibrated>();
-            InputSystem.RegisterTemplate<AndroidSignificantMotion>();
-            InputSystem.RegisterTemplate<AndroidStepDetector>();
-            InputSystem.RegisterTemplate<AndroidStepCounter>();
-            InputSystem.RegisterTemplate<AndroidGeomagneticRotationVector>();
-            InputSystem.RegisterTemplate<AndroidHeartRate>();
+            InputSystem.RegisterControlLayout<AndroidAccelerometer>();
+            InputSystem.RegisterControlLayout<AndroidMagneticField>();
+            InputSystem.RegisterControlLayout<AndroidOrientation>();
+            InputSystem.RegisterControlLayout<AndroidGyroscope>();
+            InputSystem.RegisterControlLayout<AndroidLight>();
+            InputSystem.RegisterControlLayout<AndroidPressure>();
+            InputSystem.RegisterControlLayout<AndroidProximity>();
+            InputSystem.RegisterControlLayout<AndroidTemperature>();
+            InputSystem.RegisterControlLayout<AndroidGravity>();
+            InputSystem.RegisterControlLayout<AndroidLinearAcceleration>();
+            InputSystem.RegisterControlLayout<AndroidRotationVector>();
+            InputSystem.RegisterControlLayout<AndroidRelativeHumidity>();
+            InputSystem.RegisterControlLayout<AndroidAmbientTemperature>();
+            InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>();
+            InputSystem.RegisterControlLayout<AndroidGameRotationVector>();
+            InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>();
+            InputSystem.RegisterControlLayout<AndroidSignificantMotion>();
+            InputSystem.RegisterControlLayout<AndroidStepDetector>();
+            InputSystem.RegisterControlLayout<AndroidStepCounter>();
+            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>();
+            InputSystem.RegisterControlLayout<AndroidHeartRate>();
 
-            InputSystem.onFindTemplateForDevice += OnFindTemplateForDevice;
+            InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
         }
 
-        internal static string OnFindTemplateForDevice(int deviceId, ref InputDeviceDescription description,
+        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description,
             string matchedTemplate, IInputRuntime runtime)
         {
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
