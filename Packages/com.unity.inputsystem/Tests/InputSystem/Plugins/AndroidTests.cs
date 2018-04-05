@@ -6,16 +6,47 @@ using NUnit.Framework;
 
 class AndroidTests : InputTestFixture
 {
+    private InputDeviceDescription GetGamepadDeviceDescriptor()
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick
+            }.ToJson()
+        };
+    }
+
+    private InputDeviceDescription GetJoystickDeviceDescriptor()
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",     
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Joystick
+            }.ToJson()
+        };
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CorrectControllerTypeIsCreated()
+    {
+        var gamepad = InputSystem.AddDevice(GetGamepadDeviceDescriptor());
+        var joystick = InputSystem.AddDevice(GetJoystickDeviceDescriptor());
+        Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
+        Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad()
     {
-        var device = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController"     ////TODO: have backend report this as just "Gamepad" or "Controller"
-        });
+        var device = InputSystem.AddDevice(GetGamepadDeviceDescriptor());
 
         Assert.That(device, Is.TypeOf<AndroidGamepad>());
         var controller = (AndroidGamepad)device;
