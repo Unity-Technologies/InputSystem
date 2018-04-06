@@ -353,35 +353,25 @@ namespace UnityEngine.Experimental.Input.Editor
                 var devices = AddChild(parent, "Devices", ref id);
                 var products = AddChild(parent, "Products", ref id);
 
-                foreach (var layout in EditorInputControlLayoutCache.allLayouts)
+                foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
+                    AddControlLayoutItem(layout, controls, ref id);
+                foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
+                    AddControlLayoutItem(layout, devices, ref id);
+                foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
                 {
-                    TreeViewItem parentForLayout;
-                    if (layout.isDeviceLayout)
-                    {
-                        ////REVIEW: should this split by base device layouts derived device layouts instead?
-                        if (!layout.deviceDescription.empty)
-                        {
-                            var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
-                            if (string.IsNullOrEmpty(rootBaseLayoutName))
-                                rootBaseLayoutName = "Other";
-                            else
-                                rootBaseLayoutName += "s";
-
-                            var group = products.children != null
-                                ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
-                                : null;
-                            if (group == null)
-                                group = AddChild(products, rootBaseLayoutName, ref id);
-
-                            parentForLayout = group;
-                        }
-                        else
-                            parentForLayout = devices;
-                    }
+                    var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
+                    if (string.IsNullOrEmpty(rootBaseLayoutName))
+                        rootBaseLayoutName = "Other";
                     else
-                        parentForLayout = controls;
+                        rootBaseLayoutName += "s";
 
-                    AddControlLayoutItem(layout, parentForLayout, ref id);
+                    var group = products.children != null
+                        ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
+                        : null;
+                    if (group == null)
+                        group = AddChild(products, rootBaseLayoutName, ref id);
+
+                    AddControlLayoutItem(layout, group, ref id);
                 }
 
                 if (controls.children != null)
@@ -389,7 +379,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (devices.children != null)
                     devices.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 if (products.children != null)
+                {
                     products.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                    foreach (var productGroup in products.children)
+                        productGroup.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
             }
 
             private TreeViewItem AddControlLayoutItem(InputControlLayout layout, TreeViewItem parent, ref int id)
