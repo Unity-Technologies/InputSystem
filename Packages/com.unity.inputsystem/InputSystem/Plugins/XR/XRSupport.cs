@@ -105,6 +105,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 manufacturer = "Oculus",
                 interfaceName = XRUtilities.kXRInterface
             });
+            InputSystem.RegisterControlLayout<OculusTrackingReference>(deviceDescription: new InputDeviceDescription
+            {
+                product = "^(Tracking Reference)",
+                manufacturer = "Oculus",
+                interfaceName = XRUtilities.kXRInterface
+            });
+
 
             InputSystem.RegisterControlLayout<GearVRHMD>(deviceDescription: new InputDeviceDescription
             {
@@ -139,6 +146,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterControlLayout<ViveWand>(deviceDescription: new InputDeviceDescription
             {
                 product = @"^(OpenVR Controller\(Vive Controller)",
+                manufacturer = "HTC",
+                interfaceName = XRUtilities.kXRInterface
+            });
+            InputSystem.RegisterControlLayout<ViveLighthouse>(deviceDescription: new InputDeviceDescription
+            {
+                product = @"^(HTC V2-XD/XE)",
                 manufacturer = "HTC",
                 interfaceName = XRUtilities.kXRInterface
             });
