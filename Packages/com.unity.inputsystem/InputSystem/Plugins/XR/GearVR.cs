@@ -2,7 +2,7 @@ using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputControlLayout()]
+    [InputControlLayout]
     public class GearVRHMD : XRHMD
     {
         public Vector2Control touchpad { get; private set; }

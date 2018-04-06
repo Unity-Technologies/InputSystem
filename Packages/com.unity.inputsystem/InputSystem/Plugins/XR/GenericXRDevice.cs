@@ -76,7 +76,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     public class XRControllerWithRumble : XRController, IHaptics
     {
         SimpleXRRumble m_Rumble;
-        public SimpleXRRumble rumble { get { return m_Rumble; } }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -87,6 +86,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public void SetIntensity(float intensity)
         {
             m_Rumble.intensity = intensity;
+        }
+
+        public bool IsHapticsPaused
+        {
+            get
+            {
+                return m_Rumble.isPaused;
+            }
         }
 
         public void PauseHaptics()

@@ -3,7 +3,7 @@ using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputControlLayout()]
+    [InputControlLayout]
     public class ViveHMD : XRHMD
     {
         public IntegerControl trackingState { get; private set; }
