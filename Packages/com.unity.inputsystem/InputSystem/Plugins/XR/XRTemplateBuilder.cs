@@ -38,19 +38,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return 0;
         }
 
-        static string SanitizeLayoutName(string layoutName)
+        static string SanitizeName(string originalName)
         {
-            int stringLength = layoutName.Length;
-            var sanitizedLayoutName = new StringBuilder(stringLength);
+            int stringLength = originalName.Length;
+            var sanitizedName = new StringBuilder(stringLength);
             for (int i = 0; i < stringLength; i++)
             {
-                char letter = layoutName[i];
+                char letter = originalName[i];
                 if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == ':')
                 {
-                    sanitizedLayoutName.Append(letter);
+                    sanitizedName.Append(letter);
                 }
             }
-            return sanitizedLayoutName.ToString();
+            return sanitizedName.ToString();
         }
 
         internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
@@ -98,7 +98,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             var layoutMatchingDescription = description;
             layoutMatchingDescription.capabilities = null;
 
-            var layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
+            var layoutName = SanitizeName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
 
@@ -130,12 +130,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                 }
 
+                string featureName = SanitizeName(feature.name);
                 uint nextOffset = GetSizeOfFeature(feature);
                 switch (feature.featureType)
                 {
                     case FeatureType.Binary:
                     {
-                        builder.AddControl(feature.name)
+                        builder.AddControl(featureName)
                         .WithLayout("Button")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeBit)
@@ -144,7 +145,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                     case FeatureType.DiscreteStates:
                     {
-                        builder.AddControl(feature.name)
+                        builder.AddControl(featureName)
                         .WithLayout("Integer")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeInt)
@@ -153,7 +154,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                     case FeatureType.Axis1D:
                     {
-                        builder.AddControl(feature.name)
+                        builder.AddControl(featureName)
                         .WithLayout("Analog")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeFloat)
@@ -162,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                     case FeatureType.Axis2D:
                     {
-                        builder.AddControl(feature.name)
+                        builder.AddControl(featureName)
                         .WithLayout("Vector2")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeVector2)
@@ -171,7 +172,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                     case FeatureType.Axis3D:
                     {
-                        builder.AddControl(feature.name)
+                        builder.AddControl(featureName)
                         .WithLayout("Vector3")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeVector3)
@@ -180,7 +181,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                     case FeatureType.Rotation:
                     {
-                        builder.AddControl(feature.name)
+                        builder.AddControl(featureName)
                         .WithLayout("Quaternion")
                         .WithOffset(currentOffset)
                         .WithFormat(InputStateBlock.kTypeQuaternion)
