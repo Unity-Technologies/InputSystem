@@ -55,9 +55,6 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Cannot modify control setup of existing device {0} while added to system.",
                         existingDevice));
 
-            if (variant.IsEmpty())
-                variant = new InternedString("Default");
-
             InstantiateLayout(layout, variant, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
@@ -65,9 +62,6 @@ namespace UnityEngine.Experimental.Input
 
         internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variant)
         {
-            if (variant.IsEmpty())
-                variant = new InternedString("Default");
-
             InstantiateLayout(layout, variant, new InternedString(), null, null);
             FinalizeControlHierarchy();
 
@@ -301,6 +295,15 @@ namespace UnityEngine.Experimental.Input
                 var indexOfLastColon = name.ToString().LastIndexOf(':');
                 if (indexOfLastColon != -1)
                     name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
+            }
+
+            // Variant defaults to variant of layout.
+            if (variant.IsEmpty())
+            {
+                variant = layout.variant;
+
+                if (variant.IsEmpty())
+                    variant = InputControlLayout.DefaultVariant;
             }
 
             control.m_Name = name;

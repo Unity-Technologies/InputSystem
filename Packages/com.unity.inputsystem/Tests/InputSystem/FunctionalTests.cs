@@ -1048,6 +1048,105 @@ class FunctionalTests : InputTestFixture
         Assert.Fail();
     }
 
+    struct StateWithTwoLayoutVariants : IInputStateTypeInfo
+    {
+        [InputControl(name = "button", layout = "Button", variant = "A")]
+        public int buttons;
+        [InputControl(name = "axis", layout = "Axis", variant = "B")]
+        public float axis;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(variant = "A", stateType = typeof(StateWithTwoLayoutVariants))]
+    class DeviceWithLayoutVariantA : InputDevice
+    {
+    }
+    [InputControlLayout(variant = "B", stateType = typeof(StateWithTwoLayoutVariants))]
+    class DeviceWithLayoutVariantB : InputDevice
+    {
+    }
+
+    // Sometimes you have a single state format that you want to use with multiple
+    // different types of devices that each have a different control setup. For example,
+    // a given state may just be a generic set of axis and button values with the
+    // assignment of axis and button controls depending on which type of device the
+    // state is used with.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSetUpMultipleLayoutsFromSingleState_UsingVariants()
+    {
+        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
+        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantB>();
+
+        var deviceA = InputSystem.AddDevice<DeviceWithLayoutVariantA>();
+        var deviceB = InputSystem.AddDevice<DeviceWithLayoutVariantB>();
+
+        Assert.That(deviceA.allControls.Count, Is.EqualTo(1));
+        Assert.That(deviceB.allControls.Count, Is.EqualTo(1));
+
+        Assert.That(deviceA["button"], Is.TypeOf<ButtonControl>());
+        Assert.That(deviceB["axis"], Is.TypeOf<AxisControl>());
+
+        Assert.That(deviceA["button"].variant, Is.EqualTo("A"));
+        Assert.That(deviceB["axis"].variant, Is.EqualTo("B"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_SettingVariantOnLayout_MergesAwayNonMatchingControlInformationFromBaseLayouts()
+    {
+        const string jsonBase = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""extend"" : ""DeviceWithLayoutVariantA"",
+                ""controls"" : [
+                    { ""name"" : ""ControlFromBase"", ""layout"" : ""Button"" },
+                    { ""name"" : ""OtherControlFromBase"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""ControlWithExplicitDefaultVariant"", ""layout"" : ""Axis"", ""variant"" : ""default"" }
+                ]
+            }
+        ";
+        const string jsonDerived = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    { ""name"" : ""ControlFromBase"", ""variant"" : ""A"", ""offset"" : 20 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout<DeviceWithLayoutVariantA>();
+        InputSystem.RegisterControlLayout(jsonBase);
+        InputSystem.RegisterControlLayout(jsonDerived);
+
+        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+
+        // The variant setting here is coming all the way from the base layout so itself already has
+        // to come through properly in the merge.
+        Assert.That(layout.variant, Is.EqualTo(new InternedString("A")));
+
+        // Not just the variant setting itself should come through but it also should affect the
+        // merging of control items. `ControlFromBase` has a layout set on it which should get picked
+        // up by the variant defined for it in `DerivedLayout`. Also, controls that don't have the right
+        // variant should have been removed.
+        Assert.That(layout.controls.Count, Is.EqualTo(4));
+        Assert.That(layout.controls, Has.None.Matches<InputControlLayout.ControlItem>(
+                x => x.name == new InternedString("axis"))); // Axis control should have disappeared.
+        Assert.That(layout.controls, Has.Exactly(1).Matches<InputControlLayout.ControlItem>(
+                x => x.name == new InternedString("OtherControlFromBase"))); // But this one targeting no specific variant should be included.
+        Assert.That(layout.controls, Has.Exactly(1)
+            .Matches<InputControlLayout.ControlItem>(x =>
+                x.name == new InternedString("ControlFromBase") && x.layout == new InternedString("Button") && x.offset == 20 && x.variant == new InternedString("A")));
+        Assert.That(layout.controls, Has.Exactly(1)
+            .Matches<InputControlLayout.ControlItem>(x =>
+                x.name == new InternedString("ControlWithExplicitDefaultVariant")));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateDeviceFromLayout()
@@ -2014,7 +2113,7 @@ class FunctionalTests : InputTestFixture
     // should add the base offset of the field itself.
     [Test]
     [Category("State")]
-    public void TODO_State_SpecifyingOffsetOnControlProperty_AddsBaseOffset()
+    public void TODO_State_SpecifyingOffsetOnControlAttribute_AddsBaseOffset()
     {
         Assert.Fail();
     }
@@ -2726,7 +2825,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ThatHaveNoMatchingLayout_AreDisabled()
+    public void Devices_ThatHaveNoKnownLayout_AreDisabled()
     {
         var deviceId = testRuntime.AllocateDeviceId();
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
@@ -2757,7 +2856,7 @@ class FunctionalTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_ThatHadNoMatchingLayout_AreReEnabled_WhenLayoutBecomesAvailable()
+    public void Devices_ThatHadNoKnownLayout_AreReEnabled_WhenLayoutBecomesKnown()
     {
         var deviceId = testRuntime.AllocateDeviceId();
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
@@ -2785,6 +2884,66 @@ class FunctionalTests : InputTestFixture
 
         Assert.That(wasEnabled.HasValue);
         Assert.That(wasEnabled.Value, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_QueryTheirEnabledStateFromRuntime()
+    {
+        var deviceId = testRuntime.AllocateDeviceId();
+
+        var queryEnabledStateResult = false;
+        bool? receivedQueryEnabledStateCommand = null;
+        testRuntime.SetDeviceCommandCallback(deviceId,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QueryEnabledStateCommand.Type)
+                    {
+                        Assert.That(receivedQueryEnabledStateCommand, Is.Null);
+                        receivedQueryEnabledStateCommand = true;
+                        ((QueryEnabledStateCommand*)commandPtr)->isEnabled = queryEnabledStateResult;
+                        return InputDeviceCommand.kGenericSuccess;
+                    }
+                }
+
+                Assert.Fail("Should not get other IOCTLs");
+                return InputDeviceCommand.kGenericFailure;
+            });
+
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Mouse"}.ToJson(), deviceId);
+        InputSystem.Update();
+        var device = InputSystem.devices.First(x => x.id == deviceId);
+
+        var isEnabled = device.enabled;
+
+        Assert.That(isEnabled, Is.False);
+        Assert.That(receivedQueryEnabledStateCommand, Is.Not.Null);
+        Assert.That(receivedQueryEnabledStateCommand.Value, Is.True);
+
+        receivedQueryEnabledStateCommand = null;
+        queryEnabledStateResult = true;
+
+        // A configuration change event should cause the cached state to become invalid
+        // and thus cause InputDevice.enabled to issue another IOCTL.
+        InputSystem.QueueConfigChangeEvent(device);
+        InputSystem.Update();
+
+        isEnabled = device.enabled;
+
+        Assert.That(isEnabled, Is.True);
+        Assert.That(receivedQueryEnabledStateCommand, Is.Not.Null);
+        Assert.That(receivedQueryEnabledStateCommand.Value, Is.True);
+
+        // Make sure that querying the state *again* does not lead to another IOCTL.
+
+        receivedQueryEnabledStateCommand = null;
+
+        isEnabled = device.enabled;
+
+        Assert.That(isEnabled, Is.True);
+        Assert.That(receivedQueryEnabledStateCommand, Is.Null);
     }
 
     [Test]

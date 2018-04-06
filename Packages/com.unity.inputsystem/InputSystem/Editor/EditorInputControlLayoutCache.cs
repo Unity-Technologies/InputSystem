@@ -42,37 +42,33 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        /// <summary>
-        /// Iterate over all device layouts that do not extend other layouts.
-        /// </summary>
-        public static IEnumerable<InputControlLayout> allBaseDeviceLayouts
+        public static IEnumerable<InputControlLayout> allControlLayouts
         {
             get
             {
-                foreach (var layout in allLayouts)
-                    if (string.IsNullOrEmpty(layout.extendsLayout) &&
-                        typeof(InputDevice).IsAssignableFrom(layout.type))
-                        yield return layout;
+                Refresh();
+                foreach (var name in s_ControlLayouts)
+                    yield return s_Cache.FindOrLoadLayout(name.ToString());
             }
         }
 
-        /// <summary>
-        /// Iterate over all device layouts that don't try to match specific products.
-        /// </summary>
-        public static IEnumerable<InputControlLayout> allNonProductLayouts
+        public static IEnumerable<InputControlLayout> allDeviceLayouts
         {
             get
             {
-                foreach (var layout in allLayouts)
-                {
-                    if (!typeof(InputDevice).IsAssignableFrom(layout.type))
-                        continue;
+                Refresh();
+                foreach (var name in s_DeviceLayouts)
+                    yield return s_Cache.FindOrLoadLayout(name.ToString());
+            }
+        }
 
-                    var deviceDescription = layout.deviceDescription;
-                    if (string.IsNullOrEmpty(deviceDescription.product) &&
-                        string.IsNullOrEmpty(deviceDescription.manufacturer))
-                        yield return layout;
-                }
+        public static IEnumerable<InputControlLayout> allProductLayouts
+        {
+            get
+            {
+                Refresh();
+                foreach (var name in s_ProductLayouts)
+                    yield return s_Cache.FindOrLoadLayout(name.ToString());
             }
         }
 
@@ -105,6 +101,9 @@ namespace UnityEngine.Experimental.Input.Editor
             if (s_Cache.table != null)
                 s_Cache.table.Clear();
             s_Usages.Clear();
+            s_ControlLayouts.Clear();
+            s_DeviceLayouts.Clear();
+            s_ProductLayouts.Clear();
         }
 
         // If our layout data is outdated, rescan all the layouts in the system.
@@ -120,11 +119,44 @@ namespace UnityEngine.Experimental.Input.Editor
             manager.ListControlLayouts(layoutNames);
 
             s_Cache.layouts = manager.m_Layouts;
+
+            // Load and store all layouts.
             for (var i = 0; i < layoutNames.Count; ++i)
             {
                 var layout = s_Cache.FindOrLoadLayout(layoutNames[i]);
                 ScanLayout(layout);
+
+                if (layout.isControlLayout)
+                    s_ControlLayouts.Add(layout.name);
+                else if (!layout.deviceDescription.empty)
+                    s_ProductLayouts.Add(layout.name);
+                else
+                    s_DeviceLayouts.Add(layout.name);
             }
+
+            // Move all device layouts without a device description but derived from
+            // a layout that has one over to the product list.
+            foreach (var name in s_DeviceLayouts)
+            {
+                var layout = s_Cache.FindOrLoadLayout(name);
+
+                for (var baseLayoutName = layout.extendsLayout; baseLayoutName != null;)
+                {
+                    var internedBaseLayoutName = new InternedString(baseLayoutName);
+                    if (s_ProductLayouts.Contains(internedBaseLayoutName))
+                    {
+                        // Defer removing from s_DeviceLayouts to keep iteration stable.
+                        s_ProductLayouts.Add(name);
+                        break;
+                    }
+
+                    var baseLayout = s_Cache.FindOrLoadLayout(baseLayoutName);
+                    baseLayoutName = baseLayout.extendsLayout;
+                }
+            }
+
+            // Remove every product device layout now.
+            s_DeviceLayouts.ExceptWith(s_ProductLayouts);
 
             s_LayoutRegistrationVersion = manager.m_LayoutRegistrationVersion;
 
@@ -136,6 +168,10 @@ namespace UnityEngine.Experimental.Input.Editor
         private static int s_LayoutRegistrationVersion;
         private static InputControlLayout.Cache s_Cache;
         private static List<Action> s_RefreshListeners;
+
+        private static HashSet<InternedString> s_ControlLayouts = new HashSet<InternedString>();
+        private static HashSet<InternedString> s_DeviceLayouts = new HashSet<InternedString>();
+        private static HashSet<InternedString> s_ProductLayouts = new HashSet<InternedString>();
 
         // We keep a map of all unique usages we find in layouts and also
         // retain a list of the layouts they are used with.
