@@ -208,7 +208,7 @@ class AndroidTests : InputTestFixture
             .WithData(0.1f, 0.2f, 0.3f));
 
         InputSystem.Update();
-        
+
         ////TODO: test processing of AndroidAccelerationProcessor
 
         Assert.That(accelerometer.acceleration.x.ReadValue(), Is.EqualTo(0.1).Within(0.000001));

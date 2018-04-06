@@ -826,7 +826,7 @@ namespace UnityEngine.Experimental.Input
             {
                 throw new Exception(
                     string.Format(
-                        "Control '{0}' with layout '{1}' has no size set but has no children to compute size from",
+                        "Control '{0}' with layout '{1}' has no size set and has no children to compute size from",
                         control.path, control.layout));
             }
 

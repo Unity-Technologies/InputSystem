@@ -15,7 +15,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.XR;
 using Touch = UnityEngine.Experimental.Input.Touch;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 #if UNITY_EDITOR
@@ -29,7 +28,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 // These tests rely on the default layout setup present in the code
 // of the system (e.g. they make assumptions about how Gamepad is set up).
-class FunctionalTests : InputTestFixture
+class CoreTests : InputTestFixture
 {
     // The test categories give the feature area associated with the test:
     //
@@ -41,7 +40,6 @@ class FunctionalTests : InputTestFixture
     //     f) Actions
     //     g) Editor
     //     h) Remote
-    //     i) Plugins
 
     [Test]
     [Category("Layouts")]
