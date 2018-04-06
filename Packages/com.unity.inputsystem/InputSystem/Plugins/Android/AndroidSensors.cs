@@ -1,9 +1,6 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -65,15 +62,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "androidacceleration", variant = "Accelerometer")]
         public fixed float data[16];
 
-        public AndroidSensorState WithData(float[] data)
+        public AndroidSensorState WithData(params float[] data)
         {
             fixed(float* dataPtr = this.data)
             {
-                for (int i = 0; i < data.Length && i < 16; i++)
+                for (var i = 0; i < data.Length && i < 16; i++)
                     dataPtr[i] = data[i];
 
                 // Fill the rest with zeroes
-                for (int i = data.Length; i < 16; i++)
+                for (var i = data.Length; i < 16; i++)
                     dataPtr[i] = 0.0f;
             }
 

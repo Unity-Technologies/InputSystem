@@ -205,11 +205,15 @@ class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(accelerometer,
             new AndroidSensorState()
-            .WithData(new[] { 0.1f, 0.2f, 0.3f }));
+            .WithData(0.1f, 0.2f, 0.3f));
 
         InputSystem.Update();
+        
+        ////TODO: test processing of AndroidAccelerationProcessor
 
-        Assert.That(accelerometer.acceleration.ReadValue(), Is.EqualTo(new Vector3(0.1f, 0.2f, 0.3f)).Within(0.000001));
+        Assert.That(accelerometer.acceleration.x.ReadValue(), Is.EqualTo(0.1).Within(0.000001));
+        Assert.That(accelerometer.acceleration.y.ReadValue(), Is.EqualTo(0.2).Within(0.000001));
+        Assert.That(accelerometer.acceleration.z.ReadValue(), Is.EqualTo(0.3).Within(0.000001));
     }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID
