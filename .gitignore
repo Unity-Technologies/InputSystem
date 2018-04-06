@@ -1,5 +1,7 @@
 InitTestScene*
 *.preformat.bak*
+*.orig
+*.orig.meta
 .vs/
 Assets/Plugins/
 Assets/Plugins.meta
