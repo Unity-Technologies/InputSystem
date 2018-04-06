@@ -9,7 +9,7 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
-////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
+////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDiagnostics to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
 ////TODO: add view to tweak InputConfiguration interactively in the editor
@@ -124,21 +124,21 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // Enable/disable debug mode.
-            var debugMode = GUILayout.Toggle(m_DebugMode, Contents.debugModeContent, EditorStyles.toolbarButton);
-            if (debugMode != m_DebugMode)
+            // Enable/disable diagnostics mode.
+            var diagnosticsMode = GUILayout.Toggle(m_DiagnosticsMode, Contents.diagnosticsModeContent, EditorStyles.toolbarButton);
+            if (diagnosticsMode != m_DiagnosticsMode)
             {
-                if (debugMode)
+                if (diagnosticsMode)
                 {
-                    if (m_Debugger == null)
-                        m_Debugger = new InputDebugger();
-                    InputSystem.s_Manager.m_Debugger = m_Debugger;
+                    if (m_Diagnostics == null)
+                        m_Diagnostics = new InputDiagnostics();
+                    InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
                 }
                 else
                 {
-                    InputSystem.s_Manager.m_Debugger = null;
+                    InputSystem.s_Manager.m_Diagnostics = null;
                 }
-                m_DebugMode = debugMode;
+                m_DiagnosticsMode = diagnosticsMode;
             }
 
             InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
@@ -183,10 +183,10 @@ namespace UnityEngine.Experimental.Input.Editor
         }
         */
 
-        [SerializeField] private bool m_DebugMode;
+        [SerializeField] private bool m_DiagnosticsMode;
         [SerializeField] private TreeViewState m_TreeViewState;
 
-        [NonSerialized] private InputDebugger m_Debugger;
+        [NonSerialized] private InputDiagnostics m_Diagnostics;
         [NonSerialized] private InputSystemTreeView m_TreeView;
         [NonSerialized] private bool m_Initialized;
 
@@ -205,7 +205,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static class Contents
         {
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
-            public static GUIContent debugModeContent = new GUIContent("Debug Mode");
+            public static GUIContent diagnosticsModeContent = new GUIContent("Enable Diagnostics");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()

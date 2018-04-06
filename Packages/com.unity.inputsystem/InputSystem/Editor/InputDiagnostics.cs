@@ -3,7 +3,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class InputDebugger : IInputDebugger
+    internal class InputDiagnostics : IInputDiagnostics
     {
         public void OnCannotFindDeviceForEvent(InputEventPtr eventPtr)
         {
@@ -19,6 +19,12 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             Debug.LogError(string.Format("'{0}' input event for device '{1}' has incorrect format (event format: '{2}', device format: '{3}')",
                     eventPtr.type, device, eventPtr.type, device.stateBlock.format));
+        }
+
+        public void OnEventForDisabledDevice(InputEventPtr eventPtr, InputDevice device)
+        {
+            Debug.LogError(string.Format("Device '{1}' received input event '{0}' but the device is disabled",
+                    eventPtr, device));
         }
     }
 }
