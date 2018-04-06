@@ -363,12 +363,12 @@ class HIDTests : InputTestFixture
     // as Rx and Ry. Each of these will be reported as a single byte with a [0..255] range. However, the
     // triggers need to be centered at 0 (i.e. byte 0) and go from [0..1] whereas the left and right stick
     // need to be centered at 0 (i.e. byte 127) and go from [-1..1]. From the data in the HID descriptor this
-    // is impossible to differentiate automatically and a different piece of hardware may well us the same
+    // is impossible to differentiate automatically and a different piece of hardware may well use the same
     // axes in a different way.
     //
     // So we have to make a choice to go one way or the other. Given that the sticks are more important to
     // work out of the box than the triggers, we lean that way and accept the triggers misbehaving (i.e.
-    // ending up being centered when have pressed). This way we can at least make joysticks behave correctly
+    // ending up being centered when half pressed). This way we can at least make joysticks behave correctly
     // out of the box.
     //
     // The only reliable fix for a device is to put a layout in place that provides the missing data
@@ -465,6 +465,37 @@ class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+    }
+
+    // Would be nicer to just call them "HID" but ATM the layout builder mechanism doesn't have
+    // direct control over the naming.
+    [Test]
+    [Category("Devices")]
+    public void Devices_HIDsWithoutProductName_AreNamedByTheirVendorAndProductID()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+            }
+        };
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            capabilities = hidDescriptor.ToJson()
+        }.ToJson());
+        InputSystem.Update();
+
+        var device = (HID)InputSystem.devices.First(x => x is HID);
+        Assert.That(device.name, Is.EqualTo("1234-5678"));
     }
 
     [Test]

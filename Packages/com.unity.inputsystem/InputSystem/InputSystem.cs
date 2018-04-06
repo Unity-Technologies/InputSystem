@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Register a type as a control layout.
+        /// Register a control layout based on a type.
         /// </summary>
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
