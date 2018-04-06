@@ -300,7 +300,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 // Layouts.
-                layoutsItem = AddChild(root, "Control Layouts", ref id);
+                layoutsItem = AddChild(root, "Layouts", ref id);
                 AddControlLayouts(layoutsItem, ref id);
 
                 ////FIXME: this shows local configuration only

@@ -980,9 +980,18 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        // This is the central method for allowing layouts to 'inherit' settings from their
-        // base layout. It will merge the information in `other` into the current layout.
-        internal void MergeLayout(InputControlLayout other)
+        /// <summary>
+        /// Merge the settings from <paramref name="other"/> into the layout such that they become
+        /// the base settings.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <remarks>
+        /// This is the central method for allowing layouts to 'inherit' settings from their
+        /// base layout. It will merge the information in <paramref name="other"/> into the current
+        /// layout such that the existing settings in the current layout acts as if applied on top
+        /// of the settings in the base layout.
+        /// </remarks>
+        public void MergeLayout(InputControlLayout other)
         {
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
@@ -1039,7 +1048,7 @@ namespace UnityEngine.Experimental.Input
                         // baseControlTable below.
                         baseControlTable.Remove(pair.Key);
                     }
-                    ////REVIEw: is this really the most useful behavior?
+                    ////REVIEW: is this really the most useful behavior?
                     // We may be looking at a control that is using variants on the base layout but
                     // isn't targeting a specific variant on the derived layout. In that case, we
                     // want to take each of the variants from the base layout and merge them with
@@ -1083,7 +1092,7 @@ namespace UnityEngine.Experimental.Input
                         if (!isTargetingVariants)
                             controls.Add(pair.Value);
                     }
-                    // Finally, we may be looking at a control that is targeting a specific variant
+                    // We may be looking at a control that is targeting a specific variant
                     // in this layout but not targeting a variant in the base layout. We still want to
                     // merge information from that non-targeted base control.
                     else if (baseControlTable.TryGetValue(pair.Value.name.ToLower(), out baseControlItem))
@@ -1091,6 +1100,14 @@ namespace UnityEngine.Experimental.Input
                         var mergedLayout = pair.Value.Merge(baseControlItem);
                         controls.Add(mergedLayout);
                         baseControlTable.Remove(pair.Value.name.ToLower());
+                    }
+                    // Seems like we can't match it to a control in the base layout. We already know it
+                    // must have a variant setting (because we checked above) so if the variant setting
+                    // doesn't prevent us, just include the control. It's most likely a path-modifying
+                    // control (e.g. "rightStick/x").
+                    else if (pair.Value.variant == m_Variant)
+                    {
+                        controls.Add(pair.Value);
                     }
                 }
 

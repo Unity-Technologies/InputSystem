@@ -15,7 +15,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.XR;
 using Touch = UnityEngine.Experimental.Input.Touch;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 #if UNITY_EDITOR
@@ -29,7 +28,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 // These tests rely on the default layout setup present in the code
 // of the system (e.g. they make assumptions about how Gamepad is set up).
-class FunctionalTests : InputTestFixture
+class CoreTests : InputTestFixture
 {
     // The test categories give the feature area associated with the test:
     //
@@ -41,7 +40,6 @@ class FunctionalTests : InputTestFixture
     //     f) Actions
     //     g) Editor
     //     h) Remote
-    //     i) Plugins
 
     [Test]
     [Category("Layouts")]
@@ -1106,7 +1104,9 @@ class FunctionalTests : InputTestFixture
                 ""controls"" : [
                     { ""name"" : ""ControlFromBase"", ""layout"" : ""Button"" },
                     { ""name"" : ""OtherControlFromBase"", ""layout"" : ""Axis"" },
-                    { ""name"" : ""ControlWithExplicitDefaultVariant"", ""layout"" : ""Axis"", ""variant"" : ""default"" }
+                    { ""name"" : ""ControlWithExplicitDefaultVariant"", ""layout"" : ""Axis"", ""variant"" : ""default"" },
+                    { ""name"" : ""StickControl"", ""layout"" : ""Stick"" },
+                    { ""name"" : ""StickControl/x"", ""offset"" : 14, ""variant"" : ""A"" }
                 ]
             }
         ";
@@ -1134,7 +1134,7 @@ class FunctionalTests : InputTestFixture
         // merging of control items. `ControlFromBase` has a layout set on it which should get picked
         // up by the variant defined for it in `DerivedLayout`. Also, controls that don't have the right
         // variant should have been removed.
-        Assert.That(layout.controls.Count, Is.EqualTo(4));
+        Assert.That(layout.controls.Count, Is.EqualTo(6));
         Assert.That(layout.controls, Has.None.Matches<InputControlLayout.ControlItem>(
                 x => x.name == new InternedString("axis"))); // Axis control should have disappeared.
         Assert.That(layout.controls, Has.Exactly(1).Matches<InputControlLayout.ControlItem>(
@@ -1145,6 +1145,13 @@ class FunctionalTests : InputTestFixture
         Assert.That(layout.controls, Has.Exactly(1)
             .Matches<InputControlLayout.ControlItem>(x =>
                 x.name == new InternedString("ControlWithExplicitDefaultVariant")));
+        // Make sure that the "StickControl/x" item came through along with the stick itself.
+        Assert.That(layout.controls, Has.Exactly(1)
+            .Matches<InputControlLayout.ControlItem>(x =>
+                x.name == new InternedString("StickControl")));
+        Assert.That(layout.controls, Has.Exactly(1)
+            .Matches<InputControlLayout.ControlItem>(x =>
+                x.name == new InternedString("StickControl/x")));
     }
 
     [Test]
