@@ -18,8 +18,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
-        ////REVIEW: is this mapping something that Android *guarantees* for us or do we need per-product layouts
-        ////        to deal with specific gamepads individually?
         [InputControl(name = "buttonSouth", bit = (uint)AndroidKeyCode.ButtonA, variant = kVariantGamepad)]
         [InputControl(name = "buttonWest", bit = (uint)AndroidKeyCode.ButtonX, variant = kVariantGamepad)]
         [InputControl(name = "buttonNorth", bit = (uint)AndroidKeyCode.ButtonY, variant = kVariantGamepad)]
@@ -37,9 +35,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
         [InputControl(name = "leftStick", variant = kVariantGamepad)]
-        [InputControl(name = "rightStick", variant = kVariantGamepad)]
-        [InputControl(name = "rightStick/x", offset = (uint)AndroidAxis.Z * sizeof(float), variant = kVariantGamepad)]
-        [InputControl(name = "rightStick/y", offset = (uint)AndroidAxis.Rz * sizeof(float), variant = kVariantGamepad)]
+        ////FIXME: state for this control is not contiguous
+        [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variant = kVariantGamepad)]
+        [InputControl(name = "rightStick/x", variant = kVariantGamepad)]
+        [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variant = kVariantGamepad)]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()
