@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Principal;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -239,11 +237,25 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             var deviceDescriptionForLayout = description;
             deviceDescriptionForLayout.capabilities = null;
 
-            ////TODO: make sure we don't produce name conflicts on the layout name
+            ////REVIEW: this probably works fine for most products out there but I'm not sure it works reliably for all cases
+            // Come up with a unique template name. HIDs are required to have product and vendor IDs.
+            // We go with the string versions if we have them and with the numeric versions if we don't.
+            string layoutName;
+            if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
+            {
+                layoutName = string.Format("{0}::{1} {2}", kHIDNamespace, description.manufacturer, description.product);
+            }
+            else
+            {
+                // Sanity check to make sure we really have the data we expect.
+                if (hidDeviceDescriptor.vendorId == 0)
+                    return null;
+                layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
+                        hidDeviceDescriptor.productId);
+            }
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
-            var layoutName = string.Format("{0}::{1}", kHIDNamespace, description.product);
             var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
 

@@ -2430,6 +2430,29 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_NameDefaultsToNameOfTemplate_AlsoWhenProductNameIsNotSupplied()
+    {
+        InputSystem.RegisterControlLayout(@"
+            {
+                ""name"" : ""TestTemplate"",
+                ""device"" : { ""interface"" : ""TEST"" },
+                ""controls"" : [
+                    { ""name"" : ""button"", ""layout"" : ""Button"" }
+                ]
+            }
+        ");
+
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "TEST",
+        }.ToJson());
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).With.Property("name").EqualTo("TestTemplate"));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_ChangingConfigurationOfDevice_TriggersNotification()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
