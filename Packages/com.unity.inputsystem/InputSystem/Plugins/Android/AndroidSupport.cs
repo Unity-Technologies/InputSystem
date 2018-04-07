@@ -11,14 +11,18 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         public static void Initialize()
         {
             InputSystem.RegisterControlLayout<AndroidGamepad>(
-
                 deviceDescription: new InputDeviceDescription
             {
                 interfaceName = "Android",
                 deviceClass = "AndroidGameController"
             });
 
-            InputSystem.RegisterControlLayout<AndroidJoystick>("AndroidJoystick");
+            InputSystem.RegisterControlLayout<AndroidJoystick>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidGameController"
+            });
 
             InputSystem.RegisterControlLayout(@"
 {
@@ -50,27 +54,132 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             InputSystem.RegisterProcessor<AndroidAccelerationProcessor>();
 
             // Add sensors
-            InputSystem.RegisterControlLayout<AndroidAccelerometer>();
-            InputSystem.RegisterControlLayout<AndroidMagneticField>();
-            InputSystem.RegisterControlLayout<AndroidOrientation>();
-            InputSystem.RegisterControlLayout<AndroidGyroscope>();
-            InputSystem.RegisterControlLayout<AndroidLight>();
-            InputSystem.RegisterControlLayout<AndroidPressure>();
-            InputSystem.RegisterControlLayout<AndroidProximity>();
-            InputSystem.RegisterControlLayout<AndroidTemperature>();
-            InputSystem.RegisterControlLayout<AndroidGravity>();
-            InputSystem.RegisterControlLayout<AndroidLinearAcceleration>();
-            InputSystem.RegisterControlLayout<AndroidRotationVector>();
-            InputSystem.RegisterControlLayout<AndroidRelativeHumidity>();
-            InputSystem.RegisterControlLayout<AndroidAmbientTemperature>();
-            InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>();
-            InputSystem.RegisterControlLayout<AndroidGameRotationVector>();
-            InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>();
-            InputSystem.RegisterControlLayout<AndroidSignificantMotion>();
-            InputSystem.RegisterControlLayout<AndroidStepDetector>();
-            InputSystem.RegisterControlLayout<AndroidStepCounter>();
-            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>();
-            InputSystem.RegisterControlLayout<AndroidHeartRate>();
+            InputSystem.RegisterControlLayout<AndroidAccelerometer>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidMagneticField>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidOrientation>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidGyroscope>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidLight>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidPressure>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidProximity>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidTemperature>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidGravity>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidLinearAcceleration>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidRotationVector>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidRelativeHumidity>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidAmbientTemperature>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidGameRotationVector>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidSignificantMotion>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidStepDetector>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidStepCounter>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
+            InputSystem.RegisterControlLayout<AndroidHeartRate>(
+                deviceDescription: new InputDeviceDescription
+            {
+                interfaceName = "Android",
+                deviceClass = "AndroidSensor"
+            });
 
             InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
         }
@@ -81,6 +190,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
                 return null;
 
+            ////TODO: these should just be Controller and Sensor; the interface is already Android
+            ////TODO: we want the ability to just match on capabilities in a good way without having to do it manually in code
             switch (description.deviceClass)
             {
                 case "AndroidGameController":
