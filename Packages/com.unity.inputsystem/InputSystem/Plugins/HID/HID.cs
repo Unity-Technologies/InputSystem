@@ -617,6 +617,9 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                                 return null;
                             var min = minFloat;
                             var max = maxFloat;
+                            // Do nothing if result of floating-point conversion is already normalized.
+                            if (Mathf.Approximately(0f, minFloat) && Mathf.Approximately(0f, maxFloat))
+                                return null;
                             var zero = min + (max - min) / 2.0f;
                             return string.Format("normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min,
                             max, zero);
