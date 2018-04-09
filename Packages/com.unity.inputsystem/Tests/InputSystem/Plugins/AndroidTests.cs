@@ -36,39 +36,10 @@ class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CorrectControllerTypeIsCreated()
+    public void Devices_CanDifferentiateAndroidGamepadFromJoystick()
     {
         var gamepad = InputSystem.AddDevice(GetGamepadDeviceDescriptor());
         var joystick = InputSystem.AddDevice(GetJoystickDeviceDescriptor());
-        Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
-        Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanDifferentiateAndroidGamepadFromJoystick()
-    {
-        var gamepad = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick
-            }.ToJson()
-        });
-
-        var joystick = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "Android",
-            deviceClass = "AndroidGameController",
-            capabilities = new AndroidDeviceCapabilities
-            {
-                inputSources = AndroidInputSource.Joystick
-            }.ToJson()
-        });
 
         Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
         Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
