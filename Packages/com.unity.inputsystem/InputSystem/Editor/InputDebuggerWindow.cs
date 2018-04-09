@@ -9,7 +9,7 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
-////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
+////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDiagnostics to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
 ////TODO: add view to tweak InputConfiguration interactively in the editor
@@ -124,21 +124,21 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // Enable/disable debug mode.
-            var debugMode = GUILayout.Toggle(m_DebugMode, Contents.debugModeContent, EditorStyles.toolbarButton);
-            if (debugMode != m_DebugMode)
+            // Enable/disable diagnostics mode.
+            var diagnosticsMode = GUILayout.Toggle(m_DiagnosticsMode, Contents.diagnosticsModeContent, EditorStyles.toolbarButton);
+            if (diagnosticsMode != m_DiagnosticsMode)
             {
-                if (debugMode)
+                if (diagnosticsMode)
                 {
-                    if (m_Debugger == null)
-                        m_Debugger = new InputDebugger();
-                    InputSystem.s_Manager.m_Debugger = m_Debugger;
+                    if (m_Diagnostics == null)
+                        m_Diagnostics = new InputDiagnostics();
+                    InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
                 }
                 else
                 {
-                    InputSystem.s_Manager.m_Debugger = null;
+                    InputSystem.s_Manager.m_Diagnostics = null;
                 }
-                m_DebugMode = debugMode;
+                m_DiagnosticsMode = diagnosticsMode;
             }
 
             InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
@@ -183,10 +183,10 @@ namespace UnityEngine.Experimental.Input.Editor
         }
         */
 
-        [SerializeField] private bool m_DebugMode;
+        [SerializeField] private bool m_DiagnosticsMode;
         [SerializeField] private TreeViewState m_TreeViewState;
 
-        [NonSerialized] private InputDebugger m_Debugger;
+        [NonSerialized] private InputDiagnostics m_Diagnostics;
         [NonSerialized] private InputSystemTreeView m_TreeView;
         [NonSerialized] private bool m_Initialized;
 
@@ -205,7 +205,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static class Contents
         {
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
-            public static GUIContent debugModeContent = new GUIContent("Debug Mode");
+            public static GUIContent diagnosticsModeContent = new GUIContent("Enable Diagnostics");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -300,7 +300,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 // Layouts.
-                layoutsItem = AddChild(root, "Control Layouts", ref id);
+                layoutsItem = AddChild(root, "Layouts", ref id);
                 AddControlLayouts(layoutsItem, ref id);
 
                 ////FIXME: this shows local configuration only
@@ -353,35 +353,25 @@ namespace UnityEngine.Experimental.Input.Editor
                 var devices = AddChild(parent, "Devices", ref id);
                 var products = AddChild(parent, "Products", ref id);
 
-                foreach (var layout in EditorInputControlLayoutCache.allLayouts)
+                foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
+                    AddControlLayoutItem(layout, controls, ref id);
+                foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
+                    AddControlLayoutItem(layout, devices, ref id);
+                foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
                 {
-                    TreeViewItem parentForLayout;
-                    if (layout.isDeviceLayout)
-                    {
-                        ////REVIEW: should this split by base device layouts derived device layouts instead?
-                        if (!layout.deviceDescription.empty)
-                        {
-                            var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
-                            if (string.IsNullOrEmpty(rootBaseLayoutName))
-                                rootBaseLayoutName = "Other";
-                            else
-                                rootBaseLayoutName += "s";
-
-                            var group = products.children != null
-                                ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
-                                : null;
-                            if (group == null)
-                                group = AddChild(products, rootBaseLayoutName, ref id);
-
-                            parentForLayout = group;
-                        }
-                        else
-                            parentForLayout = devices;
-                    }
+                    var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
+                    if (string.IsNullOrEmpty(rootBaseLayoutName))
+                        rootBaseLayoutName = "Other";
                     else
-                        parentForLayout = controls;
+                        rootBaseLayoutName += "s";
 
-                    AddControlLayoutItem(layout, parentForLayout, ref id);
+                    var group = products.children != null
+                        ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
+                        : null;
+                    if (group == null)
+                        group = AddChild(products, rootBaseLayoutName, ref id);
+
+                    AddControlLayoutItem(layout, group, ref id);
                 }
 
                 if (controls.children != null)
@@ -389,7 +379,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (devices.children != null)
                     devices.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 if (products.children != null)
+                {
                     products.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                    foreach (var productGroup in products.children)
+                        productGroup.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
             }
 
             private TreeViewItem AddControlLayoutItem(InputControlLayout layout, TreeViewItem parent, ref int id)

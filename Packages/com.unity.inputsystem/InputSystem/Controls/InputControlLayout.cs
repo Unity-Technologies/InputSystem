@@ -54,6 +54,12 @@ namespace UnityEngine.Experimental.Input
         // String that is used to separate names from namespaces in layout names.
         public const string kNamespaceQualifier = "::";
 
+        private static InternedString s_DefaultVariant = new InternedString("Default");
+        public static InternedString DefaultVariant
+        {
+            get { return s_DefaultVariant; }
+        }
+
         public enum ParameterType
         {
             Boolean,
@@ -624,7 +630,7 @@ namespace UnityEngine.Experimental.Input
 
         // Add ControlLayouts for every member in the list thas has InputControlAttribute applied to it
         // or has an InputControl-derived value type.
-        private static void AddControlItemsFromMembers(MemberInfo[] members, List<ControlItem> controlLayouts, string layoutName)
+        private static void AddControlItemsFromMembers(MemberInfo[] members, List<ControlItem> controlItems, string layoutName)
         {
             foreach (var member in members)
             {
@@ -639,9 +645,9 @@ namespace UnityEngine.Experimental.Input
                 // interface, dive inside and look. This is useful for composing states of one another.
                 if (valueType != null && valueType.IsValueType && typeof(IInputStateTypeInfo).IsAssignableFrom(valueType))
                 {
-                    var controlCountBefore = controlLayouts.Count;
+                    var controlCountBefore = controlItems.Count;
 
-                    AddControlItems(valueType, controlLayouts, layoutName);
+                    AddControlItems(valueType, controlItems, layoutName);
 
                     // If the current member is a field that is embedding the state structure, add
                     // the field offset to all control layouts that were added from the struct.
@@ -649,14 +655,14 @@ namespace UnityEngine.Experimental.Input
                     if (memberAsField != null)
                     {
                         var fieldOffset = Marshal.OffsetOf(member.DeclaringType, member.Name).ToInt32();
-                        var countrolCountAfter = controlLayouts.Count;
+                        var countrolCountAfter = controlItems.Count;
                         for (var i = controlCountBefore; i < countrolCountAfter; ++i)
                         {
-                            var controlLayout = controlLayouts[i];
-                            if (controlLayouts[i].offset != InputStateBlock.kInvalidOffset)
+                            var controlLayout = controlItems[i];
+                            if (controlItems[i].offset != InputStateBlock.kInvalidOffset)
                             {
                                 controlLayout.offset += (uint)fieldOffset;
-                                controlLayouts[i] = controlLayout;
+                                controlItems[i] = controlLayout;
                             }
                         }
                     }
@@ -673,12 +679,12 @@ namespace UnityEngine.Experimental.Input
                         continue;
                 }
 
-                AddControlItemsFromMember(member, attributes, controlLayouts, layoutName);
+                AddControlItemsFromMember(member, attributes, controlItems, layoutName);
             }
         }
 
         private static void AddControlItemsFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlItem> controlLayouts, string layoutName)
+            InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each ocurrence. However, it can also
@@ -689,16 +695,16 @@ namespace UnityEngine.Experimental.Input
             if (attributes.Length == 0)
             {
                 var controlLayout = CreateControlItemFromMember(member, null, layoutName);
-                ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layoutName);
-                controlLayouts.Add(controlLayout);
+                ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
+                controlItems.Add(controlLayout);
             }
             else
             {
                 foreach (var attribute in attributes)
                 {
                     var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
-                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layoutName);
-                    controlLayouts.Add(controlLayout);
+                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
+                    controlItems.Add(controlLayout);
                 }
             }
         }
@@ -974,10 +980,28 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        internal void MergeLayout(InputControlLayout other)
+        /// <summary>
+        /// Merge the settings from <paramref name="other"/> into the layout such that they become
+        /// the base settings.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <remarks>
+        /// This is the central method for allowing layouts to 'inherit' settings from their
+        /// base layout. It will merge the information in <paramref name="other"/> into the current
+        /// layout such that the existing settings in the current layout acts as if applied on top
+        /// of the settings in the base layout.
+        /// </remarks>
+        public void MergeLayout(InputControlLayout other)
         {
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
+
+            if (m_Variant.IsEmpty())
+                m_Variant = other.m_Variant;
+
+            // If the layout has a variant set on it, we want to merge away information coming
+            // from 'other' than isn't relevant to that variant.
+            var layoutIsTargetingSpecificVariant = !m_Variant.IsEmpty();
 
             if (m_StateFormat == new FourCC())
                 m_StateFormat = other.m_StateFormat;
@@ -987,8 +1011,10 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(m_ResourceName))
                 m_ResourceName = other.m_ResourceName;
 
+            // Combine common usages.
             m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
 
+            // Merge controls.
             if (m_Controls == null)
                 m_Controls = other.m_Controls;
             else
@@ -1002,10 +1028,14 @@ namespace UnityEngine.Experimental.Input
                 var controls = new List<ControlItem>();
                 var baseControlVariants = new List<string>();
 
+                ////REVIEW: should setting a variant directly on a layout force that variant to automatically
+                ////        be set on every control item directly defined in that layout?
+
                 var baseControlTable = CreateLookupTableForControls(baseControls, baseControlVariants);
                 var thisControlTable = CreateLookupTableForControls(m_Controls);
 
-                // First go through every control we have in this layout.
+                // First go through every control we have in this layout. Add every control from
+                // `thisControlTable` while removing corresponding control items from `baseControlTable`.
                 foreach (var pair in thisControlTable)
                 {
                     ControlItem baseControlItem;
@@ -1018,36 +1048,83 @@ namespace UnityEngine.Experimental.Input
                         // baseControlTable below.
                         baseControlTable.Remove(pair.Key);
                     }
-                    else
+                    ////REVIEW: is this really the most useful behavior?
+                    // We may be looking at a control that is using variants on the base layout but
+                    // isn't targeting a specific variant on the derived layout. In that case, we
+                    // want to take each of the variants from the base layout and merge them with
+                    // the control layout in the derived layout.
+                    else if (pair.Value.variant.IsEmpty() || pair.Value.variant == DefaultVariant)
                     {
-                        // We may be looking at a control that is using variants on the base layout but
-                        // isn't targeting a specific variant on the derived layout. In that case, we
-                        // want to take each of the variants from the base layout and merge them with
-                        // the control layout in the derived layout.
                         var isTargetingVariants = false;
-                        foreach (var variant in baseControlVariants)
+                        if (layoutIsTargetingSpecificVariant)
                         {
-                            var key = string.Format("{0}@{1}", pair.Key, variant);
-                            if (baseControlTable.TryGetValue(key, out baseControlItem))
+                            // We're only looking for one specific variant so try only that one.
+                            if (baseControlVariants.Contains(m_Variant))
                             {
-                                var mergedLayout = pair.Value.Merge(baseControlItem);
-                                controls.Add(mergedLayout);
-                                baseControlTable.Remove(key);
-                                isTargetingVariants = true;
+                                var key = string.Format("{0}@{1}", pair.Key, m_Variant.ToLower());
+                                if (baseControlTable.TryGetValue(key, out baseControlItem))
+                                {
+                                    var mergedLayout = pair.Value.Merge(baseControlItem);
+                                    controls.Add(mergedLayout);
+                                    baseControlTable.Remove(key);
+                                    isTargetingVariants = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Try each variant present in the base layout.
+                            foreach (var variant in baseControlVariants)
+                            {
+                                var key = string.Format("{0}@{1}", pair.Key, variant);
+                                if (baseControlTable.TryGetValue(key, out baseControlItem))
+                                {
+                                    var mergedLayout = pair.Value.Merge(baseControlItem);
+                                    controls.Add(mergedLayout);
+                                    baseControlTable.Remove(key);
+                                    isTargetingVariants = true;
+                                }
                             }
                         }
 
-                        // Okay, this layout isn't corresponding to anything in the base layout
+                        // Okay, this control item isn't corresponding to anything in the base layout
                         // so just add it as is.
                         if (!isTargetingVariants)
                             controls.Add(pair.Value);
+                    }
+                    // We may be looking at a control that is targeting a specific variant
+                    // in this layout but not targeting a variant in the base layout. We still want to
+                    // merge information from that non-targeted base control.
+                    else if (baseControlTable.TryGetValue(pair.Value.name.ToLower(), out baseControlItem))
+                    {
+                        var mergedLayout = pair.Value.Merge(baseControlItem);
+                        controls.Add(mergedLayout);
+                        baseControlTable.Remove(pair.Value.name.ToLower());
+                    }
+                    // Seems like we can't match it to a control in the base layout. We already know it
+                    // must have a variant setting (because we checked above) so if the variant setting
+                    // doesn't prevent us, just include the control. It's most likely a path-modifying
+                    // control (e.g. "rightStick/x").
+                    else if (pair.Value.variant == m_Variant)
+                    {
+                        controls.Add(pair.Value);
                     }
                 }
 
                 // And then go through all the controls in the base and take the
                 // ones we're missing. We've already removed all the ones that intersect
                 // and had to be merged so the rest we can just slurp into the list as is.
-                controls.AddRange(baseControlTable.Values);
+                if (!layoutIsTargetingSpecificVariant)
+                {
+                    controls.AddRange(baseControlTable.Values);
+                }
+                else
+                {
+                    // Filter out controls coming from the base layout which are targeting variants
+                    // that we're not interested in.
+                    controls.AddRange(
+                        baseControlTable.Values.Where(x => x.variant.IsEmpty() || x.variant == m_Variant || x.variant == DefaultVariant));
+                }
 
                 m_Controls = controls.ToArray();
             }
@@ -1062,12 +1139,12 @@ namespace UnityEngine.Experimental.Input
                 var key = controlItems[i].name.ToLower();
                 // Need to take variant into account as well. Otherwise two variants for
                 // "leftStick", for example, will overwrite each other.
-                if (!controlItems[i].variant.IsEmpty())
+                var variant = controlItems[i].variant;
+                if (!variant.IsEmpty() && variant != DefaultVariant)
                 {
-                    var variant = controlItems[i].variant.ToLower();
-                    key = string.Format("{0}@{1}", key, variant);
+                    key = string.Format("{0}@{1}", key, variant.ToLower());
                     if (variants != null)
-                        variants.Add(variant);
+                        variants.Add(variant.ToLower());
                 }
                 table[key] = controlItems[i];
             }
@@ -1118,6 +1195,7 @@ namespace UnityEngine.Experimental.Input
             public string displayName;
             public string resourceName;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
+            public string variant;
             public DeviceDescriptionJson device;
             public ControlItemJson[] controls;
 
@@ -1156,6 +1234,7 @@ namespace UnityEngine.Experimental.Input
                 layout.m_DeviceDescription = device.ToDescriptor();
                 layout.m_DisplayName = displayName;
                 layout.m_ResourceName = resourceName;
+                layout.m_Variant = new InternedString(variant);
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
 
@@ -1211,6 +1290,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = layout.m_Name,
                     type = layout.type.AssemblyQualifiedName,
+                    variant = layout.m_Variant,
                     displayName = layout.m_DisplayName,
                     resourceName = layout.m_ResourceName,
                     extend = layout.m_ExtendsLayout,

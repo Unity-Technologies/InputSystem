@@ -1138,7 +1138,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private IInputRuntime m_Runtime;
 
         #if UNITY_EDITOR
-        [NonSerialized] internal IInputDebugger m_Debugger;
+        [NonSerialized] internal IInputDiagnostics m_Diagnostics;
         #endif
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
@@ -1632,8 +1632,8 @@ namespace UnityEngine.Experimental.Input
                 if (device == null)
                 {
                     #if UNITY_EDITOR
-                    if (m_Debugger != null)
-                        m_Debugger.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventPtr));
+                    if (m_Diagnostics != null)
+                        m_Diagnostics.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventPtr));
                     #endif
 
                     // No device found matching event. Consider it handled.
@@ -1652,6 +1652,10 @@ namespace UnityEngine.Experimental.Input
                         // Ignore state changes if device is disabled.
                         if (!device.enabled)
                         {
+                            #if UNITY_EDITOR
+                            if (m_Diagnostics != null)
+                                m_Diagnostics.OnEventForDisabledDevice(new InputEventPtr(currentEventPtr), device);
+                            #endif
                             doNotMakeDeviceCurrent = true;
                             break;
                         }
@@ -1661,8 +1665,8 @@ namespace UnityEngine.Experimental.Input
                         if (currentEventTime < device.m_LastUpdateTime)
                         {
                             #if UNITY_EDITOR
-                            if (m_Debugger != null)
-                                m_Debugger.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
+                            if (m_Diagnostics != null)
+                                m_Diagnostics.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
                             #endif
                             doNotMakeDeviceCurrent = true;
                             break;
@@ -1710,8 +1714,8 @@ namespace UnityEngine.Experimental.Input
                         if (stateBlock.format != stateFormat)
                         {
                             #if UNITY_EDITOR
-                            if (m_Debugger != null)
-                                m_Debugger.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
+                            if (m_Diagnostics != null)
+                                m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
                             #endif
                             break;
                         }
@@ -2172,7 +2176,7 @@ namespace UnityEngine.Experimental.Input
             [NonSerialized] public IInputRuntime runtime;
 
             #if UNITY_EDITOR
-            [NonSerialized] public IInputDebugger debugger;
+            [NonSerialized] public IInputDiagnostics diagnostics;
             #endif
         }
 
@@ -2259,7 +2263,7 @@ namespace UnityEngine.Experimental.Input
                 runtime = m_Runtime,
 
                 #if UNITY_EDITOR
-                debugger = m_Debugger
+                diagnostics = m_Diagnostics
                 #endif
             };
 
@@ -2289,7 +2293,7 @@ namespace UnityEngine.Experimental.Input
             m_UpdateMask = state.updateMask;
 
             #if UNITY_EDITOR
-            m_Debugger = state.debugger;
+            m_Diagnostics = state.diagnostics;
             #endif
 
             // Configuration.

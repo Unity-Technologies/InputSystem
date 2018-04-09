@@ -216,7 +216,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var id = 1;
                 var usageRoot = BuildTreeForUsages(ref id);
 
-                foreach (var layout in EditorInputControlLayoutCache.allNonProductLayouts)
+                foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
                 {
                     // Skip layouts that don't have any controls (like the "HID" layout).
                     if (layout.controls.Count == 0)

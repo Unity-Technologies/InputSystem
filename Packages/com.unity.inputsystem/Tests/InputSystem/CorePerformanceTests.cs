@@ -5,7 +5,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using NUnit.Framework;
 using UnityEngine;
 
-public class PerformanceTests
+public class CorePerformanceTests
 {
     [SetUp]
     public void Setup()

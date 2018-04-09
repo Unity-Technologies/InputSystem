@@ -39,12 +39,6 @@ namespace UnityEngine.Experimental.Input
     /// \todo Remove the distinction between input and output controls; allow every InputControl to write values
     public abstract class InputControl
     {
-        public static InternedString s_DefaultVariant = new InternedString("Default");
-        public static InternedString DefaultVariant
-        {
-            get { return s_DefaultVariant; }
-        }
-
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
         /// </summary>
