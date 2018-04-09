@@ -41,17 +41,17 @@ namespace UnityEngine.Experimental.Input.Controls
 
         //needs to enforce layout/format
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            touchId = setup.GetControl<IntegerControl>(this, "touchId");
-            position = setup.GetControl<Vector2Control>(this, "position");
-            delta = setup.GetControl<Vector2Control>(this, "delta");
-            pressure = setup.GetControl<AxisControl>(this, "pressure");
-            radius = setup.GetControl<Vector2Control>(this, "radius");
-            phase = setup.GetControl<PointerPhaseControl>(this, "phase");
-            displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
-            touchType = setup.GetControl<TouchTypeControl>(this, "touchType");
-            base.FinishSetup(setup);
+            touchId = builder.GetControl<IntegerControl>(this, "touchId");
+            position = builder.GetControl<Vector2Control>(this, "position");
+            delta = builder.GetControl<Vector2Control>(this, "delta");
+            pressure = builder.GetControl<AxisControl>(this, "pressure");
+            radius = builder.GetControl<Vector2Control>(this, "radius");
+            phase = builder.GetControl<PointerPhaseControl>(this, "phase");
+            displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
+            touchType = builder.GetControl<TouchTypeControl>(this, "touchType");
+            base.FinishSetup(builder);
         }
 
         public override unsafe Touch ReadRawValueFrom(IntPtr statePtr)

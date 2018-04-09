@@ -25,11 +25,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public static FourCC kTypeSByte = new FourCC('S', 'B', 'Y', 'T');
         public static FourCC kTypeFloat = new FourCC('F', 'L', 'T');
         public static FourCC kTypeDouble = new FourCC('D', 'B', 'L');
+
+        ////REVIEW: are these really useful?
         public static FourCC kTypeVector2 = new FourCC('V', 'E', 'C', '2');
         public static FourCC kTypeVector3 = new FourCC('V', 'E', 'C', '3');
         public static FourCC kTypeQuaternion = new FourCC('Q', 'U', 'A', 'T');
-
-        ////REVIEW: are these really useful?
         public static FourCC kTypeVector2Short = new FourCC('V', 'C', '2', 'S');
         public static FourCC kTypeVector3Short = new FourCC('V', 'C', '3', 'S');
         public static FourCC kTypeVector2Byte = new FourCC('V', 'C', '2', 'B');
@@ -149,7 +149,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else if (format == kTypeByte)
             {
-                value = *(byte*)valuePtr;
+                value = *valuePtr;
             }
             else if (format == kTypeSByte)
             {
@@ -207,12 +207,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
             else if (format == kTypeByte)
             {
-                value = *((byte*)valuePtr) / 255.0f;
+                value = *valuePtr / 255.0f;
             }
             else if (format == kTypeSByte)
             {
                 ////REVIEW: Same problem here as with 'short'
-                value = *((byte*)valuePtr) / 128.0f;
+                value = *valuePtr / 128.0f;
             }
             else
             {

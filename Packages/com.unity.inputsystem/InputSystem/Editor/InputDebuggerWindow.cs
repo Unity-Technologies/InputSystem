@@ -9,7 +9,7 @@ using UnityEditor.Networking.PlayerConnection;
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
-////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDebugger to automatically
+////TODO: Ideally, I'd like all separate EditorWindows opened by the InputDiagnostics to automatically
 ////      be docked into the container window of InputDebuggerWindow
 
 ////TODO: add view to tweak InputConfiguration interactively in the editor
@@ -50,19 +50,19 @@ namespace UnityEngine.Experimental.Input.Editor
                 Refresh();
         }
 
-        private void OnTemplateChange(string name, InputTemplateChange change)
+        private void OnLayoutChange(string name, InputControlLayoutChange change)
         {
-            // Update tree if template setup has changed.
+            // Update tree if layout setup has changed.
             Refresh();
         }
 
-        private string OnFindTemplate(int deviceId, ref InputDeviceDescription description, string matchedTemplate,
+        private string OnFindLayout(int deviceId, ref InputDeviceDescription description, string matchedLayout,
             IInputRuntime runtime)
         {
-            // If there's no matched template, there's a chance this device will go in
+            // If there's no matched layout, there's a chance this device will go in
             // the unsupported list. There's no direct notification for that so we
             // pre-emptively trigger a refresh.
-            if (string.IsNullOrEmpty(matchedTemplate))
+            if (string.IsNullOrEmpty(matchedLayout))
                 Refresh();
 
             return null;
@@ -78,8 +78,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public void OnDestroy()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
-            InputSystem.onTemplateChange -= OnTemplateChange;
-            InputSystem.onFindTemplateForDevice -= OnFindTemplate;
+            InputSystem.onControlLayoutChange -= OnLayoutChange;
+            InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
 
             if (InputActionSet.s_OnEnabledActionsChanged != null)
                 InputActionSet.s_OnEnabledActionsChanged.Remove(Repaint);
@@ -88,8 +88,8 @@ namespace UnityEngine.Experimental.Input.Editor
         private void Initialize()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
-            InputSystem.onTemplateChange += OnTemplateChange;
-            InputSystem.onFindTemplateForDevice += OnFindTemplate;
+            InputSystem.onControlLayoutChange += OnLayoutChange;
+            InputSystem.onFindControlLayoutForDevice += OnFindLayout;
 
             if (InputActionSet.s_OnEnabledActionsChanged == null)
                 InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
@@ -124,21 +124,21 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            // Enable/disable debug mode.
-            var debugMode = GUILayout.Toggle(m_DebugMode, Contents.debugModeContent, EditorStyles.toolbarButton);
-            if (debugMode != m_DebugMode)
+            // Enable/disable diagnostics mode.
+            var diagnosticsMode = GUILayout.Toggle(m_DiagnosticsMode, Contents.diagnosticsModeContent, EditorStyles.toolbarButton);
+            if (diagnosticsMode != m_DiagnosticsMode)
             {
-                if (debugMode)
+                if (diagnosticsMode)
                 {
-                    if (m_Debugger == null)
-                        m_Debugger = new InputDebugger();
-                    InputSystem.s_Manager.m_Debugger = m_Debugger;
+                    if (m_Diagnostics == null)
+                        m_Diagnostics = new InputDiagnostics();
+                    InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
                 }
                 else
                 {
-                    InputSystem.s_Manager.m_Debugger = null;
+                    InputSystem.s_Manager.m_Diagnostics = null;
                 }
-                m_DebugMode = debugMode;
+                m_DiagnosticsMode = diagnosticsMode;
             }
 
             InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
@@ -183,10 +183,10 @@ namespace UnityEngine.Experimental.Input.Editor
         }
         */
 
-        [SerializeField] private bool m_DebugMode;
+        [SerializeField] private bool m_DiagnosticsMode;
         [SerializeField] private TreeViewState m_TreeViewState;
 
-        [NonSerialized] private InputDebugger m_Debugger;
+        [NonSerialized] private InputDiagnostics m_Diagnostics;
         [NonSerialized] private InputSystemTreeView m_TreeView;
         [NonSerialized] private bool m_Initialized;
 
@@ -205,7 +205,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private static class Contents
         {
             public static GUIContent lockInputToGameContent = new GUIContent("Lock Input to Game");
-            public static GUIContent debugModeContent = new GUIContent("Debug Mode");
+            public static GUIContent diagnosticsModeContent = new GUIContent("Enable Diagnostics");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -220,7 +220,7 @@ namespace UnityEngine.Experimental.Input.Editor
         class InputSystemTreeView : TreeView
         {
             public TreeViewItem devicesItem { get; private set; }
-            public TreeViewItem templatesItem { get; private set; }
+            public TreeViewItem layoutsItem { get; private set; }
             public TreeViewItem configurationItem { get; private set; }
 
             public InputSystemTreeView(TreeViewState state)
@@ -276,7 +276,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     foreach (var player in EditorConnection.instance.ConnectedPlayers)
                     {
                         var playerNode = AddChild(remoteDevicesNode, player.name, ref id);
-                        AddDevices(playerNode, devices, ref id, "Remote" + player.playerId + InputTemplate.kNamespaceQualifier);
+                        AddDevices(playerNode, devices, ref id, "Remote" + player.playerId + InputControlLayout.kNamespaceQualifier);
                     }
                 }
                 else
@@ -299,9 +299,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
-                // Templates.
-                templatesItem = AddChild(root, "Templates", ref id);
-                AddTemplates(templatesItem, ref id);
+                // Layouts.
+                layoutsItem = AddChild(root, "Layouts", ref id);
+                AddControlLayouts(layoutsItem, ref id);
 
                 ////FIXME: this shows local configuration only
                 // Configuration.
@@ -324,7 +324,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         if (!device.name.StartsWith(namePrefix))
                             continue;
                     }
-                    else if (device.name.Contains(InputTemplate.kNamespaceQualifier))
+                    else if (device.name.Contains(InputControlLayout.kNamespaceQualifier))
                         continue;
 
                     var item = new DeviceItem
@@ -341,47 +341,37 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            ////TODO: split remote and local templates
-            private void AddTemplates(TreeViewItem parent, ref int id)
+            ////TODO: split remote and local layouts
+            private void AddControlLayouts(TreeViewItem parent, ref int id)
             {
                 // Split root into three different groups:
-                // 1) Control templates
-                // 2) Device templates that don't match specific products
-                // 3) Device templates that match specific products
+                // 1) Control layouts
+                // 2) Device layouts that don't match specific products
+                // 3) Device layouts that match specific products
 
                 var controls = AddChild(parent, "Controls", ref id);
                 var devices = AddChild(parent, "Devices", ref id);
                 var products = AddChild(parent, "Products", ref id);
 
-                foreach (var template in EditorInputTemplateCache.allTemplates)
+                foreach (var layout in EditorInputControlLayoutCache.allControlLayouts)
+                    AddControlLayoutItem(layout, controls, ref id);
+                foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
+                    AddControlLayoutItem(layout, devices, ref id);
+                foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
                 {
-                    TreeViewItem parentForTemplate;
-                    if (template.isDeviceTemplate)
-                    {
-                        ////REVIEW: should this split by base device templates derived device templates instead?
-                        if (!template.deviceDescription.empty)
-                        {
-                            var rootBaseTemplateName = InputTemplate.s_Templates.GetRootTemplateName(template.name).ToString();
-                            if (string.IsNullOrEmpty(rootBaseTemplateName))
-                                rootBaseTemplateName = "Other";
-                            else
-                                rootBaseTemplateName += "s";
-
-                            var group = products.children != null
-                                ? products.children.FirstOrDefault(x => x.displayName == rootBaseTemplateName)
-                                : null;
-                            if (group == null)
-                                group = AddChild(products, rootBaseTemplateName, ref id);
-
-                            parentForTemplate = group;
-                        }
-                        else
-                            parentForTemplate = devices;
-                    }
+                    var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
+                    if (string.IsNullOrEmpty(rootBaseLayoutName))
+                        rootBaseLayoutName = "Other";
                     else
-                        parentForTemplate = controls;
+                        rootBaseLayoutName += "s";
 
-                    AddTemplateItem(template, parentForTemplate, ref id);
+                    var group = products.children != null
+                        ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
+                        : null;
+                    if (group == null)
+                        group = AddChild(products, rootBaseLayoutName, ref id);
+
+                    AddControlLayoutItem(layout, group, ref id);
                 }
 
                 if (controls.children != null)
@@ -389,52 +379,56 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (devices.children != null)
                     devices.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 if (products.children != null)
+                {
                     products.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                    foreach (var productGroup in products.children)
+                        productGroup.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                }
             }
 
-            private TreeViewItem AddTemplateItem(InputTemplate template, TreeViewItem parent, ref int id)
+            private TreeViewItem AddControlLayoutItem(InputControlLayout layout, TreeViewItem parent, ref int id)
             {
-                var item = AddChild(parent, template.name, ref id);
+                var item = AddChild(parent, layout.name, ref id);
 
                 // Header.
-                AddChild(item, "Type: " + template.type.Name, ref id);
-                if (!string.IsNullOrEmpty(template.extendsTemplate))
-                    AddChild(item, "Extends: " + template.extendsTemplate, ref id);
-                if (template.stateFormat != 0)
-                    AddChild(item, "Format: " + template.stateFormat, ref id);
-                if (template.m_UpdateBeforeRender != null)
+                AddChild(item, "Type: " + layout.type.Name, ref id);
+                if (!string.IsNullOrEmpty(layout.extendsLayout))
+                    AddChild(item, "Extends: " + layout.extendsLayout, ref id);
+                if (layout.stateFormat != 0)
+                    AddChild(item, "Format: " + layout.stateFormat, ref id);
+                if (layout.m_UpdateBeforeRender != null)
                 {
-                    var value = template.m_UpdateBeforeRender.Value ? "Update" : "Disabled";
+                    var value = layout.m_UpdateBeforeRender.Value ? "Update" : "Disabled";
                     AddChild(item, "Before Render: " + value, ref id);
                 }
-                if (template.commonUsages.Count > 0)
+                if (layout.commonUsages.Count > 0)
                 {
                     AddChild(item,
                         "Common Usages: " +
-                        string.Join(", ", template.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
+                        string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
                 }
-                if (!template.deviceDescription.empty)
+                if (!layout.deviceDescription.empty)
                 {
                     var deviceDescription = AddChild(item, "Device Description", ref id);
-                    if (!string.IsNullOrEmpty(template.deviceDescription.deviceClass))
+                    if (!string.IsNullOrEmpty(layout.deviceDescription.deviceClass))
                         AddChild(deviceDescription,
-                            "Device Class: " + template.deviceDescription.deviceClass, ref id);
-                    if (!string.IsNullOrEmpty(template.deviceDescription.interfaceName))
+                            "Device Class: " + layout.deviceDescription.deviceClass, ref id);
+                    if (!string.IsNullOrEmpty(layout.deviceDescription.interfaceName))
                         AddChild(deviceDescription,
-                            "Interface: " + template.deviceDescription.interfaceName, ref id);
-                    if (!string.IsNullOrEmpty(template.deviceDescription.product))
-                        AddChild(deviceDescription, "Product: " + template.deviceDescription.product, ref id);
-                    if (!string.IsNullOrEmpty(template.deviceDescription.manufacturer))
+                            "Interface: " + layout.deviceDescription.interfaceName, ref id);
+                    if (!string.IsNullOrEmpty(layout.deviceDescription.product))
+                        AddChild(deviceDescription, "Product: " + layout.deviceDescription.product, ref id);
+                    if (!string.IsNullOrEmpty(layout.deviceDescription.manufacturer))
                         AddChild(deviceDescription,
-                            "Manufacturer: " + template.deviceDescription.manufacturer, ref id);
+                            "Manufacturer: " + layout.deviceDescription.manufacturer, ref id);
                 }
 
                 // Controls.
-                if (template.controls.Count > 0)
+                if (layout.controls.Count > 0)
                 {
                     var controls = AddChild(item, "Controls", ref id);
-                    foreach (var control in template.controls)
-                        AddControlTemplateItem(control, controls, ref id);
+                    foreach (var control in layout.controls)
+                        AddControlItem(control, controls, ref id);
 
                     controls.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
@@ -442,16 +436,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 return item;
             }
 
-            private void AddControlTemplateItem(InputTemplate.ControlTemplate control, TreeViewItem parent, ref int id)
+            private void AddControlItem(InputControlLayout.ControlItem control, TreeViewItem parent, ref int id)
             {
                 var item = AddChild(parent, control.variant.IsEmpty() ? control.name : string.Format("{0} ({1})",
                             control.name, control.variant), ref id);
 
-                ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control templates into the control they modify
+                ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
 
-                ////TODO: allow clicking this field to jump to the template
-                if (!control.template.IsEmpty())
-                    AddChild(item, string.Format("Template: {0}", control.template), ref id);
+                ////TODO: allow clicking this field to jump to the layout
+                if (!control.layout.IsEmpty())
+                    AddChild(item, string.Format("Layout: {0}", control.layout), ref id);
                 if (!control.variant.IsEmpty())
                     AddChild(item, string.Format("Variant: {0}", control.variant), ref id);
                 if (control.format != 0)

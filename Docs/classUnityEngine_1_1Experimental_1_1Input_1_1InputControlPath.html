@@ -99,16 +99,16 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a4814495cbd34ca141de4eb7914464873"><td class="memItemLeft" align="right" valign="top">static string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#a4814495cbd34ca141de4eb7914464873">TryGetDeviceTemplate</a> (string path)</td></tr>
-<tr class="separator:a4814495cbd34ca141de4eb7914464873"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab39ab1047c8308cacf7e28ab78de7083"><td class="memItemLeft" align="right" valign="top">static string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#ab39ab1047c8308cacf7e28ab78de7083">TryGetDeviceLayout</a> (string path)</td></tr>
+<tr class="separator:ab39ab1047c8308cacf7e28ab78de7083"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Functions to working with control path specs (like "/gamepad/*stick"). </p>
 <p>The thinking here is somewhat similar to System.IO.Path, i.e. have a range of static methods that perform various operations on paths.</p>
-<p>Has both methods that work just on paths themselves (like TryGetControlTemplate) and methods that work on paths in combination with controls (like TryFindControls). </p>
+<p>Has both methods that work just on paths themselves (like TryGetControlLayout) and methods that work on paths in combination with controls (like TryFindControls). </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4814495cbd34ca141de4eb7914464873"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4814495cbd34ca141de4eb7914464873">&#9670;&nbsp;</a></span>TryGetDeviceTemplate()</h2>
+<a id="ab39ab1047c8308cacf7e28ab78de7083"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab39ab1047c8308cacf7e28ab78de7083">&#9670;&nbsp;</a></span>TryGetDeviceLayout()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -117,7 +117,7 @@ Static Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static string TryGetDeviceTemplate </td>
+          <td class="memname">static string TryGetDeviceLayout </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>path</em></td><td>)</td>
@@ -132,7 +132,7 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p></p>
-<p>This function will only use information available in the path itself or in templates referenced by the path. It will not look at actual devices in the system. This is to make the behavior predictable and not dependent on whether you currently have the right device connected or not.</p>
+<p>This function will only use information available in the path itself or in layouts referenced by the path. It will not look at actual devices in the system. This is to make the behavior predictable and not dependent on whether you currently have the right device connected or not.</p>
 <p>Note that this function allocates and causes GC. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -140,14 +140,14 @@ Static Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>The name of the device template used by the given control path or null if the path does not specify a device template or does so in a way that is not supported by the function.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The name of the device layout used by the given control path or null if the path does not specify a device layout or does so in a way that is not supported by the function.</dd></dl>
 <dl class="exception"><dt>Exceptions</dt><dd>
   <table class="exception">
     <tr><td class="paramname">ArgumentNullException</td><td><em>path</em>  is null</td></tr>
   </table>
   </dd>
 </dl>
-<div class="fragment"><div class="line">InputControlPath.TryGetDeviceTemplate(<span class="stringliteral">&quot;/&lt;gamepad&gt;/leftStick&quot;</span>); <span class="comment">// Returns &quot;gamepad&quot;.</span></div><div class="line">InputControlPath.TryGetDeviceTemplate(<span class="stringliteral">&quot;/*/leftStick&quot;</span>); <span class="comment">// Returns &quot;*&quot;.</span></div><div class="line">InputControlPath.TryGetDeviceTemplate(<span class="stringliteral">&quot;/gamepad/leftStick&quot;</span>); <span class="comment">// Returns null. &quot;gamepad&quot; is a device name here.</span></div></div><!-- fragment --> 
+<div class="fragment"><div class="line">InputControlPath.TryGetDeviceLayout(<span class="stringliteral">&quot;/&lt;gamepad&gt;/leftStick&quot;</span>); <span class="comment">// Returns &quot;gamepad&quot;.</span></div><div class="line">InputControlPath.TryGetDeviceLayout(<span class="stringliteral">&quot;/*/leftStick&quot;</span>); <span class="comment">// Returns &quot;*&quot;.</span></div><div class="line">InputControlPath.TryGetDeviceLayout(<span class="stringliteral">&quot;/gamepad/leftStick&quot;</span>); <span class="comment">// Returns null. &quot;gamepad&quot; is a device name here.</span></div></div><!-- fragment --> 
 </div>
 </div>
 </div><!-- contents -->
@@ -156,7 +156,7 @@ Static Public Member Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="namespaceUnityEngine.html">UnityEngine</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental.html">Experimental</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html">Input</a></li><li class="navelem"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html">InputControlPath</a></li>
-    <li class="footer">Generated on Fri Mar 23 2018 13:50:55 for Input System by
+    <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.14 </li>
   </ul>

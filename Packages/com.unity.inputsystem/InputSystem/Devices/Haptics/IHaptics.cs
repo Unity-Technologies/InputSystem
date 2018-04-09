@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input.Haptics
     /// <seealso cref="InputSystem.ResumeHaptics"/>
     /// <seealso cref="InputSystem.ResetHaptics"/>
     public interface IHaptics
-    {
+    { 
         /// <summary>
         /// Pause haptics playback on the device.
         /// </summary>

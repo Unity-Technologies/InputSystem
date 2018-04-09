@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Metadata for a device. Primarily used to find a matching template
+    /// Metadata for a device. Primarily used to find a matching layout
     /// which we can then use to create a control setup for the device.
     /// </summary>
     [Serializable]
@@ -25,9 +25,9 @@ namespace UnityEngine.Experimental.Input
         /// What the interface thinks the device classifies as.
         /// </summary>
         /// <remarks>
-        /// If there is no template specifically matching a device description,
+        /// If there is no layout specifically matching a device description,
         /// the device class is used as as fallback. If, for example, this field
-        /// is set to "Gamepad", the "Gamepad" template is used as a fallback.
+        /// is set to "Gamepad", the "Gamepad" layout is used as a fallback.
         /// </remarks>
         public string deviceClass;
 
@@ -52,8 +52,8 @@ namespace UnityEngine.Experimental.Input
         /// An optional JSON string listing device-specific capabilities.
         /// </summary>
         /// <remarks>
-        /// The primary use of this field is to allow custom template factories
-        /// to create templates on the fly from in-depth device descriptions delivered
+        /// The primary use of this field is to allow custom layout factories
+        /// to create layouts on the fly from in-depth device descriptions delivered
         /// by external APIs.
         ///
         /// In the case of HID, for example, this field contains a JSON representation
@@ -182,7 +182,7 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        ////FIXME: this format differs from the one used in templates; we should only have one format
+        ////FIXME: this format differs from the one used in layouts; we should only have one format
         private struct DeviceDescriptionJson
         {
             public string @interface;

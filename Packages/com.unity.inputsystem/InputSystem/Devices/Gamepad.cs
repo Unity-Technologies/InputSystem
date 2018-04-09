@@ -30,51 +30,51 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         /// <seealso cref="Button"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
-        [InputControl(name = "dpad", template = "Dpad", usage = "Hatswitch")]
-        [InputControl(name = "buttonSouth", template = "Button", bit = (uint)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
-        [InputControl(name = "buttonWest", template = "Button", bit = (uint)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
-        [InputControl(name = "buttonNorth", template = "Button", bit = (uint)Button.North, aliases = new[] { "y", "triangle" })]
-        [InputControl(name = "buttonEast", template = "Button", bit = (uint)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
+        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch")]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)Button.South, usage = "PrimaryAction", aliases = new[] { "a", "cross" })]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)Button.West, usage = "SecondaryAction", aliases = new[] { "x", "square" })]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)Button.North, aliases = new[] { "y", "triangle" })]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)Button.East, usage = "Back", aliases = new[] { "b", "circle" })]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
-        [InputControl(name = "leftStickPress", template = "Button", bit = (uint)Button.LeftStick)]
-        [InputControl(name = "rightStickPress", template = "Button", bit = (uint)Button.RightStick)]
-        [InputControl(name = "leftShoulder", template = "Button", bit = (uint)Button.LeftShoulder)]
-        [InputControl(name = "rightShoulder", template = "Button", bit = (uint)Button.RightShoulder)]
+        [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)Button.LeftStick)]
+        [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)Button.RightStick)]
+        [InputControl(name = "leftShoulder", layout = "Button", bit = (uint)Button.LeftShoulder)]
+        [InputControl(name = "rightShoulder", layout = "Button", bit = (uint)Button.RightShoulder)]
         ////REVIEW: seems like these two should get less ambiguous names as well
-        [InputControl(name = "start", template = "Button", bit = (uint)Button.Start, usage = "Menu")]
-        [InputControl(name = "select", template = "Button", bit = (uint)Button.Select)]
+        [InputControl(name = "start", layout = "Button", bit = (uint)Button.Start, usage = "Menu")]
+        [InputControl(name = "select", layout = "Button", bit = (uint)Button.Select)]
         [FieldOffset(0)]
         public uint buttons;
 
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(variant = "Default", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
-        [InputControl(variant = "Lefty", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(variant = "Default", template = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
-        [InputControl(variant = "Lefty", template = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "deadzone")]
+        [InputControl(variant = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "deadzone")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
         /// <summary>
         /// Position of the left trigger.
         /// </summary>
-        [InputControl(variant = "Default", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
-        [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variant = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variant = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
         /// Position of the right trigger.
         /// </summary>
-        [InputControl(variant = "Default", template = "Button", format = "FLT", usage = "PrimaryTrigger")]
-        [InputControl(variant = "Lefty", template = "Button", format = "FLT", usage = "SecondaryTrigger")]
+        [InputControl(variant = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger")]
+        [InputControl(variant = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger")]
         [FieldOffset(24)]
         public float rightTrigger;
 
@@ -139,8 +139,7 @@ namespace UnityEngine.Experimental.Input
     /// An Xbox-style gamepad with two switcks, a D-Pad, four face buttons, two triggers,
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
-    /// <seealso cref="GamepadState"/>
-    [InputTemplate(stateType = typeof(GamepadState))]
+    [InputControlLayout(stateType = typeof(GamepadState))]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         ////REVEIEW: add PS4 and Xbox style alternate accessors?
@@ -181,31 +180,31 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            buttonWest = setup.GetControl<ButtonControl>(this, "buttonWest");
-            buttonNorth = setup.GetControl<ButtonControl>(this, "buttonNorth");
-            buttonSouth = setup.GetControl<ButtonControl>(this, "buttonSouth");
-            buttonEast = setup.GetControl<ButtonControl>(this, "buttonEast");
+            buttonWest = builder.GetControl<ButtonControl>(this, "buttonWest");
+            buttonNorth = builder.GetControl<ButtonControl>(this, "buttonNorth");
+            buttonSouth = builder.GetControl<ButtonControl>(this, "buttonSouth");
+            buttonEast = builder.GetControl<ButtonControl>(this, "buttonEast");
 
-            startButton = setup.GetControl<ButtonControl>(this, "start");
-            selectButton = setup.GetControl<ButtonControl>(this, "select");
+            startButton = builder.GetControl<ButtonControl>(this, "start");
+            selectButton = builder.GetControl<ButtonControl>(this, "select");
 
-            leftStickButton = setup.GetControl<ButtonControl>(this, "leftStickPress");
-            rightStickButton = setup.GetControl<ButtonControl>(this, "rightStickPress");
+            leftStickButton = builder.GetControl<ButtonControl>(this, "leftStickPress");
+            rightStickButton = builder.GetControl<ButtonControl>(this, "rightStickPress");
 
-            dpad = setup.GetControl<DpadControl>(this, "dpad");
+            dpad = builder.GetControl<DpadControl>(this, "dpad");
 
-            leftShoulder = setup.GetControl<ButtonControl>(this, "leftShoulder");
-            rightShoulder = setup.GetControl<ButtonControl>(this, "rightShoulder");
+            leftShoulder = builder.GetControl<ButtonControl>(this, "leftShoulder");
+            rightShoulder = builder.GetControl<ButtonControl>(this, "rightShoulder");
 
-            leftStick = setup.GetControl<StickControl>(this, "leftStick");
-            rightStick = setup.GetControl<StickControl>(this, "rightStick");
+            leftStick = builder.GetControl<StickControl>(this, "leftStick");
+            rightStick = builder.GetControl<StickControl>(this, "rightStick");
 
-            leftTrigger = setup.GetControl<ButtonControl>(this, "leftTrigger");
-            rightTrigger = setup.GetControl<ButtonControl>(this, "rightTrigger");
+            leftTrigger = builder.GetControl<ButtonControl>(this, "leftTrigger");
+            rightTrigger = builder.GetControl<ButtonControl>(this, "rightTrigger");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         protected override void RefreshConfiguration()

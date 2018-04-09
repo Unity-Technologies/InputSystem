@@ -5,7 +5,7 @@ using UnityEditor.IMGUI.Controls;
 
 ////TODO: add means to pick specific device index
 
-////TODO: add usages actually used by a template also to the list of controls of the template
+////TODO: add usages actually used by a layout also to the list of controls of the layout
 
 ////TODO: prime picker with currently selected control (also with usage on device)
 
@@ -19,9 +19,9 @@ namespace UnityEngine.Experimental.Input.Editor
     // a path string as a result and store it in the given "path" property.
     //
     // At the moment, the interface is pretty simplistic. You can either select a usage
-    // or select a specific control on a specific base device template.
+    // or select a specific control on a specific base device layout.
     //
-    // Usages are discovered from all templates that are registered with the system.
+    // Usages are discovered from all layouts that are registered with the system.
     public class InputControlPicker : PopupWindowContent
     {
         public Action<SerializedProperty> onPickCallback;
@@ -92,7 +92,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 public string usage;
                 public string device;
                 public string controlPath;
-                public InputTemplate template;
+                public InputControlLayout layout;
                 public GUIContent[] popupOptions;
                 public int[] popupValues;
                 public int selectedPopupOption;
@@ -125,12 +125,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (item != null
                     && item.device != null
                     && item.controlPath == null
-                    && item.template.commonUsages.Count > 0)
+                    && item.layout.commonUsages.Count > 0)
                 {
                     // On first render, create popup options.
                     if (item.popupOptions == null)
                     {
-                        var usageCount = item.template.commonUsages.Count;
+                        var usageCount = item.layout.commonUsages.Count;
                         var options = new GUIContent[usageCount + 1];
                         var values = new int[usageCount + 1];
 
@@ -139,7 +139,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                         for (var i = 0; i < usageCount; ++i)
                         {
-                            options[i + 1] = new GUIContent(item.template.commonUsages[i].ToString());
+                            options[i + 1] = new GUIContent(item.layout.commonUsages[i].ToString());
                             values[i + 1] = i + 1;
                         }
 
@@ -178,7 +178,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         if (deviceItem != null && deviceItem.selectedPopupOption != 0)
                         {
                             deviceUsage = string.Format("{{{0}}}",
-                                    deviceItem.template.commonUsages[deviceItem.selectedPopupOption - 1]);
+                                    deviceItem.layout.commonUsages[deviceItem.selectedPopupOption - 1]);
                         }
 
                         if (item.controlPath != null)
@@ -211,18 +211,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 // This can use PLENTY of improvement. ATM all it does is add one branch
                 // containing all unique usages in the system and then one branch for each
-                // base device template.
+                // base device layout.
 
                 var id = 1;
                 var usageRoot = BuildTreeForUsages(ref id);
 
-                foreach (var template in EditorInputTemplateCache.allNonProductTemplates)
+                foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
                 {
-                    // Skip templates that don't have any controls (like the "HID" template).
-                    if (template.controls.Count == 0)
+                    // Skip layouts that don't have any controls (like the "HID" layout).
+                    if (layout.controls.Count == 0)
                         continue;
 
-                    var tree = BuildTreeForDevice(template, ref id);
+                    var tree = BuildTreeForDevice(layout, ref id);
                     root.AddChild(tree);
                 }
 
@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     depth = 0
                 };
 
-                foreach (var usage in EditorInputTemplateCache.allUsages)
+                foreach (var usage in EditorInputControlLayoutCache.allUsages)
                 {
                     var child = new Item
                     {
@@ -257,25 +257,25 @@ namespace UnityEngine.Experimental.Input.Editor
                 return usageRoot;
             }
 
-            private TreeViewItem BuildTreeForDevice(InputTemplate template, ref int id)
+            private TreeViewItem BuildTreeForDevice(InputControlLayout layout, ref int id)
             {
                 var deviceRoot = new Item
                 {
-                    displayName = template.name,
+                    displayName = layout.name,
                     id = id++,
                     depth = 0,
-                    device = template.name,
-                    template = template
+                    device = layout.name,
+                    layout = layout
                 };
 
-                BuildControlsRecursive(deviceRoot, template, string.Empty, ref id);
+                BuildControlsRecursive(deviceRoot, layout, string.Empty, ref id);
 
                 return deviceRoot;
             }
 
-            private void BuildControlsRecursive(Item parent, InputTemplate template, string prefix, ref int id)
+            private void BuildControlsRecursive(Item parent, InputControlLayout layout, string prefix, ref int id)
             {
-                foreach (var control in template.controls)
+                foreach (var control in layout.controls)
                 {
                     if (control.isModifyingChildControlByPath)
                         continue;
@@ -290,15 +290,15 @@ namespace UnityEngine.Experimental.Input.Editor
                         id = id++,
                         depth = 1,
                         displayName = controlPath,
-                        device = parent.template.name,
+                        device = parent.layout.name,
                         controlPath = controlPath,
-                        template = template
+                        layout = layout
                     };
 
-                    var childTemplate = EditorInputTemplateCache.TryGetTemplate(control.template);
-                    if (childTemplate != null)
+                    var childLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
+                    if (childLayout != null)
                     {
-                        BuildControlsRecursive(parent, childTemplate, controlPath + "/", ref id);
+                        BuildControlsRecursive(parent, childLayout, controlPath + "/", ref id);
                     }
 
                     parent.AddChild(child);

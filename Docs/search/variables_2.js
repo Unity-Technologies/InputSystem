@@ -2,5 +2,5 @@ var searchData=
 [
   ['deadzonemin',['DeadzoneMin',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputConfiguration.html#a73c3b5907426acf0a49a6225b7d2cc59',1,'UnityEngine::Experimental::Input::InputConfiguration']]],
   ['deviceclass',['deviceClass',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#a3af4028153dffb860fbd70868883f15d',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
-  ['displayname',['displayName',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate_1_1ControlTemplate.html#aa782ccbdf1d5af49aae11b97a526d56a',1,'UnityEngine::Experimental::Input::InputTemplate::ControlTemplate']]]
+  ['displayname',['displayName',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#aa782ccbdf1d5af49aae11b97a526d56a',1,'UnityEngine::Experimental::Input::InputControlLayout::ControlItem']]]
 ];

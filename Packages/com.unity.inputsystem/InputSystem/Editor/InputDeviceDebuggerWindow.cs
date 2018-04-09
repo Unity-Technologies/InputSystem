@@ -83,7 +83,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ////FIXME: with ExpandHeight(false), editor still expands height for some reason....
             EditorGUILayout.BeginVertical("OL Box", GUILayout.Height(170));// GUILayout.ExpandHeight(false));
             EditorGUILayout.LabelField("Name", m_Device.name);
-            EditorGUILayout.LabelField("Template", m_Device.template);
+            EditorGUILayout.LabelField("Layout", m_Device.layout);
             EditorGUILayout.LabelField("Type", m_Device.GetType().Name);
             EditorGUILayout.LabelField("Interface", m_Device.description.interfaceName);
             EditorGUILayout.LabelField("Product", m_Device.description.product);

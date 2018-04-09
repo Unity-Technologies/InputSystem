@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input.Processors
                 return position;
 
             var command = QueryEditorWindowCoordinatesCommand.Create(position);
-            if (control.device.OnDeviceCommand(ref command) > 0)
+            if (control.device.ExecuteCommand(ref command) > 0)
                 return command.inOutCoordinates;
             return position;
         }

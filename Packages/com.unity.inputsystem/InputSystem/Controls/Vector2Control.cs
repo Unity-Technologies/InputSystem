@@ -34,11 +34,11 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeVector2;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            x = setup.GetControl<AxisControl>(this, "x");
-            y = setup.GetControl<AxisControl>(this, "y");
-            base.FinishSetup(setup);
+            x = builder.GetControl<AxisControl>(this, "x");
+            y = builder.GetControl<AxisControl>(this, "y");
+            base.FinishSetup(builder);
         }
 
         public override Vector2 ReadRawValueFrom(IntPtr statePtr)

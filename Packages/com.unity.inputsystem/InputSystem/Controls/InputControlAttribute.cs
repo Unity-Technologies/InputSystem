@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public class InputControlAttribute : Attribute
     {
-        public string template;
+        public string layout;
         public string variant;
         public string name;
         public string format;

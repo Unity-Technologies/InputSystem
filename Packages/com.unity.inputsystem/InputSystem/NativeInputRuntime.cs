@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 // This is stupid but the enum prevents us from jacking the delegate in directly.
-                // This we get a double dispatch here :(
+                // This means we get a double dispatch here :(
                 if (value != null)
                     NativeInputSystem.onUpdate = (updateType, eventCount, eventPtr) =>
                         value((InputUpdateType)updateType, eventCount, eventPtr);
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 // This is stupid but the enum prevents us from jacking the delegate in directly.
-                // This we get a double dispatch here :(
+                // This means we get a double dispatch here :(
                 if (value != null)
                     NativeInputSystem.onBeforeUpdate = updateType => value((InputUpdateType)updateType);
                 else

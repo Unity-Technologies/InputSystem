@@ -21,16 +21,16 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterBindingModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
 
 namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using TemplateChangeListener = Action<string, InputTemplateChange>;
+    using LayoutChangeListener = Action<string, InputControlLayoutChange>;
     using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
 
-    public delegate string DeviceFindTemplateCallback(int deviceId, ref InputDeviceDescription description, string matchedTemplate,
+    public delegate string DeviceFindControlLayoutCallback(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
 
     // The hub of the input system.
@@ -66,16 +66,16 @@ namespace UnityEngine.Experimental.Input
             remove { m_DeviceChangeListeners.Remove(value); }
         }
 
-        public event DeviceFindTemplateCallback onFindTemplateForDevice
+        public event DeviceFindControlLayoutCallback onFindControlLayoutForDevice
         {
-            add { m_DeviceFindTemplateCallbacks.Append(value); }
-            remove { m_DeviceFindTemplateCallbacks.Remove(value); }
+            add { m_DeviceFindLayoutCallbacks.Append(value); }
+            remove { m_DeviceFindLayoutCallbacks.Remove(value); }
         }
 
-        public event TemplateChangeListener onTemplateChange
+        public event LayoutChangeListener onLayoutChange
         {
-            add { m_TemplateChangeListeners.Append(value); }
-            remove { m_TemplateChangeListeners.Remove(value); }
+            add { m_LayoutChangeListeners.Append(value); }
+            remove { m_LayoutChangeListeners.Remove(value); }
         }
 
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
@@ -97,72 +97,72 @@ namespace UnityEngine.Experimental.Input
             remove { m_UpdateListeners.Remove(value); }
         }
 
-        ////TODO: when registering a template that exists as a template of a different type (type vs string vs constructor),
+        ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
         ////      remove the existing registration
 
-        // Add a template constructed from a type.
-        // If a template with the same name already exists, the new template
+        // Add a layout constructed from a type.
+        // If a layout with the same name already exists, the new layout
         // takes its place.
-        public void RegisterTemplate(string name, Type type, InputDeviceDescription? deviceDescription = null)
+        public void RegisterControlLayout(string name, Type type, InputDeviceDescription? deviceDescription = null)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
             if (type == null)
                 throw new ArgumentNullException("type");
 
-            // Note that since InputDevice derives from InputControl, isDeviceTemplate implies
-            // isControlTemplate to be true as well.
-            var isDeviceTemplate = typeof(InputDevice).IsAssignableFrom(type);
-            var isControlTemplate = typeof(InputControl).IsAssignableFrom(type);
+            // Note that since InputDevice derives from InputControl, isDeviceLayout implies
+            // isControlLayout to be true as well.
+            var isDeviceLayout = typeof(InputDevice).IsAssignableFrom(type);
+            var isControlLayout = typeof(InputControl).IsAssignableFrom(type);
 
-            if (!isDeviceTemplate && !isControlTemplate)
-                throw new ArgumentException("Types used as templates have to be InputControls or InputDevices",
+            if (!isDeviceLayout && !isControlLayout)
+                throw new ArgumentException("Types used as layouts have to be InputControls or InputDevices",
                     "type");
 
             var internedName = new InternedString(name);
-            var isReplacement = HaveTemplate(internedName);
+            var isReplacement = DoesLayoutExist(internedName);
 
-            // All we do is enter the type into a map. We don't construct an InputTemplate
-            // from it until we actually need it in an InputControlSetup to create a device.
+            // All we do is enter the type into a map. We don't construct an InputControlLayout
+            // from it until we actually need it in an InputDeviceBuilder to create a device.
             // This not only avoids us creating a bunch of objects on the managed heap but
-            // also avoids us laboriously constructing a VRController template, for example,
-            // in a game that never uses VR.
-            m_Templates.templateTypes[internedName] = type;
+            // also avoids us laboriously constructing a XRController layout, for example,
+            // in a game that never uses XR.
+            m_Layouts.layoutTypes[internedName] = type;
 
             ////TODO: make this independent of initialization order
             ////TODO: re-scan base type information after domain reloads
 
             // Walk class hierarchy all the way up to InputControl to see
-            // if there's another type that's been registered as a template.
-            // If so, make it a base template for this one.
-            string baseTemplate = null;
-            for (var baseType = type.BaseType; baseTemplate == null && baseType != typeof(InputControl);
+            // if there's another type that's been registered as a layhout.
+            // If so, make it a base layout for this one.
+            string baseLayout = null;
+            for (var baseType = type.BaseType; baseLayout == null && baseType != typeof(InputControl);
                  baseType = baseType.BaseType)
             {
-                foreach (var entry in m_Templates.templateTypes)
+                foreach (var entry in m_Layouts.layoutTypes)
                     if (entry.Value == baseType)
                     {
-                        baseTemplate = entry.Key;
+                        baseLayout = entry.Key;
                         break;
                     }
             }
 
-            PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement,
-                isKnownToBeDeviceTemplate: isDeviceTemplate);
+            PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement,
+                isKnownToBeDeviceLayout: isDeviceLayout);
         }
 
-        // Add a template constructed from a JSON string.
-        public void RegisterTemplate(string json, string name = null, string @namespace = null)
+        // Add a layout constructed from a JSON string.
+        public void RegisterControlLayout(string json, string name = null, string @namespace = null)
         {
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException("json");
 
-            ////REVIEW: as long as no one has instantiated the template, the base template information is kinda pointless
+            ////REVIEW: as long as no one has instantiated the layout, the base layout information is kinda pointless
 
-            // Parse out name, device description, and base template.
+            // Parse out name, device description, and base layout.
             InputDeviceDescription deviceDescription;
-            string baseTemplate;
-            var nameFromJson = InputTemplate.ParseHeaderFromJson(json, out deviceDescription, out baseTemplate);
+            string baseLayout;
+            var nameFromJson = InputControlLayout.ParseHeaderFromJson(json, out deviceDescription, out baseLayout);
 
             // Decide whether to take name from JSON or from code.
             if (string.IsNullOrEmpty(name))
@@ -171,7 +171,7 @@ namespace UnityEngine.Experimental.Input
 
                 // Make sure we have a name.
                 if (string.IsNullOrEmpty(name))
-                    throw new ArgumentException("Template name has not been given and is not set in JSON template",
+                    throw new ArgumentException("Layout name has not been given and is not set in JSON layout",
                         "name");
             }
 
@@ -179,16 +179,16 @@ namespace UnityEngine.Experimental.Input
                 name = string.Format("{0}::{1}", @namespace, name);
 
             var internedName = new InternedString(name);
-            var isReplacement = HaveTemplate(internedName);
+            var isReplacement = DoesLayoutExist(internedName);
 
             // Add it to our records.
-            m_Templates.templateStrings[internedName] = json;
+            m_Layouts.layoutStrings[internedName] = json;
 
-            PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement);
+            PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement);
         }
 
-        public void RegisterTemplateFactory(MethodInfo method, object instance, string name,
-            string baseTemplate = null, InputDeviceDescription? deviceDescription = null)
+        public void RegisterControlLayoutBuilder(MethodInfo method, object instance, string name,
+            string baseLayout = null, InputDeviceDescription? deviceDescription = null)
         {
             if (method == null)
                 throw new ArgumentNullException("method");
@@ -196,8 +196,8 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException(string.Format("Method must not be generic ({0})", method), "method");
             if (method.GetParameters().Length > 0)
                 throw new ArgumentException(string.Format("Method must not take arguments ({0})", method), "method");
-            if (!typeof(InputTemplate).IsAssignableFrom(method.ReturnType))
-                throw new ArgumentException(string.Format("Method msut return InputTemplate ({0})", method), "method");
+            if (!typeof(InputControlLayout).IsAssignableFrom(method.ReturnType))
+                throw new ArgumentException(string.Format("Method must return InputControlLayout ({0})", method), "method");
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
 
@@ -208,50 +208,50 @@ namespace UnityEngine.Experimental.Input
                 if (type.GetCustomAttribute<SerializableAttribute>(true) == null)
                     throw new ArgumentException(
                         string.Format(
-                            "Instance used with {0} to construct a template must be [Serializable] but {1} is not",
+                            "Instance used with {0} to construct a layout must be [Serializable] but {1} is not",
                             method, type),
                         "instance");
             }
 
             var internedName = new InternedString(name);
-            var isReplacement = HaveTemplate(internedName);
+            var isReplacement = DoesLayoutExist(internedName);
 
-            m_Templates.templateFactories[internedName] = new InputTemplate.Factory
+            m_Layouts.layoutBuilders[internedName] = new InputControlLayout.BuilderInfo
             {
                 method = method,
                 instance = instance
             };
 
-            PerformTemplatePostRegistration(internedName, baseTemplate, deviceDescription, isReplacement);
+            PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement);
         }
 
-        private void PerformTemplatePostRegistration(InternedString name, string baseTemplate,
-            InputDeviceDescription? deviceDescription, bool isReplacement, bool isKnownToBeDeviceTemplate = false)
+        private void PerformLayoutPostRegistration(InternedString name, string baseLayout,
+            InputDeviceDescription? deviceDescription, bool isReplacement, bool isKnownToBeDeviceLayout = false)
         {
-            ++m_TemplateSetupVersion;
+            ++m_LayoutRegistrationVersion;
 
-            if (!string.IsNullOrEmpty(baseTemplate))
-                m_Templates.baseTemplateTable[name] = new InternedString(baseTemplate);
+            if (!string.IsNullOrEmpty(baseLayout))
+                m_Layouts.baseLayoutTable[name] = new InternedString(baseLayout);
 
-            // Re-create any devices using the template.
-            RecreateDevicesUsingTemplate(name, isKnownToBeDeviceTemplate: isKnownToBeDeviceTemplate);
+            // Re-create any devices using the layout.
+            RecreateDevicesUsingLayout(name, isKnownToBeDeviceLayout: isKnownToBeDeviceLayout);
 
-            // If the template has a device description, see if it allows us
+            // If the layout has a device description, see if it allows us
             // to make sense of any device we couldn't make sense of so far.
             if (deviceDescription != null && !deviceDescription.Value.empty)
                 AddSupportedDevice(deviceDescription.Value, name);
 
             // Let listeners know.
-            var change = isReplacement ? InputTemplateChange.Replaced : InputTemplateChange.Added;
-            for (var i = 0; i < m_TemplateChangeListeners.Count; ++i)
-                m_TemplateChangeListeners[i](name.ToString(), change);
+            var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
+            for (var i = 0; i < m_LayoutChangeListeners.Count; ++i)
+                m_LayoutChangeListeners[i](name.ToString(), change);
         }
 
-        private void AddSupportedDevice(InputDeviceDescription description, InternedString template)
+        private void AddSupportedDevice(InputDeviceDescription description, InternedString layout)
         {
-            m_Templates.templateDeviceDescriptions[template] = description;
+            m_Layouts.layoutDeviceDescriptions[layout] = description;
 
-            // See if the new description to template mapping allows us to make
+            // See if the new description to layout mapping allows us to make
             // sense of a device we couldn't make sense of so far.
             for (var i = 0; i < m_AvailableDevices.Count; ++i)
             {
@@ -261,46 +261,51 @@ namespace UnityEngine.Experimental.Input
 
                 if (description.Matches(m_AvailableDevices[i].description))
                 {
-                    AddDevice(template, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
+                    // Re-enable device.
+                    var command = EnableDeviceCommand.Create();
+                    m_Runtime.DeviceCommand(deviceId, ref command);
+
+                    // Create InputDevice instance.
+                    AddDevice(layout, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
                 }
             }
         }
 
-        private void RecreateDevicesUsingTemplate(InternedString template, bool isKnownToBeDeviceTemplate = false)
+        private void RecreateDevicesUsingLayout(InternedString layout, bool isKnownToBeDeviceLayout = false)
         {
             if (m_Devices == null)
                 return;
 
-            List<InputDevice> devicesUsingTemplate = null;
+            List<InputDevice> devicesUsingLayout = null;
 
-            // Find all devices using the template.
+            // Find all devices using the layout.
             for (var i = 0; i < m_Devices.Length; ++i)
             {
                 var device = m_Devices[i];
 
-                bool usesTemplate;
-                if (isKnownToBeDeviceTemplate)
-                    usesTemplate = IsControlUsingTemplate(device, template);
+                bool usesLayout;
+                if (isKnownToBeDeviceLayout)
+                    usesLayout = IsControlUsingLayout(device, layout);
                 else
-                    usesTemplate = IsControlOrChildUsingTemplateRecursive(device, template);
+                    usesLayout = IsControlOrChildUsingLayoutRecursive(device, layout);
 
-                if (usesTemplate)
+                if (usesLayout)
                 {
-                    if (devicesUsingTemplate == null)
-                        devicesUsingTemplate = new List<InputDevice>();
-                    devicesUsingTemplate.Add(device);
+                    if (devicesUsingLayout == null)
+                        devicesUsingLayout = new List<InputDevice>();
+                    devicesUsingLayout.Add(device);
                 }
             }
 
             // If there's none, we're good.
-            if (devicesUsingTemplate == null)
+            if (devicesUsingLayout == null)
                 return;
 
             // Remove and re-add the matching devices.
-            var setup = new InputControlSetup(m_Templates);
-            for (var i = 0; i < devicesUsingTemplate.Count; ++i)
+            var setup = new InputDeviceBuilder(m_Layouts);
+            for (var i = 0; i < devicesUsingLayout.Count; ++i)
             {
-                var device = devicesUsingTemplate[i];
+                var device = devicesUsingLayout[i];
 
                 ////TODO: preserve state where possible
 
@@ -308,7 +313,7 @@ namespace UnityEngine.Experimental.Input
                 RemoveDevice(device);
 
                 // Re-setup device.
-                setup.Setup(device.m_Template, device, device.m_Variant);
+                setup.Setup(device.m_Layout, device, device.m_Variant);
                 var newDevice = setup.Finish();
 
                 // Re-add.
@@ -316,37 +321,37 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private bool IsControlOrChildUsingTemplateRecursive(InputControl control, InternedString template)
+        private bool IsControlOrChildUsingLayoutRecursive(InputControl control, InternedString layout)
         {
             // Check control itself.
-            if (IsControlUsingTemplate(control, template))
+            if (IsControlUsingLayout(control, layout))
                 return true;
 
             // Check children.
             var children = control.children;
             for (var i = 0; i < children.Count; ++i)
-                if (IsControlOrChildUsingTemplateRecursive(children[i], template))
+                if (IsControlOrChildUsingLayoutRecursive(children[i], layout))
                     return true;
 
             return false;
         }
 
-        private bool IsControlUsingTemplate(InputControl control, InternedString template)
+        private bool IsControlUsingLayout(InputControl control, InternedString layout)
         {
             // Check direct match.
-            if (control.template == template)
+            if (control.layout == layout)
                 return true;
 
-            // Check base template chain.
-            var baseTemplate = control.m_Template;
-            while (m_Templates.baseTemplateTable.TryGetValue(baseTemplate, out baseTemplate))
-                if (baseTemplate == template)
+            // Check base layout chain.
+            var baseLayout = control.m_Layout;
+            while (m_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout))
+                if (baseLayout == layout)
                     return true;
 
             return false;
         }
 
-        public void RemoveTemplate(string name, string @namespace = null)
+        public void RemoveControlLayout(string name, string @namespace = null)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -356,11 +361,11 @@ namespace UnityEngine.Experimental.Input
 
             var internedName = new InternedString(name);
 
-            // Remove all devices using the template.
+            // Remove all devices using the layout.
             for (var i = 0; m_Devices != null && i < m_Devices.Length;)
             {
                 var device = m_Devices[i];
-                if (IsControlOrChildUsingTemplateRecursive(device, internedName))
+                if (IsControlOrChildUsingLayoutRecursive(device, internedName))
                 {
                     RemoveDevice(device);
                 }
@@ -370,44 +375,44 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            // Remove template record.
-            m_Templates.templateTypes.Remove(internedName);
-            m_Templates.templateStrings.Remove(internedName);
-            m_Templates.templateFactories.Remove(internedName);
-            m_Templates.baseTemplateTable.Remove(internedName);
+            // Remove layout record.
+            m_Layouts.layoutTypes.Remove(internedName);
+            m_Layouts.layoutStrings.Remove(internedName);
+            m_Layouts.layoutBuilders.Remove(internedName);
+            m_Layouts.baseLayoutTable.Remove(internedName);
 
-            ////TODO: check all template inheritance chain for whether they are based on the template and if so
-            ////      remove those templates, too
+            ////TODO: check all layout inheritance chain for whether they are based on the layout and if so
+            ////      remove those layouts, too
 
             // Let listeners know.
-            for (var i = 0; i < m_TemplateChangeListeners.Count; ++i)
-                m_TemplateChangeListeners[i](name, InputTemplateChange.Removed);
+            for (var i = 0; i < m_LayoutChangeListeners.Count; ++i)
+                m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
         }
 
-        public InputTemplate TryLoadTemplate(InternedString name)
+        public InputControlLayout TryLoadControlLayout(InternedString name)
         {
-            return m_Templates.TryLoadTemplate(name);
+            return m_Layouts.TryLoadLayout(name);
         }
 
-        public string TryFindMatchingTemplate(InputDeviceDescription deviceDescription)
+        public string TryFindMatchingControlLayout(InputDeviceDescription deviceDescription)
         {
             ////TODO: this will want to take overrides into account
 
             // See if we can match by description.
-            var templateName = m_Templates.TryFindMatchingTemplate(deviceDescription);
-            if (!templateName.IsEmpty())
-                return templateName;
+            var layoutName = m_Layouts.TryFindMatchingLayout(deviceDescription);
+            if (!layoutName.IsEmpty())
+                return layoutName;
 
-            // No, so try to match by device class. If we have a "Gamepad" template,
+            // No, so try to match by device class. If we have a "Gamepad" layout,
             // for example, a device that classifies itself as a "Gamepad" will match
-            // that template.
+            // that layout.
             //
-            // NOTE: Have to make sure here that we get a device template and not a
-            //       control template.
+            // NOTE: Have to make sure here that we get a device layout and not a
+            //       control layout.
             if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
             {
                 var deviceClassLowerCase = new InternedString(deviceDescription.deviceClass);
-                var type = m_Templates.GetControlTypeForTemplate(deviceClassLowerCase);
+                var type = m_Layouts.GetControlTypeForLayout(deviceClassLowerCase);
                 if (type != null && typeof(InputDevice).IsAssignableFrom(type))
                     return deviceDescription.deviceClass;
             }
@@ -415,27 +420,27 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        private bool HaveTemplate(InternedString name)
+        private bool DoesLayoutExist(InternedString name)
         {
-            return m_Templates.templateTypes.ContainsKey(name) ||
-                m_Templates.templateStrings.ContainsKey(name) ||
-                m_Templates.templateFactories.ContainsKey(name);
+            return m_Layouts.layoutTypes.ContainsKey(name) ||
+                m_Layouts.layoutStrings.ContainsKey(name) ||
+                m_Layouts.layoutBuilders.ContainsKey(name);
         }
 
-        public int ListTemplates(List<string> templates)
+        public int ListControlLayouts(List<string> layouts)
         {
-            if (templates == null)
-                throw new ArgumentNullException("templates");
+            if (layouts == null)
+                throw new ArgumentNullException("layouts");
 
-            var countBefore = templates.Count;
+            var countBefore = layouts.Count;
 
             ////FIXME: this may add a name twice; also allocates
 
-            templates.AddRange(m_Templates.templateTypes.Keys.Select(x => x.ToString()));
-            templates.AddRange(m_Templates.templateStrings.Keys.Select(x => x.ToString()));
-            templates.AddRange(m_Templates.templateFactories.Keys.Select(x => x.ToString()));
+            layouts.AddRange(m_Layouts.layoutTypes.Keys.Select(x => x.ToString()));
+            layouts.AddRange(m_Layouts.layoutStrings.Keys.Select(x => x.ToString()));
+            layouts.AddRange(m_Layouts.layoutBuilders.Keys.Select(x => x.ToString()));
 
-            return templates.Count - countBefore;
+            return layouts.Count - countBefore;
         }
 
         public void RegisterControlProcessor(string name, Type type)
@@ -540,7 +545,7 @@ namespace UnityEngine.Experimental.Input
             return numMatches;
         }
 
-        public void SetVariant(InputControl control, string variant)
+        public void SetLayoutVariant(InputControl control, string variant)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
@@ -573,48 +578,48 @@ namespace UnityEngine.Experimental.Input
             if (type == null)
                 throw new ArgumentNullException("type");
 
-            // Find the template name that the given type was registered with.
+            // Find the layout name that the given type was registered with.
             // First just try the name of the type and see if that produces a hit.
-            var templateName = new InternedString(type.Name);
+            var layoutName = new InternedString(type.Name);
             Type registeredType;
-            if (!m_Templates.templateTypes.TryGetValue(templateName, out registeredType)
+            if (!m_Layouts.layoutTypes.TryGetValue(layoutName, out registeredType)
                 || registeredType != type)
             {
-                // Didn't produce a hit so crawl through all registered template types
+                // Didn't produce a hit so crawl through all registered layout types
                 // and look for a match.
-                templateName = new InternedString();
-                foreach (var entry in m_Templates.templateTypes)
+                layoutName = new InternedString();
+                foreach (var entry in m_Layouts.layoutTypes)
                 {
                     if (entry.Value == type)
                     {
-                        templateName = entry.Key;
+                        layoutName = entry.Key;
                         break;
                     }
                 }
 
-                if (templateName.IsEmpty())
-                    throw new ArgumentException(string.Format("Cannot find template registered for type '{0}'", type.Name),
+                if (layoutName.IsEmpty())
+                    throw new ArgumentException(string.Format("Cannot find layout registered for type '{0}'", type.Name),
                         "type");
             }
 
-            Debug.Assert(!templateName.IsEmpty(), name);
+            Debug.Assert(!layoutName.IsEmpty(), name);
 
             // Note that since we go through the normal by-name lookup here, this will
-            // still work if the template from the type was override with a string template.
-            return AddDevice(templateName);
+            // still work if the layout from the type was override with a string layout.
+            return AddDevice(layoutName);
         }
 
-        // Creates a device from the given template and adds it to the system.
+        // Creates a device from the given layout and adds it to the system.
         // NOTE: Creates garbage.
-        public InputDevice AddDevice(string template, string name = null)
+        public InputDevice AddDevice(string layout, string name = null)
         {
-            if (string.IsNullOrEmpty(template))
-                throw new ArgumentException("template");
+            if (string.IsNullOrEmpty(layout))
+                throw new ArgumentException("layout");
 
-            var internedTemplateName = new InternedString(template);
+            var internedLayoutName = new InternedString(layout);
 
-            var setup = new InputControlSetup(m_Templates);
-            setup.Setup(internedTemplateName, null, new InternedString());
+            var setup = new InputDeviceBuilder(m_Layouts);
+            setup.Setup(internedLayoutName, null, new InternedString());
             var device = setup.Finish();
 
             if (!string.IsNullOrEmpty(name))
@@ -626,10 +631,10 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Add device with a forced ID. Used when creating devices reported to us by native.
-        private InputDevice AddDevice(string template, int deviceId, InputDeviceDescription description, bool isNative)
+        private InputDevice AddDevice(string layout, int deviceId, InputDeviceDescription description, bool isNative)
         {
-            var setup = new InputControlSetup(m_Templates);
-            setup.SetupWithDescription(new InternedString(template), description, new InternedString());
+            var setup = new InputDeviceBuilder(m_Layouts);
+            setup.SetupWithDescription(new InternedString(layout), description, new InternedString());
             var device = setup.Finish();
 
             device.m_Id = deviceId;
@@ -651,8 +656,8 @@ namespace UnityEngine.Experimental.Input
         {
             if (device == null)
                 throw new ArgumentNullException("device");
-            if (string.IsNullOrEmpty(device.template))
-                throw new ArgumentException("Device has no associated template", "device");
+            if (string.IsNullOrEmpty(device.layout))
+                throw new ArgumentException("Device has no associated layout", "device");
 
             // Ignore if the same device gets added multiple times.
             if (ArrayHelpers.Contains(m_Devices, device))
@@ -706,33 +711,43 @@ namespace UnityEngine.Experimental.Input
 
         public InputDevice AddDevice(InputDeviceDescription description)
         {
-            return AddDevice(description, throwIfNoTemplateFound: true);
+            return AddDevice(description, throwIfNoLayoutFound: true);
         }
 
-        public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoTemplateFound, int deviceId = InputDevice.kInvalidDeviceId, bool isNative = false)
+        public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound, int deviceId = InputDevice.kInvalidDeviceId, bool isNative = false)
         {
-            var template = TryFindMatchingTemplate(description);
+            // Look for matching layout.
+            var layout = TryFindMatchingControlLayout(description);
 
-            ////REVIEW: listeners registering new templates from in here may potentially lead to the creation of devices; should we disallow that?
-            // Give listeners a shot to select/create a template.
-            for (var i = 0; i < m_DeviceFindTemplateCallbacks.Count; ++i)
+            ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
+            // Give listeners a shot to select/create a layout.
+            for (var i = 0; i < m_DeviceFindLayoutCallbacks.Count; ++i)
             {
-                var newTemplate = m_DeviceFindTemplateCallbacks[i](deviceId, ref description, template, m_Runtime);
-                if (!string.IsNullOrEmpty(newTemplate))
+                var newLayout = m_DeviceFindLayoutCallbacks[i](deviceId, ref description, layout, m_Runtime);
+                if (!string.IsNullOrEmpty(newLayout))
                 {
-                    template = newTemplate;
+                    layout = newLayout;
                     break;
                 }
             }
 
-            if (template == null)
+            // If no layout was found, bail out.
+            if (layout == null)
             {
-                if (throwIfNoTemplateFound)
-                    throw new ArgumentException(string.Format("Cannot find template matching device description '{0}'", description), "description");
+                if (throwIfNoLayoutFound)
+                    throw new ArgumentException(string.Format("Cannot find layout matching device description '{0}'", description), "description");
+
+                // If it's a device coming from the runtime, disable it.
+                if (deviceId != InputDevice.kInvalidDeviceId)
+                {
+                    var command = DisableDeviceCommand.Create();
+                    m_Runtime.DeviceCommand(deviceId, ref command);
+                }
+
                 return null;
             }
 
-            var device = AddDevice(template, deviceId, description, isNative);
+            var device = AddDevice(layout, deviceId, description, isNative);
             device.m_Description = description;
 
             return device;
@@ -808,32 +823,32 @@ namespace UnityEngine.Experimental.Input
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
         }
 
-        public InputDevice TryGetDevice(string nameOrTemplate)
+        public InputDevice TryGetDevice(string nameOrLayout)
         {
-            if (string.IsNullOrEmpty(nameOrTemplate))
-                throw new ArgumentException("nameOrTemplate");
+            if (string.IsNullOrEmpty(nameOrLayout))
+                throw new ArgumentException("nameOrLayout");
 
             if (m_Devices == null)
                 return null;
 
-            var nameOrTemplateLowerCase = nameOrTemplate.ToLower();
+            var nameOrLayoutLowerCase = nameOrLayout.ToLower();
 
             for (var i = 0; i < m_Devices.Length; ++i)
             {
                 var device = m_Devices[i];
-                if (device.m_Name.ToLower() == nameOrTemplateLowerCase ||
-                    device.m_Template.ToLower() == nameOrTemplateLowerCase)
+                if (device.m_Name.ToLower() == nameOrLayoutLowerCase ||
+                    device.m_Layout.ToLower() == nameOrLayoutLowerCase)
                     return device;
             }
 
             return null;
         }
 
-        public InputDevice GetDevice(string nameOrTemplate)
+        public InputDevice GetDevice(string nameOrLayout)
         {
-            var device = TryGetDevice(nameOrTemplate);
+            var device = TryGetDevice(nameOrLayout);
             if (device == null)
-                throw new Exception(string.Format("Cannot find device with name or template '{0}'", nameOrTemplate));
+                throw new Exception(string.Format("Cannot find device with name or layout '{0}'", nameOrLayout));
 
             return device;
         }
@@ -847,7 +862,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Adds any device that's been reported to the system but could not be matched to
-        // a template to the given list.
+        // a layout to the given list.
         public int GetUnsupportedDevices(List<InputDeviceDescription> descriptions)
         {
             if (descriptions == null)
@@ -871,12 +886,12 @@ namespace UnityEngine.Experimental.Input
             try
             {
                 // Try to turn it into a device instance.
-                AddDevice(description, throwIfNoTemplateFound: false, deviceId: deviceId, isNative: isNative);
+                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId, isNative: isNative);
             }
             finally
             {
                 // Remember it. Do this *after* the AddDevice() call above so that if there's
-                // a listener creating templates on the fly we won't end up matching this device and
+                // a listener creating layouts on the fly we won't end up matching this device and
                 // create an InputDevice right away (which would then conflict with the one we
                 // create in AddDevice).
                 m_AvailableDevices.Add(new AvailableDevice
@@ -907,12 +922,12 @@ namespace UnityEngine.Experimental.Input
             if (enable)
             {
                 var command = EnableDeviceCommand.Create();
-                device.OnDeviceCommand(ref command);
+                device.ExecuteCommand(ref command);
             }
             else
             {
                 var command = DisableDeviceCommand.Create();
-                device.OnDeviceCommand(ref command);
+                device.ExecuteCommand(ref command);
             }
 
             // Let listeners know.
@@ -953,8 +968,8 @@ namespace UnityEngine.Experimental.Input
 
         internal void Destroy()
         {
-            if (ReferenceEquals(InputTemplate.s_Templates.baseTemplateTable, m_Templates.baseTemplateTable))
-                InputTemplate.s_Templates = new InputTemplate.Collection();
+            if (ReferenceEquals(InputControlLayout.s_Layouts.baseLayoutTable, m_Layouts.baseLayoutTable))
+                InputControlLayout.s_Layouts = new InputControlLayout.Collection();
             if (ReferenceEquals(InputProcessor.s_Processors, m_Processors))
                 InputProcessor.s_Processors = null;
 
@@ -971,7 +986,7 @@ namespace UnityEngine.Experimental.Input
 
         internal void InitializeData()
         {
-            m_Templates.Allocate();
+            m_Layouts.Allocate();
             m_Processors = new Dictionary<InternedString, Type>();
             m_Modifiers = new Dictionary<InternedString, Type>();
             m_DevicesById = new Dictionary<int, InputDevice>();
@@ -986,41 +1001,41 @@ namespace UnityEngine.Experimental.Input
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
 
-            // Register templates.
-            RegisterTemplate("Button", typeof(ButtonControl)); // Controls.
-            RegisterTemplate("DiscreteButton", typeof(DiscreteButtonControl));
-            RegisterTemplate("Key", typeof(KeyControl));
-            RegisterTemplate("Axis", typeof(AxisControl));
-            RegisterTemplate("Analog", typeof(AxisControl));
-            RegisterTemplate("Digital", typeof(IntegerControl));
-            RegisterTemplate("Integer", typeof(IntegerControl));
-            RegisterTemplate("PointerPhase", typeof(PointerPhaseControl));
-            RegisterTemplate("TouchType", typeof(TouchTypeControl));
-            RegisterTemplate("Vector2", typeof(Vector2Control));
-            RegisterTemplate("Vector3", typeof(Vector3Control));
-            RegisterTemplate("Magnitude2", typeof(Magnitude2Control));
-            RegisterTemplate("Magnitude3", typeof(Magnitude3Control));
-            RegisterTemplate("Quaternion", typeof(QuaternionControl));
-            RegisterTemplate("Pose", typeof(PoseControl));
-            RegisterTemplate("Stick", typeof(StickControl));
-            RegisterTemplate("Dpad", typeof(DpadControl));
-            RegisterTemplate("AnyKey", typeof(AnyKeyControl));
-            RegisterTemplate("Touch", typeof(TouchControl));
-            RegisterTemplate("Color", typeof(ColorControl));
-            RegisterTemplate("Audio", typeof(AudioControl));
+            // Register layouts.
+            RegisterControlLayout("Button", typeof(ButtonControl)); // Controls.
+            RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
+            RegisterControlLayout("Key", typeof(KeyControl));
+            RegisterControlLayout("Axis", typeof(AxisControl));
+            RegisterControlLayout("Analog", typeof(AxisControl));
+            RegisterControlLayout("Digital", typeof(IntegerControl));
+            RegisterControlLayout("Integer", typeof(IntegerControl));
+            RegisterControlLayout("PointerPhase", typeof(PointerPhaseControl));
+            RegisterControlLayout("TouchType", typeof(TouchTypeControl));
+            RegisterControlLayout("Vector2", typeof(Vector2Control));
+            RegisterControlLayout("Vector3", typeof(Vector3Control));
+            RegisterControlLayout("Magnitude2", typeof(Magnitude2Control));
+            RegisterControlLayout("Magnitude3", typeof(Magnitude3Control));
+            RegisterControlLayout("Quaternion", typeof(QuaternionControl));
+            RegisterControlLayout("Pose", typeof(PoseControl));
+            RegisterControlLayout("Stick", typeof(StickControl));
+            RegisterControlLayout("Dpad", typeof(DpadControl));
+            RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
+            RegisterControlLayout("Touch", typeof(TouchControl));
+            RegisterControlLayout("Color", typeof(ColorControl));
+            RegisterControlLayout("Audio", typeof(AudioControl));
 
-            RegisterTemplate("Gamepad", typeof(Gamepad)); // Devices.
-            RegisterTemplate("Joystick", typeof(Joystick));
-            RegisterTemplate("Keyboard", typeof(Keyboard));
-            RegisterTemplate("Pointer", typeof(Pointer));
-            RegisterTemplate("Mouse", typeof(Mouse));
-            RegisterTemplate("Pen", typeof(Pen));
-            RegisterTemplate("Touchscreen", typeof(Touchscreen));
-            RegisterTemplate("Sensor", typeof(Sensor));
-            RegisterTemplate("Accelerometer", typeof(Accelerometer));
-            RegisterTemplate("Gyroscope", typeof(Gyroscope));
+            RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
+            RegisterControlLayout("Joystick", typeof(Joystick));
+            RegisterControlLayout("Keyboard", typeof(Keyboard));
+            RegisterControlLayout("Pointer", typeof(Pointer));
+            RegisterControlLayout("Mouse", typeof(Mouse));
+            RegisterControlLayout("Pen", typeof(Pen));
+            RegisterControlLayout("Touchscreen", typeof(Touchscreen));
+            RegisterControlLayout("Sensor", typeof(Sensor));
+            RegisterControlLayout("Accelerometer", typeof(Accelerometer));
+            RegisterControlLayout("Gyroscope", typeof(Gyroscope));
 
-            ////REVIEW: #if templates to the platforms they make sense on?
+            ////REVIEW: #if layouts to the platforms they make sense on?
 
             // Register processors.
             RegisterControlProcessor("Invert", typeof(InvertProcessor));
@@ -1071,7 +1086,7 @@ namespace UnityEngine.Experimental.Input
         // Revive after domain reload.
         internal void InstallGlobals()
         {
-            InputTemplate.s_Templates = m_Templates;
+            InputControlLayout.s_Layouts = m_Layouts;
             InputProcessor.s_Processors = m_Processors;
 
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
@@ -1094,10 +1109,10 @@ namespace UnityEngine.Experimental.Input
             public bool isNative;
         }
 
-        // Used by EditorInputTemplateCache to determine whether its state is outdated.
-        [NonSerialized] internal int m_TemplateSetupVersion;
+        // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
+        [NonSerialized] internal int m_LayoutRegistrationVersion;
 
-        [NonSerialized] internal InputTemplate.Collection m_Templates;
+        [NonSerialized] internal InputControlLayout.Collection m_Layouts;
         [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
         [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
         [NonSerialized] private Dictionary<InternedString, Type> m_Composites;
@@ -1113,8 +1128,8 @@ namespace UnityEngine.Experimental.Input
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
-        [NonSerialized] private InlinedArray<DeviceFindTemplateCallback> m_DeviceFindTemplateCallbacks;
-        [NonSerialized] private InlinedArray<TemplateChangeListener> m_TemplateChangeListeners;
+        [NonSerialized] private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
+        [NonSerialized] private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
@@ -1123,7 +1138,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private IInputRuntime m_Runtime;
 
         #if UNITY_EDITOR
-        [NonSerialized] internal IInputDebugger m_Debugger;
+        [NonSerialized] internal IInputDiagnostics m_Diagnostics;
         #endif
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
@@ -1617,8 +1632,8 @@ namespace UnityEngine.Experimental.Input
                 if (device == null)
                 {
                     #if UNITY_EDITOR
-                    if (m_Debugger != null)
-                        m_Debugger.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventPtr));
+                    if (m_Diagnostics != null)
+                        m_Diagnostics.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventPtr));
                     #endif
 
                     // No device found matching event. Consider it handled.
@@ -1637,6 +1652,10 @@ namespace UnityEngine.Experimental.Input
                         // Ignore state changes if device is disabled.
                         if (!device.enabled)
                         {
+                            #if UNITY_EDITOR
+                            if (m_Diagnostics != null)
+                                m_Diagnostics.OnEventForDisabledDevice(new InputEventPtr(currentEventPtr), device);
+                            #endif
                             doNotMakeDeviceCurrent = true;
                             break;
                         }
@@ -1646,8 +1665,8 @@ namespace UnityEngine.Experimental.Input
                         if (currentEventTime < device.m_LastUpdateTime)
                         {
                             #if UNITY_EDITOR
-                            if (m_Debugger != null)
-                                m_Debugger.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
+                            if (m_Diagnostics != null)
+                                m_Diagnostics.OnEventTimestampOutdated(new InputEventPtr(currentEventPtr), device);
                             #endif
                             doNotMakeDeviceCurrent = true;
                             break;
@@ -1695,8 +1714,8 @@ namespace UnityEngine.Experimental.Input
                         if (stateBlock.format != stateFormat)
                         {
                             #if UNITY_EDITOR
-                            if (m_Debugger != null)
-                                m_Debugger.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
+                            if (m_Diagnostics != null)
+                                m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
                             #endif
                             break;
                         }
@@ -2050,13 +2069,13 @@ namespace UnityEngine.Experimental.Input
         {
             // Preserving InputDevices is somewhat tricky business. Serializing
             // them in full would involve pretty nasty work. We have the restriction,
-            // however, that everything needs to be created from templates (it partly
+            // however, that everything needs to be created from layouts (it partly
             // exists for the sake of reload survivability), so we should be able to
-            // just go and recreate the device from the template. This also has the
-            // advantage that if the template changes between reloads, the change
+            // just go and recreate the device from the layout. This also has the
+            // advantage that if the layout changes between reloads, the change
             // automatically takes effect.
             public string name;
-            public string template;
+            public string layout;
             public string variant;
             public string[] usages;
             public int deviceId;
@@ -2076,21 +2095,21 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        internal struct TemplateState
+        internal struct LayoutState
         {
             public string name;
             public string typeNameOrJson;
         }
 
         [Serializable]
-        internal struct BaseTemplateState
+        internal struct BaseLayoutState
         {
-            public string baseTemplate;
-            public string derivedTemplate;
+            public string baseLayout;
+            public string derivedLayout;
         }
 
         [Serializable]
-        internal struct TemplateConstructorState
+        internal struct LayoutBuilderState
         {
             public string name;
             public string typeName;
@@ -2099,10 +2118,10 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        internal struct TemplateDeviceState
+        internal struct LayoutDeviceState
         {
             public InputDeviceDescription deviceDescription;
-            public string templateName;
+            public string layoutName;
         }
 
         [Serializable]
@@ -2131,12 +2150,12 @@ namespace UnityEngine.Experimental.Input
         [Serializable]
         internal struct SerializedState
         {
-            public int templateSetupVersion;
-            public TemplateState[] templateTypes;
-            public TemplateState[] templateStrings;
-            public TemplateConstructorState[] templateConstructors;
-            public BaseTemplateState[] baseTemplates;
-            public TemplateDeviceState[] templateDeviceDescriptions;
+            public int layoutRegistrationVersion;
+            public LayoutState[] layoutTypes;
+            public LayoutState[] layoutStrings;
+            public LayoutBuilderState[] layoutFactories;
+            public BaseLayoutState[] baseLayouts;
+            public LayoutDeviceState[] layoutDeviceDescriptions;
             public TypeRegistrationState[] processors;
             public TypeRegistrationState[] modifiers;
             public DeviceState[] devices;
@@ -2150,50 +2169,50 @@ namespace UnityEngine.Experimental.Input
             // not across domain reloads.
 
             [NonSerialized] public InlinedArray<DeviceChangeListener> deviceChangeListeners;
-            [NonSerialized] public InlinedArray<DeviceFindTemplateCallback> deviceFindTemplateCallbacks;
-            [NonSerialized] public InlinedArray<TemplateChangeListener> templateChangeListeners;
+            [NonSerialized] public InlinedArray<DeviceFindControlLayoutCallback> deviceFindLayoutCallbacks;
+            [NonSerialized] public InlinedArray<LayoutChangeListener> layoutChangeListeners;
             [NonSerialized] public InlinedArray<EventListener> eventListeners;
 
             [NonSerialized] public IInputRuntime runtime;
 
             #if UNITY_EDITOR
-            [NonSerialized] public IInputDebugger debugger;
+            [NonSerialized] public IInputDiagnostics diagnostics;
             #endif
         }
 
         internal SerializedState SaveState()
         {
-            // Template types.
-            var templateTypeCount = m_Templates.templateTypes.Count;
-            var templateTypeArray = new TemplateState[templateTypeCount];
+            // Layout types.
+            var layoutTypeCount = m_Layouts.layoutTypes.Count;
+            var layoutTypeArray = new LayoutState[layoutTypeCount];
 
             var i = 0;
-            foreach (var entry in m_Templates.templateTypes)
-                templateTypeArray[i++] = new TemplateState
+            foreach (var entry in m_Layouts.layoutTypes)
+                layoutTypeArray[i++] = new LayoutState
                 {
                     name = entry.Key,
                     typeNameOrJson = entry.Value.AssemblyQualifiedName
                 };
 
-            // Template strings.
-            var templateStringCount = m_Templates.templateStrings.Count;
-            var templateStringArray = new TemplateState[templateStringCount];
+            // Layout strings.
+            var layoutStringCount = m_Layouts.layoutStrings.Count;
+            var layoutStringArray = new LayoutState[layoutStringCount];
 
             i = 0;
-            foreach (var entry in m_Templates.templateStrings)
-                templateStringArray[i++] = new TemplateState
+            foreach (var entry in m_Layouts.layoutStrings)
+                layoutStringArray[i++] = new LayoutState
                 {
                     name = entry.Key,
                     typeNameOrJson = entry.Value
                 };
 
-            // Template factories.
-            var templateConstructorCount = m_Templates.templateFactories.Count;
-            var templateConstructorArray = new TemplateConstructorState[templateConstructorCount];
+            // Layout factories.
+            var layoutBuilderCount = m_Layouts.layoutBuilders.Count;
+            var layoutBuilderArray = new LayoutBuilderState[layoutBuilderCount];
 
             i = 0;
-            foreach (var entry in m_Templates.templateFactories)
-                templateConstructorArray[i++] = new TemplateConstructorState
+            foreach (var entry in m_Layouts.layoutBuilders)
+                layoutBuilderArray[i++] = new LayoutBuilderState
                 {
                     name = entry.Key,
                     typeName = entry.Value.method.DeclaringType.AssemblyQualifiedName,
@@ -2210,7 +2229,7 @@ namespace UnityEngine.Experimental.Input
                 var deviceState = new DeviceState
                 {
                     name = device.name,
-                    template = device.template,
+                    layout = device.layout,
                     variant = device.variant,
                     deviceId = device.id,
                     usages = device.usages.Select(x => x.ToString()).ToArray(),
@@ -2223,12 +2242,12 @@ namespace UnityEngine.Experimental.Input
 
             return new SerializedState
             {
-                templateSetupVersion = m_TemplateSetupVersion,
-                templateTypes = templateTypeArray,
-                templateStrings = templateStringArray,
-                templateConstructors = templateConstructorArray,
-                baseTemplates = m_Templates.baseTemplateTable.Select(x => new BaseTemplateState { derivedTemplate = x.Key, baseTemplate = x.Value }).ToArray(),
-                templateDeviceDescriptions = m_Templates.templateDeviceDescriptions.Select(x => new TemplateDeviceState { deviceDescription = x.Value, templateName = x.Key }).ToArray(),
+                layoutRegistrationVersion = m_LayoutRegistrationVersion,
+                layoutTypes = layoutTypeArray,
+                layoutStrings = layoutStringArray,
+                layoutFactories = layoutBuilderArray,
+                baseLayouts = m_Layouts.baseLayoutTable.Select(x => new BaseLayoutState { derivedLayout = x.Key, baseLayout = x.Value }).ToArray(),
+                layoutDeviceDescriptions = m_Layouts.layoutDeviceDescriptions.Select(x => new LayoutDeviceState { deviceDescription = x.Value, layoutName = x.Key }).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
                 modifiers = TypeRegistrationState.SaveState(m_Modifiers),
                 devices = deviceArray,
@@ -2237,14 +2256,14 @@ namespace UnityEngine.Experimental.Input
                 configuration = InputConfiguration.Save(),
                 updateState = InputUpdate.Save(),
                 deviceChangeListeners = m_DeviceChangeListeners.Clone(),
-                deviceFindTemplateCallbacks = m_DeviceFindTemplateCallbacks.Clone(),
-                templateChangeListeners = m_TemplateChangeListeners.Clone(),
+                deviceFindLayoutCallbacks = m_DeviceFindLayoutCallbacks.Clone(),
+                layoutChangeListeners = m_LayoutChangeListeners.Clone(),
                 eventListeners = m_EventListeners.Clone(),
                 updateMask = m_UpdateMask,
                 runtime = m_Runtime,
 
                 #if UNITY_EDITOR
-                debugger = m_Debugger
+                diagnostics = m_Diagnostics
                 #endif
             };
 
@@ -2266,15 +2285,15 @@ namespace UnityEngine.Experimental.Input
 
             m_StateBuffers = state.buffers;
             m_AvailableDevices = state.availableDevices.ToList();
-            m_TemplateSetupVersion = state.templateSetupVersion + 1;
+            m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
             m_DeviceChangeListeners = state.deviceChangeListeners;
-            m_DeviceFindTemplateCallbacks = state.deviceFindTemplateCallbacks;
-            m_TemplateChangeListeners = state.templateChangeListeners;
+            m_DeviceFindLayoutCallbacks = state.deviceFindLayoutCallbacks;
+            m_LayoutChangeListeners = state.layoutChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
 
             #if UNITY_EDITOR
-            m_Debugger = state.debugger;
+            m_Diagnostics = state.diagnostics;
             #endif
 
             // Configuration.
@@ -2283,72 +2302,72 @@ namespace UnityEngine.Experimental.Input
             // Update state.
             InputUpdate.Restore(state.updateState);
 
-            // Template types.
-            foreach (var template in state.templateTypes)
+            // Layout types.
+            foreach (var layout in state.layoutTypes)
             {
-                var name = new InternedString(template.name);
-                if (m_Templates.templateTypes.ContainsKey(name))
+                var name = new InternedString(layout.name);
+                if (m_Layouts.layoutTypes.ContainsKey(name))
                     continue; // Don't overwrite builtins as they have been updated.
-                var type = Type.GetType(template.typeNameOrJson, false);
+                var type = Type.GetType(layout.typeNameOrJson, false);
                 if (type != null)
-                    m_Templates.templateTypes[name] = type;
+                    m_Layouts.layoutTypes[name] = type;
                 else
-                    Debug.Log(string.Format("Input template '{0}' has been removed (type '{1}' cannot be found)",
-                            template.name, template.typeNameOrJson));
+                    Debug.Log(string.Format("Input control layout '{0}' has been removed (type '{1}' cannot be found)",
+                            layout.name, layout.typeNameOrJson));
             }
 
-            // Template strings.
-            foreach (var template in state.templateStrings)
+            // Layout strings.
+            foreach (var layout in state.layoutStrings)
             {
-                var name = new InternedString(template.name);
-                if (m_Templates.templateStrings.ContainsKey(name))
+                var name = new InternedString(layout.name);
+                if (m_Layouts.layoutStrings.ContainsKey(name))
                     continue; // Don't overwrite builtins as they may have been updated.
-                m_Templates.templateStrings[name] = template.typeNameOrJson;
+                m_Layouts.layoutStrings[name] = layout.typeNameOrJson;
             }
 
-            // Template factories.
-            foreach (var template in state.templateConstructors)
+            // Layout factories.
+            foreach (var layout in state.layoutFactories)
             {
-                var name = new InternedString(template.name);
-                // Don't need to check for builtin version. We don't have builtin template
+                var name = new InternedString(layout.name);
+                // Don't need to check for builtin version. We don't have builtin layout
                 // constructors.
 
-                var type = Type.GetType(template.typeName, false);
+                var type = Type.GetType(layout.typeName, false);
                 if (type == null)
                 {
-                    Debug.Log(string.Format("Template factory '{0}' has been removed (type '{1}' cannot be found)",
-                            name, template.typeName));
+                    Debug.Log(string.Format("Layout builder '{0}' has been removed (type '{1}' cannot be found)",
+                            name, layout.typeName));
                     continue;
                 }
 
                 ////TODO: deal with overloaded methods
 
-                var method = type.GetMethod(template.methodName,
+                var method = type.GetMethod(layout.methodName,
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
-                m_Templates.templateFactories[name] = new InputTemplate.Factory
+                m_Layouts.layoutBuilders[name] = new InputControlLayout.BuilderInfo
                 {
                     method = method,
-                    instance = template.instanceJson != null ? JsonUtility.FromJson(template.instanceJson, type) : null
+                    instance = layout.instanceJson != null ? JsonUtility.FromJson(layout.instanceJson, type) : null
                 };
             }
 
-            // Base templates.
-            if (state.baseTemplates != null)
-                foreach (var entry in state.baseTemplates)
+            // Base layouts.
+            if (state.baseLayouts != null)
+                foreach (var entry in state.baseLayouts)
                 {
-                    var name = new InternedString(entry.derivedTemplate);
-                    if (!m_Templates.baseTemplateTable.ContainsKey(name))
-                        m_Templates.baseTemplateTable[name] = new InternedString(entry.baseTemplate);
+                    var name = new InternedString(entry.derivedLayout);
+                    if (!m_Layouts.baseLayoutTable.ContainsKey(name))
+                        m_Layouts.baseLayoutTable[name] = new InternedString(entry.baseLayout);
                 }
 
-            // Template device descriptions.
-            if (state.templateDeviceDescriptions != null)
-                foreach (var entry in state.templateDeviceDescriptions)
+            // Layout device descriptions.
+            if (state.layoutDeviceDescriptions != null)
+                foreach (var entry in state.layoutDeviceDescriptions)
                 {
-                    var name = new InternedString(entry.templateName);
-                    if (!m_Templates.templateDeviceDescriptions.ContainsKey(name))
-                        m_Templates.templateDeviceDescriptions[name] = entry.deviceDescription;
+                    var name = new InternedString(entry.layoutName);
+                    if (!m_Layouts.layoutDeviceDescriptions.ContainsKey(name))
+                        m_Layouts.layoutDeviceDescriptions[name] = entry.deviceDescription;
                 }
 
             // Processors.
@@ -2382,19 +2401,19 @@ namespace UnityEngine.Experimental.Input
             // Re-create devices.
             var deviceCount = state.devices.Length;
             var devices = new InputDevice[deviceCount];
-            var setup = new InputControlSetup(m_Templates);
+            var setup = new InputDeviceBuilder(m_Layouts);
             for (var i = 0; i < deviceCount; ++i)
             {
                 var deviceState = state.devices[i];
 
-                // See if we still have the template that the device used. Might have
+                // See if we still have the layout that the device used. Might have
                 // come from a type that was removed in the meantime. If so, just
                 // don't re-add the device.
-                var template = new InternedString(deviceState.template);
-                if (!m_Templates.HasTemplate(template))
+                var layout = new InternedString(deviceState.layout);
+                if (!m_Layouts.HasLayout(layout))
                     continue;
 
-                setup.Setup(template, null, new InternedString(deviceState.variant));
+                setup.Setup(layout, null, new InternedString(deviceState.variant));
                 var device = setup.Finish();
                 device.m_Name = new InternedString(deviceState.name);
                 device.m_Id = deviceState.deviceId;
@@ -2425,7 +2444,7 @@ namespace UnityEngine.Experimental.Input
             }
             m_Devices = devices;
 
-            ////TODO: retry to make sense of available devices that we couldn't make sense of before; maybe we have a template now
+            ////TODO: retry to make sense of available devices that we couldn't make sense of before; maybe we have a layout now
 
             // At the moment, there's no support for taking state across domain reloads
             // as we don't have support ATM for taking state across format changes.
