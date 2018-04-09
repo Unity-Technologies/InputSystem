@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 
-public class DevicesList : MonoBehaviour {
+public class XRDeviceList : MonoBehaviour {
 
     public Text deviceText;
 
@@ -29,6 +29,9 @@ public class DevicesList : MonoBehaviour {
             deviceAccumulator += "<" + i + "> " + InputSystem.devices[i].displayName + "\n";
         }
         
-        deviceText.text = deviceAccumulator;
+        if (deviceText != null)
+        {
+            deviceText.text = deviceAccumulator;
+        }
     }
 }
