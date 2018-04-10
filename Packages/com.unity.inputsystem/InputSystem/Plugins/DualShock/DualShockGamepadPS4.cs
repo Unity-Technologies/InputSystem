@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 
         [InputControl(name = "leftStickPress", bit = (uint)Button.L3, displayName = "L3")]
         [InputControl(name = "rightStickPress", bit = (uint)Button.R3, displayName = "R3")]
-        [InputControl(name = "options", layout = "Button", bit = (uint)Button.Options)]
+        [InputControl(name = "start", layout = "Button", bit = (uint)Button.Options)]
         [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4)]
         [InputControl(name = "dpad/up", bit = (uint)Button.DpadUp)]
         [InputControl(name = "dpad/right", bit = (uint)Button.DpadRight)]
@@ -94,18 +94,18 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
 
         [InputControl(name = "orientation")]
         [FieldOffset(40)]
-        public Vector3 orientation;
+        public Quaternion orientation;
 
         [InputControl(name = "angularVelocity")]
-        [FieldOffset(52)]
+        [FieldOffset(56)]
         public Vector3 angularVelocity;
 
         [InputControl]
-        [FieldOffset(64)]
+        [FieldOffset(68)]
         public PS4Touch touch0;
 
         [InputControl]
-        [FieldOffset(76)]
+        [FieldOffset(80)]
         public PS4Touch touch1;
 
         public FourCC GetFormat()
@@ -130,7 +130,8 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         {
             Rumble = 0x1,
             Color = 0x2,
-            ResetColor = 0x4
+            ResetColor = 0x4,
+            ResetOrientation = 0x8
         }
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
@@ -167,11 +168,52 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
             flags |= (byte)Flags.ResetColor;
         }
 
+        public void ResetOrientation()
+        {
+            flags |= (byte)Flags.ResetOrientation;
+        }
+
         public static DualShockPS4OuputCommand Create()
         {
             return new DualShockPS4OuputCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize)
+            };
+        }
+    }
+
+    /// <summary>
+    /// Retrieve the slotId, colorId and userId of the controller
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct QuerySlotIdCommand : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('S', 'L', 'I', 'D'); } }
+
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
+        public int slotId;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
+        public int defaultColorId;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
+        public int userId;
+
+        public FourCC GetTypeStatic()
+        {
+            return Type;
+        }
+
+        public static QuerySlotIdCommand Create()
+        {
+            return new QuerySlotIdCommand()
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
             };
         }
     }
@@ -230,6 +272,115 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     {
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
+
+        static DualShockGamepadPS4[] devices = new DualShockGamepadPS4[4];
+
+        // Slot id for the gamepad. Once set will never change.
+        private int m_slotId = -1;
+        private int m_defaultColorId = -1;
+        private int m_userId = -1;
+        private void UpdatePadSettingsIfNeeded()
+        {
+            if (m_slotId == -1)
+            {
+                var command = QuerySlotIdCommand.Create();
+
+                if (ExecuteCommand(ref command) > 0)
+                {
+                    m_slotId = command.slotId;
+                    m_defaultColorId = command.defaultColorId;
+                    m_userId = command.userId;
+
+                    if (m_LightBarColor.HasValue == false)
+                    {
+                        m_LightBarColor = GetPlayStationColor(m_defaultColorId);
+                    }
+                }
+            }
+        }
+
+        public Color LightBarColor
+        {
+            get
+            {
+                if (m_LightBarColor.HasValue == false)
+                {
+                    return GetPlayStationColor(m_defaultColorId);
+                }
+
+                return m_LightBarColor.Value;
+            }
+        }
+        private static Color GetPlayStationColor(int colorId)
+        {
+            switch (colorId)
+            {
+                case 0:
+                    return Color.blue;
+                case 1:
+                    return Color.red;
+                case 2:
+                    return Color.green;
+                case 3:
+                    return Color.magenta;
+                default:
+                    return Color.black;
+            }
+        }
+        public int slotId
+        {
+            get
+            {
+                UpdatePadSettingsIfNeeded();
+                return m_slotId;
+            }
+        }
+        public int sceUserId
+        {
+            get
+            {
+                UpdatePadSettingsIfNeeded();
+                return m_userId;
+            }
+        }
+
+        public static void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            DualShockGamepadPS4 ps4Gamepad = device as DualShockGamepadPS4;
+
+            if (ps4Gamepad == null || ps4Gamepad.slotId == -1) return;
+
+            if (change == InputDeviceChange.Added)
+            {
+                // Check there is no other device already in that slot
+                if (devices[ps4Gamepad.slotId] == null)
+                {
+                    devices[ps4Gamepad.slotId] = ps4Gamepad;
+                }
+            }
+            else if (change == InputDeviceChange.Removed)
+            {
+                // check to make sure the device in the expected array index matches the actual device in that slot.
+                if (devices[ps4Gamepad.slotId] == device)
+                {
+                    devices[ps4Gamepad.slotId] = null;
+                }
+            }
+        }
+
+        public static DualShockGamepadPS4 FindBySlotId(int slotId)
+        {
+            if (devices[slotId] != null && devices[slotId].slotId == slotId)
+            {
+                return devices[slotId];
+            }
+
+            return null;
+        }
+        public static new ReadOnlyArray<DualShockGamepadPS4> all
+        {
+            get { return new ReadOnlyArray<DualShockGamepadPS4>(devices); }
+        }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -318,6 +469,13 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 
             m_LargeMotor = largeMotor;
             m_SmallMotor = smallMotor;
+        }
+        public void ResetOrientation()
+        {
+            var command = DualShockPS4OuputCommand.Create();
+            command.ResetOrientation();
+
+            ExecuteCommand(ref command);
         }
 
         private float? m_LargeMotor;

@@ -23,6 +23,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             #endif
 
             #if UNITY_EDITOR || UNITY_PS4
+
             InputSystem.RegisterControlLayout<PS4TouchControl>("PS4Touch");
             InputSystem.RegisterControlLayout<DualShockGamepadPS4>("PS4DualShockGamepad",
                 deviceDescription: new InputDeviceDescription
@@ -30,6 +31,9 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                 deviceClass = "PS4DualShockGamepad",
                 interfaceName = "PS4"
             });
+
+            InputSystem.onDeviceChange += DualShockGamepadPS4.OnDeviceChange;
+
             #endif
         }
     }
