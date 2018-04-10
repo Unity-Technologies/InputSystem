@@ -87,11 +87,11 @@ public class XRTests : InputTestFixture
                     deviceRole = DeviceRole.LeftHanded,
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
-                                new XRFeatureDescriptor()
-                                {
-                                    name = "SimpleFeature",
-                                    featureType = FeatureType.Binary
-                                }
+                        new XRFeatureDescriptor()
+                        {
+                            name = "SimpleFeature",
+                            featureType = FeatureType.Binary
+                        }
                     }
                 }.ToJson()
             }.ToJson());
@@ -280,11 +280,11 @@ public class XRTests : InputTestFixture
                     deviceRole = DeviceRole.Generic,
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
-                                new XRFeatureDescriptor()
-                                {
-                                    name = "SimpleFeature",                            
-                                    featureType = FeatureType.Binary
-                                }
+                        new XRFeatureDescriptor()
+                        {
+                            name = "SimpleFeature",                            
+                            featureType = FeatureType.Binary
+                        }
                     }
                 }.ToJson()
             }.ToJson());
@@ -310,11 +310,11 @@ public class XRTests : InputTestFixture
                     deviceRole = DeviceRole.Generic,
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
-                                new XRFeatureDescriptor()
-                                {
-                                    name = "SimpleFeature[|.:+-?<1",
-                                    featureType = FeatureType.Binary
-                                }
+                        new XRFeatureDescriptor()
+                        {
+                            name = "SimpleFeature[|.:+-?<1",
+                            featureType = FeatureType.Binary
+                        }
                     }
                 }.ToJson()
             }.ToJson());
@@ -362,7 +362,38 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_AllFeatureTypesOccupyTheAppropriateSize()
+    public void Layouts_WhenMatchingAKnownDeviceTheGeneratedLayoutInheritsProperly()
+    {
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = XRUtilities.kXRInterface,
+                product = "Oculus Rift",
+                manufacturer = "Oculus",
+                capabilities = new XRDeviceDescriptor
+                {
+                    deviceRole = DeviceRole.LeftHanded,
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                    {
+                        new XRFeatureDescriptor()
+                        {
+                            name = "SimpleFeature",
+                            featureType = FeatureType.Binary
+                        }
+                    }
+                }.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+
+        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Oculus::OculusRift");
+        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout.extendsLayout, Is.EqualTo("OculusHMD"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_AllFeatureTypesOccupyTheAppropriateSizeAndType()
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
@@ -511,7 +542,7 @@ public class XRTests : InputTestFixture
         var vec2Control = generatedLayout.controls[3];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.offset, Is.EqualTo(9));
-        Assert.That(vec2Control.layout, Is.EqualTo("Vector2"));
+        Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
