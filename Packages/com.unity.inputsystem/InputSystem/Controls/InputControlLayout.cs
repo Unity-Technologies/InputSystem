@@ -222,6 +222,7 @@ namespace UnityEngine.Experimental.Input
 
                 result.name = name;
                 Debug.Assert(!name.IsEmpty());
+                result.isModifyingChildControlByPath = isModifyingChildControlByPath;
 
                 result.layout = layout.IsEmpty() ? other.layout : layout;
                 result.variant = variant.IsEmpty() ? other.variant : variant;
