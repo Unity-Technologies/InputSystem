@@ -45,7 +45,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             for (int i = 0; i < stringLength; i++)
             {
                 char letter = originalName[i];
-                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == ':')
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter))
                 {
                     sanitizedName.Append(letter);
                 }
@@ -90,15 +90,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     matchedLayout = "XRController";
                 else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
                     matchedLayout = "XRHMD";
-                else
-                    return null;
             }
 
             // We don't want to forward the Capabilities along due to how template fields are Regex compared.
             var layoutMatchingDescription = description;
             layoutMatchingDescription.capabilities = null;
 
-            var layoutName = SanitizeName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
+            var layoutName = string.Format("{0}::{1}::{2}", SanitizeName(XRUtilities.kXRInterface), SanitizeName(description.manufacturer), SanitizeName(description.product));
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
 
@@ -125,7 +123,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 {
                     foreach (var usageHint in feature.usageHints)
                     {
-                        if (string.IsNullOrEmpty(usageHint.content))
+                        if (!string.IsNullOrEmpty(usageHint.content))
                             currentUsages.Add(usageHint.content);
                     }
                 }
