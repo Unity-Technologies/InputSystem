@@ -98,12 +98,12 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <p>A test fixture for writing tests that use the input system. Can be derived from or simply instantiated from another test fixture.  
  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#details">More...</a></p>
 
-<p>Inherited by AndroidTests, DualShockTests, FunctionalTests, HIDTests, and XInputTests.</p>
+<p>Inherited by AndroidTests, DualShockTests, FunctionalTests, HIDTests, iOSTests, SwitchTests, XInputTests, and XRTests.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a969675a4b191e8c8de4cccfa9ca83ed4"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a969675a4b191e8c8de4cccfa9ca83ed4">Setup</a> ()</td></tr>
-<tr class="memdesc:a969675a4b191e8c8de4cccfa9ca83ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Put InputSystem into a known state where it only has a basic set of templates and does not have any input devices.  <a href="#a969675a4b191e8c8de4cccfa9ca83ed4">More...</a><br /></td></tr>
+<tr class="memdesc:a969675a4b191e8c8de4cccfa9ca83ed4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Put InputSystem into a known state where it only has a basic set of layouts and does not have any input devices.  <a href="#a969675a4b191e8c8de4cccfa9ca83ed4">More...</a><br /></td></tr>
 <tr class="separator:a969675a4b191e8c8de4cccfa9ca83ed4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a870a092058305911f3d42df45dd657e5"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a870a092058305911f3d42df45dd657e5">TearDown</a> ()</td></tr>
 <tr class="memdesc:a870a092058305911f3d42df45dd657e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Restore the state of the input system it had when the test was started.  <a href="#a870a092058305911f3d42df45dd657e5">More...</a><br /></td></tr>
@@ -117,8 +117,8 @@ Properties</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A test fixture for writing tests that use the input system. Can be derived from or simply instantiated from another test fixture. </p>
-<p>The fixture will put the input system into a known state where it has only the built-in set of basic templates and no devices. The state of the system before starting a test is recorded and restored when the test finishes. </p>
-<div class="fragment"><div class="line"><span class="keyword">public</span> <span class="keyword">class </span>MyInputTests : InputTestFixture</div><div class="line">{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="keywordtype">void</span> <a class="code" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a969675a4b191e8c8de4cccfa9ca83ed4">Setup</a>()</div><div class="line">    {</div><div class="line">        base.Setup();</div><div class="line"></div><div class="line">        InputSystem.RegisterTemplate&lt;MyDevice&gt;();</div><div class="line">    }</div><div class="line"></div><div class="line">    [Test]</div><div class="line">    <span class="keyword">public</span> <span class="keywordtype">void</span> CanCreateMyDevice()</div><div class="line">    {</div><div class="line">        InputSystem.AddDevice(<span class="stringliteral">&quot;MyDevice&quot;</span>);</div><div class="line">        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf&lt;MyDevice&gt;());</div><div class="line">    }</div><div class="line">}</div></div><!-- fragment --> </div><h2 class="groupheader">Member Function Documentation</h2>
+<p>The fixture will put the input system into a known state where it has only the built-in set of basic layouts and no devices. The state of the system before starting a test is recorded and restored when the test finishes. </p>
+<div class="fragment"><div class="line"><span class="keyword">public</span> <span class="keyword">class </span>MyInputTests : InputTestFixture</div><div class="line">{</div><div class="line">    <span class="keyword">public</span> <span class="keyword">override</span> <span class="keywordtype">void</span> <a class="code" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a969675a4b191e8c8de4cccfa9ca83ed4">Setup</a>()</div><div class="line">    {</div><div class="line">        base.Setup();</div><div class="line"></div><div class="line">        InputSystem.RegisterControlLayout&lt;MyDevice&gt;();</div><div class="line">    }</div><div class="line"></div><div class="line">    [Test]</div><div class="line">    <span class="keyword">public</span> <span class="keywordtype">void</span> CanCreateMyDevice()</div><div class="line">    {</div><div class="line">        InputSystem.AddDevice(<span class="stringliteral">&quot;MyDevice&quot;</span>);</div><div class="line">        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf&lt;MyDevice&gt;());</div><div class="line">    }</div><div class="line">}</div></div><!-- fragment --> </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a969675a4b191e8c8de4cccfa9ca83ed4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a969675a4b191e8c8de4cccfa9ca83ed4">&#9670;&nbsp;</a></span>Setup()</h2>
 
@@ -142,7 +142,7 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Put InputSystem into a known state where it only has a basic set of templates and does not have any input devices. </p>
+<p>Put InputSystem into a known state where it only has a basic set of layouts and does not have any input devices. </p>
 <p>If you derive your own test fixture directly from InputTestFixture, this method will automatically be called. If you embed InputTestFixture into your fixture, you have to explicitly call this method yourself. </p>
 
 </div>
@@ -205,7 +205,7 @@ Properties</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="namespaceUnityEngine.html">UnityEngine</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental.html">Experimental</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html">Input</a></li><li class="navelem"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html">InputTestFixture</a></li>
-    <li class="footer">Generated on Fri Mar 23 2018 13:50:55 for Input System by
+    <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.14 </li>
   </ul>

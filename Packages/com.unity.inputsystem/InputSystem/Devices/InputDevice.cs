@@ -2,6 +2,7 @@ using System;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Plugins.XR;
 
 // per device functions:
 //  - update/poll
@@ -24,9 +25,8 @@ namespace UnityEngine.Experimental.Input
     /// a device at the root. Devices cannot occur inside of hierarchies.
     ///
     /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    /// without requiring a change to the device template (<see cref="InputSystem.SetUsage"/>).
+    /// without requiring a change to the device layout (<see cref="InputSystem.SetUsage"/>).
     /// </remarks>
-    /// \todo The entire control hierarchy should be a linear array; transition to that with InputData.
     public class InputDevice : InputControl
     {
         public const int kInvalidDeviceId = 0;
@@ -62,7 +62,31 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: this might be useful even at the control level
         public bool enabled
         {
-            get { return (m_Flags & Flags.Disabled) != Flags.Disabled; }
+            get
+            {
+                // Fetch state from runtime, if necessary.
+                if ((m_Flags & Flags.DisabledStateHasBeenQueried) != Flags.DisabledStateHasBeenQueried)
+                {
+                    var command = QueryEnabledStateCommand.Create();
+                    if (ExecuteCommand(ref command) >= 0)
+                    {
+                        if (command.isEnabled)
+                            m_Flags &= ~Flags.Disabled;
+                        else
+                            m_Flags |= Flags.Disabled;
+                    }
+                    else
+                    {
+                        // We got no response on the enable/disable state. Assume device is enabled.
+                        m_Flags &= ~Flags.Disabled;
+                    }
+
+                    // Only fetch enable/disable state again if we get a configuration change event.
+                    m_Flags |= Flags.DisabledStateHasBeenQueried;
+                }
+
+                return (m_Flags & Flags.Disabled) != Flags.Disabled;
+            }
         }
 
         /// <summary>
@@ -91,7 +115,7 @@ namespace UnityEngine.Experimental.Input
         /// Unique numeric ID for the device.
         /// </summary>
         /// <remarks>
-        /// This is only assigned once a device has been added to the system. Not two devices will receive the same
+        /// This is only assigned once a device has been added to the system. No two devices will receive the same
         /// ID and no device will receive an ID that another device used before even if the device was removed.
         ///
         /// IDs are assigned by the input runtime.
@@ -207,6 +231,9 @@ namespace UnityEngine.Experimental.Input
             m_ConfigUpToDate = false;
             for (var i = 0; i < m_ChildrenForEachControl.Length; ++i)
                 m_ChildrenForEachControl[i].m_ConfigUpToDate = false;
+
+            // Make sure we fetch the enabled/disabled state again.
+            m_Flags &= ~Flags.DisabledStateHasBeenQueried;
         }
 
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
@@ -224,7 +251,7 @@ namespace UnityEngine.Experimental.Input
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public long OnDeviceCommand<TCommand>(ref TCommand command)
+        public long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
             return InputRuntime.s_Instance.DeviceCommand(id, ref command);
@@ -234,7 +261,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_UserId = null;
             var command = QueryUserIdCommand.Create();
-            if (OnDeviceCommand(ref command) > 0)
+            if (ExecuteCommand(ref command) > 0)
                 m_UserId = command.ReadId();
         }
 
@@ -247,6 +274,7 @@ namespace UnityEngine.Experimental.Input
             Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
             Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
             Disabled = 1 << 5,
+            DisabledStateHasBeenQueried = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
         }
 
         internal Flags m_Flags;

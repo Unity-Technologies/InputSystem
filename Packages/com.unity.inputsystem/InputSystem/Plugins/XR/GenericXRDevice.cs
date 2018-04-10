@@ -1,56 +1,52 @@
-using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
+using UnityEngine.Experimental.Input.Haptics;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRHMD : InputDevice
     {
-        public static XRHMD active { get; private set; }
+        public static XRHMD current { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
-            active = this;
+            base.FinishSetup(builder);
+        }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
         }
     }
 
-    [InputTemplate(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : InputDevice
     {
         public static XRController leftHand { get; private set; }
         public static XRController rightHand { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            try
+            var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
+            switch (deviceDescriptor.deviceRole)
             {
-                XRDeviceDescriptor deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
-
-                switch (deviceDescriptor.deviceRole)
+                case DeviceRole.LeftHanded:
                 {
-                    case EDeviceRole.LeftHanded:
-                    {
-                        InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                        leftHand = this;
-                        break;
-                    }
-                    case EDeviceRole.RightHanded:
-                    {
-                        InputSystem.SetUsage(this, CommonUsages.RightHand);
-                        rightHand = this;
-                        break;
-                    }
-                    default:
-                        break;
+                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    break;
                 }
+                case DeviceRole.RightHanded:
+                {
+                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    break;
+                }
+                default:
+                    break;
             }
-            catch (Exception)
-            {}
-
-            base.FinishSetup(setup);
         }
 
         public override void MakeCurrent()
@@ -77,14 +73,35 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    public class XRControllerWithRumble : XRController
+    public class XRControllerWithRumble : XRController, IHaptics
     {
-        public SimpleXRRumble rumble { get; private set; }
+        SimpleXRRumble m_Rumble;
+        public SimpleXRRumble rumble { get { return m_Rumble; } }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
-            rumble = new SimpleXRRumble(this);
+            base.FinishSetup(builder);
+            m_Rumble = new SimpleXRRumble(this);
+        }
+
+        public void SetIntensity(float intensity)
+        {
+            m_Rumble.intensity = intensity;
+        }
+
+        public void PauseHaptics()
+        {
+            m_Rumble.isPaused = true;
+        }
+
+        public void ResumeHaptics()
+        {
+            m_Rumble.isPaused = false;
+        }
+
+        public void ResetHaptics()
+        {
+            m_Rumble.Reset();
         }
     }
 }

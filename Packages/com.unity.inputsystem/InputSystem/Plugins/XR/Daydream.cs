@@ -1,79 +1,10 @@
-using System;
-using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    internal static class DaydreamSupport
-    {
-        internal static string FilterTemplate(XRDeviceDescriptor deviceDescriptor)
-        {
-            if (String.IsNullOrEmpty(deviceDescriptor.manufacturer))
-            {
-                if (deviceDescriptor.deviceName == "Daydream HMD" && deviceDescriptor.deviceRole == EDeviceRole.Generic)
-                {
-                    return "DaydreamHMD";
-                }
-                else if (deviceDescriptor.deviceName == "Daydream Controller" && (deviceDescriptor.deviceRole == EDeviceRole.LeftHanded || deviceDescriptor.deviceRole == EDeviceRole.RightHanded))
-                {
-                    return "DaydreamController";
-                }
-            }
-
-            return null;
-        }
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 120)]
-    public struct DaydreamHMDState : IInputStateTypeInfo
-    {
-        [InputControl(template = "Integer")]
-        [FieldOffset(0)]
-        public int trackingState;
-        [InputControl(template = "Button")]
-        [FieldOffset(4)]
-        public bool isTracked;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(8)]
-        public Vector3 devicePosition;
-        [InputControl(template = "Quaternion")]
-        [FieldOffset(20)]
-        public Quaternion deviceRotation;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(36)]
-        public Vector3 leftEyePosition;
-        [InputControl(template = "Quaternion")]
-        [FieldOffset(48)]
-        public Quaternion leftEyeRotation;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(64)]
-        public Vector3 rightEyePosition;
-        [InputControl(template = "Quaternion")]
-        [FieldOffset(76)]
-        public Quaternion rightEyeRotation;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(92)]
-        public Vector3 centerEyePosition;
-        [InputControl(template = "Quaternion")]
-        [FieldOffset(104)]
-        public Quaternion centerEyeRotation;
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'R', 'S', '0');
-        }
-    }
-
-    [InputTemplate(stateType = typeof(DaydreamHMDState))]
+    [InputControlLayout()]
     public class DaydreamHMD : XRHMD
     {
-        new public DaydreamHMD active { get; private set; }
-
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
         public Vector3Control devicePosition { get; private set; }
@@ -85,92 +16,26 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control centerEyePosition { get; private set; }
         public QuaternionControl centerEyeRotation { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
-            active = this;
+            base.FinishSetup(builder);
 
-            trackingState = setup.GetControl<IntegerControl>("trackingState");
-            isTracked = setup.GetControl<ButtonControl>("isTracked");
-            devicePosition = setup.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            leftEyePosition = setup.GetControl<Vector3Control>("leftEyePosition");
-            leftEyeRotation = setup.GetControl<QuaternionControl>("leftEyeRotation");
-            rightEyePosition = setup.GetControl<Vector3Control>("rightEyePosition");
-            rightEyeRotation = setup.GetControl<QuaternionControl>("rightEyeRotation");
-            centerEyePosition = setup.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = setup.GetControl<QuaternionControl>("centerEyeRotation");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            leftEyePosition = builder.GetControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = builder.GetControl<QuaternionControl>("leftEyeRotation");
+            rightEyePosition = builder.GetControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = builder.GetControl<QuaternionControl>("rightEyeRotation");
+            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 100)]
-    public struct DaydreamControllerState : IInputStateTypeInfo
-    {
-        [InputControl(template = "Vector2")]
-        [FieldOffset(0)]
-        public Vector2 touchpad;
-        [InputControl(template = "Button")]
-        [FieldOffset(8)]
-        public bool volumeUp;
-        [InputControl(template = "Button")]
-        [FieldOffset(12)]
-        public bool recentered;
-        [InputControl(template = "Button")]
-        [FieldOffset(16)]
-        public bool volumeDown;
-        [InputControl(template = "Button")]
-        [FieldOffset(20)]
-        public bool recentering;
-        [InputControl(template = "Button")]
-        [FieldOffset(24)]
-        public bool app;
-        [InputControl(template = "Button")]
-        [FieldOffset(28)]
-        public bool home;
-        [InputControl(template = "Button")]
-        [FieldOffset(32)]
-        public bool touchpadClick;
-        [InputControl(template = "Button")]
-        [FieldOffset(36)]
-        public bool touchpadTouch;
-
-
-        [InputControl(template = "Integer")]
-        [FieldOffset(40)]
-        public int trackingState;
-
-        [InputControl(template = "Button")]
-        [FieldOffset(44)]
-        public bool isTracked;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(48)]
-        public Vector3 devicePosition;
-
-        [InputControl(template = "Quaternion")]
-        [FieldOffset(60)]
-        public Quaternion deviceRotation;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(76)]
-        public Vector3 deviceVelocity;
-
-        [InputControl(template = "Vector3")]
-        [FieldOffset(88)]
-        public Vector3 deviceAcceleration;
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'R', 'S', '0');
-        }
-    }
-
-    [InputTemplate(stateType = typeof(DaydreamControllerState), commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class DaydreamController : XRController
     {
-        new public static DaydreamController leftHand { get; private set; }
-        new public static DaydreamController rightHand { get; private set; }
-
         public Vector2Control touchpad { get; private set; }
         public ButtonControl volumeUp { get; private set; }
         public ButtonControl recentered { get; private set; }
@@ -188,51 +53,26 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector3Control deviceVelocity { get; private set; }
         public Vector3Control deviceAcceleration { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
 
-            try
-            {
-                XRDeviceDescriptor deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
+            touchpad = builder.GetControl<Vector2Control>("touchpad");
+            volumeUp = builder.GetControl<ButtonControl>("volumeUp");
+            recentered = builder.GetControl<ButtonControl>("recentered");
+            volumeDown = builder.GetControl<ButtonControl>("volumeDown");
+            recentering = builder.GetControl<ButtonControl>("recentering");
+            app = builder.GetControl<ButtonControl>("app");
+            home = builder.GetControl<ButtonControl>("home");
+            touchpadClick = builder.GetControl<ButtonControl>("touchpadClick");
+            touchpadTouch = builder.GetControl<ButtonControl>("touchpadTouch");
 
-                switch (deviceDescriptor.deviceRole)
-                {
-                    case EDeviceRole.LeftHanded:
-                    {
-                        InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                        leftHand = this;
-                        break;
-                    }
-                    case EDeviceRole.RightHanded:
-                    {
-                        InputSystem.SetUsage(this, CommonUsages.RightHand);
-                        rightHand = this;
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            }
-            catch (Exception)
-            {}
-
-            touchpad = setup.GetControl<Vector2Control>("touchpad");
-            volumeUp = setup.GetControl<ButtonControl>("volumeUp");
-            recentered = setup.GetControl<ButtonControl>("recentered");
-            volumeDown = setup.GetControl<ButtonControl>("volumeDown");
-            recentering = setup.GetControl<ButtonControl>("recentering");
-            app = setup.GetControl<ButtonControl>("app");
-            home = setup.GetControl<ButtonControl>("home");
-            touchpadClick = setup.GetControl<ButtonControl>("touchpadClick");
-            touchpadTouch = setup.GetControl<ButtonControl>("touchpadTouch");
-
-            trackingState = setup.GetControl<IntegerControl>("trackingState");
-            isTracked = setup.GetControl<ButtonControl>("isTracked");
-            devicePosition = setup.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = setup.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = setup.GetControl<Vector3Control>("deviceVelocity");
-            deviceAcceleration = setup.GetControl<Vector3Control>("deviceAcceleration");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
+            deviceAcceleration = builder.GetControl<Vector3Control>("deviceAcceleration");
         }
     }
 }

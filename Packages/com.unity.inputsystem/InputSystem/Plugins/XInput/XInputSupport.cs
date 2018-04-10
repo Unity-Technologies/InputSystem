@@ -9,18 +9,23 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     {
         public static void Initialize()
         {
-            // Base template for Xbox-style gamepad.
-            InputSystem.RegisterTemplate<XInputController>();
+            // Base layout for Xbox-style gamepad.
+            InputSystem.RegisterControlLayout<XInputController>();
 
 #if UNITY_EDITOR || UNITY_XBOXONE
-            InputSystem.RegisterTemplate<XboxOneGamepad>();
+            InputSystem.RegisterControlLayout<XboxOneGamepad>(
+                deviceDescription: new InputDeviceDescription
+            {
+                deviceClass = "XboxOneGamepad",
+                interfaceName = "Xbox"
+            });
 #endif
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
             // XInput controllers on Windows.
             // State layout is XINPUT_GAMEPAD.
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx
-            InputSystem.RegisterTemplate(@"{
+            InputSystem.RegisterControlLayout(@"{
 ""name"" : ""XInputControllerWindows"",
 ""extend"" : ""XInputController"",
 ""format"" : ""XINP"",
@@ -62,7 +67,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
 
             ////TODO: it would be totally rad if instead of going to JSON in code here,
             ////      you could just create a new state struct representing the changed
-            ////      state layout and then feed that into the template system; essentially,
+            ////      state layout and then feed that into the layout system; essentially,
             ////      InputReport below would become a real C# struct
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
             // Xbox one controller on OSX. State layout can be found here:
@@ -83,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             ////TODO: come up with a way that allows us to snip that data out of the state we store and the
             ////      state we compare
             ////TODO: rumble and LED output
-            InputSystem.RegisterTemplate(@"{
+            InputSystem.RegisterControlLayout(@"{
 ""name"" : ""XInputControllerOSX"",
 ""extend"" : ""XInputController"",
 ""format"" : ""HID"",
@@ -104,7 +109,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 3 },
     { ""name"" : ""start"", ""offset"" : 2, ""bit"" : 4 },
     { ""name"" : ""select"", ""offset"" : 2, ""bit"" : 5 },
-    { ""name"" : ""xbox"", ""offset"" : 2, ""bit"" : 10, ""template"" : ""Button"" },
+    { ""name"" : ""xbox"", ""offset"" : 2, ""bit"" : 10, ""layout"" : ""Button"" },
     { ""name"" : ""leftTrigger"", ""offset"" : 4, ""format"" : ""BYTE"" },
     { ""name"" : ""rightTrigger"", ""offset"" : 5, ""format"" : ""BYTE"" },
     { ""name"" : ""leftStick"", ""offset"" : 6, ""format"" : ""VC2S"" },

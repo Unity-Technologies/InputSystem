@@ -6,17 +6,9 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: Is there some way we can center axis controls of HIDs correctly and automatically?
-////        If this code picks up a PS4 controller, for example, then X and Y are the left stick,
-////        Z and Rz are the right stick, and Rx and Ry are the triggers. The triggers work fine.
-////        They go from 0 to 1. However, the axes on the sticks end up centered at 0.5 instead
-////        of going from -1 to 1 with the center at 0. The problem is that from the HID descriptor
-////        data we can't really tell. All those axes look exactly identical. In the HID spec, too;
-////        there's no special meaning applied to the individual axes.
-////
-////        Maybe it's good enough to center X and Y in the -1..1 range. Will do the trick for
-////        joysticks.
+////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
 class HIDTests : InputTestFixture
 {
@@ -350,6 +342,162 @@ class HIDTests : InputTestFixture
         Assert.That(device.hidDescriptor.elements.Length, Is.EqualTo(1));
     }
 
+    struct SimpleAxisState : IInputStateTypeInfo
+    {
+        public byte reportId;
+        public ushort x;
+        public short y;
+        public byte rx;
+        public sbyte ry;
+        public ushort vx;
+        public short vy;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('H', 'I', 'D');
+        }
+    }
+
+    // There's too little data in HID descriptors to reliably normalize and center HID axes. For example,
+    // a PS4 controller will report the left stick as X and Y, the right stick as Z and Rz, and the triggers
+    // as Rx and Ry. Each of these will be reported as a single byte with a [0..255] range. However, the
+    // triggers need to be centered at 0 (i.e. byte 0) and go from [0..1] whereas the left and right stick
+    // need to be centered at 0 (i.e. byte 127) and go from [-1..1]. From the data in the HID descriptor this
+    // is impossible to differentiate automatically and a different piece of hardware may well use the same
+    // axes in a different way.
+    //
+    // So we have to make a choice to go one way or the other. Given that the sticks are more important to
+    // work out of the box than the triggers, we lean that way and accept the triggers misbehaving (i.e.
+    // ending up being centered when half pressed). This way we can at least make joysticks behave correctly
+    // out of the box.
+    //
+    // The only reliable fix for a device is to put a layout in place that provides the missing data
+    // (i.e. how to interpret axis values) to the system.
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_HIDAxesAreCenteredBetweenMinAndMax()
+    {
+        // Make up a HID that has both 16bit and 8bit axes in both signed and unsigned form.
+        var hidDescriptor =
+            new HID.HIDDeviceDescriptorBuilder(HID.GenericDesktop.MultiAxisController)
+            .StartReport(HID.HIDReportType.Input)
+            // 16bit [0..65535]
+            .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535)
+            // 16bit [-32768..32767]
+            .AddElement(HID.GenericDesktop.Y, 16).WithLogicalMinMax(-32768, 32767)
+            // 8bit [0..255]
+            .AddElement(HID.GenericDesktop.Rx, 8).WithLogicalMinMax(0, 255)
+            // 8bit [-128..127]
+            .AddElement(HID.GenericDesktop.Ry, 8).WithLogicalMinMax(-128, 127)
+            // 16bit [0..10000]
+            .AddElement(HID.GenericDesktop.Vx, 16).WithLogicalMinMax(0, 10000)
+            // 16bit [-10000..10000]
+            .AddElement(HID.GenericDesktop.Vy, 16).WithLogicalMinMax(-10000, 10000)
+            .Finish();
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            product = "MyHIDThing",
+            capabilities = hidDescriptor.ToJson()
+        }.ToJson());
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        // Test lower bound.
+        InputSystem.QueueStateEvent(device, new SimpleAxisState
+        {
+            reportId = 1,
+            x = ushort.MinValue,
+            y = short.MinValue,
+            rx = byte.MinValue,
+            ry = sbyte.MinValue,
+            vx = 0,
+            vy = -10000,
+        });
+        InputSystem.Update();
+
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Y"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+
+        // Test upper bound.
+        InputSystem.QueueStateEvent(device, new SimpleAxisState
+        {
+            reportId = 1,
+            x = ushort.MaxValue,
+            y = short.MaxValue,
+            rx = byte.MaxValue,
+            ry = sbyte.MaxValue,
+            vx = 10000,
+            vy = 10000,
+        });
+        InputSystem.Update();
+
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(1).Within(0.000001));
+        Assert.That(device["Y"].ReadValueAsObject(), Is.EqualTo(1).Within(0.000001));
+        Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.000001));
+        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(1).Within(0.000001));
+        Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.000001));
+        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(1).Within(0.000001));
+
+        // Test center.
+        InputSystem.QueueStateEvent(device, new SimpleAxisState
+        {
+            reportId = 1,
+            x = ushort.MaxValue / 2,
+            y = 0,
+            rx = byte.MaxValue / 2,
+            ry = 0,
+            vx = 10000 / 2,
+            vy = 0,
+        });
+        InputSystem.Update();
+
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+        Assert.That(device["Y"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+        Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+        Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(0).Within(0.000001));
+    }
+
+    // Would be nicer to just call them "HID" but ATM the layout builder mechanism doesn't have
+    // direct control over the naming.
+    [Test]
+    [Category("Devices")]
+    public void Devices_HIDsWithoutProductName_AreNamedByTheirVendorAndProductID()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+            }
+        };
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            capabilities = hidDescriptor.ToJson()
+        }.ToJson());
+        InputSystem.Update();
+
+        var device = (HID)InputSystem.devices.First(x => x is HID);
+        Assert.That(device.name, Is.EqualTo("1234-5678"));
+    }
+
     [Test]
     [Category("Devices")]
     public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
@@ -357,6 +505,13 @@ class HIDTests : InputTestFixture
         Assert.Fail();
     }
 
+    // Based on the HID spec, we can't make *any* guarantees on where a HID-only gamepad puts its axes
+    // and buttons. Generic buttons in HID are simply numbered with no specific meaning and axes equally
+    // carry no guarantees about how they are arranged on a device.
+    //
+    // This means we cannot turn a HID-only gamepad into a `Gamepad` instance and make any guarantees
+    // about buttonSouth etc or leftStick etc. So, we opt to not turn HID-only gamepads into gamepads at
+    // all but rather turn them into joysticks instead.
     [Test]
     [Category("Devices")]
     public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()

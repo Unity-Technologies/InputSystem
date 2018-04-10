@@ -53,7 +53,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
             {
                 m_Device = InputSystem.TryGetDeviceById(m_DeviceId) as HID;
                 if (m_Device == null)
+                {
+                    Close();
                     return;
+                }
 
                 InitializeWith(m_Device);
             }
@@ -156,6 +159,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
                     for (var i = 0; i < elementCount; ++i)
                         BuildElementItem(i, elements, device.elements[i], ref id, ref currentReportType);
                 }
+                else
+                    AddChild(item, "0 Elements", ref id);
 
                 ////TODO: collections
 

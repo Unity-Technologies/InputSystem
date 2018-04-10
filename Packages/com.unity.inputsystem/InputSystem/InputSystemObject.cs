@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input
         {
             InputActionSet.ResetGlobals();
             manager.Destroy();
-            EditorInputTemplateCache.Clear();
+            EditorInputControlLayoutCache.Clear();
             DestroyImmediate(playerConnection);
 
             ////REVIEW: Find a mechanism that can do this without knowing about each class

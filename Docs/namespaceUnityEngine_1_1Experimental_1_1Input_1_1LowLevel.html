@@ -104,6 +104,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html">DeviceRemoveEvent</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Notifies about the removal of an input device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html">DisableDeviceCommand</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Command to tell the runtime to no longer send events for the given device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1EnableDeviceCommand.html">EnableDeviceCommand</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Command to re-enable a device that has been disabled with <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html" title="Command to tell the runtime to no longer send events for the given device. ">DisableDeviceCommand</a>.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1EnableDeviceCommand.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html">GamepadState</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default state layout for gamepads.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,11 +146,17 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html">PointerState</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default state structure for pointer devices.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryDimensionsCommand.html">QueryDimensionsCommand</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query dimensions of a device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryDimensionsCommand.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyboardLayoutCommand.html">QueryKeyboardLayoutCommand</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Command to query the name of the current keyboard layout from a device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyboardLayoutCommand.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyNameCommand.html">QueryKeyNameCommand</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Command to query the current name of a key according to the current keyboard layout.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyNameCommand.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1SetSamplingFrequencyCommand.html">SetSamplingFrequencyCommand</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">For a device that is sampled periodically, set the frequency at which the device is sampled.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1SetSamplingFrequencyCommand.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html">StateEvent</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A complete state snapshot for an entire input device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html#details">More...</a><br /></td></tr>
@@ -155,9 +167,6 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html">TouchscreenState</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default state layout for touch devices.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1XRControllerState.html">XRControllerState</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default state layout for <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1XRController.html">XR controllers</a>.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1XRControllerState.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -165,7 +174,7 @@ Classes</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="namespaceUnityEngine.html">UnityEngine</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental.html">Experimental</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html">Input</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel.html">LowLevel</a></li>
-    <li class="footer">Generated on Fri Mar 23 2018 13:50:55 for Input System by
+    <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.14 </li>
   </ul>

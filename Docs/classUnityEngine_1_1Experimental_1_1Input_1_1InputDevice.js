@@ -3,12 +3,12 @@ var classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice =
     [ "MakeCurrent", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc", null ],
     [ "OnDeviceCommand< TCommand >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a2412bf37f4ebad551b79910a38d6d0f5", null ],
     [ "OnTextInput", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ad8bb013ace2ffafeaaecc1d4331df859", null ],
+    [ "ReadValueAsObject", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#aa9cb9bfa7d3d04cff020ebffd07fff10", null ],
     [ "allControls", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a1b4618163d91cdf2d2d22a234e700d05", null ],
     [ "description", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a4cd2f444322d6b1c8b8917dae96a673c", null ],
     [ "id", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a7441ef0865bcb3db9b8064dd7375c1ea", null ],
     [ "lastUpdateTime", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a344adddb4b721b52e3bb43c1d6506c86", null ],
     [ "native", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a2043d924d76eefa146d9fd793cac1704", null ],
     [ "remote", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a02d6f3655b4ef4d41c3169419d6d316a", null ],
-    [ "userId", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a92f6b8b4e707539655961ceda789d127", null ],
-    [ "valueAsObject", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#aca8e22a32453028320ea39e3844fad14", null ]
+    [ "userId", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a92f6b8b4e707539655961ceda789d127", null ]
 ];

@@ -1,6 +1,6 @@
 namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 {
-    public class SimpleXRRumble
+    public struct SimpleXRRumble
     {
         public InputDevice device { get; private set; }
 
@@ -56,13 +56,16 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         public SimpleXRRumble(InputDevice device)
         {
             this.device = device;
+
+            m_IsPaused = false;
+            m_Intensity = 0f;
         }
 
         private void UpdateMotorSpeed()
         {
             float intensity = m_IsPaused ? 0f : m_Intensity;
             var command = SimpleXRRumbleCommand.Create(intensity);
-            device.OnDeviceCommand(ref command);
+            device.ExecuteCommand(ref command);
         }
     }
 }

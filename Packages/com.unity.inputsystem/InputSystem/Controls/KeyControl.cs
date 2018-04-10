@@ -45,7 +45,7 @@ namespace UnityEngine.Experimental.Input.Controls
             m_ScanCode = 0;
 
             var command = QueryKeyNameCommand.Create(keyCode);
-            if (device.OnDeviceCommand(ref command) > 0)
+            if (device.ExecuteCommand(ref command) > 0)
             {
                 m_ScanCode = command.scanOrKeyCode;
                 displayName = command.ReadKeyName();

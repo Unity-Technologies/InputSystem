@@ -106,6 +106,9 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingComposite.html">IInputBindingComposite</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A binding composite arranges several bindings such that they form a "virtual control".  <a href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingComposite.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingModifier.html">IInputBindingModifier</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interface for modifying the behavior of actions.  <a href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputBindingModifier.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html">IInputProcessor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A processor that conditions input values.  <a href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -130,29 +133,29 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlAttribute.html">InputControlAttribute</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Mark a data member in a state struct as being an input control.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlAttribute.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A control layout specifies the composition of an input control.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayoutAttribute.html">InputControlLayoutAttribute</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attribute to control layout settings of a type used to generate an <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html" title="A control layout specifies the composition of an input control. ">InputControlLayout</a>.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayoutAttribute.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html">InputControlPath</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Functions to working with control path specs (like "/gamepad/*stick").  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlSetup.html">InputControlSetup</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Turns a template into a control hierarchy.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlSetup.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html">InputDevice</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">The root of a control hierarchy.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceBuilder.html">InputDeviceBuilder</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Turns a device layout into an actual <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a> instance.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceBuilder.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html">InputDeviceDescription</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Metadata for a device. Primarily used to find a matching template which we can then use to create a control setup for the device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Metadata for a device. Primarily used to find a matching layout which we can then use to create a control setup for the device.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html">InputRemoting</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes the activity and data of an InputManager observable in message form.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html">InputSystem</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is the central hub for the input system.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate.html">InputTemplate</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A template lays out the composition of an input control.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplateAttribute.html">InputTemplateAttribute</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attribute to control template settings of a type used to generate an <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplate.html" title="A template lays out the composition of an input control. ">InputTemplate</a>.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTemplateAttribute.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html">InputTestFixture</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A test fixture for writing tests that use the input system. Can be derived from or simply instantiated from another test fixture.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#details">More...</a><br /></td></tr>
@@ -175,15 +178,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html">Touchscreen</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A multi-touch surface.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1XRController.html">XRController</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A hand and interaction tracking device.  <a href="classUnityEngine_1_1Experimental_1_1Input_1_1XRController.html#details">More...</a><br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
 <tr class="memitem:ad26a042de52e46164d033ecb2730d8db"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8db">InputDeviceChange</a> { <a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dbaf29ddbfb905eb2593fdcdfb243f9af85">Added</a>, 
-<a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba93f07b720ebf7d1246512569761a5804">Removed</a>, 
-<a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba1c49d571f9d59cf999198884684eb1b3">UsageChanged</a>
+<a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba93f07b720ebf7d1246512569761a5804">Removed</a>
+, <a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba1c49d571f9d59cf999198884684eb1b3">UsageChanged</a>
 , <a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba31e4c3ad63d178cb96c2a70ea23cbaf5">ConfigurationChanged</a>
  }</td></tr>
 <tr class="memdesc:ad26a042de52e46164d033ecb2730d8db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates what type of change related to an input device occurred.  <a href="namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8db">More...</a><br /></td></tr>
@@ -294,7 +294,7 @@ Enumerations</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="namespaceUnityEngine.html">UnityEngine</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental.html">Experimental</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html">Input</a></li>
-    <li class="footer">Generated on Fri Mar 23 2018 13:50:55 for Input System by
+    <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.14 </li>
   </ul>

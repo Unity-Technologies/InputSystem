@@ -7,12 +7,14 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
     {
         public static void Initialize()
         {
-            InputSystem.RegisterTemplate<DualShockGamepad>();
+            InputSystem.RegisterControlLayout<DualShockGamepad>();
 
             // HID version for platforms where we pick up the controller as a raw HID.
-            // This works without any PS4-specific drivers.
+            // This works without any PS4-specific drivers but does not support the full
+            // range of capabilities of the controller (the HID format is undocumented
+            // and only partially understood).
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR
-            InputSystem.RegisterTemplate<DualShockGamepadHID>(deviceDescription: new InputDeviceDescription
+            InputSystem.RegisterControlLayout<DualShockGamepadHID>(deviceDescription: new InputDeviceDescription
             {
                 manufacturer = "Sony Interactive Entertainment",
                 product = "Wireless Controller",
@@ -21,8 +23,13 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             #endif
 
             #if UNITY_EDITOR || UNITY_PS4
-            InputSystem.RegisterTemplate<PS4TouchControl>("PS4Touch");
-            InputSystem.RegisterTemplate<DualShockGamepadPS4>("PS4DualShockGamepad");
+            InputSystem.RegisterControlLayout<PS4TouchControl>("PS4Touch");
+            InputSystem.RegisterControlLayout<DualShockGamepadPS4>("PS4DualShockGamepad",
+                deviceDescription: new InputDeviceDescription
+            {
+                deviceClass = "PS4DualShockGamepad",
+                interfaceName = "PS4"
+            });
             #endif
         }
     }

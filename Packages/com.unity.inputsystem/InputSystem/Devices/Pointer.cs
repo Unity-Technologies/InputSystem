@@ -21,39 +21,39 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('P', 'T', 'R'); }
         }
 
-        [InputControl(template = "Digital")]
+        [InputControl(layout = "Digital")]
         public uint pointerId;
 
         /// <summary>
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(template = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
+        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace")]
 #else
-        [InputControl(template = "Vector2", usage = "Point")]
+        [InputControl(layout = "Vector2", usage = "Point")]
 #endif
         public Vector2 position;
 
-        [InputControl(template = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
+        [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 
-        [InputControl(template = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", usage = "Pressure")]
         public float pressure;
 
-        [InputControl(template = "Axis", usage = "Twist")]
+        [InputControl(layout = "Axis", usage = "Twist")]
         public float twist;
 
-        [InputControl(template = "Vector2", usage = "Tilt")]
+        [InputControl(layout = "Vector2", usage = "Tilt")]
         public Vector2 tilt;
 
-        [InputControl(template = "Vector2", usage = "Radius")]
+        [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", template = "PointerPhase", sizeInBits = 4)]
-        [InputControl(name = "button", template = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
+        [InputControl(name = "phase", layout = "PointerPhase", sizeInBits = 4)]
+        [InputControl(name = "button", layout = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
-        [InputControl(template = "Digital")]
+        [InputControl(layout = "Digital")]
         public ushort displayIndex;
 
         public FourCC GetFormat()
@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Input
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
-    [InputTemplate(stateType = typeof(PointerState))]
+    [InputControlLayout(stateType = typeof(PointerState))]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
         ////REVIEW: shouldn't this be done for every touch position, too?
@@ -130,20 +130,20 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            position = setup.GetControl<Vector2Control>(this, "position");
-            delta = setup.GetControl<Vector2Control>(this, "delta");
-            tilt = setup.GetControl<Vector2Control>(this, "tilt");
-            radius = setup.GetControl<Vector2Control>(this, "radius");
-            pressure = setup.GetControl<AxisControl>(this, "pressure");
-            twist = setup.GetControl<AxisControl>(this, "twist");
-            pointerId = setup.GetControl<IntegerControl>(this, "pointerId");
-            phase = setup.GetControl<PointerPhaseControl>(this, "phase");
-            displayIndex = setup.GetControl<IntegerControl>(this, "displayIndex");
-            button = setup.GetControl<ButtonControl>(this, "button");
+            position = builder.GetControl<Vector2Control>(this, "position");
+            delta = builder.GetControl<Vector2Control>(this, "delta");
+            tilt = builder.GetControl<Vector2Control>(this, "tilt");
+            radius = builder.GetControl<Vector2Control>(this, "radius");
+            pressure = builder.GetControl<AxisControl>(this, "pressure");
+            twist = builder.GetControl<AxisControl>(this, "twist");
+            pointerId = builder.GetControl<IntegerControl>(this, "pointerId");
+            phase = builder.GetControl<PointerPhaseControl>(this, "phase");
+            displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
+            button = builder.GetControl<ButtonControl>(this, "button");
 
-            base.FinishSetup(setup);
+            base.FinishSetup(builder);
         }
 
         bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)

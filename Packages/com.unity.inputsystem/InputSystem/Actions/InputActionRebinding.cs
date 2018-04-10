@@ -81,12 +81,12 @@ namespace UnityEngine.Experimental.Input
             private InputAction m_CancelAction;
             private InputAction m_RebindAction;
 
-            private List<string> m_SuitableControlTemplates;
+            private List<string> m_SuitableControlLayouts;
 
             private int m_NumInputUpdatesToAggregate;
             private int m_NumInputUpdatesReceived;
 
-            protected virtual void DetermineSuitableControlTemplates(List<string> result)
+            protected virtual void DetermineSuitableControlLayouts(List<string> result)
             {
             }
 
@@ -117,7 +117,7 @@ namespace UnityEngine.Experimental.Input
         //
         // NOTE: Suitable controls to rebind to are determined from the given action.
         //       The rebind will listen only for controls that match one of th control
-        //       templates used in an y of the bindings of the action.
+        //       layouts used in an y of the bindings of the action.
         //
         //       So, for example, if the given action has only bindings to buttons,
         //       then only buttons will be considered. If it has bindings to both button
