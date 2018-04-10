@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Android;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using NUnit.Framework;
-using UnityEngine;
 
 class AndroidTests : InputTestFixture
 {
