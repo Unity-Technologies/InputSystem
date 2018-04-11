@@ -12,23 +12,23 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRGenericDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRGenericDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -43,23 +43,23 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRGenericDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRGenericDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -78,43 +78,43 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRLeftHandedDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRLeftHandedDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.LeftHanded,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.LeftHanded,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRRightHandedDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRRightHandedDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.RightHanded,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.RightHanded,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -133,43 +133,43 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRLeftHandedDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRLeftHandedDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.LeftHanded,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.LeftHanded,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRRightHandedDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRRightHandedDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.RightHanded,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.RightHanded,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -196,23 +196,23 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "HardwareTracker",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "HardwareTracker",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.HardwareTracker,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.HardwareTracker,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
 
         InputSystem.Update();
@@ -231,22 +231,22 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRController",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRController",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.LeftHanded,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.LeftHanded,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -271,23 +271,23 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XR_This.Layout/Should have 1 Valid::Name",
+            manufacturer = "__Manufacturer::",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XR_This.Layout/Should have 1 Valid::Name",
-                manufacturer = "__Manufacturer::",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",                            
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -301,23 +301,23 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRDevice",
+            manufacturer = "__Manufacturer::",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRDevice",
-                manufacturer = "__Manufacturer::",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature[|.:+-?<1",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature[|.:+-?<1",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -335,21 +335,21 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-            {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRDevice1",
-                manufacturer = "XRManufacturer",
-                capabilities = null
-            }.ToJson());
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRDevice1",
+            manufacturer = "XRManufacturer",
+            capabilities = null
+        }.ToJson());
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-            {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRDevice2",
-                manufacturer = "XRManufacturer",
-                capabilities = "Not A JSON String"
-            }.ToJson());
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRDevice2",
+            manufacturer = "XRManufacturer",
+            capabilities = "Not A JSON String"
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -366,23 +366,23 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "Oculus Rift",
+            manufacturer = "Oculus",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "Oculus Rift",
-                manufacturer = "Oculus",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.LeftHanded,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.LeftHanded,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "SimpleFeature",
-                            featureType = FeatureType.Binary
-                        }
+                        name = "SimpleFeature",
+                        featureType = FeatureType.Binary
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
@@ -397,120 +397,119 @@ public class XRTests : InputTestFixture
     {
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,
-                product = "XRDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                    new XRFeatureDescriptor()
                     {
-                        new XRFeatureDescriptor()
+                        name = "Button",
+                        featureType = FeatureType.Binary,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Button",
-                            featureType = FeatureType.Binary,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "ButtonUsage"
-                                }
-                            }                          
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "DiscreteState",
-                            featureType = FeatureType.DiscreteStates,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "DiscreteStateUsage"
-                                }
+                                content = "ButtonUsage"
                             }
-                        },
-                        new XRFeatureDescriptor()
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "DiscreteState",
+                        featureType = FeatureType.DiscreteStates,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Axis",
-                            featureType = FeatureType.Axis1D,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "Axis1DUsage"
-                                }
+                                content = "DiscreteStateUsage"
                             }
-                        },
-                        new XRFeatureDescriptor()
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Axis",
+                        featureType = FeatureType.Axis1D,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Vector2",
-                            featureType = FeatureType.Axis2D,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "Axis2DUsage"
-                                }
+                                content = "Axis1DUsage"
                             }
-                        },
-                        new XRFeatureDescriptor()
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Vector2",
+                        featureType = FeatureType.Axis2D,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Vector3",
-                            featureType = FeatureType.Axis3D,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "Axis3DUsage"
-                                }
+                                content = "Axis2DUsage"
                             }
-                        },
-                        new XRFeatureDescriptor()
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Vector3",
+                        featureType = FeatureType.Axis3D,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Rotation",
-                            featureType = FeatureType.Rotation,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "RotationUsage"
-                                }
+                                content = "Axis3DUsage"
                             }
-                        },
-                        new XRFeatureDescriptor()
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Rotation",
+                        featureType = FeatureType.Rotation,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Custom",
-                            featureType = FeatureType.Custom,
-                            customSize = 1024,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "CustomTypeUsage"
-                                }
+                                content = "RotationUsage"
                             }
-
-                        },
-                        new XRFeatureDescriptor()
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Custom",
+                        featureType = FeatureType.Custom,
+                        customSize = 1024,
+                        usageHints = new List<UsageHint>()
                         {
-                            name = "Last",
-                            featureType = FeatureType.Binary,
-                            usageHints = new List<UsageHint>()
+                            new UsageHint()
                             {
-                                new UsageHint()
-                                {
-                                    content = "LastElementUsage"
-                                },
-                                new UsageHint()
-                                {
-                                    content = "SecondUsage"
-                                }
+                                content = "CustomTypeUsage"
+                            }
+                        }
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Last",
+                        featureType = FeatureType.Binary,
+                        usageHints = new List<UsageHint>()
+                        {
+                            new UsageHint()
+                            {
+                                content = "LastElementUsage"
+                            },
+                            new UsageHint()
+                            {
+                                content = "SecondUsage"
                             }
                         }
                     }
-                }.ToJson()
-            }.ToJson());
+                }
+            }.ToJson()
+        }.ToJson());
 
         InputSystem.Update();
 
