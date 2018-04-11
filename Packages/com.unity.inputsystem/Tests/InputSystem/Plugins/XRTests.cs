@@ -557,7 +557,7 @@ public class XRTests : InputTestFixture
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(Vector3.zero));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(Quaternion.identity));
         Assert.That(device["Custom"], Is.EqualTo(null));
-        Assert.That((device["Last"] as ButtonControl).isPressed, Is.EqualTo(true));
+        Assert.That((device["Last"] as ButtonControl).isPressed, Is.EqualTo(false));
 
         InputSystem.QueueStateEvent(device, new TestXRDeviceState
         {
