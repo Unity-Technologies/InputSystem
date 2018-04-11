@@ -182,10 +182,6 @@ class DualShockTests : InputTestFixture
         Assert.That(orientation.z, Is.EqualTo(0.333).Within(0.00001));
         Assert.That(orientation.w, Is.EqualTo(0.444).Within(0.00001));
 
-        //Assert.That(gamepad.orientation.x.ReadValue(), Is.EqualTo(0.111).Within(0.00001));
-        //Assert.That(gamepad.orientation.y.ReadValue(), Is.EqualTo(0.222).Within(0.00001));
-        //Assert.That(gamepad.orientation.z.ReadValue(), Is.EqualTo(0.333).Within(0.00001));
-
         Assert.That(gamepad.angularVelocity.x.ReadValue(), Is.EqualTo(0.444).Within(0.00001));
         Assert.That(gamepad.angularVelocity.y.ReadValue(), Is.EqualTo(0.555).Within(0.00001));
         Assert.That(gamepad.angularVelocity.z.ReadValue(), Is.EqualTo(0.666).Within(0.00001));
