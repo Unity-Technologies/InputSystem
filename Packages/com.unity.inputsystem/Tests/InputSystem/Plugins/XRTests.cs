@@ -1,8 +1,11 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.Experimental.Input.Controls;
 
 public class XRTests : InputTestFixture
 {
@@ -391,20 +394,27 @@ public class XRTests : InputTestFixture
         Assert.That(generatedLayout.extendsLayout, Is.EqualTo("OculusHMD"));
     }
 
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_AllFeatureTypesOccupyTheAppropriateSizeAndType()
+    [StructLayout(LayoutKind.Explicit)]
+    unsafe struct TestXRDeviceState : IInputStateTypeInfo
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
+        [FieldOffset(0)] public byte button;
+        [FieldOffset(1)] public uint discreteState;
+        [FieldOffset(5)] public float axis;
+        [FieldOffset(9)] public Vector2 axis2D;
+        [FieldOffset(17)] public Vector3 axis3D;
+        [FieldOffset(29)] public Quaternion rotation;
+        [FieldOffset(45)] public fixed byte buffer[256];
+        [FieldOffset(301)] public byte lastElement;
+
+        public static InputDeviceDescription deviceDescription = new InputDeviceDescription()
             {
-                deviceRole = DeviceRole.Generic,
-                inputFeatures = new List<XRFeatureDescriptor>()
+                interfaceName = XRUtilities.kXRInterface,                  
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+                    deviceRole = DeviceRole.Generic,
+                    inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
                     {
@@ -482,7 +492,7 @@ public class XRTests : InputTestFixture
                     {
                         name = "Custom",
                         featureType = FeatureType.Custom,
-                        customSize = 1024,
+                        customSize = 256,
                         usageHints = new List<UsageHint>()
                         {
                             new UsageHint()
@@ -490,6 +500,7 @@ public class XRTests : InputTestFixture
                                 content = "CustomTypeUsage"
                             }
                         }
+
                     },
                     new XRFeatureDescriptor()
                     {
@@ -508,8 +519,73 @@ public class XRTests : InputTestFixture
                         }
                     }
                 }
-            }.ToJson()
-        }.ToJson());
+                }.ToJson()
+            };
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('X', 'R', 'S', '0');
+        }
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_AllFeaturesAlignToCorrectStateEntries()
+    {
+        testRuntime.ReportNewInputDevice(TestXRDeviceState.deviceDescription.ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        InputSystem.QueueStateEvent(device, new TestXRDeviceState
+        {
+            button = 0,
+            discreteState = 0,
+            axis = 0f,
+            axis2D = Vector2.zero,
+            axis3D = Vector3.zero,
+            rotation = Quaternion.identity,
+            lastElement = 0,
+        });
+        InputSystem.Update();
+
+        Assert.That((device["Button"] as ButtonControl).isPressed, Is.EqualTo(false));
+        Assert.That(device["DiscreteState"].ReadValueAsObject(), Is.EqualTo(0));
+        Assert.That(device["Axis"].ReadValueAsObject(), Is.EqualTo(0f).Within(0.0001f));
+        Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(Vector2.zero));
+        Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(Vector3.zero));
+        Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(Quaternion.identity));
+        Assert.That(device["Custom"], Is.EqualTo(null));
+        Assert.That((device["Last"] as ButtonControl).isPressed, Is.EqualTo(true));
+
+        InputSystem.QueueStateEvent(device, new TestXRDeviceState
+        {
+            button = 1,
+            discreteState = 17,
+            axis = 1.24f,
+            axis2D = new Vector2(0.1f, 0.2f),
+            axis3D = new Vector3(0.3f, 0.4f, 0.5f),
+            rotation = new Quaternion(0.6f, 0.7f, 0.8f, 0.9f),
+            lastElement = byte.MaxValue,
+        });
+        InputSystem.Update();
+
+        Assert.That((device["Button"] as ButtonControl).isPressed, Is.EqualTo(true));
+        Assert.That(device["DiscreteState"].ReadValueAsObject(), Is.EqualTo(17));
+        Assert.That(device["Axis"].ReadValueAsObject(), Is.EqualTo(1.24f).Within(0.0001f));
+        Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(new Vector2(0.1f, 0.2f)));
+        Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(new Vector3(0.3f, 0.4f, 0.5f)));
+        Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(new Quaternion(0.6f, 0.7f, 0.8f, 0.9f)));
+        Assert.That(device["Custom"], Is.EqualTo(null));
+        Assert.That((device["Last"] as ButtonControl).isPressed, Is.EqualTo(true));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_AllFeatureTypesOccupyTheAppropriateSizeAndType()
+    {
+        testRuntime.ReportNewInputDevice(TestXRDeviceState.deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -559,11 +635,11 @@ public class XRTests : InputTestFixture
         Assert.That(rotationControl.usages.Count, Is.EqualTo(1));
         Assert.That(rotationControl.usages[0], Is.EqualTo(new InternedString("RotationUsage")));
 
-        // Custom element is skipped, but occupies 1024 bytes
+        // Custom element is skipped, but occupies 256 bytes
 
         var lastControl = generatedLayout.controls[6];
         Assert.That(lastControl.name, Is.EqualTo(new InternedString("Last")));
-        Assert.That(lastControl.offset, Is.EqualTo(1069));
+        Assert.That(lastControl.offset, Is.EqualTo(301));
         Assert.That(lastControl.layout, Is.EqualTo(new InternedString("Button")));
         Assert.That(lastControl.usages.Count, Is.EqualTo(2));
         Assert.That(lastControl.usages[0], Is.EqualTo(new InternedString("LastElementUsage")));
