@@ -256,19 +256,18 @@ namespace UnityEngine.Experimental.Input
                         ArrayHelpers.Merge(usages.m_Array,
                             other.usages.m_Array));
 
+                // We don't merge parameters. If a control sets parameters, it'll overwrite
+                // parameters inherited from the base.
                 if (parameters.Count == 0)
                     result.parameters = other.parameters;
-                else if (other.parameters.Count == 0)
-                    result.parameters = parameters;
                 else
-                    throw new NotImplementedException("merging parameters");////REVIEW: probably best to not merge them actually
+                    result.parameters = parameters;
 
+                // Same for processors.
                 if (processors.Count == 0)
                     result.processors = other.processors;
-                else if (other.parameters.Count == 0)
-                    result.processors = processors;
                 else
-                    throw new NotImplementedException("merging processors");
+                    result.processors = processors;
 
                 if (!string.IsNullOrEmpty(displayName))
                     result.displayName = displayName;
