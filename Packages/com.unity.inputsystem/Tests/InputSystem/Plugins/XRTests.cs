@@ -407,14 +407,14 @@ public class XRTests : InputTestFixture
         [FieldOffset(301)] public byte lastElement;
 
         public static InputDeviceDescription deviceDescription = new InputDeviceDescription()
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XRDevice",
+            manufacturer = "XRManufacturer",
+            capabilities = new XRDeviceDescriptor
             {
-                interfaceName = XRUtilities.kXRInterface,                  
-                product = "XRDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
-                {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
                     {
@@ -500,7 +500,6 @@ public class XRTests : InputTestFixture
                                 content = "CustomTypeUsage"
                             }
                         }
-
                     },
                     new XRFeatureDescriptor()
                     {
@@ -519,8 +518,8 @@ public class XRTests : InputTestFixture
                         }
                     }
                 }
-                }.ToJson()
-            };
+            }.ToJson()
+        };
 
         public FourCC GetFormat()
         {
