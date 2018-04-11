@@ -176,7 +176,11 @@ namespace UnityEngine.Experimental.Input
             }
 
             if (@namespace != null)
+            {
                 name = string.Format("{0}::{1}", @namespace, name);
+                if (!string.IsNullOrEmpty(baseLayout))
+                    baseLayout = string.Format("{0}::{1}", @namespace, baseLayout);
+            }
 
             var internedName = new InternedString(name);
             var isReplacement = DoesLayoutExist(internedName);
