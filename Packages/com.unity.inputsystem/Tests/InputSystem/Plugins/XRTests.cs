@@ -36,7 +36,7 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRGenericDevice");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.extendsLayout, Is.EqualTo("XRHMD"));
     }
 
@@ -122,11 +122,11 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRLeftHandedDevice");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.extendsLayout, Is.EqualTo("XRController"));
 
         generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRRightHandedDevice");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.extendsLayout, Is.EqualTo("XRController"));
     }
 
@@ -257,7 +257,7 @@ public class XRTests : InputTestFixture
 
         Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
         Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.RightHand));
-        Assert.That(XRController.rightHand, Is.EqualTo(null));
+        Assert.That(XRController.rightHand, Is.Null);
         Assert.That(XRController.leftHand, Is.EqualTo(controller));
 
         InputSystem.SetUsage(controller, CommonUsages.RightHand);
@@ -265,7 +265,7 @@ public class XRTests : InputTestFixture
         Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
         Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
         Assert.That(XRController.rightHand, Is.EqualTo(controller));
-        Assert.That(XRController.leftHand, Is.EqualTo(null));
+        Assert.That(XRController.leftHand, Is.Null);
     }
 
     [Test]
@@ -295,7 +295,7 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::XRThisLayoutShouldhave1ValidName");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
     }
 
     [Test]
@@ -325,7 +325,7 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::XRDevice");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(1));
 
         var childControl = generatedLayout.controls[0];
@@ -357,10 +357,10 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRDevice1");
-        Assert.That(generatedLayout, Is.EqualTo(null));
+        Assert.That(generatedLayout, Is.Null);
 
         generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRDevice2");
-        Assert.That(generatedLayout, Is.EqualTo(null));
+        Assert.That(generatedLayout, Is.Null);
     }
 
     [Test]
@@ -390,7 +390,7 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::Oculus::OculusRift");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.extendsLayout, Is.EqualTo("OculusHMD"));
     }
 
@@ -549,14 +549,14 @@ public class XRTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That((device["Button"] as ButtonControl).isPressed, Is.EqualTo(false));
+        Assert.That((device["Button"] as ButtonControl).isPressed, Is.False);
         Assert.That(device["DiscreteState"].ReadValueAsObject(), Is.EqualTo(0));
         Assert.That(device["Axis"].ReadValueAsObject(), Is.EqualTo(0f).Within(0.0001f));
         Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(Vector2.zero));
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(Vector3.zero));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(Quaternion.identity));
-        Assert.That(device["Custom"], Is.EqualTo(null));
-        Assert.That((device["Last"] as ButtonControl).isPressed, Is.EqualTo(false));
+        Assert.That(device["Custom"], Is.Null);
+        Assert.That((device["Last"] as ButtonControl).isPressed, Is.False);
 
         InputSystem.QueueStateEvent(device, new TestXRDeviceState
         {
@@ -570,14 +570,14 @@ public class XRTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That((device["Button"] as ButtonControl).isPressed, Is.EqualTo(true));
+        Assert.That((device["Button"] as ButtonControl).isPressed, Is.True);
         Assert.That(device["DiscreteState"].ReadValueAsObject(), Is.EqualTo(17));
         Assert.That(device["Axis"].ReadValueAsObject(), Is.EqualTo(1.24f).Within(0.0001f));
         Assert.That(device["Vector2"].ReadValueAsObject(), Is.EqualTo(new Vector2(0.1f, 0.2f)));
         Assert.That(device["Vector3"].ReadValueAsObject(), Is.EqualTo(new Vector3(0.3f, 0.4f, 0.5f)));
         Assert.That(device["Rotation"].ReadValueAsObject(), Is.EqualTo(new Quaternion(0.6f, 0.7f, 0.8f, 0.9f)));
-        Assert.That(device["Custom"], Is.EqualTo(null));
-        Assert.That((device["Last"] as ButtonControl).isPressed, Is.EqualTo(true));
+        Assert.That(device["Custom"], Is.Null);
+        Assert.That((device["Last"] as ButtonControl).isPressed, Is.True);
     }
 
     [Test]
@@ -589,7 +589,7 @@ public class XRTests : InputTestFixture
         InputSystem.Update();
 
         var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRDevice");
-        Assert.That(generatedLayout, Is.Not.EqualTo(null));
+        Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(7));
 
         var binaryControl = generatedLayout.controls[0];
