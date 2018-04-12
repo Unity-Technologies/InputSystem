@@ -88,7 +88,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             m_Rumble.intensity = intensity;
         }
 
-        public bool IsHapticsPaused
+        public bool isHapticsPaused
         {
             get
             {
