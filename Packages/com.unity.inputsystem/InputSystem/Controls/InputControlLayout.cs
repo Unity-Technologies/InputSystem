@@ -24,6 +24,13 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
 
+////REVIEW: kill layout namespacing for remotes and have remote players instantiate layouts from editor instead?
+////        loses the ability for layouts to be different in the player than in the editor but if we take it as granted that
+////           a) a given layout X always is the same regardless to which player it is deployed, and that
+////           b) the editor always has all layouts
+////        then we can just kill off the entire namespacing. This also makes it much easier to tweak layouts in the
+////        editor.
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

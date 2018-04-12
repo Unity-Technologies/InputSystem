@@ -3679,6 +3679,132 @@ class CoreTests : InputTestFixture
     }
 
     [Test]
+    [Category("Devices")]
+    public void Devices_CanMatchDeviceDescriptions()
+    {
+        var matchOne = new InputDeviceMatcher()
+            .WithInterface("TestInterface");
+        var matchTwo = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithDeviceClass("TestDeviceClass");
+        var matchOneWithRegex = new InputDeviceMatcher()
+            .WithInterface(".*Interface");
+        var matchAll = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithDeviceClass("TestDeviceClass")
+            .WithManufacturer("TestManufacturer")
+            .WithProduct("TestProduct")
+            .WithVersion(@"1\.0");
+        var matchNone = new InputDeviceMatcher()
+            .WithInterface("Test")
+            .WithDeviceClass("Test")
+            .WithManufacturer("Test");
+        var matchMoreThanItHas = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithCapability("canDo", true);
+
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            deviceClass = "TestDeviceClass",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer",
+            version = "1.0",
+        };
+
+        Assert.That(matchOne.MatchPercentage(description), Is.EqualTo(1.0f / 5).Within(0.0001));
+        Assert.That(matchTwo.MatchPercentage(description), Is.EqualTo(1.0f / 5 * 2).Within(0.0001));
+        Assert.That(matchOneWithRegex.MatchPercentage(description), Is.EqualTo(1.0f / 5).Within(0.0001));
+        Assert.That(matchAll.MatchPercentage(description), Is.EqualTo(1).Within(0.0001));
+        Assert.That(matchNone.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
+        Assert.That(matchMoreThanItHas.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
+    }
+
+    [Serializable]
+    struct TestDeviceCapabilities
+    {
+        public string stringCap;
+        public int intCap;
+        public float floatCap;
+        public bool boolCap;
+        public NestedCaps nestedCap;
+        public string[] arrayCap;
+        public EnumCaps enumCap;
+
+        [Serializable]
+        public struct NestedCaps
+        {
+            public string value;
+        }
+
+        [Serializable]
+        public enum EnumCaps
+        {
+            First,
+            Second
+        }
+
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanMatchDeviceDescriptions_WithCapabilities()
+    {
+        var matchOneAndOneCap = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithCapability("stringCap", "string");
+        var matchOneCapInArray = new InputDeviceMatcher()
+            .WithCapability("arrayCap[]", "second");
+        var matchOneIntAndOneFloatCap = new InputDeviceMatcher()
+            .WithCapability("floatCap", 1.234f)
+            .WithCapability("intCap", 1234);
+        var matchBoolCap = new InputDeviceMatcher()
+            .WithCapability("boolCap", true);
+        var matchEnumCap = new InputDeviceMatcher()
+            .WithCapability("enumCap", TestDeviceCapabilities.EnumCaps.Second);
+        var matchNestedCap = new InputDeviceMatcher()
+            .WithCapability("nestedCap/value", "value");
+        var matchStringCapWithRegex = new InputDeviceMatcher()
+            .WithCapability("stringCap", ".*ng$");
+        var matchIntCapWithRegex = new InputDeviceMatcher()
+            .WithCapability("intCap", "1.*4");
+        var matchNone = new InputDeviceMatcher()
+            .WithCapability("intCap", 4567);
+
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            capabilities = new TestDeviceCapabilities
+            {
+                stringCap = "string",
+                intCap = 1234,
+                floatCap = 1.234f,
+                boolCap = true,
+                nestedCap = new TestDeviceCapabilities.NestedCaps
+                {
+                    value = "value"
+                },
+                arrayCap = new[] { "first", "second" },
+                enumCap = TestDeviceCapabilities.EnumCaps.Second,
+            }.ToJson()
+        };
+
+        Assert.That(matchOneAndOneCap.MatchPercentage(description), Is.EqualTo(1).Within(0.0001));
+        Assert.That(matchOneCapInArray.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchOneIntAndOneFloatCap.MatchPercentage(description), Is.EqualTo(1).Within(0.0001));
+        Assert.That(matchBoolCap.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchEnumCap.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchNestedCap.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchStringCapWithRegex.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchIntCapWithRegex.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchNone.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
+    }
+
+    [Test]
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
     {
