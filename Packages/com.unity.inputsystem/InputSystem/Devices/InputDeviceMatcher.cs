@@ -209,15 +209,15 @@ namespace UnityEngine.Experimental.Input
         {
             var matcher = new InputDeviceMatcher();
             if (!string.IsNullOrEmpty(deviceDescription.interfaceName))
-                matcher.WithInterface(deviceDescription.interfaceName);
+                matcher = matcher.WithInterface(deviceDescription.interfaceName);
             if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
-                matcher.WithDeviceClass(deviceDescription.deviceClass);
+                matcher = matcher.WithDeviceClass(deviceDescription.deviceClass);
             if (!string.IsNullOrEmpty(deviceDescription.manufacturer))
-                matcher.WithManufacturer(deviceDescription.manufacturer);
+                matcher = matcher.WithManufacturer(deviceDescription.manufacturer);
             if (!string.IsNullOrEmpty(deviceDescription.product))
-                matcher.WithProduct(deviceDescription.product);
+                matcher = matcher.WithProduct(deviceDescription.product);
             if (!string.IsNullOrEmpty(deviceDescription.version))
-                matcher.WithVersion(deviceDescription.version);
+                matcher = matcher.WithVersion(deviceDescription.version);
             // We don't include capabilities in this conversion.
             return matcher;
         }
