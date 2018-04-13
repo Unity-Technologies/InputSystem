@@ -88,6 +88,7 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">InputControlLayout Class Reference</div>  </div>
@@ -105,6 +106,12 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html">ControlItem</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specification for the composition of a direct or indirect child control.  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a0c727f625371684ef6abae163f4d2de7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html#a0c727f625371684ef6abae163f4d2de7">MergeLayout</a> (<a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a> other)</td></tr>
+<tr class="memdesc:a0c727f625371684ef6abae163f4d2de7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Merge the settings from <em>other</em>  into the layout such that they become the base settings.  <a href="#a0c727f625371684ef6abae163f4d2de7">More...</a><br /></td></tr>
+<tr class="separator:a0c727f625371684ef6abae163f4d2de7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A control layout specifies the composition of an input control. </p>
@@ -120,7 +127,35 @@ Through layout factories using InputControlLayout.Builder. </li>
 <p>Once constructed, control layouts are immutable (but you can always replace a registered layout in the system and it will affect everything constructed from the layout).</p>
 <p>Control layouts can be for arbitrary control rigs or for entire devices. Device layouts can use the 'deviceDescriptor' field to specify regexs that are to match against compatible devices.</p>
 <p>InputControlLayout objects are considered temporaries. Except in the editor, we don't keep them around beyond device creation. </p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a0c727f625371684ef6abae163f4d2de7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0c727f625371684ef6abae163f4d2de7">&#9670;&nbsp;</a></span>MergeLayout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MergeLayout </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a>&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Merge the settings from <em>other</em>  into the layout such that they become the base settings. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">other</td><td></td></tr>
+  </table>
+  </dd>
+</dl>
+<p>This is the central method for allowing layouts to 'inherit' settings from their base layout. It will merge the information in <em>other</em>  into the current layout such that the existing settings in the current layout acts as if applied on top of the settings in the base layout. </p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

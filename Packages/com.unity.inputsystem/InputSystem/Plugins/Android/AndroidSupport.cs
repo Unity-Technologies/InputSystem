@@ -1,5 +1,4 @@
 #if UNITY_EDITOR || UNITY_ANDROID
-using System;
 using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
@@ -8,32 +7,30 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     public static class AndroidSupport
     {
+        public const string kAndroidInterface = "Android";
+
         public static void Initialize()
         {
             InputSystem.RegisterControlLayout<AndroidGamepad>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidGameController"
-            });
-
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidGameController"));
             InputSystem.RegisterControlLayout<AndroidJoystick>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidGameController"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidGameController"));
 
+            ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindControlLayoutForDevice for now
             InputSystem.RegisterControlLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
     ""extend"" : ""AndroidGamepad"",
     ""controls"" : [
         { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
-        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampMin=0,clampMax=0.5,normalize,normalizeMin=0,normalizeMax=0.5"" },
-        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0.5,clampMin=0.5,clampMax=1,normalize,normalizeMin=0.5,normalizeMax=1"" },
-        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0.5,clampMin=0.5,clampMax=1,normalize,normalizeMin=0.5,normalizeMax=1"" },
-        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampMin=0,clampMax=0.5,normalize,normalizeMin=0,normalizeMax=0.5"" }
+        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
+        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
     ]
 }
             ");
@@ -55,131 +52,110 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
             // Add sensors
             InputSystem.RegisterControlLayout<AndroidAccelerometer>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Accelerometer));
             InputSystem.RegisterControlLayout<AndroidMagneticField>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.MagneticField));
             InputSystem.RegisterControlLayout<AndroidOrientation>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Orientation));
             InputSystem.RegisterControlLayout<AndroidGyroscope>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Gyroscope));
             InputSystem.RegisterControlLayout<AndroidLight>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Light));
             InputSystem.RegisterControlLayout<AndroidPressure>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Pressure));
             InputSystem.RegisterControlLayout<AndroidProximity>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Proximity));
             InputSystem.RegisterControlLayout<AndroidTemperature>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Temperature));
             InputSystem.RegisterControlLayout<AndroidGravity>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Gravity));
             InputSystem.RegisterControlLayout<AndroidLinearAcceleration>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.LinearAcceleration));
             InputSystem.RegisterControlLayout<AndroidRotationVector>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.RotationVector));
             InputSystem.RegisterControlLayout<AndroidRelativeHumidity>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.RelativeHumidity));
             InputSystem.RegisterControlLayout<AndroidAmbientTemperature>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.AmbientTemperature));
             InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.MagneticFieldUncalibrated));
             InputSystem.RegisterControlLayout<AndroidGameRotationVector>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.GameRotationVector));
             InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.GyroscopeUncalibrated));
             InputSystem.RegisterControlLayout<AndroidSignificantMotion>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.SignificantMotion));
             InputSystem.RegisterControlLayout<AndroidStepDetector>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.StepDetector));
             InputSystem.RegisterControlLayout<AndroidStepCounter>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.StepCounter));
             InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.GeomagneticRotationVector));
             InputSystem.RegisterControlLayout<AndroidHeartRate>(
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidSensor"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.HeartRate));
 
             InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
         }
@@ -191,7 +167,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 return null;
 
             ////TODO: these should just be Controller and Sensor; the interface is already Android
-            ////TODO: we want the ability to just match on capabilities in a good way without having to do it manually in code
             switch (description.deviceClass)
             {
                 case "AndroidGameController":
@@ -209,13 +184,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     }
 
                     return "AndroidJoystick";
-                }
-                case "AndroidSensor":
-                {
-                    var caps = AndroidSensorCapabilities.FromJson(description.capabilities);
-                    if (Enum.IsDefined(typeof(AndroidSenorType), caps.sensorType))
-                        return "Android" + caps.sensorType.ToString();
-                    return null;
                 }
                 default:
                     return null;

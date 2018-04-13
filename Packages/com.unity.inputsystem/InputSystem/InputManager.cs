@@ -103,7 +103,7 @@ namespace UnityEngine.Experimental.Input
         // Add a layout constructed from a type.
         // If a layout with the same name already exists, the new layout
         // takes its place.
-        public void RegisterControlLayout(string name, Type type, InputDeviceDescription? deviceDescription = null)
+        public void RegisterControlLayout(string name, Type type, InputDeviceMatcher? deviceMatcher = null)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -147,12 +147,13 @@ namespace UnityEngine.Experimental.Input
                     }
             }
 
-            PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement,
+            PerformLayoutPostRegistration(internedName, baseLayout, deviceMatcher, isReplacement,
                 isKnownToBeDeviceLayout: isDeviceLayout);
         }
 
+        ////TODO: nuke namespace argument
         // Add a layout constructed from a JSON string.
-        public void RegisterControlLayout(string json, string name = null, string @namespace = null)
+        public void RegisterControlLayout(string json, string name = null, string @namespace = null, InputDeviceMatcher? matcher = null)
         {
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException("json");
@@ -160,9 +161,14 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: as long as no one has instantiated the layout, the base layout information is kinda pointless
 
             // Parse out name, device description, and base layout.
-            InputDeviceDescription deviceDescription;
+            InputDeviceMatcher deviceMatcher;
             string baseLayout;
-            var nameFromJson = InputControlLayout.ParseHeaderFromJson(json, out deviceDescription, out baseLayout);
+            var nameFromJson = InputControlLayout.ParseHeaderFromJson(json, out deviceMatcher, out baseLayout);
+
+            // If we have explicity been given a matcher, override the one
+            // from JSON (if it even has one).
+            if (matcher.HasValue)
+                deviceMatcher = matcher.Value;
 
             // Decide whether to take name from JSON or from code.
             if (string.IsNullOrEmpty(name))
@@ -176,7 +182,11 @@ namespace UnityEngine.Experimental.Input
             }
 
             if (@namespace != null)
+            {
                 name = string.Format("{0}::{1}", @namespace, name);
+                if (!string.IsNullOrEmpty(baseLayout))
+                    baseLayout = string.Format("{0}::{1}", @namespace, baseLayout);
+            }
 
             var internedName = new InternedString(name);
             var isReplacement = DoesLayoutExist(internedName);
@@ -184,11 +194,11 @@ namespace UnityEngine.Experimental.Input
             // Add it to our records.
             m_Layouts.layoutStrings[internedName] = json;
 
-            PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement);
+            PerformLayoutPostRegistration(internedName, baseLayout, deviceMatcher, isReplacement);
         }
 
         public void RegisterControlLayoutBuilder(MethodInfo method, object instance, string name,
-            string baseLayout = null, InputDeviceDescription? deviceDescription = null)
+            string baseLayout = null, InputDeviceMatcher? deviceMatcher = null)
         {
             if (method == null)
                 throw new ArgumentNullException("method");
@@ -222,11 +232,11 @@ namespace UnityEngine.Experimental.Input
                 instance = instance
             };
 
-            PerformLayoutPostRegistration(internedName, baseLayout, deviceDescription, isReplacement);
+            PerformLayoutPostRegistration(internedName, baseLayout, deviceMatcher, isReplacement);
         }
 
         private void PerformLayoutPostRegistration(InternedString name, string baseLayout,
-            InputDeviceDescription? deviceDescription, bool isReplacement, bool isKnownToBeDeviceLayout = false)
+            InputDeviceMatcher? deviceMatcher, bool isReplacement, bool isKnownToBeDeviceLayout = false)
         {
             ++m_LayoutRegistrationVersion;
 
@@ -236,10 +246,10 @@ namespace UnityEngine.Experimental.Input
             // Re-create any devices using the layout.
             RecreateDevicesUsingLayout(name, isKnownToBeDeviceLayout: isKnownToBeDeviceLayout);
 
-            // If the layout has a device description, see if it allows us
+            // If the layout has a device matcher, see if it allows us
             // to make sense of any device we couldn't make sense of so far.
-            if (deviceDescription != null && !deviceDescription.Value.empty)
-                AddSupportedDevice(deviceDescription.Value, name);
+            if (deviceMatcher != null && !deviceMatcher.Value.empty)
+                AddSupportedDevice(deviceMatcher.Value, name);
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
@@ -247,9 +257,9 @@ namespace UnityEngine.Experimental.Input
                 m_LayoutChangeListeners[i](name.ToString(), change);
         }
 
-        private void AddSupportedDevice(InputDeviceDescription description, InternedString layout)
+        private void AddSupportedDevice(InputDeviceMatcher matcher, InternedString layout)
         {
-            m_Layouts.layoutDeviceDescriptions[layout] = description;
+            m_Layouts.layoutDeviceMatchers[layout] = matcher;
 
             // See if the new description to layout mapping allows us to make
             // sense of a device we couldn't make sense of so far.
@@ -259,7 +269,7 @@ namespace UnityEngine.Experimental.Input
                 if (TryGetDeviceById(deviceId) != null)
                     continue;
 
-                if (description.Matches(m_AvailableDevices[i].description))
+                if (matcher.MatchPercentage(m_AvailableDevices[i].description) > 0f)
                 {
                     // Re-enable device.
                     var command = EnableDeviceCommand.Create();
@@ -2120,8 +2130,8 @@ namespace UnityEngine.Experimental.Input
         [Serializable]
         internal struct LayoutDeviceState
         {
-            public InputDeviceDescription deviceDescription;
             public string layoutName;
+            public string matcherJson;
         }
 
         [Serializable]
@@ -2155,7 +2165,7 @@ namespace UnityEngine.Experimental.Input
             public LayoutState[] layoutStrings;
             public LayoutBuilderState[] layoutFactories;
             public BaseLayoutState[] baseLayouts;
-            public LayoutDeviceState[] layoutDeviceDescriptions;
+            public LayoutDeviceState[] layoutDeviceMatchers;
             public TypeRegistrationState[] processors;
             public TypeRegistrationState[] modifiers;
             public DeviceState[] devices;
@@ -2247,7 +2257,7 @@ namespace UnityEngine.Experimental.Input
                 layoutStrings = layoutStringArray,
                 layoutFactories = layoutBuilderArray,
                 baseLayouts = m_Layouts.baseLayoutTable.Select(x => new BaseLayoutState { derivedLayout = x.Key, baseLayout = x.Value }).ToArray(),
-                layoutDeviceDescriptions = m_Layouts.layoutDeviceDescriptions.Select(x => new LayoutDeviceState { deviceDescription = x.Value, layoutName = x.Key }).ToArray(),
+                layoutDeviceMatchers = m_Layouts.layoutDeviceMatchers.Select(x => new LayoutDeviceState { matcherJson = x.Value.ToJson(), layoutName = x.Key }).ToArray(),
                 processors = TypeRegistrationState.SaveState(m_Processors),
                 modifiers = TypeRegistrationState.SaveState(m_Modifiers),
                 devices = deviceArray,
@@ -2361,13 +2371,13 @@ namespace UnityEngine.Experimental.Input
                         m_Layouts.baseLayoutTable[name] = new InternedString(entry.baseLayout);
                 }
 
-            // Layout device descriptions.
-            if (state.layoutDeviceDescriptions != null)
-                foreach (var entry in state.layoutDeviceDescriptions)
+            // Layout device matchers.
+            if (state.layoutDeviceMatchers != null)
+                foreach (var entry in state.layoutDeviceMatchers)
                 {
                     var name = new InternedString(entry.layoutName);
-                    if (!m_Layouts.layoutDeviceDescriptions.ContainsKey(name))
-                        m_Layouts.layoutDeviceDescriptions[name] = entry.deviceDescription;
+                    if (!m_Layouts.layoutDeviceMatchers.ContainsKey(name))
+                        m_Layouts.layoutDeviceMatchers[name] = InputDeviceMatcher.FromJson(entry.matcherJson);
                 }
 
             // Processors.

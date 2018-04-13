@@ -92,10 +92,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     matchedLayout = "XRHMD";
             }
 
-            // We don't want to forward the Capabilities along due to how template fields are Regex compared.
-            var layoutMatchingDescription = description;
-            layoutMatchingDescription.capabilities = null;
-
             string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
@@ -108,7 +104,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             }
 
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout,
+                InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }

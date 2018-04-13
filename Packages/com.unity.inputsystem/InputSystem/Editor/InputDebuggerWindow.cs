@@ -407,20 +407,11 @@ namespace UnityEngine.Experimental.Input.Editor
                         "Common Usages: " +
                         string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
                 }
-                if (!layout.deviceDescription.empty)
+                if (!layout.deviceMatcher.empty)
                 {
-                    var deviceDescription = AddChild(item, "Device Description", ref id);
-                    if (!string.IsNullOrEmpty(layout.deviceDescription.deviceClass))
-                        AddChild(deviceDescription,
-                            "Device Class: " + layout.deviceDescription.deviceClass, ref id);
-                    if (!string.IsNullOrEmpty(layout.deviceDescription.interfaceName))
-                        AddChild(deviceDescription,
-                            "Interface: " + layout.deviceDescription.interfaceName, ref id);
-                    if (!string.IsNullOrEmpty(layout.deviceDescription.product))
-                        AddChild(deviceDescription, "Product: " + layout.deviceDescription.product, ref id);
-                    if (!string.IsNullOrEmpty(layout.deviceDescription.manufacturer))
-                        AddChild(deviceDescription,
-                            "Manufacturer: " + layout.deviceDescription.manufacturer, ref id);
+                    var node = AddChild(item, "Matching Devices", ref id);
+                    foreach (var pattern in layout.deviceMatcher.patterns)
+                        AddChild(node, string.Format("{0} => \"{1}\"", pattern.Key, pattern.Value), ref id);
                 }
 
                 // Controls.

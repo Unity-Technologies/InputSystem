@@ -8,12 +8,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
     {
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<NPad>(deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "NPad",
-                manufacturer = "Nintendo",
-                product = "Wireless Controller",
-            });
+            InputSystem.RegisterControlLayout<NPad>(
+                matches: new InputDeviceMatcher()
+                .WithInterface("NPad")     ////TODO: this should be 'Switch'
+                .WithManufacturer("Nintendo")
+                .WithProduct("Wireless Controller"));
         }
     }
 }
