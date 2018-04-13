@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 
-//for serialization during domain reload, turn into JSON
-//(or even always store them as such?)
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -16,7 +13,8 @@ namespace UnityEngine.Experimental.Input
     /// InputDeviceMatchers are used to match descriptions of input devices to
     /// specific control layouts.
     ///
-    /// Each matcher is basically a set of key/value pairs.
+    /// Each matcher is basically a set of key/value pairs where each value may either be
+    /// a regular expression or a plain value object.
     /// </remarks>
     public struct InputDeviceMatcher
     {
@@ -25,6 +23,19 @@ namespace UnityEngine.Experimental.Input
         public bool empty
         {
             get { return m_Patterns == null; }
+        }
+
+        public IEnumerable<KeyValuePair<string, object>> patterns
+        {
+            get
+            {
+                if (m_Patterns == null)
+                    yield break;
+
+                var count = m_Patterns.Length;
+                for (var i = 0; i < count; ++i)
+                    yield return new KeyValuePair<string, object>(m_Patterns[i].Key.ToString(), m_Patterns[i].Value);
+            }
         }
 
         public InputDeviceMatcher WithInterface(string pattern)
@@ -65,7 +76,7 @@ namespace UnityEngine.Experimental.Input
             {
                 var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch));
                 if (mayBeRegex)
-                    value = new Regex(str);
+                    value = new Regex(str, RegexOptions.IgnoreCase);
             }
 
             // Add to list.
@@ -88,51 +99,43 @@ namespace UnityEngine.Experimental.Input
             if (empty)
                 return 0;
 
-            var propertyCountInDescription = GetNumPropertiesIn(deviceDescription);
-            var scorePerProperty = 1.0f / propertyCountInDescription;
-            var score = 0f;
-
+            // Go through all patterns. Score is 0 if any of the patterns
+            // doesn't match.
             var numPatterns = m_Patterns.Length;
             for (var i = 0; i < numPatterns; ++i)
             {
                 var key = m_Patterns[i].Key;
                 var pattern = m_Patterns[i].Value;
 
-                var isMatch = false;
                 if (key == kInterfaceKey)
                 {
-                    if (string.IsNullOrEmpty(deviceDescription.interfaceName))
+                    if (string.IsNullOrEmpty(deviceDescription.interfaceName)
+                        || !MatchSingleProperty(pattern, deviceDescription.interfaceName))
                         return 0;
-
-                    isMatch = MatchSingleProperty(pattern, deviceDescription.interfaceName);
                 }
                 else if (key == kDeviceClassKey)
                 {
-                    if (string.IsNullOrEmpty(deviceDescription.deviceClass))
+                    if (string.IsNullOrEmpty(deviceDescription.deviceClass)
+                        || !MatchSingleProperty(pattern, deviceDescription.deviceClass))
                         return 0;
-
-                    isMatch = MatchSingleProperty(pattern, deviceDescription.deviceClass);
                 }
                 else if (key == kManufacturerKey)
                 {
-                    if (string.IsNullOrEmpty(deviceDescription.manufacturer))
+                    if (string.IsNullOrEmpty(deviceDescription.manufacturer)
+                        || !MatchSingleProperty(pattern, deviceDescription.manufacturer))
                         return 0;
-
-                    isMatch = MatchSingleProperty(pattern, deviceDescription.manufacturer);
                 }
                 else if (key == kProductKey)
                 {
-                    if (string.IsNullOrEmpty(deviceDescription.product))
+                    if (string.IsNullOrEmpty(deviceDescription.product)
+                        || !MatchSingleProperty(pattern, deviceDescription.product))
                         return 0;
-
-                    isMatch = MatchSingleProperty(pattern, deviceDescription.product);
                 }
                 else if (key == kVersionKey)
                 {
-                    if (string.IsNullOrEmpty(deviceDescription.version))
+                    if (string.IsNullOrEmpty(deviceDescription.version)
+                        || !MatchSingleProperty(pattern, deviceDescription.version))
                         return 0;
-
-                    isMatch = MatchSingleProperty(pattern, deviceDescription.version);
                 }
                 else
                 {
@@ -143,15 +146,18 @@ namespace UnityEngine.Experimental.Input
                         return 0;
 
                     var graph = new JsonGraph(deviceDescription.capabilities);
-                    isMatch = graph.NavigateToProperty(key.ToString()) &&
-                        graph.CurrentPropertyHasValueEqualTo(pattern);
+                    if (!graph.NavigateToProperty(key.ToString()) ||
+                        !graph.CurrentPropertyHasValueEqualTo(pattern))
+                        return 0;
                 }
-
-                if (isMatch)
-                    score += scorePerProperty;
             }
 
-            return score;
+            // All patterns matched. Our score is determined by the number of properties
+            // we matched against.
+            var propertyCountInDescription = GetNumPropertiesIn(deviceDescription);
+            var scorePerProperty = 1.0f / propertyCountInDescription;
+
+            return numPatterns * scorePerProperty;
         }
 
         private bool MatchSingleProperty(object pattern, string value)
@@ -189,24 +195,69 @@ namespace UnityEngine.Experimental.Input
 
         public string ToJson()
         {
-            throw new NotImplementedException();
+            var value = MatcherJson.FromMatcher(this);
+            return JsonUtility.ToJson(value);
         }
 
         public static InputDeviceMatcher FromJson(string json)
         {
-            throw new NotImplementedException();
+            var value = JsonUtility.FromJson<MatcherJson>(json);
+            return value.ToMatcher();
         }
 
-        ////TODO: ToString
+        public static InputDeviceMatcher FromDeviceDescription(InputDeviceDescription deviceDescription)
+        {
+            var matcher = new InputDeviceMatcher();
+            if (!string.IsNullOrEmpty(deviceDescription.interfaceName))
+                matcher.WithInterface(deviceDescription.interfaceName);
+            if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
+                matcher.WithDeviceClass(deviceDescription.deviceClass);
+            if (!string.IsNullOrEmpty(deviceDescription.manufacturer))
+                matcher.WithManufacturer(deviceDescription.manufacturer);
+            if (!string.IsNullOrEmpty(deviceDescription.product))
+                matcher.WithProduct(deviceDescription.product);
+            if (!string.IsNullOrEmpty(deviceDescription.version))
+                matcher.WithVersion(deviceDescription.version);
+            // We don't include capabilities in this conversion.
+            return matcher;
+        }
+
+        public override string ToString()
+        {
+            if (empty)
+                return "<empty>";
+
+            var result = string.Empty;
+            foreach (var pattern in m_Patterns)
+            {
+                if (result.Length > 0)
+                    result += string.Format(",{0}={1}", pattern.Key, pattern.Value);
+                else
+                    result += string.Format("{0}={1}", pattern.Key, pattern.Value);
+            }
+
+            return result;
+        }
 
         public static InternedString InterfaceKey
         {
             get { return kInterfaceKey; }
         }
-
         public static InternedString DeviceClassKey
         {
             get { return kDeviceClassKey; }
+        }
+        public static InternedString ManufacturerKey
+        {
+            get { return kManufacturerKey; }
+        }
+        public static InternedString ProductKey
+        {
+            get { return kProductKey; }
+        }
+        public static InternedString VersionKey
+        {
+            get { return kVersionKey; }
         }
 
         private static InternedString kInterfaceKey = new InternedString("interface");
@@ -214,5 +265,132 @@ namespace UnityEngine.Experimental.Input
         private static InternedString kManufacturerKey = new InternedString("manufacturer");
         private static InternedString kProductKey = new InternedString("product");
         private static InternedString kVersionKey = new InternedString("version");
+
+        [Serializable]
+        internal struct MatcherJson
+        {
+            public string @interface;
+            public string[] interfaces;
+            public string deviceClass;
+            public string[] deviceClasses;
+            public string manufacturer;
+            public string[] manufacturers;
+            public string product;
+            public string[] products;
+            public string version;
+            public string[] versions;
+            public Capability[] capabilities;
+
+            public struct Capability
+            {
+                public string path;
+                public string value;
+            }
+
+            public static MatcherJson FromMatcher(InputDeviceMatcher matcher)
+            {
+                if (matcher.empty)
+                    return new MatcherJson();
+
+                var json = new MatcherJson();
+                foreach (var pattern in matcher.m_Patterns)
+                {
+                    var key = pattern.Key;
+                    var value = pattern.Value.ToString();
+
+                    if (key == kInterfaceKey)
+                    {
+                        if (json.@interface == null)
+                            json.@interface = value;
+                        else
+                            ArrayHelpers.Append(ref json.interfaces, value);
+                    }
+                    else if (key == kDeviceClassKey)
+                    {
+                        if (json.deviceClass == null)
+                            json.deviceClass = value;
+                        else
+                            ArrayHelpers.Append(ref json.deviceClasses, value);
+                    }
+                    else if (key == kManufacturerKey)
+                    {
+                        if (json.manufacturer == null)
+                            json.manufacturer = value;
+                        else
+                            ArrayHelpers.Append(ref json.manufacturers, value);
+                    }
+                    else if (key == kProductKey)
+                    {
+                        if (json.product == null)
+                            json.product = value;
+                        else
+                            ArrayHelpers.Append(ref json.products, value);
+                    }
+                    else if (key == kVersionKey)
+                    {
+                        if (json.version == null)
+                            json.version = value;
+                        else
+                            ArrayHelpers.Append(ref json.versions, value);
+                    }
+                    else
+                    {
+                        ArrayHelpers.Append(ref json.capabilities, new Capability {path = key, value = value});
+                    }
+                }
+
+                return json;
+            }
+
+            public InputDeviceMatcher ToMatcher()
+            {
+                var matcher = new InputDeviceMatcher();
+
+                ////TODO: get rid of the piecemeal array allocation and do it in one step
+
+                // Interfaces.
+                if (!string.IsNullOrEmpty(@interface))
+                    matcher = matcher.WithInterface(@interface);
+                if (interfaces != null)
+                    foreach (var value in interfaces)
+                        matcher = matcher.WithInterface(value);
+
+                // Device classes.
+                if (!string.IsNullOrEmpty(deviceClass))
+                    matcher = matcher.WithDeviceClass(deviceClass);
+                if (deviceClasses != null)
+                    foreach (var value in deviceClasses)
+                        matcher = matcher.WithDeviceClass(value);
+
+                // Manufacturer.
+                if (!string.IsNullOrEmpty(manufacturer))
+                    matcher = matcher.WithManufacturer(manufacturer);
+                if (manufacturers != null)
+                    foreach (var value in manufacturers)
+                        matcher = matcher.WithManufacturer(value);
+
+                // Product.
+                if (!string.IsNullOrEmpty(product))
+                    matcher = matcher.WithProduct(product);
+                if (products != null)
+                    foreach (var value in products)
+                        matcher = matcher.WithProduct(value);
+
+                // Version.
+                if (!string.IsNullOrEmpty(version))
+                    matcher = matcher.WithVersion(version);
+                if (versions != null)
+                    foreach (var value in versions)
+                        matcher = matcher.WithVersion(value);
+
+                // Capabilities.
+                if (capabilities != null)
+                    foreach (var value in capabilities)
+                        ////FIXME: we're turning all values into strings here
+                        matcher = matcher.WithCapability(value.path, value.value);
+
+                return matcher;
+            }
+        }
     }
 }

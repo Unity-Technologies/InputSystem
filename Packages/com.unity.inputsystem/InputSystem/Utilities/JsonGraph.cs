@@ -171,6 +171,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             var str = expectedValue as string;
             if (str != null)
             {
+                // Special case float comparison to take precision into account.
+                if (propertyValue is float)
+                {
+                    float f;
+                    if (float.TryParse(str, out f))
+                        return Mathf.Approximately(f, (float)propertyValue);
+                    return false;
+                }
+
+                // This path should work for ints and bools, too.
                 return string.Compare(str, propertyValue.ToString(), StringComparison.InvariantCultureIgnoreCase) == 0;
             }
 

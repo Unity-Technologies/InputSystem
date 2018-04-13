@@ -94,13 +94,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     return null;
             }
 
-            // We don't want to forward the Capabilities along due to how template fields are Regex compared.
-            var layoutMatchingDescription = description;
-            layoutMatchingDescription.capabilities = null;
-
             var layoutName = SanitizeLayoutName(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface, description.manufacturer, description.product));
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout,
+                InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }

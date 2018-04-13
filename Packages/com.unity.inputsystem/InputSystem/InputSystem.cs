@@ -53,18 +53,18 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
-        /// <param name="deviceDescription">Optional device description. If this is supplied, the layout will automatically
+        /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
         /// </remarks>
-        public static void RegisterControlLayout(Type type, string name = null, InputDeviceDescription? deviceDescription = null)
+        public static void RegisterControlLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
-            s_Manager.RegisterControlLayout(name, type, deviceDescription);
+            s_Manager.RegisterControlLayout(name, type, matches);
         }
 
         /// <summary>
@@ -72,51 +72,52 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <typeparam name="T">Type to derive a control layout from.</typeparam>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
-        /// <param name="deviceDescription">Optional device description. If this is supplied, the layout will automatically
+        /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
         /// </remarks>
-        public static void RegisterControlLayout<T>(string name = null, InputDeviceDescription? deviceDescription = null)
+        public static void RegisterControlLayout<T>(string name = null, InputDeviceMatcher? matches = null)
             where T : InputControl
         {
-            RegisterControlLayout(typeof(T), name, deviceDescription);
+            RegisterControlLayout(typeof(T), name, matches);
         }
 
-        /// <summary>
-        /// Register a layout in JSON format.
-        /// </summary>
-        /// <param name="json">Layout in JSON format.</param>
-        /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
-        /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
-        /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        ///  <summary>
+        ///  Register a layout in JSON format.
+        ///  </summary>
+        ///  <param name="json">Layout in JSON format.</param>
+        ///  <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
+        ///  property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
+        ///  is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        /// <param name="matches"></param>
         /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
-        /// or the "name" JSON property.</exception>
-        /// <remarks>
-        /// Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
-        /// being created from a layout). The JSON data will, however, be parsed once on registration to check for a
-        /// device description in the layout. JSON format errors will thus be detected during registration.
-        /// </remarks>
-        /// <example>
-        /// <code>
-        /// InputSystem.RegisterControlLayout(@"
-        ///    {
-        ///        ""name"" : ""MyDevice"",
-        ///        ""controls"" : [
-        ///            {
-        ///                ""name"" : ""myThing"",
-        ///                ""layout"" : ""MyControl"",
-        ///                ""usage"" : ""LeftStick""
-        ///            }
-        ///        ]
-        ///    }
-        ///");
-        /// </code>
-        /// </example>
-        public static void RegisterControlLayout(string json, string name = null)
+        ///  or the "name" JSON property.</exception>
+        ///  <remarks>
+        ///  Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
+        ///  being created from a layout). The JSON data will, however, be parsed once on registration to check for a
+        ///  device description in the layout. JSON format errors will thus be detected during registration.
+        ///  </remarks>
+        ///  <example>
+        ///  <code>
+        ///  InputSystem.RegisterControlLayout(@"
+        ///     {
+        ///         ""name"" : ""MyDevice"",
+        ///         ""controls"" : [
+        ///             {
+        ///                 ""name"" : ""myThing"",
+        ///                 ""layout"" : ""MyControl"",
+        ///                 ""usage"" : ""LeftStick""
+        ///             }
+        ///         ]
+        ///     }
+        /// ");
+        ///  </code>
+        ///  </example>
+        public static void RegisterControlLayout(string json, string name = null, InputDeviceMatcher? matches = null)
         {
-            s_Manager.RegisterControlLayout(json, name);
+            s_Manager.RegisterControlLayout(json, name, matcher: matches);
         }
 
         /// <summary>
@@ -125,7 +126,7 @@ namespace UnityEngine.Experimental.Input
         /// <param name="builderExpression"></param>
         /// <param name="name"></param>
         /// <param name="baseLayout"></param>
-        /// <param name="deviceDescription"></param>
+        /// <param name="matches"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
         /// <remarks>
@@ -158,7 +159,7 @@ namespace UnityEngine.Experimental.Input
         /// </code>
         /// </example>
         public static void RegisterControlLayoutBuilder(Expression<Func<InputControlLayout>> builderExpression, string name,
-            string baseLayout = null, InputDeviceDescription? deviceDescription = null)
+            string baseLayout = null, InputDeviceMatcher? matches = null)
         {
             if (builderExpression == null)
                 throw new ArgumentNullException("builderExpression");
@@ -223,7 +224,7 @@ namespace UnityEngine.Experimental.Input
 
             // Register.
             s_Manager.RegisterControlLayoutBuilder(method, instance, name, baseLayout: baseLayout,
-                deviceDescription: deviceDescription);
+                deviceMatcher: matches);
         }
 
         /// <summary>

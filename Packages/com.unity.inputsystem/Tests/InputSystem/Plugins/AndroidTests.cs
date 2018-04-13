@@ -212,7 +212,7 @@ class AndroidTests : InputTestFixture
             deviceClass = "AndroidSensor",
             capabilities = new AndroidSensorCapabilities()
             {
-                sensorType = AndroidSenorType.Accelerometer
+                sensorType = AndroidSensorType.Accelerometer
             }.ToJson()
         });
 
