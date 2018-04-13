@@ -9,11 +9,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public static XRHMD current { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            base.FinishSetup(builder);
-        }
-
         public override void MakeCurrent()
         {
             base.MakeCurrent();

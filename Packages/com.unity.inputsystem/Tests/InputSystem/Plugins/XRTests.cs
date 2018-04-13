@@ -1,6 +1,8 @@
+using System;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Utilities;
@@ -9,16 +11,35 @@ using UnityEngine.Experimental.Input.Controls;
 
 public class XRTests : InputTestFixture
 {
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_GenericDeviceCreatesLayoutThatExtendsXRHMD()
+    InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
+        return new InputDeviceDescription
         {
             interfaceName = XRUtilities.kXRInterface,
-            product = "XRGenericDevice",
-            manufacturer = "XRManufacturer",
+            product = "Device",
+            manufacturer = "Manufacturer",
+            capabilities = new XRDeviceDescriptor
+            {
+                deviceRole = role,
+                inputFeatures = new List<XRFeatureDescriptor>()
+                {
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Filler",
+                        featureType = FeatureType.Binary
+                    }
+                }
+            }.ToJson()
+        };
+    }
+
+    InputDeviceDescription CreateMangledNameDeviceDescription()
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterface,
+            product = "XR_This.Layout/Should have 1 Valid::Name",
+            manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
             {
                 deviceRole = DeviceRole.Generic,
@@ -26,230 +47,245 @@ public class XRTests : InputTestFixture
                 {
                     new XRFeatureDescriptor()
                     {
-                        name = "SimpleFeature",
+                        name = "SimpleFeature[|.:+-?<1",
                         featureType = FeatureType.Binary
                     }
                 }
             }.ToJson()
-        }.ToJson());
+        };
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    unsafe struct TestXRDeviceState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte button;
+        [FieldOffset(1)] public uint discreteState;
+        [FieldOffset(5)] public float axis;
+        [FieldOffset(9)] public Vector2 axis2D;
+        [FieldOffset(17)] public Vector3 axis3D;
+        [FieldOffset(29)] public Quaternion rotation;
+        [FieldOffset(45)] public fixed byte buffer[256];
+        [FieldOffset(301)] public byte lastElement;
+
+        public static InputDeviceDescription CreateDeviceDescription()
+        {
+            return new InputDeviceDescription()
+            {
+                interfaceName = XRUtilities.kXRInterface,
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+                    deviceRole = DeviceRole.Generic,
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                    {
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button",
+                            featureType = FeatureType.Binary,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "ButtonUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "DiscreteState",
+                            featureType = FeatureType.DiscreteStates,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "DiscreteStateUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Axis",
+                            featureType = FeatureType.Axis1D,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "Axis1DUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Vector2",
+                            featureType = FeatureType.Axis2D,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "Axis2DUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Vector3",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "Axis3DUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Rotation",
+                            featureType = FeatureType.Rotation,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "RotationUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Custom",
+                            featureType = FeatureType.Custom,
+                            customSize = 256,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "CustomTypeUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Last",
+                            featureType = FeatureType.Binary,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "LastElementUsage"
+                                },
+                                new UsageHint()
+                                {
+                                    content = "SecondUsage"
+                                }
+                            }
+                        }
+                    }
+                }.ToJson()
+            };
+        }
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('X', 'R', 'S', '0');
+        }
+    }
+
+
+    [Test]
+    [Category("Layouts")]
+    [TestCase(DeviceRole.Generic, "XRHMD")]
+    [TestCase(DeviceRole.LeftHanded, "XRController")]
+    [TestCase(DeviceRole.RightHanded, "XRController")]
+    [TestCase(DeviceRole.HardwareTracker, null)]
+    [TestCase(DeviceRole.TrackingReference, null)]
+    [TestCase(DeviceRole.GameController, null)]
+    [TestCase(DeviceRole.Unknown, null)]
+    public void Layouts_DeviceRole_ExtendsSpecificDevice(DeviceRole role, string extends)
+    {
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRGenericDevice");
+        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::Device");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo("XRHMD"));
+        Assert.That(generatedLayout.extendsLayout, Is.EqualTo(extends));
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_GenericDeviceRoleCreatesHMDDevice()
+    [TestCase(DeviceRole.Generic, typeof(XRHMD))]
+    [TestCase(DeviceRole.LeftHanded, typeof(XRController))]
+    [TestCase(DeviceRole.RightHanded, typeof(XRController))]
+    [TestCase(DeviceRole.HardwareTracker, typeof(InputDevice))]
+    [TestCase(DeviceRole.TrackingReference, typeof(InputDevice))]
+    [TestCase(DeviceRole.GameController, typeof(InputDevice))]
+    [TestCase(DeviceRole.Unknown, typeof(InputDevice))]
+    public void Devices_DeviceRole_CreatesSpecificDeviceType(DeviceRole role, Type expectedType)
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRGenericDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.Generic,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-
-        var hmd = InputSystem.devices[0];
-        Assert.That(hmd, Is.TypeOf<XRHMD>());
-        Assert.That(hmd.description.interfaceName, Is.EqualTo(XRUtilities.kXRInterface));
-        Assert.That(hmd.usages.Count, Is.EqualTo(0));
-        Assert.That(XRHMD.current, Is.EqualTo(hmd));
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void Layouts_LeftAndRightHandedDevicesCreateLayoutThatExtendsXRController()
-    {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRLeftHandedDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.LeftHanded,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
-
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRRightHandedDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.RightHanded,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
-
-        InputSystem.Update();
-
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRLeftHandedDevice");
-        Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo("XRController"));
-
-        generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRRightHandedDevice");
-        Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo("XRController"));
+        var createdDevice = InputSystem.devices[0];
+        Assert.That(createdDevice, Is.TypeOf(expectedType));
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_LeftAndRightRoleCreatesXRControllerDevice()
+    public void TODO_Devices_GenericDevice_IsAvailableViaHMDCurrent()
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRLeftHandedDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.LeftHanded,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        Assert.That(XRHMD.current, Is.Null);
 
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRRightHandedDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.RightHanded,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var device = InputSystem.devices[0];
+        Assert.That(XRHMD.current, Is.EqualTo(device));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_LeftAndRightDevices_AvailableViaXRControllerLeftAndRigthHandProperties()
+    {
+        Assert.That(XRController.leftHand, Is.Null);
+        Assert.That(XRController.rightHand, Is.Null);
+
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var leftHandedDevice = InputSystem.devices[0];
+
+        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
+        Assert.That(XRController.rightHand, Is.Null);
+
+        deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
-
-        var leftHandedDevice = InputSystem.devices[0];
-        Assert.That(leftHandedDevice, Is.TypeOf<XRController>());
-        Assert.That(leftHandedDevice.description.interfaceName, Is.EqualTo(XRUtilities.kXRInterface));
-        Assert.That(leftHandedDevice.usages.Count, Is.EqualTo(1));
-        Assert.That(leftHandedDevice.usages[0], Is.EqualTo(CommonUsages.LeftHand));
-        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
-
         var rightHandedDevice = InputSystem.devices[1];
-        Assert.That(rightHandedDevice, Is.TypeOf<XRController>());
-        Assert.That(rightHandedDevice.description.interfaceName, Is.EqualTo(XRUtilities.kXRInterface));
-        Assert.That(rightHandedDevice.usages.Count, Is.EqualTo(1));
-        Assert.That(rightHandedDevice.usages[0], Is.EqualTo(CommonUsages.RightHand));
+
+        Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
         Assert.That(XRController.rightHand, Is.EqualTo(rightHandedDevice));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_HardwareTrackerCreatesDefaultInputDevice()
-    {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "HardwareTracker",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.HardwareTracker,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
-
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-
-        var hardwareTracker = InputSystem.devices[0];
-        Assert.That(hardwareTracker, Is.TypeOf<InputDevice>());
-        Assert.That(hardwareTracker.description.interfaceName, Is.EqualTo(XRUtilities.kXRInterface));
-        Assert.That(hardwareTracker.usages.Count, Is.EqualTo(0));
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRController",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.LeftHanded,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
@@ -270,61 +306,64 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_XRGeneratedLayoutNamesOnlyContainAllowedCharacters()
+    public void Layout_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XR_This.Layout/Should have 1 Valid::Name",
-            manufacturer = "__Manufacturer::",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.Generic,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::XRThisLayoutShouldhave1ValidName");
-        Assert.That(generatedLayout, Is.Not.Null);
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var createdDevice = InputSystem.devices[0];
+
+        string expectedLayoutName = String.Format("{0}::{1}::{2}", XRUtilities.kXRInterface,
+                deviceDescription.manufacturer, deviceDescription.product);
+        Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_XRLayoutFeaturesOnlyContainAllowedCharacters()
+    public void Layout_XRLayoutWithoutManufacturer_IsNamespacedAsInterfaceDevice()
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRDevice",
-            manufacturer = "__Manufacturer::",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.Generic,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature[|.:+-?<1",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        deviceDescription.manufacturer = null;
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::XRDevice");
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var createdDevice = InputSystem.devices[0];
+
+        string expectedLayoutName = String.Format("{0}::{1}", XRUtilities.kXRInterface, deviceDescription.product);
+        Assert.AreEqual(expectedLayoutName, createdDevice.layout);
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_XRGeneratedLayoutNames_OnlyContainAllowedCharacters()
+    {
+        testRuntime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var createdDevice = InputSystem.devices[0];
+
+        Assert.AreEqual(createdDevice.layout, "XRInput::Manufacturer::XRThisLayoutShouldhave1ValidName");
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_XRLayoutFeatures_OnlyContainAllowedCharacters()
+    {
+        testRuntime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var createdDevice = InputSystem.devices[0];
+
+        var generatedLayout = InputSystem.TryLoadLayout(createdDevice.layout);
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(1));
 
@@ -334,204 +373,68 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_XRDevicesWithNoOrInvalidCapabilitiesDoNotCreateLayouts()
+    public void Layouts_XRDevicesWithNoOrInvalidCapabilities_DoNotCreateLayouts()
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRDevice1",
-            manufacturer = "XRManufacturer",
-            capabilities = null
-        }.ToJson());
-
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRDevice2",
-            manufacturer = "XRManufacturer",
-            capabilities = "Not A JSON String"
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        deviceDescription.capabilities = null;
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRDevice1");
+        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
+        Assert.That(InputSystem.devices, Is.Empty);
 
-        generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRDevice2");
+        deviceDescription.capabilities = "Not a JSON String";
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
+
+        InputSystem.Update();
+
+        generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
+        Assert.That(InputSystem.devices, Is.Empty);
     }
 
     [Test]
-    [Category("Layouts")]
-    public void Layouts_WhenMatchingAKnownDeviceTheGeneratedLayoutInheritsProperly()
+    [Category("Devices")]
+    [TestCase("Windows Mixed Reality HMD", "Microsoft", typeof(WMRHMD))]
+    [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
+    [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
+    [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
+    [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
+    [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
+    [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
+    [TestCase("Oculus HMD", "Samsung", typeof(GearVRHMD))]
+    [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
+    [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
+    [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
+    [TestCase("Daydream Controller", null, typeof(DaydreamController))]
+    [TestCase("Daydream Controller", null, typeof(DaydreamController))]
+    [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
+    [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
+    [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
+    [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
+    [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
+    [TestCase("OpenVR Controller(Knuckles)", "Valve", typeof(KnucklesController))]
+    public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {
-        testRuntime.ReportNewInputDevice(
-            new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "Oculus Rift",
-            manufacturer = "Oculus",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.LeftHanded,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        }.ToJson());
+        InputDeviceDescription deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        deviceDescription.product = name;
+        deviceDescription.manufacturer = manufacturer;
+        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Oculus::OculusRift");
-        Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo("OculusHMD"));
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    unsafe struct TestXRDeviceState : IInputStateTypeInfo
-    {
-        [FieldOffset(0)] public byte button;
-        [FieldOffset(1)] public uint discreteState;
-        [FieldOffset(5)] public float axis;
-        [FieldOffset(9)] public Vector2 axis2D;
-        [FieldOffset(17)] public Vector3 axis3D;
-        [FieldOffset(29)] public Quaternion rotation;
-        [FieldOffset(45)] public fixed byte buffer[256];
-        [FieldOffset(301)] public byte lastElement;
-
-        public static InputDeviceDescription deviceDescription = new InputDeviceDescription()
-        {
-            interfaceName = XRUtilities.kXRInterface,
-            product = "XRDevice",
-            manufacturer = "XRManufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.Generic,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button",
-                        featureType = FeatureType.Binary,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "ButtonUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "DiscreteState",
-                        featureType = FeatureType.DiscreteStates,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "DiscreteStateUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Axis",
-                        featureType = FeatureType.Axis1D,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "Axis1DUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Vector2",
-                        featureType = FeatureType.Axis2D,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "Axis2DUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Vector3",
-                        featureType = FeatureType.Axis3D,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "Axis3DUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Rotation",
-                        featureType = FeatureType.Rotation,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "RotationUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Custom",
-                        featureType = FeatureType.Custom,
-                        customSize = 256,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "CustomTypeUsage"
-                            }
-                        }
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Last",
-                        featureType = FeatureType.Binary,
-                        usageHints = new List<UsageHint>()
-                        {
-                            new UsageHint()
-                            {
-                                content = "LastElementUsage"
-                            },
-                            new UsageHint()
-                            {
-                                content = "SecondUsage"
-                            }
-                        }
-                    }
-                }
-            }.ToJson()
-        };
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'R', 'S', '0');
-        }
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        var createdDevice = InputSystem.devices[0];
+        Assert.That(createdDevice, Is.TypeOf(expectedDeviceType));
     }
 
     [Test]
     [Category("State")]
-    public void State_AllFeaturesAlignToCorrectStateEntries()
+    public void State_AllFeatureTypes_ReadTheSameAsTheirStateValue()
     {
-        testRuntime.ReportNewInputDevice(TestXRDeviceState.deviceDescription.ToJson());
+        testRuntime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
 
         InputSystem.Update();
 
@@ -582,9 +485,9 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_AllFeatureTypesOccupyTheAppropriateSizeAndType()
+    public void Layouts_AllFeatureTypes_AreRepresentedInTheGeneratedLayout()
     {
-        testRuntime.ReportNewInputDevice(TestXRDeviceState.deviceDescription.ToJson());
+        testRuntime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
 
         InputSystem.Update();
 

@@ -96,7 +96,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             var layoutMatchingDescription = description;
             layoutMatchingDescription.capabilities = null;
 
-            var layoutName = string.Format("{0}::{1}::{2}", SanitizeName(XRUtilities.kXRInterface), SanitizeName(description.manufacturer), SanitizeName(description.product));
+            string layoutName = null;
+            if (string.IsNullOrEmpty(description.manufacturer))
+            {
+                layoutName = string.Format("{0}::{1}", SanitizeName(XRUtilities.kXRInterface),
+                        SanitizeName(description.product));
+            }
+            else
+            {
+                layoutName = string.Format("{0}::{1}::{2}", SanitizeName(XRUtilities.kXRInterface), SanitizeName(description.manufacturer), SanitizeName(description.product));
+            }
+
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, layoutMatchingDescription);
 

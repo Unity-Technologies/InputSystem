@@ -35,11 +35,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public string name;
         public List<UsageHint> usageHints;
         public FeatureType featureType;
-        public System.UInt32 customSize;
+        public uint customSize;
     }
 
     // Sync to UnityXRInputDeviceRole in IUnityXRInput.h
-    enum DeviceRole
+    public enum DeviceRole
     {
         Unknown = 0,
         Generic,
