@@ -122,12 +122,12 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aaa2b8b87169de689a78bf24fcc6b98a4"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#aaa2b8b87169de689a78bf24fcc6b98a4">ExecuteCommand&lt; TCommand &gt;</a> (ref TCommand command)</td></tr>
+<tr class="memdesc:aaa2b8b87169de689a78bf24fcc6b98a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific command.  <a href="#aaa2b8b87169de689a78bf24fcc6b98a4">More...</a><br /></td></tr>
+<tr class="separator:aaa2b8b87169de689a78bf24fcc6b98a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0ad4f4a4a7ed405c15eb6ed831aecbc"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc">MakeCurrent</a> ()</td></tr>
 <tr class="memdesc:ab0ad4f4a4a7ed405c15eb6ed831aecbc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make this the current device of its type.  <a href="#ab0ad4f4a4a7ed405c15eb6ed831aecbc">More...</a><br /></td></tr>
 <tr class="separator:ab0ad4f4a4a7ed405c15eb6ed831aecbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2412bf37f4ebad551b79910a38d6d0f5"><td class="memItemLeft" align="right" valign="top">long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a2412bf37f4ebad551b79910a38d6d0f5">OnDeviceCommand&lt; TCommand &gt;</a> (ref TCommand command)</td></tr>
-<tr class="memdesc:a2412bf37f4ebad551b79910a38d6d0f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Perform a device-specific command.  <a href="#a2412bf37f4ebad551b79910a38d6d0f5">More...</a><br /></td></tr>
-<tr class="separator:a2412bf37f4ebad551b79910a38d6d0f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad8bb013ace2ffafeaaecc1d4331df859"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ad8bb013ace2ffafeaaecc1d4331df859">OnTextInput</a> (char character)</td></tr>
 <tr class="memdesc:ad8bb013ace2ffafeaaecc1d4331df859"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked when the device receive a <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html">text input event</a>.  <a href="#ad8bb013ace2ffafeaaecc1d4331df859">More...</a><br /></td></tr>
 <tr class="separator:ad8bb013ace2ffafeaaecc1d4331df859"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -163,8 +163,46 @@ Properties</h2></td></tr>
 <div class="textblock"><p>The root of a control hierarchy. </p>
 <p>Input devices act as the container for control hierarchies. Every hierarchy has to have a device at the root. Devices cannot occur inside of hierarchies.</p>
 <p>Unlike other controls, usages of InputDevices are allowed to be changed on the fly without requiring a change to the device layout (InputSystem.SetUsage). </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>The entire control hierarchy should be a linear array; transition to that with InputData. </dd></dl>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="aaa2b8b87169de689a78bf24fcc6b98a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa2b8b87169de689a78bf24fcc6b98a4">&#9670;&nbsp;</a></span>ExecuteCommand&lt; TCommand &gt;()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">long ExecuteCommand&lt; TCommand &gt; </td>
+          <td>(</td>
+          <td class="paramtype">ref TCommand&#160;</td>
+          <td class="paramname"><em>command</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Perform a device-specific command. </p>
+<p>REVIEW: return just bool instead of long and require everything else to go in the command?</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">command</td><td>Data for the command to be performed.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A transfer-specific return code. Negative values are considered failure codes.</dd></dl>
+<p>Commands allow devices to set up custom protocols without having to extend the device API. This is most useful for devices implemented in the native Unity runtime which, through the command interface, may provide custom, device-specific functions.</p>
+<p>This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html" target="_blank">ioctl</a> on UNIX-like systems. </p>
+<div class="typeconstraint">
+<dl><dt><b>Type Constraints</b></dt><dd>
+<table border="0" cellspacing="2" cellpadding="0">
+<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>struct</em></td><td>&#160;</td></tr>
+<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>IInputDeviceCommandInfo</em></td><td>&#160;</td></tr>
+</table>
+</dd>
+</dl>
+</div>
+
+</div>
+</div>
 <a id="ab0ad4f4a4a7ed405c15eb6ed831aecbc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab0ad4f4a4a7ed405c15eb6ed831aecbc">&#9670;&nbsp;</a></span>MakeCurrent()</h2>
 
@@ -192,45 +230,6 @@ Properties</h2></td></tr>
 <p>Use this to set static properties that give fast access to the latest device used of a given type (Gamepad.current or XRController.leftHand and XRController.rightHand).</p>
 <p>This functionality is somewhat like a 'pwd' for the semantic paths but one where there can be multiple current working directories, one for each type.</p>
 <p>A device will be made current by the system initially when it is created and subsequently whenever it receives an event. </p>
-
-</div>
-</div>
-<a id="a2412bf37f4ebad551b79910a38d6d0f5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2412bf37f4ebad551b79910a38d6d0f5">&#9670;&nbsp;</a></span>OnDeviceCommand&lt; TCommand &gt;()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">long OnDeviceCommand&lt; TCommand &gt; </td>
-          <td>(</td>
-          <td class="paramtype">ref TCommand&#160;</td>
-          <td class="paramname"><em>command</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Perform a device-specific command. </p>
-<p>TODO: rename to `SendDeviceCommand` or something like that</p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">command</td><td>Data for the command to be performed.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>A transfer-specific return code. Negative values are considered failure codes.</dd></dl>
-<p>Commands allow devices to set up custom protocols without having to extend the device API. This is most useful for devices implemented in the native Unity runtime which, through the command interface, may provide custom, device-specific functions.</p>
-<p>This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html" target="_blank">ioctl</a> on UNIX-like systems. </p>
-<div class="typeconstraint">
-<dl><dt><b>Type Constraints</b></dt><dd>
-<table border="0" cellspacing="2" cellpadding="0">
-<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>struct</em></td><td>&#160;</td></tr>
-<tr><td valign="top"><em>TCommand</em></td><td>&#160;:</td><td valign="top"><em>IInputDeviceCommandInfo</em></td><td>&#160;</td></tr>
-</table>
-</dd>
-</dl>
-</div>
 
 </div>
 </div>
@@ -360,7 +359,7 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Unique numeric ID for the device. </p>
-<p>This is only assigned once a device has been added to the system. Not two devices will receive the same ID and no device will receive an ID that another device used before even if the device was removed.</p>
+<p>This is only assigned once a device has been added to the system. No two devices will receive the same ID and no device will receive an ID that another device used before even if the device was removed.</p>
 <p>IDs are assigned by the input runtime. </p>
 <dl class="section see"><dt>See also</dt><dd>IInputRuntime.AllocateDeviceId</dd></dl>
 

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['parsereportdescriptor',['ParseReportDescriptor',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDParser.html#abd864c4f353cbeee3b68a2cc8d995dc0',1,'UnityEngine::Experimental::Input::Plugins::HID::HIDParser']]],
-  ['pausehaptics',['PauseHaptics',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IHaptics.html#a5e330b3d653e971277d18f60981b5d96',1,'UnityEngine.Experimental.Input.Haptics.IHaptics.PauseHaptics()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad7640ab8aeeaeb7c5c80a30a3f6c947b',1,'UnityEngine.Experimental.Input.InputSystem.PauseHaptics()']]],
-  ['process',['Process',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html#a563d680455bc57b65e4ff0101a4ea71b',1,'UnityEngine::Experimental::Input::IInputProcessor']]]
+  ['onbeforewritenewstate',['OnBeforeWriteNewState',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputStateCallbackReceiver.html#a476724d14b89301daf9a258b542a4c28',1,'UnityEngine::Experimental::Input::LowLevel::IInputStateCallbackReceiver']]],
+  ['oncarrystateforward',['OnCarryStateForward',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputStateCallbackReceiver.html#a817b7784ececd90c5ce9c6eaf837069f',1,'UnityEngine::Experimental::Input::LowLevel::IInputStateCallbackReceiver']]],
+  ['ontextinput',['OnTextInput',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ad8bb013ace2ffafeaaecc1d4331df859',1,'UnityEngine::Experimental::Input::InputDevice']]]
 ];

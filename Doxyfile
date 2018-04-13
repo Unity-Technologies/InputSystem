@@ -236,8 +236,7 @@ TAB_SIZE               = 4
 # will allow you to put the command \sideeffect (or @sideeffect) in the
 # documentation, which will result in a user-defined paragraph with heading
 # "Side Effects:". You can put \n's in the value part of an alias to insert
-# newlines (in the resulting output). You can put ^^ in the value part of an
-# alias to insert a newline as if a physical newline was in the original file.
+# newlines.
 
 ALIASES                = 
 
@@ -532,7 +531,7 @@ CASE_SENSE_NAMES       = YES
 # scope will be hidden.
 # The default value is: NO.
 
-HIDE_SCOPE_NAMES       = NO
+HIDE_SCOPE_NAMES       = YES
 
 # If the HIDE_COMPOUND_REFERENCE tag is set to NO (default) then doxygen will
 # append additional text to a page's title, such as Class Reference. If set to
@@ -1054,7 +1053,7 @@ CLANG_OPTIONS          =
 # path to the compilation database (see:
 # http://clang.llvm.org/docs/HowToSetupToolingForLLVM.html) used when the files
 # were built. This is equivalent to specifying the "-p" option to a clang tool,
-# such as clang-check. These options will then be passed to the parser.
+# such as clang-check. These options will then be pased to the parser.
 # Note: The availability of this option depends on whether or not doxygen was
 # generated with the -Duse-libclang=ON option for CMake.
 # The default value is: 0.
@@ -1213,7 +1212,7 @@ HTML_COLORSTYLE_GAMMA  = 103
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_TIMESTAMP         = YES
+HTML_TIMESTAMP         = NO
 
 # If the HTML_DYNAMIC_MENUS tag is set to YES then the generated HTML
 # documentation will contain a main index with vertical navigation menus that
@@ -1533,7 +1532,7 @@ MATHJAX_FORMAT         = HTML-CSS
 # Content Delivery Network so you can quickly see the result without installing
 # MathJax. However, it is strongly recommended to install a local copy of
 # MathJax from https://www.mathjax.org before deployment.
-# The default value is: https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/.
+# The default value is: http://cdn.mathjax.org/mathjax/latest.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
 MATHJAX_RELPATH        = http://cdn.mathjax.org/mathjax/latest
