@@ -114,6 +114,88 @@ class DualShockTests : InputTestFixture
 #endif
 
 #if UNITY_EDITOR || UNITY_PS4
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanSetLightBarColorAndMotorSpeedsOnDualShockPS4()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            deviceClass = "PS4DualShockGamepad", ////REVIEW: this should be the product name instead
+            interfaceName = "PS4"
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepadPS4>());
+        var gamepad = (DualShockGamepadPS4)device;
+
+        DualShockPS4OuputCommand? receivedCommand = null;
+        testRuntime.SetDeviceCommandCallback(gamepad.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == DualShockPS4OuputCommand.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((DualShockPS4OuputCommand*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command");
+                    return InputDeviceCommand.kGenericFailure;
+                }
+            });
+
+        ////REVIEW: This illustrates a weekness of the current haptics API; each call results in a separate output command whereas
+        ////        what the device really wants is to receive both motor speed and light bar settings in one single command
+
+        gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.largeMotorSpeed, Is.EqualTo((byte)(0.1234 * 255)));
+        Assert.That(receivedCommand.Value.smallMotorSpeed, Is.EqualTo((byte)(0.56787 * 255)));
+
+        receivedCommand = null;
+        gamepad.SetLightBarColor(new Color(0.123f, 0.456f, 0.789f));
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.redColor, Is.EqualTo((byte)(0.123f * 255)));
+        Assert.That(receivedCommand.Value.greenColor, Is.EqualTo((byte)(0.456f * 255)));
+        Assert.That(receivedCommand.Value.blueColor, Is.EqualTo((byte)(0.789f * 255)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReadSlotIdOnDualShockPS4()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            deviceClass = "PS4DualShockGamepad", ////REVIEW: this should be the product name instead
+            interfaceName = "PS4"
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepadPS4>());
+        var gamepad = (DualShockGamepadPS4)device;
+
+        QuerySlotIdCommand? receivedCommand = null;
+        testRuntime.SetDeviceCommandCallback(gamepad.id,
+            (id, commandPtr) =>
+            {
+                unsafe
+                {
+                    if (commandPtr->type == QuerySlotIdCommand.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((QuerySlotIdCommand*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command");
+                    return InputDeviceCommand.kGenericFailure;
+                }
+            });
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockOnPS4()
