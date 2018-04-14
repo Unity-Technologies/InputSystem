@@ -1,13 +1,22 @@
 using System;
 using UnityEngine.Experimental.Input.LowLevel;
 
+////REVEW: expose euler angle subcontrols?
+
 namespace UnityEngine.Experimental.Input.Controls
 {
     public class QuaternionControl : InputControl<Quaternion>
     {
-        // No component controls as doing individual operations on the xyzw components of a quaternion
-        // doesn't really make sense as individual input controls.
-        ////REVIEW: while exposing quaternion fields makes no sense, might make sense to expose euler angle subcontrols
+        // Accessing these components as individual controls usually doesn't make too much sense,
+        // but having these controls allows changing the state format on the quaternion without
+        // requiring the control to explicitly support the various different storage formats.
+        // Also, it allows putting processors on the individual components which may be necessary
+        // to properly convert the source data.
+
+        public AxisControl x { get; private set; }
+        public AxisControl y { get; private set; }
+        public AxisControl z { get; private set; }
+        public AxisControl w { get; private set; }
 
         public QuaternionControl()
         {
@@ -15,23 +24,27 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeQuaternion;
         }
 
-        public override unsafe Quaternion ReadRawValueFrom(IntPtr statePtr)
+        protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            var x = valuePtr[0];
-            var y = valuePtr[1];
-            var z = valuePtr[2];
-            var w = valuePtr[3];
-            return new Quaternion(x, y, z, w);
+            x = builder.GetControl<AxisControl>(this, "x");
+            y = builder.GetControl<AxisControl>(this, "y");
+            z = builder.GetControl<AxisControl>(this, "z");
+            w = builder.GetControl<AxisControl>(this, "w");
+            base.FinishSetup(builder);
         }
 
-        protected override unsafe void WriteRawValueInto(IntPtr statePtr, Quaternion value)
+        public override Quaternion ReadRawValueFrom(IntPtr statePtr)
         {
-            var valuePtr = (float*)new IntPtr(statePtr.ToInt64() + (int)m_StateBlock.byteOffset);
-            valuePtr[0] = value.x;
-            valuePtr[1] = value.y;
-            valuePtr[2] = value.z;
-            valuePtr[3] = value.w;
+            return new Quaternion(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr),
+                w.ReadRawValueFrom(statePtr));
+        }
+
+        protected override void WriteRawValueInto(IntPtr statePtr, Quaternion value)
+        {
+            x.WriteValueInto(statePtr, value.x);
+            y.WriteValueInto(statePtr, value.y);
+            z.WriteValueInto(statePtr, value.z);
+            w.WriteValueInto(statePtr, value.w);
         }
     }
 }
