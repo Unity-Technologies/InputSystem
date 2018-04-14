@@ -35,11 +35,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public string name;
         public List<UsageHint> usageHints;
         public FeatureType featureType;
-        public System.UInt32 customSize;
+        public uint customSize;
     }
 
     // Sync to UnityXRInputDeviceRole in IUnityXRInput.h
-    enum DeviceRole
+    public enum DeviceRole
     {
         Unknown = 0,
         Generic,
@@ -101,6 +101,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 .WithInterface(XRUtilities.kXRInterface)
                 .WithManufacturer("Oculus")
                 .WithProduct("^(Oculus Touch Controller)"));
+            InputSystem.RegisterControlLayout<OculusTrackingReference>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(XRUtilities.kXRInterface)
+                .WithManufacturer("Oculus")
+                .WithProduct("^(Tracking Reference)"));
 
             InputSystem.RegisterControlLayout<GearVRHMD>(
                 matches: new InputDeviceMatcher()
@@ -132,6 +137,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 .WithInterface(XRUtilities.kXRInterface)
                 .WithManufacturer("HTC")
                 .WithProduct(@"^(OpenVR Controller\(Vive Controller)"));
+            InputSystem.RegisterControlLayout<ViveLighthouse>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(XRUtilities.kXRInterface)
+                .WithManufacturer("HTC")
+                .WithProduct(@"^(HTC V2-XD/XE)"));
 
             InputSystem.RegisterControlLayout<KnucklesController>(
                 matches: new InputDeviceMatcher()

@@ -1037,9 +1037,9 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_SWITCH
             Plugins.Switch.SwitchSupport.Initialize();
-            #endif
+#endif
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
             Plugins.XR.XRSupport.Initialize();
             #endif
         }
