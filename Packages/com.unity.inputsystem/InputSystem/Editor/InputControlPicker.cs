@@ -223,7 +223,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (layout.controls.Count == 0)
                         continue;
 
-                    var tree = BuildTreeForDevice(layout, devices, ref id);
+                    BuildTreeForDevice(layout, devices, ref id);
                 }
                 foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
                 {
@@ -239,7 +239,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (group == null)
                         group = AddChild(products, rootBaseLayoutName, ref id);
 
-                    var tree = BuildTreeForDevice(layout, group, ref id);
+                    BuildTreeForDevice(layout, group, ref id);
                 }
 
                 if (devices.children != null)
