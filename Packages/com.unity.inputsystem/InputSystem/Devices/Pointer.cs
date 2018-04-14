@@ -7,6 +7,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
 ////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
+////        (if we do this, every touch control has to get this, too)
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -65,7 +66,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    ////REVIEW: does it really make sense to have this at the pointer level
+    ////REVIEW: does it really make sense to have this at the pointer level?
     public enum PointerPhase
     {
         /// <summary>
@@ -108,19 +109,36 @@ namespace UnityEngine.Experimental.Input
         public Vector2Control position { get; private set; }
 
         public Vector2Control delta { get; private set; }
+
         public Vector2Control tilt { get; private set; }
         public Vector2Control radius { get; private set; }
         public AxisControl pressure { get; private set; }
+
+        /// <summary>
+        /// Rotation of the pointer around its own axis. 0 means the pointer is facing away from the user (12 'o clock position)
+        /// and ~1 means the pointer has been rotated clockwise almost one full rotation.
+        /// </summary>
+        /// <remarks>
+        /// Twist is generally only supported by pens and even among pens, twist support is rare. An example product that
+        /// supports twist is the Wacom Art Pen.
+        ///
+        /// The axis of rotation is the vector facing away from the pointer surface when the pointer is facing straight up
+        /// (i.e. the surface normal of the pointer surface). When the pointer is tilted, the rotation axis is tilted along
+        /// with it.
+        /// </remarks>
         public AxisControl twist { get; private set; }
+
         public IntegerControl pointerId { get; private set; }
         ////TODO: find a way which gives values as PointerPhase instead of as int
         public PointerPhaseControl phase { get; private set; }
-        public IntegerControl displayIndex { get; private set; }////REVIEW: kill this and move to configuration?
+        public IntegerControl displayIndex { get; private set; }////TODO: kill this
+
+        ////TODO: give this a better name; primaryButton?
         public ButtonControl button { get; private set; }
 
         /// <summary>
-        /// The pointer that was added or updated last or null if there is no pointer
-        /// connected to the system.
+        /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
+        /// device connected to the system.
         /// </summary>
         public static Pointer current { get; internal set; }
 
