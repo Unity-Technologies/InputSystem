@@ -1863,6 +1863,7 @@ namespace UnityEngine.Experimental.Input
                     --remainingEventCount;
                 }
 
+                ////TODO: move this into the state event case; don't make device current for other types of events
                 ////TODO: we need to filter out noisy devices; PS4 controller, for example, just spams constant reports and thus will always make itself current
                 ////      (check for actual change and only make current if state changed?)
                 // Device received event so make it current except if we got a
