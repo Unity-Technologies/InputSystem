@@ -11,10 +11,10 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
+
 ////TODO: turn 'overrides' into feature where layouts can be registered as overrides and they get merged *into* the layout
 ////      they are overriding
-
-////TODO: make it so that a control with no variant set can act as the base layout for controls with the same name that have a variant set
 
 ////TODO: ensure that if a layout sets a device description, it is indeed a device layout
 
@@ -41,8 +41,8 @@ namespace UnityEngine.Experimental.Input
     ///
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
-    /// <item><description>Constructed through reflection from InputControls classes.</description></item>
-    /// <item><description>Through layout factories using InputControlLayout.Builder.</description></item>
+    /// <item><description>Constructed through reflection from <see cref="InputControl">InputControls</see> classes.</description></item>
+    /// <item><description>Through layout factories using <see cref="InputControlLayout.Builder"/>.</description></item>
     /// </list>
     ///
     /// Once constructed, control layouts are immutable (but you can always
@@ -50,11 +50,11 @@ namespace UnityEngine.Experimental.Input
     /// everything constructed from the layout).
     ///
     /// Control layouts can be for arbitrary control rigs or for entire
-    /// devices. Device layouts can use the 'deviceDescriptor' field
+    /// devices. Device layouts can use the <see cref="deviceMatcher"/> field
     /// to specify regexs that are to match against compatible devices.
     ///
     /// InputControlLayout objects are considered temporaries. Except in the
-    /// editor, we don't keep them around beyond device creation.
+    /// editor, they are not kept around beyond device creation.
     /// </remarks>
     public class InputControlLayout
     {
