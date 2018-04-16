@@ -55,39 +55,17 @@ public class XRTests : InputTestFixture
         };
     }
 
-#if UNITY_ANDROID
-    const int buttonOffset = 0;
-    const int discreteStateOffset = 4;
-    const int axisOffset = 8;
-    const int axis2DOffset = 12;
-    const int axis3DOffset = 20;
-    const int rotationOffset = 32;
-    const int bufferOffset = 48;
-    const int lastElementOffset = 304;
-#else
-    const int buttonOffset = 0;
-    const int discreteStateOffset = 1;
-    const int axisOffset = 5;
-    const int axis2DOffset = 9;
-    const int axis3DOffset = 17;
-    const int rotationOffset = 29;
-    const int bufferOffset = 45;
-    const int lastElementOffset = 301;
-#endif
-
-    const int bufferSize = 256;
-
     [StructLayout(LayoutKind.Explicit)]
     unsafe struct TestXRDeviceState : IInputStateTypeInfo
     {
-        [FieldOffset(buttonOffset)] public byte button;
-        [FieldOffset(discreteStateOffset)] public uint discreteState;
-        [FieldOffset(axisOffset)] public float axis;
-        [FieldOffset(axis2DOffset)] public Vector2 axis2D;
-        [FieldOffset(axis3DOffset)] public Vector3 axis3D;
-        [FieldOffset(rotationOffset)] public Quaternion rotation;
-        [FieldOffset(bufferOffset)] public fixed byte buffer[bufferSize];
-        [FieldOffset(lastElementOffset)] public byte lastElement;
+        [FieldOffset(0)] public byte button;
+        [FieldOffset(1)] public uint discreteState;
+        [FieldOffset(5)] public float axis;
+        [FieldOffset(9)] public Vector2 axis2D;
+        [FieldOffset(17)] public Vector3 axis3D;
+        [FieldOffset(29)] public Quaternion rotation;
+        [FieldOffset(45)] public fixed byte buffer[256];
+        [FieldOffset(301)] public byte lastElement;
 
         public static InputDeviceDescription CreateDeviceDescription()
         {
@@ -519,42 +497,42 @@ public class XRTests : InputTestFixture
 
         var binaryControl = generatedLayout.controls[0];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
-        Assert.That(binaryControl.offset, Is.EqualTo(buttonOffset));
+        Assert.That(binaryControl.offset, Is.EqualTo(0));
         Assert.That(binaryControl.layout, Is.EqualTo(new InternedString("Button")));
         Assert.That(binaryControl.usages.Count, Is.EqualTo(1));
         Assert.That(binaryControl.usages[0], Is.EqualTo(new InternedString("ButtonUsage")));
 
         var discreteControl = generatedLayout.controls[1];
         Assert.That(discreteControl.name, Is.EqualTo(new InternedString("DiscreteState")));
-        Assert.That(discreteControl.offset, Is.EqualTo(discreteStateOffset));
+        Assert.That(discreteControl.offset, Is.EqualTo(1));
         Assert.That(discreteControl.layout, Is.EqualTo(new InternedString("Integer")));
         Assert.That(discreteControl.usages.Count, Is.EqualTo(1));
         Assert.That(discreteControl.usages[0], Is.EqualTo(new InternedString("DiscreteStateUsage")));
 
         var axisControl = generatedLayout.controls[2];
         Assert.That(axisControl.name, Is.EqualTo(new InternedString("Axis")));
-        Assert.That(axisControl.offset, Is.EqualTo(axisOffset));
+        Assert.That(axisControl.offset, Is.EqualTo(5));
         Assert.That(axisControl.layout, Is.EqualTo(new InternedString("Analog")));
         Assert.That(axisControl.usages.Count, Is.EqualTo(1));
         Assert.That(axisControl.usages[0], Is.EqualTo(new InternedString("Axis1DUsage")));
 
         var vec2Control = generatedLayout.controls[3];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
-        Assert.That(vec2Control.offset, Is.EqualTo(axis2DOffset));
+        Assert.That(vec2Control.offset, Is.EqualTo(9));
         Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
         var vec3Control = generatedLayout.controls[4];
         Assert.That(vec3Control.name, Is.EqualTo(new InternedString("Vector3")));
-        Assert.That(vec3Control.offset, Is.EqualTo(axis3DOffset));
+        Assert.That(vec3Control.offset, Is.EqualTo(17));
         Assert.That(vec3Control.layout, Is.EqualTo(new InternedString("Vector3")));
         Assert.That(vec3Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec3Control.usages[0], Is.EqualTo(new InternedString("Axis3DUsage")));
 
         var rotationControl = generatedLayout.controls[5];
         Assert.That(rotationControl.name, Is.EqualTo(new InternedString("Rotation")));
-        Assert.That(rotationControl.offset, Is.EqualTo(rotationOffset));
+        Assert.That(rotationControl.offset, Is.EqualTo(29));
         Assert.That(rotationControl.layout, Is.EqualTo(new InternedString("Quaternion")));
         Assert.That(rotationControl.usages.Count, Is.EqualTo(1));
         Assert.That(rotationControl.usages[0], Is.EqualTo(new InternedString("RotationUsage")));
@@ -563,7 +541,7 @@ public class XRTests : InputTestFixture
 
         var lastControl = generatedLayout.controls[6];
         Assert.That(lastControl.name, Is.EqualTo(new InternedString("Last")));
-        Assert.That(lastControl.offset, Is.EqualTo(lastElementOffset));
+        Assert.That(lastControl.offset, Is.EqualTo(301));
         Assert.That(lastControl.layout, Is.EqualTo(new InternedString("Button")));
         Assert.That(lastControl.usages.Count, Is.EqualTo(2));
         Assert.That(lastControl.usages[0], Is.EqualTo(new InternedString("LastElementUsage")));
