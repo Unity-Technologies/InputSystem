@@ -17,11 +17,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             switch (featureDescriptor.featureType)
             {
                 case FeatureType.Binary:
-#if UNITY_ANDROID
-                    return 4;
-#else
-                    return 1;
-#endif
+                    return sizeof(byte);
                 case FeatureType.DiscreteStates:
                     return sizeof(int);
                 case FeatureType.Axis1D:
@@ -137,6 +133,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
                 string featureName = SanitizeName(feature.name);
                 uint nextOffset = GetSizeOfFeature(feature);
+
+                if (nextOffset >= 4 && (currentOffset % 4 != 0))
+                    currentOffset += (4 - (currentOffset % 4));
+
                 switch (feature.featureType)
                 {
                     case FeatureType.Binary:
