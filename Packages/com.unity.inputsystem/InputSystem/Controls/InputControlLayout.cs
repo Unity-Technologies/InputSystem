@@ -11,10 +11,10 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
+
 ////TODO: turn 'overrides' into feature where layouts can be registered as overrides and they get merged *into* the layout
 ////      they are overriding
-
-////TODO: make it so that a control with no variant set can act as the base layout for controls with the same name that have a variant set
 
 ////TODO: ensure that if a layout sets a device description, it is indeed a device layout
 
@@ -23,6 +23,13 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
+
+////REVIEW: kill layout namespacing for remotes and have remote players instantiate layouts from editor instead?
+////        loses the ability for layouts to be different in the player than in the editor but if we take it as granted that
+////           a) a given layout X always is the same regardless to which player it is deployed, and that
+////           b) the editor always has all layouts
+////        then we can just kill off the entire namespacing. This also makes it much easier to tweak layouts in the
+////        editor.
 
 namespace UnityEngine.Experimental.Input
 {
@@ -34,8 +41,8 @@ namespace UnityEngine.Experimental.Input
     ///
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
-    /// <item><description>Constructed through reflection from InputControls classes.</description></item>
-    /// <item><description>Through layout factories using InputControlLayout.Builder.</description></item>
+    /// <item><description>Constructed through reflection from <see cref="InputControl">InputControls</see> classes.</description></item>
+    /// <item><description>Through layout factories using <see cref="InputControlLayout.Builder"/>.</description></item>
     /// </list>
     ///
     /// Once constructed, control layouts are immutable (but you can always
@@ -43,11 +50,11 @@ namespace UnityEngine.Experimental.Input
     /// everything constructed from the layout).
     ///
     /// Control layouts can be for arbitrary control rigs or for entire
-    /// devices. Device layouts can use the 'deviceDescriptor' field
+    /// devices. Device layouts can use the <see cref="deviceMatcher"/> field
     /// to specify regexs that are to match against compatible devices.
     ///
     /// InputControlLayout objects are considered temporaries. Except in the
-    /// editor, we don't keep them around beyond device creation.
+    /// editor, they are not kept around beyond device creation.
     /// </remarks>
     public class InputControlLayout
     {
@@ -222,6 +229,7 @@ namespace UnityEngine.Experimental.Input
 
                 result.name = name;
                 Debug.Assert(!name.IsEmpty());
+                result.isModifyingChildControlByPath = isModifyingChildControlByPath;
 
                 result.layout = layout.IsEmpty() ? other.layout : layout;
                 result.variant = variant.IsEmpty() ? other.variant : variant;
@@ -255,19 +263,18 @@ namespace UnityEngine.Experimental.Input
                         ArrayHelpers.Merge(usages.m_Array,
                             other.usages.m_Array));
 
+                // We don't merge parameters. If a control sets parameters, it'll overwrite
+                // parameters inherited from the base.
                 if (parameters.Count == 0)
                     result.parameters = other.parameters;
-                else if (other.parameters.Count == 0)
-                    result.parameters = parameters;
                 else
-                    throw new NotImplementedException("merging parameters");////REVIEW: probably best to not merge them actually
+                    result.parameters = parameters;
 
+                // Same for processors.
                 if (processors.Count == 0)
                     result.processors = other.processors;
-                else if (other.parameters.Count == 0)
-                    result.processors = processors;
                 else
-                    throw new NotImplementedException("merging processors");
+                    result.processors = processors;
 
                 if (!string.IsNullOrEmpty(displayName))
                     result.displayName = displayName;
@@ -315,12 +322,9 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InternedString>(m_CommonUsages); }
         }
 
-        // Unlike in a normal device descriptor, the strings in this descriptor are
-        // regular expressions which can be used to match against the strings of an
-        // actual device descriptor.
-        public InputDeviceDescription deviceDescription
+        public InputDeviceMatcher deviceMatcher
         {
-            get { return m_DeviceDescription; }
+            get { return m_DeviceMatcher; }
         }
 
         public ReadOnlyArray<ControlItem> controls
@@ -350,7 +354,7 @@ namespace UnityEngine.Experimental.Input
             public FourCC stateFormat;
             public string extendsLayout;
             public bool? updateBeforeRender;
-            public InputDeviceDescription deviceDescription;
+            public InputDeviceMatcher deviceMatcher;
 
             private int m_ControlCount;
             private ControlItem[] m_Controls;
@@ -479,9 +483,9 @@ namespace UnityEngine.Experimental.Input
                 return WithFormat(new FourCC(format));
             }
 
-            public Builder ForDevice(InputDeviceDescription deviceDescription)
+            public Builder ForDevice(InputDeviceMatcher matcher)
             {
-                this.deviceDescription = deviceDescription;
+                deviceMatcher = matcher;
                 return this;
             }
 
@@ -508,7 +512,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     m_StateFormat = stateFormat,
                     m_ExtendsLayout = new InternedString(extendsLayout),
-                    m_DeviceDescription = deviceDescription,
+                    m_DeviceMatcher = deviceMatcher,
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender
                 };
@@ -596,7 +600,7 @@ namespace UnityEngine.Experimental.Input
 #pragma warning restore 0414
         private InternedString[] m_CommonUsages;
         internal ControlItem[] m_Controls;
-        private InputDeviceDescription m_DeviceDescription;
+        private InputDeviceMatcher m_DeviceMatcher;
         internal string m_DisplayName;
         internal string m_ResourceName;
 
@@ -1161,10 +1165,10 @@ namespace UnityEngine.Experimental.Input
                     throw new Exception(string.Format("Duplicate control '{0}' in layout '{1}'", name, layoutName));
         }
 
-        internal static string ParseHeaderFromJson(string json, out InputDeviceDescription deviceDescription, out string baseLayout)
+        internal static string ParseHeaderFromJson(string json, out InputDeviceMatcher deviceMatcher, out string baseLayout)
         {
             var layoutJson = JsonUtility.FromJson<LayoutJsonNameAndDescriptorOnly>(json);
-            deviceDescription = layoutJson.device.ToDescriptor();
+            deviceMatcher = layoutJson.device.ToMatcher();
             baseLayout = layoutJson.extend;
             return layoutJson.name;
         }
@@ -1174,7 +1178,7 @@ namespace UnityEngine.Experimental.Input
         {
             public string name;
             public string extend;
-            public DeviceDescriptionJson device;
+            public InputDeviceMatcher.MatcherJson device;
         }
 
         [Serializable]
@@ -1196,7 +1200,7 @@ namespace UnityEngine.Experimental.Input
             public string resourceName;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
             public string variant;
-            public DeviceDescriptionJson device;
+            public InputDeviceMatcher.MatcherJson device;
             public ControlItemJson[] controls;
 
             // ReSharper restore MemberCanBePrivate.Local
@@ -1231,7 +1235,7 @@ namespace UnityEngine.Experimental.Input
                 // Create layout.
                 var layout = new InputControlLayout(name, type);
                 layout.m_ExtendsLayout = new InternedString(extend);
-                layout.m_DeviceDescription = device.ToDescriptor();
+                layout.m_DeviceMatcher = device.ToMatcher();
                 layout.m_DisplayName = displayName;
                 layout.m_ResourceName = resourceName;
                 layout.m_Variant = new InternedString(variant);
@@ -1295,7 +1299,7 @@ namespace UnityEngine.Experimental.Input
                     resourceName = layout.m_ResourceName,
                     extend = layout.m_ExtendsLayout,
                     format = layout.stateFormat.ToString(),
-                    device = DeviceDescriptionJson.FromDescription(layout.m_DeviceDescription),
+                    device = InputDeviceMatcher.MatcherJson.FromMatcher(layout.m_DeviceMatcher),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
                 };
             }
@@ -1423,78 +1427,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        [Serializable]
-        private struct DeviceDescriptionJson
-        {
-            // Disable warnings that these fields are never assigned to. They are set
-            // by JsonUtility.
-            #pragma warning disable 0649
-            // ReSharper disable MemberCanBePrivate.Local
-
-            public string @interface;
-            public string[] interfaces;
-            public string deviceClass;
-            public string[] deviceClasses;
-            public string manufacturer;
-            public string[] manufacturers;
-            public string product;
-            public string[] products;
-            public string version;
-            public string[] versions;
-
-            // ReSharper restore MemberCanBePrivate.Local
-            #pragma warning restore 0649
-
-            public static DeviceDescriptionJson FromDescription(InputDeviceDescription description)
-            {
-                return new DeviceDescriptionJson
-                {
-                    @interface = description.interfaceName,
-                    deviceClass = description.deviceClass,
-                    manufacturer = description.manufacturer,
-                    product = description.product,
-                    version = description.version
-                };
-            }
-
-            public InputDeviceDescription ToDescriptor()
-            {
-                return new InputDeviceDescription
-                {
-                    interfaceName = JoinRegexStrings(@interface, interfaces),
-                    deviceClass = JoinRegexStrings(deviceClass, deviceClasses),
-                    manufacturer = JoinRegexStrings(manufacturer, manufacturers),
-                    product = JoinRegexStrings(product, products),
-                    version = JoinRegexStrings(version, versions)
-                };
-            }
-
-            private static string JoinRegexStrings(string first, string[] subsequent)
-            {
-                var result = AppendRegexString(null, first);
-                if (subsequent != null)
-                    foreach (var str in subsequent)
-                        result = AppendRegexString(result, str);
-                return result;
-            }
-
-            private static string AppendRegexString(string regex, string part)
-            {
-                if (string.IsNullOrEmpty(regex))
-                {
-                    if (string.IsNullOrEmpty(part))
-                        return null;
-
-                    return part;
-                }
-
-                if (regex[regex.Length - 1] != ')')
-                    return string.Format("({0})|({1}", regex, part);
-
-                return string.Format("{0}|({1})", regex, part);
-            }
-        }
-
 
         internal struct Collection
         {
@@ -1502,7 +1434,7 @@ namespace UnityEngine.Experimental.Input
             public Dictionary<InternedString, string> layoutStrings;
             public Dictionary<InternedString, BuilderInfo> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
-            public Dictionary<InternedString, InputDeviceDescription> layoutDeviceDescriptions;
+            public Dictionary<InternedString, InputDeviceMatcher> layoutDeviceMatchers;
 
             public void Allocate()
             {
@@ -1510,19 +1442,25 @@ namespace UnityEngine.Experimental.Input
                 layoutStrings = new Dictionary<InternedString, string>();
                 layoutBuilders = new Dictionary<InternedString, BuilderInfo>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
-                layoutDeviceDescriptions = new Dictionary<InternedString, InputDeviceDescription>();
+                layoutDeviceMatchers = new Dictionary<InternedString, InputDeviceMatcher>();
             }
 
             public InternedString TryFindMatchingLayout(InputDeviceDescription deviceDescription)
             {
-                foreach (var entry in layoutDeviceDescriptions)
+                var highestScore = 0f;
+                var highestScoringLayout = new InternedString();
+
+                foreach (var entry in layoutDeviceMatchers)
                 {
-                    ////REVIEW: we don't only want to find any match, we want to find the best match
-                    if (entry.Value.Matches(deviceDescription))
-                        return entry.Key;
+                    var score = entry.Value.MatchPercentage(deviceDescription);
+                    if (score > highestScore)
+                    {
+                        highestScore = score;
+                        highestScoringLayout = entry.Key;
+                    }
                 }
 
-                return new InternedString();
+                return highestScoringLayout;
             }
 
             public bool HasLayout(InternedString name)
@@ -1584,11 +1522,11 @@ namespace UnityEngine.Experimental.Input
                         layout.m_ExtendsLayout = baseLayoutName;
                     }
 
-                    // If the layout has an associated device description,
+                    // If the layout has an associated device matcher,
                     // put it on the layout instance.
-                    InputDeviceDescription deviceDescription;
-                    if (layoutDeviceDescriptions.TryGetValue(name, out deviceDescription))
-                        layout.m_DeviceDescription = deviceDescription;
+                    InputDeviceMatcher deviceMatcher;
+                    if (layoutDeviceMatchers.TryGetValue(name, out deviceMatcher))
+                        layout.m_DeviceMatcher = deviceMatcher;
                 }
 
                 return layout;

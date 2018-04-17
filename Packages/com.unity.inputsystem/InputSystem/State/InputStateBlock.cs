@@ -212,7 +212,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             else if (format == kTypeSByte)
             {
                 ////REVIEW: Same problem here as with 'short'
-                value = *valuePtr / 128.0f;
+                value = *((sbyte*)valuePtr) / 128.0f;
             }
             else
             {

@@ -7,8 +7,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
-// use case: audio on GP (ps4 mic)
-// use case: player ID and change on same GP
+////REVIEW: should we add a gyro as a standard feature of gamepads?
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {

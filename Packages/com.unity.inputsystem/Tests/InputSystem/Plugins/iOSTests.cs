@@ -38,10 +38,6 @@ class iOSTests : InputTestFixture
         Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.654).Within(0.000001));
         Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(0.321).Within(0.000001));
 
-        /// FIXME, these will fail saying start/or select buttons were not expected to be pressed.
-        /// The problem is iOSGameController doesn't have those, so mappings for those are not set.
-        /// Because iOSGameController is derived from Gamepad, derived mappings are picked which are basically wrong
-        /// Question: how to disable those controls?
         AssertButtonPress(controller, new IOSGameControllerState().WithButton(IOSButton.A), controller.buttonSouth);
         AssertButtonPress(controller, new IOSGameControllerState().WithButton(IOSButton.X), controller.buttonWest);
         AssertButtonPress(controller, new IOSGameControllerState().WithButton(IOSButton.Y), controller.buttonNorth);

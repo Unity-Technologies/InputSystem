@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         public ButtonControl crossButton { get; private set; }
 
         public Vector3Control acceleration { get; private set; }
-        public Vector3Control orientation { get; private set; }
+        public QuaternionControl orientation { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
         public new static DualShockGamepad current { get; private set; }
@@ -40,7 +40,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             optionsButton = startButton;
 
             acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
-            orientation = builder.GetControl<Vector3Control>(this, "orientation");
+            orientation = builder.GetControl<QuaternionControl>(this, "orientation");
             angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
 
             squareButton = buttonWest;

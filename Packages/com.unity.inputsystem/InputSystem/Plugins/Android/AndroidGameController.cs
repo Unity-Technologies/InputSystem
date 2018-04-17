@@ -35,10 +35,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
         [InputControl(name = "leftStick", variant = kVariantGamepad)]
+        [InputControl(name = "leftStick/y", variant = kVariantGamepad, parameters = "invert")]
         ////FIXME: state for this control is not contiguous
         [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variant = kVariantGamepad)]
         [InputControl(name = "rightStick/x", variant = kVariantGamepad)]
-        [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variant = kVariantGamepad)]
+        [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variant = kVariantGamepad, parameters = "invert")]
         public fixed float axis[kMaxAndroidAxes];
 
         public FourCC GetFormat()

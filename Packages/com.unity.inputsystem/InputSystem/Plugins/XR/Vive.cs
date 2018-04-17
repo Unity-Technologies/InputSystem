@@ -2,7 +2,7 @@ using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputControlLayout()]
+    [InputControlLayout]
     public class ViveHMD : XRHMD
     {
         public IntegerControl trackingState { get; private set; }
@@ -87,6 +87,25 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
             deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
             deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
+        }
+    }
+
+    [InputControlLayout]
+    public class ViveLighthouse : InputDevice
+    {
+        public IntegerControl trackingState { get; private set; }
+        public ButtonControl isTracked { get; private set; }
+        public Vector3Control devicePosition { get; private set; }
+        public QuaternionControl deviceRotation { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
         }
     }
 }

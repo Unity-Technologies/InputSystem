@@ -7,12 +7,16 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: reset and accumulate deltas of all touches
 
+////TODO: look at how you can meaningfully use touches with actions
+
 //// Remaining things to sort out around touch:
 //// - How do we handle 'primary' touches? ATM the setup always makes touch0 the primary touch
 ////   by hardwiring the pointer state to it but I have doubts this is a satisbuilder solution.
 //// - How do we handle mouse simulation?
 //// - How do we implement deltas for touch when there is no delta information from the platform?
 //// - How do we implement click-detection for touch?
+//// - High frequency touches
+//// - Touch prediction
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -167,6 +171,7 @@ namespace UnityEngine.Experimental.Input
                         ++touchCount;
                     }
                 }
+
                 return new ReadOnlyArray<TouchControl>(m_TouchesArray, 0, touchCount);
             }
         }
@@ -214,5 +219,16 @@ namespace UnityEngine.Experimental.Input
         }
 
         private TouchControl[] m_TouchesArray;
+    }
+
+    /// <summary>
+    /// Helper to make tracking of touches easier.
+    /// </summary>
+    /// <remarks>
+    /// This class obsoletes the need to manually track touches by ID and provides
+    /// various helpers such as making history data of touches available.
+    /// </remarks>
+    public class TouchTracker
+    {
     }
 }

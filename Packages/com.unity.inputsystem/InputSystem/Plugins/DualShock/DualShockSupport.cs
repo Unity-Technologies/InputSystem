@@ -14,22 +14,21 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             // range of capabilities of the controller (the HID format is undocumented
             // and only partially understood).
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR
-            InputSystem.RegisterControlLayout<DualShockGamepadHID>(deviceDescription: new InputDeviceDescription
-            {
-                manufacturer = "Sony Interactive Entertainment",
-                product = "Wireless Controller",
-                interfaceName = "HID"
-            });
+            InputSystem.RegisterControlLayout<DualShockGamepadHID>(
+                matches: new InputDeviceMatcher()
+                .WithInterface("HID")
+                .WithManufacturer("Sony Interactive Entertainment")
+                .WithProduct("Wireless Controller"));
             #endif
 
             #if UNITY_EDITOR || UNITY_PS4
             InputSystem.RegisterControlLayout<PS4TouchControl>("PS4Touch");
             InputSystem.RegisterControlLayout<DualShockGamepadPS4>("PS4DualShockGamepad",
-                deviceDescription: new InputDeviceDescription
-            {
-                deviceClass = "PS4DualShockGamepad",
-                interfaceName = "PS4"
-            });
+                matches: new InputDeviceMatcher()
+                .WithInterface("PS4")
+                .WithDeviceClass("PS4DualShockGamepad"));
+
+            InputSystem.onDeviceChange += DualShockGamepadPS4.OnDeviceChange;
             #endif
         }
     }
