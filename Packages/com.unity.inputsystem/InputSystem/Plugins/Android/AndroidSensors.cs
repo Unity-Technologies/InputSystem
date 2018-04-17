@@ -6,7 +6,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 {
-    public enum AndroidSenorType
+    public enum AndroidSensorType
     {
         Accelerometer = 1,
         MagneticField = 2,
@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     [Serializable]
     public struct AndroidSensorCapabilities
     {
-        public AndroidSenorType sensorType;
+        public AndroidSensorType sensorType;
 
         public string ToJson()
         {

@@ -2,8 +2,10 @@ var searchData=
 [
   ['makecurrent',['MakeCurrent',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc',1,'UnityEngine::Experimental::Input::InputDevice']]],
   ['manufacturer',['manufacturer',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#aedcdc6adde44e6000bbe06947da5be82',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
+  ['matchpercentage',['MatchPercentage',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceMatcher.html#af46d964b82dda1f472aca05b8caa1d0c',1,'UnityEngine::Experimental::Input::InputDeviceMatcher']]],
   ['maxvalue',['maxValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#a2b7e749822fb4d49dbbfba304d475d73',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]],
   ['merge',['Merge',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#a5e9cba5308f65a867c333c8841944edb',1,'UnityEngine::Experimental::Input::InputControlLayout::ControlItem']]],
+  ['mergelayout',['MergeLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html#a0c727f625371684ef6abae163f4d2de7',1,'UnityEngine::Experimental::Input::InputControlLayout']]],
   ['message',['Message',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting_1_1Message.html',1,'UnityEngine::Experimental::Input::InputRemoting']]],
   ['messagetype',['MessageType',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html#ac6606ebe91c8ac66a2c314c79f5ab013',1,'UnityEngine::Experimental::Input::InputRemoting']]],
   ['middlebutton',['middleButton',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html#a004b4b7c70de8732da4054e477431744',1,'UnityEngine::Experimental::Input::Mouse']]],

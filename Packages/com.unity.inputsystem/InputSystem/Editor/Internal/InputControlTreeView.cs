@@ -42,6 +42,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private enum ColumnId
         {
             Name,
+            DisplayName,
             Layout,
             Type,
             Format,
@@ -65,6 +66,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 width = 180,
                 minWidth = 60,
                 headerContent = new GUIContent("Name")
+            };
+            columns[(int)ColumnId.DisplayName] =
+                new MultiColumnHeaderState.Column
+            {
+                width = 160,
+                minWidth = 60,
+                headerContent = new GUIContent("Display Name")
             };
             columns[(int)ColumnId.Layout] =
                 new MultiColumnHeaderState.Column
@@ -237,6 +245,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 case (int)ColumnId.Name:
                     args.rowRect = cellRect;
                     base.RowGUI(args);
+                    break;
+                case (int)ColumnId.DisplayName:
+                    GUI.Label(cellRect, item.control.displayName);
                     break;
                 case (int)ColumnId.Layout:
                     GUI.Label(cellRect, item.layout);

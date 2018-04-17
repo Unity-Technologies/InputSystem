@@ -1,7 +1,7 @@
 var classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice =
 [
+    [ "ExecuteCommand< TCommand >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#aaa2b8b87169de689a78bf24fcc6b98a4", null ],
     [ "MakeCurrent", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc", null ],
-    [ "OnDeviceCommand< TCommand >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a2412bf37f4ebad551b79910a38d6d0f5", null ],
     [ "OnTextInput", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ad8bb013ace2ffafeaaecc1d4331df859", null ],
     [ "ReadValueAsObject", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#aa9cb9bfa7d3d04cff020ebffd07fff10", null ],
     [ "allControls", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a1b4618163d91cdf2d2d22a234e700d05", null ],

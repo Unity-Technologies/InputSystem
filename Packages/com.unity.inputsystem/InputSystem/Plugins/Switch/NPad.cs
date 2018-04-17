@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: gyro and accelerometer support
+
 namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
 {
     /// <summary>
@@ -255,6 +257,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
             return ExecuteCommand(ref command);
         }
 
+        ////REVIEW: this should probably use layout variants; if not, should be turned into an 'orientation' property
         public void SetPosition(Position position)
         {
             var command = NPadOutputReport.Create();

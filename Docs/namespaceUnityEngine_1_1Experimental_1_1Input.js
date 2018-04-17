@@ -25,6 +25,7 @@ var namespaceUnityEngine_1_1Experimental_1_1Input =
     [ "InputDevice", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice" ],
     [ "InputDeviceBuilder", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceBuilder.html", null ],
     [ "InputDeviceDescription", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription" ],
+    [ "InputDeviceMatcher", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceMatcher.html", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceMatcher" ],
     [ "InputRemoting", "classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html", "classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting" ],
     [ "InputSystem", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html", "classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem" ],
     [ "InputTestFixture", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture" ],
@@ -33,5 +34,6 @@ var namespaceUnityEngine_1_1Experimental_1_1Input =
     [ "Mouse", "classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Mouse" ],
     [ "Pen", "classUnityEngine_1_1Experimental_1_1Input_1_1Pen.html", null ],
     [ "Pointer", "classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Pointer" ],
-    [ "Touchscreen", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen" ]
+    [ "Touchscreen", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen" ],
+    [ "TouchTracker", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html", null ]
 ];

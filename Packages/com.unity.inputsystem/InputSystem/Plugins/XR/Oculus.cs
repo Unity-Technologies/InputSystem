@@ -2,7 +2,7 @@ using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputControlLayout()]
+    [InputControlLayout]
     public class OculusHMD : XRHMD
     {
         public IntegerControl trackingState { get; private set; }
@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         }
     }
 
-    [InputControlLayout()]
+    [InputControlLayout]
     public class OculusTrackingReference : InputDevice
     {
         public IntegerControl trackingState { get; private set; }
