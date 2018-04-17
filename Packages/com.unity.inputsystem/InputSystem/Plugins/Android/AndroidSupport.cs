@@ -215,7 +215,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     var caps = AndroidSensorCapabilities.FromJson(description.capabilities);
                     if (Enum.IsDefined(typeof(AndroidSenorType), caps.sensorType))
                         return "Android" + caps.sensorType.ToString();
-                    return null;
+
+                    ////FIXME: Don't return null here, because then Input system tries to create AndroidAccelerometer for unknown sensor type
+                    //
+                    return "AndroidUnknownSensor";
                 }
                 default:
                     return null;
