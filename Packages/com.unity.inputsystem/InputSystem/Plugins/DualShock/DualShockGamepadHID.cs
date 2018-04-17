@@ -74,13 +74,15 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(16)] public short accelerationY;
         [FieldOffset(18)] public short accelerationZ;
 
-        [InputControl(name = "orientation", layout = "Vector3", format = "VC3S")]
+        [InputControl(name = "orientation", layout = "Quaternion")]
         [InputControl(name = "orientation/x", format = "USHT", offset = 0)]
         [InputControl(name = "orientation/y", format = "USHT", offset = 2)]
         [InputControl(name = "orientation/z", format = "USHT", offset = 4)]
+        [InputControl(name = "orientation/w", format = "USHT", offset = 6)]
         [FieldOffset(20)] public short gyroX;
         [FieldOffset(22)] public short gyroY;
         [FieldOffset(24)] public short gyroZ;
+        [FieldOffset(26)] public short gyroW;
 
         [FieldOffset(30)] public byte batteryLevel;
 

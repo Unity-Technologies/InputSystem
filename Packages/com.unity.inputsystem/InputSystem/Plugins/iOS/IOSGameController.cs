@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -51,6 +52,11 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         [InputControl(name = "rightStickPress", bit = (uint)IOSButton.RightStick)]
         [InputControl(name = "leftShoulder", bit = (uint)IOSButton.LeftShoulder)]
         [InputControl(name = "rightShoulder", bit = (uint)IOSButton.RightShoulder)]
+        // iOS game controllers don't have the center menu buttons, so "park" them outside of the state we send.
+        ////FIXME: should not be necessary to set format here
+        ////FIXME: if bit isn't explicit set to 0 (means we inherit the existing setting) it seems we're reading invalid memory; probably a bug in InputDeviceBuilder
+        [InputControl(name = "start", offset = InputStateBlock.kInvalidOffset, bit = 0, format = "BIT")]
+        [InputControl(name = "select", offset = InputStateBlock.kInvalidOffset, bit = 0, format = "BIT")]
         public uint buttons;
 
         [InputControl(name = "leftTrigger", offset = sizeof(uint) + sizeof(float) * (uint)IOSButton.LeftTrigger)]

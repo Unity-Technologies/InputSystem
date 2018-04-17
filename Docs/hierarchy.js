@@ -52,6 +52,7 @@ var hierarchy =
       [ "DeadzoneProcessor", "classUnityEngine_1_1Experimental_1_1Input_1_1Processors_1_1DeadzoneProcessor.html", null ],
       [ "EditorWindowSpaceProcessor", "classUnityEngine_1_1Experimental_1_1Input_1_1Processors_1_1EditorWindowSpaceProcessor.html", null ]
     ] ],
+    [ "IInputProcessor< Vector3 >", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html", null ],
     [ "IInputRuntime", "interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html", [
       [ "InputTestRuntime", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTestRuntime.html", null ]
     ] ],
@@ -112,6 +113,7 @@ var hierarchy =
     [ "InputDeviceBuilder", "classUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceBuilder.html", null ],
     [ "InputDeviceCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputDeviceCommand.html", null ],
     [ "InputDeviceDescription", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html", null ],
+    [ "InputDeviceMatcher", "structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceMatcher.html", null ],
     [ "InputEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html", null ],
     [ "InputEventBuffer", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEventBuffer.html", null ],
     [ "InputEventPtr", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEventPtr.html", null ],
@@ -128,8 +130,11 @@ var hierarchy =
     [ "PenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PenState.html", null ],
     [ "PointerState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html", null ],
     [ "QueryDimensionsCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryDimensionsCommand.html", null ],
+    [ "QueryEnabledStateCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryEnabledStateCommand.html", null ],
     [ "QueryKeyboardLayoutCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyboardLayoutCommand.html", null ],
     [ "QueryKeyNameCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryKeyNameCommand.html", null ],
+    [ "QueryOrientationCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryOrientationCommand.html", null ],
+    [ "QuerySlotIdCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1QuerySlotIdCommand.html", null ],
     [ "ReadOnlyArray< TValue >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ReadOnlyArray< InternedString >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
     [ "ReadOnlyArray< NameAndParameters >", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html", null ],
@@ -141,6 +146,7 @@ var hierarchy =
     [ "SwitchSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1SwitchSupport.html", null ],
     [ "TextEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html", null ],
     [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", null ],
+    [ "TouchTracker", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html", null ],
     [ "XboxOneGamepadRumbleCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1LowLevel_1_1XboxOneGamepadRumbleCommand.html", null ],
     [ "XInputSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputSupport.html", null ]
 ];

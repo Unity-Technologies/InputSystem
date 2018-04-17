@@ -9,11 +9,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     {
         public static XRHMD current { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            base.FinishSetup(builder);
-        }
-
         public override void MakeCurrent()
         {
             base.MakeCurrent();
@@ -76,7 +71,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     public class XRControllerWithRumble : XRController, IHaptics
     {
         SimpleXRRumble m_Rumble;
-        public SimpleXRRumble rumble { get { return m_Rumble; } }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -87,6 +81,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public void SetIntensity(float intensity)
         {
             m_Rumble.intensity = intensity;
+        }
+
+        public bool isHapticsPaused
+        {
+            get
+            {
+                return m_Rumble.isPaused;
+            }
         }
 
         public void PauseHaptics()

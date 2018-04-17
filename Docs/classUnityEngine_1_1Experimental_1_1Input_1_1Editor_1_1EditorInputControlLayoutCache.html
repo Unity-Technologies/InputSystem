@@ -99,15 +99,9 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
-<tr class="memitem:ab43a05b3292bc7346d46dec249b173a5"><td class="memItemLeft" align="right" valign="top">static IEnumerable&lt; <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputControlLayoutCache.html#ab43a05b3292bc7346d46dec249b173a5">allBaseDeviceLayouts</a><code> [get]</code></td></tr>
-<tr class="memdesc:ab43a05b3292bc7346d46dec249b173a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate over all device layouts that do not extend other layouts.  <a href="#ab43a05b3292bc7346d46dec249b173a5">More...</a><br /></td></tr>
-<tr class="separator:ab43a05b3292bc7346d46dec249b173a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab70ddcb18f704692415f4139926239b6"><td class="memItemLeft" align="right" valign="top">static IEnumerable&lt; <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputControlLayoutCache.html#ab70ddcb18f704692415f4139926239b6">allLayouts</a><code> [get]</code></td></tr>
 <tr class="memdesc:ab70ddcb18f704692415f4139926239b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate over all control layouts in the system.  <a href="#ab70ddcb18f704692415f4139926239b6">More...</a><br /></td></tr>
 <tr class="separator:ab70ddcb18f704692415f4139926239b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae21dbfd11dde5e292784819f81844db6"><td class="memItemLeft" align="right" valign="top">static IEnumerable&lt; <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputControlLayoutCache.html#ae21dbfd11dde5e292784819f81844db6">allNonProductLayouts</a><code> [get]</code></td></tr>
-<tr class="memdesc:ae21dbfd11dde5e292784819f81844db6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate over all device layouts that don't try to match specific products.  <a href="#ae21dbfd11dde5e292784819f81844db6">More...</a><br /></td></tr>
-<tr class="separator:ae21dbfd11dde5e292784819f81844db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7427bd9946c2dfa7ab89f62c7575ee0c"><td class="memItemLeft" align="right" valign="top">static IEnumerable&lt; KeyValuePair&lt; string, IEnumerable&lt; string &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1Editor_1_1EditorInputControlLayoutCache.html#a7427bd9946c2dfa7ab89f62c7575ee0c">allUsages</a><code> [get]</code></td></tr>
 <tr class="memdesc:a7427bd9946c2dfa7ab89f62c7575ee0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate over all unique usages and their respective lists of layouts that use them.  <a href="#a7427bd9946c2dfa7ab89f62c7575ee0c">More...</a><br /></td></tr>
 <tr class="separator:a7427bd9946c2dfa7ab89f62c7575ee0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,30 +114,6 @@ Properties</h2></td></tr>
 <p>In the editor we need access to the <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayouts</a> registered with the system in order to facilitate various UI features. Instead of constructing layout instances over and over, we keep them around in here.</p>
 <p>This class is only available in the editor (when <code>UNITY_EDITOR</code> is true). </p>
 </div><h2 class="groupheader">Property Documentation</h2>
-<a id="ab43a05b3292bc7346d46dec249b173a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab43a05b3292bc7346d46dec249b173a5">&#9670;&nbsp;</a></span>allBaseDeviceLayouts</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">IEnumerable&lt;<a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a>&gt; allBaseDeviceLayouts</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">get</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Iterate over all device layouts that do not extend other layouts. </p>
-
-</div>
-</div>
 <a id="ab70ddcb18f704692415f4139926239b6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab70ddcb18f704692415f4139926239b6">&#9670;&nbsp;</a></span>allLayouts</h2>
 
@@ -165,30 +135,6 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Iterate over all control layouts in the system. </p>
-
-</div>
-</div>
-<a id="ae21dbfd11dde5e292784819f81844db6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae21dbfd11dde5e292784819f81844db6">&#9670;&nbsp;</a></span>allNonProductLayouts</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">IEnumerable&lt;<a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html">InputControlLayout</a>&gt; allNonProductLayouts</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">get</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Iterate over all device layouts that don't try to match specific products. </p>
 
 </div>
 </div>

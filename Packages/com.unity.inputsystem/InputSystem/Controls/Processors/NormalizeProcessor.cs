@@ -18,6 +18,13 @@ namespace UnityEngine.Experimental.Input.Processors
         {
             if (zero < min)
                 zero = min;
+            // Prevent NaN/Inf from dividing 0 by something.
+            if (Mathf.Approximately(value, min))
+            {
+                if (min < zero)
+                    return -1f;
+                return 0f;
+            }
             var percentage = (value - min) / (max - min);
             if (min < zero)
                 return 2 * percentage - 1;

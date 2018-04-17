@@ -13,6 +13,7 @@ var searchData=
   ['touchid',['touchId',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1TouchControl.html#a21fb75227209e2744fa36673f19507f8',1,'UnityEngine::Experimental::Input::Controls::TouchControl']]],
   ['touchscreen',['Touchscreen',['../classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html',1,'UnityEngine::Experimental::Input']]],
   ['touchscreenstate',['TouchscreenState',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
+  ['touchtracker',['TouchTracker',['../classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html',1,'UnityEngine::Experimental::Input']]],
   ['tryfindmatchingcontrollayout',['TryFindMatchingControlLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#abb364ddcbef8dacf5ef473a983bb71fd',1,'UnityEngine::Experimental::Input::InputSystem']]],
   ['trygetdevicelayout',['TryGetDeviceLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#ab39ab1047c8308cacf7e28ab78de7083',1,'UnityEngine::Experimental::Input::InputControlPath']]],
   ['tryloadlayout',['TryLoadLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#adbdfe4223869f653e31903ffff94a4cf',1,'UnityEngine::Experimental::Input::InputSystem']]],

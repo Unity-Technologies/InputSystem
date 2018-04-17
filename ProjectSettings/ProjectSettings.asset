@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: InputSystemX
+  companyName: Unity Technologies
+  productName: InputSystem
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -246,6 +246,7 @@ PlayerSettings:
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: 
   AndroidKeyaliasName: 
+  AndroidBuildApkPerCpuArchitecture: 0
   AndroidTVCompatibility: 1
   AndroidIsGame: 1
   AndroidEnableTango: 0
@@ -607,9 +608,11 @@ PlayerSettings:
   platformArchitecture:
     iOS: 0
   scriptingBackend:
+    Android: 0
     Standalone: 0
     iOS: 1
-  il2cppCompilerConfiguration: {}
+  il2cppCompilerConfiguration:
+    Android: 0
   incrementalIl2cppBuild: {}
   allowUnsafeCode: 0
   additionalIl2CppArgs: 
@@ -662,6 +665,7 @@ PlayerSettings:
   XboxOneGameOsOverridePath: 
   XboxOnePackagingOverridePath: 
   XboxOneAppManifestOverridePath: 
+  XboxOneVersion: 1.0.0.0
   XboxOnePackageEncryption: 0
   XboxOnePackageUpdateGranularity: 2
   XboxOneDescription: 

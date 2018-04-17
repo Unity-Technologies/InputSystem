@@ -1,16 +1,16 @@
 using System;
-using System.Text.RegularExpressions;
-
-////REVIEW: should there be a way to make fields mandatory matches?
 
 ////REVIEW: add a 'devicePath' field for a platform-dependent device path?
 
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Metadata for a device. Primarily used to find a matching layout
-    /// which we can then use to create a control setup for the device.
+    /// Metadata for an input device.
     /// </summary>
+    /// <remarks>
+    /// Device descriptions are used to determine which layout to create an actual <see cref="InputDevice"/>
+    /// instance from that matches the device.
+    /// </remarks>
     [Serializable]
     public struct InputDeviceDescription
     {
@@ -130,27 +130,6 @@ namespace UnityEngine.Experimental.Input
             return "<Empty Device Description>";
         }
 
-        public bool Matches(InputDeviceDescription other)
-        {
-            return MatchPair(interfaceName, other.interfaceName)
-                && MatchPair(deviceClass, other.deviceClass)
-                && MatchPair(manufacturer, other.manufacturer)
-                && MatchPair(product, other.product)
-                // We don't match serials or capabilities; seems nonsense to do that.
-                && MatchPair(version, other.version);
-        }
-
-        private static bool MatchPair(string left, string right)
-        {
-            if (string.IsNullOrEmpty(left))
-                return true;
-            if (string.IsNullOrEmpty(right))
-                return false;
-            if (!Regex.IsMatch(right, left, RegexOptions.IgnoreCase))
-                return false;
-            return true;
-        }
-
         public string ToJson()
         {
             var data = new DeviceDescriptionJson
@@ -182,7 +161,6 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        ////FIXME: this format differs from the one used in layouts; we should only have one format
         private struct DeviceDescriptionJson
         {
             public string @interface;

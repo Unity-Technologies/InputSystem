@@ -232,11 +232,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 */
             }
 
-            // We don't want the capabilities field in the description to be matched
-            // when the input system is looking for matching layouts so null it out.
-            var deviceDescriptionForLayout = description;
-            deviceDescriptionForLayout.capabilities = null;
-
             ////REVIEW: this probably works fine for most products out there but I'm not sure it works reliably for all cases
             // Come up with a unique template name. HIDs are required to have product and vendor IDs.
             // We go with the string versions if we have them and with the numeric versions if we don't.
@@ -256,8 +251,9 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
-            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, deviceDescription = deviceDescriptionForLayout};
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, baseLayout, deviceDescriptionForLayout);
+            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor};
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(),
+                layoutName, baseLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }
@@ -295,7 +291,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         private class HIDLayoutBuilder
         {
             public HIDDeviceDescriptor hidDescriptor;
-            public InputDeviceDescription deviceDescription;
 
             public InputControlLayout Build()
             {
@@ -303,7 +298,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 {
                     type = typeof(HID),
                     stateFormat = new FourCC('H', 'I', 'D'),
-                    deviceDescription = deviceDescription
                 };
 
                 ////TODO: for joysticks, set up stick from X and Y
@@ -617,6 +611,9 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                                 return null;
                             var min = minFloat;
                             var max = maxFloat;
+                            // Do nothing if result of floating-point conversion is already normalized.
+                            if (Mathf.Approximately(0f, minFloat) && Mathf.Approximately(0f, maxFloat))
+                                return null;
                             var zero = min + (max - min) / 2.0f;
                             return string.Format("normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min,
                             max, zero);

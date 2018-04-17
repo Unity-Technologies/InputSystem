@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['teardown',['TearDown',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a870a092058305911f3d42df45dd657e5',1,'UnityEngine::Experimental::Input::InputTestFixture']]],
-  ['toarray',['ToArray',['../structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html#acce24c57bd3ff43b3da1c57571c1c7b2',1,'UnityEngine::Experimental::Input::Utilities::ReadOnlyArray']]],
-  ['tryfindmatchingcontrollayout',['TryFindMatchingControlLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#abb364ddcbef8dacf5ef473a983bb71fd',1,'UnityEngine::Experimental::Input::InputSystem']]],
-  ['trygetdevicelayout',['TryGetDeviceLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#ab39ab1047c8308cacf7e28ab78de7083',1,'UnityEngine::Experimental::Input::InputControlPath']]],
-  ['tryloadlayout',['TryLoadLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#adbdfe4223869f653e31903ffff94a4cf',1,'UnityEngine::Experimental::Input::InputSystem']]]
+  ['setlightbarcolor',['SetLightBarColor',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html#a861b6d4afd25067920ca3528511c22f1',1,'UnityEngine::Experimental::Input::Plugins::DualShock::IDualShockHaptics']]],
+  ['setmotorspeeds',['SetMotorSpeeds',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IDualMotorRumble.html#a5f4e601804e0fbfb1037b5121e80b167',1,'UnityEngine::Experimental::Input::Haptics::IDualMotorRumble']]],
+  ['setup',['Setup',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a969675a4b191e8c8de4cccfa9ca83ed4',1,'UnityEngine::Experimental::Input::InputTestFixture']]],
+  ['startsending',['StartSending',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html#a20235c8b33cf76b75d94f9fcd3e4ab22',1,'UnityEngine::Experimental::Input::InputRemoting']]]
 ];
