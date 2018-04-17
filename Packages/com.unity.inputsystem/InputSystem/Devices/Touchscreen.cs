@@ -9,6 +9,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: look at how you can meaningfully use touches with actions
 
+////TODO: ramp up touch count considerably so that it's possible to allocate many more touches in-between frames
+
 //// Remaining things to sort out around touch:
 //// - How do we handle 'primary' touches? ATM the setup always makes touch0 the primary touch
 ////   by hardwiring the pointer state to it but I have doubts this is a satisbuilder solution.
