@@ -185,16 +185,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
                     return "AndroidJoystick";
                 }
-                case "AndroidSensor":
-                {
-                    var caps = AndroidSensorCapabilities.FromJson(description.capabilities);
-                    if (Enum.IsDefined(typeof(AndroidSenorType), caps.sensorType))
-                        return "Android" + caps.sensorType.ToString();
-
-                    ////FIXME: Don't return null here, because then Input system tries to create AndroidAccelerometer for unknown sensor type
-                    //
-                    return "AndroidUnknownSensor";
-                }
                 default:
                     return null;
             }
