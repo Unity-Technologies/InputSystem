@@ -559,8 +559,8 @@ namespace UnityEngine.Experimental.Input
                 AddControlItems(type, controlLayouts, name);
             }
 
-            if (layoutAttribute != null && layoutAttribute.stateFormat != new FourCC())
-                stateFormat = layoutAttribute.stateFormat;
+            if (layoutAttribute != null && !string.IsNullOrEmpty(layoutAttribute.stateFormat))
+                stateFormat = new FourCC(layoutAttribute.stateFormat);
 
             // Determine variant (if any).
             var variant = new InternedString();

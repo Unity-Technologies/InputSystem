@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public Type stateType;
 
-        public FourCC stateFormat;
+        public string stateFormat;
 
         public string[] commonUsages;
 
