@@ -15,7 +15,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-using Touch = UnityEngine.Experimental.Input.Touch;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
@@ -3490,7 +3489,7 @@ class CoreTests : InputTestFixture
         var device = InputSystem.AddDevice<Touchscreen>();
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Began,
             touchId = 4,
@@ -3513,7 +3512,7 @@ class CoreTests : InputTestFixture
         Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Began,
             touchId = 4,
@@ -3528,14 +3527,14 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Moved,
             touchId = 4,
             position = new Vector2(0.123f, 0.456f)
         });
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Began,
             touchId = 5,
@@ -3550,13 +3549,13 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Ended,
             touchId = 4,
         });
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Cancelled,
             touchId = 5,

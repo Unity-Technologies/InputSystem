@@ -10,6 +10,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: have surface distance property to detect how far pen is when hovering?
 
+////REVIEW: does it make sense to have orientation support for pen, too?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     /// <summary>

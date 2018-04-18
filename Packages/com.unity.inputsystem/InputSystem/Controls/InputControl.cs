@@ -9,6 +9,8 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
+////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
