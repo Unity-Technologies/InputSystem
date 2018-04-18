@@ -18,8 +18,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////TODO: ensure that if a layout sets a device description, it is indeed a device layout
 
-////TODO: array support
-
 ////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
@@ -185,6 +183,7 @@ namespace UnityEngine.Experimental.Input
             public uint sizeInBits;
             public FourCC format;
             public Flags flags;
+            public int arraySize;
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -216,6 +215,11 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            public bool isArray
+            {
+                get { return (arraySize != 0); }
+            }
+
             /// <summary>
             /// For any property not set on this control layout, take the setting from <paramref name="other"/>.
             /// </summary>
@@ -234,6 +238,7 @@ namespace UnityEngine.Experimental.Input
                 result.layout = layout.IsEmpty() ? other.layout : layout;
                 result.variant = variant.IsEmpty() ? other.variant : variant;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
+                result.arraySize = !isArray ? other.arraySize : arraySize;
 
                 if (offset != InputStateBlock.kInvalidOffset)
                     result.offset = offset;
@@ -427,6 +432,12 @@ namespace UnityEngine.Experimental.Input
                 {
                     var parsed = ParseParameters(parameters);
                     controls[index].parameters = new ReadOnlyArray<ParameterValue>(parsed);
+                    return this;
+                }
+
+                public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
+                {
+                    controls[index].arraySize = arraySize;
                     return this;
                 }
             }
@@ -804,6 +815,11 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
+            // Determine array size.
+            var arraySize = 0;
+            if (attribute != null)
+                arraySize = attribute.arraySize;
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -820,6 +836,7 @@ namespace UnityEngine.Experimental.Input
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
+                arraySize = arraySize,
             };
         }
 
@@ -1327,6 +1344,7 @@ namespace UnityEngine.Experimental.Input
             public uint bit;
             public uint sizeInBits;
             public string format;
+            public int arraySize;
             public string[] usages;
             public string[] aliases;
             public string parameters;
@@ -1359,6 +1377,7 @@ namespace UnityEngine.Experimental.Input
                     sizeInBits = sizeInBits,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    arraySize = arraySize,
                 };
 
                 if (!string.IsNullOrEmpty(format))
@@ -1403,23 +1422,24 @@ namespace UnityEngine.Experimental.Input
 
                 for (var i = 0; i < count; ++i)
                 {
-                    var layout = items[i];
+                    var item = items[i];
                     result[i] = new ControlItemJson
                     {
-                        name = layout.name,
-                        layout = layout.layout,
-                        variant = layout.variant,
-                        displayName = layout.displayName,
-                        resourceName = layout.resourceName,
-                        bit = layout.bit,
-                        offset = layout.offset,
-                        sizeInBits = layout.sizeInBits,
-                        format = layout.format.ToString(),
-                        parameters = string.Join(",", layout.parameters.Select(x => x.ToString()).ToArray()),
-                        processors = string.Join(",", layout.processors.Select(x => x.ToString()).ToArray()),
-                        usages = layout.usages.Select(x => x.ToString()).ToArray(),
-                        aliases = layout.aliases.Select(x => x.ToString()).ToArray(),
-                        noisy = layout.isNoisy
+                        name = item.name,
+                        layout = item.layout,
+                        variant = item.variant,
+                        displayName = item.displayName,
+                        resourceName = item.resourceName,
+                        bit = item.bit,
+                        offset = item.offset,
+                        sizeInBits = item.sizeInBits,
+                        format = item.format.ToString(),
+                        parameters = string.Join(",", item.parameters.Select(x => x.ToString()).ToArray()),
+                        processors = string.Join(",", item.processors.Select(x => x.ToString()).ToArray()),
+                        usages = item.usages.Select(x => x.ToString()).ToArray(),
+                        aliases = item.aliases.Select(x => x.ToString()).ToArray(),
+                        noisy = item.isNoisy,
+                        arraySize = item.arraySize,
                     };
                 }
 

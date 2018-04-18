@@ -218,6 +218,65 @@ class CoreTests : InputTestFixture
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
     }
 
+    unsafe struct StateStructWithArrayOfControls
+    {
+        [InputControl(layout = "Axis", arraySize = 5)]
+        public fixed float value[5];
+    }
+    [InputControlLayout(stateType = typeof(StateStructWithArrayOfControls))]
+    class TestDeviceWithArrayOfControls : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanAddArrayOfControls_InStateStruct()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithArrayOfControls>();
+
+        var device = new InputDeviceBuilder("TestDeviceWithArrayOfControls").Finish();
+
+        Assert.That(device.allControls, Has.Count.EqualTo(5));
+        Assert.That(device["value0"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value1"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value2"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value3"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value4"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value0"].stateBlock.byteOffset, Is.EqualTo(0 * sizeof(float)));
+        Assert.That(device["value1"].stateBlock.byteOffset, Is.EqualTo(1 * sizeof(float)));
+        Assert.That(device["value2"].stateBlock.byteOffset, Is.EqualTo(2 * sizeof(float)));
+        Assert.That(device["value3"].stateBlock.byteOffset, Is.EqualTo(3 * sizeof(float)));
+        Assert.That(device["value4"].stateBlock.byteOffset, Is.EqualTo(4 * sizeof(float)));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanAddArrayOfControls_InJSON()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""value"",
+                        ""layout"" : ""Axis"",
+                        ""arraySize"" : 5
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+        var device = new InputDeviceBuilder("MyDevice").Finish();
+
+        Assert.That(device.allControls, Has.Count.EqualTo(5));
+        Assert.That(device["value0"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value1"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value2"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value3"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value4"], Is.TypeOf<AxisControl>());
+    }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_BooleanParameterDefaultsToTrueIfValueOmitted()
@@ -2570,6 +2629,33 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.wasUpdatedThisFrame, Is.False);
+    }
+
+    struct TestDevicePartialState : IInputStateTypeInfo
+    {
+        public FourCC GetFormat()
+        {
+            throw new NotImplementedException();
+        }
+    }
+    class TestDeviceDecidingWhereToIntegrateState : InputDevice, IInputStateCallbackReceiver
+    {
+        public bool OnCarryStateForward(IntPtr statePtr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DeviceWithStateCallback_CanDecideHowToIntegrateState()
+    {
+        Assert.Fail();
     }
 
     [Test]
