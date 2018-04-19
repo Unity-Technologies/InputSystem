@@ -1032,7 +1032,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            Plugins.iOS.IOSSupport.Initialize();
+            Plugins.iOS.iOSSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_SWITCH
