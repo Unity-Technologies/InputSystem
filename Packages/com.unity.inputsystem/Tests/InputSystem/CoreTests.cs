@@ -3707,8 +3707,8 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.activeTouches.Count, Is.Zero);
-        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
-        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
     }
 
     ////REVIEW: if we allow this, InputControl.ReadValueFrom() is in trouble
