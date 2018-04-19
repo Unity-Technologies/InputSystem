@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -962,12 +963,12 @@ namespace UnityEngine.Experimental.Input
                     ++index;
 
                 var value = parameterString.Substring(valueStart, index - valueStart);
-                if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(value, "true", StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     parameter.type = ParameterType.Boolean;
                     *((bool*)parameter.value) = true;
                 }
-                else if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Compare(value, "false", StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     parameter.type = ParameterType.Boolean;
                     *((bool*)parameter.value) = false;
@@ -975,12 +976,12 @@ namespace UnityEngine.Experimental.Input
                 else if (value.IndexOf('.') != -1)
                 {
                     parameter.type = ParameterType.Float;
-                    *((float*)parameter.value) = float.Parse(value);
+                    *((float*)parameter.value) = float.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
                 else
                 {
                     parameter.type = ParameterType.Integer;
-                    *((int*)parameter.value) = int.Parse(value);
+                    *((int*)parameter.value) = int.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
             }
 
