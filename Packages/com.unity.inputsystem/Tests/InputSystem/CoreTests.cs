@@ -3745,6 +3745,78 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_TouchStaysOnSameControlForDurationOfTouch()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        // Begin touch.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+
+        // Don't move.
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
+        // Move.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+
+        // Don't move.
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
+        // Random unrelated touch.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 5,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
+        // End.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+
+        // Release.
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_TouchesBecomeStationaryWhenNotMovedInFrame()
     {
         var device = InputSystem.AddDevice<Touchscreen>();

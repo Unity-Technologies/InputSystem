@@ -1746,6 +1746,7 @@ namespace UnityEngine.Experimental.Input
                                 if (m_Diagnostics != null)
                                     m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
                                 #endif
+                                doNotMakeDeviceCurrent = true;
                                 break;
                             }
                         }

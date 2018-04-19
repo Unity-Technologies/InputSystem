@@ -11,6 +11,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: look at how you can meaningfully use touches with actions
 
+////TODO: touch is hardwired to certain memory layouts ATM; either allow flexbility or make sure the layouts cannot be changed
+
 //// Remaining things to sort out around touch:
 //// - How do we handle mouse simulation?
 //// - How do we implement deltas for touch when there is no delta information from the platform?
@@ -24,7 +26,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = 40;
+        public const int kSizeInBytes = 36;
 
         public static FourCC kFormat
         {
@@ -39,8 +41,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
         [InputControl(name = "touchType", layout = "TouchType", format = "SBYT")][FieldOffset(35)] public sbyte touchTypeId;
-        ////REVIEW: make double?
-        [InputControl(layout = "Axis")][FieldOffset(36)] public float timestamp;
 
         public PointerPhase phase
         {
@@ -95,18 +95,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
         // NOTE: Some controls from Pointer don't make sense for touch and we "park"
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
-        [InputControl(name = "fingerId", layout = "Digital", alias = "pointerId", useStateFrom = "touch0/touchId")]
-        [InputControl(name = "position", layout = "Vector2", usage = "Point", useStateFrom = "touch0/position")]
-        [InputControl(name = "delta", layout = "Vector2", usage = "Secondary2DMotion", useStateFrom = "touch0/delta")]
-        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", useStateFrom = "touch0/pressure")]
-        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", useStateFrom = "touch0/radius")]
-        [InputControl(name = "phase", layout = "PointerPhase", useStateFrom = "touch0/phase")]
-        [InputControl(name = "displayIndex", layout = "Digital", useStateFrom = "touch0/displayIndex")]
-        [InputControl(name = "touchType", layout = "TouchType", useStateFrom = "touch0/touchType")]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "pointerId", useStateFrom = "touch0/touchId")]
+        [InputControl(name = "position", useStateFrom = "touch0/position")]
+        [InputControl(name = "delta", useStateFrom = "touch0/delta")]
+        [InputControl(name = "pressure", useStateFrom = "touch0/pressure")]
+        [InputControl(name = "radius", useStateFrom = "touch0/radius")]
+        [InputControl(name = "phase", useStateFrom = "touch0/phase")]
+        [InputControl(name = "displayIndex", useStateFrom = "touch0/displayIndex")]
+        [InputControl(name = "twist", offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "tilt", offset = InputStateBlock.kInvalidOffset)]
         ////TODO: we want to the button to be pressed when there is a primary touch
-        [InputControl(name = "button", layout = "Button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, offset = InputStateBlock.kInvalidOffset)]
+        [InputControl(name = "button", offset = InputStateBlock.kInvalidOffset)]
         [FieldOffset(0)]
         public fixed byte touchData[kMaxTouches * TouchState.kSizeInBytes];
 
@@ -274,7 +273,7 @@ namespace UnityEngine.Experimental.Input
 
             // Reset all touches that have ended last frame to being unused.
             // Also mark any ongoing touches as stationary.
-            var touchStatePtr = (TouchState*)statePtr;
+            var touchStatePtr = (TouchState*)((byte*)statePtr.ToPointer() + stateBlock.byteOffset);
             for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
             {
                 var phase = touchStatePtr->phase;
@@ -306,9 +305,13 @@ namespace UnityEngine.Experimental.Input
             if (stateFormat != TouchState.kFormat)
                 return false;
 
+            // For performance reasons, we read memory here directly rather than going through
+            // ReadValue() of the individual TouchControl children. This means that Touchscreen,
+            // unlike other devices, is hardwired to a single memory layout only.
+
             var touch = (TouchState*)statePtr;
             var phase = touch->phase;
-            var touchStatePtr = (TouchState*)currentStatePtr;
+            var touchStatePtr = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
 
             // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
             // previously.

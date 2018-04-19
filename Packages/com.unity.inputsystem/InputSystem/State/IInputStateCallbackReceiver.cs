@@ -52,6 +52,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </remarks>
         void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr);
 
+        ////TODO: pass pointer to current state
         /// <summary>
         /// Called when a device receives a chunk of state that is tagged with a different format than the
         /// state of the device itself.
@@ -65,6 +66,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// This method permits a device to integrate state into its own that is not sent as full-device snapshots
         /// or deltas with specific offsets.
         /// </remarks>
-        bool OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt);
+        bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt);
     }
 }
