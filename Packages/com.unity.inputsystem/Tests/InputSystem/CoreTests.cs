@@ -2585,6 +2585,11 @@ class CoreTests : InputTestFixture
         public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
         {
         }
+
+        public bool OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            return false;
+        }
     }
 
     [Test]
@@ -2633,21 +2638,49 @@ class CoreTests : InputTestFixture
 
     struct TestDevicePartialState : IInputStateTypeInfo
     {
+        public float axis;
+
         public FourCC GetFormat()
         {
-            throw new NotImplementedException();
+            return new FourCC("PART");
         }
     }
+    unsafe struct TestDeviceFullState : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Axis", arraySize = 5)]
+        public fixed float axis[5];
+
+        public FourCC GetFormat()
+        {
+            return new FourCC("FULL");
+        }
+    }
+    [InputControlLayout(stateType = typeof(TestDeviceFullState))]
     class TestDeviceDecidingWhereToIntegrateState : InputDevice, IInputStateCallbackReceiver
     {
         public bool OnCarryStateForward(IntPtr statePtr)
         {
-            throw new NotImplementedException();
+            return false;
         }
 
         public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
         {
-            throw new NotImplementedException();
+        }
+
+        public unsafe bool OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            Assert.That(stateFormat, Is.EqualTo(new FourCC("PART")));
+            Assert.That(stateSize, Is.EqualTo(UnsafeUtility.SizeOf<TestDevicePartialState>()));
+
+            var values = (float*)currentStatePtr.ToPointer();
+            for (var i = 0; i < 5; ++i)
+                if (Mathf.Approximately(values[i], 0))
+                {
+                    offsetToStoreAt = (uint)i * sizeof(float);
+                    return true;
+                }
+            Assert.Fail();
+            return false;
         }
     }
 
@@ -2655,7 +2688,19 @@ class CoreTests : InputTestFixture
     [Category("Devices")]
     public void Devices_DeviceWithStateCallback_CanDecideHowToIntegrateState()
     {
-        Assert.Fail();
+        InputSystem.RegisterControlLayout<TestDeviceDecidingWhereToIntegrateState>();
+        var device = InputSystem.AddDevice<TestDeviceDecidingWhereToIntegrateState>();
+
+        InputSystem.QueueStateEvent(device, new TestDevicePartialState { axis = 0.123f });
+        InputSystem.Update();
+
+        Assert.That(device["axis0"].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
+
+        InputSystem.QueueStateEvent(device, new TestDevicePartialState { axis = 0.234f });
+        InputSystem.Update();
+
+        Assert.That(device["axis0"].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
+        Assert.That(device["axis1"].ReadValueAsObject(), Is.EqualTo(0.234).Within(0.00001));
     }
 
     [Test]

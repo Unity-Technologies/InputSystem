@@ -196,5 +196,10 @@ namespace UnityEngine.Experimental.Input
             x.WriteValueInto(newStatePtr, oldDeltaX + newDeltaX);
             y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
         }
+
+        bool IInputStateCallbackReceiver.OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            return false;
+        }
     }
 }

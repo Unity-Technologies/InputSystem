@@ -6,6 +6,8 @@ using UnityEditor.IMGUI.Controls;
 
 ////FIXME: preserve tree view state properly; currently resets whenever the picker is opened
 
+////TODO: allow restricting to certain types of controls
+
 ////TODO: add means to pick specific device index
 
 ////TODO: add usages actually used by a layout also to the list of controls of the layout

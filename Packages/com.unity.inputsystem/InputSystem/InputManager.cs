@@ -1682,65 +1682,92 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
+                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
+                            InputDevice.Flags.HasStateCallbacks;
+                        IInputStateCallbackReceiver stateCallbacks = null;
                         var deviceIndex = device.m_DeviceIndex;
-                        var stateBlock = device.m_StateBlock;
-                        var stateBlockSize = stateBlock.alignedSizeInBytes;
-                        var stateOffset = 0u;
-                        uint stateSize;
-                        IntPtr statePtr;
-                        FourCC stateFormat;
+                        var stateBlockOfDevice = device.m_StateBlock;
+                        var stateBlockSizeOfDevice = stateBlockOfDevice.alignedSizeInBytes;
+                        var offsetInDeviceStateToCopyTo = 0u;
+                        uint sizeOfStateToCopy;
+                        uint receivedStateSize;
+                        IntPtr ptrToReceivedState;
+                        FourCC receivedStateFormat;
+                        var needToCopyFromBackBuffer = false;
 
-                        // Grab state data from event.
+                        // Grab state data from event and decide where to copy to and how much to copy.
                         if (currentEventType == StateEvent.Type)
                         {
                             var stateEventPtr = (StateEvent*)currentEventPtr;
-                            stateFormat = stateEventPtr->stateFormat;
-                            stateSize = stateEventPtr->stateSizeInBytes;
-                            statePtr = stateEventPtr->state;
+                            receivedStateFormat = stateEventPtr->stateFormat;
+                            receivedStateSize = stateEventPtr->stateSizeInBytes;
+                            ptrToReceivedState = stateEventPtr->state;
 
                             // Ignore extra state at end of event.
-                            if (stateSize > stateBlockSize)
-                                stateSize = stateBlockSize;
+                            sizeOfStateToCopy = receivedStateSize;
+                            if (sizeOfStateToCopy > stateBlockSizeOfDevice)
+                                sizeOfStateToCopy = stateBlockSizeOfDevice;
                         }
                         else
                         {
                             var deltaEventPtr = (DeltaStateEvent*)currentEventPtr;
-                            stateFormat = deltaEventPtr->stateFormat;
-                            stateSize = deltaEventPtr->deltaStateSizeInBytes;
-                            statePtr = deltaEventPtr->deltaState;
-                            stateOffset = deltaEventPtr->stateOffset;
+                            receivedStateFormat = deltaEventPtr->stateFormat;
+                            receivedStateSize = deltaEventPtr->deltaStateSizeInBytes;
+                            ptrToReceivedState = deltaEventPtr->deltaState;
+                            offsetInDeviceStateToCopyTo = deltaEventPtr->stateOffset;
 
                             // Ignore extra state at end of event.
-                            if (stateOffset + stateSize > stateBlockSize)
+                            sizeOfStateToCopy = receivedStateSize;
+                            if (offsetInDeviceStateToCopyTo + sizeOfStateToCopy > stateBlockSizeOfDevice)
                             {
-                                if (stateOffset >= stateBlockSize)
+                                if (offsetInDeviceStateToCopyTo >= stateBlockSizeOfDevice)
                                     break; // Entire delta state is out of range.
 
-                                stateSize = stateBlockSize - stateOffset;
+                                sizeOfStateToCopy = stateBlockSizeOfDevice - offsetInDeviceStateToCopyTo;
                             }
                         }
 
-                        // Ignore state event if the format doesn't match.
-                        if (stateBlock.format != stateFormat)
+                        // If the state format doesn't match, see if the device knows what to do.
+                        // If not, ignore the event.
+                        if (stateBlockOfDevice.format != receivedStateFormat)
                         {
-                            #if UNITY_EDITOR
-                            if (m_Diagnostics != null)
-                                m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
-                            #endif
-                            break;
+                            var canIncorporateUnrecognizedState = false;
+                            if (deviceHasStateCallbacks)
+                            {
+                                if (stateCallbacks == null)
+                                    stateCallbacks = (IInputStateCallbackReceiver)device;
+                                canIncorporateUnrecognizedState =
+                                    stateCallbacks.OnReceiveUnrecognizedState(ptrToReceivedState, receivedStateFormat,
+                                        receivedStateSize, ref offsetInDeviceStateToCopyTo);
+
+                                // If the device tells us to put the state somewhere inside of it, we're potentially
+                                // performing a partial state update, so bring the current state forward like for delta
+                                // state events.
+                                needToCopyFromBackBuffer = true;
+                            }
+
+                            if (!canIncorporateUnrecognizedState)
+                            {
+                                #if UNITY_EDITOR
+                                if (m_Diagnostics != null)
+                                    m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
+                                #endif
+                                break;
+                            }
                         }
 
                         // If the device has state callbacks, give it a shot at running custom logic on
                         // the new state before we integrate it into the system.
-                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
-                            InputDevice.Flags.HasStateCallbacks;
                         if (deviceHasStateCallbacks)
                         {
+                            if (stateCallbacks == null)
+                                stateCallbacks = (IInputStateCallbackReceiver)device;
+
                             ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
                             var currentState = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
-                            var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
+                            var newState = new IntPtr((byte*)ptrToReceivedState.ToPointer() - stateBlockOfDevice.byteOffset);  // Account for device offset in buffers.
 
-                            ((IInputStateCallbackReceiver)device).OnBeforeWriteNewState(currentState, newState);
+                            stateCallbacks.OnBeforeWriteNewState(currentState, newState);
                         }
 
                         // Before we update state, let change monitors compare the old and the new state.
@@ -1751,12 +1778,11 @@ namespace UnityEngine.Experimental.Input
                         // change notifications.
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
-                            ProcessStateChangeMonitors(deviceIndex, statePtr,
-                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlock.byteOffset),
-                                stateSize, stateOffset);
+                            ProcessStateChangeMonitors(deviceIndex, ptrToReceivedState,
+                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlockOfDevice.byteOffset),
+                                sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
 
                         // Buffer flip.
-                        var needToCopyFromBackBuffer = false;
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
                         {
                             // In case of a delta state event we need to carry forward all state we're
@@ -1767,7 +1793,7 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Now write the state.
-                        var deviceStateOffset = device.m_StateBlock.byteOffset + stateOffset;
+                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
 
 #if UNITY_EDITOR
                         if (!gameIsPlayingAndHasFocus)
@@ -1782,7 +1808,7 @@ namespace UnityEngine.Experimental.Input
                                             (int)device.m_StateBlock.byteOffset),
                                     device.m_StateBlock.alignedSizeInBytes);
 
-                            UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
+                            UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                         }
                         else
 #endif
@@ -1805,7 +1831,7 @@ namespace UnityEngine.Experimental.Input
                                                 (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
+                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
@@ -1819,7 +1845,7 @@ namespace UnityEngine.Experimental.Input
                                                 (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
+                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                             }
                         }
 
