@@ -51,6 +51,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public Vector2 radius;
 
         [InputControl(name = "phase", layout = "PointerPhase", sizeInBits = 4)]
+        ////TODO: give this control a better name
         [InputControl(name = "button", layout = "Button", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         public ushort flags;
 
@@ -77,7 +78,8 @@ namespace UnityEngine.Experimental.Input
         Began,
         Moved,
         Ended,
-        Cancelled
+        Cancelled,
+        Stationary,
     }
 
     /// <summary>
@@ -164,7 +166,7 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
 
-        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        protected bool OnCarryStateForward(IntPtr statePtr)
         {
             var x = delta.x;
             var y = delta.y;
@@ -182,7 +184,7 @@ namespace UnityEngine.Experimental.Input
             return true;
         }
 
-        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        protected void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
         {
             var x = delta.x;
             var y = delta.y;
@@ -197,7 +199,17 @@ namespace UnityEngine.Experimental.Input
             y.WriteValueInto(newStatePtr, oldDeltaY + newDeltaY);
         }
 
-        bool IInputStateCallbackReceiver.OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        {
+            return OnCarryStateForward(statePtr);
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+            OnBeforeWriteNewState(oldStatePtr, newStatePtr);
+        }
+
+        bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }

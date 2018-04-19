@@ -3,6 +3,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.LowLevel;
 
+////TODO: enforce memory layout of TouchControl to be in TouchState.kFormat
+
 namespace UnityEngine.Experimental.Input.Controls
 {
     /// <summary>

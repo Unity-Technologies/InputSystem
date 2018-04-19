@@ -20,10 +20,12 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
-    // IMPORTANT: Must match FingerInputState in native code.
-    [StructLayout(LayoutKind.Explicit, Size = 36)]
+    // IMPORTANT: Must match TouchInputState in native code.
+    [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
     {
+        public const int kSizeInBytes = 40;
+
         public static FourCC kFormat
         {
             get { return new FourCC('T', 'O', 'U', 'C'); }
@@ -37,6 +39,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
         [InputControl(name = "touchType", layout = "TouchType", format = "SBYT")][FieldOffset(35)] public sbyte touchTypeId;
+        ////REVIEW: make double?
+        [InputControl(layout = "Axis")][FieldOffset(36)] public float timestamp;
 
         public PointerPhase phase
         {
@@ -66,7 +70,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// only specific fingers.
     /// </remarks>
     // IMPORTANT: Must match TouchInputState in native code.
-    [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * 36)]
+    [StructLayout(LayoutKind.Explicit, Size = kMaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
         public static FourCC kFormat
@@ -104,7 +108,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         ////TODO: we want to the button to be pressed when there is a primary touch
         [InputControl(name = "button", layout = "Button", usages = new[] { "PrimaryAction", "PrimaryTrigger" }, offset = InputStateBlock.kInvalidOffset)]
         [FieldOffset(0)]
-        public fixed byte touchData[kMaxTouches * 36];
+        public fixed byte touchData[kMaxTouches * TouchState.kSizeInBytes];
 
         public TouchState* touches
         {
@@ -139,7 +143,7 @@ namespace UnityEngine.Experimental.Input
     /// A multi-touch surface.
     /// </summary>
     [InputControlLayout(stateType = typeof(TouchscreenState))]
-    public class Touchscreen : Pointer
+    public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
         public TouchControl primaryTouch
         {
@@ -153,6 +157,8 @@ namespace UnityEngine.Experimental.Input
         /// This array only contains touches that are either in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
         /// or <see cref="PointerPhase.Moved"/>, or that have just ended, i.e. moved to <see cref="PointerPhase.Ended"/> or
         /// <see cref="PointerPhase.Cancelled"/> this frame.
+        ///
+        /// Does not allocate GC memory.
         /// </remarks>
         public ReadOnlyArray<TouchControl> activeTouches
         {
@@ -187,12 +193,12 @@ namespace UnityEngine.Experimental.Input
 
                     if (isActive)
                     {
-                        m_TouchesArray[touchCount] = touchControl;
+                        m_ActiveTouchesArray[touchCount] = touchControl;
                         ++touchCount;
                     }
                 }
 
-                return new ReadOnlyArray<TouchControl>(m_TouchesArray, 0, touchCount);
+                return new ReadOnlyArray<TouchControl>(m_ActiveTouchesArray, 0, touchCount);
             }
         }
 
@@ -225,12 +231,124 @@ namespace UnityEngine.Experimental.Input
                 touchArray[i] = builder.GetControl<TouchControl>(this, "touch" + i);
 
             allTouchControls = new ReadOnlyArray<TouchControl>(touchArray);
-            m_TouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
+            m_ActiveTouchesArray = new TouchControl[TouchscreenState.kMaxTouches];
 
             base.FinishSetup(builder);
         }
 
-        private TouchControl[] m_TouchesArray;
+        ////TODO: find a better way to manage memory allocation for touches
+        ////      (we really don't want to crawl through the entire state here like we do now;
+        ////      whatever the solution, it'll likely be complicated by fixed vs dymamic updates)
+
+        ////TODO: primary touch handling
+
+        // Touch presents a somewhat more complicated picture when it comes to how to store it as state.
+        //
+        // We need several TouchState entries as there can be multiple touches going on at the same time.
+        // However, if we give us, say, 10 TouchStates based on the assumption that a touchscreen can track
+        // at most 10 concurrent touches, then for each touch we receive from the OS, we have to figure out
+        // which of the TouchStates to store it in. That, however, can get a little tricky.
+        //
+        // We don't want to overwrite touch state before anyone had a chance to actually see it. So a touch
+        // that ended in one frame should not be overwritten by a touch that started in the same frame. And
+        // a touch that started and ended in the same frame should still be visible in the state for one
+        // frame. This means that we can actually end up having to store information for more touches than
+        // are currently in progress.
+        //
+        // So what we do is give us a larger pool of TouchStates to allocate from and then we decide dynamically
+        // which of entry to use for a particular TouchState event. Note that this requires the runtime
+        // sending us touch information not as TouchscreenState events (delta or full device) but as
+        // TouchState events which in turn means that the format of incoming events ('TOUC') will not match
+        // the format of the Touchscreen device state ('TSCR').
+        //
+        // Note that TouchManager presents an alternate API that does not have to deal with the same kind of
+        // problems.
+        //
+        // NOTE: It is still possible to send TouchscreenState events to a Touchscreen device, just like
+        //       sending state to any other device. The code here only presents an alternate path for sending
+        //       state to a Touchscreen and have it perform touch allocation internally.
+
+        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        {
+            var haveChangedState = false;
+
+            // Reset all touches that have ended last frame to being unused.
+            // Also mark any ongoing touches as stationary.
+            var touchStatePtr = (TouchState*)statePtr;
+            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+            {
+                var phase = touchStatePtr->phase;
+                switch (phase)
+                {
+                    case PointerPhase.Ended:
+                    case PointerPhase.Cancelled:
+                        touchStatePtr->phase = PointerPhase.None;
+                        haveChangedState = true;
+                        break;
+
+                    ////REVIEW: the downside of blindly doing this here is that even if there is an upcoming
+                    ////        motion event for a touch, it will briefly go stationary at the start of a frame
+                    ////        (which is observable by actions)
+                    case PointerPhase.Began:
+                    case PointerPhase.Moved:
+                        touchStatePtr->phase = PointerPhase.Stationary;
+                        haveChangedState = true;
+                        break;
+                }
+            }
+
+            return base.OnCarryStateForward(statePtr) || haveChangedState;
+        }
+
+        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
+            ref uint offsetToStoreAt)
+        {
+            if (stateFormat != TouchState.kFormat)
+                return false;
+
+            var touch = (TouchState*)statePtr;
+            var phase = touch->phase;
+            var touchStatePtr = (TouchState*)currentStatePtr;
+
+            // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
+            // previously.
+            if (phase != PointerPhase.Began)
+            {
+                var touchId = touch->touchId;
+                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+                {
+                    if (touchStatePtr->touchId == touchId)
+                    {
+                        offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        return true;
+                    }
+                }
+
+                // Couldn't find an entry. Either it was a touch that we previously ran out of available
+                // entries for or it's an event sent out of sequence. Ignore the touch to be consistent.
+
+                return false;
+            }
+            else
+            {
+                // It's a new touch. Try to find an unused TouchState.
+                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+                {
+                    if (touchStatePtr->phase == PointerPhase.None)
+                    {
+                        offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        return true;
+                    }
+                }
+
+                // We ran out of state and we don't want to stomp an existing ongoing touch.
+                // Drop this touch entirely.
+
+                return false;
+            }
+        }
+
+        private TouchControl[] m_ActiveTouchesArray;
     }
 
     public class Touch

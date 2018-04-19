@@ -1520,12 +1520,6 @@ namespace UnityEngine.Experimental.Input
                 m_UpdateListeners[i](updateType);
         }
 
-        // When we have the C# job system, this should be a job and NativeInputSystem should double
-        // buffer input between frames. On top, the state change detection in here can be further
-        // split off and put in its own job(s) (might not yield a gain; might be enough to just have
-        // this thing in a job). The system can easily sync on a fence when some control goes
-        // to the global state buffers so the user won't ever know that updates happen in the background.
-        //
         // NOTE: Update types do *NOT* say what the events we receive are for. The update type only indicates
         //       where in the Unity's application loop we got called from.
         internal unsafe void OnUpdate(InputUpdateType updateType, int eventCount, IntPtr eventData)
@@ -1737,7 +1731,7 @@ namespace UnityEngine.Experimental.Input
                                 if (stateCallbacks == null)
                                     stateCallbacks = (IInputStateCallbackReceiver)device;
                                 canIncorporateUnrecognizedState =
-                                    stateCallbacks.OnReceiveUnrecognizedState(ptrToReceivedState, receivedStateFormat,
+                                    stateCallbacks.OnReceiveStateWithDifferentFormat(ptrToReceivedState, receivedStateFormat,
                                         receivedStateSize, ref offsetInDeviceStateToCopyTo);
 
                                 // If the device tells us to put the state somewhere inside of it, we're potentially

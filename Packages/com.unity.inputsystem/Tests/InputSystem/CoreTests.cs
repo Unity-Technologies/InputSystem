@@ -2586,7 +2586,7 @@ class CoreTests : InputTestFixture
         {
         }
 
-        public bool OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        public bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             return false;
         }
@@ -2667,7 +2667,7 @@ class CoreTests : InputTestFixture
         {
         }
 
-        public unsafe bool OnReceiveUnrecognizedState(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        public unsafe bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
         {
             Assert.That(stateFormat, Is.EqualTo(new FourCC("PART")));
             Assert.That(stateSize, Is.EqualTo(UnsafeUtility.SizeOf<TestDevicePartialState>()));
@@ -3619,7 +3619,9 @@ class CoreTests : InputTestFixture
     {
         var device = InputSystem.AddDevice<Touchscreen>();
 
-        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
+        // Primary touch functions as pointing element of touchscreen.
+
+        InputSystem.QueueDeltaStateEvent(device.primaryTouch,
             new TouchState
         {
             phase = PointerPhase.Began,
@@ -3628,6 +3630,7 @@ class CoreTests : InputTestFixture
         });
         InputSystem.Update();
 
+        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
@@ -3706,6 +3709,73 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches.Count, Is.Zero);
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
         Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+    }
+
+    ////REVIEW: if we allow this, InputControl.ReadValueFrom() is in trouble
+    ////        (actually, is this true? TouchControl should be able to read a state event like here just fine)
+    // Touchscreen is somewhat special in that treats its available TouchState slots like a pool
+    // from which it dynamically assigns entries to track individual touches.
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchscreenDynamicallyAllocatesTouchStates()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 5,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(5));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchesBecomeStationaryWhenNotMovedInFrame()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_TouchesAccumulateDeltasWithinFrame()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
+    {
+        Assert.Fail();
     }
 
     [Test]

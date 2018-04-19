@@ -137,6 +137,8 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
+    //can we have a structure for doing those different simulation parts in a controlled fashion?
+
     /// <summary>
     /// Simulate mouse input from touch or gamepad input.
     /// </summary>
