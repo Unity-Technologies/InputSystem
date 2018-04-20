@@ -254,7 +254,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (device.id != m_DeviceId)
                 return;
 
-            m_Device = null;
             if (change == InputDeviceChange.Removed)
             {
                 Close();

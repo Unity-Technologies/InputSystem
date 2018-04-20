@@ -1525,11 +1525,9 @@ namespace UnityEngine.Experimental.Input
         internal unsafe void OnUpdate(InputUpdateType updateType, int eventCount, IntPtr eventData)
         {
             ////TODO: switch from Profiler to CustomSampler API
-#if ENABLE_PROFILER
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
-#endif
 
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
@@ -1898,9 +1896,7 @@ namespace UnityEngine.Experimental.Input
             if (buffersToUseForUpdate != updateType)
                 InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
-#if ENABLE_PROFILER
             Profiler.EndSample();
-#endif
         }
 
         // If anyone is listening for state changes on the given device, run state change detections

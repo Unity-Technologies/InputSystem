@@ -269,6 +269,8 @@ namespace UnityEngine.Experimental.Input
 
         unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
         {
+            ////TODO: early out and skip crawling through touches if we didn't change state in the last update
+
             var haveChangedState = false;
 
             // Reset all touches that have ended last frame to being unused.
