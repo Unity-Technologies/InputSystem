@@ -220,6 +220,13 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             var touchArray = new TouchControl[TouchscreenState.kMaxTouches];
