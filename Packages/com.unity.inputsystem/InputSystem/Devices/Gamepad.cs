@@ -166,11 +166,25 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: we need to split gamepad input and output state such that events can send state without including output
 
+        ////TODO: noise filtering
+        /// <summary>
+        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
+        /// </summary>
         public static Gamepad current { get; internal set; }
 
+        /// <summary>
+        /// A list of gamepads currently connected to the system.
+        /// </summary>
+        /// <remarks>
+        /// Does not cause GC allocation.
+        ///
+        /// Do *NOT* hold on to the value returned by this getter but rather query it whenever
+        /// you need it. Whenever the gamepad setup changes, the value returned by this getter
+        /// is invalidated.
+        /// </remarks>
         public static ReadOnlyArray<Gamepad> all
         {
-            get { throw new NotImplementedException(); }
+            get { return new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount); }
         }
 
         public override void MakeCurrent()
@@ -212,6 +226,20 @@ namespace UnityEngine.Experimental.Input
             RefreshUserId();
         }
 
+        protected override void OnAdded()
+        {
+            ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
+        }
+
+        protected override void OnRemoved()
+        {
+            if (current == this)
+                current = null;
+
+            ArrayHelpers.Erase(ref s_Gamepads, this);
+            --s_GamepadCount;
+        }
+
         public virtual void PauseHaptics()
         {
             m_Rumble.PauseHaptics(this);
@@ -233,5 +261,8 @@ namespace UnityEngine.Experimental.Input
         }
 
         private DualMotorRumble m_Rumble;
+
+        private static int s_GamepadCount;
+        private static Gamepad[] s_Gamepads;
     }
 }

@@ -3303,22 +3303,25 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
+    public void Devices_CanQueryAllGamepadsWithSimpleGetter()
     {
-        var gamepad1 = InputSystem.AddDevice("Gamepad");
-        var gamepad2 = InputSystem.AddDevice("Gamepad");
-        InputSystem.AddDevice("Keyboard");
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
 
         Assert.That(Gamepad.all, Has.Count.EqualTo(2));
         Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad1));
         Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad2));
-    }
 
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_AllGamepadListRefreshesWhenGamepadIsAdded()
-    {
-        Assert.Fail();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(Gamepad.all, Has.Count.EqualTo(3));
+        Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad3));
+
+        InputSystem.RemoveDevice(gamepad2);
+
+        Assert.That(Gamepad.all, Has.Count.EqualTo(2));
+        Assert.That(Gamepad.all, Has.None.SameAs(gamepad2));
     }
 
     [Test]
