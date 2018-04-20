@@ -391,6 +391,11 @@ namespace UnityEngine.Experimental.Input
                 // an existing child.
                 if (controlLayouts[i].isModifyingChildControlByPath)
                 {
+                    if (controlLayouts[i].isArray)
+                        throw new NotSupportedException(string.Format(
+                                "Control '{0}' in layout '{1}' is modifying the child of another control but is marked as an array",
+                                controlLayouts[i].name, layout.name));
+
                     haveControlLayoutWithPath = true;
                     InsertChildControlOverrides(parent, ref controlLayouts[i]);
                     continue;
@@ -401,7 +406,10 @@ namespace UnityEngine.Experimental.Input
                     controlLayouts[i].variant != variant)
                     continue;
 
-                ++childCount;
+                if (controlLayouts[i].isArray)
+                    childCount += controlLayouts[i].arraySize;
+                else
+                    ++childCount;
             }
 
             // Add room for us in the device's child array.
@@ -425,8 +433,25 @@ namespace UnityEngine.Experimental.Input
                 if (!controlLayout.variant.IsEmpty() && controlLayout.variant != variant)
                     continue;
 
-                AddChildControl(layout, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
-                    ref controlLayout, ref childIndex);
+                // If it's an array, add a control for each array element.
+                if (controlLayout.isArray)
+                {
+                    for (var n = 0; n < controlLayout.arraySize; ++n)
+                    {
+                        var name = controlLayout.name + n;
+                        var control = AddChildControl(layout, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
+                                ref controlLayout, ref childIndex, nameOverride: name);
+
+                        // Adjust offset, if the control uses explicit offsets.
+                        if (control.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
+                            control.m_StateBlock.byteOffset = (uint)n * control.m_StateBlock.alignedSizeInBytes;
+                    }
+                }
+                else
+                {
+                    AddChildControl(layout, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
+                        ref controlLayout, ref childIndex);
+                }
             }
 
             // Install child array on parent. We will later patch up the array
@@ -619,6 +644,8 @@ namespace UnityEngine.Experimental.Input
             ref bool haveChildrenUsingStateFromOtherControls,
             ref InputControlLayout.ControlItem controlItem)
         {
+            ////TODO: support arrays (we may modify an entire array in bulk)
+
             // Controls layout themselves as we come back up the hierarchy. However, when we
             // apply layout modifications reaching *into* the hierarchy, we need to retrigger
             // layouting on their parents.

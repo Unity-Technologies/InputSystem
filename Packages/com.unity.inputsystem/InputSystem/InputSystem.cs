@@ -1037,10 +1037,14 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_SWITCH
             Plugins.Switch.SwitchSupport.Initialize();
-#endif
+            #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
             Plugins.XR.XRSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_UWP
+            Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
         }
 

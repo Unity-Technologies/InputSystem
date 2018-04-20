@@ -447,6 +447,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Bit: {0}", control.bit), ref id);
                 if (control.sizeInBits != 0)
                     AddChild(item, string.Format("Size In Bits: {0}", control.sizeInBits), ref id);
+                if (control.isArray)
+                    AddChild(item, string.Format("Array Size: {0}", control.arraySize), ref id);
                 if (!string.IsNullOrEmpty(control.useStateFrom))
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
 

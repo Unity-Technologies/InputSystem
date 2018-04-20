@@ -4,6 +4,8 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: gyro and accelerometer (and potentially other sensors) need adjusting for screen orientation
+
 ////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
 
 namespace UnityEngine.Experimental.Input.LowLevel
