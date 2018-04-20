@@ -236,6 +236,14 @@ namespace UnityEngine.Experimental.Input
             m_Flags &= ~Flags.DisabledStateHasBeenQueried;
         }
 
+        protected virtual void OnAdded()
+        {
+        }
+
+        protected virtual void OnRemoved()
+        {
+        }
+
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
@@ -336,6 +344,16 @@ namespace UnityEngine.Experimental.Input
 
             for (var i = 0; i < m_UsageToControl.Length; ++i)
                 m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
+        }
+
+        internal void NotifyAdded()
+        {
+            OnAdded();
+        }
+
+        internal void NotifyRemoved()
+        {
+            OnRemoved();
         }
     }
 }

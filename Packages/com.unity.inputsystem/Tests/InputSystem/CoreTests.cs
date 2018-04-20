@@ -2388,6 +2388,39 @@ class CoreTests : InputTestFixture
         Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad1/dpad/up"));
     }
 
+    class TestDeviceReceivingAddAndRemoveNotification : Mouse
+    {
+        public int addedCount;
+        public int removedCount;
+
+        protected override void OnAdded()
+        {
+            ++addedCount;
+        }
+
+        protected override void OnRemoved()
+        {
+            ++removedCount;
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingAndRemovingDevice_InvokesNotificationOnDeviceItself()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceReceivingAddAndRemoveNotification>();
+
+        var device = InputSystem.AddDevice<TestDeviceReceivingAddAndRemoveNotification>();
+
+        Assert.That(device.addedCount, Is.EqualTo(1));
+        Assert.That(device.removedCount, Is.Zero);
+
+        InputSystem.RemoveDevice(device);
+
+        Assert.That(device.addedCount, Is.EqualTo(1));
+        Assert.That(device.removedCount, Is.EqualTo(1));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_UnsupportedDevices_AreAddedToList()
@@ -3424,20 +3457,22 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    [TestCase("Gamepad")]
-    [TestCase("Keyboard")]
-    [TestCase("Pointer")]
-    [TestCase("Mouse")]
-    [TestCase("Pen")]
-    [TestCase("Touchscreen")]
-    [TestCase("Joystick")]
-    [TestCase("Accelerometer")]
-    public void Devices_CanCreateDevice(string layout)
+    [TestCase("Gamepad", typeof(Gamepad))]
+    [TestCase("Keyboard", typeof(Keyboard))]
+    [TestCase("Pointer", typeof(Pointer))]
+    [TestCase("Mouse", typeof(Mouse))]
+    [TestCase("Pen", typeof(Pen))]
+    [TestCase("Touchscreen", typeof(Touchscreen))]
+    [TestCase("Joystick", typeof(Joystick))]
+    [TestCase("Accelerometer", typeof(Accelerometer))]
+    [TestCase("Gyroscope", typeof(Gyroscope))]
+    public void Devices_CanCreateDevice(string layout, Type type)
     {
         var device = InputSystem.AddDevice(layout);
 
         Assert.That(device, Is.InstanceOf<InputDevice>());
         Assert.That(device.layout, Is.EqualTo(layout));
+        Assert.That(device, Is.TypeOf(type));
     }
 
     [Test]

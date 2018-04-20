@@ -87,6 +87,8 @@ namespace UnityEngine.Experimental.Input
             ////        registered in the system. Should we force-disable all actions on Restore()?
             InputSystem.DisableAllEnabledActions();
 
+            ////TODO: destroy devices individually so that they clean up globals
+
             InputSystem.Restore();
 
             testRuntime.Dispose();

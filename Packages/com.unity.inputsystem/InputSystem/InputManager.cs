@@ -693,9 +693,6 @@ namespace UnityEngine.Experimental.Input
             // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
 
-            // Make the device current.
-            device.MakeCurrent();
-
             // Let actions re-resolve their paths.
             InputActionSet.RefreshAllEnabledActions();
 
@@ -713,6 +710,12 @@ namespace UnityEngine.Experimental.Input
                 device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
+
+            // Notify device.
+            device.NotifyAdded();
+
+            // Make the device current.
+            device.MakeCurrent();
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
@@ -827,6 +830,9 @@ namespace UnityEngine.Experimental.Input
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
+
+            // Let device know.
+            device.NotifyRemoved();
 
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
