@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Profiling;
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
@@ -126,10 +127,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override TreeViewItem BuildRoot()
         {
+            Profiler.BeginSample("BuildControlTree");
+
             var id = 1;
 
             // Build tree from control down the control hierarchy.
             var rootItem = BuildControlTreeRecursive(m_RootControl, 0, ref id);
+
+            Profiler.EndSample();
 
             // Wrap root control in invisible item required by TreeView.
             return new TreeViewItem

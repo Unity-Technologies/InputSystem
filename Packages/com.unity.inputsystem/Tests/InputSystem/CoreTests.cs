@@ -15,7 +15,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
-using Touch = UnityEngine.Experimental.Input.Touch;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
@@ -217,6 +216,65 @@ class CoreTests : InputTestFixture
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>(), Is.Not.Null);
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().min, Is.EqualTo(0.1).Within(0.00001f));
         Assert.That(device.leftStick.TryGetProcessor<DeadzoneProcessor>().max, Is.EqualTo(0.9).Within(0.00001f));
+    }
+
+    unsafe struct StateStructWithArrayOfControls
+    {
+        [InputControl(layout = "Axis", arraySize = 5)]
+        public fixed float value[5];
+    }
+    [InputControlLayout(stateType = typeof(StateStructWithArrayOfControls))]
+    class TestDeviceWithArrayOfControls : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanAddArrayOfControls_InStateStruct()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithArrayOfControls>();
+
+        var device = new InputDeviceBuilder("TestDeviceWithArrayOfControls").Finish();
+
+        Assert.That(device.allControls, Has.Count.EqualTo(5));
+        Assert.That(device["value0"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value1"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value2"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value3"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value4"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value0"].stateBlock.byteOffset, Is.EqualTo(0 * sizeof(float)));
+        Assert.That(device["value1"].stateBlock.byteOffset, Is.EqualTo(1 * sizeof(float)));
+        Assert.That(device["value2"].stateBlock.byteOffset, Is.EqualTo(2 * sizeof(float)));
+        Assert.That(device["value3"].stateBlock.byteOffset, Is.EqualTo(3 * sizeof(float)));
+        Assert.That(device["value4"].stateBlock.byteOffset, Is.EqualTo(4 * sizeof(float)));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanAddArrayOfControls_InJSON()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""value"",
+                        ""layout"" : ""Axis"",
+                        ""arraySize"" : 5
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+        var device = new InputDeviceBuilder("MyDevice").Finish();
+
+        Assert.That(device.allControls, Has.Count.EqualTo(5));
+        Assert.That(device["value0"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value1"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value2"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value3"], Is.TypeOf<AxisControl>());
+        Assert.That(device["value4"], Is.TypeOf<AxisControl>());
     }
 
     [Test]
@@ -2527,6 +2585,11 @@ class CoreTests : InputTestFixture
         public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
         {
         }
+
+        public bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            return false;
+        }
     }
 
     [Test]
@@ -2571,6 +2634,73 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.wasUpdatedThisFrame, Is.False);
+    }
+
+    struct TestDevicePartialState : IInputStateTypeInfo
+    {
+        public float axis;
+
+        public FourCC GetFormat()
+        {
+            return new FourCC("PART");
+        }
+    }
+    unsafe struct TestDeviceFullState : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Axis", arraySize = 5)]
+        public fixed float axis[5];
+
+        public FourCC GetFormat()
+        {
+            return new FourCC("FULL");
+        }
+    }
+    [InputControlLayout(stateType = typeof(TestDeviceFullState))]
+    class TestDeviceDecidingWhereToIntegrateState : InputDevice, IInputStateCallbackReceiver
+    {
+        public bool OnCarryStateForward(IntPtr statePtr)
+        {
+            return false;
+        }
+
+        public void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+        }
+
+        public unsafe bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        {
+            Assert.That(stateFormat, Is.EqualTo(new FourCC("PART")));
+            Assert.That(stateSize, Is.EqualTo(UnsafeUtility.SizeOf<TestDevicePartialState>()));
+
+            var values = (float*)currentStatePtr.ToPointer();
+            for (var i = 0; i < 5; ++i)
+                if (Mathf.Approximately(values[i], 0))
+                {
+                    offsetToStoreAt = (uint)i * sizeof(float);
+                    return true;
+                }
+            Assert.Fail();
+            return false;
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DeviceWithStateCallback_CanDecideHowToIntegrateState()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceDecidingWhereToIntegrateState>();
+        var device = InputSystem.AddDevice<TestDeviceDecidingWhereToIntegrateState>();
+
+        InputSystem.QueueStateEvent(device, new TestDevicePartialState { axis = 0.123f });
+        InputSystem.Update();
+
+        Assert.That(device["axis0"].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
+
+        InputSystem.QueueStateEvent(device, new TestDevicePartialState { axis = 0.234f });
+        InputSystem.Update();
+
+        Assert.That(device["axis0"].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
+        Assert.That(device["axis1"].ReadValueAsObject(), Is.EqualTo(0.234).Within(0.00001));
     }
 
     [Test]
@@ -3489,8 +3619,10 @@ class CoreTests : InputTestFixture
     {
         var device = InputSystem.AddDevice<Touchscreen>();
 
-        InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+        // Primary touch functions as pointing element of touchscreen.
+
+        InputSystem.QueueDeltaStateEvent(device.primaryTouch,
+            new TouchState
         {
             phase = PointerPhase.Began,
             touchId = 4,
@@ -3498,6 +3630,7 @@ class CoreTests : InputTestFixture
         });
         InputSystem.Update();
 
+        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
@@ -3513,7 +3646,7 @@ class CoreTests : InputTestFixture
         Assert.That(device.allTouchControls.Count, Is.EqualTo(TouchscreenState.kMaxTouches));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Began,
             touchId = 4,
@@ -3528,14 +3661,14 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches[0].position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Moved,
             touchId = 4,
             position = new Vector2(0.123f, 0.456f)
         });
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Began,
             touchId = 5,
@@ -3550,13 +3683,13 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Ended,
             touchId = 4,
         });
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
-            new Touch
+            new TouchState
         {
             phase = PointerPhase.Cancelled,
             touchId = 5,
@@ -3574,8 +3707,147 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device.activeTouches.Count, Is.Zero);
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+    }
+
+    ////REVIEW: if we allow this, InputControl.ReadValueFrom() is in trouble
+    ////        (actually, is this true? TouchControl should be able to read a state event like here just fine)
+    // Touchscreen is somewhat special in that treats its available TouchState slots like a pool
+    // from which it dynamically assigns entries to track individual touches.
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchscreenDynamicallyAllocatesTouchStates()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 5,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(5));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchStaysOnSameControlForDurationOfTouch()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        // Begin touch.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+
+        // Don't move.
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
+        // Move.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+
+        // Don't move.
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
+        // Random unrelated touch.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 5,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
+        // End.
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
-        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+
+        // Release.
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchesBecomeStationaryWhenNotMovedInFrame()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+        });
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_TouchesAccumulateDeltasWithinFrame()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
+    {
+        Assert.Fail();
     }
 
     [Test]

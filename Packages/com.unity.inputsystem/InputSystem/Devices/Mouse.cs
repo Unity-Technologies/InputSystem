@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -134,5 +135,48 @@ namespace UnityEngine.Experimental.Input
             rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
             base.FinishSetup(builder);
         }
+    }
+
+    //can we have a structure for doing those different simulation parts in a controlled fashion?
+
+    /// <summary>
+    /// Simulate mouse input from touch or gamepad input.
+    /// </summary>
+    public class MouseSimulation
+    {
+        /// <summary>
+        /// Whether to translate touch input into mouse input.
+        /// </summary>
+        public bool useTouchInput
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        /// <summary>
+        /// Whether to translate gamepad and joystick input into mouse input.
+        /// </summary>
+        public bool useControllerInput
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        public static MouseSimulation instance
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public void Enable()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Disable()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Mouse m_Mouse;
     }
 }

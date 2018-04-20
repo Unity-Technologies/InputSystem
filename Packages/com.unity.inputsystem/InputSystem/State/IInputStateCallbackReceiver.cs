@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -11,6 +12,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </remarks>
     public interface IInputStateCallbackReceiver
     {
+        ////REVIEW: replace bool result value with enum?
         /// <summary>
         /// Called when a new input update is started and existing state of a device is carried forward.
         /// </summary>
@@ -49,5 +51,21 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// not get triggered.
         /// </remarks>
         void OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr);
+
+        ////TODO: pass pointer to current state
+        /// <summary>
+        /// Called when a device receives a chunk of state that is tagged with a different format than the
+        /// state of the device itself.
+        /// </summary>
+        /// <param name="statePtr"></param>
+        /// <param name="stateFormat"></param>
+        /// <param name="stateSize"></param>
+        /// <param name="offsetToStoreAt"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// This method permits a device to integrate state into its own that is not sent as full-device snapshots
+        /// or deltas with specific offsets.
+        /// </remarks>
+        bool OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt);
     }
 }
