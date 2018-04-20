@@ -38,6 +38,23 @@ namespace UnityEngine.Experimental.Input.Editor
             return new InputControlTreeView(rootControl, treeState, header);
         }
 
+        public void RefreshControlValues()
+        {
+            if (rootItem != null)
+                RefreshControlValuesRecursive(rootItem);
+        }
+
+        private void RefreshControlValuesRecursive(TreeViewItem item)
+        {
+            var controlItem = item as ControlItem;
+            if (controlItem != null)
+                ReadState(controlItem.control, out controlItem.value, out controlItem.values);
+
+            if (item.children != null)
+                foreach (var child in item.children)
+                    RefreshControlValuesRecursive(child);
+        }
+
         private const float kRowHeight = 20f;
 
         private enum ColumnId
@@ -172,35 +189,17 @@ namespace UnityEngine.Experimental.Input.Editor
                 children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
             }
 
-            // Read state.
-            GUIContent value = null;
-            GUIContent[] values = null;
-            if (stateBuffer != null)
-            {
-                ////TODO: switch to ReadValueFrom
-                var text = ReadRawValueAsString(control, stateBuffer);
-                if (text != null)
-                    value = new GUIContent(text);
-            }
-            else if (multipleStateBuffers != null)
-            {
-                var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
-                if (showDifferentOnly && isLeaf && valueStrings.Distinct().Count() == 1)
-                    return null;
-                values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
-            }
-            else
-            {
-                var valueObject = control.ReadValueAsObject();
-                if (valueObject != null)
-                    value = new GUIContent(valueObject.ToString());
-            }
-
             // Compute offset. Offsets on the controls are absolute. Make them relative to the
             // root control.
             var controlOffset = control.stateBlock.byteOffset;
             var rootOffset = m_RootControl.stateBlock.byteOffset;
             var offset = controlOffset - rootOffset;
+
+            // Read state.
+            GUIContent value;
+            GUIContent[] values;
+            if (!ReadState(control, out value, out values))
+                return null;
 
             ////TODO: come up with nice icons depicting different control types
 
@@ -228,6 +227,35 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             return item;
+        }
+
+        private bool ReadState(InputControl control, out GUIContent value, out GUIContent[] values)
+        {
+            value = null;
+            values = null;
+
+            if (stateBuffer != null)
+            {
+                ////TODO: switch to ReadValueFrom
+                var text = ReadRawValueAsString(control, stateBuffer);
+                if (text != null)
+                    value = new GUIContent(text);
+            }
+            else if (multipleStateBuffers != null)
+            {
+                var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
+                if (showDifferentOnly && control.children.Count == 0 && valueStrings.Distinct().Count() == 1)
+                    return false;
+                values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
+            }
+            else
+            {
+                var valueObject = control.ReadValueAsObject();
+                if (valueObject != null)
+                    value = new GUIContent(valueObject.ToString());
+            }
+
+            return true;
         }
 
         protected override void RowGUI(RowGUIArgs args)
