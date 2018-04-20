@@ -261,6 +261,12 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 Repaint();
+
+                ////FIXME: We really don't want to do this here as it leads to really bad performance by rebuilding
+                ////       the entire control tree from scratch over and over again. However, we need a way to not just
+                ////       repaint the control tree but to refresh some of its data.
+                if (m_ControlTree != null)
+                    m_ControlTree.Reload();
             }
         }
 

@@ -1899,15 +1899,6 @@ namespace UnityEngine.Experimental.Input
             Profiler.EndSample();
         }
 
-        // If anyone is listening for state changes on the given device, run state change detections
-        // for the two given state blocks of the device. If a value that is covered by a monitor
-        // has changed in 'newState' compared to 'oldState', set m_StateChangeSignalled for the
-        // monitor to true.
-        //
-        // Returns true if any monitors got signalled, false otherwise.
-        //
-        // This could easily be spun off into jobs.
-        //
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
         //       'newStateOffset' must give the offset into the full state and 'newStateSize' must
         //       give the size of memory slice to be updated.
