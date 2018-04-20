@@ -3847,9 +3847,144 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_TouchesAccumulateDeltasWithinFrame()
+    public void Devices_TouchDeltasAreComputedAutomatically()
     {
-        Assert.Fail();
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(10).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(20).Within(0.00001));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchDeltasResetWhenTouchIsStationary()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(10).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(20).Within(0.00001));
+
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchDeltasResetWhenTouchIsMovingInPlace()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchesAccumulateDeltasWithinFrame()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(30, 50)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(20).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(30).Within(0.00001));
     }
 
     [Test]

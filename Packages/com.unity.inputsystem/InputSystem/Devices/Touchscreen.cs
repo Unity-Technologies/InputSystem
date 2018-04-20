@@ -287,6 +287,7 @@ namespace UnityEngine.Experimental.Input
                     case PointerPhase.Ended:
                     case PointerPhase.Cancelled:
                         touchStatePtr->phase = PointerPhase.None;
+                        touchStatePtr->delta = Vector2.zero;
                         haveChangedState = true;
                         break;
 
@@ -296,6 +297,7 @@ namespace UnityEngine.Experimental.Input
                     case PointerPhase.Began:
                     case PointerPhase.Moved:
                         touchStatePtr->phase = PointerPhase.Stationary;
+                        touchStatePtr->delta = Vector2.zero;
                         haveChangedState = true;
                         break;
                 }
@@ -303,7 +305,7 @@ namespace UnityEngine.Experimental.Input
 
             Profiler.EndSample();
 
-            return base.OnCarryStateForward(statePtr) || haveChangedState;
+            return haveChangedState;
         }
 
         unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
@@ -332,6 +334,8 @@ namespace UnityEngine.Experimental.Input
                     if (touchStatePtr->touchId == touchId)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        touch->delta = touch->position - touchStatePtr->position;
+                        touch->delta += touchStatePtr->delta;
                         Profiler.EndSample();
                         return true;
                     }
@@ -351,6 +355,7 @@ namespace UnityEngine.Experimental.Input
                     if (touchStatePtr->phase == PointerPhase.None)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        touch->delta = Vector2.zero;
                         Profiler.EndSample();
                         return true;
                     }
@@ -362,6 +367,10 @@ namespace UnityEngine.Experimental.Input
                 Profiler.EndSample();
                 return false;
             }
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
         }
 
         private TouchControl[] m_ActiveTouchesArray;
