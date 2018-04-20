@@ -8,15 +8,12 @@ using UnityEngine.Profiling;
 
 ////TODO: add orientation
 
-////TODO: reset and accumulate deltas of all touches
-
 ////TODO: look at how you can meaningfully use touches with actions
 
 ////TODO: touch is hardwired to certain memory layouts ATM; either allow flexbility or make sure the layouts cannot be changed
 
 //// Remaining things to sort out around touch:
 //// - How do we handle mouse simulation?
-//// - How do we implement deltas for touch when there is no delta information from the platform?
 //// - How do we implement click-detection for touch?
 //// - High frequency touches
 //// - Touch prediction
@@ -155,8 +152,8 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <remarks>
         /// This array only contains touches that are either in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
-        /// or <see cref="PointerPhase.Moved"/>, or that have just ended, i.e. moved to <see cref="PointerPhase.Ended"/> or
-        /// <see cref="PointerPhase.Cancelled"/> this frame.
+        /// or <see cref="PointerPhase.Moved"/> or <see cref="PointerPhase.Stationary"/>, or that have just ended, i.e. moved to
+        /// <see cref="PointerPhase.Ended"/> or <see cref="PointerPhase.Cancelled"/> this frame.
         ///
         /// Does not allocate GC memory.
         /// </remarks>

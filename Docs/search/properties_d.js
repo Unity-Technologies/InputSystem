@@ -1,6 +1,7 @@
 var searchData=
 [
-  ['queryhidreportdescriptordevicecommandtype',['QueryHIDReportDescriptorDeviceCommandType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID.html#a345da57aff7367ca3ae1e1536766c89f',1,'UnityEngine::Experimental::Input::Plugins::HID::HID']]],
-  ['queryhidreportdescriptorsizedevicecommandtype',['QueryHIDReportDescriptorSizeDeviceCommandType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID.html#ae5bdba8001c4037a02efbb8d57083682',1,'UnityEngine::Experimental::Input::Plugins::HID::HID']]],
-  ['quotekey',['quoteKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#a0ed5f05c1ea365ad3bbb5c87c759fc3d',1,'UnityEngine::Experimental::Input::Keyboard']]]
+  ['parent',['parent',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#ad90f697954abe2b8f91858ff8685e085',1,'UnityEngine::Experimental::Input::InputControl']]],
+  ['path',['path',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#a46c20eb2a26abeb1e934cd66e1dd6484',1,'UnityEngine::Experimental::Input::InputControl']]],
+  ['pollingfrequency',['pollingFrequency',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a61c58de716bc19b745a0ea262db7f737',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
+  ['position',['position',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1TouchControl.html#a495c0c7ed8ef3f3183e11b9a89cb8930',1,'UnityEngine.Experimental.Input.Controls.TouchControl.position()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html#a495c0c7ed8ef3f3183e11b9a89cb8930',1,'UnityEngine.Experimental.Input.Pointer.position()']]]
 ];
