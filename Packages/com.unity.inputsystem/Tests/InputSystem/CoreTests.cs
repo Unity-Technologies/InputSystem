@@ -3682,6 +3682,15 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
         Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
+        // No change. Touches should become stationary and stay in list.
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+        Assert.That(device.activeTouches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.activeTouches[1].touchId.ReadValue(), Is.EqualTo(5));
+        Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+        Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState
         {

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Profiling;
 
 ////TODO: add orientation
 
@@ -172,7 +173,7 @@ namespace UnityEngine.Experimental.Input
                     var touchControl = allTouchControls[i];
                     var phaseControl = touchControl.phase;
                     var phase = phaseControl.ReadValue();
-                    if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
+                    if (phase == PointerPhase.Began || phase == PointerPhase.Moved || phase == PointerPhase.Stationary)
                     {
                         isActive = true;
                     }
@@ -271,6 +272,8 @@ namespace UnityEngine.Experimental.Input
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
+            Profiler.BeginSample("TouchCarryStateForward");
+
             var haveChangedState = false;
 
             // Reset all touches that have ended last frame to being unused.
@@ -298,6 +301,8 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            Profiler.EndSample();
+
             return base.OnCarryStateForward(statePtr) || haveChangedState;
         }
 
@@ -306,6 +311,8 @@ namespace UnityEngine.Experimental.Input
         {
             if (stateFormat != TouchState.kFormat)
                 return false;
+
+            Profiler.BeginSample("TouchAllocate");
 
             // For performance reasons, we read memory here directly rather than going through
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
@@ -325,6 +332,7 @@ namespace UnityEngine.Experimental.Input
                     if (touchStatePtr->touchId == touchId)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        Profiler.EndSample();
                         return true;
                     }
                 }
@@ -332,6 +340,7 @@ namespace UnityEngine.Experimental.Input
                 // Couldn't find an entry. Either it was a touch that we previously ran out of available
                 // entries for or it's an event sent out of sequence. Ignore the touch to be consistent.
 
+                Profiler.EndSample();
                 return false;
             }
             else
@@ -342,6 +351,7 @@ namespace UnityEngine.Experimental.Input
                     if (touchStatePtr->phase == PointerPhase.None)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        Profiler.EndSample();
                         return true;
                     }
                 }
@@ -349,6 +359,7 @@ namespace UnityEngine.Experimental.Input
                 // We ran out of state and we don't want to stomp an existing ongoing touch.
                 // Drop this touch entirely.
 
+                Profiler.EndSample();
                 return false;
             }
         }
