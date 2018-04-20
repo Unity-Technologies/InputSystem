@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -93,6 +94,28 @@ namespace UnityEngine.Experimental.Input
                     m_DeviceCommandCallbacks = new List<KeyValuePair<int, DeviceCommandCallback>>();
                 m_DeviceCommandCallbacks.Add(new KeyValuePair<int, DeviceCommandCallback>(deviceId, callback));
             }
+        }
+
+        public void SetDeviceCommandCallback<TCommand>(int deviceId, TCommand result)
+            where TCommand : struct, IInputDeviceCommandInfo
+        {
+            bool? receivedCommand = null;
+            SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
+                {
+                    unsafe
+                    {
+                        if (commandPtr->type == result.GetTypeStatic())
+                        {
+                            Assert.That(receivedCommand.HasValue, Is.False);
+                            receivedCommand = true;
+                            UnsafeUtility.MemCpy(commandPtr, UnsafeUtility.AddressOf(ref result),
+                                UnsafeUtility.SizeOf<TCommand>());
+                            return InputDeviceCommand.kGenericSuccess;
+                        }
+                        return InputDeviceCommand.kGenericFailure;
+                    }
+                });
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)

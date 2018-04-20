@@ -229,7 +229,6 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
-        [SerializeField] private Vector2 m_EventListScrollPosition;
         [SerializeField] private InputEventTrace m_EventTrace;
         [SerializeField] private bool m_EventTraceDisabled;
 
