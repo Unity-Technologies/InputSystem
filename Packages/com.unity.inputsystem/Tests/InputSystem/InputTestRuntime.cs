@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
-        private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
+        internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
     }
 }

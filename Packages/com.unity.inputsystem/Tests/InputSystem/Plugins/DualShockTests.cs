@@ -6,8 +6,6 @@ using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
 
-////TODO: test button presses individually (put helper in InputTestFixture to verify button presses en bloc)
-
 class DualShockTests : InputTestFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
@@ -46,6 +44,7 @@ class DualShockTests : InputTestFixture
         Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(-NormalizeProcessor.Normalize(255 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(20 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(40 / 255.0f, 0f, 1f, 0f)).Within(0.00001));
+        ////TODO: test button presses individually
         Assert.That(gamepad.buttonSouth.isPressed);
         Assert.That(gamepad.buttonEast.isPressed);
         Assert.That(gamepad.buttonWest.isPressed);
@@ -288,14 +287,14 @@ class DualShockTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanQueryPS4UserIdFromDualShockPS4()
     {
-        var gamepad = (DualShockGamepadPS4)InputSystem.AddDevice(new InputDeviceDescription
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
             deviceClass = "PS4DualShockGamepad",
             interfaceName = "PS4"
-        });
+        }.ToJson(), 1);
 
         bool? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(gamepad.id,
+        testRuntime.SetDeviceCommandCallback(1,
             (id, commandPtr) =>
             {
                 unsafe
@@ -304,6 +303,7 @@ class DualShockTests : InputTestFixture
                     {
                         Assert.That(receivedCommand.HasValue, Is.False);
                         receivedCommand = true;
+                        ((QueryPS4ControllerInfo*)commandPtr)->slotIndex = 1;  // Otherwise we query over and over again.
                         ((QueryPS4ControllerInfo*)commandPtr)->userId = 1234;
                         return 1;
                     }
@@ -312,6 +312,8 @@ class DualShockTests : InputTestFixture
                     return InputDeviceCommand.kGenericFailure;
                 }
             });
+        InputSystem.Update();
+        var gamepad = (DualShockGamepadPS4)InputSystem.devices[0];
 
         Assert.That(gamepad.ps4UserId, Is.EqualTo(1234));
     }

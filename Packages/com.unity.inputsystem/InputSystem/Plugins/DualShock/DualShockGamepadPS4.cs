@@ -283,31 +283,9 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         ////TODO: move up into base
         public ReadOnlyArray<PS4TouchControl> touches { get; private set; }
 
-        private static DualShockGamepadPS4[] s_Devices = new DualShockGamepadPS4[4];
-
-        // Slot id for the gamepad. Once set will never change.
-        private int m_SlotId = -1;
-        private int m_DefaultColorId = -1;
-        private int m_PS4UserId = -1;
-
-        private void UpdatePadSettingsIfNeeded()
+        public new static ReadOnlyArray<DualShockGamepadPS4> all
         {
-            if (m_SlotId == -1)
-            {
-                var command = QueryPS4ControllerInfo.Create();
-
-                if (ExecuteCommand(ref command) > 0)
-                {
-                    m_SlotId = command.slotIndex;
-                    m_DefaultColorId = command.defaultColorId;
-                    m_PS4UserId = command.userId;
-
-                    if (!m_LightBarColor.HasValue)
-                    {
-                        m_LightBarColor = GetPlayStationColor(m_DefaultColorId);
-                    }
-                }
-            }
+            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_Devices); }
         }
 
         public Color lightBarColor
@@ -316,27 +294,10 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             {
                 if (m_LightBarColor.HasValue == false)
                 {
-                    return GetPlayStationColor(m_DefaultColorId);
+                    return PS4ColorIdToColor(m_DefaultColorId);
                 }
 
                 return m_LightBarColor.Value;
-            }
-        }
-
-        private static Color GetPlayStationColor(int colorId)
-        {
-            switch (colorId)
-            {
-                case 0:
-                    return Color.blue;
-                case 1:
-                    return Color.red;
-                case 2:
-                    return Color.green;
-                case 3:
-                    return Color.magenta;
-                default:
-                    return Color.black;
             }
         }
 
@@ -384,17 +345,15 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 
         public static DualShockGamepadPS4 GetBySlotIndex(int slotIndex)
         {
+            if (slotIndex < 0 || slotIndex >= s_Devices.Length)
+                throw new ArgumentException("Slot index out of range: " + slotIndex, "slotIndex");
+
             if (s_Devices[slotIndex] != null && s_Devices[slotIndex].slotIndex == slotIndex)
             {
                 return s_Devices[slotIndex];
             }
 
             return null;
-        }
-
-        public new static ReadOnlyArray<DualShockGamepadPS4> all
-        {
-            get { return new ReadOnlyArray<DualShockGamepadPS4>(s_Devices); }
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -497,6 +456,50 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         private float? m_LargeMotor;
         private float? m_SmallMotor;
         private Color? m_LightBarColor;
+
+        // Slot id for the gamepad. Once set will never change.
+        private int m_SlotId = -1;
+        private int m_DefaultColorId = -1;
+        private int m_PS4UserId = -1;
+
+        private static DualShockGamepadPS4[] s_Devices = new DualShockGamepadPS4[4];
+
+        private void UpdatePadSettingsIfNeeded()
+        {
+            if (m_SlotId == -1)
+            {
+                var command = QueryPS4ControllerInfo.Create();
+
+                if (ExecuteCommand(ref command) > 0)
+                {
+                    m_SlotId = command.slotIndex;
+                    m_DefaultColorId = command.defaultColorId;
+                    m_PS4UserId = command.userId;
+
+                    if (!m_LightBarColor.HasValue)
+                    {
+                        m_LightBarColor = PS4ColorIdToColor(m_DefaultColorId);
+                    }
+                }
+            }
+        }
+
+        private static Color PS4ColorIdToColor(int colorId)
+        {
+            switch (colorId)
+            {
+                case 0:
+                    return Color.blue;
+                case 1:
+                    return Color.red;
+                case 2:
+                    return Color.green;
+                case 3:
+                    return Color.magenta;
+                default:
+                    return Color.black;
+            }
+        }
     }
 }
 #endif // UNITY_EDITOR || UNITY_PS4

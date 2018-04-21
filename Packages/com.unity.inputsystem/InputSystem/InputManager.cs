@@ -1143,7 +1143,7 @@ namespace UnityEngine.Experimental.Input
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
-        [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
+        [NonSerialized] internal InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
         [NonSerialized] private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
         [NonSerialized] private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;

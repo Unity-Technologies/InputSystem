@@ -87,13 +87,17 @@ namespace UnityEngine.Experimental.Input
             ////        registered in the system. Should we force-disable all actions on Restore()?
             InputSystem.DisableAllEnabledActions();
 
-            // Remove devices one-by-one so they get cleaned up properly.
+            // Remove devices one-by-one so they get cleaned up properly but kill all
+            // device callbacks and change listeners first as they may not expect additional calls.
+            if (testRuntime.m_DeviceCommandCallbacks != null)
+                testRuntime.m_DeviceCommandCallbacks.Clear();
+            InputSystem.s_Manager.m_DeviceChangeListeners.Clear();
             while (InputSystem.devices.Count > 0)
                 InputSystem.RemoveDevice(InputSystem.devices[0]);
 
-            InputSystem.Restore();
-
             testRuntime.Dispose();
+
+            InputSystem.Restore();
         }
 
         public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
