@@ -319,30 +319,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             }
         }
 
-        internal static void OnDeviceChange(InputDevice device, InputDeviceChange change)
-        {
-            var ps4Gamepad = device as DualShockGamepadPS4;
-
-            if (ps4Gamepad == null || ps4Gamepad.slotIndex == -1) return;
-
-            if (change == InputDeviceChange.Added)
-            {
-                // Check there is no other device already in that slot
-                if (s_Devices[ps4Gamepad.slotIndex] == null)
-                {
-                    s_Devices[ps4Gamepad.slotIndex] = ps4Gamepad;
-                }
-            }
-            else if (change == InputDeviceChange.Removed)
-            {
-                // check to make sure the device in the expected array index matches the actual device in that slot.
-                if (s_Devices[ps4Gamepad.slotIndex] == device)
-                {
-                    s_Devices[ps4Gamepad.slotIndex] = null;
-                }
-            }
-        }
-
         public static DualShockGamepadPS4 GetBySlotIndex(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= s_Devices.Length)
@@ -354,6 +330,27 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             }
 
             return null;
+        }
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            var index = slotIndex;
+            if (index >= 0 && index < s_Devices.Length)
+            {
+                Debug.Assert(s_Devices[index] == null, "PS4 gamepad with same slotIndex already added");
+                s_Devices[index] = this;
+            }
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+
+            var index = slotIndex;
+            if (index >= 0 && index < s_Devices.Length && s_Devices[index] == this)
+                s_Devices[index] = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
