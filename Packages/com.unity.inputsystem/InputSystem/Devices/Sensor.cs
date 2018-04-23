@@ -80,6 +80,13 @@ namespace UnityEngine.Experimental.Input
             base.MakeCurrent();
             current = this;
         }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
     }
 
     [InputControlLayout(stateType = typeof(GyroscopeState))]
@@ -93,6 +100,13 @@ namespace UnityEngine.Experimental.Input
         {
             base.MakeCurrent();
             current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)

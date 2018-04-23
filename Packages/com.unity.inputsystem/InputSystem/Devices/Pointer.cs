@@ -150,6 +150,12 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
+        protected override void OnRemoved()
+        {
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             position = builder.GetControl<Vector2Control>(this, "position");

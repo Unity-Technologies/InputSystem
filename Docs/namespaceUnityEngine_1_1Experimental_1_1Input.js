@@ -32,8 +32,9 @@ var namespaceUnityEngine_1_1Experimental_1_1Input =
     [ "InputTestRuntime", "classUnityEngine_1_1Experimental_1_1Input_1_1InputTestRuntime.html", null ],
     [ "Keyboard", "classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard" ],
     [ "Mouse", "classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Mouse" ],
-    [ "Pen", "classUnityEngine_1_1Experimental_1_1Input_1_1Pen.html", null ],
+    [ "MouseSimulation", "classUnityEngine_1_1Experimental_1_1Input_1_1MouseSimulation.html", "classUnityEngine_1_1Experimental_1_1Input_1_1MouseSimulation" ],
+    [ "Pen", "classUnityEngine_1_1Experimental_1_1Input_1_1Pen.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Pen" ],
     [ "Pointer", "classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Pointer" ],
-    [ "Touchscreen", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen" ],
-    [ "TouchTracker", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html", null ]
+    [ "TouchManager", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchManager.html", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchManager" ],
+    [ "Touchscreen", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen" ]
 ];

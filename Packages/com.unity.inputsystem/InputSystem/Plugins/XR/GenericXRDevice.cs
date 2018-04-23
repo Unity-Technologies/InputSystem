@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Haptics;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout]
     public class XRHMD : InputDevice
     {
         public static XRHMD current { get; private set; }
@@ -13,6 +13,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.MakeCurrent();
             current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
     }
 
@@ -65,6 +72,15 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             {
                 rightHand = null;
             }
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (leftHand == this)
+                leftHand = null;
+            else if (rightHand == this)
+                rightHand = null;
         }
     }
 

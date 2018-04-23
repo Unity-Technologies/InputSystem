@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -95,6 +96,28 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public void SetDeviceCommandCallback<TCommand>(int deviceId, TCommand result)
+            where TCommand : struct, IInputDeviceCommandInfo
+        {
+            bool? receivedCommand = null;
+            SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
+                {
+                    unsafe
+                    {
+                        if (commandPtr->type == result.GetTypeStatic())
+                        {
+                            Assert.That(receivedCommand.HasValue, Is.False);
+                            receivedCommand = true;
+                            UnsafeUtility.MemCpy(commandPtr, UnsafeUtility.AddressOf(ref result),
+                                UnsafeUtility.SizeOf<TCommand>());
+                            return InputDeviceCommand.kGenericSuccess;
+                        }
+                        return InputDeviceCommand.kGenericFailure;
+                    }
+                });
+        }
+
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
             lock (m_Lock)
@@ -142,7 +165,7 @@ namespace UnityEngine.Experimental.Input
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
-        private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
+        internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
     }
 }

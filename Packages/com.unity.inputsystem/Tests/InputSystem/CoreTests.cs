@@ -2388,6 +2388,39 @@ class CoreTests : InputTestFixture
         Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad1/dpad/up"));
     }
 
+    class TestDeviceReceivingAddAndRemoveNotification : Mouse
+    {
+        public int addedCount;
+        public int removedCount;
+
+        protected override void OnAdded()
+        {
+            ++addedCount;
+        }
+
+        protected override void OnRemoved()
+        {
+            ++removedCount;
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingAndRemovingDevice_InvokesNotificationOnDeviceItself()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceReceivingAddAndRemoveNotification>();
+
+        var device = InputSystem.AddDevice<TestDeviceReceivingAddAndRemoveNotification>();
+
+        Assert.That(device.addedCount, Is.EqualTo(1));
+        Assert.That(device.removedCount, Is.Zero);
+
+        InputSystem.RemoveDevice(device);
+
+        Assert.That(device.addedCount, Is.EqualTo(1));
+        Assert.That(device.removedCount, Is.EqualTo(1));
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_UnsupportedDevices_AreAddedToList()
@@ -3270,22 +3303,25 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanQueryAllGamepadsWithSimpleGetter()
+    public void Devices_CanQueryAllGamepadsWithSimpleGetter()
     {
-        var gamepad1 = InputSystem.AddDevice("Gamepad");
-        var gamepad2 = InputSystem.AddDevice("Gamepad");
-        InputSystem.AddDevice("Keyboard");
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
 
         Assert.That(Gamepad.all, Has.Count.EqualTo(2));
         Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad1));
         Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad2));
-    }
 
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_AllGamepadListRefreshesWhenGamepadIsAdded()
-    {
-        Assert.Fail();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(Gamepad.all, Has.Count.EqualTo(3));
+        Assert.That(Gamepad.all, Has.Exactly(1).SameAs(gamepad3));
+
+        InputSystem.RemoveDevice(gamepad2);
+
+        Assert.That(Gamepad.all, Has.Count.EqualTo(2));
+        Assert.That(Gamepad.all, Has.None.SameAs(gamepad2));
     }
 
     [Test]
@@ -3424,20 +3460,22 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    [TestCase("Gamepad")]
-    [TestCase("Keyboard")]
-    [TestCase("Pointer")]
-    [TestCase("Mouse")]
-    [TestCase("Pen")]
-    [TestCase("Touchscreen")]
-    [TestCase("Joystick")]
-    [TestCase("Accelerometer")]
-    public void Devices_CanCreateDevice(string layout)
+    [TestCase("Gamepad", typeof(Gamepad))]
+    [TestCase("Keyboard", typeof(Keyboard))]
+    [TestCase("Pointer", typeof(Pointer))]
+    [TestCase("Mouse", typeof(Mouse))]
+    [TestCase("Pen", typeof(Pen))]
+    [TestCase("Touchscreen", typeof(Touchscreen))]
+    [TestCase("Joystick", typeof(Joystick))]
+    [TestCase("Accelerometer", typeof(Accelerometer))]
+    [TestCase("Gyroscope", typeof(Gyroscope))]
+    public void Devices_CanCreateDevice(string layout, Type type)
     {
         var device = InputSystem.AddDevice(layout);
 
         Assert.That(device, Is.InstanceOf<InputDevice>());
         Assert.That(device.layout, Is.EqualTo(layout));
+        Assert.That(device, Is.TypeOf(type));
     }
 
     [Test]
@@ -3682,6 +3720,15 @@ class CoreTests : InputTestFixture
         Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
         Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
 
+        // No change. Touches should become stationary and stay in list.
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+        Assert.That(device.activeTouches[0].touchId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.activeTouches[1].touchId.ReadValue(), Is.EqualTo(5));
+        Assert.That(device.activeTouches[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+        Assert.That(device.activeTouches[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Stationary));
+
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState
         {
@@ -3838,9 +3885,144 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_TouchesAccumulateDeltasWithinFrame()
+    public void Devices_TouchDeltasAreComputedAutomatically()
     {
-        Assert.Fail();
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(10).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(20).Within(0.00001));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchDeltasResetWhenTouchIsStationary()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(10).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(20).Within(0.00001));
+
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchDeltasResetWhenTouchIsMovingInPlace()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchesAccumulateDeltasWithinFrame()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 4,
+            position = new Vector2(10, 20)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(20, 40)
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 4,
+            position = new Vector2(30, 50)
+        });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(20).Within(0.00001));
+        Assert.That(device.activeTouches[0].delta.y.ReadValue(), Is.EqualTo(30).Within(0.00001));
     }
 
     [Test]
