@@ -7,15 +7,17 @@ var searchData=
   ['this_5bint_20index_5d',['this[int index]',['../structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html#a89c98436392006df6b0fa34abe54d6c1',1,'UnityEngine::Experimental::Input::Utilities::ReadOnlyArray']]],
   ['this_5bkey_20key_5d',['this[Key key]',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#a5ce0dacf9c04256cc27a5798666d98a3',1,'UnityEngine::Experimental::Input::Keyboard']]],
   ['time',['time',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#ab2d5aa7fce1a14d8bddfb2c333ea9679',1,'UnityEngine::Experimental::Input::LowLevel::InputEvent']]],
+  ['tip',['tip',['../classUnityEngine_1_1Experimental_1_1Input_1_1Pen.html#afaaccf47d48cb36b6c249c7dfa925923',1,'UnityEngine::Experimental::Input::Pen']]],
   ['toarray',['ToArray',['../structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1ReadOnlyArray.html#acce24c57bd3ff43b3da1c57571c1c7b2',1,'UnityEngine::Experimental::Input::Utilities::ReadOnlyArray']]],
   ['todo_20list',['Todo List',['../todo.html',1,'']]],
   ['touchcontrol',['TouchControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1TouchControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
   ['touchid',['touchId',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1TouchControl.html#a21fb75227209e2744fa36673f19507f8',1,'UnityEngine::Experimental::Input::Controls::TouchControl']]],
+  ['touchmanager',['TouchManager',['../classUnityEngine_1_1Experimental_1_1Input_1_1TouchManager.html',1,'UnityEngine::Experimental::Input']]],
   ['touchscreen',['Touchscreen',['../classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html',1,'UnityEngine::Experimental::Input']]],
   ['touchscreenstate',['TouchscreenState',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
-  ['touchtracker',['TouchTracker',['../classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html',1,'UnityEngine::Experimental::Input']]],
   ['tryfindmatchingcontrollayout',['TryFindMatchingControlLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#abb364ddcbef8dacf5ef473a983bb71fd',1,'UnityEngine::Experimental::Input::InputSystem']]],
   ['trygetdevicelayout',['TryGetDeviceLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#ab39ab1047c8308cacf7e28ab78de7083',1,'UnityEngine::Experimental::Input::InputControlPath']]],
   ['tryloadlayout',['TryLoadLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#adbdfe4223869f653e31903ffff94a4cf',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['twist',['twist',['../classUnityEngine_1_1Experimental_1_1Input_1_1Pointer.html#a171458ab84efcf7050d25e3e89299b68',1,'UnityEngine::Experimental::Input::Pointer']]],
   ['type',['type',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#aa63ac9f60188d89ffbb6e778d4c9372b',1,'UnityEngine::Experimental::Input::LowLevel::InputEvent']]]
 ];

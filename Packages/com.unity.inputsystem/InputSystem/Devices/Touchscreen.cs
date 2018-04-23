@@ -4,10 +4,9 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Profiling;
 
 ////TODO: add orientation
-
-////TODO: reset and accumulate deltas of all touches
 
 ////TODO: look at how you can meaningfully use touches with actions
 
@@ -15,7 +14,6 @@ using UnityEngine.Experimental.Input.Utilities;
 
 //// Remaining things to sort out around touch:
 //// - How do we handle mouse simulation?
-//// - How do we implement deltas for touch when there is no delta information from the platform?
 //// - How do we implement click-detection for touch?
 //// - High frequency touches
 //// - Touch prediction
@@ -154,8 +152,8 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <remarks>
         /// This array only contains touches that are either in progress, i.e. have a phase of <see cref="PointerPhase.Began"/>
-        /// or <see cref="PointerPhase.Moved"/>, or that have just ended, i.e. moved to <see cref="PointerPhase.Ended"/> or
-        /// <see cref="PointerPhase.Cancelled"/> this frame.
+        /// or <see cref="PointerPhase.Moved"/> or <see cref="PointerPhase.Stationary"/>, or that have just ended, i.e. moved to
+        /// <see cref="PointerPhase.Ended"/> or <see cref="PointerPhase.Cancelled"/> this frame.
         ///
         /// Does not allocate GC memory.
         /// </remarks>
@@ -172,7 +170,7 @@ namespace UnityEngine.Experimental.Input
                     var touchControl = allTouchControls[i];
                     var phaseControl = touchControl.phase;
                     var phase = phaseControl.ReadValue();
-                    if (phase == PointerPhase.Began || phase == PointerPhase.Moved)
+                    if (phase == PointerPhase.Began || phase == PointerPhase.Moved || phase == PointerPhase.Stationary)
                     {
                         isActive = true;
                     }
@@ -220,6 +218,13 @@ namespace UnityEngine.Experimental.Input
         {
             base.MakeCurrent();
             current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -271,6 +276,8 @@ namespace UnityEngine.Experimental.Input
         {
             ////TODO: early out and skip crawling through touches if we didn't change state in the last update
 
+            Profiler.BeginSample("TouchCarryStateForward");
+
             var haveChangedState = false;
 
             // Reset all touches that have ended last frame to being unused.
@@ -284,6 +291,7 @@ namespace UnityEngine.Experimental.Input
                     case PointerPhase.Ended:
                     case PointerPhase.Cancelled:
                         touchStatePtr->phase = PointerPhase.None;
+                        touchStatePtr->delta = Vector2.zero;
                         haveChangedState = true;
                         break;
 
@@ -293,12 +301,15 @@ namespace UnityEngine.Experimental.Input
                     case PointerPhase.Began:
                     case PointerPhase.Moved:
                         touchStatePtr->phase = PointerPhase.Stationary;
+                        touchStatePtr->delta = Vector2.zero;
                         haveChangedState = true;
                         break;
                 }
             }
 
-            return base.OnCarryStateForward(statePtr) || haveChangedState;
+            Profiler.EndSample();
+
+            return haveChangedState;
         }
 
         unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(IntPtr statePtr, FourCC stateFormat, uint stateSize,
@@ -306,6 +317,8 @@ namespace UnityEngine.Experimental.Input
         {
             if (stateFormat != TouchState.kFormat)
                 return false;
+
+            Profiler.BeginSample("TouchAllocate");
 
             // For performance reasons, we read memory here directly rather than going through
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
@@ -325,6 +338,9 @@ namespace UnityEngine.Experimental.Input
                     if (touchStatePtr->touchId == touchId)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        touch->delta = touch->position - touchStatePtr->position;
+                        touch->delta += touchStatePtr->delta;
+                        Profiler.EndSample();
                         return true;
                     }
                 }
@@ -332,6 +348,7 @@ namespace UnityEngine.Experimental.Input
                 // Couldn't find an entry. Either it was a touch that we previously ran out of available
                 // entries for or it's an event sent out of sequence. Ignore the touch to be consistent.
 
+                Profiler.EndSample();
                 return false;
             }
             else
@@ -342,6 +359,8 @@ namespace UnityEngine.Experimental.Input
                     if (touchStatePtr->phase == PointerPhase.None)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                        touch->delta = Vector2.zero;
+                        Profiler.EndSample();
                         return true;
                     }
                 }
@@ -349,8 +368,13 @@ namespace UnityEngine.Experimental.Input
                 // We ran out of state and we don't want to stomp an existing ongoing touch.
                 // Drop this touch entirely.
 
+                Profiler.EndSample();
                 return false;
             }
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
         }
 
         private TouchControl[] m_ActiveTouchesArray;

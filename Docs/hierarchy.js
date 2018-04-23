@@ -61,7 +61,8 @@ var hierarchy =
         [ "Mouse", "classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html", null ],
         [ "Pen", "classUnityEngine_1_1Experimental_1_1Input_1_1Pen.html", null ],
         [ "Touchscreen", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html", null ]
-      ] ]
+      ] ],
+      [ "Touchscreen", "classUnityEngine_1_1Experimental_1_1Input_1_1Touchscreen.html", null ]
     ] ],
     [ "InputAction", "classUnityEngine_1_1Experimental_1_1Input_1_1InputAction.html", null ],
     [ "InputActionSet", "classUnityEngine_1_1Experimental_1_1Input_1_1InputActionSet.html", null ],
@@ -93,7 +94,7 @@ var hierarchy =
     [ "InputControl< Pose >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html", null ],
     [ "InputControl< PS4Touch >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html", null ],
     [ "InputControl< Quaternion >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html", null ],
-    [ "InputControl< Touch >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html", [
+    [ "InputControl< TouchState >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html", [
       [ "TouchControl", "classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1TouchControl.html", null ]
     ] ],
     [ "InputControl< TouchType >", "classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html", null ],
@@ -124,9 +125,15 @@ var hierarchy =
     [ "InternedString", "structUnityEngine_1_1Experimental_1_1Input_1_1Utilities_1_1InternedString.html", null ],
     [ "KeyboardState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1KeyboardState.html", null ],
     [ "InputRemoting.Message", "structUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting_1_1Message.html", null ],
+    [ "MouseSimulation", "classUnityEngine_1_1Experimental_1_1Input_1_1MouseSimulation.html", null ],
     [ "MouseState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1MouseState.html", null ],
     [ "NPadInputState", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1LowLevel_1_1NPadInputState.html", null ],
     [ "NPadOutputReport", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1LowLevel_1_1NPadOutputReport.html", null ],
+    [ "OnSceenStick", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnSceenStick.html", null ],
+    [ "OnScreenControl", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenControl.html", [
+      [ "OnScreenButton", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenButton.html", null ]
+    ] ],
+    [ "OnScreenSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenSupport.html", null ],
     [ "PenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PenState.html", null ],
     [ "PointerState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1PointerState.html", null ],
     [ "QueryDimensionsCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1QueryDimensionsCommand.html", null ],
@@ -145,8 +152,8 @@ var hierarchy =
     [ "StateEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html", null ],
     [ "SwitchSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Switch_1_1SwitchSupport.html", null ],
     [ "TextEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html", null ],
+    [ "TouchManager", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchManager.html", null ],
     [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", null ],
-    [ "TouchTracker", "classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html", null ],
     [ "XboxOneGamepadRumbleCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1LowLevel_1_1XboxOneGamepadRumbleCommand.html", null ],
     [ "XInputSupport", "classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XInput_1_1XInputSupport.html", null ]
 ];

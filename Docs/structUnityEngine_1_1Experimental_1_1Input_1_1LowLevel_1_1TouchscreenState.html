@@ -87,6 +87,7 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
 
 <div class="header">
   <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">TouchscreenState Struct Reference</div>  </div>
@@ -97,11 +98,36 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html#details">More...</a></p>
 
 <p>Inherits IInputStateTypeInfo.</p>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a3f5e2aeb7bbbbaf91538c074b364950c"><td class="memItemLeft" align="right" valign="top">const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html#a3f5e2aeb7bbbbaf91538c074b364950c">kMaxTouches</a> = 64</td></tr>
+<tr class="memdesc:a3f5e2aeb7bbbbaf91538c074b364950c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum number of touches that can be tracked at the same time.  <a href="#a3f5e2aeb7bbbbaf91538c074b364950c">More...</a><br /></td></tr>
+<tr class="separator:a3f5e2aeb7bbbbaf91538c074b364950c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Default state layout for touch devices. </p>
-<p>Combines multiple pointers each corresponding to a finger.</p>
-<p>All fingers combine to quite a bit of state; ideally send delta events that update only specific fingers. </p>
-</div></div><!-- contents -->
+<p>Combines multiple pointers each corresponding to a single contact.</p>
+<p>All touches combine to quite a bit of state; ideally send delta events that update only specific fingers. </p>
+</div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a3f5e2aeb7bbbbaf91538c074b364950c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3f5e2aeb7bbbbaf91538c074b364950c">&#9670;&nbsp;</a></span>kMaxTouches</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const int kMaxTouches = 64</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Maximum number of touches that can be tracked at the same time. </p>
+<p>While most touchscreens only support a number of concurrent touches that is significantly lower than this number, having a larger pool of touch states to work with makes it possible to track short-lived touches better. </p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

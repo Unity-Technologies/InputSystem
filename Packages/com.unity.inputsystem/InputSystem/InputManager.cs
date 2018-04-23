@@ -693,9 +693,6 @@ namespace UnityEngine.Experimental.Input
             // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
 
-            // Make the device current.
-            device.MakeCurrent();
-
             // Let actions re-resolve their paths.
             InputActionSet.RefreshAllEnabledActions();
 
@@ -713,6 +710,12 @@ namespace UnityEngine.Experimental.Input
                 device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
+
+            // Notify device.
+            device.NotifyAdded();
+
+            // Make the device current.
+            device.MakeCurrent();
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
@@ -827,6 +830,9 @@ namespace UnityEngine.Experimental.Input
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
+
+            // Let device know.
+            device.NotifyRemoved();
 
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
@@ -1137,7 +1143,7 @@ namespace UnityEngine.Experimental.Input
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
-        [NonSerialized] private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
+        [NonSerialized] internal InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
         [NonSerialized] private InlinedArray<DeviceFindControlLayoutCallback> m_DeviceFindLayoutCallbacks;
         [NonSerialized] private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
         [NonSerialized] private InlinedArray<EventListener> m_EventListeners;
