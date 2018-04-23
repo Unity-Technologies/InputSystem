@@ -9,6 +9,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
+////        around with on the editor side but will only be changed once they're updated in the player
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

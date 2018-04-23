@@ -509,43 +509,50 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_RegisteringLayoutType_WithDescription_PutsDescriptionInLayoutWhenLoaded()
+    public void Layouts_RegisteringLayoutType_WithMatcher_PutsMatcherInLayoutWhenLoaded()
     {
-        InputSystem.RegisterControlLayout<TestLayoutType>(deviceDescription: new InputDeviceDescription
-        {
-            interfaceName = "TestInterface",
-            product = "TestProduct",
-            manufacturer = "TestManufacturer"
-        });
+        InputSystem.RegisterControlLayout<TestLayoutType>(
+            matches: new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithManufacturer("TestManufacturer")
+            .WithProduct("TestProduct"));
 
         var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
-        Assert.That(layout.deviceDescription.empty, Is.False);
-        Assert.That(layout.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
-        Assert.That(layout.deviceDescription.product, Is.EqualTo("TestProduct"));
-        Assert.That(layout.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
+        Assert.That(layout.deviceMatcher.empty, Is.False);
+        Assert.That(layout.deviceMatcher.patterns,
+            Has.Exactly(1)
+            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+        Assert.That(layout.deviceMatcher.patterns,
+            Has.Exactly(1).Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
+        Assert.That(layout.deviceMatcher.patterns,
+            Has.Exactly(1)
+            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_RegisteringLayoutBuilder_WithDescription_PutsDescriptionInLayoutWhenLoaded()
+    public void Layouts_RegisteringLayoutBuilder_WithMatcher_PutsMatcherInLayoutWhenLoaded()
     {
         var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
 
         InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "TestLayout",
-            deviceDescription: new InputDeviceDescription
-        {
-            interfaceName = "TestInterface",
-            product = "TestProduct",
-            manufacturer = "TestManufacturer"
-        });
+            matches: new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithProduct("TestProduct")
+            .WithManufacturer("TestManufacturer"));
 
         var layout = InputSystem.TryLoadLayout("TestLayout");
 
-        Assert.That(layout.deviceDescription.empty, Is.False);
-        Assert.That(layout.deviceDescription.interfaceName, Is.EqualTo("TestInterface"));
-        Assert.That(layout.deviceDescription.product, Is.EqualTo("TestProduct"));
-        Assert.That(layout.deviceDescription.manufacturer, Is.EqualTo("TestManufacturer"));
+        Assert.That(layout.deviceMatcher.empty, Is.False);
+        Assert.That(layout.deviceMatcher.patterns,
+            Has.Exactly(1)
+            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+        Assert.That(layout.deviceMatcher.patterns,
+            Has.Exactly(1).Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
+        Assert.That(layout.deviceMatcher.patterns,
+            Has.Exactly(1)
+            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
@@ -2364,10 +2371,8 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         InputSystem.RegisterControlLayout<TestLayoutType>(
-            deviceDescription: new InputDeviceDescription
-        {
-            interfaceName = "TestInterface"
-        });
+            matches: new InputDeviceMatcher()
+            .WithInterface("TestInterface"));
 
         var unsupportedDevices = new List<InputDeviceDescription>();
         var count = InputSystem.GetUnsupportedDevices(unsupportedDevices);
@@ -2910,7 +2915,7 @@ class CoreTests : InputTestFixture
                 return InputDeviceCommand.kGenericFailure;
             });
 
-        InputSystem.RegisterControlLayout<Mouse>(deviceDescription: new InputDeviceDescription {deviceClass = "TestThing"});
+        InputSystem.RegisterControlLayout<Mouse>(matches: new InputDeviceMatcher().WithDeviceClass("TestThing"));
 
         Assert.That(wasEnabled.HasValue);
         Assert.That(wasEnabled.Value, Is.True);
@@ -3676,6 +3681,141 @@ class CoreTests : InputTestFixture
         Assert.That(gyro.acceleration.ReadValue().x, Is.EqualTo(0.555).Within(0.00001));
         Assert.That(gyro.acceleration.ReadValue().y, Is.EqualTo(0.666).Within(0.00001));
         Assert.That(gyro.acceleration.ReadValue().z, Is.EqualTo(0.777).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanMatchDeviceDescriptions()
+    {
+        var matchOne = new InputDeviceMatcher()
+            .WithInterface("TestInterface");
+        var matchTwo = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithDeviceClass("TestDeviceClass");
+        var matchOneWithRegex = new InputDeviceMatcher()
+            .WithInterface(".*Interface");
+        var matchAll = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithDeviceClass("TestDeviceClass")
+            .WithManufacturer("TestManufacturer")
+            .WithProduct("TestProduct")
+            .WithVersion(@"1\.0");
+        var matchNone = new InputDeviceMatcher()
+            .WithInterface("Test")
+            .WithDeviceClass("Test")
+            .WithManufacturer("Test");
+        var matchMoreThanItHas = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithCapability("canDo", true);
+
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            deviceClass = "TestDeviceClass",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer",
+            version = "1.0",
+        };
+
+        Assert.That(matchOne.MatchPercentage(description), Is.EqualTo(1.0f / 5).Within(0.0001));
+        Assert.That(matchTwo.MatchPercentage(description), Is.EqualTo(1.0f / 5 * 2).Within(0.0001));
+        Assert.That(matchOneWithRegex.MatchPercentage(description), Is.EqualTo(1.0f / 5).Within(0.0001));
+        Assert.That(matchAll.MatchPercentage(description), Is.EqualTo(1).Within(0.0001));
+        Assert.That(matchNone.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
+        Assert.That(matchMoreThanItHas.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
+    }
+
+    [Serializable]
+    struct TestDeviceCapabilities
+    {
+        public string stringCap;
+        public int intCap;
+        public float floatCap;
+        public bool boolCap;
+        public NestedCaps nestedCap;
+        public string[] arrayCap;
+        public EnumCaps enumCap;
+
+        [Serializable]
+        public struct NestedCaps
+        {
+            public string value;
+        }
+
+        [Serializable]
+        public enum EnumCaps
+        {
+            First,
+            Second
+        }
+
+        public string ToJson()
+        {
+            return JsonUtility.ToJson(this);
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanMatchDeviceDescriptions_WithCapabilities()
+    {
+        var matchOneAndOneCap = new InputDeviceMatcher()
+            .WithInterface("TestInterface")
+            .WithCapability("stringCap", "string");
+        var matchOneCapInArray = new InputDeviceMatcher()
+            .WithCapability("arrayCap[]", "second");
+        var matchOneIntAndOneFloatCap = new InputDeviceMatcher()
+            .WithCapability("floatCap", 1.234f)
+            .WithCapability("intCap", 1234);
+        var matchBoolCap = new InputDeviceMatcher()
+            .WithCapability("boolCap", true);
+        var matchEnumCap = new InputDeviceMatcher()
+            .WithCapability("enumCap", TestDeviceCapabilities.EnumCaps.Second);
+        var matchNestedCap = new InputDeviceMatcher()
+            .WithCapability("nestedCap/value", "value");
+        var matchStringCapWithRegex = new InputDeviceMatcher()
+            .WithCapability("stringCap", ".*ng$");
+        var matchIntCapWithRegex = new InputDeviceMatcher()
+            .WithCapability("intCap", "1.*4");
+        var matchIntCapWithString = new InputDeviceMatcher()
+            .WithCapability("intCap", "1234");
+        var matchFloatCapWithString = new InputDeviceMatcher()
+            .WithCapability("floatCap", "1.234");
+        var matchBoolCapWithString = new InputDeviceMatcher()
+            .WithCapability("boolCap", "true");
+        var matchNone = new InputDeviceMatcher()
+            .WithCapability("intCap", 4567);
+
+        var description = new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            capabilities = new TestDeviceCapabilities
+            {
+                stringCap = "string",
+                intCap = 1234,
+                floatCap = 1.234f,
+                boolCap = true,
+                nestedCap = new TestDeviceCapabilities.NestedCaps
+                {
+                    value = "value"
+                },
+                arrayCap = new[] { "first", "second" },
+                enumCap = TestDeviceCapabilities.EnumCaps.Second,
+            }.ToJson()
+        };
+
+        Assert.That(matchOneAndOneCap.MatchPercentage(description), Is.EqualTo(1).Within(0.0001));
+        Assert.That(matchOneCapInArray.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchOneIntAndOneFloatCap.MatchPercentage(description), Is.EqualTo(1).Within(0.0001));
+        Assert.That(matchBoolCap.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchEnumCap.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchNestedCap.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchStringCapWithRegex.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchIntCapWithRegex.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchIntCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchFloatCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchBoolCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchNone.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
     }
 
     [Test]
@@ -6210,7 +6350,7 @@ class CoreTests : InputTestFixture
 
         var layout = secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout"));
         Assert.That(layout, Is.Not.Null);
-        Assert.That(layout.extendsLayout, Is.EqualTo("Gamepad"));
+        Assert.That(layout.extendsLayout, Is.EqualTo("remote0::Gamepad"));
 
         const string jsonV2 = @"
             {
@@ -6223,7 +6363,7 @@ class CoreTests : InputTestFixture
         InputSystem.RegisterControlLayout(jsonV2);
 
         layout = secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout"));
-        Assert.That(layout.extendsLayout, Is.EqualTo("Keyboard"));
+        Assert.That(layout.extendsLayout, Is.EqualTo("remote0::Keyboard"));
 
         // Remove layout.
         InputSystem.RemoveControlLayout("MyLayout");

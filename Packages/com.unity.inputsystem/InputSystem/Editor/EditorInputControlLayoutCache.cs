@@ -128,7 +128,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (layout.isControlLayout)
                     s_ControlLayouts.Add(layout.name);
-                else if (!layout.deviceDescription.empty)
+                else if (!layout.deviceMatcher.empty)
                     s_ProductLayouts.Add(layout.name);
                 else
                     s_DeviceLayouts.Add(layout.name);

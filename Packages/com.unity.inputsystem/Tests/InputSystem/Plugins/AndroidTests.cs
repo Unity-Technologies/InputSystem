@@ -4,7 +4,6 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Android;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using NUnit.Framework;
-using UnityEngine;
 
 class AndroidTests : InputTestFixture
 {
@@ -70,9 +69,9 @@ class AndroidTests : InputTestFixture
         Assert.That(controller.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(controller.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.000001));
-        Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(0.987).Within(0.000001));
+        Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(-0.987).Within(0.000001)); // Y is upside down on Android.
         Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.654).Within(0.000001));
-        Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(0.321).Within(0.000001));
+        Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(-0.321).Within(0.000001)); // Y is upside down on Android.
 
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonA), controller.buttonSouth);
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonX), controller.buttonWest);
@@ -108,27 +107,41 @@ class AndroidTests : InputTestFixture
             }.ToJson()
         });
 
+        // HatX is -1 (left) to 1 (right)
+        // HatY is -1 (up) to 1 (down)
+
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-            .WithAxis(AndroidAxis.HatX, 0.789f)
-            .WithAxis(AndroidAxis.HatY, 0.987f));
+            .WithAxis(AndroidAxis.HatX, 1)
+            .WithAxis(AndroidAxis.HatY, 1));
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.False);
         Assert.That(gamepad.dpad.right.isPressed, Is.True);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+            .WithAxis(AndroidAxis.HatX, -1)
+            .WithAxis(AndroidAxis.HatY, -1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.True);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
         Assert.That(gamepad.dpad.up.isPressed, Is.True);
         Assert.That(gamepad.dpad.down.isPressed, Is.False);
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-            .WithAxis(AndroidAxis.HatX, 0.123f)
-            .WithAxis(AndroidAxis.HatY, 0.456f));
+            .WithAxis(AndroidAxis.HatX, 0)
+            .WithAxis(AndroidAxis.HatY, 0));
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.left.isPressed, Is.True);
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
         Assert.That(gamepad.dpad.right.isPressed, Is.False);
         Assert.That(gamepad.dpad.up.isPressed, Is.False);
-        Assert.That(gamepad.dpad.down.isPressed, Is.True);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
     }
 
     [Test]
@@ -199,7 +212,7 @@ class AndroidTests : InputTestFixture
             deviceClass = "AndroidSensor",
             capabilities = new AndroidSensorCapabilities()
             {
-                sensorType = AndroidSenorType.Accelerometer
+                sensorType = AndroidSensorType.Accelerometer
             }.ToJson()
         });
 

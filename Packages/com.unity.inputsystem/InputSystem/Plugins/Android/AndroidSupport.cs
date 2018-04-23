@@ -1,5 +1,4 @@
 #if UNITY_EDITOR || UNITY_ANDROID
-using System;
 using System.Linq;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
@@ -8,28 +7,30 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 {
     public static class AndroidSupport
     {
+        public const string kAndroidInterface = "Android";
+
         public static void Initialize()
         {
             InputSystem.RegisterControlLayout<AndroidGamepad>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidGameController"));
+            InputSystem.RegisterControlLayout<AndroidJoystick>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidGameController"));
 
-                deviceDescription: new InputDeviceDescription
-            {
-                interfaceName = "Android",
-                deviceClass = "AndroidGameController"
-            });
-
-            InputSystem.RegisterControlLayout<AndroidJoystick>("AndroidJoystick");
-
+            ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindControlLayoutForDevice for now
             InputSystem.RegisterControlLayout(@"
 {
     ""name"" : ""AndroidGamepadWithDpadAxes"",
     ""extend"" : ""AndroidGamepad"",
     ""controls"" : [
         { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
-        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampMin=0,clampMax=0.5,normalize,normalizeMin=0,normalizeMax=0.5"" },
-        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0.5,clampMin=0.5,clampMax=1,normalize,normalizeMin=0.5,normalizeMax=1"" },
-        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0.5,clampMin=0.5,clampMax=1,normalize,normalizeMin=0.5,normalizeMax=1"" },
-        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampMin=0,clampMax=0.5,normalize,normalizeMin=0,normalizeMax=0.5"" }
+        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
+        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
     ]
 }
             ");
@@ -50,27 +51,111 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             InputSystem.RegisterProcessor<AndroidAccelerationProcessor>();
 
             // Add sensors
-            InputSystem.RegisterControlLayout<AndroidAccelerometer>();
-            InputSystem.RegisterControlLayout<AndroidMagneticField>();
-            InputSystem.RegisterControlLayout<AndroidOrientation>();
-            InputSystem.RegisterControlLayout<AndroidGyroscope>();
-            InputSystem.RegisterControlLayout<AndroidLight>();
-            InputSystem.RegisterControlLayout<AndroidPressure>();
-            InputSystem.RegisterControlLayout<AndroidProximity>();
-            InputSystem.RegisterControlLayout<AndroidTemperature>();
-            InputSystem.RegisterControlLayout<AndroidGravity>();
-            InputSystem.RegisterControlLayout<AndroidLinearAcceleration>();
-            InputSystem.RegisterControlLayout<AndroidRotationVector>();
-            InputSystem.RegisterControlLayout<AndroidRelativeHumidity>();
-            InputSystem.RegisterControlLayout<AndroidAmbientTemperature>();
-            InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>();
-            InputSystem.RegisterControlLayout<AndroidGameRotationVector>();
-            InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>();
-            InputSystem.RegisterControlLayout<AndroidSignificantMotion>();
-            InputSystem.RegisterControlLayout<AndroidStepDetector>();
-            InputSystem.RegisterControlLayout<AndroidStepCounter>();
-            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>();
-            InputSystem.RegisterControlLayout<AndroidHeartRate>();
+            InputSystem.RegisterControlLayout<AndroidAccelerometer>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Accelerometer));
+            InputSystem.RegisterControlLayout<AndroidMagneticField>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.MagneticField));
+            InputSystem.RegisterControlLayout<AndroidOrientation>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Orientation));
+            InputSystem.RegisterControlLayout<AndroidGyroscope>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Gyroscope));
+            InputSystem.RegisterControlLayout<AndroidLight>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Light));
+            InputSystem.RegisterControlLayout<AndroidPressure>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Pressure));
+            InputSystem.RegisterControlLayout<AndroidProximity>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Proximity));
+            InputSystem.RegisterControlLayout<AndroidTemperature>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Temperature));
+            InputSystem.RegisterControlLayout<AndroidGravity>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.Gravity));
+            InputSystem.RegisterControlLayout<AndroidLinearAcceleration>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.LinearAcceleration));
+            InputSystem.RegisterControlLayout<AndroidRotationVector>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.RotationVector));
+            InputSystem.RegisterControlLayout<AndroidRelativeHumidity>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.RelativeHumidity));
+            InputSystem.RegisterControlLayout<AndroidAmbientTemperature>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.AmbientTemperature));
+            InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.MagneticFieldUncalibrated));
+            InputSystem.RegisterControlLayout<AndroidGameRotationVector>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.GameRotationVector));
+            InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.GyroscopeUncalibrated));
+            InputSystem.RegisterControlLayout<AndroidSignificantMotion>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.SignificantMotion));
+            InputSystem.RegisterControlLayout<AndroidStepDetector>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.StepDetector));
+            InputSystem.RegisterControlLayout<AndroidStepCounter>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.StepCounter));
+            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.GeomagneticRotationVector));
+            InputSystem.RegisterControlLayout<AndroidHeartRate>(
+                matches: new InputDeviceMatcher()
+                .WithInterface(kAndroidInterface)
+                .WithDeviceClass("AndroidSensor")
+                .WithCapability("sensorType", AndroidSensorType.HeartRate));
 
             InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
         }
@@ -81,6 +166,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
                 return null;
 
+            ////TODO: these should just be Controller and Sensor; the interface is already Android
             switch (description.deviceClass)
             {
                 case "AndroidGameController":
@@ -98,13 +184,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                     }
 
                     return "AndroidJoystick";
-                }
-                case "AndroidSensor":
-                {
-                    var caps = AndroidSensorCapabilities.FromJson(description.capabilities);
-                    if (Enum.IsDefined(typeof(AndroidSenorType), caps.sensorType))
-                        return "Android" + caps.sensorType.ToString();
-                    return null;
                 }
                 default:
                     return null;

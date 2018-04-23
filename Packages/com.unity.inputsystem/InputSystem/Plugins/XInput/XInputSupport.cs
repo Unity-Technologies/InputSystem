@@ -13,7 +13,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             InputSystem.RegisterControlLayout<XInputController>();
 
 #if UNITY_EDITOR || UNITY_XBOXONE
-            InputSystem.RegisterControlLayout<XboxOneGamepad>();
+            InputSystem.RegisterControlLayout<XboxOneGamepad>(
+                matches: new InputDeviceMatcher()
+                .WithDeviceClass("XboxOneGamepad")
+                .WithInterface("Xbox"));
 #endif
 
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
