@@ -25,6 +25,7 @@ namespace UnityEngine.Experimental.Input.Editor
     // Allows looking at input activity in the editor.
     internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
+        private static int s_Disabled;
         private static InputDebuggerWindow s_Instance;
 
         [MenuItem("Window/Input Debugger", false, 2100)]
@@ -41,6 +42,26 @@ namespace UnityEngine.Experimental.Input.Editor
                 s_Instance.Show();
                 s_Instance.Focus();
             }
+        }
+
+        public static void Enable()
+        {
+            if (s_Disabled == 0)
+                return;
+
+            --s_Disabled;
+            if (s_Disabled == 0 && s_Instance != null)
+                s_Instance.InstallHooks();
+
+            ////REVIEW: technically, we'd have to do a refresh here but that'd mean that in the current setup
+            ////        we'd do a refresh after every single test; find a better solution
+        }
+
+        public static void Disable()
+        {
+            ++s_Disabled;
+            if (s_Disabled == 1 && s_Instance != null)
+                s_Instance.UninstallHooks();
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -82,6 +103,22 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnDestroy()
         {
+            UninstallHooks();
+        }
+
+        private void InstallHooks()
+        {
+            InputSystem.onDeviceChange += OnDeviceChange;
+            InputSystem.onControlLayoutChange += OnLayoutChange;
+            InputSystem.onFindControlLayoutForDevice += OnFindLayout;
+
+            if (InputActionSet.s_OnEnabledActionsChanged == null)
+                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
+            InputActionSet.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
+        }
+
+        private void UninstallHooks()
+        {
             InputSystem.onDeviceChange -= OnDeviceChange;
             InputSystem.onControlLayoutChange -= OnLayoutChange;
             InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
@@ -92,13 +129,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void Initialize()
         {
-            InputSystem.onDeviceChange += OnDeviceChange;
-            InputSystem.onControlLayoutChange += OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice += OnFindLayout;
-
-            if (InputActionSet.s_OnEnabledActionsChanged == null)
-                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionSet.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
+            InstallHooks();
 
             var newTreeViewState = m_TreeViewState == null;
             if (newTreeViewState)
@@ -115,6 +146,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnGUI()
         {
+            if (s_Disabled > 0)
+            {
+                EditorGUILayout.LabelField("Disabled");
+                return;
+            }
+
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
                 Initialize();

@@ -2,6 +2,10 @@ using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
 
+#if UNITY_EDITOR
+using UnityEngine.Experimental.Input.Editor;
+#endif
+
 ////TODO: when running tests in players, make sure that remoting is turned off
 
 namespace UnityEngine.Experimental.Input
@@ -54,6 +58,13 @@ namespace UnityEngine.Experimental.Input
         [SetUp]
         public virtual void Setup()
         {
+            // Disable input debugger so we don't waste time responding to all the
+            // input system activity from the tests.
+            #if UNITY_EDITOR
+            InputDebuggerWindow.Disable();
+            #endif
+
+            // Push current input system state on stack.
             InputSystem.Save();
 
             // Put system in a blank state where it has all the layouts but has
@@ -93,6 +104,11 @@ namespace UnityEngine.Experimental.Input
             testRuntime.Dispose();
 
             InputSystem.Restore();
+
+            // Re-enable input debugger.
+            #if UNITY_EDITOR
+            InputDebuggerWindow.Enable();
+            #endif
         }
 
         public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
