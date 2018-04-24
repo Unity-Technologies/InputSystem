@@ -54,9 +54,18 @@ namespace UnityEngine.Experimental.Input
             get { return m_UpdateMask; }
             set
             {
-                ////TODO: also actually turn off unnecessary updates on the native side (e.g. if fixed
-                ////      updates are disabled, don't even have native fire onUpdate for fixed updates)
-                throw new NotImplementedException();
+                if (m_UpdateMask == value)
+                    return;
+
+                m_UpdateMask = value;
+
+                // Tell runtime.
+                if (m_Runtime != null)
+                    m_Runtime.updateMask = m_UpdateMask;
+
+                // Recreate state buffers.
+                if (m_Devices != null)
+                    ReallocateStateBuffers();
             }
         }
 
@@ -711,6 +720,11 @@ namespace UnityEngine.Experimental.Input
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
 
+            // If the device wants before-render updates, enable them if they
+            // aren't already.
+            if (device.updateBeforeRender)
+                updateMask |= InputUpdateType.BeforeRender;
+
             // Notify device.
             device.NotifyAdded();
 
@@ -766,7 +780,6 @@ namespace UnityEngine.Experimental.Input
             return device;
         }
 
-        ////TODO: get current&all getters to update
         public void RemoveDevice(InputDevice device)
         {
             if (device == null)
@@ -830,6 +843,23 @@ namespace UnityEngine.Experimental.Input
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
+
+            // Disable before-render updates if this was the last device
+            // that requires them.
+            if (device.updateBeforeRender)
+            {
+                var haveDeviceRequiringBeforeRender = false;
+                if (m_Devices != null)
+                    for (var i = 0; i < m_Devices.Length; ++i)
+                        if (m_Devices[i].updateBeforeRender)
+                        {
+                            haveDeviceRequiringBeforeRender = true;
+                            break;
+                        }
+
+                if (!haveDeviceRequiringBeforeRender)
+                    updateMask &= ~InputUpdateType.BeforeRender;
+            }
 
             // Let device know.
             device.NotifyRemoved();
@@ -1095,6 +1125,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
+            m_Runtime.updateMask = updateMask;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_UpdateListeners.Count > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1142,7 +1173,12 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
         [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
-        [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
+        [NonSerialized] private InputUpdateType m_UpdateMask // Which of our update types are enabled.
+            #if UNITY_EDITOR
+            = InputUpdateType.Fixed | InputUpdateType.Dynamic | InputUpdateType.Editor;
+            #else
+            = InputUpdateType.Fixed | InputUpdateType.Dynamic;
+            #endif
         [NonSerialized] internal InputStateBuffers m_StateBuffers;
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.

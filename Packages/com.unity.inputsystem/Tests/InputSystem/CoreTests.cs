@@ -2288,6 +2288,44 @@ class CoreTests : InputTestFixture
     }
 
     [Test]
+    [Category("State")]
+    public void State_CanDisableFixedUpdates()
+    {
+        // Add a device as otherwise we don't have any state.
+        InputSystem.AddDevice<Gamepad>();
+
+        // Disable fixed updates.
+        InputSystem.updateMask &= ~InputUpdateType.Fixed;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
+        #if UNITY_EDITOR
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+
+        // Make sure we disabled the update in the runtime.
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
+
+        // Make sure we got rid of the memory for fixed update.
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
+
+        // Re-enable fixed updates.
+        InputSystem.updateMask |= InputUpdateType.Fixed;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
+        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
+        #if UNITY_EDITOR
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+
+        // Make sure we re-enabled the update in the runtime.
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
+
+        // Make sure we got re-instated the fixed update state buffers.
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
+    }
+
+    [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromLayout()
     {
@@ -2386,6 +2424,55 @@ class CoreTests : InputTestFixture
         InputSystem.AddDevice(device);
 
         Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad1/dpad/up"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingDeviceThatUsesBeforeRenderUpdates_CausesBeforeRenderUpdatesToBeEnabled()
+    {
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(deviceJson);
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+
+        InputSystem.AddDevice("CustomGamepad");
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingLastDeviceThatUsesBeforeRenderUpdates_CausesBeforeRenderUpdatesToBeDisabled()
+    {
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(deviceJson);
+
+        var device1 = InputSystem.AddDevice("CustomGamepad");
+        var device2 = InputSystem.AddDevice("CustomGamepad");
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        InputSystem.RemoveDevice(device1);
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        InputSystem.RemoveDevice(device2);
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
     class TestDeviceReceivingAddAndRemoveNotification : Mouse
@@ -4568,8 +4655,6 @@ class CoreTests : InputTestFixture
     [Category("Events")]
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
-        // Could use one of the tracking layouts but let's do it with a
-        // custom layout that enables before render updates on a gamepad.
         const string deviceJson = @"
             {
                 ""name"" : ""CustomGamepad"",
@@ -7281,15 +7366,6 @@ class CoreTests : InputTestFixture
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("State")]
-    public void TODO_State_CanDisableFixedUpdates()
-    {
-        //make sure it reduces memory usage
         ////TODO
         Assert.Fail();
     }

@@ -809,6 +809,12 @@ namespace UnityEngine.Experimental.Input
             s_Manager.Update(updateType);
         }
 
+        public static InputUpdateType updateMask
+        {
+            get { return s_Manager.updateMask; }
+            set { s_Manager.updateMask = value; }
+        }
+
         #endregion
 
         #region Actions
