@@ -2493,6 +2493,7 @@ namespace UnityEngine.Experimental.Input
                 deviceState.RestoreUsagesOnDevice(device);
 
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
+                device.NotifyAdded();
                 device.MakeCurrent();
 
                 devices[i] = device;
