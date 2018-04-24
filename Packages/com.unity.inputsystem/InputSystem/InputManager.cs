@@ -1105,7 +1105,7 @@ namespace UnityEngine.Experimental.Input
             RegisterBindingModifier("Hold", typeof(HoldModifier));
             RegisterBindingModifier("Tap", typeof(TapModifier));
             RegisterBindingModifier("SlowTap", typeof(SlowTapModifier));
-            RegisterBindingModifier("DoubleTap", typeof(DoubleTapModifier));
+            //RegisterBindingModifier("DoubleTap", typeof(DoubleTapModifier));
             RegisterBindingModifier("Swipe", typeof(SwipeModifier));
 
             // Register composites.
