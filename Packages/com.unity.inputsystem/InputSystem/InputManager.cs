@@ -1499,6 +1499,8 @@ namespace UnityEngine.Experimental.Input
                         var deviceStateOffset = device.m_StateBlock.byteOffset;
                         var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
 
+                        ////REVIEW: don't we need to flip here?
+
                         // Grab current front buffer.
                         var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
 
