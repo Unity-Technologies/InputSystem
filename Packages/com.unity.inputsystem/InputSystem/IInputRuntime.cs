@@ -91,6 +91,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
         float pollingFrequency { set; }
+
+        InputUpdateType updateMask { set; }
     }
 
     internal static class InputRuntime

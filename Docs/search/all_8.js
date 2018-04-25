@@ -29,7 +29,7 @@ var searchData=
   ['inputcontrol_3c_20pose_20_3e',['InputControl&lt; Pose &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
   ['inputcontrol_3c_20ps4touch_20_3e',['InputControl&lt; PS4Touch &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
   ['inputcontrol_3c_20quaternion_20_3e',['InputControl&lt; Quaternion &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
-  ['inputcontrol_3c_20touch_20_3e',['InputControl&lt; Touch &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
+  ['inputcontrol_3c_20touchstate_20_3e',['InputControl&lt; TouchState &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
   ['inputcontrol_3c_20touchtype_20_3e',['InputControl&lt; TouchType &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
   ['inputcontrol_3c_20vector2_20_3e',['InputControl&lt; Vector2 &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],
   ['inputcontrol_3c_20vector3_20_3e',['InputControl&lt; Vector3 &gt;',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html',1,'UnityEngine::Experimental::Input']]],

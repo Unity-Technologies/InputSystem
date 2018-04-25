@@ -3,6 +3,7 @@ var searchData=
   ['makecurrent',['MakeCurrent',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#ab0ad4f4a4a7ed405c15eb6ed831aecbc',1,'UnityEngine::Experimental::Input::InputDevice']]],
   ['manufacturer',['manufacturer',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#aedcdc6adde44e6000bbe06947da5be82',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
   ['matchpercentage',['MatchPercentage',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceMatcher.html#af46d964b82dda1f472aca05b8caa1d0c',1,'UnityEngine::Experimental::Input::InputDeviceMatcher']]],
+  ['maxhistorylengthpertouch',['maxHistoryLengthPerTouch',['../classUnityEngine_1_1Experimental_1_1Input_1_1TouchManager.html#a9627076a3883c86ae8040b84e6a77036',1,'UnityEngine::Experimental::Input::TouchManager']]],
   ['maxvalue',['maxValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#a2b7e749822fb4d49dbbfba304d475d73',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]],
   ['merge',['Merge',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#a5e9cba5308f65a867c333c8841944edb',1,'UnityEngine::Experimental::Input::InputControlLayout::ControlItem']]],
   ['mergelayout',['MergeLayout',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout.html#a0c727f625371684ef6abae163f4d2de7',1,'UnityEngine::Experimental::Input::InputControlLayout']]],
@@ -13,5 +14,6 @@ var searchData=
   ['minvalue',['minValue',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html#accb6134418c57f3811180b78e0fbeb7a',1,'UnityEngine::Experimental::Input::Controls::DiscreteButtonControl']]],
   ['modifiers',['modifiers',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputBinding.html#a662407a4db7e569dae3c4885bdc6a329',1,'UnityEngine::Experimental::Input::InputBinding']]],
   ['mouse',['Mouse',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html',1,'UnityEngine::Experimental::Input']]],
+  ['mousesimulation',['MouseSimulation',['../classUnityEngine_1_1Experimental_1_1Input_1_1MouseSimulation.html',1,'UnityEngine::Experimental::Input']]],
   ['mousestate',['MouseState',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1MouseState.html',1,'UnityEngine::Experimental::Input::LowLevel']]]
 ];

@@ -67,16 +67,6 @@ namespace UnityEngine.Experimental.Input
             manager.Destroy();
             EditorInputControlLayoutCache.Clear();
             DestroyImmediate(playerConnection);
-
-            ////REVIEW: Find a mechanism that can do this without knowing about each class
-            // Reset any current&all getters.
-            Gamepad.current = null;
-            Keyboard.current = null;
-            Pointer.current = null;
-            Mouse.current = null;
-            Touchscreen.current = null;
-            Pen.current = null;
-            Joystick.current = null;
         }
 
         public void OnBeforeSerialize()

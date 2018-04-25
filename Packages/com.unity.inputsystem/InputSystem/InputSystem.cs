@@ -24,6 +24,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
 
+////TODO: release native alloations when exiting
+
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 
 namespace UnityEngine.Experimental.Input
@@ -347,6 +349,10 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// Note that accessing this property does not allocate. It gives read-only access
         /// directly to the system's internal array of devices.
+        ///
+        /// The value return by this property should not be held on to. When the device
+        /// setup in the system changes, any value previously returned by this property
+        /// becomes invalid. Query the property directly whenever you need it.
         /// </remarks>
         public static ReadOnlyArray<InputDevice> devices
         {
@@ -357,8 +363,8 @@ namespace UnityEngine.Experimental.Input
         /// Event that is signalled when the device setup in the system changes.
         /// </summary>
         /// <remarks>
-        /// This can be used to detect when device are added or removed as well as
-        /// detecting when existing device change their configuration.
+        /// This can be used to detect when devices are added or removed as well as
+        /// detecting when existing devices change their configuration.
         /// </remarks>
         /// <example>
         /// <code>
@@ -590,6 +596,7 @@ namespace UnityEngine.Experimental.Input
 
         #region Controls
 
+        ////FIXME: we don't really store this on a per-control basis; make this a call that operates on devices instead
         public static void SetLayoutVariant(InputControl control, string variant)
         {
             s_Manager.SetLayoutVariant(control, variant);
@@ -792,7 +799,6 @@ namespace UnityEngine.Experimental.Input
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: should we actually expose the Update() methods or should these be internal?
         public static void Update()
         {
             s_Manager.Update();
@@ -801,6 +807,12 @@ namespace UnityEngine.Experimental.Input
         public static void Update(InputUpdateType updateType)
         {
             s_Manager.Update(updateType);
+        }
+
+        public static InputUpdateType updateMask
+        {
+            get { return s_Manager.updateMask; }
+            set { s_Manager.updateMask = value; }
         }
 
         #endregion
@@ -1037,10 +1049,14 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_SWITCH
             Plugins.Switch.SwitchSupport.Initialize();
-#endif
+            #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
             Plugins.XR.XRSupport.Initialize();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_UWP
+            Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
         }
 
@@ -1053,7 +1069,7 @@ namespace UnityEngine.Experimental.Input
         {
             #if UNITY_EDITOR
             if (s_SystemObject != null)
-                UnityEngine.Object.DestroyImmediate(s_SystemObject);
+                Object.DestroyImmediate(s_SystemObject);
             s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
             s_Manager = s_SystemObject.manager;
             s_Remote = s_SystemObject.remote;
@@ -1083,6 +1099,30 @@ namespace UnityEngine.Experimental.Input
         {
             if (s_SerializedStateStack != null && s_SerializedStateStack.Count > 0)
             {
+                // This is a little contrived. Expected behavior would be that InputManager.Destroy()
+                // will also take all devices down and release allocate state buffers. However, if we do
+                // that, then InputManager.SaveState() would have to duplicate state buffer memory and
+                // every time we'd have a domain reload, we'd needlessy duplicate and destroy input state
+                // in native -- which is just adding yet more stuff to an operation that already takes
+                // way too long.
+                //
+                // So, instead we do *NOT* release state buffers when we do a Reset(). Meaning that the
+                // saved state we store in s_SerializedStateStack uses whatever the InputManager owned.
+                // However, when restoring, we do want to get rid of whatever the InputManager currently
+                // holds on to, so we flush things out here.
+                if (s_Manager.devices.Count > 0)
+                {
+                    // Fast-track this. Only call NotifyRemoved() to get devices to clean up global state
+                    // and then release all state memory.
+                    // NOTE: Make sure to not trigger callbacks here or tests will fail getting unexpected calls.
+                    foreach (var device in devices)
+                        device.NotifyRemoved();
+                    s_Manager.m_StateBuffers.FreeAll();
+                }
+
+                Reset();
+
+                // Load back previous state.
                 var index = s_SerializedStateStack.Count - 1;
                 s_Manager.RestoreState(s_SerializedStateStack[index]);
                 s_SerializedStateStack.RemoveAt(index);

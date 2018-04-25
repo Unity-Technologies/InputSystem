@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.14"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Input System: TouchTracker Class Reference</title>
+<title>Input System: OnScreenControl Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -67,7 +67,7 @@ $(function() {
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html','');});
+$(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenControl.html','');});
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -86,22 +86,37 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 </div>
 
 <div class="header">
+  <div class="summary">
+<a href="classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenControl-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">TouchTracker Class Reference</div>  </div>
+<div class="title">OnScreenControl Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
-<p>Helper to make tracking of touches easier.  
- <a href="classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html#details">More...</a></p>
+<p>Base class for on-screen controls.  
+ <a href="classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenControl.html#details">More...</a></p>
+<div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
+  <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Inheritance diagram for OnScreenControl:</div>
+<div id="dynsection-0-summary" class="dynsummary" style="display:block;">
+</div>
+<div id="dynsection-0-content" class="dyncontent" style="display:none;">
+ <div class="center">
+  <img src="classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenControl.png" usemap="#OnScreenControl_map" alt=""/>
+  <map id="OnScreenControl_map" name="OnScreenControl_map">
+<area href="classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenButton.html" title="A button that is visually represented on-screen and triggered by touch or other pointer input..." alt="OnScreenButton" shape="rect" coords="0,56,111,80"/>
+</map>
+ </div></div>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Helper to make tracking of touches easier. </p>
-<p>This class obsoletes the need to manually track touches by ID and provides various helpers such as making history data of touches available. </p>
+<div class="textblock"><p>Base class for on-screen controls. </p>
+<p>The set of on-screen controls together forms a device. A control layout is automatically generated from the set and a device using the layout is added to the system when the on-screen controls are enabled.</p>
+<p>The layout that the generated layout is based on is determined by the control paths chosen for each on-screen control. If, for example, an on-screen control chooses the 'a' key from the "Keyboard" layout as its path, a device layout is generated that is based on the "Keyboard" layout and the on-screen control becomes the 'a' key in that layout.</p>
+<p>If a GameObject has multiple on-screen controls that reference different types of device layouts (e.g. one control references 'buttonWest' on a gamepad and another references 'leftButton' on a mouse), then a device is created for each type referenced by the setup. </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="namespaceUnityEngine.html">UnityEngine</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental.html">Experimental</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html">Input</a></li><li class="navelem"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1TouchTracker.html">TouchTracker</a></li>
+    <li class="navelem"><a class="el" href="namespaceUnityEngine.html">UnityEngine</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental.html">Experimental</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input.html">Input</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins.html">Plugins</a></li><li class="navelem"><a class="el" href="namespaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen.html">OnScreen</a></li><li class="navelem"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1OnScreen_1_1OnScreenControl.html">OnScreenControl</a></li>
     <li class="footer">Generated by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.14 </li>

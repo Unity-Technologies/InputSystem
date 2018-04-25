@@ -2,7 +2,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine;
 
 // Using state of gamepad device directly.
-public class SimpleController_v1 : MonoBehaviour
+public class SimpleController_UsingState : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;
