@@ -14,7 +14,7 @@ public class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterface,
+            interfaceName = XRUtilities.kXRInterfaceCurrent,
             product = "Device",
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
@@ -36,7 +36,7 @@ public class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterface,
+            interfaceName = XRUtilities.kXRInterfaceCurrent,
             product = "XR_This.Layout/Should have 1 Valid::Name",
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
@@ -70,7 +70,7 @@ public class XRTests : InputTestFixture
         {
             return new InputDeviceDescription()
             {
-                interfaceName = XRUtilities.kXRInterface,
+                interfaceName = XRUtilities.kXRInterfaceCurrent,
                 product = "XRDevice",
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
@@ -316,7 +316,7 @@ public class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = String.Format("{0}::{1}::{2}", XRUtilities.kXRInterface,
+        var expectedLayoutName = String.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
                 deviceDescription.manufacturer, deviceDescription.product);
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
@@ -334,7 +334,7 @@ public class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = string.Format("{0}::{1}", XRUtilities.kXRInterface, deviceDescription.product);
+        var expectedLayoutName = String.Format("{0}::{1}", XRUtilities.kXRInterfaceCurrent, deviceDescription.product);
         Assert.AreEqual(expectedLayoutName, createdDevice.layout);
     }
 

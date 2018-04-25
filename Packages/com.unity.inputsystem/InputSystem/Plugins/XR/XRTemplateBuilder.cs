@@ -10,6 +10,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     class XRLayoutBuilder
     {
         public string parentLayout;
+        public string interfaceName;
         public XRDeviceDescriptor descriptor;
 
         static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
@@ -52,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
-            if (description.interfaceName != XRUtilities.kXRInterface)
+            if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
             {
                 return null;
             }
@@ -91,21 +92,20 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
-                layoutName = string.Format("{0}::{1}", SanitizeName(XRUtilities.kXRInterface),
+                layoutName = string.Format("{0}::{1}", SanitizeName(description.interfaceName),
                         SanitizeName(description.product));
             }
             else
             {
-                layoutName = string.Format("{0}::{1}::{2}", SanitizeName(XRUtilities.kXRInterface), SanitizeName(description.manufacturer), SanitizeName(description.product));
+                layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
 
             // If we are already using a generated layout, we just want to use what's there currently, instead of creating a brand new layout.
             if (layoutName == matchedLayout)
                 return layoutName;
 
-            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout,
-                InputDeviceMatcher.FromDeviceDescription(description));
+            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }
@@ -138,8 +138,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 string featureName = SanitizeName(feature.name);
                 uint nextOffset = GetSizeOfFeature(feature);
 
-                if (nextOffset >= 4 && (currentOffset % 4 != 0))
-                    currentOffset += (4 - (currentOffset % 4));
+                if(interfaceName == XRUtilities.kXRInterfaceV1)
+                {
+#if UNITY_ANDROID
+                    if(nextOffset < 4)
+                        nextOffset = 4;
+#endif           
+                }
+                else
+                {
+                    if (nextOffset >= 4 && (currentOffset % 4 != 0))
+                        currentOffset += (4 - (currentOffset % 4));
+                }
+                
 
                 switch (feature.featureType)
                 {
