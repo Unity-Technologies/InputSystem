@@ -767,7 +767,7 @@ namespace UnityEngine.Experimental.Input
             for (var n = 0; n < processorCount; ++n)
             {
                 var name = controlItem.processors[n].name;
-                var type = InputProcessor.TryGet(name);
+                var type = InputControlProcessor.s_Processors.LookupTypeRegisteration(name);
                 if (type == null)
                     throw new Exception(
                         string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,

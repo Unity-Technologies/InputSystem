@@ -312,12 +312,12 @@ namespace UnityEngine.Experimental.Input
         #region Processors
 
         /// <summary>
-        /// Register an <see cref="IInputProcessor{TValue}"/> with the system.
+        /// Register an <see cref="IInputControlProcessor{TValue}"/> with the system.
         /// </summary>
-        /// <param name="type">Type that implements <see cref="IInputProcessor{TValue}"/>.</param>
+        /// <param name="type">Type that implements <see cref="IInputControlProcessor{TValue}"/>.</param>
         /// <param name="name">Name to use for the process. If null or empty, name will be taken from short name
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
-        public static void RegisterProcessor(Type type, string name = null)
+        public static void RegisterControlProcessor(Type type, string name = null)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -326,17 +326,17 @@ namespace UnityEngine.Experimental.Input
                     name = name.Substring(0, name.Length - "Processor".Length);
             }
 
-            s_Manager.RegisterControlProcessor(name, type);
+            s_Manager.processors.AddTypeRegistration(name, type);
         }
 
-        public static void RegisterProcessor<T>(string name = null)
+        public static void RegisterControlProcessor<T>(string name = null)
         {
-            RegisterProcessor(typeof(T), name);
+            RegisterControlProcessor(typeof(T), name);
         }
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.TryGetControlProcessor(name);
+            return s_Manager.processors.LookupTypeRegisteration(name);
         }
 
         #endregion
@@ -828,7 +828,7 @@ namespace UnityEngine.Experimental.Input
                     name = name.Substring(0, name.Length - "Modifier".Length);
             }
 
-            s_Manager.RegisterBindingModifier(name, type);
+            s_Manager.modifiers.AddTypeRegistration(name, type);
         }
 
         public static void RegisterBindingModifier<T>(string name = null)
@@ -838,12 +838,34 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetBindingModifier(string name)
         {
-            return s_Manager.TryGetBindingModifier(name);
+            return s_Manager.modifiers.LookupTypeRegisteration(name);
         }
 
         public static IEnumerable<string> ListBindingModifiers()
         {
-            return s_Manager.ListBindingModifiers();
+            return s_Manager.modifiers.names;
+        }
+
+        public static void RegisterBindingComposite(Type type, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                name = type.Name;
+                if (name.EndsWith("Composite"))
+                    name = name.Substring(0, name.Length - "Composite".Length);
+            }
+
+            s_Manager.composites.AddTypeRegistration(name, type);
+        }
+
+        public static void RegisterBindingComposite<T>(string name = null)
+        {
+            RegisterBindingComposite(typeof(T), name);
+        }
+
+        public static Type TryGetBindingComposite(string name)
+        {
+            return s_Manager.composites.LookupTypeRegisteration(name);
         }
 
         /// <summary>

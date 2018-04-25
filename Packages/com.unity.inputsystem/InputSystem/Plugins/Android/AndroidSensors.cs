@@ -83,7 +83,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidAccelerationProcessor : IInputProcessor<Vector3>
+    public class AndroidAccelerationProcessor : IInputControlProcessor<Vector3>
     {
         // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;
