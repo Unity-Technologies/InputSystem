@@ -24,8 +24,12 @@ public class XRHaptics : MonoBehaviour {
         leftHapticDetected.color = (leftHandController != null) ? Color.red : Color.white;
         if (leftHandController != null)
         {
-            leftHandController.rumble.isPaused = !m_LeftHandRumbling;
-            leftHandController.rumble.intensity = 1f;
+            //if (!m_LeftHandRumbling)
+            //    leftHandController.PauseHaptics();
+            //else
+            //    leftHandController.ResumeHaptics();
+
+            leftHandController.SetIntensity(1f);
 
             leftTryingToRumble.color = (m_LeftHandRumbling ? Color.red : Color.white);
         }
@@ -34,8 +38,12 @@ public class XRHaptics : MonoBehaviour {
         rightHapticDetected.color = (rightHandController != null) ? Color.red : Color.white;
         if (rightHandController != null)
         {
-            rightHandController.rumble.isPaused = m_LeftHandRumbling;
-            rightHandController.rumble.intensity = 1f;
+            //if (m_LeftHandRumbling)
+            //    rightHandController.PauseHaptics();
+            //else
+            //    rightHandController.ResumeHaptics();
+
+            rightHandController.SetIntensity(1f);
 
             rightTryingToRumble.color = !m_LeftHandRumbling ? Color.red : Color.white;
         }
