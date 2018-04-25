@@ -677,6 +677,13 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             anyKey = builder.GetControl<AnyKeyControl>("anyKey");
@@ -823,9 +830,5 @@ namespace UnityEngine.Experimental.Input
 
         internal InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
-    }
-
-    public class OnScreenKeyboard : Keyboard
-    {
     }
 }

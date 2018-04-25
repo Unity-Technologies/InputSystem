@@ -27,8 +27,6 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                 matches: new InputDeviceMatcher()
                 .WithInterface("PS4")
                 .WithDeviceClass("PS4DualShockGamepad"));
-
-            InputSystem.onDeviceChange += DualShockGamepadPS4.OnDeviceChange;
             #endif
         }
     }

@@ -25,6 +25,7 @@ namespace UnityEngine.Experimental.Input.Editor
     // Allows looking at input activity in the editor.
     internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
+        private static int s_Disabled;
         private static InputDebuggerWindow s_Instance;
 
         [MenuItem("Window/Input Debugger", false, 2100)]
@@ -43,6 +44,26 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        public static void Enable()
+        {
+            if (s_Disabled == 0)
+                return;
+
+            --s_Disabled;
+            if (s_Disabled == 0 && s_Instance != null)
+                s_Instance.InstallHooks();
+
+            ////REVIEW: technically, we'd have to do a refresh here but that'd mean that in the current setup
+            ////        we'd do a refresh after every single test; find a better solution
+        }
+
+        public static void Disable()
+        {
+            ++s_Disabled;
+            if (s_Disabled == 1 && s_Instance != null)
+                s_Instance.UninstallHooks();
+        }
+
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             // Update tree if devices are added or removed.
@@ -53,6 +74,11 @@ namespace UnityEngine.Experimental.Input.Editor
         private void OnLayoutChange(string name, InputControlLayoutChange change)
         {
             // Update tree if layout setup has changed.
+            Refresh();
+        }
+
+        private void OnEnabledActionsChanged()
+        {
             Refresh();
         }
 
@@ -77,15 +103,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnDestroy()
         {
-            InputSystem.onDeviceChange -= OnDeviceChange;
-            InputSystem.onControlLayoutChange -= OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
-
-            if (InputActionSet.s_OnEnabledActionsChanged != null)
-                InputActionSet.s_OnEnabledActionsChanged.Remove(Repaint);
+            UninstallHooks();
         }
 
-        private void Initialize()
+        private void InstallHooks()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
             InputSystem.onControlLayoutChange += OnLayoutChange;
@@ -93,7 +114,22 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (InputActionSet.s_OnEnabledActionsChanged == null)
                 InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionSet.s_OnEnabledActionsChanged.Add(Repaint);
+            InputActionSet.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
+        }
+
+        private void UninstallHooks()
+        {
+            InputSystem.onDeviceChange -= OnDeviceChange;
+            InputSystem.onControlLayoutChange -= OnLayoutChange;
+            InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
+
+            if (InputActionSet.s_OnEnabledActionsChanged != null)
+                InputActionSet.s_OnEnabledActionsChanged.Remove(OnEnabledActionsChanged);
+        }
+
+        private void Initialize()
+        {
+            InstallHooks();
 
             var newTreeViewState = m_TreeViewState == null;
             if (newTreeViewState)
@@ -110,6 +146,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnGUI()
         {
+            if (s_Disabled > 0)
+            {
+                EditorGUILayout.LabelField("Disabled");
+                return;
+            }
+
             // This also brings us back online after a domain reload.
             if (!m_Initialized)
                 Initialize();
@@ -148,41 +190,6 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        /*
-        private void DrawActionsGUI()
-        {
-            GUILayout.Label(Contents.enabledActionsContent, EditorStyles.boldLabel);
-
-            if (m_EnabledActions == null)
-                m_EnabledActions = new List<InputAction>();
-            else
-                m_EnabledActions.Clear();
-
-            InputSystem.ListEnabledActions(m_EnabledActions);
-
-            EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
-
-            var numEnabledActions = m_EnabledActions.Count;
-            if (numEnabledActions == 0)
-            {
-                GUILayout.Label(Contents.noneContent);
-            }
-            else
-            {
-                for (var i = 0; i < m_EnabledActions.Count; ++i)
-                {
-                    var action = m_EnabledActions[i];
-                    if (GUILayout.Button(action.name))
-                    {
-                        InputActionDebuggerWindow.CreateOrShowExisting(m_EnabledActions[i]);
-                    }
-                }
-            }
-
-            EditorGUILayout.EndHorizontal();
-        }
-        */
-
         [SerializeField] private bool m_DiagnosticsMode;
         [SerializeField] private TreeViewState m_TreeViewState;
 
@@ -219,6 +226,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         class InputSystemTreeView : TreeView
         {
+            public TreeViewItem actionsItem { get; private set; }
             public TreeViewItem devicesItem { get; private set; }
             public TreeViewItem layoutsItem { get; private set; }
             public TreeViewItem configurationItem { get; private set; }
@@ -258,7 +266,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 };
 
                 // Actions.
-                //var actionsNode = AddChild(root, "Actions", ref id);
+                m_EnabledActions.Clear();
+                InputSystem.ListEnabledActions(m_EnabledActions);
+                if (m_EnabledActions.Count > 0)
+                {
+                    actionsItem = AddChild(root, string.Format("Actions ({0})", m_EnabledActions.Count), ref id);
+                    AddEnabledActions(actionsItem, ref id);
+                }
 
                 // Devices.
                 var devices = InputSystem.devices;
@@ -447,6 +461,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Bit: {0}", control.bit), ref id);
                 if (control.sizeInBits != 0)
                     AddChild(item, string.Format("Size In Bits: {0}", control.sizeInBits), ref id);
+                if (control.isArray)
+                    AddChild(item, string.Format("Array Size: {0}", control.arraySize), ref id);
                 if (!string.IsNullOrEmpty(control.useStateFrom))
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
 
@@ -474,7 +490,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
 
-            public void AddConfigurationItem<TValue>(TreeViewItem parent, string name, TValue value, ref int id)
+            private void AddConfigurationItem<TValue>(TreeViewItem parent, string name, TValue value, ref int id)
             {
                 var item = new ConfigurationItem
                 {
@@ -484,6 +500,24 @@ namespace UnityEngine.Experimental.Input.Editor
                     name = name
                 };
                 parent.AddChild(item);
+            }
+
+            private void AddEnabledActions(TreeViewItem parent, ref int id)
+            {
+                foreach (var action in m_EnabledActions)
+                {
+                    // Add item for action.
+                    var set = action.set;
+                    var setName = set != null ? set.name + "/" : string.Empty;
+                    var item = AddChild(parent, setName + action.name, ref id);
+
+                    // Add list of resolved controls.
+                    foreach (var control in action.controls)
+                        AddChild(item, control.path, ref id);
+                }
+
+                if (parent.children != null)
+                    parent.children.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.CurrentCultureIgnoreCase));
             }
 
             private TreeViewItem AddChild(TreeViewItem parent, string displayName, ref int id)
@@ -499,6 +533,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             private List<InputDeviceDescription> m_UnsupportedDevices;
+            private List<InputAction> m_EnabledActions = new List<InputAction>();
 
             class DeviceItem : TreeViewItem
             {

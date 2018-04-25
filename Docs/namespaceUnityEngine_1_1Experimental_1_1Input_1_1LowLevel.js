@@ -25,5 +25,5 @@ var namespaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel =
     [ "SetSamplingFrequencyCommand", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1SetSamplingFrequencyCommand.html", null ],
     [ "StateEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent" ],
     [ "TextEvent", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TextEvent" ],
-    [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", null ]
+    [ "TouchscreenState", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState.html", "structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1TouchscreenState" ]
 ];

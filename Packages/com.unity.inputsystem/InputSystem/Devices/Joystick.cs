@@ -97,6 +97,13 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         ////TODO: move this into InputControl
         private void FindControlsRecursive<TControl>(InputControl parent, List<TControl> controls, Func<TControl, bool> filter)
             where TControl : InputControl
