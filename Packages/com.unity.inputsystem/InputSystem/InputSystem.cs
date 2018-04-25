@@ -632,7 +632,13 @@ namespace UnityEngine.Experimental.Input
 
         public static int GetControls(string path, List<InputControl> controls)
         {
-            return s_Manager.GetControls(path, controls);
+            var wrapper = new ArrayOrListWrapper<InputControl>(controls);
+            return GetControls(path, ref wrapper);
+        }
+
+        internal static int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
+        {
+            return s_Manager.GetControls(path, ref controls);
         }
 
         #endregion

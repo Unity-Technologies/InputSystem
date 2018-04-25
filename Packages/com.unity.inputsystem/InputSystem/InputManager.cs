@@ -501,12 +501,10 @@ namespace UnityEngine.Experimental.Input
         // Adds all controls that match the given path spec to the given list.
         // Returns number of controls added to the list.
         // NOTE: Does not create garbage.
-        public int GetControls(string path, List<InputControl> controls)
+        public int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
         {
             if (string.IsNullOrEmpty(path))
                 return 0;
-            if (controls == null)
-                throw new ArgumentNullException("controls");
             if (m_Devices == null)
                 return 0;
 
@@ -515,7 +513,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                numMatches += InputControlPath.TryFindControls(device, path, 0, controls);
+                numMatches += InputControlPath.TryFindControls(device, path, 0, ref controls);
             }
 
             return numMatches;
