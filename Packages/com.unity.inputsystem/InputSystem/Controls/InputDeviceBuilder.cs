@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -790,7 +791,10 @@ namespace UnityEngine.Experimental.Input
             {
                 var parameter = parameters[i];
 
-                var field = objectType.GetField(parameter.name);
+                ////REVIEW: what about properties?
+
+                var field = objectType.GetField(parameter.name,
+                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (field == null)
                     throw new Exception(string.Format("Cannot find public field {0} in {1} (referenced by parameter)",
                             parameter.name, objectType.Name));

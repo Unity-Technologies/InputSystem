@@ -6254,7 +6254,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanCreateCompositeBindings()
+    public void Actions_CanCreateCompositeBindings()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

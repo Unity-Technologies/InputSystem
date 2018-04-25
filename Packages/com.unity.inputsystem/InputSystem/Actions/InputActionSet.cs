@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
@@ -170,7 +171,7 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] internal InputControl[] m_Controls;
         [NonSerialized] internal ModifierState[] m_Modifiers;
-        [NonSerialized] internal ResolvedComposite[] m_Composites;
+        [NonSerialized] internal object[] m_Composites;
         [NonSerialized] internal ResolvedBinding[] m_ResolvedBindings;
 
         // Action sets that are created internally by singleton actions to hold their data
@@ -221,11 +222,13 @@ namespace UnityEngine.Experimental.Input
             {
                 ChainsWithNext = 1 << 0,
                 EndOfChain = 1 << 1,
+                PartOfComposite = 1 << 2,
             }
 
             public ReadOnlyArray<InputControl> controls;
             public ReadWriteArray<ModifierState> modifiers;
             public Flags flags;
+            public int compositeIndex;
 
             public bool chainsWithNext
             {
@@ -255,12 +258,18 @@ namespace UnityEngine.Experimental.Input
             {
                 get { return chainsWithNext || isEndOfChain; }
             }
-        }
 
-        internal struct ResolvedComposite
-        {
-            public object composite;
-            public ReadOnlyArray<InputControl> controls;
+            public bool isPartOfComposite
+            {
+                get { return (flags & Flags.PartOfComposite) == Flags.PartOfComposite; }
+                set
+                {
+                    if (value)
+                        flags |= Flags.PartOfComposite;
+                    else
+                        flags &= ~Flags.PartOfComposite;
+                }
+            }
         }
 
         /// <summary>
@@ -277,7 +286,7 @@ namespace UnityEngine.Experimental.Input
             public InputControl[] controls;
             public ModifierState[] modifiers;
             public ResolvedBinding[] bindings;
-            public ResolvedComposite[] composites;
+            public object[] composites;
 
             private List<InputControlLayout.NameAndParameters> m_Parameters;
 
@@ -295,18 +304,37 @@ namespace UnityEngine.Experimental.Input
                 var controlStartIndex = controlCount;
                 var bindingsStartIndex = bindingCount;
 
+                object currentComposite = null;
+                var currentCompositeIndex = -1;
+
                 ////TODO: handle case where we have bindings resolving to the same control
                 ////      (not so clear cut what to do there; each binding may have a different modifier setup, for example)
                 for (var n = 0; n < unresolvedBindings.Count; ++n)
                 {
                     var unresolvedBinding = unresolvedBindings[n];
-                    var firstControl = controlCount;
+                    var indexOfFirstControlInThisBinding = controlCount;
 
-                    //
+                    ////TODO: allow specifying parameters for composite on its path (same way as parameters work for modifiers)
+                    // If it's the start of a composite chain, create the composite.
                     if (unresolvedBinding.isComposite)
                     {
-                        ////TODO
+                        // Instantiate. For composites, the path is the name of the composite.
+                        currentComposite = InstantiateBindingComposite(unresolvedBinding.path);
+                        currentCompositeIndex = compositeCount;
+
+                        // The composite binding entry itself does not resolve to any controls.
+                        // It creates a composite binding object which is then populated from
+                        // subsequent bindings.
                         continue;
+                    }
+
+                    // If we've reached the end of a composite chain, finish
+                    // of the current composite.
+                    if (!unresolvedBinding.isPartOfComposite && currentComposite != null)
+                    {
+                        FinishBindingComposite(currentComposite);
+                        currentComposite = null;
+                        currentCompositeIndex = -1;
                     }
 
                     // Use override path but fall back to default path if no
@@ -337,10 +365,35 @@ namespace UnityEngine.Experimental.Input
                     // Add entry for resolved binding.
                     ArrayHelpers.AppendWithCapacity(ref bindings, ref bindingCount, new ResolvedBinding
                     {
-                        controls = new ReadOnlyArray<InputControl>(null, firstControl, numControls),
-                        modifiers = new ReadWriteArray<ModifierState>(null, firstModifier, numModifiers)
+                        controls = new ReadOnlyArray<InputControl>(null, indexOfFirstControlInThisBinding, numControls),
+                        modifiers = new ReadWriteArray<ModifierState>(null, firstModifier, numModifiers),
+                        isPartOfComposite = unresolvedBinding.isPartOfComposite,
+                        compositeIndex = currentCompositeIndex,
                     });
+
+                    // If the binding is part of a composite, pass the resolve controls
+                    // on to the composite.
+                    if (unresolvedBinding.isPartOfComposite && currentComposite != null)
+                    {
+                        ////REVIEW: what should we do when a single binding in a composite resolves to multiple controls?
+                        ////        if the composite has more than one bindable control, it's not readily apparent how we would group them
+                        if (numControls > 1)
+                            throw new NotImplementedException("Handling case where single binding in composite resolves to multiple controls");
+
+                        // Make sure the binding is named. The name determines what in the composite
+                        // to bind to.
+                        if (string.IsNullOrEmpty(unresolvedBinding.name))
+                            throw new Exception(string.Format(
+                                    "Binding that is part of composite '{0}' is missing a name", currentComposite));
+
+                        // Install the control on the binding.
+                        BindControlInComposite(currentComposite, unresolvedBinding.name,
+                            controls[indexOfFirstControlInThisBinding]);
+                    }
                 }
+
+                if (currentComposite != null)
+                    FinishBindingComposite(currentComposite);
 
                 // Let action know where its control and resolved binding entries are.
                 action.m_Controls =
@@ -365,7 +418,7 @@ namespace UnityEngine.Experimental.Input
                         var type = InputBindingModifier.s_Modifiers.LookupTypeRegisteration(m_Parameters[i].name);
                         if (type == null)
                             throw new Exception(string.Format(
-                                    "No modifier with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                                    "No binding modifier with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
                                     modifierString));
 
                         // Instantiate it.
@@ -387,6 +440,48 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 return firstModifierIndex;
+            }
+
+            private void FinishBindingComposite(object composite)
+            {
+                ////TODO: check whether composite is fully initialized
+                ArrayHelpers.AppendWithCapacity(ref composites, ref compositeCount, composite);
+            }
+
+            private static object InstantiateBindingComposite(string name)
+            {
+                // Look up.
+                var type = InputBindingComposite.s_Composites.LookupTypeRegisteration(name);
+                if (type == null)
+                    throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
+                            name));
+
+                // Instantiate.
+                var instance = Activator.CreateInstance(type);
+                ////REVIEW: typecheck for IInputBindingComposite? (at least in dev builds)
+
+                return instance;
+            }
+
+            ////REVIEW: replace this with a method on the composite that receives the value?
+            private static void BindControlInComposite(object composite, string name, InputControl control)
+            {
+                var type = composite.GetType();
+
+                // Look up field.
+                var field = type.GetField(name,
+                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (field == null)
+                    throw new Exception(string.Format("Cannot find public field '{0}' in binding composite '{1}' of type '{2}'",
+                            name, composite, type));
+
+                // Typecheck.
+                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
+                    throw new Exception(string.Format(
+                            "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
+                            type));
+
+                field.SetValue(composite, control);
             }
         }
 
