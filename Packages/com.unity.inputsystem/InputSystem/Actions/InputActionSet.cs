@@ -83,7 +83,9 @@ namespace UnityEngine.Experimental.Input
             return action;
         }
 
-        // Enable all the actions in the set.
+        /// <summary>
+        /// Enable all the actions in the set.
+        /// </summary>
         public void Enable()
         {
             if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)
@@ -95,7 +97,9 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(m_EnabledActionsCount == m_Actions.Length);
         }
 
-        // Disable all the actions in the set.
+        /// <summary>
+        /// Disable all the actions in the set.
+        /// </summary>
         public void Disable()
         {
             if (m_Actions == null || !enabled)
@@ -708,19 +712,25 @@ namespace UnityEngine.Experimental.Input
         [Serializable]
         public struct BindingJson
         {
+            public string name;
             public string path;
             public string modifiers;
             public string groups;
             public bool chainWithPrevious;
+            public bool isComposite;
+            public bool isPartOfComposite;
 
             public InputBinding ToBinding()
             {
                 return new InputBinding
                 {
+                    name = string.IsNullOrEmpty(name) ? null : name,
                     path = string.IsNullOrEmpty(path) ? null : path,
                     modifiers = string.IsNullOrEmpty(modifiers) ? null : modifiers,
                     group = string.IsNullOrEmpty(groups) ? null : groups,
-                    chainWithPrevious = chainWithPrevious
+                    chainWithPrevious = chainWithPrevious,
+                    isComposite = isComposite,
+                    isPartOfComposite = isPartOfComposite,
                 };
             }
 
@@ -728,10 +738,13 @@ namespace UnityEngine.Experimental.Input
             {
                 return new BindingJson
                 {
+                    name = binding.name,
                     path = binding.path,
                     modifiers = binding.modifiers,
                     groups = binding.group,
-                    chainWithPrevious = binding.chainWithPrevious
+                    chainWithPrevious = binding.chainWithPrevious,
+                    isComposite = binding.isComposite,
+                    isPartOfComposite = binding.isPartOfComposite,
                 };
             }
         }
@@ -759,7 +772,7 @@ namespace UnityEngine.Experimental.Input
                 return new ActionJson
                 {
                     name = action.name,
-                    bindings = bindingsJson
+                    bindings = bindingsJson,
                 };
             }
         }

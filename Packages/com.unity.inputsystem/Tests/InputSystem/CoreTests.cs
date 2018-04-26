@@ -6377,9 +6377,41 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanSerializeAndDeserializeActionsWithCompositeBindings()
+    public void Actions_CanSerializeAndDeserializeActionsWithCompositeBindings()
     {
-        Assert.Fail();
+        var set = new InputActionSet(name: "test");
+        set.AddAction("test")
+        .AddCompositeBinding("ButtonVector")
+        .With("Up", "/<Keyboard>/w")
+        .With("Down", "/<Keyboard>/s")
+        .With("Left", "/<Keyboard>/a")
+        .With("Right", "/<Keyboard>/d");
+
+        var json = set.ToJson();
+        var deserialized = InputActionSet.FromJson(json);
+
+        Assert.That(deserialized.Length, Is.EqualTo(1));
+        Assert.That(deserialized[0].actions.Count, Is.EqualTo(1));
+        Assert.That(deserialized[0].actions[0].bindings.Count, Is.EqualTo(5));
+        Assert.That(deserialized[0].actions[0].bindings[0].path, Is.EqualTo("ButtonVector"));
+        Assert.That(deserialized[0].actions[0].bindings[0].isComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[0].isPartOfComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[1].name, Is.EqualTo("Up"));
+        Assert.That(deserialized[0].actions[0].bindings[1].path, Is.EqualTo("/<Keyboard>/w"));
+        Assert.That(deserialized[0].actions[0].bindings[1].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[1].isPartOfComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[2].name, Is.EqualTo("Down"));
+        Assert.That(deserialized[0].actions[0].bindings[2].path, Is.EqualTo("/<Keyboard>/s"));
+        Assert.That(deserialized[0].actions[0].bindings[2].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[2].isPartOfComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[3].name, Is.EqualTo("Left"));
+        Assert.That(deserialized[0].actions[0].bindings[3].path, Is.EqualTo("/<Keyboard>/a"));
+        Assert.That(deserialized[0].actions[0].bindings[3].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[3].isPartOfComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[4].name, Is.EqualTo("Right"));
+        Assert.That(deserialized[0].actions[0].bindings[4].path, Is.EqualTo("/<Keyboard>/d"));
+        Assert.That(deserialized[0].actions[0].bindings[4].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[4].isPartOfComposite, Is.True);
     }
 
     [Test]
