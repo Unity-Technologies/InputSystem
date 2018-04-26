@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -767,7 +768,7 @@ namespace UnityEngine.Experimental.Input
             for (var n = 0; n < processorCount; ++n)
             {
                 var name = controlItem.processors[n].name;
-                var type = InputProcessor.TryGet(name);
+                var type = InputControlProcessor.s_Processors.LookupTypeRegisteration(name);
                 if (type == null)
                     throw new Exception(
                         string.Format("Cannot find processor '{0}' referenced by control '{1}' in layout '{2}'", name,
@@ -790,7 +791,10 @@ namespace UnityEngine.Experimental.Input
             {
                 var parameter = parameters[i];
 
-                var field = objectType.GetField(parameter.name);
+                ////REVIEW: what about properties?
+
+                var field = objectType.GetField(parameter.name,
+                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (field == null)
                     throw new Exception(string.Format("Cannot find public field {0} in {1} (referenced by parameter)",
                             parameter.name, objectType.Name));

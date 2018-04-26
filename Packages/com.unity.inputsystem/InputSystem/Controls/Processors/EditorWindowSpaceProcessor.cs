@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Processors
     /// Outside of EditorWindow callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
     /// </remarks>
-    public class EditorWindowSpaceProcessor : IInputProcessor<Vector2>
+    public class EditorWindowSpaceProcessor : IInputControlProcessor<Vector2>
     {
         public Vector2 Process(Vector2 position, InputControl control)
         {
