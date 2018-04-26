@@ -115,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidSensorProcessor : IInputProcessor<Vector3>
+    public class AndroidSensorProcessor : IInputControlProcessor<Vector3>
     {
         // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;
@@ -141,7 +141,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidSensorRotationProcessor : IInputProcessor<Quaternion>
+    public class AndroidSensorRotationProcessor : IInputControlProcessor<Quaternion>
     {
         public Quaternion Process(Quaternion rotation, InputControl control)
         {
@@ -170,12 +170,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
+    ////TODO: Setup InputControls for sensors below
+
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Accelerometer")]
     public class AndroidAccelerometer : Accelerometer
     {
     }
-
-    ////FIXME: Setup InputControls for sensors below
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticField")]
     public class AndroidMagneticField : Sensor
