@@ -1720,53 +1720,53 @@ class CoreTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.up));
 
         // Up left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
 
         // Left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.left));
 
         // Down left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.left).normalized.y).Within(0.00001));
 
         // Down.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.down));
 
         // Down right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
 
-        // Down.
+        // Right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.right));
 
         // Up right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.right).normalized.y).Within(0.00001));
     }
 
     struct DiscreteButtonDpadState : IInputStateTypeInfo
@@ -6254,7 +6254,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCreateCompositeBindings()
+    public void Actions_CanCreateButtonAxisComposite()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -6279,6 +6279,107 @@ class CoreTests : InputTestFixture
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateButtonVectorComposite()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up classic WASD control.
+        var action = new InputAction();
+        action.AddCompositeBinding("ButtonVector")
+        .With("Up", "/<Keyboard>/w")
+        .With("Down", "/<Keyboard>/s")
+        .With("Left", "/<Keyboard>/a")
+        .With("Right", "/<Keyboard>/d");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.GetValue<Vector2>(); };
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.left + Vector2.down).normalized.y).Within(0.00001));
+
+        // Down.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S, Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
+
+        // Right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_WhenPartOfCompositeResolvesToMultipleControls_WhatHappensXXX()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanSerializeAndDeserializeActionsWithCompositeBindings()
+    {
+        Assert.Fail();
     }
 
     [Test]
