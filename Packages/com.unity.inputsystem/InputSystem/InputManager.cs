@@ -1045,6 +1045,9 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Sensor", typeof(Sensor));
             RegisterControlLayout("Accelerometer", typeof(Accelerometer));
             RegisterControlLayout("Gyroscope", typeof(Gyroscope));
+            RegisterControlLayout("Gravity", typeof(Gravity));
+            RegisterControlLayout("Attitude", typeof(Attitude));
+            RegisterControlLayout("LinearAcceleration", typeof(LinearAcceleration));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
