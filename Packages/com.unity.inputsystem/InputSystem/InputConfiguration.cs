@@ -62,7 +62,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public static bool CompensateSensorsForScreenOrientation = true;
 
-		#if UNITY_EDITOR
+        #if UNITY_EDITOR
         // We support input in edit mode as well. If the editor is in play mode and the game view
         // has focus, input goes to the game. Otherwise input goes to the editor. This behavior can
         // be annoying so this switch allows to route input exclusively to the game.
@@ -116,8 +116,8 @@ namespace UnityEngine.Experimental.Input
             HoldTime = state.holdTime;
             PointerDeltaSensitivity = state.pointerDeltaSensitivity;
             CompensateSensorsForScreenOrientation = state.compensateSensorsForScreenOrientation;
-			#if UNITY_EDITOR
-        	LockInputToGame = state.lockInputToGame;
+            #if UNITY_EDITOR
+            LockInputToGame = state.lockInputToGame;
             #endif
         }
     }

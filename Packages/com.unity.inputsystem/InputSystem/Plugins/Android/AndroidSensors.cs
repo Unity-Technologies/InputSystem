@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         public AndroidSensorState WithData(params float[] data)
         {
-            fixed (float* dataPtr = this.data)
+            fixed(float* dataPtr = this.data)
             {
                 for (var i = 0; i < data.Length && i < 16; i++)
                     dataPtr[i] = data[i];
@@ -163,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
                 return rotation * q;
             }
 
-           return rotation;
+            return rotation;
         }
     }
 }

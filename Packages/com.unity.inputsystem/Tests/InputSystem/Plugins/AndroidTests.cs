@@ -147,6 +147,5 @@ class AndroidTests : InputTestFixture
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadLeft), gamepad.dpad.left);
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadRight), gamepad.dpad.right);
     }
-
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

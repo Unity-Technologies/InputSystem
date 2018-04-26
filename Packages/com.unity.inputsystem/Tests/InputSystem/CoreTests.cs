@@ -4110,7 +4110,7 @@ class CoreTests : InputTestFixture
     {
         var gyro = InputSystem.AddDevice<Gyroscope>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
-        InputSystem.QueueStateEvent(gyro, new GyroscopeState{angularVelocity = value});
+        InputSystem.QueueStateEvent(gyro, new GyroscopeState {angularVelocity = value});
         InputSystem.Update();
 
         Assert.That(Gyroscope.current, Is.SameAs(gyro));
