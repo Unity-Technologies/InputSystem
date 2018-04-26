@@ -56,12 +56,19 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="Pointer.delta"/>
         public static float PointerDeltaSensitivity = 0.25f;
 
+        /// <summary>
+        /// Should sensors be compensated for screen orientation.
+        /// Compensated sensors are accelerometer, compass, gyroscope.
+        /// </summary>
+        public static bool CompensateSensorsForScreenOrientation = true;
+
         #if UNITY_EDITOR
         // We support input in edit mode as well. If the editor is in play mode and the game view
         // has focus, input goes to the game. Otherwise input goes to the editor. This behavior can
         // be annoying so this switch allows to route input exclusively to the game.
         public static bool LockInputToGame;
         #endif
+
 
         [Serializable]
         internal struct SerializedState
@@ -74,6 +81,7 @@ namespace UnityEngine.Experimental.Input
             public float multiTapMaximumDelay;
             public float holdTime;
             public float pointerDeltaSensitivity;
+            public bool compensateSensorsForScreenOrientation;
             #if UNITY_EDITOR
             public bool lockInputToGame;
             #endif
@@ -91,6 +99,7 @@ namespace UnityEngine.Experimental.Input
                 multiTapMaximumDelay = MultiTapMaximumDelay,
                 holdTime = HoldTime,
                 pointerDeltaSensitivity = PointerDeltaSensitivity,
+                compensateSensorsForScreenOrientation = CompensateSensorsForScreenOrientation,
                 #if UNITY_EDITOR
                 lockInputToGame = LockInputToGame
                 #endif
@@ -106,6 +115,7 @@ namespace UnityEngine.Experimental.Input
             MultiTapMaximumDelay = state.multiTapMaximumDelay;
             HoldTime = state.holdTime;
             PointerDeltaSensitivity = state.pointerDeltaSensitivity;
+            CompensateSensorsForScreenOrientation = state.compensateSensorsForScreenOrientation;
             #if UNITY_EDITOR
             LockInputToGame = state.lockInputToGame;
             #endif
