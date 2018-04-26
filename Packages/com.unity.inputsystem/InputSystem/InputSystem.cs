@@ -1139,14 +1139,7 @@ namespace UnityEngine.Experimental.Input
                 // However, when restoring, we do want to get rid of whatever the InputManager currently
                 // holds on to, so we flush things out here.
                 if (s_Manager.devices.Count > 0)
-                {
-                    // Fast-track this. Only call NotifyRemoved() to get devices to clean up global state
-                    // and then release all state memory.
-                    // NOTE: Make sure to not trigger callbacks here or tests will fail getting unexpected calls.
-                    foreach (var device in devices)
-                        device.NotifyRemoved();
                     s_Manager.m_StateBuffers.FreeAll();
-                }
 
                 Reset();
 

@@ -971,6 +971,11 @@ namespace UnityEngine.Experimental.Input
         {
             // We don't destroy devices here and don't release state buffers.
             // See InputSystem.Restore() for an explanation why.
+            // However, we still want them to clear out statics so notify each device it
+            // got removed.
+            if (m_Devices != null)
+                foreach (var device in m_Devices)
+                    device.NotifyRemoved();
 
             // Uninstall globals.
             if (ReferenceEquals(InputControlLayout.s_Layouts.baseLayoutTable, m_Layouts.baseLayoutTable))
