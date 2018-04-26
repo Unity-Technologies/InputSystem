@@ -4108,34 +4108,52 @@ class CoreTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanGetGyroReading()
     {
-        ////FIXME: Move non gyro values to other tests
         var gyro = InputSystem.AddDevice<Gyroscope>();
-
-        InputSystem.QueueStateEvent(gyro,
-            new GyroscopeState
-        {
-            //gravity = new Vector3(0.123f, 0.456f, 0.789f),
-            angularVelocity = new Vector3(0.987f, 0.654f, 0.321f),
-            //orientation = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
-            //acceleration = new Vector3(0.555f, 0.666f, 0.777f),
-        });
+        var value = new Vector3(0.987f, 0.654f, 0.321f);
+        InputSystem.QueueStateEvent(gyro, new GyroscopeState{angularVelocity = value});
         InputSystem.Update();
 
         Assert.That(Gyroscope.current, Is.SameAs(gyro));
+        Assert.That(gyro.angularVelocity.ReadValue(), Is.EqualTo(value).Within(0.00001));
+    }
 
-        //Assert.That(gyro.gravity.ReadValue().x, Is.EqualTo(0.123).Within(0.00001));
-        //Assert.That(gyro.gravity.ReadValue().y, Is.EqualTo(0.456).Within(0.00001));
-        //Assert.That(gyro.gravity.ReadValue().z, Is.EqualTo(0.789).Within(0.00001));
-        Assert.That(gyro.angularVelocity.ReadValue().x, Is.EqualTo(0.987).Within(0.00001));
-        Assert.That(gyro.angularVelocity.ReadValue().y, Is.EqualTo(0.654).Within(0.00001));
-        Assert.That(gyro.angularVelocity.ReadValue().z, Is.EqualTo(0.321).Within(0.00001));
-        //Assert.That(gyro.orientation.ReadValue().x, Is.EqualTo(0.111).Within(0.00001));
-        //Assert.That(gyro.orientation.ReadValue().y, Is.EqualTo(0.222).Within(0.00001));
-        //Assert.That(gyro.orientation.ReadValue().z, Is.EqualTo(0.333).Within(0.00001));
-        //Assert.That(gyro.orientation.ReadValue().w, Is.EqualTo(0.444).Within(0.00001));
-        //Assert.That(gyro.acceleration.ReadValue().x, Is.EqualTo(0.555).Within(0.00001));
-        //Assert.That(gyro.acceleration.ReadValue().y, Is.EqualTo(0.666).Within(0.00001));
-        //Assert.That(gyro.acceleration.ReadValue().z, Is.EqualTo(0.777).Within(0.00001));
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetGravityReading()
+    {
+        var sensor = InputSystem.AddDevice<Gravity>();
+        var value = new Vector3(0.987f, 0.654f, 0.321f);
+        InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
+        InputSystem.Update();
+
+        Assert.That(Gravity.current, Is.SameAs(sensor));
+        Assert.That(sensor.gravity.ReadValue(), Is.EqualTo(value).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetAttitudeReading()
+    {
+        var sensor = InputSystem.AddDevice<Attitude>();
+        var value = new Quaternion(0.987f, 0.654f, 0.321f, 0.5f);
+        InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = value });
+        InputSystem.Update();
+
+        Assert.That(Attitude.current, Is.SameAs(sensor));
+        Assert.That(sensor.attitude.ReadValue(), Is.EqualTo(value).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetLinearAccelerationReading()
+    {
+        var sensor = InputSystem.AddDevice<LinearAcceleration>();
+        var value = new Vector3(0.987f, 0.654f, 0.321f);
+        InputSystem.QueueStateEvent(sensor, new LinearAccelerationState { acceleration = value });
+        InputSystem.Update();
+
+        Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
+        Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
     }
 
     [Test]
