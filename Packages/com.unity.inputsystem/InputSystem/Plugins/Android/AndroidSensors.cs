@@ -60,26 +60,43 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     {
         public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
 
-        ////FIXME: review sensors
+        ////FIXME: Sensors to check if values matches old system
+        // Accelerometer - OK
+        // MagneticField - no alternative in old system
+        // Orientation - seems this constant was deprecated in API 8 https://developer.android.com/reference/android/hardware/Sensor#TYPE_ORIENTATION . Remove it?
+        // Gyroscope - OK
+        // Light - no alternative in old system
+        // Pressure - no alternative in old system
+        // Proximity - no alternative in old system
+        // Gravity - OK
+        // LinearAcceleration - need to check
+        // RotationVector - OK
+        // RelativeHumidity - no alternative in old system
+        // AmbientTemperature - no alternative in old system
+        // StepCounter - no alternative in old system
+        // GeomagneticRotationVector - no alternative in old system
+        // HeartRate - no alternative in old system
 
         [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Accelerometer")]
-        [InputControl(name = "magneticField", layout = "Vector3", format = "VEC3", offset = 0, variant = "Accelerometer")]
+        [InputControl(name = "magneticField", layout = "Vector3", format = "VEC3", offset = 0, variant = "MagneticField")]
         [InputControl(name = "orientation", layout = "Vector3", format = "VEC3", offset = 0, variant = "Orientation")]
-        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, variant = "Gyroscope")]
+        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gyroscope")]
         [InputControl(name = "lightLevel", layout = "Float", format = "FLT", offset = 0, variant = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Float", format = "FLT", offset = 0, variant = "Pressure")]
         [InputControl(name = "distance", layout = "Float", format = "FLT", offset = 0, variant = "Proximity")]
         [InputControl(name = "gravity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gravity")]
-        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, variant = "LinearAcceleration")]
-        [InputControl(name = "rotationVector", layout = "Vector3", format = "VEC3", offset = 0, variant = "RotationVector")]
+        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "LinearAcceleration")]
+        [InputControl(name = "attitude", layout = "Quaternion", format = "QUAT", offset = 0, processors = "AndroidSensorRotation", variant = "RotationVector")]
         [InputControl(name = "relativeHumidity", layout = "Float", format = "FLT", offset = 0, variant = "RelativeHumidity")]
         [InputControl(name = "ambientTemperature", layout = "Float", format = "FLT", offset = 0, variant = "AmbientTemperature")]
         [InputControl(name = "stepCounter", layout = "Integer", format = "FLT", offset = 0, variant = "StepCounter")]
+        [InputControl(name = "rotation", layout = "Quaternion", format = "QUAT", offset = 0, processors = "AndroidSensorRotation", variant = "GeomagneticRotationVector")]
+        [InputControl(name = "rate", layout = "Integer", format = "FLT", offset = 0, variant = "HeartRate")]
         public fixed float data[16];
 
         public AndroidSensorState WithData(params float[] data)
         {
-            fixed(float* dataPtr = this.data)
+            fixed (float* dataPtr = this.data)
             {
                 for (var i = 0; i < data.Length && i < 16; i++)
                     dataPtr[i] = data[i];
@@ -111,7 +128,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
             if (InputConfiguration.CompensateSensorsForScreenOrientation)
             {
                 Quaternion rotation = Quaternion.identity;
-                switch(Screen.orientation)
+                switch (Screen.orientation)
                 {
                     case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
                     case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
@@ -123,8 +140,33 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
             return newValue;
         }
     }
-}
 
+    public class AndroidSensorRotationProcessor : IInputProcessor<Quaternion>
+    {
+        public Quaternion Process(Quaternion rotation, InputControl control)
+        {
+            float sinRho2 = rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z;
+            rotation.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
+
+            if (InputConfiguration.CompensateSensorsForScreenOrientation)
+            {
+                const float kSqrtOfTwo = 1.4142135623731f;
+                Quaternion q = Quaternion.identity;
+
+                switch (Screen.orientation)
+                {
+                    case ScreenOrientation.PortraitUpsideDown: q = new Quaternion(0.0f, 0.0f, 1.0f /*sin(pi/2)*/, 0.0f /*cos(pi/2)*/); break;
+                    case ScreenOrientation.LandscapeLeft:      q = new Quaternion(0.0f, 0.0f, kSqrtOfTwo * 0.5f /*sin(pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(pi/4)*/); break;
+                    case ScreenOrientation.LandscapeRight:     q = new Quaternion(0.0f, 0.0f, -kSqrtOfTwo * 0.5f /*sin(3pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(3pi/4)*/); break;
+                }
+
+                return rotation * q;
+            }
+
+           return rotation;
+        }
+    }
+}
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
@@ -178,17 +220,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gravity")]
-    public class AndroidGravity : Sensor
+    public class AndroidGravity : Gravity
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "LinearAcceleration")]
-    public class AndroidLinearAcceleration : Sensor
+    public class AndroidLinearAcceleration : LinearAcceleration
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "RotationVector")]
-    public class AndroidRotationVector : Sensor
+    public class AndroidRotationVector : Attitude
     {
     }
 
