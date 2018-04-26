@@ -1221,7 +1221,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromLayout()
+    public void Devices_CanCreateDevice_FromLayout()
     {
         var setup = new InputDeviceBuilder("Gamepad");
         var device = setup.Finish();
@@ -1232,7 +1232,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceWithNestedState()
+    public void Devices_CanCreateDevice_WithNestedState()
     {
         InputSystem.RegisterControlLayout<CustomDevice>();
         var setup = new InputDeviceBuilder("CustomDevice");
@@ -1243,7 +1243,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromLayoutMatchedByDeviceDescription()
+    public void Devices_CanCreateDevice_FromLayoutMatchedByDeviceDescription()
     {
         const string json = @"
             {
@@ -1303,7 +1303,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromLayoutVariant()
+    public void Devices_CanCreateDevice_FromLayoutVariant()
     {
         var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variant: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
@@ -4115,6 +4115,20 @@ class CoreTests : InputTestFixture
     [Test]
     [Category("Devices")]
     public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CannotChangeStateLayoutOfTouchControls()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CannotChangeStateLayoutOfTouchscreen()
     {
         Assert.Fail();
     }
