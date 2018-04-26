@@ -227,11 +227,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
             }
 
-            if (!isFixedUpdateEnabled)
-                m_FixedUpdateBuffers = m_DynamicUpdateBuffers;
-            if (!isDynamicUpdateEnabled)
-                m_DynamicUpdateBuffers = m_FixedUpdateBuffers;
-
 #if UNITY_EDITOR
             m_EditorUpdateBuffers =
                 SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);

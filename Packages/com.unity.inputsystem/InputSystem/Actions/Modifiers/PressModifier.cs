@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.Controls;
 
+////TODO: have ability to also observe release (separate from ReleaseModifier)
+
 namespace UnityEngine.Experimental.Input.Modifiers
 {
     // A modifier for button-like behavior. Will perform action once

@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['remote',['remote',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a02d6f3655b4ef4d41c3169419d6d316a',1,'UnityEngine::Experimental::Input::InputDevice']]],
-  ['remoting',['remoting',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7852a0a3abd8dd03cffaa9e34c5fe9ee',1,'UnityEngine::Experimental::Input::InputSystem']]],
-  ['right',['right',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DpadControl.html#afed74e4661b02106a2d6e3e340a60ec8',1,'UnityEngine::Experimental::Input::Controls::DpadControl']]],
-  ['rightbutton',['rightButton',['../classUnityEngine_1_1Experimental_1_1Input_1_1Mouse.html#a02a339473f1585f6fdec8d790643a249',1,'UnityEngine::Experimental::Input::Mouse']]]
+  ['queryhidreportdescriptordevicecommandtype',['QueryHIDReportDescriptorDeviceCommandType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID.html#a345da57aff7367ca3ae1e1536766c89f',1,'UnityEngine::Experimental::Input::Plugins::HID::HID']]],
+  ['queryhidreportdescriptorsizedevicecommandtype',['QueryHIDReportDescriptorSizeDeviceCommandType',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HID.html#ae5bdba8001c4037a02efbb8d57083682',1,'UnityEngine::Experimental::Input::Plugins::HID::HID']]],
+  ['quotekey',['quoteKey',['../classUnityEngine_1_1Experimental_1_1Input_1_1Keyboard.html#a0ed5f05c1ea365ad3bbb5c87c759fc3d',1,'UnityEngine::Experimental::Input::Keyboard']]]
 ];

@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
 
 // Using simple actions with callbacks.
-public class SimpleController_v3 : MonoBehaviour
+public class SimpleController_UsingActions : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;

@@ -82,5 +82,26 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             set { NativeInputSystem.SetPollingFrequency(value); }
         }
+
+        public InputUpdateType updateMask
+        {
+            set
+            {
+                ////TODO: remove the detour through reflection once we have landed the native change in the 2018.2 beta
+                ////      the reflection detour here is only to keep it compiling and running without the native change
+                if (m_SetUpdateMaskMethod == null)
+                {
+                    var method = typeof(NativeInputSystem).GetMethod("SetUpdateMask");
+                    if (method != null)
+                        m_SetUpdateMaskMethod = mask => method.Invoke(null, new object[] {mask});
+                    else
+                        m_SetUpdateMaskMethod = mask => {};
+                }
+
+                m_SetUpdateMaskMethod((NativeInputUpdateType)value);
+            }
+        }
+
+        private Action<NativeInputUpdateType> m_SetUpdateMaskMethod;
     }
 }

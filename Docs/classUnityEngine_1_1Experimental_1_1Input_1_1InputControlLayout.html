@@ -120,13 +120,13 @@ Public Member Functions</h2></td></tr>
 <li>
 Loaded from JSON. </li>
 <li>
-Constructed through reflection from InputControls classes. </li>
+Constructed through reflection from <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html">InputControls</a> classes. </li>
 <li>
-Through layout factories using InputControlLayout.Builder. </li>
+Through layout factories using <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1Builder.html" title="Build a layout programmatically. Primarily for use by layout builders registered with the system...">InputControlLayout.Builder</a>. </li>
 </ol>
 <p>Once constructed, control layouts are immutable (but you can always replace a registered layout in the system and it will affect everything constructed from the layout).</p>
-<p>Control layouts can be for arbitrary control rigs or for entire devices. Device layouts can use the 'deviceDescriptor' field to specify regexs that are to match against compatible devices.</p>
-<p>InputControlLayout objects are considered temporaries. Except in the editor, we don't keep them around beyond device creation. </p>
+<p>Control layouts can be for arbitrary control rigs or for entire devices. Device layouts can use the deviceMatcher field to specify regexs that are to match against compatible devices.</p>
+<p>InputControlLayout objects are considered temporaries. Except in the editor, they are not kept around beyond device creation. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a0c727f625371684ef6abae163f4d2de7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0c727f625371684ef6abae163f4d2de7">&#9670;&nbsp;</a></span>MergeLayout()</h2>

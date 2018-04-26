@@ -229,7 +229,6 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
-        [SerializeField] private Vector2 m_EventListScrollPosition;
         [SerializeField] private InputEventTrace m_EventTrace;
         [SerializeField] private bool m_EventTraceDisabled;
 
@@ -254,7 +253,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (device.id != m_DeviceId)
                 return;
 
-            m_Device = null;
             if (change == InputDeviceChange.Removed)
             {
                 Close();
@@ -262,6 +260,10 @@ namespace UnityEngine.Experimental.Input.Editor
             else
             {
                 Repaint();
+
+                // If the state of the device changed, refresh control values in the control tree.
+                if (change == InputDeviceChange.StateChanged && m_ControlTree != null)
+                    m_ControlTree.RefreshControlValues();
             }
         }
 

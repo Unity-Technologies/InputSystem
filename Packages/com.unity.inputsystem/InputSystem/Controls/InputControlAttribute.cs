@@ -30,6 +30,7 @@ namespace UnityEngine.Experimental.Input
         public uint bit = InputStateBlock.kInvalidOffset;
         public uint offset = InputStateBlock.kInvalidOffset;
         public uint sizeInBits;
+        public int arraySize;
         public string displayName;
         public string imageName;
         public bool noisy;

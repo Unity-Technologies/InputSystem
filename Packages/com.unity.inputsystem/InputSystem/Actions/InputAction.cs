@@ -711,9 +711,7 @@ namespace UnityEngine.Experimental.Input
                 m_StartTime = startTime
             };
 
-            #if ENABLE_PROFILER
             Profiler.BeginSample("InputActionCallback");
-            #endif
 
             listeners.firstValue(context);
             if (listeners.additionalValues != null)
@@ -722,9 +720,7 @@ namespace UnityEngine.Experimental.Input
                     listeners.additionalValues[i](context);
             }
 
-            #if ENABLE_PROFILER
             Profiler.EndSample();
-            #endif
         }
 
         private void ThrowIfPhaseTransitionIsInvalid(Phase currentPhase, Phase newPhase, int bindingIndex, int modifierIndex)
