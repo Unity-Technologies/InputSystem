@@ -236,8 +236,11 @@ namespace UnityEngine.Experimental.Input
             if (current == this)
                 current = null;
 
-            ArrayHelpers.Erase(ref s_Gamepads, this);
-            --s_GamepadCount;
+            // Remove from array.
+            var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
+            Debug.Assert(wasFound, string.Format("Gamepad {0} seems to not have been added but is being removed", this));
+            if (wasFound)
+                --s_GamepadCount;
         }
 
         public virtual void PauseHaptics()

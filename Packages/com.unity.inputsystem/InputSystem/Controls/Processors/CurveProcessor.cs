@@ -2,7 +2,7 @@ namespace UnityEngine.Experimental.Input.Processors
 {
     // Interprets a float value as time and uses it to interpolate over an
     // AnimationCurve.
-    public class CurveProcessor : IInputProcessor<float>
+    public class CurveProcessor : IInputControlProcessor<float>
     {
         public AnimationCurve curve;
 

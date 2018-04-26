@@ -152,6 +152,7 @@ namespace UnityEngine.Experimental.Input
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public float pollingFrequency { get; set; }
+        public InputUpdateType updateMask { get; set; }
 
         public void Dispose()
         {

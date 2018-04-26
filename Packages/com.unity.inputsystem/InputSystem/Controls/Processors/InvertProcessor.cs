@@ -1,6 +1,6 @@
 namespace UnityEngine.Experimental.Input.Processors
 {
-    public class InvertProcessor : IInputProcessor<float>
+    public class InvertProcessor : IInputControlProcessor<float>
     {
         public float Process(float value, InputControl control)
         {

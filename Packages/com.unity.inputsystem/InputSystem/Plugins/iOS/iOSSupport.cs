@@ -1,11 +1,11 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
-    public static class IOSSupport
+    public static class iOSSupport
     {
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<IOSGameController>("iOSGameController",
+            InputSystem.RegisterControlLayout<iOSGameController>("iOSGameController",
                 matches: new InputDeviceMatcher()
                 .WithInterface("iOS")
                 .WithDeviceClass("iOSGameController"));

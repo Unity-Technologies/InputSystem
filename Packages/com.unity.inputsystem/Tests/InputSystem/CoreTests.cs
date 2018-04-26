@@ -1221,7 +1221,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromLayout()
+    public void Devices_CanCreateDevice_FromLayout()
     {
         var setup = new InputDeviceBuilder("Gamepad");
         var device = setup.Finish();
@@ -1232,7 +1232,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceWithNestedState()
+    public void Devices_CanCreateDevice_WithNestedState()
     {
         InputSystem.RegisterControlLayout<CustomDevice>();
         var setup = new InputDeviceBuilder("CustomDevice");
@@ -1243,7 +1243,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromLayoutMatchedByDeviceDescription()
+    public void Devices_CanCreateDevice_FromLayoutMatchedByDeviceDescription()
     {
         const string json = @"
             {
@@ -1303,7 +1303,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanCreateDeviceFromLayoutVariant()
+    public void Devices_CanCreateDevice_FromLayoutVariant()
     {
         var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variant: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
@@ -1720,53 +1720,53 @@ class CoreTests : InputTestFixture
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.up));
 
         // Up left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
 
         // Left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.left));
 
         // Down left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.left).normalized.y).Within(0.00001));
 
         // Down.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.down));
 
         // Down right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
 
-        // Down.
+        // Right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.right));
 
         // Up right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight });
         InputSystem.Update();
 
-        Assert.That(gamepad.dpad.ReadValue().magnitude, Is.EqualTo(1).Within(0.000001));
+        Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.right).normalized.y).Within(0.00001));
     }
 
     struct DiscreteButtonDpadState : IInputStateTypeInfo
@@ -2288,6 +2288,44 @@ class CoreTests : InputTestFixture
     }
 
     [Test]
+    [Category("State")]
+    public void State_CanDisableFixedUpdates()
+    {
+        // Add a device as otherwise we don't have any state.
+        InputSystem.AddDevice<Gamepad>();
+
+        // Disable fixed updates.
+        InputSystem.updateMask &= ~InputUpdateType.Fixed;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
+        #if UNITY_EDITOR
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+
+        // Make sure we disabled the update in the runtime.
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
+
+        // Make sure we got rid of the memory for fixed update.
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
+
+        // Re-enable fixed updates.
+        InputSystem.updateMask |= InputUpdateType.Fixed;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
+        Assert.That(InputSystem.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
+        #if UNITY_EDITOR
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+
+        // Make sure we re-enabled the update in the runtime.
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputSystem.updateMask));
+
+        // Make sure we got re-instated the fixed update state buffers.
+        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
+    }
+
+    [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromLayout()
     {
@@ -2386,6 +2424,55 @@ class CoreTests : InputTestFixture
         InputSystem.AddDevice(device);
 
         Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad1/dpad/up"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingDeviceThatUsesBeforeRenderUpdates_CausesBeforeRenderUpdatesToBeEnabled()
+    {
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(deviceJson);
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+
+        InputSystem.AddDevice("CustomGamepad");
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingLastDeviceThatUsesBeforeRenderUpdates_CausesBeforeRenderUpdatesToBeDisabled()
+    {
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(deviceJson);
+
+        var device1 = InputSystem.AddDevice("CustomGamepad");
+        var device2 = InputSystem.AddDevice("CustomGamepad");
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        InputSystem.RemoveDevice(device1);
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        InputSystem.RemoveDevice(device2);
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
     class TestDeviceReceivingAddAndRemoveNotification : Mouse
@@ -4034,6 +4121,20 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void TODO_Devices_CannotChangeStateLayoutOfTouchControls()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CannotChangeStateLayoutOfTouchscreen()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetSensorSamplingFrequency()
     {
         var sensor = InputSystem.AddDevice<Accelerometer>();
@@ -4587,8 +4688,6 @@ class CoreTests : InputTestFixture
     [Category("Events")]
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
-        // Could use one of the tracking layouts but let's do it with a
-        // custom layout that enables before render updates on a gamepad.
         const string deviceJson = @"
             {
                 ""name"" : ""CustomGamepad"",
@@ -6188,7 +6287,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanCreateCompositeBindings()
+    public void Actions_CanCreateButtonAxisComposite()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -6213,6 +6312,139 @@ class CoreTests : InputTestFixture
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateButtonVectorComposite()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Set up classic WASD control.
+        var action = new InputAction();
+        action.AddCompositeBinding("ButtonVector")
+        .With("Up", "/<Keyboard>/w")
+        .With("Down", "/<Keyboard>/s")
+        .With("Left", "/<Keyboard>/a")
+        .With("Right", "/<Keyboard>/d");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.GetValue<Vector2>(); };
+
+        // Up.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up));
+
+        // Up left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
+
+        // Left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.left));
+
+        // Down left.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.left + Vector2.down).normalized.y).Within(0.00001));
+
+        // Down.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.down));
+
+        // Down right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S, Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
+
+        // Right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.right));
+
+        // Up right.
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
+        Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_WhenPartOfCompositeResolvesToMultipleControls_WhatHappensXXX()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanSerializeAndDeserializeActionsWithCompositeBindings()
+    {
+        var set = new InputActionSet(name: "test");
+        set.AddAction("test")
+        .AddCompositeBinding("ButtonVector")
+        .With("Up", "/<Keyboard>/w")
+        .With("Down", "/<Keyboard>/s")
+        .With("Left", "/<Keyboard>/a")
+        .With("Right", "/<Keyboard>/d");
+
+        var json = set.ToJson();
+        var deserialized = InputActionSet.FromJson(json);
+
+        Assert.That(deserialized.Length, Is.EqualTo(1));
+        Assert.That(deserialized[0].actions.Count, Is.EqualTo(1));
+        Assert.That(deserialized[0].actions[0].bindings.Count, Is.EqualTo(5));
+        Assert.That(deserialized[0].actions[0].bindings[0].path, Is.EqualTo("ButtonVector"));
+        Assert.That(deserialized[0].actions[0].bindings[0].isComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[0].isPartOfComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[1].name, Is.EqualTo("Up"));
+        Assert.That(deserialized[0].actions[0].bindings[1].path, Is.EqualTo("/<Keyboard>/w"));
+        Assert.That(deserialized[0].actions[0].bindings[1].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[1].isPartOfComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[2].name, Is.EqualTo("Down"));
+        Assert.That(deserialized[0].actions[0].bindings[2].path, Is.EqualTo("/<Keyboard>/s"));
+        Assert.That(deserialized[0].actions[0].bindings[2].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[2].isPartOfComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[3].name, Is.EqualTo("Left"));
+        Assert.That(deserialized[0].actions[0].bindings[3].path, Is.EqualTo("/<Keyboard>/a"));
+        Assert.That(deserialized[0].actions[0].bindings[3].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[3].isPartOfComposite, Is.True);
+        Assert.That(deserialized[0].actions[0].bindings[4].name, Is.EqualTo("Right"));
+        Assert.That(deserialized[0].actions[0].bindings[4].path, Is.EqualTo("/<Keyboard>/d"));
+        Assert.That(deserialized[0].actions[0].bindings[4].isComposite, Is.False);
+        Assert.That(deserialized[0].actions[0].bindings[4].isPartOfComposite, Is.True);
     }
 
     [Test]
@@ -7300,15 +7532,6 @@ class CoreTests : InputTestFixture
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption
-        ////TODO
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("State")]
-    public void TODO_State_CanDisableFixedUpdates()
-    {
-        //make sure it reduces memory usage
         ////TODO
         Assert.Fail();
     }
