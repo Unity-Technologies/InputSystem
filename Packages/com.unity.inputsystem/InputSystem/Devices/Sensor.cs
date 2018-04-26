@@ -39,6 +39,51 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
+
+    public struct GravityState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('G', 'R', 'V', ' '); }
+        }
+
+        [InputControl] public Vector3 gravity;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+
+    public struct AttitudeState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('A', 'T', 'T', 'D'); }
+        }
+
+        [InputControl] public Quaternion attitude;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+
+    public struct LinearAccelerationState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('L', 'A', 'A', 'C'); }
+        }
+
+        [InputControl] public Vector3 acceleration;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
 }
 
 namespace UnityEngine.Experimental.Input
@@ -115,6 +160,90 @@ namespace UnityEngine.Experimental.Input
             base.FinishSetup(builder);
         }
     }
+
+    [InputControlLayout(stateType = typeof(GravityState))]
+    public class Gravity : Sensor
+    {
+        public Vector3Control gravity { get; private set; }
+
+        public static Gravity current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            gravity = builder.GetControl<Vector3Control>("gravity");
+            base.FinishSetup(builder);
+        }
+    }
+
+    //// FIXME: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
+    //          This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
+    [InputControlLayout(stateType = typeof(AttitudeState))]
+    public class Attitude : Sensor
+    {
+        public QuaternionControl attitude { get; private set; }
+
+        public static Attitude current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            attitude = builder.GetControl<QuaternionControl>("attitude");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(LinearAccelerationState))]
+    public class LinearAcceleration : Sensor
+    {
+        public Vector3Control acceleration { get; private set; }
+
+        public static LinearAcceleration current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            base.FinishSetup(builder);
+        }
+    }
+
 
     public class GPS : Sensor
     {
