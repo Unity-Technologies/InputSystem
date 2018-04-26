@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Experimental.Input.Controls;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 {
@@ -59,7 +60,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     {
         public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
 
-        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "androidacceleration", variant = "Accelerometer")]
+        ////FIXME: review sensors
+
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Accelerometer")]
+        [InputControl(name = "magneticField", layout = "Vector3", format = "VEC3", offset = 0, variant = "Accelerometer")]
+        [InputControl(name = "orientation", layout = "Vector3", format = "VEC3", offset = 0, variant = "Orientation")]
+        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, variant = "Gyroscope")]
+        [InputControl(name = "lightLevel", layout = "Float", format = "FLT", offset = 0, variant = "Light")]
+        [InputControl(name = "atmosphericPressure", layout = "Float", format = "FLT", offset = 0, variant = "Pressure")]
+        [InputControl(name = "distance", layout = "Float", format = "FLT", offset = 0, variant = "Proximity")]
+        [InputControl(name = "gravity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gravity")]
+        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, variant = "LinearAcceleration")]
+        [InputControl(name = "rotationVector", layout = "Vector3", format = "VEC3", offset = 0, variant = "RotationVector")]
+        [InputControl(name = "relativeHumidity", layout = "Float", format = "FLT", offset = 0, variant = "RelativeHumidity")]
+        [InputControl(name = "ambientTemperature", layout = "Float", format = "FLT", offset = 0, variant = "AmbientTemperature")]
+        [InputControl(name = "stepCounter", layout = "Integer", format = "FLT", offset = 0, variant = "StepCounter")]
         public fixed float data[16];
 
         public AndroidSensorState WithData(params float[] data)
@@ -83,7 +98,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidAccelerationProcessor : IInputProcessor<Vector3>
+    public class AndroidSensorProcessor : IInputProcessor<Vector3>
     {
         // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;
@@ -92,8 +107,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         public Vector3 Process(Vector3 vector, InputControl control)
         {
-            ////FIXME: Old Input system rotate this value depending on the orientation, do the same here
-            return vector * kAccelerationMultiplier;
+            var newValue = vector * kAccelerationMultiplier;
+            if (InputConfiguration.CompensateSensorsForScreenOrientation)
+            {
+                Quaternion rotation = Quaternion.identity;
+                switch(Screen.orientation)
+                {
+                    case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
+                    case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
+                    case ScreenOrientation.LandscapeRight: rotation = Quaternion.Euler(0, 0, 270); break;
+                }
+                newValue = rotation * newValue;
+            }
+
+            return newValue;
         }
     }
 }
@@ -111,6 +138,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticField")]
     public class AndroidMagneticField : Sensor
     {
+        public Vector3Control mangeticField { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            mangeticField = builder.GetControl<Vector3Control>("magneticField");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Orientation")]
@@ -196,6 +230,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "StepCounter")]
     public class AndroidStepCounter : Sensor
     {
+        public IntegerControl stepCounter { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            stepCounter = builder.GetControl<IntegerControl>("stepCounter");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GeomagneticRotationVector")]
