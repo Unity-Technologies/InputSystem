@@ -25,7 +25,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 52)]
     public struct GyroscopeState : IInputStateTypeInfo
     {
         public static FourCC kFormat
@@ -33,10 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'Y', 'R', 'O'); }
         }
 
-        [InputControl][FieldOffset(0)] public Vector3 gravity;
-        [InputControl][FieldOffset(12)] public Vector3 angularVelocity;
-        [InputControl][FieldOffset(24)] public Quaternion orientation;
-        [InputControl][FieldOffset(40)] public Vector3 acceleration;
+        [InputControl] public Vector3 angularVelocity;
 
         public FourCC GetFormat()
         {
@@ -96,10 +92,7 @@ namespace UnityEngine.Experimental.Input
     [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
-        public QuaternionControl orientation { get; private set; }
-        public Vector3Control acceleration { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
-        public Vector3Control gravity { get; private set; }
 
         public static Gyroscope current { get; private set; }
 
@@ -118,10 +111,7 @@ namespace UnityEngine.Experimental.Input
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            orientation = builder.GetControl<QuaternionControl>("orientation");
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
             angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
-            gravity = builder.GetControl<Vector3Control>("gravity");
             base.FinishSetup(builder);
         }
     }
