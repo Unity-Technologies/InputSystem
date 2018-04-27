@@ -110,6 +110,27 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return layoutName;
         }
 
+        string ConvertPotentialAliasToName(InputControlLayout layout, string nameOrAlias)
+        {
+            InternedString internedNameOrAlias = new InternedString(nameOrAlias);
+            ReadOnlyArray<InputControlLayout.ControlItem> controls = layout.controls;
+            for(int i = 0; i < controls.Count; i++)
+            {
+                InputControlLayout.ControlItem controlItem = controls[i];
+
+                if (controlItem.name == internedNameOrAlias)
+                    return nameOrAlias;
+
+                ReadOnlyArray<InternedString> aliases = controlItem.aliases;
+                for(int j = 0; j < aliases.Count; j++)
+                {
+                    if (aliases[j] == nameOrAlias)
+                        return controlItem.name.ToString();
+                }
+            }
+            return nameOrAlias;
+        }
+
         public InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
@@ -118,6 +139,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 extendsLayout = parentLayout,
                 updateBeforeRender = true
             };
+
+            var inherittedLayout = InputSystem.TryLoadLayout(parentLayout);
 
             var currentUsages = new List<string>();
 
@@ -135,7 +158,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                 }
 
-                string featureName = SanitizeName(feature.name);
+                string featureName = feature.name;
+                if (inherittedLayout != null)
+                    featureName = ConvertPotentialAliasToName(inherittedLayout, featureName);
+                featureName = SanitizeName(featureName);
+
                 uint nextOffset = GetSizeOfFeature(feature);
 
                 if(interfaceName == XRUtilities.kXRInterfaceV1)
