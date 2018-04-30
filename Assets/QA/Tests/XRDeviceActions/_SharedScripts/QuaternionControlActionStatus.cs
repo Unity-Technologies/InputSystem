@@ -29,10 +29,6 @@ public class QuaternionControlActionStatus : MonoBehaviour
 
     private string QuaternionToFieldText(Quaternion inQuat)
     {
-        return "(" + inQuat.w.ToString("+0.000;-0.000;+0.000")
-            + ", " + inQuat.x.ToString("+0.000;-0.000;+0.000")
-            + ", " + inQuat.y.ToString("+0.000;-0.000;+0.000")
-            + ", " + inQuat.z.ToString("+0.000;-0.000;+0.000")
-            + ")";
+        return inQuat.ToString("+0.000;-0.000;+0.000");
     }
 }

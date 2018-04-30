@@ -29,9 +29,6 @@ public class Vector3ControlActionStatus : MonoBehaviour
 
     private string Vector3ToFieldText(Vector3 inVec)
     {
-        return "(" + inVec.x.ToString("+000.000;-000.000;+000.000")
-            + ", " + inVec.y.ToString("+000.000;-000.000;+000.000")
-            + ", " + inVec.z.ToString("+000.000;-000.000;+000.000")
-            + ")";
+        return inVec.ToString("+000.000;-000.000;+000.000");
     }
 }
