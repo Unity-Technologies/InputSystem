@@ -14,10 +14,10 @@ public class TouchReporter : MonoBehaviour
     void Update()
     {
         Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
-        
-        if ((touchscreen!= null) && (touchIndex < touchscreen.activeTouches.Count))
+
+        if ((touchscreen != null) && (touchIndex < touchscreen.activeTouches.Count))
         {
-            coordinateText.text = 
+            coordinateText.text =
                 touchscreen.activeTouches[touchIndex].ReadValue().position.x.ToString("0000") + ", " +
                 touchscreen.activeTouches[touchIndex].ReadValue().position.y.ToString("0000");
             image.color = Color.red;

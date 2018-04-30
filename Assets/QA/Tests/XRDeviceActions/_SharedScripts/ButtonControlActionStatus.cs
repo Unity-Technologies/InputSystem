@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,8 +6,8 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.UI;
 
-public class ButtonControlActionStatus : MonoBehaviour {
-    
+public class ButtonControlActionStatus : MonoBehaviour
+{
     public InputAction buttonPressAction;
     public InputAction buttonTouchAction;
 
@@ -16,18 +16,19 @@ public class ButtonControlActionStatus : MonoBehaviour {
     private bool m_isTouched;
     private bool m_isPressed;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         buttonTouchAction.Enable();
         buttonTouchAction.performed += UpdateTouchStatus;
         buttonTouchAction.started += UpdateTouchStatus;
         buttonTouchAction.cancelled += UpdateTouchStatus;
-        
+
         buttonPressAction.Enable();
         buttonPressAction.performed += UpdatePressStatus;
         buttonPressAction.started += UpdatePressStatus;
         buttonPressAction.cancelled += UpdatePressStatus;
-	}
+    }
 
     private void UpdatePressStatus(InputAction.CallbackContext context)
     {
@@ -55,11 +56,5 @@ public class ButtonControlActionStatus : MonoBehaviour {
         {
             statusImage.color = Color.white;
         }
-    }
-
-    private void OnApplicationQuit()
-    {
-        buttonTouchAction.Disable();
-        buttonPressAction.Disable();
     }
 }

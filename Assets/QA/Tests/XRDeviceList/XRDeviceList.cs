@@ -1,20 +1,21 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 
-public class XRDeviceList : MonoBehaviour {
-
+public class XRDeviceList : MonoBehaviour
+{
     public Text deviceText;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         UpdateDeviceText();
 
         InputSystem.onDeviceChange += OnDeviceChange;
-	}
+    }
 
     void OnDeviceChange(InputDevice device, InputDeviceChange change)
     {
@@ -28,7 +29,7 @@ public class XRDeviceList : MonoBehaviour {
         {
             deviceAccumulator += "<" + i + "> " + InputSystem.devices[i].displayName + "\n";
         }
-        
+
         if (deviceText != null)
         {
             deviceText.text = deviceAccumulator;

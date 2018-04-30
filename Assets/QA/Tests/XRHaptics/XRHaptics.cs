@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,8 +7,8 @@ using UnityEngine.Experimental.Input.Plugins.XR;
 
 using UnityEngine.UI;
 
-public class XRHaptics : MonoBehaviour {
-
+public class XRHaptics : MonoBehaviour
+{
     public Image leftHapticDetected;
     public Image leftTryingToRumble;
     public Image rightHapticDetected;
@@ -24,11 +24,6 @@ public class XRHaptics : MonoBehaviour {
         leftHapticDetected.color = (leftHandController != null) ? Color.red : Color.white;
         if (leftHandController != null)
         {
-            //if (!m_LeftHandRumbling)
-            //    leftHandController.PauseHaptics();
-            //else
-            //    leftHandController.ResumeHaptics();
-
             leftHandController.SetIntensity(1f);
 
             leftTryingToRumble.color = (m_LeftHandRumbling ? Color.red : Color.white);
@@ -38,11 +33,6 @@ public class XRHaptics : MonoBehaviour {
         rightHapticDetected.color = (rightHandController != null) ? Color.red : Color.white;
         if (rightHandController != null)
         {
-            //if (m_LeftHandRumbling)
-            //    rightHandController.PauseHaptics();
-            //else
-            //    rightHandController.ResumeHaptics();
-
             rightHandController.SetIntensity(1f);
 
             rightTryingToRumble.color = !m_LeftHandRumbling ? Color.red : Color.white;
@@ -51,6 +41,7 @@ public class XRHaptics : MonoBehaviour {
         UpdateTimer();
     }
 
+    // Swap rumble between left and right hand controllers about once per period.
     void UpdateTimer()
     {
         m_Timer += Time.deltaTime;
