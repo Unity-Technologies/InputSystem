@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
@@ -24,9 +22,9 @@ namespace UnityEngine.Experimental.Input
     /// <code>
     /// // To register the processor, call
     /// //
-    /// //    InputSystem.RegisterProcessor<ScalingProcessor>("scale");
+    /// //    InputSystem.RegisterControlProcessor<ScalingProcessor>("scale");
     /// //
-    /// public class ScalingProcessor : IInputProcessor<float>
+    /// public class ScalingProcessor : IInputControlProcessor<float>
     /// {
     ///     // This field can be set as a parameter. See examples below.
     ///     // If not explicitly configured, will have its default value.
@@ -56,8 +54,8 @@ namespace UnityEngine.Experimental.Input
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="InputSystem.RegisterProcessor"/>
-    public interface IInputProcessor<TValue>
+    /// <seealso cref="InputSystem.RegisterControlProcessor"/>
+    public interface IInputControlProcessor<TValue>
     {
         /// <summary>
         /// Process the given value and return the result.
@@ -73,17 +71,8 @@ namespace UnityEngine.Experimental.Input
         TValue Process(TValue value, InputControl control);
     }
 
-    internal static class InputProcessor
+    internal static class InputControlProcessor
     {
-        public static Dictionary<InternedString, Type> s_Processors;
-
-        public static Type TryGet(string name)
-        {
-            Type type;
-            var internedName = new InternedString(name);
-            if (s_Processors.TryGetValue(internedName, out type))
-                return type;
-            return null;
-        }
+        public static TypeTable s_Processors;
     }
 }

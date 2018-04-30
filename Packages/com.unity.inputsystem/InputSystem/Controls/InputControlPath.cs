@@ -307,7 +307,8 @@ namespace UnityEngine.Experimental.Input
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
 
-            return MatchControlsRecursive(control, path, indexInPath, null);
+            var none = new ArrayOrListWrapper<InputControl>();
+            return MatchControlsRecursive(control, path, indexInPath, ref none);
         }
 
         // Perform a search for controls starting with the given control as root and matching
@@ -323,6 +324,13 @@ namespace UnityEngine.Experimental.Input
         public static int TryFindControls(InputControl control, string path, int indexInPath,
             List<InputControl> matches)
         {
+            var wrapper = new ArrayOrListWrapper<InputControl>(matches);
+            return TryFindControls(control, path, indexInPath, ref wrapper);
+        }
+
+        internal static int TryFindControls(InputControl control, string path, int indexInPath,
+            ref ArrayOrListWrapper<InputControl> matches)
+        {
             if (control == null)
                 throw new ArgumentNullException("control");
             if (path == null)
@@ -331,9 +339,9 @@ namespace UnityEngine.Experimental.Input
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;
 
-            var countBefore = matches.Count;
-            MatchControlsRecursive(control, path, indexInPath, matches);
-            return matches.Count - countBefore;
+            var countBefore = matches.count;
+            MatchControlsRecursive(control, path, indexInPath, ref matches);
+            return matches.count - countBefore;
         }
 
         public static InputControl TryFindChild(InputControl control, string path, int indexInPath = 0)
@@ -357,7 +365,7 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO: refactor this to use the new PathParser
 
-        private static InputControl MatchControlsRecursive(InputControl control, string path, int indexInPath, List<InputControl> matches)
+        private static InputControl MatchControlsRecursive(InputControl control, string path, int indexInPath, ref ArrayOrListWrapper<InputControl> matches)
         {
             var pathLength = path.Length;
 
@@ -430,7 +438,7 @@ namespace UnityEngine.Experimental.Input
                 // If we've reached the end of the path, we have a match.
                 if (indexInPath == pathLength)
                 {
-                    if (matches != null)
+                    if (!matches.isNull)
                         matches.Add(control);
                     return control;
                 }
@@ -443,7 +451,7 @@ namespace UnityEngine.Experimental.Input
                     // Silently accept trailing slashes.
                     if (indexInPath == pathLength)
                     {
-                        if (matches != null)
+                        if (!matches.isNull)
                             matches.Add(control);
                         return control;
                     }
@@ -460,12 +468,12 @@ namespace UnityEngine.Experimental.Input
                         // Usages are kind of like entry points that can route to anywhere else
                         // on a device's control hierarchy and then we keep going from that re-routed
                         // point.
-                        lastMatch = MatchByUsageAtDeviceRootRecursive(control.device, path, indexInPath, matches);
+                        lastMatch = MatchByUsageAtDeviceRootRecursive(control.device, path, indexInPath, ref matches);
                     }
                     else
                     {
                         // Go through children and see what we can match.
-                        lastMatch = MatchChildrenRecursive(control, path, indexInPath, matches);
+                        lastMatch = MatchChildrenRecursive(control, path, indexInPath, ref matches);
                     }
 
                     return lastMatch;
@@ -476,7 +484,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         private static InputControl MatchByUsageAtDeviceRootRecursive(InputDevice device, string path, int indexInPath,
-            List<InputControl> matches)
+            ref ArrayOrListWrapper<InputControl> matches)
         {
             var usages = device.m_UsagesForEachControl;
             if (usages == null)
@@ -514,7 +522,7 @@ namespace UnityEngine.Experimental.Input
                 if (indexInPath < pathLength && path[indexInPath] == '/')
                 {
                     lastMatch = MatchChildrenRecursive(controlMatchedByUsage, path, indexInPath + 1,
-                            matches);
+                            ref matches);
 
                     // We can stop going through usages if we matched something and the
                     // path component covering usage does not contain wildcards.
@@ -523,13 +531,13 @@ namespace UnityEngine.Experimental.Input
 
                     // We can stop going through usages if we have a match and are only
                     // looking for a single one.
-                    if (lastMatch != null && matches == null)
+                    if (lastMatch != null && matches.isNull)
                         break;
                 }
                 else
                 {
                     lastMatch = controlMatchedByUsage;
-                    if (matches != null)
+                    if (!matches.isNull)
                         matches.Add(controlMatchedByUsage);
                     else
                     {
@@ -543,7 +551,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         private static InputControl MatchChildrenRecursive(InputControl control, string path, int indexInPath,
-            List<InputControl> matches)
+            ref ArrayOrListWrapper<InputControl> matches)
         {
             var childCount = control.m_ChildrenReadOnly.Count;
             InputControl lastMatch = null;
@@ -552,7 +560,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < childCount; ++i)
             {
                 var child = control.m_ChildrenReadOnly[i];
-                var childMatch = MatchControlsRecursive(child, path, indexInPath, matches);
+                var childMatch = MatchControlsRecursive(child, path, indexInPath, ref matches);
 
                 if (childMatch == null)
                     continue;
@@ -564,7 +572,7 @@ namespace UnityEngine.Experimental.Input
 
                 // If we are only looking for the first match and a child matched,
                 // we can also stop.
-                if (matches == null)
+                if (matches.isNull)
                     return childMatch;
 
                 // Otherwise we have to go hunting through the hierarchy in case there are

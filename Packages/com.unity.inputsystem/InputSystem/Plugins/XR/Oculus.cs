@@ -45,11 +45,15 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public AxisControl indexNearTouch { get; private set; }
         public AxisControl thumbNearTouch { get; private set; }
 
+        [InputControl(aliases = new[] { "A", "X" })]
         public ButtonControl primaryButton { get; private set; }
+        [InputControl(aliases = new[] { "B", "Y" })]
         public ButtonControl secondaryButton { get; private set; }
         public ButtonControl start { get; private set; }
         public ButtonControl thumbstickClick { get; private set; }
+        [InputControl(aliases = new[] { "ATouch", "XTouch" })]
         public ButtonControl primaryTouch { get; private set; }
+        [InputControl(aliases = new[] { "BTouch", "YTouch" })]
         public ButtonControl secondaryTouch { get; private set; }
         public ButtonControl indexTouch { get; private set; }
         public ButtonControl thumbstickTouch { get; private set; }
