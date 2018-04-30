@@ -87,7 +87,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             for (int i = 0; i < m_Touches.Count; i++)
             {
                 Destroy(m_Touches[i]);
-                m_Touches.RemoveAt(m_Touches.Count - 1);
+                m_Touches.RemoveAt(i);
             }
         }
     }

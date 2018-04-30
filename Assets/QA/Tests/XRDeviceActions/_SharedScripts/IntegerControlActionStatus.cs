@@ -13,12 +13,20 @@ public class IntegerControlActionStatus : MonoBehaviour
     public Text statusText;
 
     // Use this for initialization
-    void Start()
+    void OnEnable()
     {
         IntegerAction.Enable();
         IntegerAction.performed += UpdateInteger;
         IntegerAction.started += UpdateInteger;
         IntegerAction.cancelled += UpdateInteger;
+    }
+
+    void OnDisable()
+    {
+        IntegerAction.Disable();
+        IntegerAction.performed -= UpdateInteger;
+        IntegerAction.started -= UpdateInteger;
+        IntegerAction.cancelled -= UpdateInteger;
     }
 
     private void UpdateInteger(InputAction.CallbackContext context)

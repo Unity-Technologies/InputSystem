@@ -17,7 +17,7 @@ public class ButtonControlActionStatus : MonoBehaviour
     private bool m_isPressed;
 
     // Use this for initialization
-    void Start()
+    void OnEnable()
     {
         buttonTouchAction.Enable();
         buttonTouchAction.performed += UpdateTouchStatus;
@@ -28,6 +28,19 @@ public class ButtonControlActionStatus : MonoBehaviour
         buttonPressAction.performed += UpdatePressStatus;
         buttonPressAction.started += UpdatePressStatus;
         buttonPressAction.cancelled += UpdatePressStatus;
+    }
+
+    void OnDisable()
+    {
+        buttonTouchAction.Disable();
+        buttonTouchAction.performed -= UpdateTouchStatus;
+        buttonTouchAction.started -= UpdateTouchStatus;
+        buttonTouchAction.cancelled -= UpdateTouchStatus;
+
+        buttonPressAction.Disable();
+        buttonPressAction.performed -= UpdatePressStatus;
+        buttonPressAction.started -= UpdatePressStatus;
+        buttonPressAction.cancelled -= UpdatePressStatus;
     }
 
     private void UpdatePressStatus(InputAction.CallbackContext context)

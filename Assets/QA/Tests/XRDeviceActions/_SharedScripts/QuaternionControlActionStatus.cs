@@ -13,12 +13,20 @@ public class QuaternionControlActionStatus : MonoBehaviour
     public Text statusText;
 
     // Use this for initialization
-    void Start()
+    void OnEnable()
     {
         quaternionAction.Enable();
         quaternionAction.performed += UpdateQuaternion;
         quaternionAction.started += UpdateQuaternion;
         quaternionAction.cancelled += UpdateQuaternion;
+    }
+
+    void OnDisable()
+    {
+        quaternionAction.Disable();
+        quaternionAction.performed -= UpdateQuaternion;
+        quaternionAction.started -= UpdateQuaternion;
+        quaternionAction.cancelled -= UpdateQuaternion;
     }
 
     private void UpdateQuaternion(InputAction.CallbackContext context)

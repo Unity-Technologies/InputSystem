@@ -13,12 +13,20 @@ public class Vector3ControlActionStatus : MonoBehaviour
     public Text statusText;
 
     // Use this for initialization
-    void Start()
+    void OnEnable()
     {
         vector3Action.Enable();
         vector3Action.performed += UpdateVector3;
         vector3Action.started += UpdateVector3;
         vector3Action.cancelled += UpdateVector3;
+    }
+
+    void OnDisable()
+    {
+        vector3Action.Disable();
+        vector3Action.performed -= UpdateVector3;
+        vector3Action.started -= UpdateVector3;
+        vector3Action.cancelled -= UpdateVector3;
     }
 
     private void UpdateVector3(InputAction.CallbackContext context)
