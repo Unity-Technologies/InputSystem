@@ -14,7 +14,7 @@ public class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterface,
+            interfaceName = XRUtilities.kXRInterfaceCurrent,
             product = "Device",
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
@@ -36,7 +36,7 @@ public class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterface,
+            interfaceName = XRUtilities.kXRInterfaceCurrent,
             product = "XR_This.Layout/Should have 1 Valid::Name",
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
@@ -55,22 +55,98 @@ public class XRTests : InputTestFixture
     }
 
     [StructLayout(LayoutKind.Explicit)]
+    unsafe struct ButtonPackedXRDeviceState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte button1;
+        [FieldOffset(1)] public byte button2;
+        [FieldOffset(2)] public byte button3;
+        [FieldOffset(3)] public byte button4;
+        [FieldOffset(4)] public byte button5;
+        [FieldOffset(5)] public byte button6;
+        [FieldOffset(8)] public float axis1;
+        [FieldOffset(12)] public byte button7;
+
+        public static InputDeviceDescription CreateDeviceDescription()
+        {
+            return new InputDeviceDescription
+            {
+                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+                    deviceRole = DeviceRole.Generic,
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                {
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button1",
+                        featureType = FeatureType.Binary
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button2",
+                        featureType = FeatureType.Binary
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button3",
+                        featureType = FeatureType.Binary
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button4",
+                        featureType = FeatureType.Binary
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button5",
+                        featureType = FeatureType.Binary
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button6",
+                        featureType = FeatureType.Binary
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Axis1",
+                        featureType = FeatureType.Axis1D
+                    },
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Button7",
+                        featureType = FeatureType.Binary
+                    },
+                }
+                }.ToJson()
+            };
+        }
+
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('X', 'R', 'S', '0');
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
     unsafe struct TestXRDeviceState : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte button;
-        [FieldOffset(1)] public uint discreteState;
-        [FieldOffset(5)] public float axis;
-        [FieldOffset(9)] public Vector2 axis2D;
-        [FieldOffset(17)] public Vector3 axis3D;
-        [FieldOffset(29)] public Quaternion rotation;
-        [FieldOffset(45)] public fixed byte buffer[256];
-        [FieldOffset(301)] public byte lastElement;
+        [FieldOffset(4)] public uint discreteState;
+        [FieldOffset(8)] public float axis;
+        [FieldOffset(12)] public Vector2 axis2D;
+        [FieldOffset(20)] public Vector3 axis3D;
+        [FieldOffset(32)] public Quaternion rotation;
+        [FieldOffset(48)] public fixed byte buffer[256];
+        [FieldOffset(304)] public byte lastElement;
 
         public static InputDeviceDescription CreateDeviceDescription()
         {
             return new InputDeviceDescription()
             {
-                interfaceName = XRUtilities.kXRInterface,
+                interfaceName = XRUtilities.kXRInterfaceCurrent,
                 product = "XRDevice",
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
@@ -207,7 +283,7 @@ public class XRTests : InputTestFixture
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::Manufacturer::Device");
+        var generatedLayout = InputSystem.TryLoadLayout("XRInputV1::Manufacturer::Device");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.extendsLayout, Is.EqualTo(extends));
     }
@@ -235,7 +311,7 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_GenericDevice_IsAvailableViaHMDCurrent()
+    public void Devices_GenericDevice_IsAvailableViaHMDCurrent()
     {
         Assert.That(XRHMD.current, Is.Null);
 
@@ -249,11 +325,9 @@ public class XRTests : InputTestFixture
         Assert.That(XRHMD.current, Is.EqualTo(device));
     }
 
-    ////FIXME: this test is causing stack overflows
-    /*
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_LeftAndRightDevices_AreAvailableViaXRControllerLeftAndRigthHandProperties()
+    public void Devices_LeftAndRightDevices_AreAvailableViaXRControllerLeftAndRightHandProperties()
     {
         Assert.That(XRController.leftHand, Is.Null);
         Assert.That(XRController.rightHand, Is.Null);
@@ -278,7 +352,6 @@ public class XRTests : InputTestFixture
         Assert.That(XRController.leftHand, Is.EqualTo(leftHandedDevice));
         Assert.That(XRController.rightHand, Is.EqualTo(rightHandedDevice));
     }
-    */
 
     [Test]
     [Category("Devices")]
@@ -316,7 +389,7 @@ public class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = String.Format("{0}::{1}::{2}", XRUtilities.kXRInterface,
+        var expectedLayoutName = String.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
                 deviceDescription.manufacturer, deviceDescription.product);
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
@@ -334,7 +407,7 @@ public class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = string.Format("{0}::{1}", XRUtilities.kXRInterface, deviceDescription.product);
+        var expectedLayoutName = String.Format("{0}::{1}", XRUtilities.kXRInterfaceCurrent, deviceDescription.product);
         Assert.AreEqual(expectedLayoutName, createdDevice.layout);
     }
 
@@ -349,7 +422,7 @@ public class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        Assert.AreEqual(createdDevice.layout, "XRInput::Manufacturer::XRThisLayoutShouldhave1ValidName");
+        Assert.AreEqual(createdDevice.layout, "XRInputV1::Manufacturer::XRThisLayoutShouldhave1ValidName");
     }
 
     [Test]
@@ -491,7 +564,7 @@ public class XRTests : InputTestFixture
 
         InputSystem.Update();
 
-        var generatedLayout = InputSystem.TryLoadLayout("XRInput::XRManufacturer::XRDevice");
+        var generatedLayout = InputSystem.TryLoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.controls.Count, Is.EqualTo(7));
 
@@ -504,35 +577,35 @@ public class XRTests : InputTestFixture
 
         var discreteControl = generatedLayout.controls[1];
         Assert.That(discreteControl.name, Is.EqualTo(new InternedString("DiscreteState")));
-        Assert.That(discreteControl.offset, Is.EqualTo(1));
+        Assert.That(discreteControl.offset, Is.EqualTo(4));
         Assert.That(discreteControl.layout, Is.EqualTo(new InternedString("Integer")));
         Assert.That(discreteControl.usages.Count, Is.EqualTo(1));
         Assert.That(discreteControl.usages[0], Is.EqualTo(new InternedString("DiscreteStateUsage")));
 
         var axisControl = generatedLayout.controls[2];
         Assert.That(axisControl.name, Is.EqualTo(new InternedString("Axis")));
-        Assert.That(axisControl.offset, Is.EqualTo(5));
+        Assert.That(axisControl.offset, Is.EqualTo(8));
         Assert.That(axisControl.layout, Is.EqualTo(new InternedString("Analog")));
         Assert.That(axisControl.usages.Count, Is.EqualTo(1));
         Assert.That(axisControl.usages[0], Is.EqualTo(new InternedString("Axis1DUsage")));
 
         var vec2Control = generatedLayout.controls[3];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
-        Assert.That(vec2Control.offset, Is.EqualTo(9));
+        Assert.That(vec2Control.offset, Is.EqualTo(12));
         Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
         var vec3Control = generatedLayout.controls[4];
         Assert.That(vec3Control.name, Is.EqualTo(new InternedString("Vector3")));
-        Assert.That(vec3Control.offset, Is.EqualTo(17));
+        Assert.That(vec3Control.offset, Is.EqualTo(20));
         Assert.That(vec3Control.layout, Is.EqualTo(new InternedString("Vector3")));
         Assert.That(vec3Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec3Control.usages[0], Is.EqualTo(new InternedString("Axis3DUsage")));
 
         var rotationControl = generatedLayout.controls[5];
         Assert.That(rotationControl.name, Is.EqualTo(new InternedString("Rotation")));
-        Assert.That(rotationControl.offset, Is.EqualTo(29));
+        Assert.That(rotationControl.offset, Is.EqualTo(32));
         Assert.That(rotationControl.layout, Is.EqualTo(new InternedString("Quaternion")));
         Assert.That(rotationControl.usages.Count, Is.EqualTo(1));
         Assert.That(rotationControl.usages[0], Is.EqualTo(new InternedString("RotationUsage")));
@@ -541,10 +614,55 @@ public class XRTests : InputTestFixture
 
         var lastControl = generatedLayout.controls[6];
         Assert.That(lastControl.name, Is.EqualTo(new InternedString("Last")));
-        Assert.That(lastControl.offset, Is.EqualTo(301));
+        Assert.That(lastControl.offset, Is.EqualTo(304));
         Assert.That(lastControl.layout, Is.EqualTo(new InternedString("Button")));
         Assert.That(lastControl.usages.Count, Is.EqualTo(2));
         Assert.That(lastControl.usages[0], Is.EqualTo(new InternedString("LastElementUsage")));
         Assert.That(lastControl.usages[1], Is.EqualTo(new InternedString("SecondUsage")));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ButtonsArePackedByTheByte_WhileLargerStructuresAreFourByteAligned()
+    {
+        testRuntime.ReportNewInputDevice(ButtonPackedXRDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var generatedLayout = InputSystem.TryLoadLayout("XRInputV1::XRManufacturer::XRDevice");
+        Assert.That(generatedLayout, Is.Not.Null);
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(8));
+
+        var currentControl = generatedLayout.controls[0];
+        Assert.That(currentControl.offset, Is.EqualTo(0));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
+
+        currentControl = generatedLayout.controls[1];
+        Assert.That(currentControl.offset, Is.EqualTo(1));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
+
+        currentControl = generatedLayout.controls[2];
+        Assert.That(currentControl.offset, Is.EqualTo(2));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
+
+        currentControl = generatedLayout.controls[3];
+        Assert.That(currentControl.offset, Is.EqualTo(3));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
+
+        currentControl = generatedLayout.controls[4];
+        Assert.That(currentControl.offset, Is.EqualTo(4));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
+
+        currentControl = generatedLayout.controls[5];
+        Assert.That(currentControl.offset, Is.EqualTo(5));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
+
+        currentControl = generatedLayout.controls[6];
+        Assert.That(currentControl.offset, Is.EqualTo(8));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Analog")));
+
+        currentControl = generatedLayout.controls[7];
+        Assert.That(currentControl.offset, Is.EqualTo(12));
+        Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 }

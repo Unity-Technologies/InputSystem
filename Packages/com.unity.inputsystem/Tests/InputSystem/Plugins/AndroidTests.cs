@@ -11,19 +11,16 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanDifferentiateAndroidGamepadFromJoystick()
     {
-        var gamepad = InputSystem.AddDevice(
-                new InputDeviceDescription
+        var gamepad = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
-                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
             }.ToJson()
         });
-
-        var joystick = InputSystem.AddDevice(
-                new InputDeviceDescription
+        var joystick = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
             deviceClass = "AndroidGameController",
@@ -41,8 +38,7 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad()
     {
-        var device = InputSystem.AddDevice(
-                new InputDeviceDescription
+        var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
             deviceClass = "AndroidGameController",
@@ -89,8 +85,7 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad_WithAxisDpad()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice(
-                new InputDeviceDescription
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
             deviceClass = "AndroidGameController",
@@ -99,9 +94,9 @@ class AndroidTests : InputTestFixture
                 inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Generic1,     // Noise
+                    AndroidAxis.Generic1, // Noise
                     AndroidAxis.HatX,
-                    AndroidAxis.Generic2,     // Noise
+                    AndroidAxis.Generic2, // Noise
                     AndroidAxis.HatY
                 }
             }.ToJson()
@@ -148,18 +143,16 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     public void Devices_SupportsAndroidGamepad_WithButtonDpad()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice(
-                new InputDeviceDescription
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
             deviceClass = "AndroidGameController",
             capabilities = new AndroidDeviceCapabilities
             {
                 inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
-                motionAxes = new[]
-                {
-                    AndroidAxis.Generic1,     // Noise
-                    AndroidAxis.Generic2,     // Noise
+                motionAxes = new[] {
+                    AndroidAxis.Generic1, // Noise
+                    AndroidAxis.Generic2, // Noise
                 }
             }.ToJson()
         });

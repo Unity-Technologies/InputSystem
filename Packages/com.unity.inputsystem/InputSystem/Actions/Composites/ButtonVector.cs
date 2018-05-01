@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.Controls;
 
+////REVIEW: rename to ButtonDpad?
+
 ////TODO: add support for ramp up/down
 
 namespace UnityEngine.Experimental.Input.Composites

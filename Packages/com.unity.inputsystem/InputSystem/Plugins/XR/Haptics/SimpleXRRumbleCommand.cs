@@ -4,25 +4,32 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 {
+    /// <summary>
+    /// An IOCTL command sent to a device to set it's motor rumble intensity.
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SimpleXRRumbleCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('X', 'R', 'R', '0'); } }
+        static FourCC Type { get { return new FourCC('X', 'R', 'R', '0'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
+        const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
 
         [FieldOffset(0)]
-        public InputDeviceCommand baseCommand;
-
+        InputDeviceCommand baseCommand;
+        
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        public float intensity;
-
+        float intensity;
 
         public FourCC GetTypeStatic()
         {
             return Type;
         }
 
+        /// <summary>
+        /// Creates an IOCTL command that can then be sent to a specific device.
+        /// </summary>
+        /// <param name="motorIntensity">The desired motor intensity that should be within a [0-1] range.</param>
+        /// <returns></returns>
         public static SimpleXRRumbleCommand Create(float motorIntensity)
         {
             return new SimpleXRRumbleCommand
