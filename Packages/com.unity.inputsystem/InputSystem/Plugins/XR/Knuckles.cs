@@ -38,6 +38,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             middle = builder.GetControl<AxisControl>("middle");
             ring = builder.GetControl<AxisControl>("ring");
             pinky = builder.GetControl<AxisControl>("pinky");
+            trigger = builder.GetControl<AxisControl>("trigger");
             stickOrPadPress = builder.GetControl<ButtonControl>("stickOrPadPress");
             stickOrPadTouch = builder.GetControl<ButtonControl>("stickOrPadTouch");
             trackpad = builder.GetControl<Vector2Control>("trackpad");
