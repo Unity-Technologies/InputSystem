@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: split off action response code
+
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
 
 ////TODO: survive domain reloads
 
-////TODO: allow individual bindings to be enabled/disabled
+////REVIEW: allow individual bindings to be enabled/disabled?
 
 ////TODO: allow querying controls *without* requiring actions to be enabled
 
@@ -81,15 +83,6 @@ namespace UnityEngine.Experimental.Input
     public class InputAction : ICloneable
         ////REVIEW: should this class be IDisposable? how do we guarantee that actions are disabled in time?
     {
-        public enum Phase
-        {
-            Disabled,
-            Waiting,
-            Started,
-            Performed,
-            Cancelled
-        }
-
         /// <summary>
         /// Name of the action.
         /// </summary>
@@ -107,7 +100,7 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
-        public Phase phase
+        public InputActionPhase phase
         {
             get { return m_CurrentPhase; }
         }
@@ -116,7 +109,7 @@ namespace UnityEngine.Experimental.Input
         /// The set the action belongs to.
         /// </summary>
         /// <remarks>
-        /// If the action is a lose action created in code, this will be null.
+        /// If the action is a lose action created in code, this will be <c>null</c>.
         /// </remarks>
         public InputActionSet set
         {
@@ -129,14 +122,26 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The list of bindings associated with the action.
         /// </summary>
+        /// <remarks>
+        /// This will include only bindings that directly trigger the action. If the action is part of a
+        /// <see cref="InputActionSet">set</see> that triggers the action through a combination of bindings,
+        /// for example, only the bindings that ultimately trigger the action are included in the list.
+        ///
+        /// May allocate memory on first hit.
+        /// </remarks>
         public ReadOnlyArray<InputBinding> bindings
         {
             get
             {
-                ////REVIEW: is there a better way to deal with the two different serializations? (singleton actions vs action sets)
-                if (m_Bindings == null && m_ActionSet != null)
-                    m_Bindings = m_ActionSet.m_Bindings;
-                return new ReadOnlyArray<InputBinding>(m_Bindings, m_BindingsStartIndex, m_BindingsCount);
+                // If m_ActionSet is null, we're a singleton action that has had no bindings added
+                // to it yet.
+                if (m_ActionSet == null)
+                {
+                    Debug.Assert(isSingletonAction);
+                    return new ReadOnlyArray<InputBinding>();
+                }
+
+                return m_ActionSet.GetBindingsForAction(this);
             }
         }
 
@@ -219,20 +224,27 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
+        public InputAction(InternedString name = new InternedString())
+        {
+            m_Name = name;
+        }
+
         // Construct a disabled action targeting the given sources.
+        // NOTE: This constructor is *not* used for actions added to sets. These are constructed
+        //       by sets themselves.
         public InputAction(string name = null, string binding = null, string modifiers = null)
+            : this(new InternedString(name))
         {
             if (binding == null && modifiers != null)
                 throw new ArgumentException("Cannot have modifier without binding", "modifiers");
 
-            m_Name = name;
             if (binding != null)
             {
-                m_Bindings = new[] {new InputBinding {path = binding, modifiers = modifiers}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, modifiers = modifiers}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
-            m_CurrentPhase = Phase.Disabled;
+            m_CurrentPhase = InputActionPhase.Disabled;
         }
 
         public override string ToString()
@@ -265,7 +277,7 @@ namespace UnityEngine.Experimental.Input
             InstallStateChangeMonitors();
 
             enabled = true;
-            m_CurrentPhase = Phase.Waiting;
+            m_CurrentPhase = InputActionPhase.Waiting;
         }
 
         ////TODO: need to cancel action if it's in started state
@@ -280,7 +292,7 @@ namespace UnityEngine.Experimental.Input
 
             enabled = false;
 
-            m_CurrentPhase = Phase.Disabled;
+            m_CurrentPhase = InputActionPhase.Disabled;
             m_LastTrigger = new TriggerState();
 
             ////TODO: reset all modifier states
@@ -309,82 +321,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        // Add a new binding to the action. This works both with actions that are part of
-        // action set as well as with actions that aren't.
-        // Returns a fluent-style syntax structure that allows performing additional modifications
-        // based on the new binding.
-        // NOTE: Actions must be disabled while altering their binding sets.
-        public AddBindingSyntax AddBinding(string path, string modifiers = null, string groups = null)
-        {
-            var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
-            var bindingIndex = AddBindingInternal(binding);
-            return new AddBindingSyntax(this, bindingIndex);
-        }
-
-        public AddCompositeSyntax AddCompositeBinding(string composite)
-        {
-            ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, flags = InputBinding.Flags.Composite};
-            var bindingIndex = AddBindingInternal(binding);
-            return new AddCompositeSyntax(this, bindingIndex);
-        }
-
-        private int AddBindingInternal(InputBinding binding)
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot add bindings to action '{0}' while the action is enabled", this));
-
-            var bindingIndex = 0;
-            if (isSingletonAction)
-            {
-                // Simple case. We're a singleton action and own m_Bindings.
-                bindingIndex = ArrayHelpers.Append(ref m_Bindings, binding);
-            }
-            else
-            {
-                // Less straightfoward case. We're part of an m_Bindings set owned
-                // by our m_ActionSet.
-                var set = m_ActionSet;
-                var actions = set.m_Actions;
-                var actionCount = actions.Length;
-
-                if (m_BindingsCount == 0 || m_BindingsStartIndex + m_BindingsCount == set.m_Bindings.Length)
-                {
-                    // This is either our first binding or we're at the end of our set's binding array which makes
-                    // it simpler. We just put our binding at the end of the set's bindings array.
-                    if (set.m_Bindings != null)
-                        bindingIndex = set.m_Bindings.Length;
-                    if (m_BindingsCount == 0)
-                        m_BindingsStartIndex = bindingIndex;
-                    ArrayHelpers.Append(ref set.m_Bindings, binding);
-                }
-                else
-                {
-                    // More involved case where we are sitting somewhere within the set's bindings array
-                    // and inserting new bindings will thus affect other actions in the set.
-                    bindingIndex = m_BindingsStartIndex + m_BindingsCount;
-                    ArrayHelpers.InsertAt(ref set.m_Bindings, bindingIndex, binding);
-
-                    // Shift binding start indices of all actions that come after us up by one.
-                    for (var i = 0; i < actionCount; ++i)
-                    {
-                        var action = actions[i];
-                        if (action.m_BindingsStartIndex >= bindingIndex)
-                            ++action.m_BindingsStartIndex;
-                    }
-                }
-
-                // Update all bindings array references on all actions in the set.
-                var bindingsArray = set.m_Bindings;
-                for (var i = 0; i < actionCount; ++i)
-                    actions[i].m_Bindings = bindingsArray;
-            }
-
-            ++m_BindingsCount;
-            return bindingIndex;
-        }
-
         ////TODO: support for removing bindings
 
         public void ApplyBindingOverride(int bindingIndex, string path)
@@ -398,7 +334,7 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Binding index {0} is out of range for action '{1}' which has {2} bindings",
                         bindingIndex, this, m_BindingsCount));
 
-            m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = path;
+            m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex].overridePath = path;
         }
 
         public void ApplyBindingOverride(string binding, string group = null)
@@ -424,7 +360,7 @@ namespace UnityEngine.Experimental.Input
             if (bindingIndex == -1)
                 return;
 
-            m_Bindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
+            m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
         }
 
         public void RemoveBindingOverride(InputBindingOverride bindingOverride)
@@ -444,7 +380,7 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Cannot removed overrides from action '{0}' while the action is enabled", this));
 
             for (var i = 0; i < m_BindingsCount; ++i)
-                m_Bindings[m_BindingsStartIndex + i].overridePath = null;
+                m_SingletonActionBindings[m_BindingsStartIndex + i].overridePath = null;
         }
 
         // Add all overrides that have been applied to this action to the given list.
@@ -459,7 +395,7 @@ namespace UnityEngine.Experimental.Input
         public InputAction Clone()
         {
             var clone = new InputAction(name: m_Name);
-            clone.m_Bindings = bindings.ToArray();
+            clone.m_SingletonActionBindings = bindings.ToArray();
             clone.m_BindingsCount = m_BindingsCount;
             return clone;
         }
@@ -469,15 +405,16 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        [SerializeField] private string m_Name;
+        [SerializeField] internal InternedString m_Name;
 
         // This should be a ReadOnlyArray<InputBinding> but we can't serialize that because
         // Unity can't serialize generic types. So we explode the structure here and turn
         // it into a ReadOnlyArray whenever needed.
         // NOTE: InputActionSet will null out this field for serialization
-        [SerializeField] internal InputBinding[] m_Bindings;
-        [SerializeField][HideInInspector] internal int m_BindingsStartIndex;
-        [SerializeField][HideInInspector] internal int m_BindingsCount;
+        [SerializeField] internal InputBinding[] m_SingletonActionBindings;
+
+        [NonSerialized] internal int m_BindingsStartIndex;
+        [NonSerialized] internal int m_BindingsCount;
 
         [NonSerialized] private bool m_Enabled;
 
@@ -492,18 +429,18 @@ namespace UnityEngine.Experimental.Input
         // State we keep for enabling/disabling. This is volatile and not put on disk.
         // NOTE: m_Controls and m_ResolvedBinding array are stored on InputActionSet.
         [NonSerialized] internal ReadOnlyArray<InputControl> m_Controls;
-        [NonSerialized] internal ReadOnlyArray<InputActionSet.ResolvedBinding> m_ResolvedBindings;
+        [NonSerialized] internal ReadOnlyArray<InputActionSet.BindingState> m_ResolvedBindings;
 
         // State releated to phase shifting and triggering of action.
         // Most of this state we lazily reset as we have to keep it available for
         // one frame but don't want to actively reset between frames.
-        [NonSerialized] private Phase m_CurrentPhase;
+        [NonSerialized] private InputActionPhase m_CurrentPhase;
         [NonSerialized] private TriggerState m_LastTrigger;
 
         // Information about what triggered an action and how.
         internal struct TriggerState
         {
-            public Phase phase;
+            public InputActionPhase phase;
             public double time;
             public double startTime;
             public InputControl control;
@@ -511,14 +448,24 @@ namespace UnityEngine.Experimental.Input
             public int modifierIndex;
         }
 
-        private bool isSingletonAction
+        internal bool isSingletonAction
         {
             get { return m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this); }
         }
 
+        internal InputActionSet internalSet
+        {
+            get
+            {
+                if (m_ActionSet == null)
+                    CreateInternalActionSetForSingletonAction();
+                return m_ActionSet;
+            }
+        }
+
         private void CreateInternalActionSetForSingletonAction()
         {
-            m_ActionSet = new InputActionSet {m_SingletonAction = this};
+            m_ActionSet = new InputActionSet {m_SingletonAction = this, m_Bindings = m_SingletonActionBindings};
         }
 
         // Find the binding tha tthe given override addresses.
@@ -533,7 +480,7 @@ namespace UnityEngine.Experimental.Input
                 // Simple case where we have only a single binding on the action.
 
                 if (!haveGroup ||
-                    string.Compare(m_Bindings[m_BindingsStartIndex].group, group,
+                    string.Compare(m_SingletonActionBindings[m_BindingsStartIndex].group, group,
                         StringComparison.InvariantCultureIgnoreCase) == 0)
                     return 0;
             }
@@ -553,7 +500,7 @@ namespace UnityEngine.Experimental.Input
                 var currentIndexInGroup = 0;
 
                 for (var i = 0; i < m_BindingsCount; ++i)
-                    if (string.Compare(m_Bindings[m_BindingsStartIndex + i].group, 0, group, 0, groupStringLength, true) == 0)
+                    if (string.Compare(m_SingletonActionBindings[m_BindingsStartIndex + i].group, 0, group, 0, groupStringLength, true) == 0)
                     {
                         if (currentIndexInGroup == indexInGroup)
                             return i;
@@ -566,7 +513,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Perform a phase change on the action. Visible to observers.
-        private void ChangePhaseOfAction(Phase newPhase, ref TriggerState trigger)
+        private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger)
         {
             ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
 
@@ -579,18 +526,18 @@ namespace UnityEngine.Experimental.Input
             // Let listeners know.
             switch (newPhase)
             {
-                case Phase.Started:
+                case InputActionPhase.Started:
                     CallListeners(ref m_OnStarted);
                     break;
 
-                case Phase.Performed:
+                case InputActionPhase.Performed:
                     CallListeners(ref m_OnPerformed);
-                    m_CurrentPhase = Phase.Waiting; // Go back to waiting after performing action.
+                    m_CurrentPhase = InputActionPhase.Waiting; // Go back to waiting after performing action.
                     break;
 
-                case Phase.Cancelled:
+                case InputActionPhase.Cancelled:
                     CallListeners(ref m_OnCancelled);
-                    m_CurrentPhase = Phase.Waiting; // Go back to waiting after cancelling action.
+                    m_CurrentPhase = InputActionPhase.Waiting; // Go back to waiting after cancelling action.
                     break;
             }
         }
@@ -610,7 +557,7 @@ namespace UnityEngine.Experimental.Input
         // SlowTapModifier both start and the TapModifier gets to drive the action because
         // it comes first; then the TapModifier cancels because the button is held for too
         // long and the SlowTapModifier will get to drive the action next).
-        private void ChangePhaseOfModifier(Phase newPhase, ref TriggerState trigger)
+        private void ChangePhaseOfModifier(InputActionPhase newPhase, ref TriggerState trigger)
         {
             Debug.Assert(trigger.bindingIndex != -1);
             Debug.Assert(trigger.modifierIndex != -1);
@@ -626,17 +573,17 @@ namespace UnityEngine.Experimental.Input
             ThrowIfPhaseTransitionIsInvalid(currentModifierState.phase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
             newModifierState.phase = newPhase;
             newModifierState.control = trigger.control;
-            if (newPhase == Phase.Started)
+            if (newPhase == InputActionPhase.Started)
                 newModifierState.startTime = trigger.time;
             modifiersForBinding[trigger.modifierIndex] = newModifierState;
 
             // See if it affects the phase of the action itself.
-            if (m_CurrentPhase == Phase.Waiting)
+            if (m_CurrentPhase == InputActionPhase.Waiting)
             {
                 // We're the first modifier to go to the start phase.
                 ChangePhaseOfAction(newPhase, ref trigger);
             }
-            else if (newPhase == Phase.Cancelled && m_LastTrigger.modifierIndex == trigger.modifierIndex)
+            else if (newPhase == InputActionPhase.Cancelled && m_LastTrigger.modifierIndex == trigger.modifierIndex)
             {
                 // We're cancelling but maybe there's another modifier ready
                 // to go into start phase.
@@ -644,18 +591,18 @@ namespace UnityEngine.Experimental.Input
                 ChangePhaseOfAction(newPhase, ref trigger);
 
                 for (var i = 0; i < modifiersForBinding.Count; ++i)
-                    if (i != trigger.modifierIndex && modifiersForBinding[i].phase == Phase.Started)
+                    if (i != trigger.modifierIndex && modifiersForBinding[i].phase == InputActionPhase.Started)
                     {
                         var triggerForModifier = new TriggerState
                         {
-                            phase = Phase.Started,
+                            phase = InputActionPhase.Started,
                             control = modifiersForBinding[i].control,
                             bindingIndex = trigger.bindingIndex,
                             modifierIndex = i,
                             time = trigger.time,
                             startTime = modifiersForBinding[i].startTime
                         };
-                        ChangePhaseOfAction(Phase.Started, ref triggerForModifier);
+                        ChangePhaseOfAction(InputActionPhase.Started, ref triggerForModifier);
                         break;
                     }
             }
@@ -667,7 +614,7 @@ namespace UnityEngine.Experimental.Input
 
                 // We're the modifier driving the action and we performed the action,
                 // so reset any other modifier to waiting state.
-                if (newPhase == Phase.Performed)
+                if (newPhase == InputActionPhase.Performed)
                 {
                     for (var i = 0; i < modifiersForBinding.Count; ++i)
                         if (i != trigger.bindingIndex)
@@ -676,7 +623,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // If the modifier performed or cancelled, go back to waiting.
-            if (newPhase == Phase.Performed || newPhase == Phase.Cancelled)
+            if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
                 ResetModifier(trigger.bindingIndex, trigger.modifierIndex);
             ////TODO: reset entire chain
         }
@@ -735,21 +682,21 @@ namespace UnityEngine.Experimental.Input
             Profiler.EndSample();
         }
 
-        private void ThrowIfPhaseTransitionIsInvalid(Phase currentPhase, Phase newPhase, int bindingIndex, int modifierIndex)
+        private void ThrowIfPhaseTransitionIsInvalid(InputActionPhase currentPhase, InputActionPhase newPhase, int bindingIndex, int modifierIndex)
         {
-            if (newPhase == Phase.Started && currentPhase != Phase.Waiting)
+            if (newPhase == InputActionPhase.Started && currentPhase != InputActionPhase.Waiting)
                 throw new InvalidOperationException(
                     string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
-                        m_CurrentPhase, Phase.Started, Phase.Waiting, this, GetModifier(bindingIndex, modifierIndex)));
-            if (newPhase == Phase.Performed && currentPhase != Phase.Waiting && currentPhase != Phase.Started)
+                        m_CurrentPhase, InputActionPhase.Started, InputActionPhase.Waiting, this, GetModifier(bindingIndex, modifierIndex)));
+            if (newPhase == InputActionPhase.Performed && currentPhase != InputActionPhase.Waiting && currentPhase != InputActionPhase.Started)
                 throw new InvalidOperationException(
                     string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' or '{3}' (action: {4}, modifier: {5})",
-                        m_CurrentPhase, Phase.Performed, Phase.Waiting, Phase.Started, this,
+                        m_CurrentPhase, InputActionPhase.Performed, InputActionPhase.Waiting, InputActionPhase.Started, this,
                         GetModifier(bindingIndex, modifierIndex)));
-            if (newPhase == Phase.Cancelled && currentPhase != Phase.Started)
+            if (newPhase == InputActionPhase.Cancelled && currentPhase != InputActionPhase.Started)
                 throw new InvalidOperationException(
                     string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
-                        m_CurrentPhase, Phase.Cancelled, Phase.Started, this, GetModifier(bindingIndex, modifierIndex)));
+                        m_CurrentPhase, InputActionPhase.Cancelled, InputActionPhase.Started, this, GetModifier(bindingIndex, modifierIndex)));
         }
 
         private InputBinding GetBinding(int bindingIndex)
@@ -757,7 +704,7 @@ namespace UnityEngine.Experimental.Input
             if (bindingIndex == -1)
                 return new InputBinding();
 
-            return m_Bindings[m_BindingsStartIndex + bindingIndex];
+            return m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex];
         }
 
         private IInputBindingModifier GetModifier(int bindingIndex, int modifierIndex)
@@ -784,7 +731,7 @@ namespace UnityEngine.Experimental.Input
                 new InputActionSet.ModifierState
             {
                 modifier = oldState.modifier,
-                phase = Phase.Waiting
+                phase = InputActionPhase.Waiting
             };
         }
 
@@ -833,14 +780,14 @@ namespace UnityEngine.Experimental.Input
 
                 var trigger = new TriggerState
                 {
-                    phase = Phase.Performed,
+                    phase = InputActionPhase.Performed,
                     control = control,
                     modifierIndex = -1,
                     bindingIndex = bindingIndex,
                     time = time,
                     startTime = time
                 };
-                ChangePhaseOfAction(Phase.Performed, ref trigger);
+                ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
             }
         }
 
@@ -901,7 +848,7 @@ namespace UnityEngine.Experimental.Input
                 get { return m_Trigger.control; }
             }
 
-            public Phase phase
+            public InputActionPhase phase
             {
                 get { return m_Trigger.phase; }
             }
@@ -928,28 +875,28 @@ namespace UnityEngine.Experimental.Input
 
             public bool isWaiting
             {
-                get { return phase == Phase.Waiting; }
+                get { return phase == InputActionPhase.Waiting; }
             }
 
             public bool isStarted
             {
-                get { return phase == Phase.Started; }
+                get { return phase == InputActionPhase.Started; }
             }
 
             public void Started()
             {
                 m_Trigger.startTime = time;
-                m_Action.ChangePhaseOfModifier(Phase.Started, ref m_Trigger);
+                m_Action.ChangePhaseOfModifier(InputActionPhase.Started, ref m_Trigger);
             }
 
             public void Performed()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Performed, ref m_Trigger);
+                m_Action.ChangePhaseOfModifier(InputActionPhase.Performed, ref m_Trigger);
             }
 
             public void Cancelled()
             {
-                m_Action.ChangePhaseOfModifier(Phase.Cancelled, ref m_Trigger);
+                m_Action.ChangePhaseOfModifier(InputActionPhase.Cancelled, ref m_Trigger);
             }
 
             public void SetTimeout(double seconds)
@@ -1025,64 +972,6 @@ namespace UnityEngine.Experimental.Input
             public double duration
             {
                 get { return m_Time - m_StartTime; }
-            }
-        }
-
-        public struct AddBindingSyntax
-        {
-            public InputAction action;
-            internal int m_BindingIndex;
-
-            internal AddBindingSyntax(InputAction action, int bindingIndex)
-            {
-                this.action = action;
-                m_BindingIndex = bindingIndex;
-            }
-
-            ////REVIEW: remove and replace with composite?
-            public AddBindingSyntax CombinedWith(string binding, string modifiers = null, string group = null)
-            {
-                if (action.m_BindingsCount - 1 != m_BindingIndex)
-                    throw new InvalidOperationException("Must not add other bindings in-between calling AddBindings() and CombinedWith()");
-
-                var result = action.AddBinding(binding, modifiers: modifiers, groups: group);
-                action.m_Bindings[action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
-                    InputBinding.Flags.ThisAndPreviousCombine;
-
-                return result;
-            }
-
-            public AddBindingSyntax WithModifiers(string modifiers)
-            {
-                action.m_Bindings[action.m_BindingsStartIndex + m_BindingIndex].modifiers = modifiers;
-                return this;
-            }
-        }
-
-        public struct AddCompositeSyntax
-        {
-            public InputAction action;
-            internal int m_CompositeIndex;
-            internal int m_BindingIndex;
-
-            internal AddCompositeSyntax(InputAction action, int compositeIndex)
-            {
-                this.action = action;
-                m_CompositeIndex = compositeIndex;
-                m_BindingIndex = -1;
-            }
-
-            public AddCompositeSyntax With(string name, string binding, string modifiers = null)
-            {
-                ////TODO: check whether non-composite bindings have been added in-between
-
-                var result = action.AddBinding(path: binding, modifiers: modifiers);
-
-                var bindingIndex = action.m_BindingsStartIndex + result.m_BindingIndex;
-                action.m_Bindings[bindingIndex].name = name;
-                action.m_Bindings[bindingIndex].isPartOfComposite = true;
-
-                return this;
             }
         }
     }

@@ -3,8 +3,11 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
-    // Helper to avoid array allocations if there's only a single value in the
-    // array.
+    /// <summary>
+    /// Helper to avoid array allocations if there's only a single value in the
+    /// array.
+    /// </summary>
+    /// <typeparam name="TValue">Element type for the array.</typeparam>
     internal struct InlinedArray<TValue>
     {
         // We inline the first value so if there's only one, there's

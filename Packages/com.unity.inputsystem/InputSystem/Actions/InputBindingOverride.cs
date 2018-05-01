@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: can this be replaced by just using InputBinding instead?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

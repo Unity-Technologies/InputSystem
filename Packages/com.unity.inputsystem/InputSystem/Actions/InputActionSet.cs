@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: split off resolution code
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// A set of input actions that can be enabled/disabled in bulk.
+    /// A set of input actions and bindings.
     /// </summary>
     /// <remarks>
     /// Also stores data for actions. All actions have to have an associated
@@ -21,21 +23,49 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionSet : ISerializationCallbackReceiver, ICloneable
+    public class InputActionSet : ICloneable
     {
+        /// <summary>
+        /// Name of the action set.
+        /// </summary>
         public string name
         {
             get { return m_Name; }
         }
 
+        /// <summary>
+        /// Whether any action in the set is currently enabled.
+        /// </summary>
         public bool enabled
         {
             get { return m_EnabledActionsCount > 0; }
         }
 
+        /// <summary>
+        /// List of actions contained in the set.
+        /// </summary>
+        /// <remarks>
+        /// Actions are owned by their set. The same action cannot appear in multiple sets.
+        ///
+        /// Does not allocate. Note that values returned by the property become invalid if
+        /// the setup of actions in a set is changed.
+        /// </remarks>
         public ReadOnlyArray<InputAction> actions
         {
             get { return new ReadOnlyArray<InputAction>(m_Actions); }
+        }
+
+        /// <summary>
+        /// List of bindings in the set.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="InputBinding">InputBindings</see> are owned by action sets and not by individual
+        /// actions. The bindings in a set can form a tree and conceptually, this array represents a depth-first
+        /// traversal of the tree.
+        /// </remarks>
+        public ReadOnlyArray<InputBinding> bindings
+        {
+            get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
         }
 
         public InputActionSet(string name = null)
@@ -43,6 +73,8 @@ namespace UnityEngine.Experimental.Input
             m_Name = name;
         }
 
+        ////TODO: move to InputActionSyntax
+        ////TODO: remove binding arguments and make this return a syntax struct
         public InputAction AddAction(string name, string binding = null, string modifiers = null, string groups = null)
         {
             if (string.IsNullOrEmpty(name))
@@ -56,22 +88,30 @@ namespace UnityEngine.Experimental.Input
             action.m_ActionSet = this;
 
             if (!string.IsNullOrEmpty(binding))
-                action.AddBinding(binding, modifiers: modifiers, groups: groups);
+                action.AppendBinding(binding, modifiers: modifiers, groups: groups);
 
             return action;
         }
 
-        public InputAction TryGetAction(string name)
+        public InputAction TryGetAction(InternedString name)
         {
-            if (m_Actions != null)
-            {
-                var actionCount = m_Actions.Length;
-                for (var i = 0; i < actionCount; ++i)
-                    if (string.Compare(name, m_Actions[i].name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                        return m_Actions[i];
-            }
+            ////REVIEW: have transient lookup table? worth optimizing this?
+
+            if (m_Actions == null)
+                return null;
+
+            var actionCount = m_Actions.Length;
+            for (var i = 0; i < actionCount; ++i)
+                if (m_Actions[i].m_Name == name)
+                    return m_Actions[i];
 
             return null;
+        }
+
+        public InputAction TryGetAction(string name)
+        {
+            var internedName = new InternedString(name);
+            return TryGetAction(internedName);
         }
 
         public InputAction GetAction(string name)
@@ -193,25 +233,43 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        [SerializeField] private string m_Name;
+        [SerializeField] private string m_Name;////REVIEW: InternedString?
+
+        /// <summary>
+        /// List of actions in this set.
+        /// </summary>
         [SerializeField] internal InputAction[] m_Actions;
 
-        // These arrays hold data for all actions in the set. Each action will
-        // refer to a slice of the arrays.
+        /// <summary>
+        /// List of bindings in this set.
+        /// </summary>
+        /// <remarks>
+        /// For singleton actions, we ensure this is always the same as <see cref="InputAction.m_SingletonActionBindings"/>.
+        /// </remarks>
         [SerializeField] internal InputBinding[] m_Bindings;
+
+        // These fields are caches. If m_Bindings is modified, these are thrown away
+        // and re-computed only if needed.
+        // NOTE: Because InputBindings are structs, m_BindingsForEachAction actually duplicates each binding
+        //       (only in the case where m_Bindings has scattered references to actions).
+        ////REVIEW: this will lead to problems when overrides are thrown into the mix
+        [NonSerialized] internal InputBinding[] m_BindingsForEachAction;
+        [NonSerialized] internal InputAction[] m_ActionForEachBinding;
 
         [NonSerialized] internal InputControl[] m_Controls;
         [NonSerialized] internal ModifierState[] m_Modifiers;
         [NonSerialized] internal object[] m_Composites;
-        [NonSerialized] internal ResolvedBinding[] m_ResolvedBindings;
+        [NonSerialized] internal BindingState[] m_ResolvedBindings;
 
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
 
-        // Records the current state of a single modifier attached to a binding.
-        // Each modifier keeps track of its own trigger control and phase progression.
+        /// <summary>
+        /// Records the current state of a single modifier attached to a binding.
+        /// Each modifier keeps track of its own trigger control and phase progression.
+        /// </summary>
         internal struct ModifierState
         {
             public IInputBindingModifier modifier;
@@ -223,7 +281,6 @@ namespace UnityEngine.Experimental.Input
             public enum Flags
             {
                 TimerRunning = 1 << 8, // Reserve first 8 bits for phase.
-                ModifiesValue = 1 << 9,
             }
 
             public bool isTimerRunning
@@ -238,15 +295,22 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public InputAction.Phase phase
+            public InputActionPhase phase
             {
                 // We store the phase in the low 8 bits of the flags field.
-                get { return (InputAction.Phase)((int)flags & 0xf); }
+                get { return (InputActionPhase)((int)flags & 0xf); }
                 set { flags = (Flags)(((uint)flags & 0xfffffff0) | (uint)value); }
             }
         }
 
-        internal struct ResolvedBinding
+        /// <summary>
+        /// Runtime state for a single binding.
+        /// </summary>
+        /// <remarks>
+        /// Correlated to the <see cref="InputBinding"/> it corresponds to by the index in the binding
+        /// array.
+        /// </remarks>
+        internal struct BindingState
         {
             [Flags]
             public enum Flags
@@ -256,8 +320,16 @@ namespace UnityEngine.Experimental.Input
                 PartOfComposite = 1 << 2,
             }
 
+            /// <summary>
+            /// Controls that the binding resolved to.
+            /// </summary>
             public ReadOnlyArray<InputControl> controls;
+
+            /// <summary>
+            /// State of modifiers applied to the binding.
+            /// </summary>
             public ReadWriteArray<ModifierState> modifiers;
+
             public Flags flags;
             public int compositeIndex;
 
@@ -316,7 +388,7 @@ namespace UnityEngine.Experimental.Input
 
             public InputControl[] controls;
             public ModifierState[] modifiers;
-            public ResolvedBinding[] bindings;
+            public BindingState[] bindings;
             public object[] composites;
 
             private List<InputControlLayout.NameAndParameters> m_Parameters;
@@ -394,7 +466,7 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Add entry for resolved binding.
-                    ArrayHelpers.AppendWithCapacity(ref bindings, ref bindingCount, new ResolvedBinding
+                    ArrayHelpers.AppendWithCapacity(ref bindings, ref bindingCount, new BindingState
                     {
                         controls = new ReadOnlyArray<InputControl>(null, indexOfFirstControlInThisBinding, numControls),
                         modifiers = new ReadWriteArray<ModifierState>(null, firstModifier, numModifiers),
@@ -430,7 +502,7 @@ namespace UnityEngine.Experimental.Input
                 action.m_Controls =
                     new ReadOnlyArray<InputControl>(null, controlStartIndex, controlCount - controlStartIndex);
                 action.m_ResolvedBindings =
-                    new ReadOnlyArray<ResolvedBinding>(null, bindingsStartIndex, bindingCount - bindingsStartIndex);
+                    new ReadOnlyArray<BindingState>(null, bindingsStartIndex, bindingCount - bindingsStartIndex);
             }
 
             private int ResolveModifiers(string modifierString)
@@ -465,7 +537,7 @@ namespace UnityEngine.Experimental.Input
                             new ModifierState
                         {
                             modifier = modifier,
-                            phase = InputAction.Phase.Waiting
+                            phase = InputActionPhase.Waiting
                         });
                     }
                 }
@@ -736,6 +808,146 @@ namespace UnityEngine.Experimental.Input
             #endif
         }
 
+        /// <summary>
+        /// Return the list of bindings for just the given actions.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// The bindings for a single action may be contiguous in <see cref="m_Bindings"/> or may be scattered
+        /// around. We don't keep persistent storage for these and instead set up a transient
+        /// array if and when bindings are queried directly from an action. In the simple case,
+        /// we don't even need a separate array but rather just need to find out which slice in the
+        /// bindings array corresponds to which action.
+        ///
+        /// NOTE: Bindings for individual actions aren't queried by the system itself during normal
+        ///       runtime operation so we only do this for cases where the user asks for the
+        ///       information.
+        /// </remarks>
+        internal ReadOnlyArray<InputBinding> GetBindingsForAction(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionSet == this);
+
+            // See if we need to refresh.
+            if (m_BindingsForEachAction == null)
+            {
+                // Handle case where we don't have any bindings.
+                if (m_Bindings == null)
+                    return new ReadOnlyArray<InputBinding>();
+
+                if (action.isSingletonAction)
+                {
+                    // Dead simple case: set is internally owned by action. The entire
+                    // list of bindings is specific to the action.
+
+                    Debug.Assert(m_Bindings == action.m_SingletonActionBindings);
+
+                    m_BindingsForEachAction = m_Bindings;
+                    m_ActionForEachBinding = null; // No point in having this for singleton actions.
+
+                    action.m_BindingsStartIndex = 0;
+                    action.m_BindingsCount = m_Bindings != null ? m_Bindings.Length : 0;
+                }
+                else
+                {
+                    // Go through all bindings and slice them out to individual actions.
+
+                    Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
+
+                    // Allocate array to retain resolved actions, if need be.
+                    var totalBindingsCount = m_Bindings.Length;
+                    if (m_ActionForEachBinding == null || m_ActionForEachBinding.Length != totalBindingsCount)
+                        m_ActionForEachBinding = new InputAction[totalBindingsCount];
+
+                    // Reset state on each action. Important we have actions that are no longer
+                    // referred to by bindings.
+                    for (var i = 0; i < m_Actions.Length; ++i)
+                    {
+                        m_Actions[i].m_BindingsCount = 0;
+                        m_Actions[i].m_BindingsStartIndex = 0;
+                    }
+
+                    // Collect actions and count bindings.
+                    // After this loop, we can have one of two situations:
+                    // 1) The bindings for any action X start at some index N and occupy the next m_BindingsCount slots.
+                    // 2) The bindings for some or all actions are scattered across non-contiguous chunks of the array.
+                    for (var i = 0; i < m_Bindings.Length; ++i)
+                    {
+                        // Look up action.
+                        var actionForBinding = TryGetAction(m_Bindings[i].action);
+                        m_ActionForEachBinding[i] = actionForBinding;
+                        if (actionForBinding == null)
+                            continue;
+
+                        ++actionForBinding.m_BindingsCount;
+                    }
+
+                    // Collect the bindings and bundle them into chunks.
+                    var newBindingsArrayIndex = 0;
+                    InputBinding[] newBindingsArray = null;
+                    for (var sourceBindingIndex = 0; sourceBindingIndex < m_Bindings.Length;)
+                    {
+                        var currentAction = m_ActionForEachBinding[sourceBindingIndex];
+                        if (currentAction == null || currentAction.m_BindingsStartIndex != 0)
+                        {
+                            // Skip bindings not targeting an action or bindings whose actions we
+                            // have already processed (when gathering bindings for a single actions scattered
+                            // across the array we may be skipping ahead).
+                            ++sourceBindingIndex;
+                            continue;
+                        }
+
+                        // Bindings for current action start at current index.
+                        currentAction.m_BindingsStartIndex = newBindingsArray != null
+                            ? newBindingsArrayIndex
+                            : sourceBindingIndex;
+
+                        // Collect all bindings for the action.
+                        var actionBindingsCount = currentAction.m_BindingsCount;
+                        for (var i = 0; i < actionBindingsCount; ++i)
+                        {
+                            var sourceBindingToCopy = sourceBindingIndex;
+
+                            if (m_ActionForEachBinding[i] != currentAction)
+                            {
+                                // If this is the first action that has its bindings scattered around, switch to
+                                // having a separate bindings array and copy whatever bindings we already processed
+                                // over to it.
+                                if (newBindingsArray == null)
+                                {
+                                    newBindingsArray = new InputBinding[totalBindingsCount];
+                                    newBindingsArrayIndex = sourceBindingIndex;
+                                    Array.Copy(m_Bindings, 0, newBindingsArray, 0, sourceBindingIndex);
+                                }
+
+                                // Find the next binding belonging to the action. We've counted bindings for
+                                // the action in the previous pass so we know exactly how many bindings we
+                                // can expect.
+                                do
+                                {
+                                    ++i;
+                                    Debug.Assert(i < m_ActionForEachBinding.Length);
+                                }
+                                while (m_ActionForEachBinding[i] != currentAction);
+                            }
+
+                            // Copy binding over to new bindings array, if need be.
+                            if (newBindingsArray != null)
+                                newBindingsArray[newBindingsArrayIndex++] = m_Bindings[sourceBindingToCopy];
+                        }
+                    }
+
+                    if (newBindingsArray == null)
+                        m_BindingsForEachAction = m_Bindings;
+                    else
+                        m_BindingsForEachAction = newBindingsArray;
+                }
+            }
+
+            return new ReadOnlyArray<InputBinding>(m_BindingsForEachAction, action.m_BindingsStartIndex, action.m_BindingsCount);
+        }
+
         [Serializable]
         public struct BindingJson
         {
@@ -804,6 +1016,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        ////TODO: this needs to be updated to be in sync with the binding refactor
         // A JSON represention of one or more sets of actions.
         // Contains a list of actions. Each action may specify the set it belongs to
         // as part of its name ("set/action").
@@ -897,11 +1110,9 @@ namespace UnityEngine.Experimental.Input
                     set.m_Actions = actionArray;
                     set.m_Bindings = bindingArray;
 
-                    // Install final binding arrays on actions.
                     for (var n = 0; n < actionArray.Length; ++n)
                     {
                         var action = actionArray[n];
-                        action.m_Bindings = bindingArray;
                         action.m_ActionSet = set;
                     }
                 }
@@ -980,43 +1191,6 @@ namespace UnityEngine.Experimental.Input
         {
             var fileJson = ActionFileJson.FromSet(this);
             return JsonUtility.ToJson(fileJson);
-        }
-
-        // The serialization solution here will only partially work. Any call to OnBeforeSerialize() will
-        // render the InputActionSet it got called on unusable until OnAfterDeserialize() is called. This
-        // means that writing a set through serialization will render it inoperable -- and the editor will
-        // do just that over and over internally on data that is being inspected.
-
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-            // Action sets created internally for singleton actions are meant to be purely transient.
-            // The way we up their data, the sets won't serialize properly.
-            Debug.Assert(m_SingletonAction == null, "Must not serialize internal sets of singleton actions!");
-
-            // All actions in the set refer to our combined m_Bindings array. We don't
-            // want to serialize that as part of each action so we null out all the
-            // array references and re-establish them when the set comes back in from
-            // serialization. We do want the index and length values from m_Bindings
-            // in the actions, though.
-            if (m_Actions != null)
-            {
-                for (var i = 0; i < m_Actions.Length; ++i)
-                    m_Actions[i].m_Bindings = null;
-            }
-        }
-
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            if (m_Actions != null)
-            {
-                // Re-establish links to m_Bindings and set.
-                for (var i = 0; i < m_Actions.Length; ++i)
-                {
-                    var action = m_Actions[i];
-                    action.m_Bindings = m_Bindings;
-                    action.m_ActionSet = this;
-                }
-            }
         }
     }
 }
