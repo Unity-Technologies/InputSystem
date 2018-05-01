@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: rename this to IInputActionTrigger? Or IInputBindingTrigger?
+
 ////TODO: modifiers should be able to not just control phase flow but also what value is reported through the action
 
 ////REVIEW: what about putting an instance of one of these on every resolved control instead of sharing it between all controls resolved from a binding?

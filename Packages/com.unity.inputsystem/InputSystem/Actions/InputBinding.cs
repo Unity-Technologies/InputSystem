@@ -1,14 +1,16 @@
 using System;
+using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: rename "combining" to "chaining"
+////REVIEW: turn these into classes?
 
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// A combination of a control path and modifiers.
+    /// A mapping of control input to an action.
     /// </summary>
     /// <remarks>
-    /// A single binding can match arbitrary many controls through its path.
+    /// A single binding can match arbitrary many controls through its path and then
+    /// map their input to a single action.
     /// </remarks>
     [Serializable]
     public struct InputBinding
@@ -16,12 +18,44 @@ namespace UnityEngine.Experimental.Input
         [Flags]
         public enum Flags
         {
+            /// <summary>
+            /// This and the next binding in the list combine such that both need to be
+            /// triggered to trigger the associated action.
+            /// </summary>
+            /// <remarks>
+            /// The order in which the bindings trigger does not matter.
+            ///
+            /// An arbitrarily long sequence of bindings can be arranged as having to trigger
+            /// together.
+            ///
+            /// If this is set, <see cref="ThisAndPreviousCombine"/> has to be set on the
+            /// subsequent binding.
+            /// </remarks>
+            ThisAndNextCombine = 1 << 5,
+            ThisAndNextAreExclusive = 1 << 6,
+
             // This binding and the previous one in the list are a combo. This one
             // can only trigger after the previous one already has.
             ThisAndPreviousCombine = 1 << 0,
+            ThisAndPreviousAreExclusive = 1 << 1,
 
-            Composite = 1 << 1,
-            PartOfComposite = 1 << 2,
+            /// <summary>
+            /// Whether this binding starts a composite binding group.
+            /// </summary>
+            /// <remarks>
+            /// This flag implies <see cref="PushBindingLevel"/>. The composite is comprised
+            /// of all bindings at the same grouping level. The name of each binding in the
+            /// composite is used to determine which role the resolved controls play in the
+            /// composite.
+            /// </remarks>
+            Composite = 1 << 2,
+            PartOfComposite = 1 << 3,////TODO: remove
+
+            /// <summary>
+            ///
+            /// </summary>
+            PushBindingLevel = 1 << 3,
+            PopBindingLevel = 1 << 4,
         }
 
         /// <summary>
@@ -32,7 +66,7 @@ namespace UnityEngine.Experimental.Input
         /// the name of the field on the binding composite object that should be initialized with
         /// the control target of the binding.
         /// </remarks>
-        public string name;
+        public string name;////REVIEW: InternedString?
 
         /// <summary>
         /// Control path being bound to.
@@ -89,9 +123,27 @@ namespace UnityEngine.Experimental.Input
         //       on the four-button group on the gamepad and a secondary set. You could
         //       mark up every single use of the modifier ...
         ////REVIEW: this almost begs for a hierarchy of bindings...
-        public string group;
+        public string group;////TODO: rename to 'tags'
+
+        /// <summary>
+        /// Name of the action triggered by the binding.
+        /// </summary>
+        /// <remarks>
+        /// This is null if the binding does not trigger an action.
+        /// </remarks>
+        public InternedString action;
 
         public Flags flags;
+
+        internal string effectivePath
+        {
+            get
+            {
+                if (overridePath != null)
+                    return overridePath;
+                return path;
+            }
+        }
 
         public bool chainWithPrevious
         {
@@ -127,6 +179,11 @@ namespace UnityEngine.Experimental.Input
                 else
                     flags &= ~Flags.PartOfComposite;
             }
+        }
+
+        public int parent
+        {
+            get { throw new NotImplementedException(); }
         }
     }
 }

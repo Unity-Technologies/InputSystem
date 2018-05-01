@@ -5410,7 +5410,7 @@ class CoreTests : InputTestFixture
         var action = new InputAction(binding: "/gamepad/leftStick");
         action.Enable();
 
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
     }
 
     [Test]
@@ -5438,7 +5438,7 @@ class CoreTests : InputTestFixture
     {
         var action = new InputAction();
 
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
     }
 
     [Test]
@@ -5469,7 +5469,7 @@ class CoreTests : InputTestFixture
                 receivedAction = ctx.action;
                 receivedControl = ctx.control;
 
-                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
+                Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
             };
         action.Enable();
 
@@ -5485,7 +5485,7 @@ class CoreTests : InputTestFixture
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
 
         // Action should be waiting again.
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
     }
 
     [Test]
@@ -5567,7 +5567,7 @@ class CoreTests : InputTestFixture
                 performedAction = ctx.action;
                 performedControl = ctx.control;
 
-                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
+                Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
             };
         action.started +=
             ctx =>
@@ -5576,7 +5576,7 @@ class CoreTests : InputTestFixture
                 startedAction = ctx.action;
                 startedControl = ctx.control;
 
-                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
+                Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
             };
         action.Enable();
 
@@ -5599,7 +5599,7 @@ class CoreTests : InputTestFixture
         Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
 
         // Action should be waiting again.
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
     }
 
     [Test]
@@ -5624,7 +5624,7 @@ class CoreTests : InputTestFixture
                 performedAction = ctx.action;
                 performedControl = ctx.control;
 
-                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Performed));
+                Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
             };
         action.started +=
             ctx =>
@@ -5633,7 +5633,7 @@ class CoreTests : InputTestFixture
                 startedAction = ctx.action;
                 startedControl = ctx.control;
 
-                Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Started));
+                Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
             };
         action.Enable();
 
@@ -5656,7 +5656,7 @@ class CoreTests : InputTestFixture
         Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
 
         // Action should be waiting again.
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Waiting));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
     }
 
     [Test]
@@ -5682,8 +5682,8 @@ class CoreTests : InputTestFixture
         var action1 = set.AddAction("action1");
         var action2 = set.AddAction("action2");
 
-        action1.AddBinding("/gamepad/leftStick");
-        action2.AddBinding("/gamepad/rightStick");
+        action1.AppendBinding("/gamepad/leftStick");
+        action2.AppendBinding("/gamepad/rightStick");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action2.bindings, Has.Count.EqualTo(1));
@@ -5728,7 +5728,7 @@ class CoreTests : InputTestFixture
     {
         var set = new InputActionSet("test");
 
-        set.AddAction(name: "action1", binding: "/gamepad/leftStick").AddBinding("/gamepad/rightStick", groups: "group");
+        set.AddAction(name: "action1", binding: "/gamepad/leftStick").AppendBinding("/gamepad/rightStick", groups: "group");
         set.AddAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
 
         var json = set.ToJson();
@@ -5837,8 +5837,8 @@ class CoreTests : InputTestFixture
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftStick");
-        action.AddBinding("/gamepad/rightStick");
+        action.AppendBinding("/gamepad/leftStick");
+        action.AppendBinding("/gamepad/rightStick");
 
         action.Enable();
 
@@ -6053,6 +6053,96 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanSetUpBindingsOnActionSet()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var set = new InputActionSet();
+        var fire = set.AddAction("fire");
+        var reload = set.AddAction("reload");
+
+        set.AppendBinding("<Keyboard>/space")
+        .WithChild("<Mouse>/leftButton").Triggering(fire)
+        .And.WithChild("<Mouse>/rightButton").Triggering(reload);
+
+        set.Enable();
+
+        var firePerformed = false;
+        var reloadPerformed = false;
+
+        fire.performed += ctx =>
+            {
+                Assert.That(firePerformed, Is.False);
+                firePerformed = true;
+            };
+        reload.performed += ctx =>
+            {
+                Assert.That(reloadPerformed, Is.False);
+                reloadPerformed = true;
+            };
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
+        InputSystem.Update();
+
+        Assert.That(firePerformed, Is.False);
+        Assert.That(reloadPerformed, Is.False);
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseState.Button.Left));
+        InputSystem.Update();
+
+        Assert.That(firePerformed, Is.True);
+        Assert.That(reloadPerformed, Is.False);
+
+        firePerformed = false;
+        reloadPerformed = false;
+
+        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseState.Button.Right));
+        InputSystem.Update();
+
+        Assert.That(firePerformed, Is.False);
+        Assert.That(reloadPerformed, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryBindingsTriggeringAction()
+    {
+        var set = new InputActionSet();
+        var fire = set.AddAction("fire");
+        var reload = set.AddAction("reload");
+
+        set.AppendBinding("<Keyboard>/space")
+        .WithChild("<Mouse>/leftButton").Triggering(fire)
+        .And.WithChild("<Mouse>/rightButton").Triggering(reload);
+        set.AppendBinding("<Keyboard>/leftCtrl").Triggering(fire);
+
+        Assert.That(set.bindings.Count, Is.EqualTo(3));
+        Assert.That(fire.bindings.Count, Is.EqualTo(2));
+        Assert.That(reload.bindings.Count, Is.EqualTo(1));
+        Assert.That(fire.bindings[0].path, Is.EqualTo("<Mouse>/leftButton"));
+        Assert.That(fire.bindings[1].path, Is.EqualTo("<Keyboard>/leftCtrl"));
+        Assert.That(reload.bindings[0].path, Is.EqualTo("<Mouse>/rightButton"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ChildBindingsReferToTheirParent()
+    {
+        var set = new InputActionSet();
+
+        set.AppendBinding("<Keyboard/a"); // To take index #0.
+        set.AppendBinding("<Keyboard>/space")
+        .WithChild("<Mouse>/leftButton")
+        .And.WithChild("<Mouse>/rightButton");
+
+        Assert.That(set.bindings[0].parent, Is.EqualTo(-1));
+        Assert.That(set.bindings[1].parent, Is.EqualTo(1));
+        Assert.That(set.bindings[2].parent, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void TODO_Actions_CanChainBindings()
     {
         // Set up an action that requires the left trigger to be held when pressing the A button.
@@ -6060,7 +6150,7 @@ class CoreTests : InputTestFixture
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(name: "Test");
-        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
+        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -6087,7 +6177,7 @@ class CoreTests : InputTestFixture
         var gamepad = InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(name: "Test");
-        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
+        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -6107,7 +6197,7 @@ class CoreTests : InputTestFixture
         var gamepad = InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(name: "Test");
-        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth");
+        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -6134,7 +6224,7 @@ class CoreTests : InputTestFixture
 
         // Tap or slow tap on A button when left trigger is held.
         var action = new InputAction(name: "Test");
-        action.AddBinding("/gamepad/leftTrigger").CombinedWith("/gamepad/buttonSouth", modifiers: "tap,slowTap");
+        action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth", modifiers: "tap,slowTap");
         action.Enable();
 
         var performed = new List<InputAction.CallbackContext>();
@@ -6249,7 +6339,7 @@ class CoreTests : InputTestFixture
 
         Assert.That(InputSystem.ListEnabledActions(), Has.Exactly(0).SameAs(action));
         Assert.That(() => action.controls, Throws.InvalidOperationException);
-        Assert.That(action.phase, Is.EqualTo(InputAction.Phase.Disabled));
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.enabled, Is.False);
     }
 
@@ -6448,7 +6538,7 @@ class CoreTests : InputTestFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction();
-        action.AddCompositeBinding("ButtonAxis")
+        action.AppendCompositeBinding("ButtonAxis")
         .With("Negative", "/<Gamepad>/leftShoulder")
         .With("Positive", "/<Gamepad>/rightShoulder");
         action.Enable();
@@ -6478,7 +6568,7 @@ class CoreTests : InputTestFixture
 
         // Set up classic WASD control.
         var action = new InputAction();
-        action.AddCompositeBinding("ButtonVector")
+        action.AppendCompositeBinding("ButtonVector")
         .With("Up", "/<Keyboard>/w")
         .With("Down", "/<Keyboard>/s")
         .With("Left", "/<Keyboard>/a")
@@ -6570,7 +6660,7 @@ class CoreTests : InputTestFixture
     {
         var set = new InputActionSet(name: "test");
         set.AddAction("test")
-        .AddCompositeBinding("ButtonVector")
+        .AppendCompositeBinding("ButtonVector")
         .With("Up", "/<Keyboard>/w")
         .With("Down", "/<Keyboard>/s")
         .With("Left", "/<Keyboard>/a")
@@ -6622,8 +6712,8 @@ class CoreTests : InputTestFixture
     {
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftTrigger", groups: "a");
-        action.AddBinding("/gamepad/rightTrigger", groups: "b");
+        action.AppendBinding("/gamepad/leftTrigger", groups: "a");
+        action.AppendBinding("/gamepad/rightTrigger", groups: "b");
 
         Assert.That(() => action.ApplyBindingOverride("/gamepad/buttonSouth"), Throws.InvalidOperationException);
 
@@ -6642,8 +6732,8 @@ class CoreTests : InputTestFixture
     {
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftTrigger", groups: "a");
-        action.AddBinding("/gamepad/rightTrigger", groups: "a");
+        action.AppendBinding("/gamepad/leftTrigger", groups: "a");
+        action.AppendBinding("/gamepad/rightTrigger", groups: "a");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a");
 
@@ -6657,8 +6747,8 @@ class CoreTests : InputTestFixture
     {
         var action = new InputAction(name: "test");
 
-        action.AddBinding("/gamepad/leftTrigger", groups: "a");
-        action.AddBinding("/gamepad/rightTrigger", groups: "a");
+        action.AppendBinding("/gamepad/leftTrigger", groups: "a");
+        action.AppendBinding("/gamepad/rightTrigger", groups: "a");
 
         action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a[1]");
 
@@ -6734,7 +6824,7 @@ class CoreTests : InputTestFixture
     {
         // Action that matches leftStick on *any* gamepad in the system.
         var action = new InputAction(binding: "/<gamepad>/leftStick");
-        action.AddBinding("/keyboard/enter"); // Add unrelated binding which should not be touched.
+        action.AppendBinding("/keyboard/enter"); // Add unrelated binding which should not be touched.
 
         InputSystem.AddDevice("Gamepad");
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
@@ -6791,8 +6881,8 @@ class CoreTests : InputTestFixture
     public void Actions_CanCloneAction()
     {
         var action = new InputAction(name: "action");
-        action.AddBinding("/gamepad/leftStick", modifiers: "tap", groups: "group");
-        action.AddBinding("/gamepad/rightStick");
+        action.AppendBinding("/gamepad/leftStick", modifiers: "tap", groups: "group");
+        action.AppendBinding("/gamepad/rightStick");
 
         var clone = action.Clone();
 
@@ -6940,8 +7030,8 @@ class CoreTests : InputTestFixture
 
         var action = new InputAction();
 
-        action.AddBinding("/<Gamepad>/leftStick");
-        action.AddBinding("/<Pointer>/delta");
+        action.AppendBinding("/<Gamepad>/leftStick");
+        action.AppendBinding("/<Pointer>/delta");
 
         Vector2? movement = null;
         action.performed +=
@@ -6970,120 +7060,6 @@ class CoreTests : InputTestFixture
         Assert.That(movement.HasValue, Is.True);
         Assert.That(movement.Value.x, Is.EqualTo(0).Within(0.000001));
         Assert.That(movement.Value.y, Is.EqualTo(0).Within(0.000001));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void TODO_Actions_CanDriveMoveActionFromWASDKeys()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        var action = new InputAction();
-
-        action.AddBinding("/<Keyboard>/a").WithModifiers("axisvector(x=-1,y=0)");
-        action.AddBinding("/<Keyboard>/d").WithModifiers("axisvector(x=1,y=0)");
-        action.AddBinding("/<Keyboard>/w").WithModifiers("axisvector(x=0,y=1)");
-        action.AddBinding("/<Keyboard>/s").WithModifiers("axisvector(x=0,y=-1)");
-
-        Vector2? vector = null;
-        action.performed +=
-            ctx => { vector = ctx.GetValue<Vector2>(); };
-
-        action.Enable();
-
-        //Have a concept of "composite bindings"?
-
-        //This leads to the bigger question of how the system handles an action
-        //that has multiple bindings where each may independently go through a
-        //full phase cycle.
-
-        ////TODO: need to have names on the bindings ("up", "down", "left", right")
-        ////      (so it becomes "Move Up" etc in a binding UI)
-
-        ////REVIEW: how should we handle mixed-device bindings? say there's an additional
-        ////        gamepad binding on the action above. what if both the gamepad and
-        ////        the keyboard trigger?
-
-        // A pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
-        vector = null;
-
-        // D pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
-        vector = null;
-
-        // W pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
-        vector = null;
-
-        // S pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
-        vector = null;
-
-        ////FIXME: these need to behave like Dpad vectors and be normalized
-
-        // A+W pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
-        vector = null;
-
-        // D+W pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(1).Within(0.000001));
-        vector = null;
-
-        // A+S pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(-1).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
-        vector = null;
-
-        // D+S pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(1).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(-1).Within(0.000001));
-        vector = null;
-
-        // A+D+W+S pressed.
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.S, Key.W, Key.A));
-        InputSystem.Update();
-
-        Assert.That(vector, Is.Not.Null);
-        Assert.That(vector.Value.x, Is.EqualTo(0).Within(0.000001));
-        Assert.That(vector.Value.y, Is.EqualTo(0).Within(0.000001));
     }
 
     [Test]

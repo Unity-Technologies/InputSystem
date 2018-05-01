@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -82,7 +81,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        // Equivalent to InputAction.AddBinding().
+        // Equivalent to InputAction.AppendBinding().
         public static void AppendBinding(SerializedProperty actionProperty, SerializedProperty actionSetProperty = null)
         {
             var bindingsArrayProperty = actionSetProperty != null
