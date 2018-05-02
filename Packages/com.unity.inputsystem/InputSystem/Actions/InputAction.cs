@@ -393,7 +393,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException(
                     string.Format("Cannot change overrides on action '{0}' while the action is enabled", this));
 
-            if (bindingIndex < 0 || bindingIndex > m_BindingsCount)
+            if (bindingIndex < 0 || bindingIndex >= m_BindingsCount)
                 throw new IndexOutOfRangeException(
                     string.Format("Binding index {0} is out of range for action '{1}' which has {2} bindings",
                         bindingIndex, this, m_BindingsCount));
