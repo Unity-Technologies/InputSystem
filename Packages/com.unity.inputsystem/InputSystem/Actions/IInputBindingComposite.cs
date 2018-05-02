@@ -1,3 +1,7 @@
+using UnityEngine.Experimental.Input.Utilities;
+
+////REVIEW: should composites be able to nest?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -28,5 +32,10 @@ namespace UnityEngine.Experimental.Input
     public interface IInputBindingComposite<TValue>
     {
         TValue ReadValue(ref InputAction.CompositeBindingContext context);
+    }
+
+    internal static class InputBindingComposite
+    {
+        public static TypeTable s_Composites;
     }
 }

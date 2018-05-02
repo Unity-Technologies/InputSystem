@@ -843,11 +843,22 @@ namespace UnityEngine.Experimental.Input
 
         internal static NameAndParameters[] ParseNameAndParameterList(string text)
         {
+            List<NameAndParameters> list = null;
+            if (!ParseNameAndParameterList(text, ref list))
+                return null;
+            return list.ToArray();
+        }
+
+        internal static bool ParseNameAndParameterList(string text, ref List<NameAndParameters> list)
+        {
             text = text.Trim();
             if (string.IsNullOrEmpty(text))
-                return null;
+                return false;
 
-            var list = new List<NameAndParameters>();
+            if (list == null)
+                list = new List<NameAndParameters>();
+            else
+                list.Clear();
 
             var index = 0;
             var textLength = text.Length;
@@ -896,7 +907,7 @@ namespace UnityEngine.Experimental.Input
                 list.Add(new NameAndParameters { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
             }
 
-            return list.ToArray();
+            return true;
         }
 
         private static ParameterValue[] ParseParameters(string parameterString)

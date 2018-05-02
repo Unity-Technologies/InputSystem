@@ -6,6 +6,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: if activeTouches is called multiple times in a single frame, only update the array once
+
 ////TODO: add orientation
 
 ////TODO: look at how you can meaningfully use touches with actions

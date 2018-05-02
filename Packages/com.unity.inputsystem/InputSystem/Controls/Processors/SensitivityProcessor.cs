@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Processors
 {
-    public class SensitivityProcessor : IInputProcessor<Vector2>
+    public class SensitivityProcessor : IInputControlProcessor<Vector2>
     {
         public float sensitivity;
 

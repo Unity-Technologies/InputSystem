@@ -23,11 +23,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
 
-        [FieldOffset(InputEvent.kBaseEventSize + 4)] public fixed byte stateData[1]; // Variable-sized.
+        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))] public fixed byte stateData[1]; // Variable-sized.
 
         public uint stateSizeInBytes
         {
-            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 4); }
+            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int)); }
         }
 
         public IntPtr state
@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public static int GetEventSizeWithPayload<TState>()
             where TState : struct
         {
-            return UnsafeUtility.SizeOf<TState>() + 24;
+            return UnsafeUtility.SizeOf<TState>() + InputEvent.kBaseEventSize + sizeof(int);
         }
 
         public static StateEvent* From(InputEventPtr ptr)
