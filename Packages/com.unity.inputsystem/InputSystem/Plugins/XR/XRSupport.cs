@@ -83,13 +83,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterControlLayout<WMRHMD>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterface)
-                .WithManufacturer("Microsoft")
                 .WithProduct("Windows Mixed Reality HMD"));
             InputSystem.RegisterControlLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterface)
-                .WithManufacturer("Microsoft")
-                .WithProduct("Spatial Controller"));
+                .WithProduct("^(Spatial Controller)"));
 
             InputSystem.RegisterControlLayout<OculusHMD>(
                 matches: new InputDeviceMatcher()
