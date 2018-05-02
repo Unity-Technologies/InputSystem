@@ -4209,6 +4209,7 @@ class CoreTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanGetGyroReading()
     {
+        ////FIXME: Move non gyro values to other tests
         var gyro = InputSystem.AddDevice<Gyroscope>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
         InputSystem.QueueStateEvent(gyro, new GyroscopeState {angularVelocity = value});
@@ -4255,6 +4256,7 @@ class CoreTests : InputTestFixture
 
         Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
+
     }
 
     [Test]
