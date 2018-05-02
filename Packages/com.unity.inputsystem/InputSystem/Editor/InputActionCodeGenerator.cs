@@ -41,7 +41,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         // Generate a string containing C# code that simplifies working with the given
         // action sets in code.
-        public static string GenerateWrapperCode(IEnumerable<InputActionSet> sets, Options options)
+        public static string GenerateWrapperCode(IEnumerable<InputActionMap> sets, Options options)
         {
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 throw new ArgumentException("options.sourceAssetPath");
@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var setStructName = CSharpCodeHelpers.MakeTypeName(setName, "Actions");
 
                 // Caching field for action set.
-                writer.WriteLine(string.Format("private UnityEngine.Experimental.Input.InputActionSet m_{0};", setName));
+                writer.WriteLine(string.Format("private UnityEngine.Experimental.Input.InputActionMap m_{0};", setName));
 
                 // Caching fields for all actions.
                 foreach (var action in set.actions)
@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 // Action set getter.
-                writer.WriteLine(string.Format("public UnityEngine.Experimental.Input.InputActionSet Get() {{ return m_Wrapper.m_{0}; }}",
+                writer.WriteLine(string.Format("public UnityEngine.Experimental.Input.InputActionMap Get() {{ return m_Wrapper.m_{0}; }}",
                         setName));
 
                 // Enable/disable methods.
@@ -129,11 +129,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.WriteLine("public void Disable() { Get().Disable(); }");
 
                 // Clone method.
-                writer.WriteLine("public UnityEngine.Experimental.Input.InputActionSet Clone() { return Get().Clone(); }");
+                writer.WriteLine("public UnityEngine.Experimental.Input.InputActionMap Clone() { return Get().Clone(); }");
 
                 // Implicit conversion operator.
                 writer.WriteLine(string.Format(
-                        "public static implicit operator UnityEngine.Experimental.Input.InputActionSet({0} set) {{ return set.Get(); }}",
+                        "public static implicit operator UnityEngine.Experimental.Input.InputActionMap({0} set) {{ return set.Get(); }}",
                         setStructName));
 
                 writer.EndBlock();
@@ -200,7 +200,7 @@ namespace UnityEngine.Experimental.Input.Editor
         // Updates the given file with wrapper code generated for the given action sets.
         // If the generated code is unchanged, does not touch the file.
         // Returns true if the file was touched, false otherwise.
-        public static bool GenerateWrapperCode(string filePath, IEnumerable<InputActionSet> sets, Options options)
+        public static bool GenerateWrapperCode(string filePath, IEnumerable<InputActionMap> sets, Options options)
         {
             // Generate code.
             var code = GenerateWrapperCode(sets, options);

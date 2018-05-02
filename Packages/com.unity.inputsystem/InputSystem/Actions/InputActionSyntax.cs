@@ -4,24 +4,24 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Extensions to modify <see cref="InputAction">InputActions</see> and <see cref="InputActionSet">InputActionSets</see>
+    /// Extensions to modify <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">InputActionSets</see>
     /// with fluent-style APIs.
     /// </summary>
     public static class InputActionSyntax
     {
         /// <summary>
-        /// Syntax to configure a binding added to an <see cref="InputAction"/> or an <see cref="InputActionSet"/>.
+        /// Syntax to configure a binding added to an <see cref="InputAction"/> or an <see cref="InputActionMap"/>.
         /// </summary>
         public struct BindingSyntax
         {
             internal InputAction m_Action;
-            internal InputActionSet m_ActionSet;
+            internal InputActionMap m_ActionMap;
             internal int m_BindingIndex;
 
-            internal BindingSyntax(InputActionSet set, InputAction action, int bindingIndex)
+            internal BindingSyntax(InputActionMap map, InputAction action, int bindingIndex)
             {
                 m_Action = action;
-                m_ActionSet = set;
+                m_ActionMap = map;
                 m_BindingIndex = bindingIndex;
             }
 
@@ -68,14 +68,14 @@ namespace UnityEngine.Experimental.Input
         public struct CompositeSyntax
         {
             internal InputAction m_Action;
-            internal InputActionSet m_ActionSet;
+            internal InputActionMap m_ActionMap;
             internal int m_CompositeIndex;
             internal int m_BindingIndex;
 
-            internal CompositeSyntax(InputActionSet set, InputAction action, int compositeIndex)
+            internal CompositeSyntax(InputActionMap map, InputAction action, int compositeIndex)
             {
                 m_Action = action;
-                m_ActionSet = set;
+                m_ActionMap = map;
                 m_CompositeIndex = compositeIndex;
                 m_BindingIndex = -1;
             }
@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static BindingSyntax AppendBinding(this InputActionSet set, string path)
+        public static BindingSyntax AppendBinding(this InputActionMap map, string path)
         {
             throw new NotImplementedException();
         }
@@ -120,26 +120,26 @@ namespace UnityEngine.Experimental.Input
             string groups = null)
         {
             var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
-            var bindingIndex = AppendBindingInternal(action.internalSet, action, binding);
-            return new BindingSyntax(action.set, action, bindingIndex);
+            var bindingIndex = AppendBindingInternal(action.internalMap, action, binding);
+            return new BindingSyntax(action.map, action, bindingIndex);
         }
 
         public static CompositeSyntax AppendCompositeBinding(this InputAction action, string composite)
         {
             ////REVIEW: use 'name' instead of 'path' field here?
             var binding = new InputBinding {path = composite, flags = InputBinding.Flags.Composite};
-            var bindingIndex = AppendBindingInternal(action.internalSet, action, binding);
-            return new CompositeSyntax(action.set, action, bindingIndex);
+            var bindingIndex = AppendBindingInternal(action.internalMap, action, binding);
+            return new CompositeSyntax(action.map, action, bindingIndex);
         }
 
-        private static int AppendBindingInternal(InputActionSet set, InputAction action, InputBinding binding)
+        private static int AppendBindingInternal(InputActionMap map, InputAction action, InputBinding binding)
         {
-            Debug.Assert(set != null);
+            Debug.Assert(map != null);
 
             // Set can't be enabled.
-            if (set.enabled)
+            if (map.enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot add bindings to set '{0}' while the set is enabled", set));
+                    string.Format("Cannot add bindings to set '{0}' while the set is enabled", map));
 
             // Action can't be enabled.
             if (action != null && action.enabled)
@@ -147,16 +147,16 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Cannot add bindings to action '{0}' while the action is enabled", action));
 
             // Append to bindings in set.
-            var bindingIndex = ArrayHelpers.Append(ref set.m_Bindings, binding);
+            var bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
 
             // Invalidate per-action binding sets so that this gets refreshed if
             // anyone queries it.
-            set.m_BindingsForEachAction = null;
+            map.m_BindingsForEachAction = null;
 
             // If it's a singleton action, make sure m_Bindings is up to date just
             // in case the action gets serialized.
             if (action != null && action.isSingletonAction)
-                action.m_SingletonActionBindings = set.m_Bindings;
+                action.m_SingletonActionBindings = map.m_Bindings;
 
             return bindingIndex;
         }

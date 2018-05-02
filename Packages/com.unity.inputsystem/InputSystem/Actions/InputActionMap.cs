@@ -8,7 +8,8 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// A set of input actions and bindings.
+    /// A mapping of <see cref="InputBinding">input bindings</see> to <see cref="InputAction">
+    /// input actions</see>.
     /// </summary>
     /// <remarks>
     /// Also stores data for actions. All actions have to have an associated
@@ -23,10 +24,10 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionSet : ICloneable
+    public class InputActionMap : ICloneable
     {
         /// <summary>
-        /// Name of the action set.
+        /// Name of the action map.
         /// </summary>
         public string name
         {
@@ -34,7 +35,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Whether any action in the set is currently enabled.
+        /// Whether any action in the map is currently enabled.
         /// </summary>
         public bool enabled
         {
@@ -42,10 +43,10 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// List of actions contained in the set.
+        /// List of actions contained in the map.
         /// </summary>
         /// <remarks>
-        /// Actions are owned by their set. The same action cannot appear in multiple sets.
+        /// Actions are owned by their map. The same action cannot appear in multiple maps.
         ///
         /// Does not allocate. Note that values returned by the property become invalid if
         /// the setup of actions in a set is changed.
@@ -68,7 +69,7 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
         }
 
-        public InputActionSet(string name = null)
+        public InputActionMap(string name = null)
         {
             m_Name = name;
         }
@@ -85,7 +86,7 @@ namespace UnityEngine.Experimental.Input
 
             var action = new InputAction(name);
             ArrayHelpers.Append(ref m_Actions, action);
-            action.m_ActionSet = this;
+            action.m_ActionMap = this;
 
             if (!string.IsNullOrEmpty(binding))
                 action.AppendBinding(binding, modifiers: modifiers, groups: groups);
@@ -131,6 +132,7 @@ namespace UnityEngine.Experimental.Input
             if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)
                 return;
 
+            ////TODO: instead of enabling one-by-one, enable actions in bulk
             for (var i = 0; i < m_Actions.Length; ++i)
                 m_Actions[i].Enable();
 
@@ -211,7 +213,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
-        public InputActionSet Clone()
+        public InputActionMap Clone()
         {
             // Internal action sets from singleton actions should not be visible outside of
             // them. Cloning them is not allowed.
@@ -219,7 +221,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException(
                     string.Format("Cloning internal set of singleton action '{0}' is not allowed", m_SingletonAction));
 
-            var clone = new InputActionSet
+            var clone = new InputActionMap
             {
                 m_Name = m_Name,
                 m_Actions = ArrayHelpers.Clone(m_Actions)
@@ -232,6 +234,9 @@ namespace UnityEngine.Experimental.Input
         {
             return Clone();
         }
+
+        // The state we persist is pretty much just a name, a flat list of actions, and a flat
+        // list of bindings. The rest is state we keep at runtime when a map is in use.
 
         [SerializeField] private string m_Name;////REVIEW: InternedString?
 
@@ -254,11 +259,11 @@ namespace UnityEngine.Experimental.Input
         //       (only in the case where m_Bindings has scattered references to actions).
         ////REVIEW: this will lead to problems when overrides are thrown into the mix
         [NonSerialized] internal InputBinding[] m_BindingsForEachAction;
+        [NonSerialized] internal InputControl[] m_ControlsForEachAction;
         [NonSerialized] internal InputAction[] m_ActionForEachBinding;
 
         [NonSerialized] internal InputControl[] m_Controls;
         [NonSerialized] internal ModifierState[] m_Modifiers;
-        [NonSerialized] internal object[] m_Composites;
         [NonSerialized] internal BindingState[] m_ResolvedBindings;
 
         // Action sets that are created internally by singleton actions to hold their data
@@ -330,8 +335,14 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             public ReadWriteArray<ModifierState> modifiers;
 
+            /// <summary>
+            /// The action being triggered by the binding (if any).
+            /// </summary>
+            public InputAction action;
+
+            public object composite;
+
             public Flags flags;
-            public int compositeIndex;
 
             public bool chainsWithNext
             {
@@ -383,62 +394,77 @@ namespace UnityEngine.Experimental.Input
         {
             public int controlCount;
             public int modifierCount;
-            public int bindingCount;
-            public int compositeCount;
 
             public InputControl[] controls;
-            public ModifierState[] modifiers;
-            public BindingState[] bindings;
+            public ModifierState[] modifierStates;
+            public BindingState[] bindingStates;
             public object[] composites;
 
             private List<InputControlLayout.NameAndParameters> m_Parameters;
 
-            /// <summary>
-            /// Resolve the bindings of a single action and add their data to the given lists of
-            /// controls, modifiers, and resolved bindings.
-            /// </summary>
-            /// <param name="action">Action whose bindings to resolve and add.</param>
-            public void ResolveAndAddBindings(InputAction action)
+            public void ResolveBindings(InputBinding[] bindings, InputAction[] actions)
             {
-                var unresolvedBindings = action.bindings;
-                if (unresolvedBindings.Count == 0)
-                    return;
+                Debug.Assert(bindings != null);
 
-                var controlStartIndex = controlCount;
-                var bindingsStartIndex = bindingCount;
+                // Allocate/clear binding states.
+                var bindingsCount = bindings.Length;
+                if (bindingStates == null || bindings.Length != bindingsCount)
+                    bindingStates = new BindingState[bindingsCount];
+                else
+                    Array.Clear(bindingStates, 0, bindingsCount);
 
-                object currentComposite = null;
-                var currentCompositeIndex = -1;
-
+                ////TODO: make sure composite objects get all the bindings they need
                 ////TODO: handle case where we have bindings resolving to the same control
                 ////      (not so clear cut what to do there; each binding may have a different modifier setup, for example)
-                for (var n = 0; n < unresolvedBindings.Count; ++n)
+                var controlStartIndex = 0;
+                var currentCompositeIndex = -1;
+                var actionCount = actions != null ? actions.Length : 0;
+                for (var n = 0; n < bindings.Length; ++n)
                 {
-                    var unresolvedBinding = unresolvedBindings[n];
+                    var unresolvedBinding = bindings[n];
                     var indexOfFirstControlInThisBinding = controlCount;
+
+                    // Try to find action.
+                    InputAction action = null;
+                    var actionName = unresolvedBinding.action;
+                    if (!actionName.IsEmpty())
+                    {
+                        for (var i = 0; i < actionCount; ++i)
+                        {
+                            var currentAction = actions[i];
+                            if (currentAction.m_Name == actionName)
+                            {
+                                action = currentAction;
+                                break;
+                            }
+                        }
+                    }
 
                     ////TODO: allow specifying parameters for composite on its path (same way as parameters work for modifiers)
                     // If it's the start of a composite chain, create the composite.
                     if (unresolvedBinding.isComposite)
                     {
+                        ////REVIEW: what to do about modifiers on composites?
+
                         // Instantiate. For composites, the path is the name of the composite.
-                        currentComposite = InstantiateBindingComposite(unresolvedBinding.path);
-                        currentCompositeIndex = compositeCount;
+                        var composite = InstantiateBindingComposite(unresolvedBinding.path);
+                        bindingStates[n] = new BindingState
+                        {
+                            composite = composite,
+                            action = action
+                        };
 
                         // The composite binding entry itself does not resolve to any controls.
                         // It creates a composite binding object which is then populated from
                         // subsequent bindings.
+                        currentCompositeIndex = n;
                         continue;
                     }
 
                     // If we've reached the end of a composite chain, finish
                     // of the current composite.
-                    if (!unresolvedBinding.isPartOfComposite && currentComposite != null)
-                    {
-                        FinishBindingComposite(currentComposite);
-                        currentComposite = null;
+                    if (!unresolvedBinding.isPartOfComposite && currentCompositeIndex != -1)
                         currentCompositeIndex = -1;
-                    }
 
                     // Use override path but fall back to default path if no
                     // override set.
@@ -461,22 +487,22 @@ namespace UnityEngine.Experimental.Input
                     if (!string.IsNullOrEmpty(unresolvedBinding.modifiers))
                     {
                         firstModifier = ResolveModifiers(unresolvedBinding.modifiers);
-                        if (modifiers != null)
+                        if (modifierStates != null)
                             numModifiers = modifierCount - firstModifier;
                     }
 
                     // Add entry for resolved binding.
-                    ArrayHelpers.AppendWithCapacity(ref bindings, ref bindingCount, new BindingState
+                    bindingStates[n] = new BindingState
                     {
                         controls = new ReadOnlyArray<InputControl>(null, indexOfFirstControlInThisBinding, numControls),
                         modifiers = new ReadWriteArray<ModifierState>(null, firstModifier, numModifiers),
                         isPartOfComposite = unresolvedBinding.isPartOfComposite,
-                        compositeIndex = currentCompositeIndex,
-                    });
+                        action = action,
+                    };
 
                     // If the binding is part of a composite, pass the resolve controls
                     // on to the composite.
-                    if (unresolvedBinding.isPartOfComposite && currentComposite != null)
+                    if (unresolvedBinding.isPartOfComposite && currentCompositeIndex != -1)
                     {
                         ////REVIEW: what should we do when a single binding in a composite resolves to multiple controls?
                         ////        if the composite has more than one bindable control, it's not readily apparent how we would group them
@@ -487,22 +513,14 @@ namespace UnityEngine.Experimental.Input
                         // to bind to.
                         if (string.IsNullOrEmpty(unresolvedBinding.name))
                             throw new Exception(string.Format(
-                                    "Binding that is part of composite '{0}' is missing a name", currentComposite));
+                                    "Binding that is part of composite '{0}' is missing a name",
+                                    bindingStates[currentCompositeIndex].composite));
 
                         // Install the control on the binding.
-                        BindControlInComposite(currentComposite, unresolvedBinding.name,
+                        BindControlInComposite(bindingStates[currentCompositeIndex].composite, unresolvedBinding.name,
                             controls[indexOfFirstControlInThisBinding]);
                     }
                 }
-
-                if (currentComposite != null)
-                    FinishBindingComposite(currentComposite);
-
-                // Let action know where its control and resolved binding entries are.
-                action.m_Controls =
-                    new ReadOnlyArray<InputControl>(null, controlStartIndex, controlCount - controlStartIndex);
-                action.m_ResolvedBindings =
-                    new ReadOnlyArray<BindingState>(null, bindingsStartIndex, bindingCount - bindingsStartIndex);
             }
 
             private int ResolveModifiers(string modifierString)
@@ -533,7 +551,7 @@ namespace UnityEngine.Experimental.Input
                         InputDeviceBuilder.SetParameters(modifier, m_Parameters[i].parameters);
 
                         // Add to list.
-                        ArrayHelpers.AppendWithCapacity(ref modifiers, ref modifierCount,
+                        ArrayHelpers.AppendWithCapacity(ref modifierStates, ref modifierCount,
                             new ModifierState
                         {
                             modifier = modifier,
@@ -543,12 +561,6 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 return firstModifierIndex;
-            }
-
-            private void FinishBindingComposite(object composite)
-            {
-                ////TODO: check whether composite is fully initialized
-                ArrayHelpers.AppendWithCapacity(ref composites, ref compositeCount, composite);
             }
 
             private static object InstantiateBindingComposite(string name)
@@ -597,7 +609,7 @@ namespace UnityEngine.Experimental.Input
         // layouts in the system are changed).
         internal void ResolveBindings()
         {
-            if (m_Actions == null && m_SingletonAction == null)
+            if (m_Bindings == null)
                 return;
 
             ////TODO: this codepath must be changed to not allocate! Must be possible to do .Enable() and Disable()
@@ -605,22 +617,14 @@ namespace UnityEngine.Experimental.Input
 
             // Resolve all source paths.
             var resolver = new BindingResolver();
-            if (m_SingletonAction != null)
-            {
-                resolver.ResolveAndAddBindings(m_SingletonAction);
-            }
-            else
-            {
-                for (var i = 0; i < m_Actions.Length; ++i)
-                    resolver.ResolveAndAddBindings(m_Actions[i]);
-            }
+            resolver.ResolveBindings(m_Bindings, m_ActionForEachBinding);
 
             // Grab final arrays.
             m_Controls = resolver.controls;
-            m_Modifiers = resolver.modifiers;
-            m_Composites = resolver.composites;
-            m_ResolvedBindings = resolver.bindings;
+            m_Modifiers = resolver.modifierStates;
+            m_ResolvedBindings = resolver.bindingStates;
 
+            /*
             if (m_ResolvedBindings != null)
             {
                 for (var i = 0; i < resolver.bindingCount; ++i)
@@ -648,16 +652,17 @@ namespace UnityEngine.Experimental.Input
                     action.m_ResolvedBindings.m_Array = m_ResolvedBindings;
                 }
             }
+            */
         }
 
         // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
         // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
         // instead we just link all action sets that have enabled actions together in a list that has its link
         // embedded right here in an action set.
-        private static InputActionSet s_FirstSetInGlobalList;
+        private static InputActionMap s_FirstMapInGlobalList;
         [NonSerialized] private int m_EnabledActionsCount;
-        [NonSerialized] internal InputActionSet m_NextInGlobalList;
-        [NonSerialized] internal InputActionSet m_PreviousInGlobalList;
+        [NonSerialized] internal InputActionMap m_NextInGlobalList;
+        [NonSerialized] internal InputActionMap m_PreviousInGlobalList;
 
         #if UNITY_EDITOR
         ////REVIEW: not sure yet whether this warrants a publicly accessible callback so keeping it a private hook for now
@@ -666,7 +671,7 @@ namespace UnityEngine.Experimental.Input
 
         internal static void ResetGlobals()
         {
-            for (var set = s_FirstSetInGlobalList; set != null;)
+            for (var set = s_FirstMapInGlobalList; set != null;)
             {
                 var next = set.m_NextInGlobalList;
                 set.m_NextInGlobalList = null;
@@ -682,14 +687,14 @@ namespace UnityEngine.Experimental.Input
 
                 set = next;
             }
-            s_FirstSetInGlobalList = null;
+            s_FirstMapInGlobalList = null;
         }
 
         // Walk all sets with enabled actions and add all enabled actions to the given list.
         internal static int FindEnabledActions(List<InputAction> actions)
         {
             var numFound = 0;
-            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+            for (var set = s_FirstMapInGlobalList; set != null; set = set.m_NextInGlobalList)
             {
                 if (set.m_SingletonAction != null)
                 {
@@ -714,7 +719,7 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: can we do better than just re-resolving *every* enabled action? seems heavy-handed
         internal static void RefreshAllEnabledActions()
         {
-            for (var set = s_FirstSetInGlobalList; set != null; set = set.m_NextInGlobalList)
+            for (var set = s_FirstMapInGlobalList; set != null; set = set.m_NextInGlobalList)
             {
                 // First get rid of all state change monitors currently installed by
                 // actions in the set.
@@ -758,7 +763,7 @@ namespace UnityEngine.Experimental.Input
 
         internal static void DisableAllEnabledActions()
         {
-            for (var set = s_FirstSetInGlobalList; set != null;)
+            for (var set = s_FirstMapInGlobalList; set != null;)
             {
                 var next = set.m_NextInGlobalList;
 
@@ -769,7 +774,7 @@ namespace UnityEngine.Experimental.Input
 
                 set = next;
             }
-            Debug.Assert(s_FirstSetInGlobalList == null);
+            Debug.Assert(s_FirstMapInGlobalList == null);
         }
 
         internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
@@ -779,10 +784,10 @@ namespace UnityEngine.Experimental.Input
                 ++m_EnabledActionsCount;
                 if (m_EnabledActionsCount == 1)
                 {
-                    if (s_FirstSetInGlobalList != null)
-                        s_FirstSetInGlobalList.m_PreviousInGlobalList = this;
-                    m_NextInGlobalList = s_FirstSetInGlobalList;
-                    s_FirstSetInGlobalList = this;
+                    if (s_FirstMapInGlobalList != null)
+                        s_FirstMapInGlobalList.m_PreviousInGlobalList = this;
+                    m_NextInGlobalList = s_FirstMapInGlobalList;
+                    s_FirstMapInGlobalList = this;
                 }
             }
             else
@@ -794,8 +799,8 @@ namespace UnityEngine.Experimental.Input
                         m_NextInGlobalList.m_PreviousInGlobalList = m_PreviousInGlobalList;
                     if (m_PreviousInGlobalList != null)
                         m_PreviousInGlobalList.m_NextInGlobalList = m_NextInGlobalList;
-                    if (s_FirstSetInGlobalList == this)
-                        s_FirstSetInGlobalList = m_NextInGlobalList;
+                    if (s_FirstMapInGlobalList == this)
+                        s_FirstMapInGlobalList = m_NextInGlobalList;
                     m_NextInGlobalList = null;
                     m_PreviousInGlobalList = null;
                 }
@@ -808,6 +813,7 @@ namespace UnityEngine.Experimental.Input
             #endif
         }
 
+        ////REVIEW: make this also produce a list of controls?
         /// <summary>
         /// Return the list of bindings for just the given actions.
         /// </summary>
@@ -827,7 +833,7 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InputBinding> GetBindingsForAction(InputAction action)
         {
             Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionSet == this);
+            Debug.Assert(action.m_ActionMap == this);
 
             // See if we need to refresh.
             if (m_BindingsForEachAction == null)
@@ -948,6 +954,11 @@ namespace UnityEngine.Experimental.Input
             return new ReadOnlyArray<InputBinding>(m_BindingsForEachAction, action.m_BindingsStartIndex, action.m_BindingsCount);
         }
 
+        internal ReadOnlyArray<InputControl> GetControlsForAction(InputAction action)
+        {
+            throw new NotImplementedException();
+        }
+
         [Serializable]
         public struct BindingJson
         {
@@ -1025,9 +1036,9 @@ namespace UnityEngine.Experimental.Input
         {
             public ActionJson[] actions;
 
-            public InputActionSet[] ToSets()
+            public InputActionMap[] ToSets()
             {
-                var sets = new List<InputActionSet>();
+                var sets = new List<InputActionMap>();
 
                 var actions = new List<List<InputAction>>();
                 var bindings = new List<List<InputBinding>>();
@@ -1057,22 +1068,22 @@ namespace UnityEngine.Experimental.Input
                     }
 
                     // Try to find existing set.
-                    InputActionSet set = null;
+                    InputActionMap map = null;
                     var setIndex = 0;
                     for (; setIndex < sets.Count; ++setIndex)
                     {
                         if (string.Compare(sets[setIndex].name, setName, StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            set = sets[setIndex];
+                            map = sets[setIndex];
                             break;
                         }
                     }
 
                     // Create new set if it's the first action in the set.
-                    if (set == null)
+                    if (map == null)
                     {
-                        set = new InputActionSet(setName);
-                        sets.Add(set);
+                        map = new InputActionMap(setName);
+                        sets.Add(map);
                         actions.Add(new List<InputAction>());
                         bindings.Add(new List<InputBinding>());
                     }
@@ -1113,26 +1124,26 @@ namespace UnityEngine.Experimental.Input
                     for (var n = 0; n < actionArray.Length; ++n)
                     {
                         var action = actionArray[n];
-                        action.m_ActionSet = set;
+                        action.m_ActionMap = set;
                     }
                 }
 
                 return sets.ToArray();
             }
 
-            public static ActionFileJson FromSet(InputActionSet set)
+            public static ActionFileJson FromSet(InputActionMap map)
             {
-                var actions = set.actions;
+                var actions = map.actions;
                 var actionCount = actions.Count;
                 var actionsJson = new ActionJson[actionCount];
-                var haveSetName = !string.IsNullOrEmpty(set.name);
+                var haveSetName = !string.IsNullOrEmpty(map.name);
 
                 for (var i = 0; i < actionCount; ++i)
                 {
                     actionsJson[i] = ActionJson.FromAction(actions[i]);
 
                     if (haveSetName)
-                        actionsJson[i].name = string.Format("{0}/{1}", set.name, actions[i].name);
+                        actionsJson[i].name = string.Format("{0}/{1}", map.name, actions[i].name);
                 }
 
                 return new ActionFileJson
@@ -1141,7 +1152,7 @@ namespace UnityEngine.Experimental.Input
                 };
             }
 
-            public static ActionFileJson FromSets(IEnumerable<InputActionSet> sets)
+            public static ActionFileJson FromSets(IEnumerable<InputActionMap> sets)
             {
                 // Count total number of actions.
                 var actionCount = 0;
@@ -1175,13 +1186,13 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Load one or more action sets from JSON.
-        public static InputActionSet[] FromJson(string json)
+        public static InputActionMap[] FromJson(string json)
         {
             var fileJson = JsonUtility.FromJson<ActionFileJson>(json);
             return fileJson.ToSets();
         }
 
-        public static string ToJson(IEnumerable<InputActionSet> sets)
+        public static string ToJson(IEnumerable<InputActionMap> sets)
         {
             var fileJson = ActionFileJson.FromSets(sets);
             return JsonUtility.ToJson(fileJson);
