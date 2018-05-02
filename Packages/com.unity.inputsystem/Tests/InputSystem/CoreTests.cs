@@ -6448,33 +6448,6 @@ class CoreTests : InputTestFixture
     }
 
 	[Test]
-	[Category("Sets")]
-	public void Sets_OnSetWithMultipleBindings_ApplyOverrides()
-	{
-		var set = new InputActionSet();
-		var action1 = set.AddAction("action1", "/<keyboard>/enter");
-		var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
-
-		var listOverrides = new List<InputBindingOverride>(3);
-		listOverrides.Add(new InputBindingOverride {action = "action3", binding = "/gamepad/buttonSouth"});
-		listOverrides.Add(new InputBindingOverride {action = "action2", binding = "/gamepad/rightTrigger"});
-		listOverrides.Add(new InputBindingOverride {action = "action1", binding = "/gamepad/leftTrigger"});
-
-		Assert.DoesNotThrow(() => set.ApplyOverrides(listOverrides));
-
-		action1.Enable();
-		action2.Enable();
-
-		Assert.That(action1.bindings[0].overridePath, Is.Not.Null);
-		Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
-		Assert.That(action1.bindings[0].overridePath, Is.EqualTo("/gamepad/leftTrigger"));
-		Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
-
-		var action = new InputAction(binding: "/gamepad/leftTrigger");
-		action.Enable();
-	}
-
-	[Test]
     [Category("Actions")]
     public void Actions_WhileActionIsEnabled_CannotApplyOverrides()
     {
@@ -7642,4 +7615,132 @@ class CoreTests : InputTestFixture
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
         Assert.Fail();
     }
+
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleOverrideBindings_ApplyOverrides()
+	{
+		var set = new InputActionSet();
+		var action1 = set.AddAction("action1", "/<keyboard>/enter");
+		var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+		listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+		listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+		Assert.DoesNotThrow(() => set.ApplyOverrides(listOverrides));
+
+		action1.Enable();
+		action2.Enable();
+
+		Assert.That(action1.bindings[0].overridePath, Is.Not.Null);
+		Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
+		Assert.That(action1.bindings[0].overridePath, Is.EqualTo("/gamepad/leftTrigger"));
+		Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+
+		var action = new InputAction(binding: "/gamepad/leftTrigger");
+		action.Enable();
+	}
+
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleOverrideBindings_CannotChangeBindindsThatIsNotEnabled()
+	{
+		var set = new InputActionSet();
+		set.AddAction("action1", "/<keyboard>/enter").Enable();
+		set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+		listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+		listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+		
+		Assert.That(() => set.ApplyOverrides(listOverrides), Throws.InvalidOperationException);
+	}
+
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleOverrideBindings_CannotRemoveBindindsThatIsNotEnabled()
+	{
+		var set = new InputActionSet();
+		var action1 = set.AddAction("action1", "/<keyboard>/enter");
+		set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+		listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+		listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+		set.ApplyOverrides(listOverrides);
+
+		action1.Enable();
+
+		Assert.That(() => set.RemoveOverrides(listOverrides), Throws.InvalidOperationException);
+	}
+
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleOverrideBindings_CannotRemoveAllBindindsThatIsNotEnabled()
+	{
+		var set = new InputActionSet();
+		var action1 = set.AddAction("action1", "/<keyboard>/enter");
+		set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+		listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+		listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+		set.ApplyOverrides(listOverrides);
+
+		action1.Enable();
+
+		Assert.That(() => set.RemoveAllOverrides(), Throws.InvalidOperationException);
+	}
+
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleOverrideBindings_RemoveAllBindindsThatIsNotEnabled()
+	{
+		var set = new InputActionSet();
+		var action1 = set.AddAction("action1", "/<keyboard>/enter");
+		var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+		listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+		listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+		set.ApplyOverrides(listOverrides);
+		set.RemoveAllOverrides();
+
+		Assert.That(action1.bindings[0].overridePath, Is.Null);
+		Assert.That(action2.bindings[0].overridePath, Is.Null);
+		Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
+		Assert.That(action2.bindings[0].path, Is.Not.EqualTo("/gamepad/rightTrigger"));
+	}
+
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleOverrideBindings_RemoveBindindsThatIsNotEnabled()
+	{
+		var set = new InputActionSet();
+		var action1 = set.AddAction("action1", "/<keyboard>/enter");
+		var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+		listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+		listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+		set.ApplyOverrides(listOverrides);
+		listOverrides.RemoveAt(1);
+		set.RemoveOverrides(listOverrides);
+
+		Assert.That(action1.bindings[0].overridePath, Is.Null);
+		Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
+		Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
+		Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+	}
 }
