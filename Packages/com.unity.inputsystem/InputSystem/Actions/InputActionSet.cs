@@ -124,8 +124,14 @@ namespace UnityEngine.Experimental.Input
 
         public void ApplyOverrides(IEnumerable<InputBindingOverride> overrides)
         {
-            throw new NotImplementedException();
-        }
+			foreach (var binding in overrides)
+			{
+				var action = TryGetAction(binding.action);
+				if (action == null)
+					continue;
+				action.ApplyBindingOverride(binding);
+			}
+		}
 
         public void RemoveOverrides(IEnumerable<InputBindingOverride> overrides)
         {

@@ -6447,7 +6447,34 @@ class CoreTests : InputTestFixture
         Assert.That(deserialized[0].actions[0].bindings[4].isPartOfComposite, Is.True);
     }
 
-    [Test]
+	[Test]
+	[Category("Sets")]
+	public void Sets_OnSetWithMultipleBindings_ApplyOverrides()
+	{
+		var set = new InputActionSet();
+		var action1 = set.AddAction("action1", "/<keyboard>/enter");
+		var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+		var listOverrides = new List<InputBindingOverride>(3);
+		listOverrides.Add(new InputBindingOverride {action = "action3", binding = "/gamepad/buttonSouth"});
+		listOverrides.Add(new InputBindingOverride {action = "action2", binding = "/gamepad/rightTrigger"});
+		listOverrides.Add(new InputBindingOverride {action = "action1", binding = "/gamepad/leftTrigger"});
+
+		Assert.DoesNotThrow(() => set.ApplyOverrides(listOverrides));
+
+		action1.Enable();
+		action2.Enable();
+
+		Assert.That(action1.bindings[0].overridePath, Is.Not.Null);
+		Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
+		Assert.That(action1.bindings[0].overridePath, Is.EqualTo("/gamepad/leftTrigger"));
+		Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+
+		var action = new InputAction(binding: "/gamepad/leftTrigger");
+		action.Enable();
+	}
+
+	[Test]
     [Category("Actions")]
     public void Actions_WhileActionIsEnabled_CannotApplyOverrides()
     {
