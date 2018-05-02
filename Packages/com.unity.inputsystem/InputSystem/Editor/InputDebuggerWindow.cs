@@ -112,9 +112,9 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onControlLayoutChange += OnLayoutChange;
             InputSystem.onFindControlLayoutForDevice += OnFindLayout;
 
-            if (InputActionSet.s_OnEnabledActionsChanged == null)
-                InputActionSet.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionSet.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
+            if (InputActionMap.s_OnEnabledActionsChanged == null)
+                InputActionMap.s_OnEnabledActionsChanged = new List<Action>();
+            InputActionMap.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
         }
 
         private void UninstallHooks()
@@ -123,8 +123,8 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onControlLayoutChange -= OnLayoutChange;
             InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
 
-            if (InputActionSet.s_OnEnabledActionsChanged != null)
-                InputActionSet.s_OnEnabledActionsChanged.Remove(OnEnabledActionsChanged);
+            if (InputActionMap.s_OnEnabledActionsChanged != null)
+                InputActionMap.s_OnEnabledActionsChanged.Remove(OnEnabledActionsChanged);
         }
 
         private void Initialize()
@@ -507,7 +507,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 foreach (var action in m_EnabledActions)
                 {
                     // Add item for action.
-                    var set = action.set;
+                    var set = action.map;
                     var setName = set != null ? set.name + "/" : string.Empty;
                     var item = AddChild(parent, setName + action.name, ref id);
 

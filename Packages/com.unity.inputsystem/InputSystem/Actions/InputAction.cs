@@ -100,6 +100,13 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
+        /// <summary>
+        /// The current phase of the action.
+        /// </summary>
+        /// <remarks>
+        /// When listening for control input and when responding to control value changes,
+        /// actions will go through several possible phases. TODO
+        /// </remarks>
         public InputActionPhase phase
         {
             get { return m_CurrentPhase; }
@@ -111,9 +118,9 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// If the action is a lose action created in code, this will be <c>null</c>.
         /// </remarks>
-        public InputActionSet set
+        public InputActionMap map
         {
-            get { return isSingletonAction ? null : m_ActionSet; }
+            get { return isSingletonAction ? null : m_ActionMap; }
         }
 
         ////TODO: add support for turning binding array into displayable info
@@ -124,7 +131,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <remarks>
         /// This will include only bindings that directly trigger the action. If the action is part of a
-        /// <see cref="InputActionSet">set</see> that triggers the action through a combination of bindings,
+        /// <see cref="InputActionMap">set</see> that triggers the action through a combination of bindings,
         /// for example, only the bindings that ultimately trigger the action are included in the list.
         ///
         /// May allocate memory on first hit.
@@ -135,13 +142,13 @@ namespace UnityEngine.Experimental.Input
             {
                 // If m_ActionSet is null, we're a singleton action that has had no bindings added
                 // to it yet.
-                if (m_ActionSet == null)
+                if (m_ActionMap == null)
                 {
                     Debug.Assert(isSingletonAction);
                     return new ReadOnlyArray<InputBinding>();
                 }
 
-                return m_ActionSet.GetBindingsForAction(this);
+                return m_ActionMap.GetBindingsForAction(this);
             }
         }
 
@@ -252,8 +259,8 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(m_Name))
                 return "<unnamed>";
 
-            if (m_ActionSet != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionSet.name))
-                return string.Format("{0}/{1}", m_ActionSet.name, m_Name);
+            if (m_ActionMap != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionMap.name))
+                return string.Format("{0}/{1}", m_ActionMap.name, m_Name);
 
             return m_Name;
         }
@@ -263,17 +270,17 @@ namespace UnityEngine.Experimental.Input
             if (enabled)
                 return;
 
-            // For singleton actions, we create an internal-only InputActionSet
+            // For singleton actions, we create an internal-only InputActionMap
             // private to the action.
-            if (m_ActionSet == null)
+            if (m_ActionMap == null)
                 CreateInternalActionSetForSingletonAction();
 
             // First time we're enabled, find all controls.
-            if (m_ActionSet.m_Controls == null)
-                m_ActionSet.ResolveBindings();
+            if (m_ActionMap.m_Controls == null)
+                m_ActionMap.ResolveBindings();
 
             // Go live.
-            m_ActionSet.TellAboutActionChangingEnabledStatus(this, true);
+            m_ActionMap.TellAboutActionChangingEnabledStatus(this, true);
             InstallStateChangeMonitors();
 
             enabled = true;
@@ -287,7 +294,7 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             // Remove global state.
-            m_ActionSet.TellAboutActionChangingEnabledStatus(this, false);
+            m_ActionMap.TellAboutActionChangingEnabledStatus(this, false);
             UninstallStateChangeMonitors();
 
             enabled = false;
@@ -410,7 +417,7 @@ namespace UnityEngine.Experimental.Input
         // This should be a ReadOnlyArray<InputBinding> but we can't serialize that because
         // Unity can't serialize generic types. So we explode the structure here and turn
         // it into a ReadOnlyArray whenever needed.
-        // NOTE: InputActionSet will null out this field for serialization
+        // NOTE: InputActionMap will null out this field for serialization
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
 
         [NonSerialized] internal int m_BindingsStartIndex;
@@ -419,17 +426,18 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private bool m_Enabled;
 
         // The action set that owns us.
-        [NonSerialized] internal InputActionSet m_ActionSet;
+        [NonSerialized] internal InputActionMap m_ActionMap;
 
         // Listeners. No array allocations if only a single listener.
         [NonSerialized] private InlinedArray<InputActionListener> m_OnStarted;
         [NonSerialized] private InlinedArray<InputActionListener> m_OnCancelled;
         [NonSerialized] private InlinedArray<InputActionListener> m_OnPerformed;
 
+        ////TODO: move this out of here and into InputActionMap
         // State we keep for enabling/disabling. This is volatile and not put on disk.
-        // NOTE: m_Controls and m_ResolvedBinding array are stored on InputActionSet.
+        // NOTE: m_Controls and m_ResolvedBinding array are stored on InputActionMap.
         [NonSerialized] internal ReadOnlyArray<InputControl> m_Controls;
-        [NonSerialized] internal ReadOnlyArray<InputActionSet.BindingState> m_ResolvedBindings;
+        [NonSerialized] internal ReadOnlyArray<InputActionMap.BindingState> m_ResolvedBindings;
 
         // State releated to phase shifting and triggering of action.
         // Most of this state we lazily reset as we have to keep it available for
@@ -450,22 +458,22 @@ namespace UnityEngine.Experimental.Input
 
         internal bool isSingletonAction
         {
-            get { return m_ActionSet == null || ReferenceEquals(m_ActionSet.m_SingletonAction, this); }
+            get { return m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this); }
         }
 
-        internal InputActionSet internalSet
+        internal InputActionMap internalMap
         {
             get
             {
-                if (m_ActionSet == null)
+                if (m_ActionMap == null)
                     CreateInternalActionSetForSingletonAction();
-                return m_ActionSet;
+                return m_ActionMap;
             }
         }
 
         private void CreateInternalActionSetForSingletonAction()
         {
-            m_ActionSet = new InputActionSet {m_SingletonAction = this, m_Bindings = m_SingletonActionBindings};
+            m_ActionMap = new InputActionMap {m_SingletonAction = this, m_Bindings = m_SingletonActionBindings};
         }
 
         // Find the binding tha tthe given override addresses.
@@ -642,10 +650,7 @@ namespace UnityEngine.Experimental.Input
             object composite = null;
             var bindingIndex = m_LastTrigger.bindingIndex;
             if (m_ResolvedBindings[bindingIndex].isPartOfComposite)
-            {
-                var compositeIndex = m_ResolvedBindings[bindingIndex].compositeIndex;
-                composite = m_ActionSet.m_Composites[compositeIndex];
-            }
+                composite = m_ResolvedBindings[bindingIndex].composite;
 
             // If we got triggered under the control of a modifier, fetch its state.
             IInputBindingModifier modifier = null;
@@ -728,7 +733,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             modifiersForBinding[modifierIndex] =
-                new InputActionSet.ModifierState
+                new InputActionMap.ModifierState
             {
                 modifier = oldState.modifier,
                 phase = InputActionPhase.Waiting

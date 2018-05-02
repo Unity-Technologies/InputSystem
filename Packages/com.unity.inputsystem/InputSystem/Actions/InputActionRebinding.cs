@@ -44,14 +44,14 @@ namespace UnityEngine.Experimental.Input
             return numMatchingControls;
         }
 
-        public static int ApplyOverridesUsingMatchingControls(this InputActionSet actionSet, InputControl control)
+        public static int ApplyOverridesUsingMatchingControls(this InputActionMap actionMap, InputControl control)
         {
-            if (actionSet == null)
-                throw new ArgumentNullException("actionSet");
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
             if (control == null)
                 throw new ArgumentNullException("control");
 
-            var actions = actionSet.actions;
+            var actions = actionMap.actions;
             var actionCount = actions.Count;
             var numMatchingControls = 0;
 

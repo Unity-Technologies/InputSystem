@@ -5419,7 +5419,7 @@ class CoreTests : InputTestFixture
     {
         var action = new InputAction();
 
-        Assert.That(action.set, Is.Null);
+        Assert.That(action.map, Is.Null);
     }
 
     ////REVIEW: not sure whether this is the best behavior
@@ -5448,7 +5448,7 @@ class CoreTests : InputTestFixture
         var action = new InputAction();
         action.Enable(); // Force to create private action set.
 
-        Assert.That(action.set, Is.Null);
+        Assert.That(action.map, Is.Null);
     }
 
     [Test]
@@ -5663,7 +5663,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanAddActionsToSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
 
         set.AddAction("action1");
         set.AddAction("action2");
@@ -5677,7 +5677,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanAddBindingsToActionsInSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
 
         var action1 = set.AddAction("action1");
         var action2 = set.AddAction("action2");
@@ -5695,7 +5695,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CannotAddUnnamedActionToSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         Assert.That(() => set.AddAction(""), Throws.ArgumentException);
     }
 
@@ -5703,7 +5703,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CannotAddTwoActionsWithTheSameNameToSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         set.AddAction("action");
 
         Assert.That(() => set.AddAction("action"), Throws.InvalidOperationException);
@@ -5713,7 +5713,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanLookUpActionInSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
 
         var action1 = set.AddAction("action1");
         var action2 = set.AddAction("action2");
@@ -5726,13 +5726,13 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanConvertActionSetToAndFromJson()
     {
-        var set = new InputActionSet("test");
+        var set = new InputActionMap("test");
 
         set.AddAction(name: "action1", binding: "/gamepad/leftStick").AppendBinding("/gamepad/rightStick", groups: "group");
         set.AddAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
 
         var json = set.ToJson();
-        var sets = InputActionSet.FromJson(json);
+        var sets = InputActionMap.FromJson(json);
 
         Assert.That(sets, Has.Length.EqualTo(1));
         Assert.That(sets[0], Has.Property("name").EqualTo("test"));
@@ -5747,15 +5747,15 @@ class CoreTests : InputTestFixture
         Assert.That(sets[0].actions[0].bindings[1].modifiers, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].group, Is.Null);
         Assert.That(sets[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
-        Assert.That(sets[0].actions[0].set, Is.SameAs(sets[0]));
-        Assert.That(sets[0].actions[1].set, Is.SameAs(sets[0]));
+        Assert.That(sets[0].actions[0].map, Is.SameAs(sets[0]));
+        Assert.That(sets[0].actions[1].map, Is.SameAs(sets[0]));
     }
 
     [Test]
     [Category("Actions")]
     public void Actions_ActionSetJsonCanBeEmpty()
     {
-        var sets = InputActionSet.FromJson("{}");
+        var sets = InputActionMap.FromJson("{}");
         Assert.That(sets, Is.Not.Null);
         Assert.That(sets, Has.Length.EqualTo(0));
     }
@@ -5764,14 +5764,14 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanConvertMultipleActionSetsToAndFromJson()
     {
-        var set1 = new InputActionSet("set1");
-        var set2 = new InputActionSet("set2");
+        var set1 = new InputActionMap("set1");
+        var set2 = new InputActionMap("set2");
 
         set1.AddAction(name: "action1", binding: "/gamepad/leftStick");
         set2.AddAction(name: "action2", binding: "/gamepad/rightStick");
 
-        var json = InputActionSet.ToJson(new[] {set1, set2});
-        var sets = InputActionSet.FromJson(json);
+        var json = InputActionMap.ToJson(new[] {set1, set2});
+        var sets = InputActionMap.FromJson(json);
 
         Assert.That(sets, Has.Length.EqualTo(2));
         Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("set1"));
@@ -5812,13 +5812,13 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanSerializeActionSet()
     {
-        var set = new InputActionSet("set");
+        var set = new InputActionMap("set");
 
         set.AddAction("action1", binding: "/gamepad/leftStick");
         set.AddAction("action2", binding: "/gamepad/rightStick");
 
         var json = JsonUtility.ToJson(set);
-        var deserializedSet = JsonUtility.FromJson<InputActionSet>(json);
+        var deserializedSet = JsonUtility.FromJson<InputActionMap>(json);
 
         Assert.That(deserializedSet.name, Is.EqualTo("set"));
         Assert.That(deserializedSet.actions, Has.Count.EqualTo(2));
@@ -5826,8 +5826,8 @@ class CoreTests : InputTestFixture
         Assert.That(deserializedSet.actions[1].name, Is.EqualTo("action2"));
         Assert.That(deserializedSet.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(deserializedSet.actions[1].bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
-        Assert.That(deserializedSet.actions[0].set, Is.SameAs(deserializedSet));
-        Assert.That(deserializedSet.actions[1].set, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[0].map, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[1].map, Is.SameAs(deserializedSet));
     }
 
     [Test]
@@ -6058,7 +6058,7 @@ class CoreTests : InputTestFixture
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         var fire = set.AddAction("fire");
         var reload = set.AddAction("reload");
 
@@ -6108,7 +6108,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanQueryBindingsTriggeringAction()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         var fire = set.AddAction("fire");
         var reload = set.AddAction("reload");
 
@@ -6129,7 +6129,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_ChildBindingsReferToTheirParent()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
 
         set.AppendBinding("<Keyboard/a"); // To take index #0.
         set.AppendBinding("<Keyboard>/space")
@@ -6430,8 +6430,8 @@ class CoreTests : InputTestFixture
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        var set1 = new InputActionSet("set1");
-        var set2 = new InputActionSet("set2");
+        var set1 = new InputActionMap("set1");
+        var set2 = new InputActionMap("set2");
 
         asset.AddActionSet(set1);
         asset.AddActionSet(set2);
@@ -6446,7 +6446,7 @@ class CoreTests : InputTestFixture
     public void Actions_SetsInAssetMustHaveName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var set = new InputActionSet();
+        var set = new InputActionMap();
 
         Assert.That(() => asset.AddActionSet(set), Throws.InvalidOperationException);
     }
@@ -6457,8 +6457,8 @@ class CoreTests : InputTestFixture
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        var set1 = new InputActionSet("same");
-        var set2 = new InputActionSet("same");
+        var set1 = new InputActionMap("same");
+        var set2 = new InputActionMap("same");
 
         asset.AddActionSet(set1);
         Assert.That(() => asset.AddActionSet(set2), Throws.InvalidOperationException);
@@ -6469,7 +6469,7 @@ class CoreTests : InputTestFixture
     public void Actions_CanLookUpSetInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var set = new InputActionSet("test");
+        var set = new InputActionMap("test");
         asset.AddActionSet(set);
 
         Assert.That(asset.TryGetActionSet("test"), Is.SameAs(set));
@@ -6480,7 +6480,7 @@ class CoreTests : InputTestFixture
     public void Actions_CanRemoveActionSetFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(new InputActionSet("test"));
+        asset.AddActionSet(new InputActionMap("test"));
         asset.RemoveActionSet("test");
 
         Assert.That(asset.actionSets, Is.Empty);
@@ -6658,7 +6658,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanSerializeAndDeserializeActionsWithCompositeBindings()
     {
-        var set = new InputActionSet(name: "test");
+        var set = new InputActionMap(name: "test");
         set.AddAction("test")
         .AppendCompositeBinding("ButtonVector")
         .With("Up", "/<Keyboard>/w")
@@ -6667,7 +6667,7 @@ class CoreTests : InputTestFixture
         .With("Right", "/<Keyboard>/d");
 
         var json = set.ToJson();
-        var deserialized = InputActionSet.FromJson(json);
+        var deserialized = InputActionMap.FromJson(json);
 
         Assert.That(deserialized.Length, Is.EqualTo(1));
         Assert.That(deserialized[0].actions.Count, Is.EqualTo(1));
@@ -6843,7 +6843,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanOverrideBindingsWithControlsFromSpecificDevices_OnActionsInSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         var action1 = set.AddAction("action1", "/<keyboard>/enter");
         var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
@@ -6859,7 +6859,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanEnableAndDisableEntireSet()
     {
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         var action1 = set.AddAction("action1");
         var action2 = set.AddAction("action2");
 
@@ -6899,12 +6899,12 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CloningActionFromSet_ProducesSingletonAction()
     {
-        var set = new InputActionSet("set");
+        var set = new InputActionMap("set");
         var action = set.AddAction("action1");
 
         var clone = action.Clone();
 
-        Assert.That(clone.set, Is.Null);
+        Assert.That(clone.map, Is.Null);
     }
 
     [Test]
@@ -6923,7 +6923,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanCloneActionSets()
     {
-        var set = new InputActionSet("set");
+        var set = new InputActionMap("set");
         var action1 = set.AddAction("action1", binding: "/gamepad/leftStick", modifiers: "tap");
         var action2 = set.AddAction("action2", binding: "/gamepad/rightStick", modifiers: "tap");
 
@@ -6944,8 +6944,8 @@ class CoreTests : InputTestFixture
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.name = "Asset";
-        var set1 = new InputActionSet("set1");
-        var set2 = new InputActionSet("set2");
+        var set1 = new InputActionMap("set1");
+        var set2 = new InputActionMap("set2");
         asset.AddActionSet(set1);
         asset.AddActionSet(set2);
 
@@ -6978,7 +6978,7 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanResolveActionReference()
     {
-        var set = new InputActionSet("set");
+        var set = new InputActionMap("set");
         set.AddAction("action1");
         var action2 = set.AddAction("action2");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -6998,7 +6998,7 @@ class CoreTests : InputTestFixture
     {
         var action1 = new InputAction(binding: "/gamepad/leftStick");
         var action2 = new InputAction(binding: "/gamepad/rightStick");
-        var set = new InputActionSet();
+        var set = new InputActionMap();
         var action3 = set.AddAction("action", "/gamepad/buttonSouth");
 
         action1.Enable();
@@ -7502,7 +7502,7 @@ class CoreTests : InputTestFixture
     [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveActionThroughSerialization()
     {
-        var set = new InputActionSet("set");
+        var set = new InputActionMap("set");
         set.AddAction(name: "action", binding: "/gamepad/leftStick");
         set.AddAction(name: "action1", binding: "/gamepad/rightStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -7530,7 +7530,7 @@ class CoreTests : InputTestFixture
     [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveBindingThroughSerialization()
     {
-        var set = new InputActionSet("set");
+        var set = new InputActionMap("set");
         set.AddAction(name: "action1", binding: "/gamepad/leftStick");
         set.AddAction(name: "action2", binding: "/gamepad/rightStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -7570,10 +7570,10 @@ class CoreTests : InputTestFixture
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
     {
-        var set1 = new InputActionSet("set1");
+        var set1 = new InputActionMap("set1");
         set1.AddAction(name: "action1", binding: "/gamepad/leftStick");
         set1.AddAction(name: "action2", binding: "/gamepad/rightStick");
-        var set2 = new InputActionSet("set2");
+        var set2 = new InputActionMap("set2");
         set2.AddAction(name: "action1", binding: "/gamepad/buttonSouth");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionSet(set1);
@@ -7589,14 +7589,14 @@ class CoreTests : InputTestFixture
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputActionSet Clone()"));
+        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputActionMap Clone()"));
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset_WhenAssetNameContainsSpacesAndSymbols()
     {
-        var set1 = new InputActionSet("set1");
+        var set1 = new InputActionMap("set1");
         set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
         set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();

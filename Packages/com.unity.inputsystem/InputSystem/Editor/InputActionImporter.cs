@@ -20,14 +20,14 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Parse JSON.
             var text = File.ReadAllText(ctx.assetPath);
-            var sets = InputActionSet.FromJson(text);
+            var sets = InputActionMap.FromJson(text);
             ////TODO: catch errors
 
             ////TODO: make sure action names are unique
 
             // Create asset.
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.m_ActionSets = sets;
+            asset.m_ActionMaps = sets;
             ctx.AddObjectToAsset("<root>", asset);
             ctx.SetMainObject(asset);
 

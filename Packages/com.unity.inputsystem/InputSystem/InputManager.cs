@@ -15,6 +15,8 @@ using Unity.Collections;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: work towards InputManager having no direct knowledge of actions
+
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
 
 ////TODO: merge InputManager into InputSystem and have InputSystemObject store SerializedState directly
@@ -658,7 +660,7 @@ namespace UnityEngine.Experimental.Input
             ReallocateStateBuffers();
 
             // Let actions re-resolve their paths.
-            InputActionSet.RefreshAllEnabledActions();
+            InputActionMap.RefreshAllEnabledActions();
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
@@ -792,7 +794,7 @@ namespace UnityEngine.Experimental.Input
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
             // by actions to uninstall state monitors will get ignored.
-            InputActionSet.RefreshAllEnabledActions();
+            InputActionMap.RefreshAllEnabledActions();
 
             // Kill before update callback, if applicable.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
