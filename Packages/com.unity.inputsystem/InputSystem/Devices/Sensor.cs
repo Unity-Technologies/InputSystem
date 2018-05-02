@@ -4,6 +4,8 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: gyro and accelerometer (and potentially other sensors) need adjusting for screen orientation
+
 ////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -23,7 +25,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = 52)]
     public struct GyroscopeState : IInputStateTypeInfo
     {
         public static FourCC kFormat
@@ -31,10 +32,52 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'Y', 'R', 'O'); }
         }
 
-        [InputControl][FieldOffset(0)] public Vector3 gravity;
-        [InputControl][FieldOffset(12)] public Vector3 angularVelocity;
-        [InputControl][FieldOffset(24)] public Quaternion orientation;
-        [InputControl][FieldOffset(40)] public Vector3 acceleration;
+        [InputControl] public Vector3 angularVelocity;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+
+    public struct GravityState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('G', 'R', 'V', ' '); }
+        }
+
+        [InputControl] public Vector3 gravity;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+
+    public struct AttitudeState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('A', 'T', 'T', 'D'); }
+        }
+
+        [InputControl] public Quaternion attitude;
+
+        public FourCC GetFormat()
+        {
+            return kFormat;
+        }
+    }
+
+    public struct LinearAccelerationState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat
+        {
+            get { return new FourCC('L', 'A', 'A', 'C'); }
+        }
+
+        [InputControl] public Vector3 acceleration;
 
         public FourCC GetFormat()
         {
@@ -82,15 +125,19 @@ namespace UnityEngine.Experimental.Input
             base.MakeCurrent();
             current = this;
         }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
     }
 
     [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
-        public QuaternionControl orientation { get; private set; }
-        public Vector3Control acceleration { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
-        public Vector3Control gravity { get; private set; }
 
         public static Gyroscope current { get; private set; }
 
@@ -100,15 +147,103 @@ namespace UnityEngine.Experimental.Input
             current = this;
         }
 
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            orientation = builder.GetControl<QuaternionControl>("orientation");
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
             angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(GravityState))]
+    public class Gravity : Sensor
+    {
+        public Vector3Control gravity { get; private set; }
+
+        public static Gravity current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
             gravity = builder.GetControl<Vector3Control>("gravity");
             base.FinishSetup(builder);
         }
     }
+
+    //// FIXME: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
+    //          This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
+    [InputControlLayout(stateType = typeof(AttitudeState))]
+    public class Attitude : Sensor
+    {
+        public QuaternionControl attitude { get; private set; }
+
+        public static Attitude current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            attitude = builder.GetControl<QuaternionControl>("attitude");
+            base.FinishSetup(builder);
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(LinearAccelerationState))]
+    public class LinearAcceleration : Sensor
+    {
+        public Vector3Control acceleration { get; private set; }
+
+        public static LinearAcceleration current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            acceleration = builder.GetControl<Vector3Control>("acceleration");
+            base.FinishSetup(builder);
+        }
+    }
+
 
     public class GPS : Sensor
     {

@@ -246,11 +246,15 @@ namespace UnityEngine.Experimental.Input.Utilities
             Array.Resize(ref array, length - 1);
         }
 
-        public static void Erase<TValue>(ref TValue[] array, TValue value)
+        public static bool Erase<TValue>(ref TValue[] array, TValue value)
         {
             var index = IndexOf(ref array, value);
             if (index != -1)
+            {
                 EraseAt(ref array, index);
+                return true;
+            }
+            return false;
         }
 
         public static TValue[] Clone<TValue>(TValue[] array)

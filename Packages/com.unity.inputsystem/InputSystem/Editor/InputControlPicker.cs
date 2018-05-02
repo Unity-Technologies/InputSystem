@@ -1,7 +1,12 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+
+////FIXME: preserve tree view state properly; currently resets whenever the picker is opened
+
+////TODO: allow restricting to certain types of controls
 
 ////TODO: add means to pick specific device index
 
@@ -209,12 +214,10 @@ namespace UnityEngine.Experimental.Input.Editor
                     depth = -1
                 };
 
-                // This can use PLENTY of improvement. ATM all it does is add one branch
-                // containing all unique usages in the system and then one branch for each
-                // base device layout.
-
                 var id = 1;
-                var usageRoot = BuildTreeForUsages(ref id);
+                var usages = BuildTreeForUsages(ref id);
+                var devices = AddChild(root, "Devices", ref id);
+                var products = AddChild(root, "Products", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
                 {
@@ -222,12 +225,36 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (layout.controls.Count == 0)
                         continue;
 
-                    var tree = BuildTreeForDevice(layout, ref id);
-                    root.AddChild(tree);
+                    BuildTreeForDevice(layout, devices, ref id);
+                }
+                foreach (var layout in EditorInputControlLayoutCache.allProductLayouts)
+                {
+                    var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
+                    if (string.IsNullOrEmpty(rootBaseLayoutName))
+                        rootBaseLayoutName = "Other";
+                    else
+                        rootBaseLayoutName += "s";
+
+                    var group = products.children != null
+                        ? products.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
+                        : null;
+                    if (group == null)
+                        group = AddChild(products, rootBaseLayoutName, ref id);
+
+                    BuildTreeForDevice(layout, group, ref id);
+                }
+
+                if (devices.children != null)
+                    devices.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                if (products.children != null)
+                {
+                    products.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                    foreach (var productGroup in products.children)
+                        productGroup.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
                 }
 
                 root.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
-                root.children.Insert(0, usageRoot);
+                root.children.Insert(0, usages);
 
                 return root;
             }
@@ -236,7 +263,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var usageRoot = new TreeViewItem
                 {
-                    displayName = "By Usage",
+                    displayName = "Usages",
                     id = id++,
                     depth = 0
                 };
@@ -257,16 +284,17 @@ namespace UnityEngine.Experimental.Input.Editor
                 return usageRoot;
             }
 
-            private TreeViewItem BuildTreeForDevice(InputControlLayout layout, ref int id)
+            private TreeViewItem BuildTreeForDevice(InputControlLayout layout, TreeViewItem parent, ref int id)
             {
                 var deviceRoot = new Item
                 {
                     displayName = layout.name,
                     id = id++,
-                    depth = 0,
+                    depth = parent.depth + 1,
                     device = layout.name,
                     layout = layout
                 };
+                parent.AddChild(deviceRoot);
 
                 BuildControlsRecursive(deviceRoot, layout, string.Empty, ref id);
 
@@ -308,6 +336,18 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.children.Sort((a, b) =>
                         string.Compare(a.displayName, b.displayName, StringComparison.Ordinal));
             }
+        }
+
+        private static TreeViewItem AddChild(TreeViewItem parent, string displayName, ref int id)
+        {
+            var item = new TreeViewItem
+            {
+                id = id++,
+                depth = parent.depth + 1,
+                displayName = displayName
+            };
+            parent.AddChild(item);
+            return item;
         }
     }
 }

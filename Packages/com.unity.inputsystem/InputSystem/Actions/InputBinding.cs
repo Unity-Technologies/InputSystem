@@ -21,11 +21,17 @@ namespace UnityEngine.Experimental.Input
             ThisAndPreviousCombine = 1 << 0,
 
             Composite = 1 << 1,
+            PartOfComposite = 1 << 2,
         }
 
         /// <summary>
         /// Optional name for the binding.
         /// </summary>
+        /// <remarks>
+        /// For bindings that <see cref="isPartOfComposite">are part of composites</see>, this is
+        /// the name of the field on the binding composite object that should be initialized with
+        /// the control target of the binding.
+        /// </remarks>
         public string name;
 
         /// <summary>
@@ -108,6 +114,18 @@ namespace UnityEngine.Experimental.Input
                     flags |= Flags.Composite;
                 else
                     flags &= ~Flags.Composite;
+            }
+        }
+
+        public bool isPartOfComposite
+        {
+            get { return (flags & Flags.PartOfComposite) == Flags.PartOfComposite; }
+            set
+            {
+                if (value)
+                    flags |= Flags.PartOfComposite;
+                else
+                    flags &= ~Flags.PartOfComposite;
             }
         }
     }

@@ -3,7 +3,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine;
 
 // Tapping event stream.
-public class SimpleController_v2 : MonoBehaviour
+public class SimpleController_UsingEvents : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;

@@ -236,6 +236,14 @@ namespace UnityEngine.Experimental.Input
             m_Flags &= ~Flags.DisabledStateHasBeenQueried;
         }
 
+        protected virtual void OnAdded()
+        {
+        }
+
+        protected virtual void OnRemoved()
+        {
+        }
+
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>
         /// Perform a device-specific command.
@@ -309,11 +317,6 @@ namespace UnityEngine.Experimental.Input
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
 
-        ////TODO: output is still in the works
-        // Buffer that will receive state events for output generated from this device.
-        // May be shared with other devices.
-        internal InputEventBuffer m_OutputBuffer;
-
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
 
@@ -336,6 +339,16 @@ namespace UnityEngine.Experimental.Input
 
             for (var i = 0; i < m_UsageToControl.Length; ++i)
                 m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
+        }
+
+        internal void NotifyAdded()
+        {
+            OnAdded();
+        }
+
+        internal void NotifyRemoved()
+        {
+            OnRemoved();
         }
     }
 }

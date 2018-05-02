@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -11,14 +12,12 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
+
 ////TODO: turn 'overrides' into feature where layouts can be registered as overrides and they get merged *into* the layout
 ////      they are overriding
 
-////TODO: make it so that a control with no variant set can act as the base layout for controls with the same name that have a variant set
-
 ////TODO: ensure that if a layout sets a device description, it is indeed a device layout
-
-////TODO: array support
 
 ////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
 
@@ -41,8 +40,8 @@ namespace UnityEngine.Experimental.Input
     ///
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
-    /// <item><description>Constructed through reflection from InputControls classes.</description></item>
-    /// <item><description>Through layout factories using InputControlLayout.Builder.</description></item>
+    /// <item><description>Constructed through reflection from <see cref="InputControl">InputControls</see> classes.</description></item>
+    /// <item><description>Through layout factories using <see cref="InputControlLayout.Builder"/>.</description></item>
     /// </list>
     ///
     /// Once constructed, control layouts are immutable (but you can always
@@ -50,11 +49,11 @@ namespace UnityEngine.Experimental.Input
     /// everything constructed from the layout).
     ///
     /// Control layouts can be for arbitrary control rigs or for entire
-    /// devices. Device layouts can use the 'deviceDescriptor' field
+    /// devices. Device layouts can use the <see cref="deviceMatcher"/> field
     /// to specify regexs that are to match against compatible devices.
     ///
     /// InputControlLayout objects are considered temporaries. Except in the
-    /// editor, we don't keep them around beyond device creation.
+    /// editor, they are not kept around beyond device creation.
     /// </remarks>
     public class InputControlLayout
     {
@@ -185,6 +184,7 @@ namespace UnityEngine.Experimental.Input
             public uint sizeInBits;
             public FourCC format;
             public Flags flags;
+            public int arraySize;
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -216,6 +216,11 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            public bool isArray
+            {
+                get { return (arraySize != 0); }
+            }
+
             /// <summary>
             /// For any property not set on this control layout, take the setting from <paramref name="other"/>.
             /// </summary>
@@ -234,6 +239,7 @@ namespace UnityEngine.Experimental.Input
                 result.layout = layout.IsEmpty() ? other.layout : layout;
                 result.variant = variant.IsEmpty() ? other.variant : variant;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
+                result.arraySize = !isArray ? other.arraySize : arraySize;
 
                 if (offset != InputStateBlock.kInvalidOffset)
                     result.offset = offset;
@@ -429,6 +435,12 @@ namespace UnityEngine.Experimental.Input
                     controls[index].parameters = new ReadOnlyArray<ParameterValue>(parsed);
                     return this;
                 }
+
+                public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
+                {
+                    controls[index].arraySize = arraySize;
+                    return this;
+                }
             }
 
             // This invalidates the ControlBuilders from previous calls! (our array may move)
@@ -548,8 +560,8 @@ namespace UnityEngine.Experimental.Input
                 AddControlItems(type, controlLayouts, name);
             }
 
-            if (layoutAttribute != null && layoutAttribute.stateFormat != new FourCC())
-                stateFormat = layoutAttribute.stateFormat;
+            if (layoutAttribute != null && !string.IsNullOrEmpty(layoutAttribute.stateFormat))
+                stateFormat = new FourCC(layoutAttribute.stateFormat);
 
             // Determine variant (if any).
             var variant = new InternedString();
@@ -804,6 +816,11 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 isNoisy = attribute.noisy;
 
+            // Determine array size.
+            var arraySize = 0;
+            if (attribute != null)
+                arraySize = attribute.arraySize;
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -820,16 +837,28 @@ namespace UnityEngine.Experimental.Input
                 aliases = new ReadOnlyArray<InternedString>(aliases),
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
+                arraySize = arraySize,
             };
         }
 
         internal static NameAndParameters[] ParseNameAndParameterList(string text)
         {
+            List<NameAndParameters> list = null;
+            if (!ParseNameAndParameterList(text, ref list))
+                return null;
+            return list.ToArray();
+        }
+
+        internal static bool ParseNameAndParameterList(string text, ref List<NameAndParameters> list)
+        {
             text = text.Trim();
             if (string.IsNullOrEmpty(text))
-                return null;
+                return false;
 
-            var list = new List<NameAndParameters>();
+            if (list == null)
+                list = new List<NameAndParameters>();
+            else
+                list.Clear();
 
             var index = 0;
             var textLength = text.Length;
@@ -878,7 +907,7 @@ namespace UnityEngine.Experimental.Input
                 list.Add(new NameAndParameters { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
             }
 
-            return list.ToArray();
+            return true;
         }
 
         private static ParameterValue[] ParseParameters(string parameterString)
@@ -945,12 +974,12 @@ namespace UnityEngine.Experimental.Input
                     ++index;
 
                 var value = parameterString.Substring(valueStart, index - valueStart);
-                if (string.Compare(value, "true", StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(value, "true", StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     parameter.type = ParameterType.Boolean;
                     *((bool*)parameter.value) = true;
                 }
-                else if (string.Compare(value, "false", StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Compare(value, "false", StringComparison.InvariantCultureIgnoreCase) == 0)
                 {
                     parameter.type = ParameterType.Boolean;
                     *((bool*)parameter.value) = false;
@@ -958,12 +987,12 @@ namespace UnityEngine.Experimental.Input
                 else if (value.IndexOf('.') != -1)
                 {
                     parameter.type = ParameterType.Float;
-                    *((float*)parameter.value) = float.Parse(value);
+                    *((float*)parameter.value) = float.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
                 else
                 {
                     parameter.type = ParameterType.Integer;
-                    *((int*)parameter.value) = int.Parse(value);
+                    *((int*)parameter.value) = int.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
             }
 
@@ -1327,6 +1356,7 @@ namespace UnityEngine.Experimental.Input
             public uint bit;
             public uint sizeInBits;
             public string format;
+            public int arraySize;
             public string[] usages;
             public string[] aliases;
             public string parameters;
@@ -1359,6 +1389,7 @@ namespace UnityEngine.Experimental.Input
                     sizeInBits = sizeInBits,
                     isModifyingChildControlByPath = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    arraySize = arraySize,
                 };
 
                 if (!string.IsNullOrEmpty(format))
@@ -1403,23 +1434,24 @@ namespace UnityEngine.Experimental.Input
 
                 for (var i = 0; i < count; ++i)
                 {
-                    var layout = items[i];
+                    var item = items[i];
                     result[i] = new ControlItemJson
                     {
-                        name = layout.name,
-                        layout = layout.layout,
-                        variant = layout.variant,
-                        displayName = layout.displayName,
-                        resourceName = layout.resourceName,
-                        bit = layout.bit,
-                        offset = layout.offset,
-                        sizeInBits = layout.sizeInBits,
-                        format = layout.format.ToString(),
-                        parameters = string.Join(",", layout.parameters.Select(x => x.ToString()).ToArray()),
-                        processors = string.Join(",", layout.processors.Select(x => x.ToString()).ToArray()),
-                        usages = layout.usages.Select(x => x.ToString()).ToArray(),
-                        aliases = layout.aliases.Select(x => x.ToString()).ToArray(),
-                        noisy = layout.isNoisy
+                        name = item.name,
+                        layout = item.layout,
+                        variant = item.variant,
+                        displayName = item.displayName,
+                        resourceName = item.resourceName,
+                        bit = item.bit,
+                        offset = item.offset,
+                        sizeInBits = item.sizeInBits,
+                        format = item.format.ToString(),
+                        parameters = string.Join(",", item.parameters.Select(x => x.ToString()).ToArray()),
+                        processors = string.Join(",", item.processors.Select(x => x.ToString()).ToArray()),
+                        usages = item.usages.Select(x => x.ToString()).ToArray(),
+                        aliases = item.aliases.Select(x => x.ToString()).ToArray(),
+                        noisy = item.isNoisy,
+                        arraySize = item.arraySize,
                     };
                 }
 

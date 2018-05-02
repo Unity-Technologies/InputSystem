@@ -20,3 +20,7 @@ Packages/com.unity.inputsystem/build/**
 Packages/com.unity.inputsystem/Documentation/ApiDocs/**
 Packages/com.unity.inputsystem/.DS_Store
 Packages/com.unity.inputsystem/.npmrc
+
+Packages/com.unity.package-manager-doctools/
+Packages/com.unity.package-manager-ui/
+

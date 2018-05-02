@@ -323,6 +323,7 @@ namespace UnityEngine.Experimental.Input
 
         public AddCompositeSyntax AddCompositeBinding(string composite)
         {
+            ////REVIEW: use 'name' instead of 'path' field here?
             var binding = new InputBinding {path = composite, flags = InputBinding.Flags.Composite};
             var bindingIndex = AddBindingInternal(binding);
             return new AddCompositeSyntax(this, bindingIndex);
@@ -686,15 +687,25 @@ namespace UnityEngine.Experimental.Input
             // Should always have a control that triggered the state change.
             Debug.Assert(m_LastTrigger.control != null);
 
+            // If there's no listeners, don't bother with anything else.
             if (listeners.firstValue == null)
                 return;
 
+            // If the binding that triggered is part of a composite, fetch the composite.
+            object composite = null;
+            var bindingIndex = m_LastTrigger.bindingIndex;
+            if (m_ResolvedBindings[bindingIndex].isPartOfComposite)
+            {
+                var compositeIndex = m_ResolvedBindings[bindingIndex].compositeIndex;
+                composite = m_ActionSet.m_Composites[compositeIndex];
+            }
+
+            // If we got triggered under the control of a modifier, fetch its state.
             IInputBindingModifier modifier = null;
             var startTime = 0.0;
-
             if (m_LastTrigger.modifierIndex != -1)
             {
-                var modifierState = m_ResolvedBindings[m_LastTrigger.bindingIndex].modifiers[m_LastTrigger.modifierIndex];
+                var modifierState = m_ResolvedBindings[bindingIndex].modifiers[m_LastTrigger.modifierIndex];
                 modifier = modifierState.modifier;
                 startTime = modifierState.startTime;
             }
@@ -708,12 +719,11 @@ namespace UnityEngine.Experimental.Input
                 m_Control = m_LastTrigger.control,
                 m_Time = m_LastTrigger.time,
                 m_Modifier = modifier,
-                m_StartTime = startTime
+                m_StartTime = startTime,
+                m_Composite = composite,
             };
 
-            #if ENABLE_PROFILER
             Profiler.BeginSample("InputActionCallback");
-            #endif
 
             listeners.firstValue(context);
             if (listeners.additionalValues != null)
@@ -722,9 +732,7 @@ namespace UnityEngine.Experimental.Input
                     listeners.additionalValues[i](context);
             }
 
-            #if ENABLE_PROFILER
             Profiler.EndSample();
-            #endif
         }
 
         private void ThrowIfPhaseTransitionIsInvalid(Phase currentPhase, Phase newPhase, int bindingIndex, int modifierIndex)
@@ -828,7 +836,7 @@ namespace UnityEngine.Experimental.Input
                     phase = Phase.Performed,
                     control = control,
                     modifierIndex = -1,
-                    bindingIndex = -1,
+                    bindingIndex = bindingIndex,
                     time = time,
                     startTime = time
                 };
@@ -968,6 +976,7 @@ namespace UnityEngine.Experimental.Input
             internal InputAction m_Action;
             internal InputControl m_Control;
             internal IInputBindingModifier m_Modifier;
+            internal object m_Composite;
             internal double m_Time;
             internal double m_StartTime;
 
@@ -989,6 +998,17 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: rename to ReadValue?
             public TValue GetValue<TValue>()
             {
+                ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
+
+                // If the binding that triggered the action is part of a composite, let
+                // the composite determine the value we return.
+                if (m_Composite != null)
+                {
+                    var composite = (IInputBindingComposite<TValue>)m_Composite;
+                    var context = new CompositeBindingContext();
+                    return composite.ReadValue(ref context);
+                }
+
                 return ((InputControl<TValue>)control).ReadValue();
             }
 
@@ -1057,7 +1077,10 @@ namespace UnityEngine.Experimental.Input
                 ////TODO: check whether non-composite bindings have been added in-between
 
                 var result = action.AddBinding(path: binding, modifiers: modifiers);
-                action.m_Bindings[action.m_BindingsStartIndex + result.m_BindingIndex].name = name;
+
+                var bindingIndex = action.m_BindingsStartIndex + result.m_BindingIndex;
+                action.m_Bindings[bindingIndex].name = name;
+                action.m_Bindings[bindingIndex].isPartOfComposite = true;
 
                 return this;
             }

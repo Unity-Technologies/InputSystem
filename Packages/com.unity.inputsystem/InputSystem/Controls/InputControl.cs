@@ -9,6 +9,8 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
+////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -488,21 +490,21 @@ namespace UnityEngine.Experimental.Input
             return value;
         }
 
-        internal InlinedArray<IInputProcessor<TValue>> m_ProcessorStack;
+        internal InlinedArray<IInputControlProcessor<TValue>> m_ProcessorStack;
 
         // Only layouts are allowed to modify the processor stack.
-        internal void AddProcessor(IInputProcessor<TValue> processor)
+        internal void AddProcessor(IInputControlProcessor<TValue> processor)
         {
             m_ProcessorStack.Append(processor);
         }
 
-        internal void RemoveProcessor(IInputProcessor<TValue> processor)
+        internal void RemoveProcessor(IInputControlProcessor<TValue> processor)
         {
             m_ProcessorStack.Remove(processor);
         }
 
         internal TProcessor TryGetProcessor<TProcessor>()
-            where TProcessor : IInputProcessor<TValue>
+            where TProcessor : IInputControlProcessor<TValue>
         {
             if (m_ProcessorStack.firstValue is TProcessor)
                 return (TProcessor)m_ProcessorStack.firstValue;
@@ -515,7 +517,7 @@ namespace UnityEngine.Experimental.Input
 
         internal override void AddProcessor(object processor)
         {
-            var processorOfType = processor as IInputProcessor<TValue>;
+            var processorOfType = processor as IInputControlProcessor<TValue>;
             if (processorOfType == null)
                 throw new Exception(string.Format("Cannot add processor of type '{0}' to control of type '{1}'",
                         processor.GetType().Name, GetType().Name));
@@ -524,10 +526,10 @@ namespace UnityEngine.Experimental.Input
 
         internal override void ClearProcessors()
         {
-            m_ProcessorStack = new InlinedArray<IInputProcessor<TValue>>();
+            m_ProcessorStack = new InlinedArray<IInputControlProcessor<TValue>>();
         }
 
-        internal IInputProcessor<TValue>[] processors
+        internal IInputControlProcessor<TValue>[] processors
         {
             get { return m_ProcessorStack.ToArray(); }
         }

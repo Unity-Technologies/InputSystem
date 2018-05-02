@@ -21,7 +21,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterBindingModifier and RegisterProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterBindingModifier and RegisterControlProcessor, have a generic RegisterInterface (or something)?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -49,14 +49,38 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputDevice>(m_Devices); }
         }
 
+        public TypeTable processors
+        {
+            get { return m_Processors; }
+        }
+
+        public TypeTable modifiers
+        {
+            get { return m_Modifiers; }
+        }
+
+        public TypeTable composites
+        {
+            get { return m_Composites; }
+        }
+
         public InputUpdateType updateMask
         {
             get { return m_UpdateMask; }
             set
             {
-                ////TODO: also actually turn off unnecessary updates on the native side (e.g. if fixed
-                ////      updates are disabled, don't even have native fire onUpdate for fixed updates)
-                throw new NotImplementedException();
+                if (m_UpdateMask == value)
+                    return;
+
+                m_UpdateMask = value;
+
+                // Tell runtime.
+                if (m_Runtime != null)
+                    m_Runtime.updateMask = m_UpdateMask;
+
+                // Recreate state buffers.
+                if (m_Devices != null)
+                    ReallocateStateBuffers();
             }
         }
 
@@ -453,64 +477,6 @@ namespace UnityEngine.Experimental.Input
             return layouts.Count - countBefore;
         }
 
-        public void RegisterControlProcessor(string name, Type type)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
-            if (type == null)
-                throw new ArgumentNullException("type");
-
-            ////REVIEW: probably good to typecheck here but it would require dealing with generic type stuff
-
-            var internedName = new InternedString(name);
-            m_Processors[internedName] = type;
-        }
-
-        public Type TryGetControlProcessor(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
-
-            Type type;
-            var internedName = new InternedString(name);
-            if (m_Processors.TryGetValue(internedName, out type))
-                return type;
-            return null;
-        }
-
-        public void RegisterBindingModifier(string name, Type type)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
-            if (type == null)
-                throw new ArgumentNullException("type");
-
-            var internedName = new InternedString(name);
-            m_Modifiers[internedName] = type;
-        }
-
-        public Type TryGetBindingModifier(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("name");
-
-            Type type;
-            var internedName = new InternedString(name);
-            if (m_Modifiers.TryGetValue(internedName, out type))
-                return type;
-            return null;
-        }
-
-        public IEnumerable<string> ListBindingModifiers()
-        {
-            return m_Modifiers.Keys.Select(x => x.ToString());
-        }
-
-        public void RegisterBindingComposite(string name, Type type)
-        {
-            //throw new NotImplementedException();
-        }
-
         // Processes a path specification that may match more than a single control.
         // Adds all controls that match to the given list.
         // Returns true if at least one control was matched.
@@ -535,12 +501,10 @@ namespace UnityEngine.Experimental.Input
         // Adds all controls that match the given path spec to the given list.
         // Returns number of controls added to the list.
         // NOTE: Does not create garbage.
-        public int GetControls(string path, List<InputControl> controls)
+        public int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
         {
             if (string.IsNullOrEmpty(path))
                 return 0;
-            if (controls == null)
-                throw new ArgumentNullException("controls");
             if (m_Devices == null)
                 return 0;
 
@@ -549,7 +513,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                numMatches += InputControlPath.TryFindControls(device, path, 0, controls);
+                numMatches += InputControlPath.TryFindControls(device, path, 0, ref controls);
             }
 
             return numMatches;
@@ -693,9 +657,6 @@ namespace UnityEngine.Experimental.Input
             // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
 
-            // Make the device current.
-            device.MakeCurrent();
-
             // Let actions re-resolve their paths.
             InputActionSet.RefreshAllEnabledActions();
 
@@ -713,6 +674,17 @@ namespace UnityEngine.Experimental.Input
                 device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
+
+            // If the device wants before-render updates, enable them if they
+            // aren't already.
+            if (device.updateBeforeRender)
+                updateMask |= InputUpdateType.BeforeRender;
+
+            // Notify device.
+            device.NotifyAdded();
+
+            // Make the device current.
+            device.MakeCurrent();
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
@@ -763,7 +735,6 @@ namespace UnityEngine.Experimental.Input
             return device;
         }
 
-        ////TODO: get current&all getters to update
         public void RemoveDevice(InputDevice device)
         {
             if (device == null)
@@ -827,6 +798,26 @@ namespace UnityEngine.Experimental.Input
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
             if (beforeUpdateCallbackReceiver != null)
                 onUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
+
+            // Disable before-render updates if this was the last device
+            // that requires them.
+            if (device.updateBeforeRender)
+            {
+                var haveDeviceRequiringBeforeRender = false;
+                if (m_Devices != null)
+                    for (var i = 0; i < m_Devices.Length; ++i)
+                        if (m_Devices[i].updateBeforeRender)
+                        {
+                            haveDeviceRequiringBeforeRender = true;
+                            break;
+                        }
+
+                if (!haveDeviceRequiringBeforeRender)
+                    updateMask &= ~InputUpdateType.BeforeRender;
+            }
+
+            // Let device know.
+            device.NotifyRemoved();
 
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
@@ -978,11 +969,25 @@ namespace UnityEngine.Experimental.Input
 
         internal void Destroy()
         {
+            // We don't destroy devices here and don't release state buffers.
+            // See InputSystem.Restore() for an explanation why.
+            // However, we still want them to clear out statics so notify each device it
+            // got removed.
+            if (m_Devices != null)
+                foreach (var device in m_Devices)
+                    device.NotifyRemoved();
+
+            // Uninstall globals.
             if (ReferenceEquals(InputControlLayout.s_Layouts.baseLayoutTable, m_Layouts.baseLayoutTable))
                 InputControlLayout.s_Layouts = new InputControlLayout.Collection();
-            if (ReferenceEquals(InputProcessor.s_Processors, m_Processors))
-                InputProcessor.s_Processors = null;
+            if (ReferenceEquals(InputControlProcessor.s_Processors.table, m_Processors.table))
+                InputControlProcessor.s_Processors = new TypeTable();
+            if (ReferenceEquals(InputBindingModifier.s_Modifiers.table, m_Modifiers.table))
+                InputBindingModifier.s_Modifiers = new TypeTable();
+            if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
+                InputBindingComposite.s_Composites = new TypeTable();
 
+            // Detach from runtime.
             if (m_Runtime != null)
             {
                 m_Runtime.onUpdate = null;
@@ -997,8 +1002,9 @@ namespace UnityEngine.Experimental.Input
         internal void InitializeData()
         {
             m_Layouts.Allocate();
-            m_Processors = new Dictionary<InternedString, Type>();
-            m_Modifiers = new Dictionary<InternedString, Type>();
+            m_Processors.Initialize();
+            m_Modifiers.Initialize();
+            m_Composites.Initialize();
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = new List<AvailableDevice>();
 
@@ -1044,32 +1050,33 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Sensor", typeof(Sensor));
             RegisterControlLayout("Accelerometer", typeof(Accelerometer));
             RegisterControlLayout("Gyroscope", typeof(Gyroscope));
-
-            ////REVIEW: #if layouts to the platforms they make sense on?
+            RegisterControlLayout("Gravity", typeof(Gravity));
+            RegisterControlLayout("Attitude", typeof(Attitude));
+            RegisterControlLayout("LinearAcceleration", typeof(LinearAcceleration));
 
             // Register processors.
-            RegisterControlProcessor("Invert", typeof(InvertProcessor));
-            RegisterControlProcessor("Clamp", typeof(ClampProcessor));
-            RegisterControlProcessor("Normalize", typeof(NormalizeProcessor));
-            RegisterControlProcessor("Deadzone", typeof(DeadzoneProcessor));
-            RegisterControlProcessor("Curve", typeof(CurveProcessor));
-            RegisterControlProcessor("Sensitivity", typeof(SensitivityProcessor));
+            processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
+            processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
+            processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
+            processors.AddTypeRegistration("Deadzone", typeof(DeadzoneProcessor));
+            processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
+            processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
 
             #if UNITY_EDITOR
-            RegisterControlProcessor("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
+            processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
             // Register modifiers.
-            RegisterBindingModifier("Press", typeof(PressModifier));
-            RegisterBindingModifier("Hold", typeof(HoldModifier));
-            RegisterBindingModifier("Tap", typeof(TapModifier));
-            RegisterBindingModifier("SlowTap", typeof(SlowTapModifier));
-            RegisterBindingModifier("DoubleTap", typeof(DoubleTapModifier));
-            RegisterBindingModifier("Swipe", typeof(SwipeModifier));
+            modifiers.AddTypeRegistration("Press", typeof(PressModifier));
+            modifiers.AddTypeRegistration("Hold", typeof(HoldModifier));
+            modifiers.AddTypeRegistration("Tap", typeof(TapModifier));
+            modifiers.AddTypeRegistration("SlowTap", typeof(SlowTapModifier));
+            //modifiers.AddTypeRegistration("DoubleTap", typeof(DoubleTapModifier));
+            modifiers.AddTypeRegistration("Swipe", typeof(SwipeModifier));
 
             // Register composites.
-            RegisterBindingComposite("ButtonAxis", typeof(ButtonAxis));
-            RegisterBindingComposite("ButtonVector", typeof(ButtonVector));
+            composites.AddTypeRegistration("ButtonAxis", typeof(ButtonAxis));
+            composites.AddTypeRegistration("ButtonVector", typeof(ButtonVector));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1084,6 +1091,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
+            m_Runtime.updateMask = updateMask;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_UpdateListeners.Count > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1097,7 +1105,9 @@ namespace UnityEngine.Experimental.Input
         internal void InstallGlobals()
         {
             InputControlLayout.s_Layouts = m_Layouts;
-            InputProcessor.s_Processors = m_Processors;
+            InputControlProcessor.s_Processors = m_Processors;
+            InputBindingModifier.s_Modifiers = m_Modifiers;
+            InputBindingComposite.s_Composites = m_Composites;
 
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
             // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
@@ -1123,9 +1133,9 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_LayoutRegistrationVersion;
 
         [NonSerialized] internal InputControlLayout.Collection m_Layouts;
-        [NonSerialized] private Dictionary<InternedString, Type> m_Processors;
-        [NonSerialized] private Dictionary<InternedString, Type> m_Modifiers;
-        [NonSerialized] private Dictionary<InternedString, Type> m_Composites;
+        [NonSerialized] private TypeTable m_Processors;
+        [NonSerialized] private TypeTable m_Modifiers;
+        [NonSerialized] private TypeTable m_Composites;
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
@@ -1150,6 +1160,29 @@ namespace UnityEngine.Experimental.Input
         #if UNITY_EDITOR
         [NonSerialized] internal IInputDiagnostics m_Diagnostics;
         #endif
+
+        private static void AddTypeRegistration(Dictionary<InternedString, Type> table, string name, Type type)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name");
+            if (type == null)
+                throw new ArgumentNullException("type");
+
+            var internedName = new InternedString(name);
+            table[internedName] = type;
+        }
+
+        private static Type LookupTypeRegisteration(Dictionary<InternedString, Type> table, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name");
+
+            Type type;
+            var internedName = new InternedString(name);
+            if (table.TryGetValue(internedName, out type))
+                return type;
+            return null;
+        }
 
         ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
         ////        to present mechanisms that the user could build different action systems on?
@@ -1488,6 +1521,8 @@ namespace UnityEngine.Experimental.Input
                         var deviceStateOffset = device.m_StateBlock.byteOffset;
                         var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
 
+                        ////REVIEW: don't we need to flip here?
+
                         // Grab current front buffer.
                         var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
 
@@ -1520,22 +1555,14 @@ namespace UnityEngine.Experimental.Input
                 m_UpdateListeners[i](updateType);
         }
 
-        // When we have the C# job system, this should be a job and NativeInputSystem should double
-        // buffer input between frames. On top, the state change detection in here can be further
-        // split off and put in its own job(s) (might not yield a gain; might be enough to just have
-        // this thing in a job). The system can easily sync on a fence when some control goes
-        // to the global state buffers so the user won't ever know that updates happen in the background.
-        //
         // NOTE: Update types do *NOT* say what the events we receive are for. The update type only indicates
         //       where in the Unity's application loop we got called from.
         internal unsafe void OnUpdate(InputUpdateType updateType, int eventCount, IntPtr eventData)
         {
             ////TODO: switch from Profiler to CustomSampler API
-#if ENABLE_PROFILER
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
-#endif
 
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
@@ -1682,65 +1709,93 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
+                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
+                            InputDevice.Flags.HasStateCallbacks;
+                        IInputStateCallbackReceiver stateCallbacks = null;
                         var deviceIndex = device.m_DeviceIndex;
-                        var stateBlock = device.m_StateBlock;
-                        var stateBlockSize = stateBlock.alignedSizeInBytes;
-                        var stateOffset = 0u;
-                        uint stateSize;
-                        IntPtr statePtr;
-                        FourCC stateFormat;
+                        var stateBlockOfDevice = device.m_StateBlock;
+                        var stateBlockSizeOfDevice = stateBlockOfDevice.alignedSizeInBytes;
+                        var offsetInDeviceStateToCopyTo = 0u;
+                        uint sizeOfStateToCopy;
+                        uint receivedStateSize;
+                        IntPtr ptrToReceivedState;
+                        FourCC receivedStateFormat;
+                        var needToCopyFromBackBuffer = false;
 
-                        // Grab state data from event.
+                        // Grab state data from event and decide where to copy to and how much to copy.
                         if (currentEventType == StateEvent.Type)
                         {
                             var stateEventPtr = (StateEvent*)currentEventPtr;
-                            stateFormat = stateEventPtr->stateFormat;
-                            stateSize = stateEventPtr->stateSizeInBytes;
-                            statePtr = stateEventPtr->state;
+                            receivedStateFormat = stateEventPtr->stateFormat;
+                            receivedStateSize = stateEventPtr->stateSizeInBytes;
+                            ptrToReceivedState = stateEventPtr->state;
 
                             // Ignore extra state at end of event.
-                            if (stateSize > stateBlockSize)
-                                stateSize = stateBlockSize;
+                            sizeOfStateToCopy = receivedStateSize;
+                            if (sizeOfStateToCopy > stateBlockSizeOfDevice)
+                                sizeOfStateToCopy = stateBlockSizeOfDevice;
                         }
                         else
                         {
                             var deltaEventPtr = (DeltaStateEvent*)currentEventPtr;
-                            stateFormat = deltaEventPtr->stateFormat;
-                            stateSize = deltaEventPtr->deltaStateSizeInBytes;
-                            statePtr = deltaEventPtr->deltaState;
-                            stateOffset = deltaEventPtr->stateOffset;
+                            receivedStateFormat = deltaEventPtr->stateFormat;
+                            receivedStateSize = deltaEventPtr->deltaStateSizeInBytes;
+                            ptrToReceivedState = deltaEventPtr->deltaState;
+                            offsetInDeviceStateToCopyTo = deltaEventPtr->stateOffset;
 
                             // Ignore extra state at end of event.
-                            if (stateOffset + stateSize > stateBlockSize)
+                            sizeOfStateToCopy = receivedStateSize;
+                            if (offsetInDeviceStateToCopyTo + sizeOfStateToCopy > stateBlockSizeOfDevice)
                             {
-                                if (stateOffset >= stateBlockSize)
+                                if (offsetInDeviceStateToCopyTo >= stateBlockSizeOfDevice)
                                     break; // Entire delta state is out of range.
 
-                                stateSize = stateBlockSize - stateOffset;
+                                sizeOfStateToCopy = stateBlockSizeOfDevice - offsetInDeviceStateToCopyTo;
                             }
                         }
 
-                        // Ignore state event if the format doesn't match.
-                        if (stateBlock.format != stateFormat)
+                        // If the state format doesn't match, see if the device knows what to do.
+                        // If not, ignore the event.
+                        if (stateBlockOfDevice.format != receivedStateFormat)
                         {
-                            #if UNITY_EDITOR
-                            if (m_Diagnostics != null)
-                                m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
-                            #endif
-                            break;
+                            var canIncorporateUnrecognizedState = false;
+                            if (deviceHasStateCallbacks)
+                            {
+                                if (stateCallbacks == null)
+                                    stateCallbacks = (IInputStateCallbackReceiver)device;
+                                canIncorporateUnrecognizedState =
+                                    stateCallbacks.OnReceiveStateWithDifferentFormat(ptrToReceivedState, receivedStateFormat,
+                                        receivedStateSize, ref offsetInDeviceStateToCopyTo);
+
+                                // If the device tells us to put the state somewhere inside of it, we're potentially
+                                // performing a partial state update, so bring the current state forward like for delta
+                                // state events.
+                                needToCopyFromBackBuffer = true;
+                            }
+
+                            if (!canIncorporateUnrecognizedState)
+                            {
+                                #if UNITY_EDITOR
+                                if (m_Diagnostics != null)
+                                    m_Diagnostics.OnEventFormatMismatch(new InputEventPtr(currentEventPtr), device);
+                                #endif
+                                doNotMakeDeviceCurrent = true;
+                                break;
+                            }
                         }
 
                         // If the device has state callbacks, give it a shot at running custom logic on
                         // the new state before we integrate it into the system.
-                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
-                            InputDevice.Flags.HasStateCallbacks;
                         if (deviceHasStateCallbacks)
                         {
+                            if (stateCallbacks == null)
+                                stateCallbacks = (IInputStateCallbackReceiver)device;
+
                             ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
                             var currentState = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
-                            var newState = new IntPtr((byte*)statePtr.ToPointer() - stateBlock.byteOffset);  // Account for device offset in buffers.
+                            var newState = new IntPtr((byte*)ptrToReceivedState.ToPointer() - stateBlockOfDevice.byteOffset);  // Account for device offset in buffers.
 
-                            ((IInputStateCallbackReceiver)device).OnBeforeWriteNewState(currentState, newState);
+                            stateCallbacks.OnBeforeWriteNewState(currentState, newState);
                         }
 
                         // Before we update state, let change monitors compare the old and the new state.
@@ -1751,12 +1806,11 @@ namespace UnityEngine.Experimental.Input
                         // change notifications.
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
-                            ProcessStateChangeMonitors(deviceIndex, statePtr,
-                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlock.byteOffset),
-                                stateSize, stateOffset);
+                            ProcessStateChangeMonitors(deviceIndex, ptrToReceivedState,
+                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlockOfDevice.byteOffset),
+                                sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
 
                         // Buffer flip.
-                        var needToCopyFromBackBuffer = false;
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
                         {
                             // In case of a delta state event we need to carry forward all state we're
@@ -1767,7 +1821,7 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Now write the state.
-                        var deviceStateOffset = device.m_StateBlock.byteOffset + stateOffset;
+                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
 
 #if UNITY_EDITOR
                         if (!gameIsPlayingAndHasFocus)
@@ -1782,7 +1836,7 @@ namespace UnityEngine.Experimental.Input
                                             (int)device.m_StateBlock.byteOffset),
                                     device.m_StateBlock.alignedSizeInBytes);
 
-                            UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
+                            UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                         }
                         else
 #endif
@@ -1805,7 +1859,7 @@ namespace UnityEngine.Experimental.Input
                                                 (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
+                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
@@ -1819,7 +1873,7 @@ namespace UnityEngine.Experimental.Input
                                                 (int)device.m_StateBlock.byteOffset),
                                         device.m_StateBlock.alignedSizeInBytes);
 
-                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), statePtr.ToPointer(), stateSize);
+                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                             }
                         }
 
@@ -1863,6 +1917,7 @@ namespace UnityEngine.Experimental.Input
                     --remainingEventCount;
                 }
 
+                ////TODO: move this into the state event case; don't make device current for other types of events
                 ////TODO: we need to filter out noisy devices; PS4 controller, for example, just spams constant reports and thus will always make itself current
                 ////      (check for actual change and only make current if state changed?)
                 // Device received event so make it current except if we got a
@@ -1876,20 +1931,9 @@ namespace UnityEngine.Experimental.Input
             if (buffersToUseForUpdate != updateType)
                 InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
-#if ENABLE_PROFILER
             Profiler.EndSample();
-#endif
         }
 
-        // If anyone is listening for state changes on the given device, run state change detections
-        // for the two given state blocks of the device. If a value that is covered by a monitor
-        // has changed in 'newState' compared to 'oldState', set m_StateChangeSignalled for the
-        // monitor to true.
-        //
-        // Returns true if any monitors got signalled, false otherwise.
-        //
-        // This could easily be spun off into jobs.
-        //
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
         //       'newStateOffset' must give the offset into the full state and 'newStateSize' must
         //       give the size of memory slice to be updated.
@@ -2135,29 +2179,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        internal struct TypeRegistrationState
-        {
-            public string name;
-            public string typeName;
-
-            public static TypeRegistrationState[] SaveState(Dictionary<InternedString, Type> table)
-            {
-                var count = table.Count;
-                var array = new TypeRegistrationState[count];
-
-                var i = 0;
-                foreach (var entry in table)
-                    array[i++] = new TypeRegistrationState
-                    {
-                        name = entry.Key,
-                        typeName = entry.Value.AssemblyQualifiedName
-                    };
-
-                return array;
-            }
-        }
-
-        [Serializable]
         internal struct SerializedState
         {
             public int layoutRegistrationVersion;
@@ -2166,8 +2187,9 @@ namespace UnityEngine.Experimental.Input
             public LayoutBuilderState[] layoutFactories;
             public BaseLayoutState[] baseLayouts;
             public LayoutDeviceState[] layoutDeviceMatchers;
-            public TypeRegistrationState[] processors;
-            public TypeRegistrationState[] modifiers;
+            public TypeTable.SavedState processors;
+            public TypeTable.SavedState modifiers;
+            public TypeTable.SavedState composites;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
             public InputStateBuffers buffers;
@@ -2258,8 +2280,9 @@ namespace UnityEngine.Experimental.Input
                 layoutFactories = layoutBuilderArray,
                 baseLayouts = m_Layouts.baseLayoutTable.Select(x => new BaseLayoutState { derivedLayout = x.Key, baseLayout = x.Value }).ToArray(),
                 layoutDeviceMatchers = m_Layouts.layoutDeviceMatchers.Select(x => new LayoutDeviceState { matcherJson = x.Value.ToJson(), layoutName = x.Key }).ToArray(),
-                processors = TypeRegistrationState.SaveState(m_Processors),
-                modifiers = TypeRegistrationState.SaveState(m_Modifiers),
+                processors = m_Processors.SaveState(),
+                modifiers = m_Modifiers.SaveState(),
+                composites = m_Composites.SaveState(),
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
                 buffers = m_StateBuffers,
@@ -2380,33 +2403,10 @@ namespace UnityEngine.Experimental.Input
                         m_Layouts.layoutDeviceMatchers[name] = InputDeviceMatcher.FromJson(entry.matcherJson);
                 }
 
-            // Processors.
-            foreach (var processor in state.processors)
-            {
-                var name = new InternedString(processor.name);
-                if (m_Processors.ContainsKey(name))
-                    continue;
-                var type = Type.GetType(processor.typeName, false);
-                if (type != null)
-                    m_Processors[name] = type;
-                else
-                    Debug.Log(string.Format("Input processor '{0}' has been removed (type '{1}' cannot be found)",
-                            processor.name, processor.typeName));
-            }
-
-            // Modifiers.
-            foreach (var modifier in state.modifiers)
-            {
-                var name = new InternedString(modifier.name);
-                if (m_Modifiers.ContainsKey(name))
-                    continue;
-                var type = Type.GetType(modifier.typeName, false);
-                if (type != null)
-                    m_Modifiers[name] = Type.GetType(modifier.typeName, true);
-                else
-                    Debug.Log(string.Format("Input action modifier '{0}' has been removed (type '{1}' cannot be found)",
-                            modifier.name, modifier.typeName));
-            }
+            // Type registrations.
+            m_Processors.RestoreState(state.processors, "Input processor");
+            m_Modifiers.RestoreState(state.processors, "Input binding modifier");
+            m_Composites.RestoreState(state.composites, "Input binding composite");
 
             // Re-create devices.
             var deviceCount = state.devices.Length;
@@ -2435,6 +2435,7 @@ namespace UnityEngine.Experimental.Input
                 deviceState.RestoreUsagesOnDevice(device);
 
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
+                device.NotifyAdded();
                 device.MakeCurrent();
 
                 devices[i] = device;

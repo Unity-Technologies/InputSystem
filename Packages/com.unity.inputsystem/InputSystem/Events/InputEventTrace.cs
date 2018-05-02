@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Profiling;
 
 ////FIXME: the ring buffer insertion and/or traversal logic is still buggy :(
 
@@ -181,6 +182,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (eventSize > m_EventBufferSize)
                 return;
 
+            Profiler.BeginSample("InputEventTrace");
+
             // Make room in the buffer for the event.
             IntPtr buffer;
             if (m_EventBufferTail == IntPtr.Zero)
@@ -245,6 +248,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             // Notify listeners.
             for (var i = 0; i < m_EventListeners.Count; ++i)
                 m_EventListeners[i](new InputEventPtr((InputEvent*)buffer));
+
+            Profiler.EndSample();
         }
 
         private class Enumerator : IEnumerator<InputEventPtr>
