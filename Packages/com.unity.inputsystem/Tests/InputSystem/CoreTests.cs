@@ -6269,6 +6269,24 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanOverrideBindings()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.ApplyBindingOverride(new InputBindingOverride {binding = "/gamepad/rightTrigger"});
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed += ctx => wasPerformed = true;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
+        InputSystem.Update();
+
+        Assert.That(wasPerformed);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateButtonAxisComposite()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
