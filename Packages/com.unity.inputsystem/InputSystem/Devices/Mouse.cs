@@ -59,6 +59,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Back
         }
 
+        ////REVIEW: move this and the same methods in other states to extension methods?
+        public MouseState WithButton(Button button, bool state = true)
+        {
+            var bit = 1 << (int)button;
+            if (state)
+                buttons |= (ushort)bit;
+            else
+                buttons &= (ushort)~bit;
+            return this;
+        }
+
         public FourCC GetFormat()
         {
             return kFormat;

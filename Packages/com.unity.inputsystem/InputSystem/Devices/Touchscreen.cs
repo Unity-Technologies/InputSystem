@@ -167,7 +167,8 @@ namespace UnityEngine.Experimental.Input
             {
                 var touchCount = 0;
                 bool? hadActivityThisFrame = null;
-                for (var i = 0; i < allTouchControls.Count; ++i)
+                var numTouchControls = allTouchControls.Count;
+                for (var i = 0; i < numTouchControls; ++i)
                 {
                     // Determine whether we consider the touch "active".
                     var isActive = false;

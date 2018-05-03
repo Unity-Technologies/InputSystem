@@ -235,8 +235,8 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    //// FIXME: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
-    //          This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
+    //// REVIEW: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
+    ////         This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
     [InputControlLayout(stateType = typeof(AttitudeState))]
     public class Attitude : Sensor
     {
