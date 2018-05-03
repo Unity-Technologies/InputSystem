@@ -664,23 +664,23 @@ namespace UnityEngine.Experimental.Input
             return monitor;
         }
 
-        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
+        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int userData = -1)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
             if (monitor == null)
                 throw new ArgumentNullException("monitor");
 
-            s_Manager.RemoveStateChangeMonitor(control, monitor);
+            s_Manager.RemoveStateChangeMonitor(control, monitor, userData);
         }
 
         private class StateChangeMonitorDelegate : IInputStateChangeMonitor
         {
             public Action<InputControl, double, int> callback;
 
-            public void NotifyControlValueChanged(InputControl control, double time, int userData)
+            public void NotifyControlValueChanged(InputControl control, double time, int monitorIndex)
             {
-                callback(control, time, userData);
+                callback(control, time, monitorIndex);
             }
         }
 

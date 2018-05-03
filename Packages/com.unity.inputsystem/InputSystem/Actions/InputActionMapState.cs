@@ -6,8 +6,9 @@ namespace UnityEngine.Experimental.Input
     /// <summary>
     /// Dynamic execution state of an <see cref="InputActionMap"/>.
     /// </summary>
-    internal class InputActionMapState
+    internal struct InputActionMapState
     {
+        public InputControl[] controls;
         public ModifierState[] modifierStates;
         public BindingState[] bindingStates;
 
@@ -68,6 +69,7 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Controls that the binding resolved to.
             /// </summary>
+            /// <seealso cref="InputActionMapState.controls"/>
             public ReadOnlyArray<InputControl> controls;
 
             /// <summary>
