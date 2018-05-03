@@ -414,10 +414,8 @@ namespace UnityEngine.Experimental.Input
 
         [SerializeField] internal InternedString m_Name;
 
-        // This should be a ReadOnlyArray<InputBinding> but we can't serialize that because
-        // Unity can't serialize generic types. So we explode the structure here and turn
-        // it into a ReadOnlyArray whenever needed.
-        // NOTE: InputActionMap will null out this field for serialization
+        // For singleton actions, we serialize the bindings directly as part of the action.
+        // For any other type of action, this is null.
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
 
         [NonSerialized] internal int m_BindingsStartIndex;
@@ -425,19 +423,24 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] private bool m_Enabled;
 
-        // The action set that owns us.
+        /// <summary>
+        /// The action map that owns the action.
+        /// </summary>
+        /// <remarks>
+        /// This is not serialized. The action map will restore this back references after deserialization.
+        /// </remarks>
         [NonSerialized] internal InputActionMap m_ActionMap;
 
         // Listeners. No array allocations if only a single listener.
-        [NonSerialized] private InlinedArray<InputActionListener> m_OnStarted;
-        [NonSerialized] private InlinedArray<InputActionListener> m_OnCancelled;
-        [NonSerialized] private InlinedArray<InputActionListener> m_OnPerformed;
+        [NonSerialized] internal InlinedArray<InputActionListener> m_OnStarted;
+        [NonSerialized] internal InlinedArray<InputActionListener> m_OnCancelled;
+        [NonSerialized] internal InlinedArray<InputActionListener> m_OnPerformed;
 
         ////TODO: move this out of here and into InputActionMap
         // State we keep for enabling/disabling. This is volatile and not put on disk.
         // NOTE: m_Controls and m_ResolvedBinding array are stored on InputActionMap.
         [NonSerialized] internal ReadOnlyArray<InputControl> m_Controls;
-        [NonSerialized] internal ReadOnlyArray<InputActionMap.BindingState> m_ResolvedBindings;
+        [NonSerialized] internal ReadOnlyArray<InputActionMapState.BindingState> m_ResolvedBindings;
 
         // State releated to phase shifting and triggering of action.
         // Most of this state we lazily reset as we have to keep it available for
@@ -580,7 +583,7 @@ namespace UnityEngine.Experimental.Input
             // Update modifier state.
             ThrowIfPhaseTransitionIsInvalid(currentModifierState.phase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
             newModifierState.phase = newPhase;
-            newModifierState.control = trigger.control;
+            newModifierState.triggerControl = trigger.control;
             if (newPhase == InputActionPhase.Started)
                 newModifierState.startTime = trigger.time;
             modifiersForBinding[trigger.modifierIndex] = newModifierState;
@@ -604,7 +607,7 @@ namespace UnityEngine.Experimental.Input
                         var triggerForModifier = new TriggerState
                         {
                             phase = InputActionPhase.Started,
-                            control = modifiersForBinding[i].control,
+                            control = modifiersForBinding[i].triggerControl,
                             bindingIndex = trigger.bindingIndex,
                             modifierIndex = i,
                             time = trigger.time,
@@ -733,7 +736,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             modifiersForBinding[modifierIndex] =
-                new InputActionMap.ModifierState
+                new InputActionMapState.ModifierState
             {
                 modifier = oldState.modifier,
                 phase = InputActionPhase.Waiting
@@ -746,6 +749,8 @@ namespace UnityEngine.Experimental.Input
         // change and relays the binding index we gave it when we called AddStateChangeMonitor.
         internal void NotifyControlValueChanged(InputControl control, int bindingIndex, double time)
         {
+            ////TODO: this is where we should filter out state changes that do not result in value changes
+
             // If we have modifiers, let them do all the processing. The precense of a modifier
             // essentially bypasses the default phase progression logic of an action.
             var modifiers = m_ResolvedBindings[bindingIndex].modifiers;
@@ -809,7 +814,7 @@ namespace UnityEngine.Experimental.Input
             context.m_Trigger =
                 new TriggerState
             {
-                control = modifierState.control,
+                control = modifierState.triggerControl,
                 phase = modifierState.phase,
                 time = time,
                 bindingIndex = bindingIndex,

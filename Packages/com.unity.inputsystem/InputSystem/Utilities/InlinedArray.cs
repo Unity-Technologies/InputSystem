@@ -40,6 +40,15 @@ namespace UnityEngine.Experimental.Input.Utilities
 
                 return additionalValues[index - 1];
             }
+            set
+            {
+                if (index == 0)
+                    firstValue = value;
+                else if (additionalValues == null)
+                    throw new IndexOutOfRangeException();
+                else
+                    additionalValues[index - 1] = value;
+            }
         }
 
         public void Clear()
@@ -55,6 +64,12 @@ namespace UnityEngine.Experimental.Input.Utilities
                 firstValue = firstValue,
                 additionalValues = additionalValues != null ? (TValue[])additionalValues.Clone() : null
             };
+        }
+
+        public void Allocate(int size)
+        {
+            if (size > 1)
+                additionalValues = new TValue[size - 1];
         }
 
         public TValue[] ToArray()

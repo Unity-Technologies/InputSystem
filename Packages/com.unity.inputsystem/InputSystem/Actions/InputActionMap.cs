@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: split off resolution code
@@ -24,7 +23,7 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable
+    public class InputActionMap : ICloneable, ISerializationCallbackReceiver
     {
         /// <summary>
         /// Name of the action map.
@@ -34,6 +33,7 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
+        ////REVIEW: how does this play with the shift towards bindings?
         /// <summary>
         /// Whether any action in the map is currently enabled.
         /// </summary>
@@ -57,12 +57,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// List of bindings in the set.
+        /// List of bindings contained in the map.
         /// </summary>
         /// <remarks>
-        /// <see cref="InputBinding">InputBindings</see> are owned by action sets and not by individual
-        /// actions. The bindings in a set can form a tree and conceptually, this array represents a depth-first
+        /// <see cref="InputBinding">InputBindings</see> are owned by action maps and not by individual
+        /// actions. The bindings in a map can form a tree and conceptually, this array represents a depth-first
         /// traversal of the tree.
+        ///
+        /// Bindings that trigger actions refer to the action by name.
         /// </remarks>
         public ReadOnlyArray<InputBinding> bindings
         {
@@ -72,26 +74,6 @@ namespace UnityEngine.Experimental.Input
         public InputActionMap(string name = null)
         {
             m_Name = name;
-        }
-
-        ////TODO: move to InputActionSyntax
-        ////TODO: remove binding arguments and make this return a syntax struct
-        public InputAction AddAction(string name, string binding = null, string modifiers = null, string groups = null)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Action must have name", "name");
-            if (TryGetAction(name) != null)
-                throw new InvalidOperationException(
-                    string.Format("Cannot add action with duplicate name '{0}' to set '{1}'", name, this.name));
-
-            var action = new InputAction(name);
-            ArrayHelpers.Append(ref m_Actions, action);
-            action.m_ActionMap = this;
-
-            if (!string.IsNullOrEmpty(binding))
-                action.AppendBinding(binding, modifiers: modifiers, groups: groups);
-
-            return action;
         }
 
         public InputAction TryGetAction(InternedString name)
@@ -241,12 +223,12 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] private string m_Name;////REVIEW: InternedString?
 
         /// <summary>
-        /// List of actions in this set.
+        /// List of actions in this map.
         /// </summary>
         [SerializeField] internal InputAction[] m_Actions;
 
         /// <summary>
-        /// List of bindings in this set.
+        /// List of bindings in this map.
         /// </summary>
         /// <remarks>
         /// For singleton actions, we ensure this is always the same as <see cref="InputAction.m_SingletonActionBindings"/>.
@@ -263,342 +245,13 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InputAction[] m_ActionForEachBinding;
 
         [NonSerialized] internal InputControl[] m_Controls;
-        [NonSerialized] internal ModifierState[] m_Modifiers;
-        [NonSerialized] internal BindingState[] m_ResolvedBindings;
+        [NonSerialized] internal InputActionMapState.ModifierState[] m_Modifiers;
+        [NonSerialized] internal InputActionMapState.BindingState[] m_ResolvedBindings;
 
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
-
-        /// <summary>
-        /// Records the current state of a single modifier attached to a binding.
-        /// Each modifier keeps track of its own trigger control and phase progression.
-        /// </summary>
-        internal struct ModifierState
-        {
-            public IInputBindingModifier modifier;
-            public InputControl control;
-            public Flags flags;
-            public double startTime;
-
-            [Flags]
-            public enum Flags
-            {
-                TimerRunning = 1 << 8, // Reserve first 8 bits for phase.
-            }
-
-            public bool isTimerRunning
-            {
-                get { return (flags & Flags.TimerRunning) == Flags.TimerRunning; }
-                set
-                {
-                    if (value)
-                        flags |= Flags.TimerRunning;
-                    else
-                        flags &= ~Flags.TimerRunning;
-                }
-            }
-
-            public InputActionPhase phase
-            {
-                // We store the phase in the low 8 bits of the flags field.
-                get { return (InputActionPhase)((int)flags & 0xf); }
-                set { flags = (Flags)(((uint)flags & 0xfffffff0) | (uint)value); }
-            }
-        }
-
-        /// <summary>
-        /// Runtime state for a single binding.
-        /// </summary>
-        /// <remarks>
-        /// Correlated to the <see cref="InputBinding"/> it corresponds to by the index in the binding
-        /// array.
-        /// </remarks>
-        internal struct BindingState
-        {
-            [Flags]
-            public enum Flags
-            {
-                ChainsWithNext = 1 << 0,
-                EndOfChain = 1 << 1,
-                PartOfComposite = 1 << 2,
-            }
-
-            /// <summary>
-            /// Controls that the binding resolved to.
-            /// </summary>
-            public ReadOnlyArray<InputControl> controls;
-
-            /// <summary>
-            /// State of modifiers applied to the binding.
-            /// </summary>
-            public ReadWriteArray<ModifierState> modifiers;
-
-            /// <summary>
-            /// The action being triggered by the binding (if any).
-            /// </summary>
-            public InputAction action;
-
-            public object composite;
-
-            public Flags flags;
-
-            public bool chainsWithNext
-            {
-                get { return (flags & Flags.ChainsWithNext) == Flags.ChainsWithNext; }
-                set
-                {
-                    if (value)
-                        flags |= Flags.ChainsWithNext;
-                    else
-                        flags &= ~Flags.ChainsWithNext;
-                }
-            }
-
-            public bool isEndOfChain
-            {
-                get { return (flags & Flags.EndOfChain) == Flags.EndOfChain; }
-                set
-                {
-                    if (value)
-                        flags |= Flags.EndOfChain;
-                    else
-                        flags &= ~Flags.EndOfChain;
-                }
-            }
-
-            public bool isPartOfChain
-            {
-                get { return chainsWithNext || isEndOfChain; }
-            }
-
-            public bool isPartOfComposite
-            {
-                get { return (flags & Flags.PartOfComposite) == Flags.PartOfComposite; }
-                set
-                {
-                    if (value)
-                        flags |= Flags.PartOfComposite;
-                    else
-                        flags &= ~Flags.PartOfComposite;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Heart of the binding resolution machinery. Consumes InputActions and spits
-        /// out a list of resolved bindings.
-        /// </summary>
-        private struct BindingResolver
-        {
-            public int controlCount;
-            public int modifierCount;
-
-            public InputControl[] controls;
-            public ModifierState[] modifierStates;
-            public BindingState[] bindingStates;
-            public object[] composites;
-
-            private List<InputControlLayout.NameAndParameters> m_Parameters;
-
-            public void ResolveBindings(InputBinding[] bindings, InputAction[] actions)
-            {
-                Debug.Assert(bindings != null);
-
-                // Allocate/clear binding states.
-                var bindingsCount = bindings.Length;
-                if (bindingStates == null || bindings.Length != bindingsCount)
-                    bindingStates = new BindingState[bindingsCount];
-                else
-                    Array.Clear(bindingStates, 0, bindingsCount);
-
-                ////TODO: make sure composite objects get all the bindings they need
-                ////TODO: handle case where we have bindings resolving to the same control
-                ////      (not so clear cut what to do there; each binding may have a different modifier setup, for example)
-                var controlStartIndex = 0;
-                var currentCompositeIndex = -1;
-                var actionCount = actions != null ? actions.Length : 0;
-                for (var n = 0; n < bindings.Length; ++n)
-                {
-                    var unresolvedBinding = bindings[n];
-                    var indexOfFirstControlInThisBinding = controlCount;
-
-                    // Try to find action.
-                    InputAction action = null;
-                    var actionName = unresolvedBinding.action;
-                    if (!actionName.IsEmpty())
-                    {
-                        for (var i = 0; i < actionCount; ++i)
-                        {
-                            var currentAction = actions[i];
-                            if (currentAction.m_Name == actionName)
-                            {
-                                action = currentAction;
-                                break;
-                            }
-                        }
-                    }
-
-                    ////TODO: allow specifying parameters for composite on its path (same way as parameters work for modifiers)
-                    // If it's the start of a composite chain, create the composite.
-                    if (unresolvedBinding.isComposite)
-                    {
-                        ////REVIEW: what to do about modifiers on composites?
-
-                        // Instantiate. For composites, the path is the name of the composite.
-                        var composite = InstantiateBindingComposite(unresolvedBinding.path);
-                        bindingStates[n] = new BindingState
-                        {
-                            composite = composite,
-                            action = action
-                        };
-
-                        // The composite binding entry itself does not resolve to any controls.
-                        // It creates a composite binding object which is then populated from
-                        // subsequent bindings.
-                        currentCompositeIndex = n;
-                        continue;
-                    }
-
-                    // If we've reached the end of a composite chain, finish
-                    // of the current composite.
-                    if (!unresolvedBinding.isPartOfComposite && currentCompositeIndex != -1)
-                        currentCompositeIndex = -1;
-
-                    // Use override path but fall back to default path if no
-                    // override set.
-                    var path = unresolvedBinding.overridePath ?? unresolvedBinding.path;
-
-                    // Look up controls.
-                    if (controls == null)
-                        controls = new InputControl[10];
-                    var resolvedControls = new ArrayOrListWrapper<InputControl>(controls, controlCount);
-                    var numControls = InputSystem.GetControls(path, ref resolvedControls);
-                    if (numControls == 0)
-                        continue;
-
-                    controlCount = resolvedControls.count;
-                    controls = resolvedControls.array;
-
-                    // Instantiate modifiers.
-                    var firstModifier = 0;
-                    var numModifiers = 0;
-                    if (!string.IsNullOrEmpty(unresolvedBinding.modifiers))
-                    {
-                        firstModifier = ResolveModifiers(unresolvedBinding.modifiers);
-                        if (modifierStates != null)
-                            numModifiers = modifierCount - firstModifier;
-                    }
-
-                    // Add entry for resolved binding.
-                    bindingStates[n] = new BindingState
-                    {
-                        controls = new ReadOnlyArray<InputControl>(null, indexOfFirstControlInThisBinding, numControls),
-                        modifiers = new ReadWriteArray<ModifierState>(null, firstModifier, numModifiers),
-                        isPartOfComposite = unresolvedBinding.isPartOfComposite,
-                        action = action,
-                    };
-
-                    // If the binding is part of a composite, pass the resolve controls
-                    // on to the composite.
-                    if (unresolvedBinding.isPartOfComposite && currentCompositeIndex != -1)
-                    {
-                        ////REVIEW: what should we do when a single binding in a composite resolves to multiple controls?
-                        ////        if the composite has more than one bindable control, it's not readily apparent how we would group them
-                        if (numControls > 1)
-                            throw new NotImplementedException("Handling case where single binding in composite resolves to multiple controls");
-
-                        // Make sure the binding is named. The name determines what in the composite
-                        // to bind to.
-                        if (string.IsNullOrEmpty(unresolvedBinding.name))
-                            throw new Exception(string.Format(
-                                    "Binding that is part of composite '{0}' is missing a name",
-                                    bindingStates[currentCompositeIndex].composite));
-
-                        // Install the control on the binding.
-                        BindControlInComposite(bindingStates[currentCompositeIndex].composite, unresolvedBinding.name,
-                            controls[indexOfFirstControlInThisBinding]);
-                    }
-                }
-            }
-
-            private int ResolveModifiers(string modifierString)
-            {
-                ////REVIEW: We're piggybacking off the processor parsing here as the two syntaxes are identical. Might consider
-                ////        moving the logic to a shared place.
-                ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
-
-                var firstModifierIndex = modifierCount;
-
-                if (InputControlLayout.ParseNameAndParameterList(modifierString, ref m_Parameters))
-                {
-                    for (var i = 0; i < m_Parameters.Count; ++i)
-                    {
-                        // Look up modifier.
-                        var type = InputBindingModifier.s_Modifiers.LookupTypeRegisteration(m_Parameters[i].name);
-                        if (type == null)
-                            throw new Exception(string.Format(
-                                    "No binding modifier with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
-                                    modifierString));
-
-                        // Instantiate it.
-                        var modifier = Activator.CreateInstance(type) as IInputBindingModifier;
-                        if (modifier == null)
-                            throw new Exception(string.Format("Modifier '{0}' is not an IInputBindingModifier", m_Parameters[i].name));
-
-                        // Pass parameters to it.
-                        InputDeviceBuilder.SetParameters(modifier, m_Parameters[i].parameters);
-
-                        // Add to list.
-                        ArrayHelpers.AppendWithCapacity(ref modifierStates, ref modifierCount,
-                            new ModifierState
-                        {
-                            modifier = modifier,
-                            phase = InputActionPhase.Waiting
-                        });
-                    }
-                }
-
-                return firstModifierIndex;
-            }
-
-            private static object InstantiateBindingComposite(string name)
-            {
-                // Look up.
-                var type = InputBindingComposite.s_Composites.LookupTypeRegisteration(name);
-                if (type == null)
-                    throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
-                            name));
-
-                // Instantiate.
-                var instance = Activator.CreateInstance(type);
-                ////REVIEW: typecheck for IInputBindingComposite? (at least in dev builds)
-
-                return instance;
-            }
-
-            ////REVIEW: replace this with a method on the composite that receives the value?
-            private static void BindControlInComposite(object composite, string name, InputControl control)
-            {
-                var type = composite.GetType();
-
-                // Look up field.
-                var field = type.GetField(name,
-                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (field == null)
-                    throw new Exception(string.Format("Cannot find public field '{0}' in binding composite '{1}' of type '{2}'",
-                            name, composite, type));
-
-                // Typecheck.
-                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
-                    throw new Exception(string.Format(
-                            "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
-                            type));
-
-                field.SetValue(composite, control);
-            }
-        }
 
         ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
         // Resolve all bindings to their controls and also add any action modifiers
@@ -616,7 +269,7 @@ namespace UnityEngine.Experimental.Input
             ////      all the time during gameplay and not end up causing GC
 
             // Resolve all source paths.
-            var resolver = new BindingResolver();
+            var resolver = new InputBindingResolver();
             resolver.ResolveBindings(m_Bindings, m_ActionForEachBinding);
 
             // Grab final arrays.
@@ -1202,6 +855,21 @@ namespace UnityEngine.Experimental.Input
         {
             var fileJson = ActionFileJson.FromSet(this);
             return JsonUtility.ToJson(fileJson);
+        }
+
+        public void OnBeforeSerialize()
+        {
+        }
+
+        public void OnAfterDeserialize()
+        {
+            // Restore references of actions linking back to us.
+            if (m_Actions != null)
+            {
+                var actionCount = m_Actions.Length;
+                for (var i = 0; i < actionCount; ++i)
+                    m_Actions[i].m_ActionMap = this;
+            }
         }
     }
 }

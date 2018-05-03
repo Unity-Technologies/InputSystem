@@ -2325,6 +2325,94 @@ class CoreTests : InputTestFixture
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
     }
 
+    // To build systems that can respond to inputs changing value, there's support for setting
+    // up monitor on state (essentially locks around memory regions). This is used by the action
+    // system to build its entire machinery but the core mechanism is available to anyone.
+    [Test]
+    [Category("Devices")]
+    public void State_CanSetUpMonitorsForStateChanges()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitorFired = false;
+        InputControl receivedControl = null;
+        int? receivedUserData = null;
+        double? receivedTime = null;
+
+        var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+                (control, time, userData) =>
+            {
+                Assert.That(!monitorFired);
+                monitorFired = true;
+                receivedControl = control;
+                receivedUserData = userData;
+                receivedTime = time;
+            }, 12345678);
+
+        // Left stick only.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) }, 0.5);
+        InputSystem.Update();
+
+        Assert.That(monitorFired, Is.True);
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+        Assert.That(receivedUserData.Value, Is.EqualTo(12345678));
+        Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
+
+        monitorFired = false;
+        receivedControl = null;
+        receivedUserData = null;
+        receivedTime = 0;
+
+        // Left stick again but with no value change.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)}, 0.6);
+        InputSystem.Update();
+
+        Assert.That(monitorFired, Is.False);
+
+        // Left and right stick.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = new Vector2(0.75f, 0.75f), leftStick = new Vector2(0.75f, 0.75f) }, 0.7);
+        InputSystem.Update();
+
+        Assert.That(monitorFired, Is.True);
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+        Assert.That(receivedUserData.Value, Is.EqualTo(12345678));
+        Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
+
+        monitorFired = false;
+        receivedControl = null;
+        receivedUserData = null;
+        receivedTime = 0;
+
+        // Right stick only.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = new Vector2(0.5f, 0.5f), leftStick = new Vector2(0.75f, 0.75f) }, 0.8);
+        InputSystem.Update();
+
+        Assert.That(monitorFired, Is.False);
+
+        // Component control of left stick.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.75f, 0.5f)}, 0.9);
+        InputSystem.Update();
+
+        Assert.That(monitorFired, Is.True);
+        ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+        Assert.That(receivedUserData.Value, Is.EqualTo(12345678));
+        Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
+
+        // Remove state monitor and change leftStick again.
+        InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor);
+
+        monitorFired = false;
+        receivedControl = null;
+        receivedUserData = null;
+        receivedTime = 0;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.0f, 0.0f)}, 1.0);
+        InputSystem.Update();
+
+        Assert.That(monitorFired, Is.False);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanAddDeviceFromLayout()
@@ -6967,7 +7055,7 @@ class CoreTests : InputTestFixture
         var action = new InputAction(binding: "/gamepad/leftStick");
         //var gamepad = InputSystem.AddDevice("Gamepad");
 
-        using (var rebind = InputActionRebinding.PerformUserRebind(action))
+        using (var rebind = InputActionRebindingExtensions.PerformUserRebind(action))
         {
         }
 

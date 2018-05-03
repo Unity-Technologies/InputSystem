@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace UnityEngine.Experimental.Input
 {
     // Various pieces of logic that help with rebinding actions in various ways.
-    public static class InputActionRebinding
+    public static class InputActionRebindingExtensions
     {
         // For all bindings in the given action, if a binding matches a control in the given control
         // hiearchy, set an override on the binding to refer specifically to that control.
