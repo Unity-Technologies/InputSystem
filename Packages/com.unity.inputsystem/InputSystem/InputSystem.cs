@@ -22,6 +22,8 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
+
 ////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
 
 ////TODO: release native alloations when exiting
@@ -639,6 +641,47 @@ namespace UnityEngine.Experimental.Input
         internal static int GetControls(string path, ref ArrayOrListWrapper<InputControl> controls)
         {
             return s_Manager.GetControls(path, ref controls);
+        }
+
+        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int userData = -1)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+            if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"));
+
+            s_Manager.AddStateChangeMonitor(control, monitor, userData);
+        }
+
+        public static IInputStateChangeMonitor AddStateChangeMonitor(InputControl control, Action<InputControl, double, int> callback, int userData = -1)
+        {
+            if (callback == null)
+                throw new ArgumentNullException("callback");
+            var monitor = new StateChangeMonitorDelegate {callback = callback};
+            AddStateChangeMonitor(control, monitor, userData);
+            return monitor;
+        }
+
+        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.RemoveStateChangeMonitor(control, monitor);
+        }
+
+        private class StateChangeMonitorDelegate : IInputStateChangeMonitor
+        {
+            public Action<InputControl, double, int> callback;
+
+            public void NotifyControlValueChanged(InputControl control, double time, int userData)
+            {
+                callback(control, time, userData);
+            }
         }
 
         #endregion

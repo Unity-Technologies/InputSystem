@@ -4,13 +4,14 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Extensions to modify <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">InputActionSets</see>
-    /// with fluent-style APIs.
+    /// Extensions to modify <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">
+    /// InputActionSets</see> with fluent-style APIs.
     /// </summary>
-    public static class InputActionSyntax
+    public static class InputActionSyntaxExtensions
     {
         /// <summary>
-        /// Syntax to configure a binding added to an <see cref="InputAction"/> or an <see cref="InputActionMap"/>.
+        /// Syntax to configure a binding added to an <see cref="InputAction"/> or an
+        /// <see cref="InputActionMap"/>.
         /// </summary>
         public struct BindingSyntax
         {
@@ -92,6 +93,25 @@ namespace UnityEngine.Experimental.Input
 
                 return this;
             }
+        }
+
+        ////TODO: remove binding arguments and make this return a syntax struct
+        public static InputAction AddAction(this InputActionMap map, string name, string binding = null, string modifiers = null, string groups = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Action must have name", "name");
+            if (map.TryGetAction(name) != null)
+                throw new InvalidOperationException(
+                    string.Format("Cannot add action with duplicate name '{0}' to set '{1}'", name, map.name));
+
+            var action = new InputAction(name);
+            ArrayHelpers.Append(ref map.m_Actions, action);
+            action.m_ActionMap = map;
+
+            if (!string.IsNullOrEmpty(binding))
+                action.AppendBinding(binding, modifiers: modifiers, groups: groups);
+
+            return action;
         }
 
         public static BindingSyntax AppendBinding(this InputActionMap map, string path)

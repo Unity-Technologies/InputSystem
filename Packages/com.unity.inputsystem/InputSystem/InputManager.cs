@@ -1206,17 +1206,65 @@ namespace UnityEngine.Experimental.Input
         private struct StateChangeMonitorListener
         {
             public InputControl control;
-            ////REVIEW: this could easily be generalized to take an arbitrary user object plus a "user data" value
-            public InputAction action;
-            public int bindingIndex;
+            public IInputStateChangeMonitor monitor;
+            public int userData;
+        }
+        private struct StateChangeMonitorsDeviceRecord
+        {
+            public StateChangeMonitorMemoryRegion[] memoryRegions;
+            public StateChangeMonitorListener[] listeners;
+            public DynamicBitfield signalled;
+
+            public int count
+            {
+                get { return signalled.length; }
+            }
+
+            public void Add(InputControl control, IInputStateChangeMonitor monitor, int userData)
+            {
+                // Add listener record.
+                var listenerCount = signalled.length;
+                ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
+                    new StateChangeMonitorListener {monitor = monitor, userData = userData, control = control});
+
+                // Add memory region record.
+                var memoryRegionCount = signalled.length;
+                ArrayHelpers.AppendWithCapacity(ref memoryRegions, ref memoryRegionCount,
+                    new StateChangeMonitorMemoryRegion
+                {
+                    offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
+                    sizeInBits = control.stateBlock.sizeInBits,
+                    bitOffset = control.stateBlock.bitOffset
+                });
+
+                signalled.SetLength(signalled.length + 1);
+            }
+
+            public void Remove(IInputStateChangeMonitor monitor)
+            {
+                if (listeners == null)
+                    return;
+
+                ////REVIEW: would be better to clean these up implicitly during the next traversal
+                for (var i = 0; i < listeners.Length; ++i)
+                    if (ReferenceEquals(listeners[i].monitor, monitor))
+                    {
+                        ArrayHelpers.EraseAt(ref listeners, i);
+                        ArrayHelpers.EraseAt(ref memoryRegions, i);
+                        signalled.SetLength(signalled.length - 1);
+                    }
+            }
+
+            public void Clear()
+            {
+                // We don't actually release memory we've potentially allocated but rather just reset
+                // our count to zero.
+                signalled.SetLength(0);
+            }
         }
 
-        ////TODO: optimize the lists away
-        ////REVIEW: I think these can be organized smarter to make bookkeeping cheaper
         // Indices correspond with those in m_Devices.
-        [NonSerialized] private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
-        [NonSerialized] private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
-        [NonSerialized] private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
+        [NonSerialized] private StateChangeMonitorsDeviceRecord[] m_StateChangeMonitors;
 
         private struct ActionTimeout
         {
@@ -1228,77 +1276,54 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] private List<ActionTimeout> m_ActionTimeouts;
 
-        ////TODO: move this out into a generic mechanism that produces change events
-        ////TODO: support combining monitors for bitfields
         internal void AddStateChangeMonitor(InputControl control, InputAction action, int bindingIndex)
         {
-            var device = control.device;
-            Debug.Assert(device != null);
-
-            var deviceIndex = device.m_DeviceIndex;
-
-            // Allocate/reallocate monitor arrays, if necessary.
-            if (m_StateChangeMonitorListeners == null)
-            {
-                var deviceCount = m_Devices.Length;
-                m_StateChangeMonitorListeners = new List<StateChangeMonitorListener>[deviceCount];
-                m_StateChangeMonitorMemoryRegions = new List<StateChangeMonitorMemoryRegion>[deviceCount];
-                m_StateChangeSignalled = new List<bool>[deviceCount];
-            }
-            else if (m_StateChangeMonitorListeners.Length <= deviceIndex)
-            {
-                var deviceCount = m_Devices.Length;
-                Array.Resize(ref m_StateChangeMonitorListeners, deviceCount);
-                Array.Resize(ref m_StateChangeMonitorMemoryRegions, deviceCount);
-                Array.Resize(ref m_StateChangeSignalled, deviceCount);
-            }
-
-            // Allocate lists, if necessary.
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
-            var memoryRegions = m_StateChangeMonitorMemoryRegions[deviceIndex];
-            var signals = m_StateChangeSignalled[deviceIndex];
-            if (listeners == null)
-            {
-                listeners = new List<StateChangeMonitorListener>();
-                memoryRegions = new List<StateChangeMonitorMemoryRegion>();
-                signals = new List<bool>();
-
-                m_StateChangeMonitorListeners[deviceIndex] = listeners;
-                m_StateChangeMonitorMemoryRegions[deviceIndex] = memoryRegions;
-                m_StateChangeSignalled[deviceIndex] = signals;
-            }
-
-            // Add monitor.
-            listeners.Add(new StateChangeMonitorListener {action = action, bindingIndex = bindingIndex, control = control});
-            memoryRegions.Add(new StateChangeMonitorMemoryRegion
-            {
-                offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
-                sizeInBits = control.stateBlock.sizeInBits,
-                bitOffset = control.stateBlock.bitOffset
-            });
-            signals.Add(false);
-        }
-
-        private void RemoveStateChangeMonitors(InputDevice device)
-        {
-            if (m_StateChangeMonitorListeners == null)
-                return;
-
-            var deviceIndex = device.m_DeviceIndex;
-            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
-
-            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
-                return;
-
-            ArrayHelpers.EraseAt(ref m_StateChangeMonitorListeners, deviceIndex);
-            ArrayHelpers.EraseAt(ref m_StateChangeMonitorMemoryRegions, deviceIndex);
-            ArrayHelpers.EraseAt(ref m_StateChangeSignalled, deviceIndex);
+            throw new NotImplementedException();
         }
 
         ////REVIEW: better to to just pass device+action and remove all state change monitors for the pair?
         internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
         {
-            if (m_StateChangeMonitorListeners == null)
+            throw new NotImplementedException();
+        }
+
+        ////TODO: support combining monitors for bitfields
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int userData)
+        {
+            Debug.Assert(m_Devices != null);
+
+            var device = control.device;
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            // Allocate/reallocate monitor arrays, if necessary.
+            // We lazy-sync it to array of devices.
+            if (m_StateChangeMonitors == null)
+                m_StateChangeMonitors = new StateChangeMonitorsDeviceRecord[m_Devices.Length];
+            else if (m_StateChangeMonitors.Length <= deviceIndex)
+                Array.Resize(ref m_StateChangeMonitors, m_Devices.Length);
+
+            // Add record.
+            m_StateChangeMonitors[deviceIndex].Add(control, monitor, userData);
+        }
+
+        private void RemoveStateChangeMonitors(InputDevice device)
+        {
+            if (m_StateChangeMonitors == null)
+                return;
+
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            if (deviceIndex >= m_StateChangeMonitors.Length)
+                return;
+
+            m_StateChangeMonitors[deviceIndex].Clear();
+        }
+
+        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
+        {
+            if (m_StateChangeMonitors == null)
                 return;
 
             var device = control.device;
@@ -1309,24 +1334,10 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             // Ignore if there are no state monitors set up for the device.
-            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
+            if (deviceIndex >= m_StateChangeMonitors.Length)
                 return;
 
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
-            var regions = m_StateChangeMonitorMemoryRegions[deviceIndex];
-            var signals = m_StateChangeSignalled[deviceIndex];
-
-            for (var i = 0; i < listeners.Count; ++i)
-            {
-                if (listeners[i].action == action && listeners[i].control == control)
-                {
-                    ////TODO: use InlinedArrays for these and only null out entries; clean up array when traversing it during processing
-                    listeners.RemoveAt(i);
-                    regions.RemoveAt(i);
-                    signals.RemoveAt(i);
-                    break;
-                }
-            }
+            m_StateChangeMonitors[deviceIndex].Remove(monitor);
         }
 
         internal void AddActionTimeout(InputAction action, double time, int bindingIndex, int modifierIndex)
@@ -1941,21 +1952,19 @@ namespace UnityEngine.Experimental.Input
         //       give the size of memory slice to be updated.
         private unsafe bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, uint newStateSize, uint newStateOffset)
         {
-            if (m_StateChangeMonitorListeners == null)
+            if (m_StateChangeMonitors == null)
                 return false;
 
             // We resize the monitor arrays only when someone adds to them so they
             // may be out of sync with the size of m_Devices.
-            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
+            if (deviceIndex >= m_StateChangeMonitors.Length)
                 return false;
 
-            var changeMonitors = m_StateChangeMonitorMemoryRegions[deviceIndex];
-            if (changeMonitors == null)
-                return false; // No action cares about state changes on this device.
+            var memoryRegions = m_StateChangeMonitors[deviceIndex].memoryRegions;
+            if (memoryRegions == null)
+                return false; // No one cares about state changes on this device.
 
-            var signals = m_StateChangeSignalled[deviceIndex];
-
-            var numMonitors = changeMonitors.Count;
+            var numMonitors = m_StateChangeMonitors[deviceIndex].count;
             var signalled = false;
 
             // Bake offsets into state pointers so that we don't have to adjust for
@@ -1968,7 +1977,7 @@ namespace UnityEngine.Experimental.Input
 
             for (var i = 0; i < numMonitors; ++i)
             {
-                var memoryRegion = changeMonitors[i];
+                var memoryRegion = memoryRegions[i];
                 var offset = (int)memoryRegion.offsetRelativeToDevice;
                 var sizeInBits = memoryRegion.sizeInBits;
                 var bitOffset = memoryRegion.bitOffset;
@@ -2007,7 +2016,7 @@ namespace UnityEngine.Experimental.Input
                         continue;
                 }
 
-                signals[i] = true;
+                m_StateChangeMonitors[deviceIndex].signalled.SetBit(i);
                 signalled = true;
             }
 
@@ -2016,16 +2025,21 @@ namespace UnityEngine.Experimental.Input
 
         private void FireActionStateChangeNotifications(int deviceIndex, double time)
         {
-            var signals = m_StateChangeSignalled[deviceIndex];
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
+            Debug.Assert(m_StateChangeMonitors != null);
+            Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
 
-            for (var i = 0; i < signals.Count; ++i)
+            var signals = m_StateChangeMonitors[deviceIndex].signalled;
+            var listeners = m_StateChangeMonitors[deviceIndex].listeners;
+
+            for (var i = 0; i < signals.length; ++i)
             {
-                if (signals[i])
+                ////TODO: we're going linear here so instead of computing a byte and bit index from scratch every
+                ////      time, shift indices and masks incrementally
+                if (signals.TestBit(i))
                 {
                     var listener = listeners[i];
-                    listener.action.NotifyControlValueChanged(listener.control, listener.bindingIndex, time);
-                    signals[i] = false;
+                    listener.monitor.NotifyControlValueChanged(listener.control, time, listener.userData);
+                    signals.ClearBit(i);
                 }
             }
         }
