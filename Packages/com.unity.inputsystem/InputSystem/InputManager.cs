@@ -1034,7 +1034,6 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Magnitude2", typeof(Magnitude2Control));
             RegisterControlLayout("Magnitude3", typeof(Magnitude3Control));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
-            RegisterControlLayout("Pose", typeof(PoseControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
@@ -1186,9 +1185,6 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
-        ////        to present mechanisms that the user could build different action systems on?
-
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
         // processing the control repeatedly but we assume this is the exception
@@ -1209,7 +1205,7 @@ namespace UnityEngine.Experimental.Input
             public IInputStateChangeMonitor monitor;
             public int userData;
         }
-        private struct StateChangeMonitorsDeviceRecord
+        private struct StateChangeMonitorsForDevice
         {
             public StateChangeMonitorMemoryRegion[] memoryRegions;
             public StateChangeMonitorListener[] listeners;
@@ -1222,12 +1218,12 @@ namespace UnityEngine.Experimental.Input
 
             public void Add(InputControl control, IInputStateChangeMonitor monitor, int userData)
             {
-                // Add listener record.
+                // Record listener.
                 var listenerCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
                     new StateChangeMonitorListener {monitor = monitor, userData = userData, control = control});
 
-                // Add memory region record.
+                // Record memory region.
                 var memoryRegionCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref memoryRegions, ref memoryRegionCount,
                     new StateChangeMonitorMemoryRegion
@@ -1264,7 +1260,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Indices correspond with those in m_Devices.
-        [NonSerialized] private StateChangeMonitorsDeviceRecord[] m_StateChangeMonitors;
+        [NonSerialized] private StateChangeMonitorsForDevice[] m_StateChangeMonitors;
 
         private struct ActionTimeout
         {
@@ -1299,7 +1295,7 @@ namespace UnityEngine.Experimental.Input
             // Allocate/reallocate monitor arrays, if necessary.
             // We lazy-sync it to array of devices.
             if (m_StateChangeMonitors == null)
-                m_StateChangeMonitors = new StateChangeMonitorsDeviceRecord[m_Devices.Length];
+                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_Devices.Length];
             else if (m_StateChangeMonitors.Length <= deviceIndex)
                 Array.Resize(ref m_StateChangeMonitors, m_Devices.Length);
 
