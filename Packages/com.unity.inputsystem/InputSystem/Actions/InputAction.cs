@@ -113,7 +113,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// The set the action belongs to.
+        /// The map the action belongs to.
         /// </summary>
         /// <remarks>
         /// If the action is a lose action created in code, this will be <c>null</c>.
@@ -152,16 +152,17 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        ////REVIEW: is this useful? control lists are per-binding, this munges them all together
-        // The set of controls to which the bindings resolve. May change over time.
+
+        /// <summary>
+        /// The set of controls to which the action's bindings resolve.
+        /// </summary>
         public ReadOnlyArray<InputControl> controls
         {
             get
             {
-                ////REVIEW: just return an empty array?
-                if (!enabled)
-                    throw new InvalidOperationException("Cannot list controls of action when the action is not enabled.");
-                return m_Controls;
+                if (m_ActionMap == null)
+                    CreateInternalActionSetForSingletonAction();
+                return m_ActionMap.GetControlsForAction(this);
             }
         }
 
@@ -276,8 +277,8 @@ namespace UnityEngine.Experimental.Input
                 CreateInternalActionSetForSingletonAction();
 
             // First time we're enabled, find all controls.
-            if (m_ActionMap.m_Controls == null)
-                m_ActionMap.ResolveBindings();
+            /*if (m_ActionMap.m_Controls == null)*/////FIXME
+            m_ActionMap.ResolveBindings();
 
             // Go live.
             m_ActionMap.TellAboutActionChangingEnabledStatus(this, true);

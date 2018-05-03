@@ -660,7 +660,7 @@ namespace UnityEngine.Experimental.Input
             ReallocateStateBuffers();
 
             // Let actions re-resolve their paths.
-            InputActionMap.RefreshAllEnabledActions();
+            InputActionMap.ReResolveAllEnabledActions();
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
@@ -794,7 +794,7 @@ namespace UnityEngine.Experimental.Input
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
             // by actions to uninstall state monitors will get ignored.
-            InputActionMap.RefreshAllEnabledActions();
+            InputActionMap.ReResolveAllEnabledActions();
 
             // Kill before update callback, if applicable.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
@@ -1238,14 +1238,14 @@ namespace UnityEngine.Experimental.Input
                 signalled.SetLength(signalled.length + 1);
             }
 
-            public void Remove(IInputStateChangeMonitor monitor)
+            public void Remove(IInputStateChangeMonitor monitor, int userData)
             {
                 if (listeners == null)
                     return;
 
                 ////REVIEW: would be better to clean these up implicitly during the next traversal
                 for (var i = 0; i < listeners.Length; ++i)
-                    if (ReferenceEquals(listeners[i].monitor, monitor))
+                    if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].userData == userData)
                     {
                         ArrayHelpers.EraseAt(ref listeners, i);
                         ArrayHelpers.EraseAt(ref memoryRegions, i);
@@ -1319,7 +1319,7 @@ namespace UnityEngine.Experimental.Input
             m_StateChangeMonitors[deviceIndex].Clear();
         }
 
-        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
+        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int userData)
         {
             if (m_StateChangeMonitors == null)
                 return;
@@ -1335,7 +1335,7 @@ namespace UnityEngine.Experimental.Input
             if (deviceIndex >= m_StateChangeMonitors.Length)
                 return;
 
-            m_StateChangeMonitors[deviceIndex].Remove(monitor);
+            m_StateChangeMonitors[deviceIndex].Remove(monitor, userData);
         }
 
         internal void AddActionTimeout(InputAction action, double time, int bindingIndex, int modifierIndex)
@@ -1974,6 +1974,7 @@ namespace UnityEngine.Experimental.Input
 
             var numMonitors = m_StateChangeMonitors[deviceIndex].count;
             var signalled = false;
+            var signals = m_StateChangeMonitors[deviceIndex].signalled;
 
             // Bake offsets into state pointers so that we don't have to adjust for
             // them repeatedly.
@@ -2024,9 +2025,12 @@ namespace UnityEngine.Experimental.Input
                         continue;
                 }
 
-                m_StateChangeMonitors[deviceIndex].signalled.SetBit(i);
+                signals.SetBit(i);
                 signalled = true;
             }
+
+            if (signalled)
+                m_StateChangeMonitors[deviceIndex].signalled = signals;
 
             return signalled;
         }
@@ -2050,6 +2054,8 @@ namespace UnityEngine.Experimental.Input
                     signals.ClearBit(i);
                 }
             }
+
+            m_StateChangeMonitors[deviceIndex].signalled = signals;
         }
 
         private void ProcessActionTimeouts()

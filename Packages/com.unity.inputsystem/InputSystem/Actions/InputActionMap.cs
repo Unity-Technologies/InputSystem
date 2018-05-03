@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: split off resolution code
@@ -23,7 +24,7 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver
+    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputStateChangeMonitor
     {
         /// <summary>
         /// Name of the action map.
@@ -217,6 +218,11 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
+        void IInputStateChangeMonitor.NotifyControlValueChanged(InputControl control, double time, int monitorIndex)
+        {
+            throw new NotImplementedException();
+        }
+
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
@@ -235,6 +241,14 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         [SerializeField] internal InputBinding[] m_Bindings;
 
+        /// <summary>
+        /// Current execution state.
+        /// </summary>
+        /// <remarks>
+        /// Initialized when map (or any action in it) is first enabled.
+        /// </remarks>
+        [NonSerialized] internal InputActionMapState m_State;
+
         // These fields are caches. If m_Bindings is modified, these are thrown away
         // and re-computed only if needed.
         // NOTE: Because InputBindings are structs, m_BindingsForEachAction actually duplicates each binding
@@ -243,10 +257,6 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InputBinding[] m_BindingsForEachAction;
         [NonSerialized] internal InputControl[] m_ControlsForEachAction;
         [NonSerialized] internal InputAction[] m_ActionForEachBinding;
-
-        [NonSerialized] internal InputControl[] m_Controls;
-        [NonSerialized] internal InputActionMapState.ModifierState[] m_Modifiers;
-        [NonSerialized] internal InputActionMapState.BindingState[] m_ResolvedBindings;
 
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
@@ -273,11 +283,11 @@ namespace UnityEngine.Experimental.Input
             resolver.ResolveBindings(m_Bindings, m_ActionForEachBinding);
 
             // Grab final arrays.
+            /*
             m_Controls = resolver.controls;
             m_Modifiers = resolver.modifierStates;
             m_ResolvedBindings = resolver.bindingStates;
 
-            /*
             if (m_ResolvedBindings != null)
             {
                 for (var i = 0; i < resolver.bindingCount; ++i)
@@ -314,7 +324,7 @@ namespace UnityEngine.Experimental.Input
         // embedded right here in an action set.
         private static InputActionMap s_FirstMapInGlobalList;
         [NonSerialized] private int m_EnabledActionsCount;
-        [NonSerialized] internal InputActionMap m_NextInGlobalList;
+        [NonSerialized] internal InputActionMap m_NextMapInGlobalList;
         [NonSerialized] internal InputActionMap m_PreviousInGlobalList;
 
         #if UNITY_EDITOR
@@ -326,8 +336,8 @@ namespace UnityEngine.Experimental.Input
         {
             for (var set = s_FirstMapInGlobalList; set != null;)
             {
-                var next = set.m_NextInGlobalList;
-                set.m_NextInGlobalList = null;
+                var next = set.m_NextMapInGlobalList;
+                set.m_NextMapInGlobalList = null;
                 set.m_PreviousInGlobalList = null;
                 set.m_EnabledActionsCount = 0;
                 if (set.m_SingletonAction != null)
@@ -347,7 +357,7 @@ namespace UnityEngine.Experimental.Input
         internal static int FindEnabledActions(List<InputAction> actions)
         {
             var numFound = 0;
-            for (var set = s_FirstMapInGlobalList; set != null; set = set.m_NextInGlobalList)
+            for (var set = s_FirstMapInGlobalList; set != null; set = set.m_NextMapInGlobalList)
             {
                 if (set.m_SingletonAction != null)
                 {
@@ -370,43 +380,43 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////REVIEW: can we do better than just re-resolving *every* enabled action? seems heavy-handed
-        internal static void RefreshAllEnabledActions()
+        internal static void ReResolveAllEnabledActions()
         {
-            for (var set = s_FirstMapInGlobalList; set != null; set = set.m_NextInGlobalList)
+            for (var map = s_FirstMapInGlobalList; map != null; map = map.m_NextMapInGlobalList)
             {
                 // First get rid of all state change monitors currently installed by
                 // actions in the set.
-                if (set.m_SingletonAction != null)
+                if (map.m_SingletonAction != null)
                 {
-                    var action = set.m_SingletonAction;
+                    var action = map.m_SingletonAction;
                     if (action.enabled)
                         action.UninstallStateChangeMonitors();
                 }
                 else
                 {
-                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
                     {
-                        var action = set.m_Actions[i];
+                        var action = map.m_Actions[i];
                         if (action.enabled)
                             action.UninstallStateChangeMonitors();
                     }
                 }
 
                 // Now re-resolve all the bindings to update the control lists.
-                set.ResolveBindings();
+                map.ResolveBindings();
 
                 // And finally, re-install state change monitors.
-                if (set.m_SingletonAction != null)
+                if (map.m_SingletonAction != null)
                 {
-                    var action = set.m_SingletonAction;
+                    var action = map.m_SingletonAction;
                     if (action.enabled)
                         action.InstallStateChangeMonitors();
                 }
                 else
                 {
-                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
                     {
-                        var action = set.m_Actions[i];
+                        var action = map.m_Actions[i];
                         if (action.enabled)
                             action.InstallStateChangeMonitors();
                     }
@@ -418,7 +428,7 @@ namespace UnityEngine.Experimental.Input
         {
             for (var set = s_FirstMapInGlobalList; set != null;)
             {
-                var next = set.m_NextInGlobalList;
+                var next = set.m_NextMapInGlobalList;
 
                 if (set.m_SingletonAction != null)
                     set.m_SingletonAction.Disable();
@@ -439,7 +449,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (s_FirstMapInGlobalList != null)
                         s_FirstMapInGlobalList.m_PreviousInGlobalList = this;
-                    m_NextInGlobalList = s_FirstMapInGlobalList;
+                    m_NextMapInGlobalList = s_FirstMapInGlobalList;
                     s_FirstMapInGlobalList = this;
                 }
             }
@@ -448,13 +458,13 @@ namespace UnityEngine.Experimental.Input
                 --m_EnabledActionsCount;
                 if (m_EnabledActionsCount == 0)
                 {
-                    if (m_NextInGlobalList != null)
-                        m_NextInGlobalList.m_PreviousInGlobalList = m_PreviousInGlobalList;
+                    if (m_NextMapInGlobalList != null)
+                        m_NextMapInGlobalList.m_PreviousInGlobalList = m_PreviousInGlobalList;
                     if (m_PreviousInGlobalList != null)
-                        m_PreviousInGlobalList.m_NextInGlobalList = m_NextInGlobalList;
+                        m_PreviousInGlobalList.m_NextMapInGlobalList = m_NextMapInGlobalList;
                     if (s_FirstMapInGlobalList == this)
-                        s_FirstMapInGlobalList = m_NextInGlobalList;
-                    m_NextInGlobalList = null;
+                        s_FirstMapInGlobalList = m_NextMapInGlobalList;
+                    m_NextMapInGlobalList = null;
                     m_PreviousInGlobalList = null;
                 }
             }

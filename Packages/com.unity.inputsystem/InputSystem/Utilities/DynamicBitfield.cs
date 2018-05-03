@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(bitIndex >= 0);
             Debug.Assert(bitIndex < length);
 
-            return (array[bitIndex / 64] &= ((ulong)1 << (bitIndex % 64))) != 0;
+            return (array[bitIndex / 64] & ((ulong)1 << (bitIndex % 64))) != 0;
         }
 
         public void ClearBit(int bitIndex)
