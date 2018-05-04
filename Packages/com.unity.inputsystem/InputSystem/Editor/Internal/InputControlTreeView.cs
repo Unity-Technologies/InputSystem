@@ -328,7 +328,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     return "0";
                 }
 
-                if (format == InputStateBlock.kTypeByte)
+                if (format == InputStateBlock.kTypeByte || format == InputStateBlock.kTypeSByte)
                 {
                     return (*ptr).ToString();
                 }
@@ -336,6 +336,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (format == InputStateBlock.kTypeShort)
                 {
                     return (*((short*)ptr)).ToString();
+                }
+
+                if (format == InputStateBlock.kTypeUShort)
+                {
+                    return (*((ushort*)ptr)).ToString();
                 }
 
                 if (format == InputStateBlock.kTypeInt)
