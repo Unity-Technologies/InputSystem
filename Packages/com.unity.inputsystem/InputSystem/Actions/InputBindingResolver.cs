@@ -17,6 +17,7 @@ namespace UnityEngine.Experimental.Input
         public InputControl[] controls;
         public InputActionMapState.ModifierState[] modifierStates;
         public InputActionMapState.BindingState[] bindingStates;
+        public int[] controlIndexToBindingIndex;
 
         private List<InputControlLayout.NameAndParameters> m_Parameters;
 
@@ -138,6 +139,16 @@ namespace UnityEngine.Experimental.Input
                     BindControlInComposite(currentComposite, unresolvedBinding.name,
                         controls[indexOfFirstControlInThisBinding]);
                 }
+            }
+
+            // Finalize arrays.
+            controlIndexToBindingIndex = new int[controlCount];
+            for (var i = 0; i < bindingsCount; ++i)
+            {
+                bindingStates[i].controls.m_Array = controls;
+                bindingStates[i].modifiers.m_Array = modifierStates;
+                for (var n = 0; n < bindingStates[i].controls.Count; ++n)
+                    controlIndexToBindingIndex[bindingStates[i].controls.m_StartIndex + n] = i;
             }
         }
 

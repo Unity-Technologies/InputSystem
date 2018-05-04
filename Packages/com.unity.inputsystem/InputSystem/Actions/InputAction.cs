@@ -148,7 +148,7 @@ namespace UnityEngine.Experimental.Input
                     return new ReadOnlyArray<InputBinding>();
                 }
 
-                return m_ActionMap.GetBindingsForAction(this);
+                return m_ActionMap.GetBindingsForSingleAction(this);
             }
         }
 
@@ -162,7 +162,7 @@ namespace UnityEngine.Experimental.Input
             {
                 if (m_ActionMap == null)
                     CreateInternalActionSetForSingletonAction();
-                return m_ActionMap.GetControlsForAction(this);
+                return m_ActionMap.GetControlsForSingleAction(this);
             }
         }
 
@@ -282,7 +282,7 @@ namespace UnityEngine.Experimental.Input
 
             // Go live.
             m_ActionMap.TellAboutActionChangingEnabledStatus(this, true);
-            InstallStateChangeMonitors();
+            //InstallStateChangeMonitors();
 
             enabled = true;
             m_CurrentPhase = InputActionPhase.Waiting;
@@ -296,37 +296,14 @@ namespace UnityEngine.Experimental.Input
 
             // Remove global state.
             m_ActionMap.TellAboutActionChangingEnabledStatus(this, false);
-            UninstallStateChangeMonitors();
+            //UninstallStateChangeMonitors();
 
             enabled = false;
 
             m_CurrentPhase = InputActionPhase.Disabled;
-            m_LastTrigger = new TriggerState();
+            m_LastTrigger = new InputActionMapState.TriggerState();
 
             ////TODO: reset all modifier states
-        }
-
-        internal void InstallStateChangeMonitors()
-        {
-            var manager = InputSystem.s_Manager;
-            for (var i = 0; i < m_ResolvedBindings.Count; ++i)
-            {
-                ////TODO: need to make sure that change monitors of combined bindings are in the right order
-                var controls = m_ResolvedBindings[i].controls;
-                for (var n = 0; n < controls.Count; ++n)
-                    manager.AddStateChangeMonitor(controls[n], this, i);
-            }
-        }
-
-        internal void UninstallStateChangeMonitors()
-        {
-            var manager = InputSystem.s_Manager;
-            for (var i = 0; i < m_ResolvedBindings.Count; ++i)
-            {
-                var controls = m_ResolvedBindings[i].controls;
-                for (var n = 0; n < controls.Count; ++n)
-                    manager.RemoveStateChangeMonitor(controls[n], this);
-            }
         }
 
         ////TODO: support for removing bindings
@@ -422,7 +399,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_BindingsStartIndex;
         [NonSerialized] internal int m_BindingsCount;
 
-        [NonSerialized] private bool m_Enabled;
+        [NonSerialized] internal bool m_Enabled;
 
         /// <summary>
         /// The action map that owns the action.
@@ -447,18 +424,7 @@ namespace UnityEngine.Experimental.Input
         // Most of this state we lazily reset as we have to keep it available for
         // one frame but don't want to actively reset between frames.
         [NonSerialized] private InputActionPhase m_CurrentPhase;
-        [NonSerialized] private TriggerState m_LastTrigger;
-
-        // Information about what triggered an action and how.
-        internal struct TriggerState
-        {
-            public InputActionPhase phase;
-            public double time;
-            public double startTime;
-            public InputControl control;
-            public int bindingIndex;
-            public int modifierIndex;
-        }
+        [NonSerialized] private InputActionMapState.TriggerState m_LastTrigger;
 
         internal bool isSingletonAction
         {
@@ -525,7 +491,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Perform a phase change on the action. Visible to observers.
-        private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger)
+        private void ChangePhaseOfAction(InputActionPhase newPhase, ref InputActionMapState.TriggerState trigger)
         {
             ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
 
@@ -569,7 +535,7 @@ namespace UnityEngine.Experimental.Input
         // SlowTapModifier both start and the TapModifier gets to drive the action because
         // it comes first; then the TapModifier cancels because the button is held for too
         // long and the SlowTapModifier will get to drive the action next).
-        private void ChangePhaseOfModifier(InputActionPhase newPhase, ref TriggerState trigger)
+        private void ChangePhaseOfModifier(InputActionPhase newPhase, ref InputActionMapState.TriggerState trigger)
         {
             Debug.Assert(trigger.bindingIndex != -1);
             Debug.Assert(trigger.modifierIndex != -1);
@@ -605,7 +571,7 @@ namespace UnityEngine.Experimental.Input
                 for (var i = 0; i < modifiersForBinding.Count; ++i)
                     if (i != trigger.modifierIndex && modifiersForBinding[i].phase == InputActionPhase.Started)
                     {
-                        var triggerForModifier = new TriggerState
+                        var triggerForModifier = new InputActionMapState.TriggerState
                         {
                             phase = InputActionPhase.Started,
                             control = modifiersForBinding[i].triggerControl,
@@ -744,64 +710,6 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        // Called from InputManager when one of our state change monitors has fired.
-        // Tells us the time of the change *according to the state events coming in*.
-        // Also tells us which control of the controls we are binding to triggered the
-        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
-        internal void NotifyControlValueChanged(InputControl control, int bindingIndex, double time)
-        {
-            ////TODO: this is where we should filter out state changes that do not result in value changes
-
-            // If we have modifiers, let them do all the processing. The precense of a modifier
-            // essentially bypasses the default phase progression logic of an action.
-            var modifiers = m_ResolvedBindings[bindingIndex].modifiers;
-            if (modifiers.Count > 0)
-            {
-                ModifierContext context;
-
-                ////REVIEW: defer this check?
-                var isAtDefault = control.CheckStateIsAllZeros();
-
-                context.m_Action = this;
-                context.m_Trigger = new TriggerState {control = control, time = time, bindingIndex = bindingIndex};
-                context.m_ControlIsAtDefaultValue = isAtDefault;
-                context.m_TimerHasExpired = false;
-
-                for (var i = 0; i < modifiers.Count; ++i)
-                {
-                    var state = modifiers[i];
-                    var modifier = state.modifier;
-
-                    context.m_Trigger.phase = state.phase;
-                    context.m_Trigger.startTime = state.startTime;
-                    context.m_Trigger.modifierIndex = i;
-
-                    modifier.Process(ref context);
-                }
-            }
-            else
-            {
-                // Default logic has no support for cancellations and won't ever go into started
-                // phase. Will go from waiting straight to performed and then straight to waiting
-                // again.
-                //
-                // Also, we perform the action on *any* value change. For buttons, this means that
-                // if you use the default logic without a modifier, the action will be performed
-                // both when you press and when you release the button.
-
-                var trigger = new TriggerState
-                {
-                    phase = InputActionPhase.Performed,
-                    control = control,
-                    modifierIndex = -1,
-                    bindingIndex = bindingIndex,
-                    time = time,
-                    startTime = time
-                };
-                ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
-            }
-        }
-
         internal void NotifyTimerExpired(int bindingIndex, int modifierIndex, double time)
         {
             ModifierContext context;
@@ -813,7 +721,7 @@ namespace UnityEngine.Experimental.Input
             context.m_ControlIsAtDefaultValue = false; ////REVIEW: how should this be handled?
             context.m_TimerHasExpired = true;
             context.m_Trigger =
-                new TriggerState
+                new InputActionMapState.TriggerState
             {
                 control = modifierState.triggerControl,
                 phase = modifierState.phase,
@@ -835,7 +743,7 @@ namespace UnityEngine.Experimental.Input
         {
             // These are all set by NotifyControlValueChanged.
             internal InputAction m_Action;
-            internal TriggerState m_Trigger;
+            internal InputActionMapState.TriggerState m_Trigger;
             internal bool m_ControlIsAtDefaultValue;
             internal bool m_TimerHasExpired;
 
