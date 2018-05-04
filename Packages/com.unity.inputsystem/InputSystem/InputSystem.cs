@@ -643,7 +643,11 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.GetControls(path, ref controls);
         }
 
-        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int userData = -1)
+        #endregion
+
+        #region State Change Monitors
+
+        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex = -1)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
@@ -652,35 +656,54 @@ namespace UnityEngine.Experimental.Input
             if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"));
 
-            s_Manager.AddStateChangeMonitor(control, monitor, userData);
+            s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
 
-        public static IInputStateChangeMonitor AddStateChangeMonitor(InputControl control, Action<InputControl, double, int> callback, int userData = -1)
+        public static IInputStateChangeMonitor AddStateChangeMonitor(InputControl control, Action<InputControl, double, int> valueChangeCallback, int monitorIndex = -1, Action<double, int> timerExpiredCallback = null)
         {
-            if (callback == null)
-                throw new ArgumentNullException("callback");
-            var monitor = new StateChangeMonitorDelegate {callback = callback};
-            AddStateChangeMonitor(control, monitor, userData);
+            if (valueChangeCallback == null)
+                throw new ArgumentNullException("valueChangeCallback");
+            var monitor = new StateChangeMonitorDelegate
+            {
+                valueChangeCallback = valueChangeCallback,
+                timerExpiredCallback = timerExpiredCallback
+            };
+            AddStateChangeMonitor(control, monitor, monitorIndex);
             return monitor;
         }
 
-        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int userData = -1)
+        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex = -1)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
             if (monitor == null)
                 throw new ArgumentNullException("monitor");
 
-            s_Manager.RemoveStateChangeMonitor(control, monitor, userData);
+            s_Manager.RemoveStateChangeMonitor(control, monitor, monitorIndex);
+        }
+
+        public static void AddStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, double time, int monitorIndex = -1)
+        {
+        }
+
+        public static void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, double time, int monitorIndex = -1)
+        {
         }
 
         private class StateChangeMonitorDelegate : IInputStateChangeMonitor
         {
-            public Action<InputControl, double, int> callback;
+            public Action<InputControl, double, int> valueChangeCallback;
+            public Action<double, int> timerExpiredCallback;
 
             public void NotifyControlValueChanged(InputControl control, double time, int monitorIndex)
             {
-                callback(control, time, monitorIndex);
+                valueChangeCallback(control, time, monitorIndex);
+            }
+
+            public void NotifyTimerExpired(double time, int monitorIndex)
+            {
+                if (timerExpiredCallback != null)
+                    timerExpiredCallback(time, monitorIndex);
             }
         }
 

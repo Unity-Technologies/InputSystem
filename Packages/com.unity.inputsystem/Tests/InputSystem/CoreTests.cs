@@ -2336,18 +2336,16 @@ class CoreTests : InputTestFixture
 
         var monitorFired = false;
         InputControl receivedControl = null;
-        int? receivedUserData = null;
         double? receivedTime = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-                (control, time, userData) =>
+                (control, time, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
                 receivedControl = control;
-                receivedUserData = userData;
                 receivedTime = time;
-            }, 12345678);
+            });
 
         // Left stick only.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) }, 0.5);
@@ -2355,12 +2353,10 @@ class CoreTests : InputTestFixture
 
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
-        Assert.That(receivedUserData.Value, Is.EqualTo(12345678));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
 
         monitorFired = false;
         receivedControl = null;
-        receivedUserData = null;
         receivedTime = 0;
 
         // Left stick again but with no value change.
@@ -2375,12 +2371,10 @@ class CoreTests : InputTestFixture
 
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
-        Assert.That(receivedUserData.Value, Is.EqualTo(12345678));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
 
         monitorFired = false;
         receivedControl = null;
-        receivedUserData = null;
         receivedTime = 0;
 
         // Right stick only.
@@ -2396,7 +2390,6 @@ class CoreTests : InputTestFixture
         Assert.That(monitorFired, Is.True);
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
-        Assert.That(receivedUserData.Value, Is.EqualTo(12345678));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
 
         // Remove state monitor and change leftStick again.
@@ -2404,13 +2397,70 @@ class CoreTests : InputTestFixture
 
         monitorFired = false;
         receivedControl = null;
-        receivedUserData = null;
         receivedTime = 0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.0f, 0.0f)}, 1.0);
         InputSystem.Update();
 
         Assert.That(monitorFired, Is.False);
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanRemoveStateChangeMonitorWithSpecificMonitorIndex()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        const int kLeftStick = 12345678;
+        const int kRightStick = 87654321;
+
+        var monitorFired = false;
+        int? receivedMonitorIndex = null;
+        var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+                (control, time, monitorIndex) =>
+            {
+                Assert.That(!monitorFired);
+                monitorFired = true;
+                receivedMonitorIndex = monitorIndex;
+            }, kLeftStick);
+        InputSystem.AddStateChangeMonitor(gamepad.rightStick, monitor, kRightStick);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kLeftStick));
+
+        monitorFired = false;
+        receivedMonitorIndex = null;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = Vector2.one, leftStick = Vector2.one});
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
+
+        InputSystem.RemoveStateChangeMonitor(gamepad.leftStick, monitor, kLeftStick);
+
+        monitorFired = false;
+        receivedMonitorIndex = null;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { rightStick = Vector2.one });
+        InputSystem.Update();
+
+        Assert.That(!monitorFired);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanWaitForStateChangeWithinGivenAmountOfTime()
+    {
     }
 
     [Test]

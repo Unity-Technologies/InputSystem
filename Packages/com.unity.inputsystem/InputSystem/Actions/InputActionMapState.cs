@@ -8,9 +8,27 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     internal struct InputActionMapState
     {
+        public int controlCount;
+
+        /// <summary>
+        /// List of all resolved controls.
+        /// </summary>
+        /// <remarks>
+        /// As we don't know in advance how many controls a binding may match (if any), we bump the size of
+        /// this array in increments during resolution. This means it may be end up being larger than the total
+        /// number of used controls and have empty entries at the end. Use <see cref="controlCount"/> and not
+        /// <c>.Length</c> to find the actual number of controls.
+        /// </remarks>
         public InputControl[] controls;
-        public ModifierState[] modifierStates;
+
+        /// <summary>
+        /// Map an entry in <see cref="controls"/> to an entry in <see cref="bindingStates"/>.
+        /// </summary>
+        public int[] controlIndexToBindingIndex;
+
         public BindingState[] bindingStates;
+
+        public ModifierState[] modifierStates;
 
         /// <summary>
         /// Records the current state of a single modifier attached to a binding.
@@ -135,6 +153,19 @@ namespace UnityEngine.Experimental.Input
                         flags &= ~Flags.PartOfComposite;
                 }
             }
+        }
+
+        /// <summary>
+        /// Information about what triggered an action and how.
+        /// </summary>
+        public struct TriggerState
+        {
+            public InputActionPhase phase;
+            public double time;
+            public double startTime;
+            public InputControl control;
+            public int bindingIndex;
+            public int modifierIndex;
         }
     }
 }
