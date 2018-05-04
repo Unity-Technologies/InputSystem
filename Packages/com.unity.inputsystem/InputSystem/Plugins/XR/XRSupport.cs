@@ -129,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterface)
                 .WithManufacturer("HTC")
-                .WithProduct(@"Vive MV\."));
+                .WithProduct(@"^(Vive((Pro)|( MV)))"));
             InputSystem.RegisterControlLayout<ViveWand>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterface)
