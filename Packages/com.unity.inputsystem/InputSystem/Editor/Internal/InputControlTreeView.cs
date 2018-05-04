@@ -348,6 +348,11 @@ namespace UnityEngine.Experimental.Input.Editor
                     return (*((int*)ptr)).ToString();
                 }
 
+                if (format == InputStateBlock.kTypeUInt)
+                {
+                    return (*((uint*)ptr)).ToString();
+                }
+
                 if (format == InputStateBlock.kTypeFloat)
                 {
                     return (*((float*)ptr)).ToString();
