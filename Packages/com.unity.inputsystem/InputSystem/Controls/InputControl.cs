@@ -482,11 +482,13 @@ namespace UnityEngine.Experimental.Input
 
         protected TValue Process(TValue value)
         {
-            if (m_ProcessorStack.firstValue != null)
+            if (m_ProcessorStack.length > 0)
+            {
                 value = m_ProcessorStack.firstValue.Process(value, this);
-            if (m_ProcessorStack.additionalValues != null)
-                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    value = m_ProcessorStack.additionalValues[i].Process(value, this);
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        value = m_ProcessorStack.additionalValues[i].Process(value, this);
+            }
             return value;
         }
 
@@ -506,12 +508,15 @@ namespace UnityEngine.Experimental.Input
         internal TProcessor TryGetProcessor<TProcessor>()
             where TProcessor : IInputControlProcessor<TValue>
         {
-            if (m_ProcessorStack.firstValue is TProcessor)
-                return (TProcessor)m_ProcessorStack.firstValue;
-            if (m_ProcessorStack.additionalValues != null)
-                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    if (m_ProcessorStack.additionalValues[i] is TProcessor)
-                        return (TProcessor)m_ProcessorStack.additionalValues[i];
+            if (m_ProcessorStack.length > 0)
+            {
+                if (m_ProcessorStack.firstValue is TProcessor)
+                    return (TProcessor)m_ProcessorStack.firstValue;
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        if (m_ProcessorStack.additionalValues[i] is TProcessor)
+                            return (TProcessor)m_ProcessorStack.additionalValues[i];
+            }
             return default(TProcessor);
         }
 

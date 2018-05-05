@@ -19,14 +19,12 @@ namespace UnityEngine.Experimental.Input
 
         public void SetLength(int newLength)
         {
-            if (newLength > 64)
-            {
-                // Don't touch array size if we don't have to. We're fine having a
-                // larger array to work with if it's already in place.
-                var ulongCount = BitCountToULongCount(newLength);
-                if (array.Count < ulongCount)
-                    array.Allocate(BitCountToULongCount(newLength));
-            }
+            // Don't touch array size if we don't have to. We're fine having a
+            // larger array to work with if it's already in place.
+            var ulongCount = BitCountToULongCount(newLength);
+            if (array.length < ulongCount)
+                array.SetLength(ulongCount);
+
             length = newLength;
         }
 

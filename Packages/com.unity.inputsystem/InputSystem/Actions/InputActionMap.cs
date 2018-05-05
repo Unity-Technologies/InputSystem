@@ -282,7 +282,7 @@ namespace UnityEngine.Experimental.Input
             */
         }
 
-        void IInputStateChangeMonitor.NotifyTimerExpired(double time, int monitorIndex)
+        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, int monitorIndex, int timerIndex)
         {
         }
 

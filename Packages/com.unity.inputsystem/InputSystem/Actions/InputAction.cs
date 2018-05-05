@@ -613,7 +613,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(m_LastTrigger.control != null);
 
             // If there's no listeners, don't bother with anything else.
-            if (listeners.firstValue == null)
+            if (listeners.length == 0)
                 return;
 
             // If the binding that triggered is part of a composite, fetch the composite.
@@ -650,7 +650,7 @@ namespace UnityEngine.Experimental.Input
             listeners.firstValue(context);
             if (listeners.additionalValues != null)
             {
-                for (var i = 0; i < listeners.additionalValues.Length; ++i)
+                for (var i = 0; i < listeners.length - 1; ++i)
                     listeners.additionalValues[i](context);
             }
 

@@ -2457,10 +2457,76 @@ class CoreTests : InputTestFixture
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
     }
 
+    // For certain actions, we want to be able to tell whether a specific input arrives in time.
+    // For example, we may want to only trigger an action if a specific button was released within
+    // a certain amount of time. To support this, the system allows putting timeouts on individual
+    // state monitors. If the state monitor fires before the timeout expires, nothing happens. If,
+    // however, the timeout expires, NotifyTimerExpired() is called when the input system updates
+    // and the IInputRuntime's currentTime has advanced to or past the given time.
     [Test]
     [Category("State")]
     public void State_CanWaitForStateChangeWithinGivenAmountOfTime()
     {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitorFired = false;
+        var timeoutFired = false;
+        double? receivedTime = null;
+        int? receivedTimerIndex = null;
+        InputControl receivedControl = null;
+
+        var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+                (control, time, monitorIndex) =>
+            {
+                Assert.That(!monitorFired);
+                monitorFired = true;
+            }, timerExpiredCallback:
+                (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.That(!timeoutFired);
+                timeoutFired = true;
+                receivedTime = time;
+                receivedTimerIndex = timerIndex;
+                receivedControl = control;
+            });
+
+        // Add and immediately expire timeout.
+        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, testRuntime.currentTime + 1, timerIndex: 1234);
+        testRuntime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutFired);
+        Assert.That(!monitorFired);
+        Assert.That(receivedTimerIndex.Value, Is.EqualTo(1234));
+        Assert.That(receivedTime.Value, Is.EqualTo(testRuntime.currentTime).Within(0.00001));
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
+
+        timeoutFired = false;
+        receivedTimerIndex = null;
+        receivedTime = null;
+
+        // Add timeout and obsolete it by state change. Then advance past timeout time
+        // and make sure we *don't* get a notification.
+        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, testRuntime.currentTime + 1, timerIndex: 4321);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(!timeoutFired);
+
+        testRuntime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(!timeoutFired);
+
+        // Add and remove timeout. Then advance past timeout time and make sure we *don't*
+        // get a notification.
+        InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor, testRuntime.currentTime + 1, timerIndex: 1423);
+        InputSystem.RemoveStateChangeMonitorTimeout(monitor, timerIndex: 1423);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.Update();
+
+        Assert.That(!timeoutFired);
     }
 
     [Test]
