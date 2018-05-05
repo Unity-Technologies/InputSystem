@@ -49,6 +49,8 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
         ConfigurationChanged,
 
+        ////REVIEW: it doesn't seem smart to deliver this high-frequency change on the same path
+        ////        as the other low-frequency changes
         StateChanged,
 
         ////REVIEW: should 'current' be renamed to 'lastActive'?

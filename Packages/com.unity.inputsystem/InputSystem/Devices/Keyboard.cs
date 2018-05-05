@@ -824,7 +824,7 @@ namespace UnityEngine.Experimental.Input
 
         public override void OnTextInput(char character)
         {
-            for (var i = 0; i < m_TextInputListeners.Count; ++i)
+            for (var i = 0; i < m_TextInputListeners.length; ++i)
                 m_TextInputListeners[i](character);
         }
 

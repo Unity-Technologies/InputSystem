@@ -83,6 +83,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set { NativeInputSystem.SetPollingFrequency(value); }
         }
 
+        public double currentTime
+        {
+            get { return Time.realtimeSinceStartup; }
+        }
+
         public InputUpdateType updateMask
         {
             set
