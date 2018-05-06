@@ -6690,6 +6690,8 @@ class CoreTests : InputTestFixture
         Assert.That(clone.actions, Has.None.SameAs(action2));
         Assert.That(clone.actions[0].name, Is.EqualTo(set.actions[0].name));
         Assert.That(clone.actions[1].name, Is.EqualTo(set.actions[1].name));
+        Assert.That(clone.actions[0].set, Is.EqualTo(clone));
+        Assert.That(clone.actions[1].set, Is.EqualTo(clone));
     }
 
     [Test]
