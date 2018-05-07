@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // This has to be public for Activator.CreateInstance() to be happy.
-        public InputDevice()
+        public InputDevice() : base(null)
         {
             m_Id = kInvalidDeviceId;
             m_DeviceIndex = kInvalidDeviceIndex;
