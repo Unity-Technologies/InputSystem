@@ -195,7 +195,7 @@ namespace UnityEngine.Experimental.Input
             get { return InputControlPath.TryFindChild(this, path); }
         }
 
-        public System.Type valueType
+        public Type valueType
         {
             get { return m_ValueType; }
         }
@@ -290,7 +290,7 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
         internal bool m_IsNoisy;
-        internal System.Type m_ValueType;
+        internal Type m_ValueType;
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().
