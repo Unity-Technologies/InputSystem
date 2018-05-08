@@ -109,7 +109,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterControlLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
-                .WithProduct("Spatial Controller"));
+                .WithProduct("^(Spatial Controller)"));
 
             InputSystem.RegisterControlLayout<OculusHMD>(
                 matches: new InputDeviceMatcher()
@@ -149,7 +149,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
                 .WithManufacturer("HTC")
-                .WithProduct(@"Vive MV\."));
+                .WithProduct(@"^(Vive((Pro)|( MV)))"));
             InputSystem.RegisterControlLayout<ViveWand>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
