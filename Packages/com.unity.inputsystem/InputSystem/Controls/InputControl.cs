@@ -195,10 +195,10 @@ namespace UnityEngine.Experimental.Input
             get { return InputControlPath.TryFindChild(this, path); }
         }
 
-        public Type valueType
-        {
-            get { return m_ValueType; }
-        }
+        /// <summary>
+        /// Returns the underlying value type of this control.
+        /// </summary>
+        public abstract Type valueType { get; }
 
         public override string ToString()
         {
@@ -216,9 +216,8 @@ namespace UnityEngine.Experimental.Input
 
         // Constructor for devices which are assigned names once plugged
         // into the system.
-        protected InputControl(Type valueType)
+        protected InputControl()
         {
-            m_ValueType = valueType;
             // Set defaults for state block setup. Subclasses may override.
             m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset; // Request automatic layout by default.
             m_StateBlock.bitOffset = 0;
@@ -290,7 +289,6 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
         internal bool m_IsNoisy;
-        internal Type m_ValueType;
 
         // This method exists only to not slap the internal modifier on all overrides of
         // FinishSetup().
@@ -372,8 +370,13 @@ namespace UnityEngine.Experimental.Input
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
     {
-        public InputControl()
-            : base(typeof(TValue)) {}
+        public override Type valueType
+        {
+            get
+            {
+                return typeof(TValue);
+            }
+        }
 
         public TValue ReadValue()
         {

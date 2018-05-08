@@ -44,6 +44,14 @@ namespace UnityEngine.Experimental.Input
             get { return m_Description; }
         }
 
+        public override Type valueType
+        {
+            get
+            {
+                return null;
+            }
+        }
+
         ////REVIEW: turn this into an object of some kind?
         ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
         /// <summary>
@@ -187,7 +195,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         // This has to be public for Activator.CreateInstance() to be happy.
-        public InputDevice() : base(null)
+        public InputDevice()
         {
             m_Id = kInvalidDeviceId;
             m_DeviceIndex = kInvalidDeviceIndex;
