@@ -4255,7 +4255,6 @@ class CoreTests : InputTestFixture
 
         Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
-
     }
 
     [Test]
