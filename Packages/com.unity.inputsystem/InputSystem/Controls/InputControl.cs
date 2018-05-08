@@ -195,6 +195,11 @@ namespace UnityEngine.Experimental.Input
             get { return InputControlPath.TryFindChild(this, path); }
         }
 
+        /// <summary>
+        /// Returns the underlying value type of this control.
+        /// </summary>
+        public abstract Type valueType { get; }
+
         public override string ToString()
         {
             return string.Format("{0}:{1}", layout, path);
@@ -365,6 +370,14 @@ namespace UnityEngine.Experimental.Input
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
     {
+        public override Type valueType
+        {
+            get
+            {
+                return typeof(TValue);
+            }
+        }
+
         public TValue ReadValue()
         {
             return ReadValueFrom(currentStatePtr);

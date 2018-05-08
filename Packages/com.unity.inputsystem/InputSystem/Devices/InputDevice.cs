@@ -44,6 +44,14 @@ namespace UnityEngine.Experimental.Input
             get { return m_Description; }
         }
 
+        public override Type valueType
+        {
+            get
+            {
+                return null;
+            }
+        }
+
         ////REVIEW: turn this into an object of some kind?
         ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
         /// <summary>
