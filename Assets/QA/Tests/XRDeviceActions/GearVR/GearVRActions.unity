@@ -1975,7 +1975,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <GearVRTrackedController>/touchpadClick
+      path: <GearVRTrackedController>/touchpadClicked
       modifiers: 
       group: 
       flags: 0
@@ -1985,7 +1985,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <GearVRTrackedController>/touchpadTouch
+      path: <GearVRTrackedController>/touchpadTouched
       modifiers: 
       group: 
       flags: 0

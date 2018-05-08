@@ -1442,7 +1442,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/secondaryTouch
+      path: <OculusTouchController>{LeftHand}/secondaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -2867,7 +2867,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/primaryTouch
+      path: <OculusTouchController>{RightHand}/primaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -5399,7 +5399,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/indexTouch
+      path: <OculusTouchController>{LeftHand}/indexTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -6033,7 +6033,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/secondaryTouch
+      path: <OculusTouchController>{RightHand}/secondaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -6687,7 +6687,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbrestTouch
+      path: <OculusTouchController>{LeftHand}/thumbrestTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -6941,7 +6941,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbrestTouch
+      path: <OculusTouchController>{RightHand}/thumbrestTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -8352,7 +8352,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/primaryTouch
+      path: <OculusTouchController>{LeftHand}/primaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -9128,7 +9128,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/indexNearTouch
+      path: <OculusTouchController>{RightHand}/indexNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -10091,7 +10091,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbNearTouch
+      path: <OculusTouchController>{LeftHand}/thumbNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -10758,7 +10758,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbNearTouch
+      path: <OculusTouchController>{RightHand}/thumbNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -11397,7 +11397,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/indexNearTouch
+      path: <OculusTouchController>{LeftHand}/indexNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -11781,7 +11781,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbstickTouch
+      path: <OculusTouchController>{LeftHand}/thumbstickTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -12355,7 +12355,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/indexTouch
+      path: <OculusTouchController>{RightHand}/indexTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -12700,7 +12700,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbstickTouch
+      path: <OculusTouchController>{RightHand}/thumbstickTouched
       modifiers: SlowTap
       group: 
       flags: 0

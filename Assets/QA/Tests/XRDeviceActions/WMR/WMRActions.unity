@@ -324,7 +324,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <WMRSpatialController>{RightHand}/touchPadTouched
+      path: <WMRSpatialController>{RightHand}/touchpadTouched
       modifiers: 
       group: 
       flags: 0
@@ -4913,7 +4913,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <WMRSpatialController>{RightHand}/joystickClick
+      path: <WMRSpatialController>{RightHand}/joystickClicked
       modifiers: 
       group: 
       flags: 0
@@ -6438,7 +6438,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <WMRSpatialController>{LeftHand}/joystickClick
+      path: <WMRSpatialController>{LeftHand}/joystickClicked
       modifiers: 
       group: 
       flags: 0
@@ -7427,7 +7427,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <WMRSpatialController>{LeftHand}/touchPadTouched
+      path: <WMRSpatialController>{LeftHand}/touchpadTouched
       modifiers: 
       group: 
       flags: 0

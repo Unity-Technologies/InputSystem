@@ -43,8 +43,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl recentering { get; private set; }
         public ButtonControl app { get; private set; }
         public ButtonControl home { get; private set; }
-        public ButtonControl touchpadClick { get; private set; }
-        public ButtonControl touchpadTouch { get; private set; }
+        public ButtonControl touchpadClicked { get; private set; }
+        public ButtonControl touchpadTouched { get; private set; }
 
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -64,8 +64,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             recentering = builder.GetControl<ButtonControl>("recentering");
             app = builder.GetControl<ButtonControl>("app");
             home = builder.GetControl<ButtonControl>("home");
-            touchpadClick = builder.GetControl<ButtonControl>("touchpadClick");
-            touchpadTouch = builder.GetControl<ButtonControl>("touchpadTouch");
+            touchpadClicked = builder.GetControl<ButtonControl>("touchpadClicked");
+            touchpadTouched = builder.GetControl<ButtonControl>("touchpadTouched");
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
             isTracked = builder.GetControl<ButtonControl>("isTracked");
