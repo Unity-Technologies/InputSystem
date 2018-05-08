@@ -105,12 +105,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterControlLayout<WMRHMD>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
-                .WithManufacturer("Microsoft")
                 .WithProduct("Windows Mixed Reality HMD"));
             InputSystem.RegisterControlLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
-                .WithManufacturer("Microsoft")
                 .WithProduct("Spatial Controller"));
 
             InputSystem.RegisterControlLayout<OculusHMD>(
@@ -132,12 +130,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterControlLayout<GearVRHMD>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
-                .WithManufacturer("Samsung")
                 .WithProduct("Oculus HMD"));
             InputSystem.RegisterControlLayout<GearVRTrackedController>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
-                .WithManufacturer("Samsung")
                 .WithProduct("^(Oculus Tracked Remote)"));
 
             InputSystem.RegisterControlLayout<DaydreamHMD>(

@@ -159,9 +159,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 }
 
                 string featureName = feature.name;
+                featureName = SanitizeName(featureName);
                 if (inherittedLayout != null)
                     featureName = ConvertPotentialAliasToName(inherittedLayout, featureName);
-                featureName = SanitizeName(featureName);
 
                 uint nextOffset = GetSizeOfFeature(feature);
 
