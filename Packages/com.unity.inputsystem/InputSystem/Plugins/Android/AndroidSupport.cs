@@ -49,7 +49,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             ");
 
             InputSystem.RegisterControlProcessor<AndroidSensorProcessor>();
-            InputSystem.RegisterControlProcessor<AndroidSensorRotationProcessor>();
 
             // Add sensors
             InputSystem.RegisterControlLayout<AndroidAccelerometer>(
