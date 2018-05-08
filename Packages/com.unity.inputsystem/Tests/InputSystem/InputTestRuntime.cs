@@ -100,11 +100,12 @@ namespace UnityEngine.Experimental.Input
             where TCommand : struct, IInputDeviceCommandInfo
         {
             bool? receivedCommand = null;
-            SetDeviceCommandCallback(deviceId,
-                (id, commandPtr) =>
-                {
-                    unsafe
+            unsafe
+            {
+                SetDeviceCommandCallback(deviceId,
+                    (id, commandPtr) =>
                     {
+
                         if (commandPtr->type == result.GetTypeStatic())
                         {
                             Assert.That(receivedCommand.HasValue, Is.False);
@@ -113,9 +114,11 @@ namespace UnityEngine.Experimental.Input
                                 UnsafeUtility.SizeOf<TCommand>());
                             return InputDeviceCommand.kGenericSuccess;
                         }
+
                         return InputDeviceCommand.kGenericFailure;
-                    }
-                });
+
+                    });
+            }
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
