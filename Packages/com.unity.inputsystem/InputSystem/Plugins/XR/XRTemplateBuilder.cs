@@ -166,6 +166,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 if (inherittedLayout != null)
                     featureName = ConvertPotentialAliasToName(inherittedLayout, featureName);
 
+                featureName = featureName.ToLower();
+
                 uint nextOffset = GetSizeOfFeature(feature);
 
                 if(interfaceName == XRUtilities.kXRInterfaceV1)
