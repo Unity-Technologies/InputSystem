@@ -9,8 +9,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [Serializable]
     class XRLayoutBuilder
     {
+        [SerializeField]
         string parentLayout;
+        [SerializeField]
         string interfaceName;
+        [SerializeField]
         XRDeviceDescriptor descriptor;
 
         static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
