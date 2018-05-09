@@ -5989,7 +5989,7 @@ class CoreTests : InputTestFixture
 
         public static bool s_GotInvoked;
 
-        public void Process(ref InputAction.ModifierContext context)
+        public void Process(ref InputBindingModifierContext context)
         {
             Assert.That(parm1, Is.EqualTo(5.0).Within(0.000001));
             s_GotInvoked = true;
@@ -6488,12 +6488,12 @@ class CoreTests : InputTestFixture
         var set1 = new InputActionMap("set1");
         var set2 = new InputActionMap("set2");
 
-        asset.AddActionSet(set1);
-        asset.AddActionSet(set2);
+        asset.AddActionMap(set1);
+        asset.AddActionMap(set2);
 
-        Assert.That(asset.actionSets, Has.Count.EqualTo(2));
-        Assert.That(asset.actionSets, Has.Exactly(1).SameAs(set1));
-        Assert.That(asset.actionSets, Has.Exactly(1).SameAs(set2));
+        Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
+        Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(set1));
+        Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(set2));
     }
 
     [Test]
@@ -6503,7 +6503,7 @@ class CoreTests : InputTestFixture
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var set = new InputActionMap();
 
-        Assert.That(() => asset.AddActionSet(set), Throws.InvalidOperationException);
+        Assert.That(() => asset.AddActionMap(set), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -6515,8 +6515,8 @@ class CoreTests : InputTestFixture
         var set1 = new InputActionMap("same");
         var set2 = new InputActionMap("same");
 
-        asset.AddActionSet(set1);
-        Assert.That(() => asset.AddActionSet(set2), Throws.InvalidOperationException);
+        asset.AddActionMap(set1);
+        Assert.That(() => asset.AddActionMap(set2), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -6525,9 +6525,9 @@ class CoreTests : InputTestFixture
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var set = new InputActionMap("test");
-        asset.AddActionSet(set);
+        asset.AddActionMap(set);
 
-        Assert.That(asset.TryGetActionSet("test"), Is.SameAs(set));
+        Assert.That(asset.TryGetActionMap("test"), Is.SameAs(set));
     }
 
     [Test]
@@ -6535,10 +6535,10 @@ class CoreTests : InputTestFixture
     public void Actions_CanRemoveActionSetFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(new InputActionMap("test"));
-        asset.RemoveActionSet("test");
+        asset.AddActionMap(new InputActionMap("test"));
+        asset.RemoveActionMap("test");
 
-        Assert.That(asset.actionSets, Is.Empty);
+        Assert.That(asset.actionMaps, Is.Empty);
     }
 
     [Test]
@@ -7001,18 +7001,18 @@ class CoreTests : InputTestFixture
         asset.name = "Asset";
         var set1 = new InputActionMap("set1");
         var set2 = new InputActionMap("set2");
-        asset.AddActionSet(set1);
-        asset.AddActionSet(set2);
+        asset.AddActionMap(set1);
+        asset.AddActionMap(set2);
 
         var clone = asset.Clone();
 
         Assert.That(clone, Is.Not.SameAs(asset));
         Assert.That(clone.GetInstanceID(), Is.Not.EqualTo(asset.GetInstanceID()));
-        Assert.That(clone.actionSets, Has.Count.EqualTo(2));
-        Assert.That(clone.actionSets, Has.None.SameAs(set1));
-        Assert.That(clone.actionSets, Has.None.SameAs(set2));
-        Assert.That(clone.actionSets[0].name, Is.EqualTo("set1"));
-        Assert.That(clone.actionSets[1].name, Is.EqualTo("set2"));
+        Assert.That(clone.actionMaps, Has.Count.EqualTo(2));
+        Assert.That(clone.actionMaps, Has.None.SameAs(set1));
+        Assert.That(clone.actionMaps, Has.None.SameAs(set2));
+        Assert.That(clone.actionMaps[0].name, Is.EqualTo("set1"));
+        Assert.That(clone.actionMaps[1].name, Is.EqualTo("set2"));
     }
 
     [Test]
@@ -7037,7 +7037,7 @@ class CoreTests : InputTestFixture
         set.AddAction("action1");
         var action2 = set.AddAction("action2");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(set);
+        asset.AddActionMap(set);
 
         var reference = ScriptableObject.CreateInstance<InputActionReference>();
         reference.Set(asset, "set", "action2");
@@ -7667,18 +7667,18 @@ class CoreTests : InputTestFixture
         InputActionSerializationHelpers.AddActionSet(obj);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        Assert.That(asset.actionSets, Has.Count.EqualTo(2));
-        Assert.That(asset.actionSets[0].name, Is.Not.Null.Or.Empty);
-        Assert.That(asset.actionSets[1].name, Is.Not.Null.Or.Empty);
-        Assert.That(asset.actionSets[0].name, Is.Not.EqualTo(asset.actionSets[1].name));
+        Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
+        Assert.That(asset.actionMaps[0].name, Is.Not.Null.Or.Empty);
+        Assert.That(asset.actionMaps[1].name, Is.Not.Null.Or.Empty);
+        Assert.That(asset.actionMaps[0].name, Is.Not.EqualTo(asset.actionMaps[1].name));
 
-        var actionSet2Name = asset.actionSets[1].name;
+        var actionSet2Name = asset.actionMaps[1].name;
 
         InputActionSerializationHelpers.DeleteActionSet(obj, 0);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        Assert.That(asset.actionSets, Has.Count.EqualTo(1));
-        Assert.That(asset.actionSets[0].name, Is.EqualTo(actionSet2Name));
+        Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
+        Assert.That(asset.actionMaps[0].name, Is.EqualTo(actionSet2Name));
     }
 
     [Test]
@@ -7689,7 +7689,7 @@ class CoreTests : InputTestFixture
         set.AddAction(name: "action", binding: "/gamepad/leftStick");
         set.AddAction(name: "action1", binding: "/gamepad/rightStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(set);
+        asset.AddActionMap(set);
 
         var obj = new SerializedObject(asset);
         var setProperty = obj.FindProperty("m_ActionSets").GetArrayElementAtIndex(0);
@@ -7697,16 +7697,16 @@ class CoreTests : InputTestFixture
         InputActionSerializationHelpers.AddAction(setProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        Assert.That(asset.actionSets[0].actions, Has.Count.EqualTo(3));
-        Assert.That(asset.actionSets[0].actions[2].name, Is.EqualTo("action2"));
-        Assert.That(asset.actionSets[0].actions[2].bindings, Has.Count.Zero);
+        Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
+        Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
         InputActionSerializationHelpers.DeleteAction(setProperty, 2);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        Assert.That(asset.actionSets[0].actions, Has.Count.EqualTo(2));
-        Assert.That(asset.actionSets[0].actions[0].name, Is.EqualTo("action"));
-        Assert.That(asset.actionSets[0].actions[1].name, Is.EqualTo("action1"));
+        Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(2));
+        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action"));
+        Assert.That(asset.actionMaps[0].actions[1].name, Is.EqualTo("action1"));
     }
 
     [Test]
@@ -7717,7 +7717,7 @@ class CoreTests : InputTestFixture
         set.AddAction(name: "action1", binding: "/gamepad/leftStick");
         set.AddAction(name: "action2", binding: "/gamepad/rightStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(set);
+        asset.AddActionMap(set);
 
         var obj = new SerializedObject(asset);
         var setProperty = obj.FindProperty("m_ActionSets").GetArrayElementAtIndex(0);
@@ -7728,8 +7728,8 @@ class CoreTests : InputTestFixture
 
         // Sets and actions aren't UnityEngine.Objects so the modifications will not
         // be in-place. Look up the actions after each apply.
-        var action1 = asset.actionSets[0].TryGetAction("action1");
-        var action2 = asset.actionSets[0].TryGetAction("action2");
+        var action1 = asset.actionMaps[0].TryGetAction("action1");
+        var action2 = asset.actionMaps[0].TryGetAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(2));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -7741,8 +7741,8 @@ class CoreTests : InputTestFixture
         InputActionSerializationHelpers.RemoveBinding(action1Property, 1, setProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        action1 = asset.actionSets[0].TryGetAction("action1");
-        action2 = asset.actionSets[0].TryGetAction("action2");
+        action1 = asset.actionMaps[0].TryGetAction("action1");
+        action2 = asset.actionMaps[0].TryGetAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -7759,8 +7759,8 @@ class CoreTests : InputTestFixture
         var set2 = new InputActionMap("set2");
         set2.AddAction(name: "action1", binding: "/gamepad/buttonSouth");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(set1);
-        asset.AddActionSet(set2);
+        asset.AddActionMap(set1);
+        asset.AddActionMap(set2);
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
@@ -7783,7 +7783,7 @@ class CoreTests : InputTestFixture
         set1.AddAction(name: "action ^&", binding: "/gamepad/leftStick");
         set1.AddAction(name: "1thing", binding: "/gamepad/leftStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionSet(set1);
+        asset.AddActionMap(set1);
         asset.name = "New Controls (4)";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,

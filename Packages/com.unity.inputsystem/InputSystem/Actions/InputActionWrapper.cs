@@ -19,14 +19,14 @@ namespace UnityEngine.Experimental.Input
 
         public void Enable()
         {
-            var sets = asset.actionSets;
+            var sets = asset.actionMaps;
             for (var i = 0; i < sets.Count; ++i)
                 sets[i].Enable();
         }
 
         public void Disable()
         {
-            var sets = asset.actionSets;
+            var sets = asset.actionMaps;
             for (var i = 0; i < sets.Count; ++i)
                 sets[i].Disable();
         }

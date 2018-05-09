@@ -36,7 +36,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (string.IsNullOrEmpty(options.className) && !string.IsNullOrEmpty(asset.name))
                 options.className =
                     CSharpCodeHelpers.MakeTypeName(asset.name);
-            return GenerateWrapperCode(asset.actionSets, options);
+            return GenerateWrapperCode(asset.actionMaps, options);
         }
 
         // Generate a string containing C# code that simplifies working with the given
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine(string.Format("// {0}", set.name));
-                writer.WriteLine(string.Format("m_{0} = asset.GetActionSet(\"{1}\");", setName, set.name));
+                writer.WriteLine(string.Format("m_{0} = asset.GetActionMap(\"{1}\");", setName, set.name));
                 foreach (var action in set.actions)
                     writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", setName, CSharpCodeHelpers.MakeIdentifier(action.name),
                             setName, action.name));

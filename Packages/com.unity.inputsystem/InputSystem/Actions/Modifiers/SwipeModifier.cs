@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
         public float maxAngle;
         public float minDistance;
 
-        public void Process(ref InputAction.ModifierContext context)
+        public void Process(ref InputBindingModifierContext context)
         {
             throw new System.NotImplementedException();
         }

@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.Modifiers;
 
+////REVIEW: this goes beyond just actions; is there a better name?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

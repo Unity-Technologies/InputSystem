@@ -1,6 +1,6 @@
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: rename this to IInputActionTrigger? Or IInputBindingTrigger?
+////REVIEW: rename this to IInputActionTrigger? Or IInputBindingTrigger? Or IInputBindingInteraction?
 
 ////TODO: modifiers should be able to not just control phase flow but also what value is reported through the action
 
@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public interface IInputBindingModifier
     {
-        void Process(ref InputAction.ModifierContext context);
+        void Process(ref InputBindingModifierContext context);
         void Reset();
     }
 
@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputAction.CallbackContext.GetValue{TValue}"/>
     public interface IInputBindingModifier<TValue> : IInputBindingModifier
     {
-        bool ProcessValue(ref InputAction.ModifierContext context, ref TValue value);
+        bool ProcessValue(ref InputBindingModifierContext context, ref TValue value);
     }
 
     internal static class InputBindingModifier

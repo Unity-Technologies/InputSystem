@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input
     /// </example>
     public interface IInputBindingComposite<TValue>
     {
-        TValue ReadValue(ref InputAction.CompositeBindingContext context);
+        TValue ReadValue(ref InputActionMapState.CompositeBindingContext context);
     }
 
     internal static class InputBindingComposite

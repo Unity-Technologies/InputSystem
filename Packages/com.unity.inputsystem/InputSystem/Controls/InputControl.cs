@@ -11,6 +11,11 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
 
+////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
+////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
+////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
+////        the InputDevice reference itself.
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -279,6 +284,9 @@ namespace UnityEngine.Experimental.Input
         internal InternedString m_Variant;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
+        ////REVIEW: This is stupid. We're storing the array references on here when in fact they should
+        ////        be fetched on demand from InputDevice. What we do here is needlessly add three extra
+        ////        references to every single InputControl
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
