@@ -185,6 +185,17 @@ namespace UnityEngine.Experimental.Input
                 m_Actions = ArrayHelpers.Clone(m_Actions)
             };
 
+            if(clone.m_Actions != null)
+            {
+                // ensure cloned actions refer to the new set and are not singletons
+                var cloneActions = clone.m_Actions;
+                var length = cloneActions.Length;
+                for(int i = 0; i < length; ++i)
+                {
+                    cloneActions[i].m_ActionSet = clone;
+                }
+            }
+            
             return clone;
         }
 
