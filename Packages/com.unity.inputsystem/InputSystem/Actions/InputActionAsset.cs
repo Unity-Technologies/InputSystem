@@ -6,20 +6,24 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
-    // An asset containing one or more action sets.
-    // Usually imported from JSON using InputActionImporter.
-    // Names of each action set in the asset ust be unique.
-    // Allows applying overrides in bulk to all sets in the asset.
-    //
-    // NOTE: You don't have to use action sets this way. InputActionAsset
-    //       is a ready-made way to use Unity's default serialization and
-    //       have action sets go into the asset database. However, you can
-    //       just as well have action sets directly as JSON in your game.
+    /// <summary>
+    /// An asset containing one or more action maps.
+    /// </summary>
+    /// <remarks>
+    /// Usually imported from JSON using InputActionImporter.
+    /// Names of each action set in the asset ust be unique.
+    /// Allows applying overrides in bulk to all sets in the asset.
+    ///
+    /// NOTE: You don't have to use action sets this way. InputActionAsset
+    ///       is a ready-made way to use Unity's default serialization and
+    ///       have action sets go into the asset database. However, you can
+    ///       just as well have action sets directly as JSON in your game.
+    /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable
     {
         public const string kExtension = "inputactions";
 
-        public ReadOnlyArray<InputActionMap> actionSets
+        public ReadOnlyArray<InputActionMap> actionMaps
         {
             get { return new ReadOnlyArray<InputActionMap>(m_ActionMaps); }
         }
@@ -37,21 +41,21 @@ namespace UnityEngine.Experimental.Input
             m_ActionMaps = InputActionMap.FromJson(json);
         }
 
-        public void AddActionSet(InputActionMap map)
+        public void AddActionMap(InputActionMap map)
         {
             if (map == null)
                 throw new ArgumentNullException("map");
             if (string.IsNullOrEmpty(map.name))
-                throw new InvalidOperationException("Sets added to an input action asset must be named");
+                throw new InvalidOperationException("Maps added to an input action asset must be named");
             ////REVIEW: some of the rules here seem stupid; just replace?
-            if (TryGetActionSet(map.name) != null)
+            if (TryGetActionMap(map.name) != null)
                 throw new InvalidOperationException(
-                    string.Format("An action set called '{0}' already exists in the asset", map.name));
+                    string.Format("An action map called '{0}' already exists in the asset", map.name));
 
             ArrayHelpers.Append(ref m_ActionMaps, map);
         }
 
-        public void RemoveActionSet(InputActionMap map)
+        public void RemoveActionMap(InputActionMap map)
         {
             if (map == null)
                 throw new ArgumentNullException("map");
@@ -59,17 +63,17 @@ namespace UnityEngine.Experimental.Input
             ArrayHelpers.Erase(ref m_ActionMaps, map);
         }
 
-        public void RemoveActionSet(string name)
+        public void RemoveActionMap(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
 
-            var set = TryGetActionSet(name);
+            var set = TryGetActionMap(name);
             if (set != null)
-                RemoveActionSet(set);
+                RemoveActionMap(set);
         }
 
-        public InputActionMap TryGetActionSet(string name)
+        public InputActionMap TryGetActionMap(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -87,11 +91,11 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        public InputActionMap GetActionSet(string name)
+        public InputActionMap GetActionMap(string name)
         {
-            var set = TryGetActionSet(name);
+            var set = TryGetActionMap(name);
             if (set == null)
-                throw new KeyNotFoundException(string.Format("Could not find an action set called '{0}' in asset '{1}'",
+                throw new KeyNotFoundException(string.Format("Could not find an action map called '{0}' in asset '{1}'",
                         name, this));
             return set;
         }

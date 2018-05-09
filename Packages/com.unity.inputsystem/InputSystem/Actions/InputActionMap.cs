@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: split off resolution code
+// This file is the workhorse of the action system. Binding resolution and action
+// triggers all comes together here. Most of the rest of the action-related code
+// is concerned with setting up data for processing here.
+
+////TODO: get rid of references to InputManager
 
 namespace UnityEngine.Experimental.Input
 {
@@ -14,14 +17,14 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// Also stores data for actions. All actions have to have an associated
-    /// action set. "Lose" actions constructed without a set will internally
-    /// create their own "set" to hold their data.
+    /// action map. "Lose" actions constructed without a map will internally
+    /// create their own map to hold their data.
     ///
-    /// A common usage pattern for action sets is to use them to group action
-    /// "contexts". So one set could hold "menu" actions, for example, whereas
+    /// A common usage pattern for action maps is to use them to group action
+    /// "contexts". So one map could hold "menu" actions, for example, whereas
     /// another set holds "gameplay" actions. This kind of splitting can be
     /// made arbitrarily complex. Like, you could have separate "driving" and
-    /// "walking" action sets, for example, that you enable and disable depending
+    /// "walking" action maps, for example, that you enable and disable depending
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
@@ -35,7 +38,7 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
-        ////REVIEW: how does this play with the shift towards bindings?
+        ////REVIEW: how does this play with the shift towards bindings? what if there's no actions but there's bindings?
         /// <summary>
         /// Whether any action in the map is currently enabled.
         /// </summary>
@@ -113,7 +116,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public void Enable()
         {
-            if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)
+            if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)//really?
                 return;
 
             ResolveBindingsIfNecessary();
@@ -188,7 +191,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException(
                     string.Format("Cannot removed overrides from set '{0}' while the action is enabled", this.name));
 
-            for (int i = 0; i < m_Actions.Length; ++i)
+            for (var i = 0; i < m_Actions.Length; ++i)
             {
                 m_Actions[i].RemoveAllBindingOverrides();
             }
@@ -211,6 +214,7 @@ namespace UnityEngine.Experimental.Input
             var clone = new InputActionMap
             {
                 m_Name = m_Name,
+                ////FIXME: this produces singleton actions! shouldn't call InputAction.Clone() and should set proper m_ActionSet references
                 m_Actions = ArrayHelpers.Clone(m_Actions)
             };
 
@@ -222,69 +226,7 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        // Called from InputManager when one of our state change monitors has fired.
-        // Tells us the time of the change *according to the state events coming in*.
-        // Also tells us which control of the controls we are binding to triggered the
-        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
-        void IInputStateChangeMonitor.NotifyControlValueChanged(InputControl control, double time, int controlIndex)
-        {
-            /*
-            ////TODO: this is where we should filter out state changes that do not result in value changes
-
-            // If we have modifiers, let them do all the processing. The precense of a modifier
-            // essentially bypasses the default phase progression logic of an action.
-            var modifiers = m_ResolvedBindings[bindingIndex].modifiers;
-            if (modifiers.Count > 0)
-            {
-                InputAction.ModifierContext context;
-
-                ////REVIEW: defer this check?
-                var isAtDefault = control.CheckStateIsAllZeros();
-
-                context.m_Action = this;
-                context.m_Trigger = new InputActionMapState.TriggerState {control = control, time = time, bindingIndex = bindingIndex};
-                context.m_ControlIsAtDefaultValue = isAtDefault;
-                context.m_TimerHasExpired = false;
-
-                for (var i = 0; i < modifiers.Count; ++i)
-                {
-                    var state = modifiers[i];
-                    var modifier = state.modifier;
-
-                    context.m_Trigger.phase = state.phase;
-                    context.m_Trigger.startTime = state.startTime;
-                    context.m_Trigger.modifierIndex = i;
-
-                    modifier.Process(ref context);
-                }
-            }
-            else
-            {
-                // Default logic has no support for cancellations and won't ever go into started
-                // phase. Will go from waiting straight to performed and then straight to waiting
-                // again.
-                //
-                // Also, we perform the action on *any* value change. For buttons, this means that
-                // if you use the default logic without a modifier, the action will be performed
-                // both when you press and when you release the button.
-
-                var trigger = new InputActionMapState.TriggerState
-                {
-                    phase = InputActionPhase.Performed,
-                    control = control,
-                    modifierIndex = -1,
-                    bindingIndex = bindingIndex,
-                    time = time,
-                    startTime = time
-                };
-                ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
-            }
-            */
-        }
-
-        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, int monitorIndex, int timerIndex)
-        {
-        }
+        #region Configuration Data
 
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
@@ -304,14 +246,6 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         [SerializeField] internal InputBinding[] m_Bindings;
 
-        /// <summary>
-        /// Current execution state.
-        /// </summary>
-        /// <remarks>
-        /// Initialized when map (or any action in it) is first enabled.
-        /// </remarks>
-        [NonSerialized] internal InputActionMapState m_State;
-
         // These fields are caches. If m_Bindings is modified, these are thrown away
         // and re-computed only if needed.
         // NOTE: Because InputBindings are structs, m_BindingsForEachAction actually duplicates each binding
@@ -325,6 +259,16 @@ namespace UnityEngine.Experimental.Input
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
+
+        /// <summary>
+        /// Current execution state.
+        /// </summary>
+        /// <remarks>
+        /// Initialized when map (or any action in it) is first enabled.
+        /// </remarks>
+        [NonSerialized] internal InputActionMapState m_State;
+
+        #endregion
 
         private void ResolveBindingsIfNecessary()
         {
@@ -349,12 +293,10 @@ namespace UnityEngine.Experimental.Input
             resolver.ResolveBindings(m_Bindings, m_ActionForEachBinding);
 
             // Transfer final arrays into state.
-            m_State.controlCount = resolver.controlCount;
-            m_State.controls = resolver.controls;
-            m_State.modifierStates = resolver.modifierStates;
-            m_State.bindingStates = resolver.bindingStates;
-            m_State.controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
+            m_State.Initialize(resolver);
         }
+
+        #region Global State
 
         // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
         // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
@@ -372,21 +314,21 @@ namespace UnityEngine.Experimental.Input
 
         internal static void ResetGlobals()
         {
-            for (var set = s_FirstMapInGlobalList; set != null;)
+            for (var map = s_FirstMapInGlobalList; map != null;)
             {
-                var next = set.m_NextMapInGlobalList;
-                set.m_NextMapInGlobalList = null;
-                set.m_PreviousInGlobalList = null;
-                set.m_EnabledActionsCount = 0;
-                if (set.m_SingletonAction != null)
-                    set.m_SingletonAction.enabled = false;
+                var next = map.m_NextMapInGlobalList;
+                map.m_NextMapInGlobalList = null;
+                map.m_PreviousInGlobalList = null;
+                map.m_EnabledActionsCount = 0;
+                if (map.m_SingletonAction != null)
+                    map.m_SingletonAction.enabled = false;
                 else
                 {
-                    for (var i = 0; i < set.m_Actions.Length; ++i)
-                        set.m_Actions[i].enabled = false;
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
+                        map.m_Actions[i].enabled = false;
                 }
 
-                set = next;
+                map = next;
             }
             s_FirstMapInGlobalList = null;
         }
@@ -395,17 +337,17 @@ namespace UnityEngine.Experimental.Input
         internal static int FindEnabledActions(List<InputAction> actions)
         {
             var numFound = 0;
-            for (var set = s_FirstMapInGlobalList; set != null; set = set.m_NextMapInGlobalList)
+            for (var map = s_FirstMapInGlobalList; map != null; map = map.m_NextMapInGlobalList)
             {
-                if (set.m_SingletonAction != null)
+                if (map.m_SingletonAction != null)
                 {
-                    actions.Add(set.m_SingletonAction);
+                    actions.Add(map.m_SingletonAction);
                 }
                 else
                 {
-                    for (var i = 0; i < set.m_Actions.Length; ++i)
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
                     {
-                        var action = set.m_Actions[i];
+                        var action = map.m_Actions[i];
                         if (!action.enabled)
                             continue;
 
@@ -466,19 +408,97 @@ namespace UnityEngine.Experimental.Input
 
         internal static void DisableAllEnabledActions()
         {
-            for (var set = s_FirstMapInGlobalList; set != null;)
+            for (var map = s_FirstMapInGlobalList; map != null;)
             {
-                var next = set.m_NextMapInGlobalList;
+                var next = map.m_NextMapInGlobalList;
 
-                if (set.m_SingletonAction != null)
-                    set.m_SingletonAction.Disable();
+                if (map.m_SingletonAction != null)
+                    map.m_SingletonAction.Disable();
                 else
-                    set.Disable();
+                    map.Disable();
 
-                set = next;
+                map = next;
             }
             Debug.Assert(s_FirstMapInGlobalList == null);
         }
+
+        #endregion
+
+        #region State Monitors
+
+        internal void InstallStateChangeMonitors(int controlStartIndex, int numControls)
+        {
+            Debug.Assert(m_State.controls != null);
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < m_State.controlCount);
+            Debug.Assert(controlStartIndex + numControls <= m_State.controlCount);
+
+            var manager = InputSystem.s_Manager;
+            var controls = m_State.controls;
+            for (var i = 0; i < numControls; ++i)
+            {
+                var controlIndex = controlStartIndex + i;
+                var bindingIndex = m_State.controlIndexToBindingIndex[controlIndex];
+                manager.AddStateChangeMonitor(controls[controlIndex], this, bindingIndex << 32 | controlIndex);
+            }
+        }
+
+        internal void UninstallStateChangeMonitors(int controlStartIndex, int numControls)
+        {
+            Debug.Assert(m_State.controls != null);
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < m_State.controlCount);
+            Debug.Assert(controlStartIndex + numControls <= m_State.controlCount);
+
+            var manager = InputSystem.s_Manager;
+            var controls = m_State.controls;
+            for (var i = 0; i < numControls; ++i)
+            {
+                var controlIndex = controlStartIndex + i;
+                var bindingIndex = m_State.controlIndexToBindingIndex[controlIndex];
+                manager.RemoveStateChangeMonitor(controls[controlIndex], this, bindingIndex << 32 | controlIndex);
+            }
+        }
+
+        internal void AddStateChangeTimeout(int controlIndex, int bindingIndex, int modifierIndex, float seconds)
+        {
+            Debug.Assert(m_State.controls != null);
+            Debug.Assert(controlIndex >= 0 && controlIndex < m_State.controlCount);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < m_State.);
+
+            var manager = InputSystem.s_Manager;
+            var currentTime = manager.m_Runtime.currentTime;
+            var control = m_State.controls[controlIndex];
+
+            manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, bindingIndex << 32 | controlIndex, modifierIndex);
+
+            // Update state.
+            var modifierState = m_State.modifierStates[modifierIndex];
+            modifierState.isTimerRunning = true;
+            m_State.modifierStates[modifierIndex] = modifierState;
+        }
+
+        internal void RemoveStateChangeTimeout(int controlIndex, int bindingIndex, int modifierIndex)
+        {
+        }
+
+        // Called from InputManager when one of our state change monitors has fired.
+        // Tells us the time of the change *according to the state events coming in*.
+        // Also tells us which control of the controls we are binding to triggered the
+        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
+        void IInputStateChangeMonitor.NotifyControlValueChanged(InputControl control, double time, long controlAndBindingIndex)
+        {
+            var controlIndex = (int)(controlAndBindingIndex & 0xffffffff);
+            var bindingIndex = (int)(controlAndBindingIndex >> 32);
+            m_State.ProcessControlValueChange(this, controlIndex, bindingIndex, time);
+        }
+
+        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long controlAndBindingIndex, int modifierIndex)
+        {
+            var controlIndex = (int)(controlAndBindingIndex & 0xffffffff);
+            var bindingIndex = (int)(controlAndBindingIndex >> 32);
+            m_State.ProcessTimeout(this, time, controlIndex, bindingIndex, modifierIndex);
+        }
+
+        #endregion
 
         internal void EnableAllActions()
         {
@@ -510,36 +530,6 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(action.enabled);
 
             throw new NotImplementedException();
-        }
-
-        private void InstallStateChangeMonitors(int controlStartIndex, int controlCount)
-        {
-            Debug.Assert(m_State.controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < m_State.controlCount);
-            Debug.Assert(controlStartIndex + controlCount <= m_State.controlCount);
-
-            var manager = InputSystem.s_Manager;
-            var controls = m_State.controls;
-            for (var i = 0; i < controlCount; ++i)
-            {
-                var controlIndex = controlStartIndex + i;
-                manager.AddStateChangeMonitor(controls[controlIndex], this, controlIndex);
-            }
-        }
-
-        private void UninstallStateChangeMonitors(int controlStartIndex, int controlCount)
-        {
-            Debug.Assert(m_State.controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < m_State.controlCount);
-            Debug.Assert(controlStartIndex + controlCount <= m_State.controlCount);
-
-            var manager = InputSystem.s_Manager;
-            var controls = m_State.controls;
-            for (var i = 0; i < controlCount; ++i)
-            {
-                var controlIndex = controlStartIndex + i;
-                manager.RemoveStateChangeMonitor(controls[controlIndex], this, controlIndex);
-            }
         }
 
         internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
@@ -723,6 +713,13 @@ namespace UnityEngine.Experimental.Input
         {
             throw new NotImplementedException();
         }
+
+        #region Serialization
+
+        // Action maps are serialized in two different ways. For storage as imported assets in Unity's Library/ folder
+        // and in player data and asset bundles as well as for surviving domain reloads, InputActionMaps are serialized
+        // directly by Unity. For storage as source data in user projects, InputActionMaps are serialized indirectly
+        // as JSON by setting up a separate set of structs that are then read and written using Unity's JSON serializer.
 
         [Serializable]
         public struct BindingJson
@@ -983,5 +980,7 @@ namespace UnityEngine.Experimental.Input
                     m_Actions[i].m_ActionMap = this;
             }
         }
+
+        #endregion
     }
 }

@@ -1158,7 +1158,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
         [NonSerialized] private bool m_HaveDevicesWithStateCallbackReceivers;
 
-        [NonSerialized] private IInputRuntime m_Runtime;
+        [NonSerialized] internal IInputRuntime m_Runtime;
 
         #if UNITY_EDITOR
         [NonSerialized] internal IInputDiagnostics m_Diagnostics;

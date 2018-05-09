@@ -7,7 +7,7 @@ public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
     private void Initialize()
     {
         // gameplay
-        m_gameplay = asset.GetActionSet("gameplay");
+        m_gameplay = asset.GetActionMap("gameplay");
         m_gameplay_fire = m_gameplay.GetAction("fire");
         m_gameplay_move = m_gameplay.GetAction("move");
         m_gameplay_look = m_gameplay.GetAction("look");

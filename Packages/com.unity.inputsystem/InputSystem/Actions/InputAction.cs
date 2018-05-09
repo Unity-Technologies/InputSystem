@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
-////TODO: split off action response code
-
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
-
-////TODO: survive domain reloads
 
 ////REVIEW: allow individual bindings to be enabled/disabled?
 
@@ -169,7 +165,7 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: expose this as a struct?
         public InputControl lastTriggerControl
         {
-            get { return m_LastTrigger.control; }
+            get { return m_LastTrigger.triggerControl; }
         }
 
         public double lastTriggerTime
@@ -414,18 +410,6 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnCancelled;
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnPerformed;
 
-        ////TODO: move this out of here and into InputActionMap
-        // State we keep for enabling/disabling. This is volatile and not put on disk.
-        // NOTE: m_Controls and m_ResolvedBinding array are stored on InputActionMap.
-        [NonSerialized] internal ReadOnlyArray<InputControl> m_Controls;
-        [NonSerialized] internal ReadOnlyArray<InputActionMapState.BindingState> m_ResolvedBindings;
-
-        // State releated to phase shifting and triggering of action.
-        // Most of this state we lazily reset as we have to keep it available for
-        // one frame but don't want to actively reset between frames.
-        [NonSerialized] private InputActionPhase m_CurrentPhase;
-        [NonSerialized] private InputActionMapState.TriggerState m_LastTrigger;
-
         internal bool isSingletonAction
         {
             get { return m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this); }
@@ -490,136 +474,17 @@ namespace UnityEngine.Experimental.Input
             return -1;
         }
 
-        // Perform a phase change on the action. Visible to observers.
-        private void ChangePhaseOfAction(InputActionPhase newPhase, ref InputActionMapState.TriggerState trigger)
-        {
-            ThrowIfPhaseTransitionIsInvalid(m_CurrentPhase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
-
-            m_CurrentPhase = newPhase;
-
-            // Store trigger info.
-            m_LastTrigger = trigger;
-            m_LastTrigger.phase = newPhase;
-
-            // Let listeners know.
-            switch (newPhase)
-            {
-                case InputActionPhase.Started:
-                    CallListeners(ref m_OnStarted);
-                    break;
-
-                case InputActionPhase.Performed:
-                    CallListeners(ref m_OnPerformed);
-                    m_CurrentPhase = InputActionPhase.Waiting; // Go back to waiting after performing action.
-                    break;
-
-                case InputActionPhase.Cancelled:
-                    CallListeners(ref m_OnCancelled);
-                    m_CurrentPhase = InputActionPhase.Waiting; // Go back to waiting after cancelling action.
-                    break;
-            }
-        }
-
-        // Perform a phase change on the given modifier. Only visible to observers
-        // if it happens to change the phase of the action, too.
-        //
-        // Multiple modifiers can be started concurrently but the first modifier that
-        // starts will get to drive the action until it either cancels or performs the
-        // action.
-        //
-        // If a modifier driving an action performs it, all modifiers will reset and
-        // go back waiting.
-        //
-        // If a modifier driving an action cancels it, the next modifier in the list which
-        // has already started will get to drive the action (example: a TapModifier and a
-        // SlowTapModifier both start and the TapModifier gets to drive the action because
-        // it comes first; then the TapModifier cancels because the button is held for too
-        // long and the SlowTapModifier will get to drive the action next).
-        private void ChangePhaseOfModifier(InputActionPhase newPhase, ref InputActionMapState.TriggerState trigger)
-        {
-            Debug.Assert(trigger.bindingIndex != -1);
-            Debug.Assert(trigger.modifierIndex != -1);
-
-            ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
-            ////      as the start of the phase
-
-            var modifiersForBinding = m_ResolvedBindings[trigger.bindingIndex].modifiers;
-            var currentModifierState = modifiersForBinding[trigger.modifierIndex];
-            var newModifierState = currentModifierState;
-
-            // Update modifier state.
-            ThrowIfPhaseTransitionIsInvalid(currentModifierState.phase, newPhase, trigger.bindingIndex, trigger.modifierIndex);
-            newModifierState.phase = newPhase;
-            newModifierState.triggerControl = trigger.control;
-            if (newPhase == InputActionPhase.Started)
-                newModifierState.startTime = trigger.time;
-            modifiersForBinding[trigger.modifierIndex] = newModifierState;
-
-            // See if it affects the phase of the action itself.
-            if (m_CurrentPhase == InputActionPhase.Waiting)
-            {
-                // We're the first modifier to go to the start phase.
-                ChangePhaseOfAction(newPhase, ref trigger);
-            }
-            else if (newPhase == InputActionPhase.Cancelled && m_LastTrigger.modifierIndex == trigger.modifierIndex)
-            {
-                // We're cancelling but maybe there's another modifier ready
-                // to go into start phase.
-
-                ChangePhaseOfAction(newPhase, ref trigger);
-
-                for (var i = 0; i < modifiersForBinding.Count; ++i)
-                    if (i != trigger.modifierIndex && modifiersForBinding[i].phase == InputActionPhase.Started)
-                    {
-                        var triggerForModifier = new InputActionMapState.TriggerState
-                        {
-                            phase = InputActionPhase.Started,
-                            control = modifiersForBinding[i].triggerControl,
-                            bindingIndex = trigger.bindingIndex,
-                            modifierIndex = i,
-                            time = trigger.time,
-                            startTime = modifiersForBinding[i].startTime
-                        };
-                        ChangePhaseOfAction(InputActionPhase.Started, ref triggerForModifier);
-                        break;
-                    }
-            }
-            else if (m_LastTrigger.modifierIndex == trigger.modifierIndex)
-            {
-                // Any other phase change goes to action if we're the modifier driving
-                // the current phase.
-                ChangePhaseOfAction(newPhase, ref trigger);
-
-                // We're the modifier driving the action and we performed the action,
-                // so reset any other modifier to waiting state.
-                if (newPhase == InputActionPhase.Performed)
-                {
-                    for (var i = 0; i < modifiersForBinding.Count; ++i)
-                        if (i != trigger.bindingIndex)
-                            ResetModifier(trigger.bindingIndex, i);
-                }
-            }
-
-            // If the modifier performed or cancelled, go back to waiting.
-            if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
-                ResetModifier(trigger.bindingIndex, trigger.modifierIndex);
-            ////TODO: reset entire chain
-        }
-
         // Notify observers that we have changed state.
-        private void CallListeners(ref InlinedArray<InputActionListener> listeners)
+        private void CallListeners(ref InlinedArray<InputActionListener> listeners, ref InputActionMapState.TriggerState trigger)
         {
-            // Should always have a control that triggered the state change.
-            Debug.Assert(m_LastTrigger.control != null);
-
             // If there's no listeners, don't bother with anything else.
             if (listeners.length == 0)
                 return;
 
             // If the binding that triggered is part of a composite, fetch the composite.
             object composite = null;
-            var bindingIndex = m_LastTrigger.bindingIndex;
-            if (m_ResolvedBindings[bindingIndex].isPartOfComposite)
+            var bindingIndex = trigger.bindingIndex;
+            if (m_ActionMap.m_State.bindingStates[bindingIndex].isPartOfComposite)
                 composite = m_ResolvedBindings[bindingIndex].composite;
 
             // If we got triggered under the control of a modifier, fetch its state.
@@ -638,7 +503,7 @@ namespace UnityEngine.Experimental.Input
             var context = new CallbackContext
             {
                 m_Action = this,
-                m_Control = m_LastTrigger.control,
+                m_Control = m_LastTrigger.triggerControl,
                 m_Time = m_LastTrigger.time,
                 m_Modifier = modifier,
                 m_StartTime = startTime,
@@ -655,186 +520,6 @@ namespace UnityEngine.Experimental.Input
             }
 
             Profiler.EndSample();
-        }
-
-        private void ThrowIfPhaseTransitionIsInvalid(InputActionPhase currentPhase, InputActionPhase newPhase, int bindingIndex, int modifierIndex)
-        {
-            if (newPhase == InputActionPhase.Started && currentPhase != InputActionPhase.Waiting)
-                throw new InvalidOperationException(
-                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
-                        m_CurrentPhase, InputActionPhase.Started, InputActionPhase.Waiting, this, GetModifier(bindingIndex, modifierIndex)));
-            if (newPhase == InputActionPhase.Performed && currentPhase != InputActionPhase.Waiting && currentPhase != InputActionPhase.Started)
-                throw new InvalidOperationException(
-                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' or '{3}' (action: {4}, modifier: {5})",
-                        m_CurrentPhase, InputActionPhase.Performed, InputActionPhase.Waiting, InputActionPhase.Started, this,
-                        GetModifier(bindingIndex, modifierIndex)));
-            if (newPhase == InputActionPhase.Cancelled && currentPhase != InputActionPhase.Started)
-                throw new InvalidOperationException(
-                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
-                        m_CurrentPhase, InputActionPhase.Cancelled, InputActionPhase.Started, this, GetModifier(bindingIndex, modifierIndex)));
-        }
-
-        private InputBinding GetBinding(int bindingIndex)
-        {
-            if (bindingIndex == -1)
-                return new InputBinding();
-
-            return m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex];
-        }
-
-        private IInputBindingModifier GetModifier(int bindingIndex, int modifierIndex)
-        {
-            if (bindingIndex == -1)
-                return null;
-
-            return m_ResolvedBindings[bindingIndex].modifiers[modifierIndex].modifier;
-        }
-
-        private void ResetModifier(int bindingIndex, int modifierIndex)
-        {
-            var modifiersForBinding = m_ResolvedBindings[bindingIndex].modifiers;
-            var oldState = modifiersForBinding[modifierIndex];
-
-            oldState.modifier.Reset();
-            if (oldState.isTimerRunning)
-            {
-                var manager = InputSystem.s_Manager;
-                manager.RemoveActionTimeout(this, bindingIndex, modifierIndex);
-            }
-
-            modifiersForBinding[modifierIndex] =
-                new InputActionMapState.ModifierState
-            {
-                modifier = oldState.modifier,
-                phase = InputActionPhase.Waiting
-            };
-        }
-
-        internal void NotifyTimerExpired(int bindingIndex, int modifierIndex, double time)
-        {
-            ModifierContext context;
-
-            var modifiersForBinding = m_ResolvedBindings[bindingIndex].modifiers;
-            var modifierState = modifiersForBinding[modifierIndex];
-
-            context.m_Action = this;
-            context.m_ControlIsAtDefaultValue = false; ////REVIEW: how should this be handled?
-            context.m_TimerHasExpired = true;
-            context.m_Trigger =
-                new InputActionMapState.TriggerState
-            {
-                control = modifierState.triggerControl,
-                phase = modifierState.phase,
-                time = time,
-                bindingIndex = bindingIndex,
-                modifierIndex = modifierIndex
-            };
-
-            modifierState.isTimerRunning = false;
-            modifiersForBinding[modifierIndex] = modifierState;
-
-            modifierState.modifier.Process(ref context);
-        }
-
-        // Data we pass to modifiers during processing. Encapsulates all the context
-        // they have access to and allows us to extend that functionality without
-        // changing the IInputBindingModifier interface.
-        public struct ModifierContext
-        {
-            // These are all set by NotifyControlValueChanged.
-            internal InputAction m_Action;
-            internal InputActionMapState.TriggerState m_Trigger;
-            internal bool m_ControlIsAtDefaultValue;
-            internal bool m_TimerHasExpired;
-
-            internal int bindingIndex
-            {
-                get { return m_Trigger.bindingIndex; }
-            }
-
-            internal int modifierIndex
-            {
-                get { return m_Trigger.modifierIndex; }
-            }
-
-            public InputAction action
-            {
-                get { return m_Action; }
-            }
-
-            public InputControl control
-            {
-                get { return m_Trigger.control; }
-            }
-
-            public InputActionPhase phase
-            {
-                get { return m_Trigger.phase; }
-            }
-
-            public double time
-            {
-                get { return m_Trigger.time; }
-            }
-
-            public double startTime
-            {
-                get { return m_Trigger.startTime; }
-            }
-
-            public bool controlHasDefaultValue
-            {
-                get { return m_ControlIsAtDefaultValue; }
-            }
-
-            public bool timerHasExpired
-            {
-                get { return m_TimerHasExpired; }
-            }
-
-            public bool isWaiting
-            {
-                get { return phase == InputActionPhase.Waiting; }
-            }
-
-            public bool isStarted
-            {
-                get { return phase == InputActionPhase.Started; }
-            }
-
-            public void Started()
-            {
-                m_Trigger.startTime = time;
-                m_Action.ChangePhaseOfModifier(InputActionPhase.Started, ref m_Trigger);
-            }
-
-            public void Performed()
-            {
-                m_Action.ChangePhaseOfModifier(InputActionPhase.Performed, ref m_Trigger);
-            }
-
-            public void Cancelled()
-            {
-                m_Action.ChangePhaseOfModifier(InputActionPhase.Cancelled, ref m_Trigger);
-            }
-
-            public void SetTimeout(double seconds)
-            {
-                var modifiersForBinding = m_Action.m_ResolvedBindings[bindingIndex].modifiers;
-                var modifierState = modifiersForBinding[modifierIndex];
-                if (modifierState.isTimerRunning)
-                    throw new NotImplementedException("cancel current timer");
-
-                var manager = InputSystem.s_Manager;
-                manager.AddActionTimeout(m_Action, Time.time + seconds, bindingIndex, modifierIndex);
-
-                modifierState.isTimerRunning = true;
-                modifiersForBinding[modifierIndex] = modifierState;
-            }
-        }
-
-        public struct CompositeBindingContext
-        {
         }
 
         public struct CallbackContext
@@ -871,7 +556,7 @@ namespace UnityEngine.Experimental.Input
                 if (m_Composite != null)
                 {
                     var composite = (IInputBindingComposite<TValue>)m_Composite;
-                    var context = new CompositeBindingContext();
+                    var context = new InputActionMapState.CompositeBindingContext();
                     return composite.ReadValue(ref context);
                 }
 
