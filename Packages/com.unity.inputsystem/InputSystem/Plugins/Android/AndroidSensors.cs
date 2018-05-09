@@ -78,20 +78,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         // GeomagneticRotationVector - no alternative in old system
         // HeartRate - no alternative in old system
 
-        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Accelerometer")]
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "Accelerometer")]
         [InputControl(name = "magneticField", layout = "Vector3", format = "VEC3", offset = 0, variant = "MagneticField")]
         [InputControl(name = "orientation", layout = "Vector3", format = "VEC3", offset = 0, variant = "Orientation")]
-        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gyroscope")]
+        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "Gyroscope")]
         [InputControl(name = "lightLevel", layout = "Float", format = "FLT", offset = 0, variant = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Float", format = "FLT", offset = 0, variant = "Pressure")]
         [InputControl(name = "distance", layout = "Float", format = "FLT", offset = 0, variant = "Proximity")]
-        [InputControl(name = "gravity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gravity")]
-        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "LinearAcceleration")]
-        [InputControl(name = "attitude", layout = "Quaternion", format = "QUAT", offset = 0, processors = "SensorRotation", variant = "RotationVector")]
+        [InputControl(name = "gravity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "Gravity")]
+        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "LinearAcceleration")]
+        [InputControl(name = "attitude", layout = "Quaternion", format = "QUAT", offset = 0, processors = "CompensateRotation", variant = "RotationVector")]
         [InputControl(name = "relativeHumidity", layout = "Float", format = "FLT", offset = 0, variant = "RelativeHumidity")]
         [InputControl(name = "ambientTemperature", layout = "Float", format = "FLT", offset = 0, variant = "AmbientTemperature")]
         [InputControl(name = "stepCounter", layout = "Integer", format = "FLT", offset = 0, variant = "StepCounter")]
-        [InputControl(name = "rotation", layout = "Quaternion", format = "QUAT", offset = 0, processors = "SensorRotation", variant = "GeomagneticRotationVector")]
+        [InputControl(name = "rotation", layout = "Quaternion", format = "QUAT", offset = 0, processors = "CompensateRotation", variant = "GeomagneticRotationVector")]
         [InputControl(name = "rate", layout = "Integer", format = "FLT", offset = 0, variant = "HeartRate")]
         public fixed float data[16];
 
@@ -116,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidSensorProcessor : SensorProcessor
+    public class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
         // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;

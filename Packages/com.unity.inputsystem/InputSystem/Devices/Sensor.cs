@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('A', 'C', 'C', 'L'); }
         }
 
-        [InputControl(processors = "Sensor")]
+        [InputControl(processors = "CompensateDirection")]
         public Vector3 acceleration;
 
         public FourCC GetFormat()
@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'Y', 'R', 'O'); }
         }
 
-        [InputControl(processors = "Sensor")] 
+        [InputControl(processors = "CompensateDirection")] 
         public Vector3 angularVelocity;
 
         public FourCC GetFormat()
@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'R', 'V', ' '); }
         }
 
-        [InputControl(processors = "Sensor")] 
+        [InputControl(processors = "CompensateDirection")] 
         public Vector3 gravity;
 
         public FourCC GetFormat()
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('A', 'T', 'T', 'D'); }
         }
 
-        [InputControl(processors = "SensorRotation")] 
+        [InputControl(processors = "CompensateRotation")] 
         public Quaternion attitude;
 
         public FourCC GetFormat()
@@ -81,7 +81,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('L', 'A', 'A', 'C'); }
         }
 
-        [InputControl(processors = "Sensor")] 
+        [InputControl(processors = "CompensateDirection")] 
         public Vector3 acceleration;
 
         public FourCC GetFormat()
@@ -90,14 +90,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
     
-    public class SensorProcessor : IInputControlProcessor<Vector3>
+    public class CompensateDirectionProcessor : IInputControlProcessor<Vector3>
     {
         public Vector3 Process(Vector3 value, InputControl control)
         {
             if (!InputConfiguration.CompensateSensorsForScreenOrientation)
                 return value;
             
-            Quaternion rotation = Quaternion.identity;
+            var rotation = Quaternion.identity;
             switch (Screen.orientation)
             {
                 case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
@@ -108,7 +108,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
     
-    public class SensorRotationProcessor : IInputControlProcessor<Quaternion>
+    public class CompensateRotationProcessor : IInputControlProcessor<Quaternion>
     {
         public Quaternion Process(Quaternion value, InputControl control)
         {
@@ -119,7 +119,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
 
             const float kSqrtOfTwo = 1.4142135623731f;
-            Quaternion q = Quaternion.identity;
+            var q = Quaternion.identity;
 
             switch (Screen.orientation)
             {
