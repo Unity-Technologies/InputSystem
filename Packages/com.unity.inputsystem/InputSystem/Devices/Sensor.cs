@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'Y', 'R', 'O'); }
         }
 
-        [InputControl(processors = "CompensateDirection")] 
+        [InputControl(processors = "CompensateDirection")]
         public Vector3 angularVelocity;
 
         public FourCC GetFormat()
@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'R', 'V', ' '); }
         }
 
-        [InputControl(processors = "CompensateDirection")] 
+        [InputControl(processors = "CompensateDirection")]
         public Vector3 gravity;
 
         public FourCC GetFormat()
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('A', 'T', 'T', 'D'); }
         }
 
-        [InputControl(processors = "CompensateRotation")] 
+        [InputControl(processors = "CompensateRotation")]
         public Quaternion attitude;
 
         public FourCC GetFormat()
@@ -81,7 +81,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('L', 'A', 'A', 'C'); }
         }
 
-        [InputControl(processors = "CompensateDirection")] 
+        [InputControl(processors = "CompensateDirection")]
         public Vector3 acceleration;
 
         public FourCC GetFormat()
@@ -89,14 +89,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
-    
+
     public class CompensateDirectionProcessor : IInputControlProcessor<Vector3>
     {
         public Vector3 Process(Vector3 value, InputControl control)
         {
             if (!InputConfiguration.CompensateSensorsForScreenOrientation)
                 return value;
-            
+
             var rotation = Quaternion.identity;
             switch (InputRuntime.s_Instance.screenOrientation)
             {
@@ -107,14 +107,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return rotation * value;
         }
     }
-    
+
     public class CompensateRotationProcessor : IInputControlProcessor<Quaternion>
     {
         public Quaternion Process(Quaternion value, InputControl control)
         {
             if (!InputConfiguration.CompensateSensorsForScreenOrientation)
                 return value;
-            
+
             float sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
             value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
 
