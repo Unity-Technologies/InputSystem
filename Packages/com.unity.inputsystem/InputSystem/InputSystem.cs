@@ -1079,7 +1079,7 @@ namespace UnityEngine.Experimental.Input
             Plugins.Switch.SwitchSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_UWP
             Plugins.XR.XRSupport.Initialize();
             #endif
 

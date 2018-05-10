@@ -1061,6 +1061,8 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Deadzone", typeof(DeadzoneProcessor));
             processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
+            processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
+            processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 
             #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));

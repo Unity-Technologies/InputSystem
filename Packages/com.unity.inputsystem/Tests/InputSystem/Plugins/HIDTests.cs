@@ -126,27 +126,28 @@ class HIDTests : InputTestFixture
 
         // The HID report descriptor is fetched from the device via an IOCTL.
         var deviceId = testRuntime.AllocateDeviceId();
-        testRuntime.SetDeviceCommandCallback(deviceId,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
                 {
-                    if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
-                        return reportDescriptor.Length;
 
-                    if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
-                        && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
-                    {
-                        fixed(byte* ptr = reportDescriptor)
-                        {
-                            UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
+                        if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
                             return reportDescriptor.Length;
-                        }
-                    }
-                }
-                return InputDeviceCommand.kGenericFailure;
-            });
 
+                        if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
+                            && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
+                        {
+                            fixed(byte* ptr = reportDescriptor)
+                            {
+                                UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
+                                return reportDescriptor.Length;
+                            }
+                        }
+
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         // Report device.
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
@@ -216,10 +217,10 @@ class HIDTests : InputTestFixture
     public void Devices_CanCreateGenericHID_FromDeviceWithParsedReportDescriptor()
     {
         var deviceId = testRuntime.AllocateDeviceId();
-        testRuntime.SetDeviceCommandCallback(deviceId,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == HID.QueryHIDParsedReportDescriptorDeviceCommandType)
                     {
@@ -250,11 +251,9 @@ class HIDTests : InputTestFixture
 
                         return utf8Length;
                     }
-                }
-
                 return -1;
-            });
-
+                });
+        }
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
         {

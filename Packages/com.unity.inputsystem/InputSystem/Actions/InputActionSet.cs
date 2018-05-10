@@ -124,18 +124,45 @@ namespace UnityEngine.Experimental.Input
 
         public void ApplyOverrides(IEnumerable<InputBindingOverride> overrides)
         {
-            throw new NotImplementedException();
+            if (enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot change overrides on set '{0}' while the action is enabled", this.name));
+
+            foreach (var binding in overrides)
+            {
+                var action = TryGetAction(binding.action);
+                if (action == null)
+                    continue;
+                action.ApplyBindingOverride(binding);
+            }
         }
 
         public void RemoveOverrides(IEnumerable<InputBindingOverride> overrides)
         {
-            throw new NotImplementedException();
+            if (enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot change overrides on set '{0}' while the action is enabled", this.name));
+
+            foreach (var binding in overrides)
+            {
+                var action = TryGetAction(binding.action);
+                if (action == null)
+                    continue;
+                action.RemoveBindingOverride(binding);
+            }
         }
 
         // Restore all bindings on all actions in the set to their defaults.
         public void RemoveAllOverrides()
         {
-            throw new NotImplementedException();
+            if (enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot removed overrides from set '{0}' while the action is enabled", this.name));
+
+            for (int i = 0; i < m_Actions.Length; ++i)
+            {
+                m_Actions[i].RemoveAllBindingOverrides();
+            }
         }
 
         public int GetOverrides(List<InputBindingOverride> overrides)

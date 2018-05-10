@@ -103,11 +103,36 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 layoutName = string.Format("{0}::{1}::{2}", SanitizeName(XRUtilities.kXRInterface), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
 
+            // If we are already using a generated layout, we just want to use what's there currently, instead of creating a brand new layout.
+            if (layoutName == matchedLayout)
+                return layoutName;
+
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
             InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout,
                 InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
+        }
+
+        string ConvertPotentialAliasToName(InputControlLayout layout, string nameOrAlias)
+        {
+            InternedString internedNameOrAlias = new InternedString(nameOrAlias);
+            ReadOnlyArray<InputControlLayout.ControlItem> controls = layout.controls;
+            for(int i = 0; i < controls.Count; i++)
+            {
+                InputControlLayout.ControlItem controlItem = controls[i];
+
+                if (controlItem.name == internedNameOrAlias)
+                    return nameOrAlias;
+
+                ReadOnlyArray<InternedString> aliases = controlItem.aliases;
+                for(int j = 0; j < aliases.Count; j++)
+                {
+                    if (aliases[j] == nameOrAlias)
+                        return controlItem.name.ToString();
+                }
+            }
+            return nameOrAlias;
         }
 
         public InputControlLayout Build()
@@ -118,6 +143,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 extendsLayout = parentLayout,
                 updateBeforeRender = true
             };
+
+            var inherittedLayout = InputSystem.TryLoadLayout(parentLayout);
 
             var currentUsages = new List<string>();
 
@@ -135,7 +162,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                 }
 
-                string featureName = SanitizeName(feature.name);
+                string featureName = feature.name;
+                featureName = SanitizeName(featureName);
+                if (inherittedLayout != null)
+                    featureName = ConvertPotentialAliasToName(inherittedLayout, featureName);
+
                 uint nextOffset = GetSizeOfFeature(feature);
                 switch (feature.featureType)
                 {
