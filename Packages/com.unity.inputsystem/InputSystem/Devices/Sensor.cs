@@ -98,7 +98,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 return value;
             
             var rotation = Quaternion.identity;
-            switch (Screen.orientation)
+            switch (InputRuntime.s_Instance.screenOrientation)
             {
                 case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
                 case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             const float kSqrtOfTwo = 1.4142135623731f;
             var q = Quaternion.identity;
 
-            switch (Screen.orientation)
+            switch (InputRuntime.s_Instance.screenOrientation)
             {
                 case ScreenOrientation.PortraitUpsideDown: q = new Quaternion(0.0f, 0.0f, 1.0f /*sin(pi/2)*/, 0.0f /*cos(pi/2)*/); break;
                 case ScreenOrientation.LandscapeLeft:      q = new Quaternion(0.0f, 0.0f, kSqrtOfTwo * 0.5f /*sin(pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(pi/4)*/); break;

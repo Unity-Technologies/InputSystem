@@ -93,6 +93,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         float pollingFrequency { set; }
 
         InputUpdateType updateMask { set; }
+
+        ScreenOrientation screenOrientation { set; get; }
     }
 
     internal static class InputRuntime

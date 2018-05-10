@@ -157,6 +157,19 @@ namespace UnityEngine.Experimental.Input
         public float pollingFrequency { get; set; }
         public InputUpdateType updateMask { get; set; }
 
+        public ScreenOrientation screenOrientation 
+        {
+            set
+            {
+                m_ScreenOrientation = value;
+            }
+
+            get
+            {
+                return m_ScreenOrientation;
+            }
+        }
+
         public void Dispose()
         {
             m_EventBuffer.Dispose();
@@ -171,5 +184,6 @@ namespace UnityEngine.Experimental.Input
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
+        private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
     }
 }

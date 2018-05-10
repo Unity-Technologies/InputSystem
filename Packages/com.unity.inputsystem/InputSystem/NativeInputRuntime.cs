@@ -103,5 +103,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         private Action<NativeInputUpdateType> m_SetUpdateMaskMethod;
+
+        public ScreenOrientation screenOrientation
+        {
+            set
+            {
+                Screen.orientation = value;
+            }
+
+            get
+            {
+                return Screen.orientation;
+            }
+        }
     }
 }
