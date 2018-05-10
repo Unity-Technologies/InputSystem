@@ -105,7 +105,6 @@ namespace UnityEngine.Experimental.Input
                 SetDeviceCommandCallback(deviceId,
                     (id, commandPtr) =>
                     {
-
                         if (commandPtr->type == result.GetTypeStatic())
                         {
                             Assert.That(receivedCommand.HasValue, Is.False);
@@ -116,7 +115,6 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         return InputDeviceCommand.kGenericFailure;
-
                     });
             }
         }
@@ -157,7 +155,7 @@ namespace UnityEngine.Experimental.Input
         public float pollingFrequency { get; set; }
         public InputUpdateType updateMask { get; set; }
 
-        public ScreenOrientation screenOrientation 
+        public ScreenOrientation screenOrientation
         {
             set
             {
