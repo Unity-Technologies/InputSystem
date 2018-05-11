@@ -8,8 +8,6 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: allow individual bindings to be enabled/disabled?
 
-////TODO: allow querying controls *without* requiring actions to be enabled
-
 ////TODO: event-based processing of input actions
 
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
@@ -98,7 +96,7 @@ namespace UnityEngine.Experimental.Input
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
-        /// If the action is a lose action created in code, this will be <c>null</c>.
+        /// If the action is a loose action created in code, this will be <c>null</c>.
         /// </remarks>
         public InputActionMap map
         {
@@ -138,12 +136,19 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The set of controls to which the action's bindings resolve.
         /// </summary>
+        /// <remarks>
+        /// May allocate memory on first and also whenever the control setup in the system has changed
+        /// (e.g. when devices are added or removed).
+        /// </remarks>
         public ReadOnlyArray<InputControl> controls
         {
             get
             {
                 if (m_ActionMap == null)
-                    CreateInternalActionSetForSingletonAction();
+                    CreateInternalActionMapForSingletonAction();
+                ////REVIEW: resolving as a side-effect is pretty heavy handed
+                ////FIXME: these don't get re-resolved if the control setup in the system changes
+                m_ActionMap.ResolveBindingsIfNecessary();
                 return m_ActionMap.GetControlsForSingleAction(this);
             }
         }
@@ -273,6 +278,8 @@ namespace UnityEngine.Experimental.Input
 
         public InputAction(InternedString name = new InternedString())
         {
+            if (name.IsEmpty())
+                name = kSingletonActionDefaultName;
             m_Name = name;
         }
 
@@ -287,7 +294,7 @@ namespace UnityEngine.Experimental.Input
 
             if (binding != null)
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, modifiers = modifiers}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, modifiers = modifiers, action = m_Name}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
@@ -295,8 +302,7 @@ namespace UnityEngine.Experimental.Input
 
         public override string ToString()
         {
-            if (string.IsNullOrEmpty(m_Name))
-                return "<unnamed>";
+            Debug.Assert(!m_Name.IsEmpty());
 
             if (m_ActionMap != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionMap.name))
                 return string.Format("{0}/{1}", m_ActionMap.name, m_Name);
@@ -312,7 +318,7 @@ namespace UnityEngine.Experimental.Input
             // For singleton actions, we create an internal-only InputActionMap
             // private to the action.
             if (m_ActionMap == null)
-                CreateInternalActionSetForSingletonAction();
+                CreateInternalActionMapForSingletonAction();
 
             // First time we're enabled, find all controls.
             m_ActionMap.ResolveBindingsIfNecessary();
@@ -428,6 +434,8 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] internal int m_BindingsStartIndex;
         [NonSerialized] internal int m_BindingsCount;
+        [NonSerialized] internal int m_ControlStartIndex;
+        [NonSerialized] internal int m_ControlCount;
 
         [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
 
@@ -444,6 +452,17 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnCancelled;
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnPerformed;
 
+        private static InternedString s_SingletonActionDefaultName;
+        private static InternedString kSingletonActionDefaultName
+        {
+            get
+            {
+                if (s_SingletonActionDefaultName.IsEmpty())
+                    s_SingletonActionDefaultName = new InternedString("<Unnamed>");
+                return s_SingletonActionDefaultName;
+            }
+        }
+
         internal bool isSingletonAction
         {
             get { return m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this); }
@@ -454,7 +473,7 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 if (m_ActionMap == null)
-                    CreateInternalActionSetForSingletonAction();
+                    CreateInternalActionMapForSingletonAction();
                 return m_ActionMap;
             }
         }
@@ -471,9 +490,14 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private void CreateInternalActionSetForSingletonAction()
+        private void CreateInternalActionMapForSingletonAction()
         {
-            m_ActionMap = new InputActionMap {m_SingletonAction = this, m_Bindings = m_SingletonActionBindings};
+            m_ActionMap = new InputActionMap
+            {
+                m_Actions = new[] { this },
+                m_SingletonAction = this,
+                m_Bindings = m_SingletonActionBindings
+            };
         }
 
         // Find the binding tha tthe given override addresses.

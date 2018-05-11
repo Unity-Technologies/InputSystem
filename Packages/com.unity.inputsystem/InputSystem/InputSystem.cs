@@ -24,8 +24,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
-////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
-
 ////TODO: release native alloations when exiting
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]

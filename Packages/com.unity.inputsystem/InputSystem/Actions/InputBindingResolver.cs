@@ -76,7 +76,6 @@ namespace UnityEngine.Experimental.Input
             for (var n = 0; n < bindingCountInThisMap; ++n)
             {
                 var unresolvedBinding = bindingsInThisMap[n];
-                var indexOfFirstControlInThisBinding = totalControlCount;
 
                 // Try to find action.
                 var actionIndex = InputActionMapState.kInvalidIndex;
@@ -126,12 +125,12 @@ namespace UnityEngine.Experimental.Input
                 var path = unresolvedBinding.overridePath ?? unresolvedBinding.path;
 
                 // Look up controls.
+                var firstControlIndex = totalControlCount;
                 if (controls == null)
                     controls = new InputControl[10];
                 var resolvedControls = new ArrayOrListWrapper<InputControl>(controls, totalControlCount);
                 var numControls = InputSystem.GetControls(path, ref resolvedControls);
-                if (numControls == 0)
-                    continue;
+                totalControlCount = resolvedControls.count;
 
                 // Instantiate modifiers.
                 var firstModifierIndex = 0;
@@ -146,7 +145,7 @@ namespace UnityEngine.Experimental.Input
                 // Add entry for resolved binding.
                 bindingStates[bindingStartIndex + n] = new InputActionMapState.BindingState
                 {
-                    controlStartIndex = indexOfFirstControlInThisBinding,
+                    controlStartIndex = firstControlIndex,
                     controlCount = numControls,
                     modifierStartIndex = firstModifierIndex,
                     modifierCount = numModifiers,
@@ -157,7 +156,7 @@ namespace UnityEngine.Experimental.Input
 
                 // If the binding is part of a composite, pass the resolve controls
                 // on to the composite.
-                if (unresolvedBinding.isPartOfComposite && currentCompositeIndex != InputActionMapState.kInvalidIndex)
+                if (unresolvedBinding.isPartOfComposite && currentCompositeIndex != InputActionMapState.kInvalidIndex && numControls != 0)
                 {
                     ////REVIEW: what should we do when a single binding in a composite resolves to multiple controls?
                     ////        if the composite has more than one bindable control, it's not readily apparent how we would group them
@@ -173,7 +172,7 @@ namespace UnityEngine.Experimental.Input
 
                     // Install the control on the binding.
                     BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
-                        controls[indexOfFirstControlInThisBinding]);
+                        controls[firstControlIndex]);
                 }
             }
 
@@ -182,8 +181,8 @@ namespace UnityEngine.Experimental.Input
             ArrayHelpers.GrowBy(ref controlIndexToBindingIndex, controlCountInThisMap);
             for (var i = 0; i < bindingCountInThisMap; ++i)
             {
-                var numControls = bindingStates[i].controlCount;
-                var startIndex = bindingStates[i].controlStartIndex;
+                var numControls = bindingStates[bindingStartIndex + i].controlCount;
+                var startIndex = bindingStates[bindingStartIndex + i].controlStartIndex;
                 for (var n = 0; n < numControls; ++n)
                     controlIndexToBindingIndex[startIndex + n] = i;
             }
