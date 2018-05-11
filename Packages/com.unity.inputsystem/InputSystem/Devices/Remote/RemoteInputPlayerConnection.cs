@@ -2,7 +2,7 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Networking.PlayerConnection;
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
