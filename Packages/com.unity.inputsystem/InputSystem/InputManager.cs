@@ -660,7 +660,7 @@ namespace UnityEngine.Experimental.Input
             ReallocateStateBuffers();
 
             // Let actions re-resolve their paths.
-            InputActionMap.ReResolveAllEnabledActions();
+            InputActionMapState.ReResolveAllEnabledActions();
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
@@ -794,7 +794,7 @@ namespace UnityEngine.Experimental.Input
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
             // by actions to uninstall state monitors will get ignored.
-            InputActionMap.ReResolveAllEnabledActions();
+            InputActionMapState.ReResolveAllEnabledActions();
 
             // Kill before update callback, if applicable.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;

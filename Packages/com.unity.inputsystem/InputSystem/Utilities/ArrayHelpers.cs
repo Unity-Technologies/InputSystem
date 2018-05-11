@@ -20,6 +20,25 @@ namespace UnityEngine.Experimental.Input.Utilities
             return false;
         }
 
+        public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
+        {
+            if (first == null || second == null)
+                return second == first;
+
+            var lengthFirst = first.Length;
+            var lengthSecond = second.Length;
+
+            if (lengthFirst != lengthSecond)
+                return false;
+
+            var comparer = EqualityComparer<TValue>.Default;
+            for (var i = 0; i < lengthFirst; ++i)
+                if (!comparer.Equals(first[i], second[i]))
+                    return false;
+
+            return true;
+        }
+
         public static int IndexOf<TValue>(TValue[] array, TValue value)
         {
             if (array == null)
@@ -226,14 +245,10 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static void EraseAt<TValue>(ref TValue[] array, int index)
         {
-            if (array == null)
-                return;
+            Debug.Assert(array != null);
+            Debug.Assert(index >= 0 && index < array.Length);
 
             var length = array.Length;
-
-            if (index >= length)
-                throw new IndexOutOfRangeException();
-
             if (index == 0 && length == 1)
             {
                 array = null;
@@ -255,6 +270,32 @@ namespace UnityEngine.Experimental.Input.Utilities
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Erase an element from the array by moving the tail element into its place.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="count"></param>
+        /// <param name="index"></param>
+        /// <typeparam name="TValue"></typeparam>
+        /// <remarks>
+        /// This method does not re-allocate the array. Instead <paramref name="count"/> is used
+        /// to keep track of how many elements there actually are in the array.
+        /// </remarks>
+        public static void EraseAtByMovingTail<TValue>(TValue[] array, ref int count, int index)
+        {
+            Debug.Assert(array != null);
+            Debug.Assert(index >= 0 && index < array.Length);
+            Debug.Assert(count >= 0 && count <= array.Length);
+
+            // Move tail, if necessary.
+            if (index != count - 1)
+                array[index] = array[count - 1];
+
+            // Destroy current tail.
+            array[count - 1] = default(TValue);
+            --count;
         }
 
         public static TValue[] Clone<TValue>(TValue[] array)

@@ -6122,6 +6122,25 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
+    public void Actions_ControlsUpdateWhenDeviceIsRemoved_WhileActionIsDisabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "/<Gamepad>/leftTrigger");
+        action.Enable();
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
+
+        action.Disable();
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(action.controls, Has.Count.Zero);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
         var action1 = new InputAction(name: "a");
