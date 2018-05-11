@@ -111,10 +111,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onDeviceChange += OnDeviceChange;
             InputSystem.onControlLayoutChange += OnLayoutChange;
             InputSystem.onFindControlLayoutForDevice += OnFindLayout;
-
-            if (InputActionMap.s_OnEnabledActionsChanged == null)
-                InputActionMap.s_OnEnabledActionsChanged = new List<Action>();
-            InputActionMap.s_OnEnabledActionsChanged.Add(OnEnabledActionsChanged);
+            InputActionMapState.s_OnEnabledActionsChanged.AppendWithCapacity(OnEnabledActionsChanged);
         }
 
         private void UninstallHooks()
@@ -122,9 +119,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InputSystem.onDeviceChange -= OnDeviceChange;
             InputSystem.onControlLayoutChange -= OnLayoutChange;
             InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
-
-            if (InputActionMap.s_OnEnabledActionsChanged != null)
-                InputActionMap.s_OnEnabledActionsChanged.Remove(OnEnabledActionsChanged);
+            InputActionMapState.s_OnEnabledActionsChanged.RemoveAtByMovingTailWithCapacity(OnEnabledActionsChanged);
         }
 
         private void Initialize()

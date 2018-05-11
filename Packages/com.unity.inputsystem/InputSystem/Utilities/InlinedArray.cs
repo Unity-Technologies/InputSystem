@@ -77,6 +77,24 @@ namespace UnityEngine.Experimental.Input.Utilities
             return ArrayHelpers.Join(firstValue, additionalValues);
         }
 
+        public int IndexOf(TValue value)
+        {
+            var comparer = EqualityComparer<TValue>.Default;
+            if (length > 0)
+            {
+                if (comparer.Equals(firstValue, value))
+                    return 0;
+                if (additionalValues != null)
+                {
+                    for (var i = 0; i < length - 1; ++i)
+                        if (comparer.Equals(additionalValues[i], value))
+                            return i + 1;
+                }
+            }
+
+            return -1;
+        }
+
         public void Append(TValue value)
         {
             if (length == 0)
@@ -95,6 +113,19 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             ++length;
+        }
+
+        public void AppendWithCapacity(TValue value)
+        {
+            if (length == 0)
+            {
+                firstValue = value;
+                ++length;
+            }
+            else
+            {
+                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref length, value);
+            }
         }
 
         public void Remove(TValue value)
@@ -142,39 +173,79 @@ namespace UnityEngine.Experimental.Input.Utilities
                     firstValue = default(TValue);
                 }
             }
-            else if (additionalValues != null)
+            else
             {
-                var numAdditionalProcessors = additionalValues.Length;
-                if (numAdditionalProcessors == 1)
+                Debug.Assert(additionalValues != null);
+
+                var numAdditionalValues = length - 1;
+                if (numAdditionalValues == 1)
                 {
                     // Remove only entry in array.
                     additionalValues = null;
                 }
-                else if (index == numAdditionalProcessors - 1)
+                else if (index == numAdditionalValues - 1)
                 {
                     // Remove entry at end.
-                    Array.Resize(ref additionalValues, numAdditionalProcessors - 1);
+                    Array.Resize(ref additionalValues, numAdditionalValues - 1);
                 }
                 else
                 {
                     // Remove entry at beginning or in middle by pasting together
                     // into a new array.
-                    var newAdditionalProcessors = new TValue[numAdditionalProcessors - 1];
+                    var newAdditionalProcessors = new TValue[numAdditionalValues - 1];
                     if (index > 0)
                     {
                         // Copy element before entry.
                         Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index);
                     }
-                    if (index != numAdditionalProcessors - 1)
+                    if (index != numAdditionalValues - 1)
                     {
                         // Copy elements after entry.
                         Array.Copy(additionalValues, index + 1, newAdditionalProcessors, index,
-                            numAdditionalProcessors - index - 1);
+                            numAdditionalValues - index - 1);
                     }
                 }
             }
 
             --length;
+        }
+
+        public void RemoveAtByMovingTailWithCapacity(int index)
+        {
+            if (index < 0 || index >= length)
+                throw new ArgumentOutOfRangeException("index");
+
+            if (index == 0)
+            {
+                if (additionalValues != null)
+                {
+                    firstValue = additionalValues[length - 1];
+                    additionalValues[length - 1] = default(TValue);
+                }
+                else
+                {
+                    firstValue = default(TValue);
+                }
+            }
+            else
+            {
+                Debug.Assert(additionalValues != null);
+
+                var numAdditionalValues = length - 1;
+                ArrayHelpers.EraseAtByMovingTail(additionalValues, ref numAdditionalValues, index - 1);
+            }
+
+            --length;
+        }
+
+        public bool RemoveAtByMovingTailWithCapacity(TValue value)
+        {
+            var index = IndexOf(value);
+            if (index == -1)
+                return false;
+
+            RemoveAtByMovingTailWithCapacity(index);
+            return true;
         }
     }
 }

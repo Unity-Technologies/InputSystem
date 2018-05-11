@@ -970,7 +970,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.Disable"/>
         public static void DisableAllEnabledActions()
         {
-            InputActionMap.DisableAllEnabledActions();
+            InputActionMapState.DisableAllActions();
         }
 
         /// <summary>
@@ -1001,7 +1001,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (actions == null)
                 throw new ArgumentNullException("actions");
-            return InputActionMap.FindEnabledActions(actions);
+            return InputActionMapState.FindAllEnabledActions(actions);
         }
 
         #endregion

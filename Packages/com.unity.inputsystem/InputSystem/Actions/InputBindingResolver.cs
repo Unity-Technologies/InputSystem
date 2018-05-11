@@ -187,18 +187,6 @@ namespace UnityEngine.Experimental.Input
                     controlIndexToBindingIndex[startIndex + n] = i;
             }
 
-            // Allocate action states.
-            if (actionCountInThisMap > 0)
-            {
-                // Assign action indices.
-                var actions = map.m_Actions;
-                for (var i = 0; i < actionCountInThisMap; ++i)
-                    actions[i].m_ActionIndex = totalActionCount + i;
-
-                ArrayHelpers.GrowBy(ref actionStates, actionCountInThisMap);
-                totalActionCount += actionCountInThisMap;
-            }
-
             // Store indices for map.
             var numMaps = totalMapCount;
             var mapIndex = ArrayHelpers.AppendWithCapacity(ref maps, ref numMaps, map);
@@ -216,6 +204,20 @@ namespace UnityEngine.Experimental.Input
                 compositeCount = totalCompositeCount - compositeStartIndex,
             });
             map.m_MapIndex = mapIndex;
+
+            // Allocate action states.
+            if (actionCountInThisMap > 0)
+            {
+                // Assign action indices.
+                var actions = map.m_Actions;
+                for (var i = 0; i < actionCountInThisMap; ++i)
+                    actions[i].m_ActionIndex = totalActionCount + i;
+
+                ArrayHelpers.GrowBy(ref actionStates, actionCountInThisMap);
+                totalActionCount += actionCountInThisMap;
+                for (var i = 0; i < actionCountInThisMap; ++i)
+                    actionStates[i].mapIndex = mapIndex;
+            }
         }
 
         private int ResolveModifiers(string modifierString)

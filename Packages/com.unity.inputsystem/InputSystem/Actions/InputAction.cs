@@ -326,8 +326,6 @@ namespace UnityEngine.Experimental.Input
             // Go live.
             m_ActionMap.m_State.EnableSingleAction(this);
             ++m_ActionMap.m_EnabledActionsCount;
-            m_ActionMap.EnsureMapAddedToGlobalList();
-            m_ActionMap.NotifyListenersEnabledActionsChanged();
         }
 
         public void Disable()
@@ -337,9 +335,6 @@ namespace UnityEngine.Experimental.Input
 
             m_ActionMap.m_State.DisableSingleAction(this);
             --m_ActionMap.m_EnabledActionsCount;
-            if (m_ActionMap.m_EnabledActionsCount == 0)
-                m_ActionMap.RemoveMapFromGlobalList();
-            m_ActionMap.NotifyListenersEnabledActionsChanged();
         }
 
         ////TODO: support for removing bindings

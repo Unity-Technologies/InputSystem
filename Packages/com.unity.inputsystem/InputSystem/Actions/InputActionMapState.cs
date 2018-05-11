@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
@@ -58,7 +60,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// As we don't know in advance how many controls a binding may match (if any), we bump the size of
         /// this array in increments during resolution. This means it may be end up being larger than the total
-        /// number of used controls and have empty entries at the end. Use <see cref="totalNumControls"/> and not
+        /// number of used controls and have empty entries at the end. Use <see cref="totalControlCount"/> and not
         /// <c>.Length</c> to find the actual number of controls.
         ///
         /// All bound controls are included in the array regardless of whether only a partial set of actions
@@ -82,19 +84,21 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public object[] composites;
 
-        public int totalNumActions;
+        public int totalMapCount;
 
-        public int totalNumBindings;
+        public int totalActionCount;
+
+        public int totalBindingCount;
 
         /// <summary>
         /// Total number of controls resolved from bindings of all action maps
         /// added to the state.
         /// </summary>
-        public int totalNumControls;
+        public int totalControlCount;
 
-        public int totalNumModifiers;
+        public int totalModifierCount;
 
-        public int totalNumComposites;
+        public int totalCompositeCount;
 
         /// <summary>
         /// State of all bindings in the action map.
@@ -137,11 +141,18 @@ namespace UnityEngine.Experimental.Input
         /// <param name="resolver"></param>
         public void Initialize(InputBindingResolver resolver)
         {
-            totalNumActions = resolver.totalActionCount;
-            totalNumBindings = resolver.totalBindingCount;
-            totalNumModifiers = resolver.totalModifierCount;
-            totalNumComposites = resolver.totalCompositeCount;
-            totalNumControls = resolver.totalControlCount;
+            ClaimDataFrom(resolver);
+            AddToGlobaList();
+        }
+
+        private void ClaimDataFrom(InputBindingResolver resolver)
+        {
+            totalMapCount = resolver.totalMapCount;
+            totalActionCount = resolver.totalActionCount;
+            totalBindingCount = resolver.totalBindingCount;
+            totalModifierCount = resolver.totalModifierCount;
+            totalCompositeCount = resolver.totalCompositeCount;
+            totalControlCount = resolver.totalControlCount;
 
             maps = resolver.maps;
             mapIndices = resolver.mapIndices;
@@ -154,13 +165,18 @@ namespace UnityEngine.Experimental.Input
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
         }
 
+        ////TODO
+        public void Destroy()
+        {
+        }
+
         public TriggerState FetchActionState(InputAction action)
         {
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap != null);
             Debug.Assert(action.m_ActionMap.m_MapIndex != kInvalidIndex);
             Debug.Assert(maps.Contains(action.m_ActionMap));
-            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalNumActions);
+            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount);
 
             return actionStates[action.m_ActionIndex];
         }
@@ -179,7 +195,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(maps.Contains(map));
 
             var mapIndex = map.m_MapIndex;
-            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Install state monitors for all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
@@ -192,6 +208,8 @@ namespace UnityEngine.Experimental.Input
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
                 actionStates[actionStartIndex + i].phase = InputActionPhase.Waiting;
+
+            NotifyListenersThatEnabledActionsChanged();
         }
 
         public void EnableSingleAction(InputAction action)
@@ -201,11 +219,11 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(maps.Contains(action.m_ActionMap));
 
             var actionIndex = action.m_ActionIndex;
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalNumActions);
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
 
             var map = action.m_ActionMap;
             var mapIndex = map.m_MapIndex;
-            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Go through all bindings in the map and for all that belong to the given action,
             // enable the associated controls.
@@ -227,6 +245,8 @@ namespace UnityEngine.Experimental.Input
             // Put action into waiting state.
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             actionStates[actionStartIndex].phase = InputActionPhase.Waiting;
+
+            NotifyListenersThatEnabledActionsChanged();
         }
 
         ////TODO: need to cancel actions if they are in started state
@@ -239,7 +259,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(maps.Contains(map));
 
             var mapIndex = map.m_MapIndex;
-            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Remove state monitors from all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
@@ -252,6 +272,8 @@ namespace UnityEngine.Experimental.Input
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
                 actionStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
+
+            NotifyListenersThatEnabledActionsChanged();
         }
 
         public void DisableSingleAction(InputAction action)
@@ -261,11 +283,11 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(maps.Contains(action.m_ActionMap));
 
             var actionIndex = action.m_ActionIndex;
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalNumActions);
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
 
             var map = action.m_ActionMap;
             var mapIndex = map.m_MapIndex;
-            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Go through all bindings in the map and for all that belong to the given action,
             // disable the associated controls.
@@ -287,6 +309,8 @@ namespace UnityEngine.Experimental.Input
             // Put action into disabled state.
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             actionStates[actionStartIndex].phase = InputActionPhase.Disabled;
+
+            NotifyListenersThatEnabledActionsChanged();
         }
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
@@ -294,8 +318,8 @@ namespace UnityEngine.Experimental.Input
         private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
         {
             Debug.Assert(controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalNumControls);
-            Debug.Assert(controlStartIndex + numControls <= totalNumControls);
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalControlCount);
+            Debug.Assert(controlStartIndex + numControls <= totalControlCount);
 
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < numControls; ++i)
@@ -311,8 +335,8 @@ namespace UnityEngine.Experimental.Input
         private void DisableControls(int mapIndex, int controlStartIndex, int numControls)
         {
             Debug.Assert(controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalNumControls);
-            Debug.Assert(controlStartIndex + numControls <= totalNumControls);
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalControlCount);
+            Debug.Assert(controlStartIndex + numControls <= totalControlCount);
 
             var manager = InputSystem.s_Manager;
             for (var i = 0; i < numControls; ++i)
@@ -385,9 +409,9 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         private void ProcessControlValueChange(int mapIndex, int controlIndex, int bindingIndex, double time)
         {
-            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
-            Debug.Assert(controlIndex >= 0 && controlIndex < controls.Length);
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
 
             ////TODO: this is where we should filter out state changes that do not result in value changes
 
@@ -448,9 +472,9 @@ namespace UnityEngine.Experimental.Input
 
         private void ProcessTimeout(double time, int mapIndex, int controlIndex, int bindingIndex, int modifierIndex)
         {
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalNumControls);
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
 
             var currentState = modifierStates[modifierIndex];
 
@@ -479,9 +503,9 @@ namespace UnityEngine.Experimental.Input
 
         internal void StartTimeout(float seconds, ref TriggerState trigger)
         {
-            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < maps.Length);
-            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalNumControls);
-            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalNumModifiers);
+            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount);
+            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount);
+            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalModifierCount);
 
             var manager = InputSystem.s_Manager;
             var currentTime = manager.m_Runtime.currentTime;
@@ -501,9 +525,9 @@ namespace UnityEngine.Experimental.Input
 
         private void StopTimeout(int mapIndex, int controlIndex, int bindingIndex, int modifierIndex)
         {
-            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalNumControls);
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
 
             var manager = InputSystem.s_Manager;
             var monitorIndex =
@@ -542,8 +566,8 @@ namespace UnityEngine.Experimental.Input
             var modifierIndex = trigger.modifierIndex;
             var bindingIndex = trigger.bindingIndex;
 
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
 
             ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
             ////      as the start of the phase
@@ -624,9 +648,9 @@ namespace UnityEngine.Experimental.Input
         // Perform a phase change on the action. Visible to observers.
         internal void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger)
         {
-            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < maps.Length);
-            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalNumControls);
-            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < totalNumBindings);
+            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount);
+            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount);
+            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < totalBindingCount);
 
             var actionIndex = bindingStates[trigger.bindingIndex].actionIndex;
             if (actionIndex == kInvalidIndex)
@@ -673,7 +697,7 @@ namespace UnityEngine.Experimental.Input
             if (bindingStates[bindingIndex].isPartOfComposite)
             {
                 var compositeIndex = bindingStates[bindingIndex].compositeIndex;
-                Debug.Assert(compositeIndex >= 0 && compositeIndex < composites.Length);
+                Debug.Assert(compositeIndex >= 0 && compositeIndex < totalCompositeCount);
                 composite = composites[compositeIndex];
             }
 
@@ -688,7 +712,7 @@ namespace UnityEngine.Experimental.Input
 
             // Fetch control that triggered the action.
             var controlIndex = trigger.controlIndex;
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalNumControls);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
             var control = controls[controlIndex];
 
             // We store the relevant state directly on the context instead of looking it
@@ -749,14 +773,14 @@ namespace UnityEngine.Experimental.Input
 
         internal InputAction GetActionOrNull(ref TriggerState trigger)
         {
-            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < maps.Length);
-            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < bindingStates.Length);
+            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount);
+            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < totalBindingCount);
 
             var actionIndex = bindingStates[trigger.bindingIndex].actionIndex;
             if (actionIndex == kInvalidIndex)
                 return null;
 
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalNumActions);
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
             var actionStartIndex = mapIndices[trigger.mapIndex].actionStartIndex;
             return maps[trigger.mapIndex].m_Actions[actionIndex - actionStartIndex];
         }
@@ -764,7 +788,7 @@ namespace UnityEngine.Experimental.Input
         internal InputControl GetControl(ref TriggerState trigger)
         {
             Debug.Assert(trigger.controlIndex != kInvalidIndex);
-            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalNumControls);
+            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount);
             return controls[trigger.controlIndex];
         }
 
@@ -773,14 +797,14 @@ namespace UnityEngine.Experimental.Input
             if (trigger.modifierIndex == kInvalidIndex)
                 return null;
 
-            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalNumModifiers);
+            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalModifierCount);
             return modifiers[trigger.modifierIndex];
         }
 
         private void ResetModifier(int mapIndex, int bindingIndex, int modifierIndex)
         {
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
 
             modifiers[modifierIndex].Reset();
 
@@ -1004,5 +1028,247 @@ namespace UnityEngine.Experimental.Input
             public int compositeStartIndex;
             public int compositeCount;
         }
+
+        #region Global State
+
+        /// <summary>
+        /// List of weak references to all action map states currently in the system.
+        /// </summary>
+        /// <remarks>
+        /// When the control setup in the system changes, we need a way for control resolution that
+        /// has already been done to be invalidated and redone. We also want a way to find all
+        /// currently enabled actions in the system.
+        ///
+        /// Both of these needs are served by this global list.
+        /// </remarks>
+        private static InlinedArray<GCHandle> s_GlobalList;
+
+        #if UNITY_EDITOR
+        internal static InlinedArray<Action> s_OnEnabledActionsChanged;
+        #endif
+
+        private void AddToGlobaList()
+        {
+            CompactGlobalList();
+            var handle = GCHandle.Alloc(this, GCHandleType.Weak);
+            s_GlobalList.AppendWithCapacity(handle);
+        }
+
+        private void RemoveMapFromGlobalList()
+        {
+            var count = s_GlobalList.length;
+            for (var i = 0; i < count; ++i)
+                if (s_GlobalList[i].Target == this)
+                {
+                    s_GlobalList[i].Free();
+                    s_GlobalList.RemoveAtByMovingTailWithCapacity(i);
+                    break;
+                }
+        }
+
+        /// <summary>
+        /// Remove any entries for states that have been reclaimed by GC.
+        /// </summary>
+        private static void CompactGlobalList()
+        {
+            var length = s_GlobalList.length;
+            var head = 0;
+            for (var i = 0; i < length; ++i)
+            {
+                if (s_GlobalList[i].Target != null)
+                {
+                    if (head != i)
+                        s_GlobalList[head] = s_GlobalList[i];
+                    ++head;
+                }
+                else
+                {
+                    s_GlobalList[i].Free();
+                }
+            }
+            s_GlobalList.length = head;
+        }
+
+        internal void NotifyListenersThatEnabledActionsChanged()
+        {
+            #if UNITY_EDITOR
+            for (var i = 0; i < s_OnEnabledActionsChanged.length; ++i)
+                s_OnEnabledActionsChanged[i]();
+            #endif
+        }
+
+        /// <summary>
+        /// Nuke global state we have to keep track of action map states.
+        /// </summary>
+        internal static void ResetGlobals()
+        {
+            for (var i = 0; i < s_GlobalList.length; ++i)
+                s_GlobalList[i].Free();
+            s_GlobalList.length = 0;
+        }
+
+        // Walk all maps with enabled actions and add all enabled actions to the given list.
+        internal static int FindAllEnabledActions(List<InputAction> result)
+        {
+            var numFound = 0;
+            var stateCount = s_GlobalList.length;
+            for (var i = 0; i < stateCount; ++i)
+            {
+                var state = (InputActionMapState)s_GlobalList[i].Target;
+                if (state == null)
+                    continue;
+
+                var mapCount = state.totalMapCount;
+                var maps = state.maps;
+                for (var n = 0; n < mapCount; ++n)
+                {
+                    var map = maps[n];
+                    if (!map.enabled)
+                        continue;
+
+                    var actions = map.m_Actions;
+                    var actionCount = actions.Length;
+                    if (map.m_EnabledActionsCount == actionCount)
+                    {
+                        result.AddRange(actions);
+                        numFound += actionCount;
+                    }
+                    else
+                    {
+                        var actionStartIndex = state.mapIndices[map.m_MapIndex].actionStartIndex;
+                        for (var k = 0; k < actionCount; ++k)
+                        {
+                            if (state.actionStates[actionStartIndex + k].phase != InputActionPhase.Disabled)
+                            {
+                                result.Add(actions[k]);
+                                ++numFound;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return numFound;
+        }
+
+        // The following things cannot change and be handled by this method:
+        // - Set of maps in the state cannot change (neither order nor amount)
+        // - Set of actions in the maps cannot change (neither order nor amount)
+        // - Set of bindings in the maps cannot change (neither order nor amount)
+        // To touch configuration data, state has to be thrown away.
+        internal static void ReResolveAllEnabledActions()
+        {
+            var stateCount = s_GlobalList.length;
+            for (var i = 0; i < stateCount; ++i)
+            {
+                var state = (InputActionMapState)s_GlobalList[i].Target;
+                if (state == null)
+                    continue;
+
+                var maps = state.maps;
+                var mapCount = state.totalMapCount;
+
+                // Re-resolve all maps in the state.
+                var resolver = new InputBindingResolver();
+                for (var n = 0; n < mapCount; ++n)
+                {
+                    var map = maps[n];
+                    map.m_MapIndex = kInvalidIndex;
+                    resolver.AddMap(map);
+                }
+
+                // See if this changes things for the state. If so, leave the
+                // state as is.
+                // NOTE: The resolver will store indices in InputActionMap and InputAction but no
+                //       references to anything in the state.
+                if (state.DataMatches(resolver))
+                    continue;
+
+                // Otherwise, first get rid of all state change monitors currently installed.
+                var mapIndices = state.mapIndices;
+                for (var n = 0; n < mapCount; ++n)
+                {
+                    Debug.Assert(maps[n].m_MapIndex == n);
+                    if (!maps[n].enabled)
+                        continue;
+
+                    var controlCount = mapIndices[n].controlCount;
+                    if (controlCount > 0)
+                        state.DisableControls(n, mapIndices[n].controlStartIndex, controlCount);
+                }
+
+                var oldActionStates = state.actionStates;
+
+                // Re-initialize the state.
+                state.ClaimDataFrom(resolver);
+                for (var n = 0; n < mapCount; ++n)
+                {
+                    var map = maps[n];
+                    map.m_State = state;
+
+                    // Controls for actions need to be re-computed on the map.
+                    map.m_ControlsForEachAction = null;
+                }
+
+                // Restore enabled actions.
+                var newActionStates = state.actionStates;
+                for (var n = 0; n < state.totalActionCount; ++n)
+                {
+                    ////TODO: we want to preserve as much state as we can here, not just lose all current execution state of the maps
+                    if (oldActionStates[i].phase != InputActionPhase.Disabled)
+                        newActionStates[i].phase = InputActionPhase.Waiting;
+                }
+
+                // Restore state change monitors.
+                for (var n = 0; n < state.totalControlCount; ++n)
+                {
+                    var bindingIndex = state.controlIndexToBindingIndex[n];
+                    var actionIndex = state.bindingStates[bindingIndex].actionIndex;
+                    if (actionIndex == kInvalidIndex)
+                        continue;
+
+                    if (oldActionStates[actionIndex].phase != InputActionPhase.Disabled)
+                        state.EnableControls(oldActionStates[actionIndex].mapIndex,
+                            state.bindingStates[bindingIndex].controlStartIndex,
+                            state.bindingStates[bindingIndex].controlCount);
+                }
+            }
+        }
+
+        private bool DataMatches(InputBindingResolver resolver)
+        {
+            if (totalMapCount == resolver.totalMapCount
+                || totalActionCount != resolver.totalActionCount
+                || totalBindingCount != resolver.totalBindingCount
+                || totalCompositeCount != resolver.totalCompositeCount
+                || totalControlCount != resolver.totalControlCount
+                || totalModifierCount != resolver.totalModifierCount)
+                return false;
+
+            if (!ArrayHelpers.HaveEqualElements(maps, resolver.maps)
+                || !ArrayHelpers.HaveEqualElements(controls, resolver.controls)
+                || !ArrayHelpers.HaveEqualElements(modifiers, resolver.modifiers)
+                || !ArrayHelpers.HaveEqualElements(composites, resolver.composites))
+                return false;
+
+            return true;
+        }
+
+        internal static void DisableAllActions()
+        {
+            for (var i = 0; i < s_GlobalList.length; ++i)
+            {
+                var state = (InputActionMapState)s_GlobalList[i].Target;
+                if (state == null)
+                    continue;
+
+                var mapCount = state.totalMapCount;
+                var maps = state.maps;
+                for (var n = 0; n < mapCount; ++n)
+                    maps[n].Disable();
+            }
+        }
+
+        #endregion
     }
 }
