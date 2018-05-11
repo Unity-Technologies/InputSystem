@@ -3159,7 +3159,7 @@ class CoreTests : InputTestFixture
                     gamepad1WasRemoved = true;
             };
 
-        var inputEvent = DeviceRemoveEvent.Create(gamepad1.id, Time.time);
+        var inputEvent = DeviceRemoveEvent.Create(gamepad1.id, testRuntime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 
@@ -3184,7 +3184,7 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
         var device = InputSystem.devices[0];
 
-        var inputEvent = DeviceRemoveEvent.Create(device.id, Time.time);
+        var inputEvent = DeviceRemoveEvent.Create(device.id, testRuntime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 

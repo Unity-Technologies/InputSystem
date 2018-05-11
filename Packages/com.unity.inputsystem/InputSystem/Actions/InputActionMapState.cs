@@ -7,6 +7,8 @@ using UnityEngine.Profiling;
 // The current form of this is a half-way step. It successfully pulls execution state together. But it still also
 // pulls in response code. We need to separate binding processing from action response.
 
+////TODO: separate resolution from enabling such that it is possible to query controls yet not have actions/maps enabled
+
 ////TODO: add a serialized form of this and take it across domain reloads
 
 ////TODO: remove direct references to InputManager
@@ -163,6 +165,13 @@ namespace UnityEngine.Experimental.Input
             return actionStates[action.m_ActionIndex];
         }
 
+        public ActionMapIndices FetchMapIndices(InputActionMap map)
+        {
+            Debug.Assert(map != null);
+            Debug.Assert(maps.Contains(map));
+            return mapIndices[map.m_MapIndex];
+        }
+
         public void EnableAllActions(InputActionMap map)
         {
             Debug.Assert(map != null);
@@ -175,7 +184,8 @@ namespace UnityEngine.Experimental.Input
             // Install state monitors for all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
             var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
-            EnableControls(mapIndex, controlStartIndex, controlCount);
+            if (controlCount > 0)
+                EnableControls(mapIndex, controlStartIndex, controlCount);
 
             // Put all actions into waiting state.
             var actionCount = mapIndices[mapIndex].actionCount;
@@ -207,8 +217,11 @@ namespace UnityEngine.Experimental.Input
                 if (bindingStates[bindingIndex].actionIndex != actionIndex)
                     continue;
 
-                EnableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex,
-                    bindingStates[bindingIndex].controlCount);
+                var controlCount = bindingStates[bindingIndex].controlCount;
+                if (controlCount == 0)
+                    continue;
+
+                EnableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex, controlCount);
             }
 
             // Put action into waiting state.
@@ -231,7 +244,8 @@ namespace UnityEngine.Experimental.Input
             // Remove state monitors from all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
             var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
-            DisableControls(mapIndex, controlStartIndex, controlCount);
+            if (controlCount > 0)
+                DisableControls(mapIndex, controlStartIndex, controlCount);
 
             // Mark all actions as disabled.
             var actionCount = mapIndices[mapIndex].actionCount;
@@ -263,8 +277,11 @@ namespace UnityEngine.Experimental.Input
                 if (bindingStates[bindingIndex].actionIndex != actionIndex)
                     continue;
 
-                DisableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex,
-                    bindingStates[bindingIndex].controlCount);
+                var controlCount = bindingStates[bindingIndex].controlCount;
+                if (controlCount == 0)
+                    continue;
+
+                DisableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex, controlCount);
             }
 
             // Put action into disabled state.
@@ -339,7 +356,10 @@ namespace UnityEngine.Experimental.Input
 
         private static long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
-            return ((long)mapIndex << 48) | ((long)bindingIndex << 32) | controlIndex;
+            var result = (long)controlIndex;
+            result |= (long)bindingIndex << 32;
+            result |= (long)mapIndex << 48;
+            return result;
         }
 
         private static void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
@@ -486,7 +506,6 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
 
             var manager = InputSystem.s_Manager;
-            var control = controls[controlIndex];
             var monitorIndex =
                 ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
