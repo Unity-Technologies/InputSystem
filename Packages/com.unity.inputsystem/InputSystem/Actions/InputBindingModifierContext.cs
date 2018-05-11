@@ -16,23 +16,16 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public InputAction action
         {
-            get
-            {
-                var actionIndex = m_ActionMap.m_State.bindingStates[bindingIndex].actionIndex;
-                if (actionIndex == InputActionMapState.kInvalidIndex)
-                    return null;
-                return m_ActionMap.m_Actions[actionIndex];
-            }
+            get { return m_State.GetActionOrNull(ref m_TriggerState); }
         }
 
+        /// <summary>
+        /// The bound control that changed its state to trigger the binding associated
+        /// with the modifier.
+        /// </summary>
         public InputControl control
         {
-            get
-            {
-                var controlIndex = m_TriggerState.controlIndex;
-                Debug.Assert(controlIndex != InputActionMapState.kInvalidIndex);
-                return m_ActionMap.m_State.controls[controlIndex];
-            }
+            get { return m_State.GetControl(ref m_TriggerState); }
         }
 
         public InputActionPhase phase
@@ -55,15 +48,14 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                throw new NotImplementedException();
+                if ((m_Flags & Flags.ControlHasDefaultValueInitialized) != Flags.ControlHasDefaultValueInitialized)
+                {
+                    var triggerControl = control;
+                    if (triggerControl.CheckStateIsAllZeros())
+                        m_Flags |= Flags.ControlHasDefaultValue;
+                    m_Flags |= Flags.ControlHasDefaultValueInitialized;
+                }
                 return (m_Flags & Flags.ControlHasDefaultValue) == Flags.ControlHasDefaultValue;
-            }
-            internal set
-            {
-                if (value)
-                    m_Flags |= Flags.ControlHasDefaultValue;
-                else
-                    m_Flags &= ~Flags.ControlHasDefaultValue;
             }
         }
 
@@ -92,27 +84,32 @@ namespace UnityEngine.Experimental.Input
         public void Started()
         {
             m_TriggerState.startTime = time;
-            m_ActionMap.m_State.ChangePhaseOfModifier(InputActionPhase.Started, ref m_TriggerState, m_ActionMap);
+            m_State.ChangePhaseOfModifier(InputActionPhase.Started, ref m_TriggerState);
         }
 
         public void Performed()
         {
-            m_ActionMap.m_State.ChangePhaseOfModifier(InputActionPhase.Performed, ref m_TriggerState, m_ActionMap);
+            m_State.ChangePhaseOfModifier(InputActionPhase.Performed, ref m_TriggerState);
         }
 
         public void Cancelled()
         {
-            m_ActionMap.m_State.ChangePhaseOfModifier(InputActionPhase.Cancelled, ref m_TriggerState, m_ActionMap);
+            m_State.ChangePhaseOfModifier(InputActionPhase.Cancelled, ref m_TriggerState);
         }
 
         public void SetTimeout(float seconds)
         {
-            m_ActionMap.AddStateChangeTimeout(controlIndex, bindingIndex, modifierIndex, seconds);
+            m_State.StartTimeout(seconds, ref m_TriggerState);
         }
 
-        internal InputActionMap m_ActionMap;
+        internal InputActionMapState m_State;
         internal Flags m_Flags;
         internal InputActionMapState.TriggerState m_TriggerState;
+
+        internal int mapIndex
+        {
+            get { return m_TriggerState.mapIndex; }
+        }
 
         internal int controlIndex
         {
@@ -134,7 +131,8 @@ namespace UnityEngine.Experimental.Input
         internal enum Flags
         {
             ControlHasDefaultValue = 1 << 0,
-            TimerHasExpired = 1 << 1,
+            ControlHasDefaultValueInitialized = 1 << 1,
+            TimerHasExpired = 1 << 2,
         }
     }
 }

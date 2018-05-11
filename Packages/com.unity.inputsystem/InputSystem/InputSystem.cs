@@ -32,8 +32,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 namespace UnityEngine.Experimental.Input
 {
-    using NotifyControlValueChangeAction = Action<InputControl, double, int>;
-    using NotifyTimerExpiredAction = Action<InputControl, double, int, int>;
+    using NotifyControlValueChangeAction = Action<InputControl, double, long>;
+    using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
 
     /// <summary>
     /// This is the central hub for the input system.
@@ -650,7 +650,7 @@ namespace UnityEngine.Experimental.Input
 
         #region State Change Monitors
 
-        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex = -1)
+        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
@@ -675,7 +675,7 @@ namespace UnityEngine.Experimental.Input
             return monitor;
         }
 
-        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex = -1)
+        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
         {
             if (control == null)
                 throw new ArgumentNullException("control");
@@ -699,7 +699,7 @@ namespace UnityEngine.Experimental.Input
         /// will be called on <paramref name="monitor"/>. If a state change happens by the given <paramref name="time"/>,
         /// the monitor is notified as usual and the timer is automatically removed.
         /// </remarks>
-        public static void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, int monitorIndex = -1, int timerIndex = -1)
+        public static void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex = -1, int timerIndex = -1)
         {
             if (monitor == null)
                 throw new ArgumentNullException("monitor");
@@ -707,7 +707,7 @@ namespace UnityEngine.Experimental.Input
             s_Manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
         }
 
-        public static void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, int monitorIndex = -1, int timerIndex = -1)
+        public static void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex = -1, int timerIndex = -1)
         {
             if (monitor == null)
                 throw new ArgumentNullException("monitor");
@@ -720,12 +720,12 @@ namespace UnityEngine.Experimental.Input
             public NotifyControlValueChangeAction valueChangeCallback;
             public NotifyTimerExpiredAction timerExpiredCallback;
 
-            public void NotifyControlValueChanged(InputControl control, double time, int monitorIndex)
+            public void NotifyControlValueChanged(InputControl control, double time, long monitorIndex)
             {
                 valueChangeCallback(control, time, monitorIndex);
             }
 
-            public void NotifyTimerExpired(InputControl control, double time, int monitorIndex, int timerIndex)
+            public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
             {
                 if (timerExpiredCallback != null)
                     timerExpiredCallback(control, time, monitorIndex, timerIndex);

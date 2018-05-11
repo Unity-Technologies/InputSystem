@@ -1,10 +1,18 @@
 using System;
+using System.Linq;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
+
+// The current form of this is a half-way step. It successfully pulls execution state together. But it still also
+// pulls in response code. We need to separate binding processing from action response.
 
 ////TODO: add a serialized form of this and take it across domain reloads
 
 ////TODO: remove direct references to InputManager
+
+////REVIEW: can we pack all the state that is blittable into a single chunk of unmanaged memory instead of into several managed arrays?
+////        (this also means we can update more data with direct pointers)
 
 ////REVIEW: can we have a global array of InputControls?
 
@@ -14,8 +22,6 @@ using UnityEngine.Profiling;
 // 1) We perform phase progression directly from state monitor callbacks
 // 2) We perform phase progression delayed from a series of state change events
 
-// What if actions and action maps become more of a configuration frontend for action state processing which stands on its own?
-
 //trace modifier state changes that result in action state changes?
 
 //IInputActionResponse?
@@ -24,23 +30,25 @@ using UnityEngine.Profiling;
 
 //allow setup where state monitor is enabled but action is disabled?
 
-//let's say we make this a class, move IInputStateChangeMonitor over to it, and additionally allow multiple maps
-//to share the same state
-
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// Dynamic execution state of one or more <see cref="InputActionMap">action maps</see>.
     /// </summary>
     /// <remarks>
-    /// The aim of this class is to both put all the dynamic execution state in one place as well
+    /// The aim of this class is to both put all the dynamic execution state into one place as well
     /// as to organize state in tight, GC-optimized arrays. Also, by moving state out of individual
     /// <see cref="InputActionMap">action maps</see>, we can combine the state of several maps
-    /// into one single object with a single set of arrays.
+    /// into one single object with a single set of arrays. Ideally, if you have a single action
+    /// asset in the game, you get a single InputActionMapState that contains the entire dynamic
+    /// execution state for your game's actions.
     /// </remarks>
-    internal struct InputActionMapState
+    internal class InputActionMapState : IInputStateChangeMonitor
     {
         public const int kInvalidIndex = -1;
+
+        public InputActionMap[] maps;
+        public ActionMapIndices[] mapIndices;
 
         /// <summary>
         /// List of all resolved controls.
@@ -48,7 +56,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// As we don't know in advance how many controls a binding may match (if any), we bump the size of
         /// this array in increments during resolution. This means it may be end up being larger than the total
-        /// number of used controls and have empty entries at the end. Use <see cref="controlCount"/> and not
+        /// number of used controls and have empty entries at the end. Use <see cref="totalNumControls"/> and not
         /// <c>.Length</c> to find the actual number of controls.
         ///
         /// All bound controls are included in the array regardless of whether only a partial set of actions
@@ -72,12 +80,19 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public object[] composites;
 
-        /// <summary>
-        /// Number of controls bound by the action map.
-        /// </summary>
-        public int controlCount;
+        public int totalNumActions;
 
-        public int modifierCount;
+        public int totalNumBindings;
+
+        /// <summary>
+        /// Total number of controls resolved from bindings of all action maps
+        /// added to the state.
+        /// </summary>
+        public int totalNumControls;
+
+        public int totalNumModifiers;
+
+        public int totalNumComposites;
 
         /// <summary>
         /// State of all bindings in the action map.
@@ -105,6 +120,9 @@ namespace UnityEngine.Experimental.Input
         /// This may end up being <c>null</c> if there's binding but either no associated actions
         /// or no actions that could be found.
         ///
+        /// This array also tells which actions are enabled or disabled. Any action with phase
+        /// <see cref="InputActionPhase.Disabled"/> is disabled.
+        ///
         /// This array should not require GC scanning.
         /// </remarks>
         public TriggerState[] actionStates;
@@ -117,26 +135,237 @@ namespace UnityEngine.Experimental.Input
         /// <param name="resolver"></param>
         public void Initialize(InputBindingResolver resolver)
         {
-            controlCount = resolver.controlCount;
+            totalNumActions = resolver.totalActionCount;
+            totalNumBindings = resolver.totalBindingCount;
+            totalNumModifiers = resolver.totalModifierCount;
+            totalNumComposites = resolver.totalCompositeCount;
+            totalNumControls = resolver.totalControlCount;
+
+            maps = resolver.maps;
+            mapIndices = resolver.mapIndices;
+            actionStates = resolver.actionStates;
+            bindingStates = resolver.bindingStates;
+            modifierStates = resolver.modifierStates;
+            modifiers = resolver.modifiers;
+            composites = resolver.composites;
             controls = resolver.controls;
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
+        }
 
-            modifierStates = resolver.modifierStates;
-            bindingStates = resolver.bindingStates;
-            actionStates = resolver.actionStates;
+        public TriggerState FetchActionState(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionMap != null);
+            Debug.Assert(action.m_ActionMap.m_MapIndex != kInvalidIndex);
+            Debug.Assert(maps.Contains(action.m_ActionMap));
+            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalNumActions);
+
+            return actionStates[action.m_ActionIndex];
+        }
+
+        public void EnableAllActions(InputActionMap map)
+        {
+            Debug.Assert(map != null);
+            Debug.Assert(map.m_Actions != null);
+            Debug.Assert(maps.Contains(map));
+
+            var mapIndex = map.m_MapIndex;
+            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+
+            // Install state monitors for all controls.
+            var controlCount = mapIndices[mapIndex].controlCount;
+            var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
+            EnableControls(mapIndex, controlStartIndex, controlCount);
+
+            // Put all actions into waiting state.
+            var actionCount = mapIndices[mapIndex].actionCount;
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            for (var i = 0; i < actionCount; ++i)
+                actionStates[actionStartIndex + i].phase = InputActionPhase.Waiting;
+        }
+
+        public void EnableSingleAction(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionMap != null);
+            Debug.Assert(maps.Contains(action.m_ActionMap));
+
+            var actionIndex = action.m_ActionIndex;
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalNumActions);
+
+            var map = action.m_ActionMap;
+            var mapIndex = map.m_MapIndex;
+            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+
+            // Go through all bindings in the map and for all that belong to the given action,
+            // enable the associated controls.
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            var bindingCount = mapIndices[mapIndex].bindingCount;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingIndex = bindingStartIndex + i;
+                if (bindingStates[bindingIndex].actionIndex != actionIndex)
+                    continue;
+
+                EnableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex,
+                    bindingStates[bindingIndex].controlCount);
+            }
+
+            // Put action into waiting state.
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            actionStates[actionStartIndex].phase = InputActionPhase.Waiting;
+        }
+
+        ////TODO: need to cancel actions if they are in started state
+        ////TODO: reset all modifier states
+
+        public void DisableAllActions(InputActionMap map)
+        {
+            Debug.Assert(map != null);
+            Debug.Assert(map.m_Actions != null);
+            Debug.Assert(maps.Contains(map));
+
+            var mapIndex = map.m_MapIndex;
+            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+
+            // Remove state monitors from all controls.
+            var controlCount = mapIndices[mapIndex].controlCount;
+            var controlStartIndex = mapIndices[mapIndex].controlStartIndex;
+            DisableControls(mapIndex, controlStartIndex, controlCount);
+
+            // Mark all actions as disabled.
+            var actionCount = mapIndices[mapIndex].actionCount;
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            for (var i = 0; i < actionCount; ++i)
+                actionStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
+        }
+
+        public void DisableSingleAction(InputAction action)
+        {
+            Debug.Assert(action != null);
+            Debug.Assert(action.m_ActionMap != null);
+            Debug.Assert(maps.Contains(action.m_ActionMap));
+
+            var actionIndex = action.m_ActionIndex;
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalNumActions);
+
+            var map = action.m_ActionMap;
+            var mapIndex = map.m_MapIndex;
+            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+
+            // Go through all bindings in the map and for all that belong to the given action,
+            // disable the associated controls.
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            var bindingCount = mapIndices[mapIndex].bindingCount;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingIndex = bindingStartIndex + i;
+                if (bindingStates[bindingIndex].actionIndex != actionIndex)
+                    continue;
+
+                DisableControls(mapIndex, bindingStates[bindingIndex].controlStartIndex,
+                    bindingStates[bindingIndex].controlCount);
+            }
+
+            // Put action into disabled state.
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            actionStates[actionStartIndex].phase = InputActionPhase.Disabled;
+        }
+
+        ////REVIEW: can we have a method on InputManager doing this in bulk?
+
+        private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
+        {
+            Debug.Assert(controls != null);
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalNumControls);
+            Debug.Assert(controlStartIndex + numControls <= totalNumControls);
+
+            var manager = InputSystem.s_Manager;
+            for (var i = 0; i < numControls; ++i)
+            {
+                var controlIndex = controlStartIndex + i;
+                var bindingIndex = controlIndexToBindingIndex[controlIndex];
+                var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+            }
+        }
+
+        private void DisableControls(int mapIndex, int controlStartIndex, int numControls)
+        {
+            Debug.Assert(controls != null);
+            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < totalNumControls);
+            Debug.Assert(controlStartIndex + numControls <= totalNumControls);
+
+            var manager = InputSystem.s_Manager;
+            for (var i = 0; i < numControls; ++i)
+            {
+                var controlIndex = controlStartIndex + i;
+                var bindingIndex = controlIndexToBindingIndex[controlIndex];
+                var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+
+                manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+            }
+        }
+
+        // Called from InputManager when one of our state change monitors has fired.
+        // Tells us the time of the change *according to the state events coming in*.
+        // Also tells us which control of the controls we are binding to triggered the
+        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
+        void IInputStateChangeMonitor.NotifyControlValueChanged(InputControl control, double time, long mapControlAndBindingIndex)
+        {
+            int controlIndex;
+            int bindingIndex;
+            int mapIndex;
+
+            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out mapIndex, out controlIndex, out bindingIndex);
+            ProcessControlValueChange(mapIndex, controlIndex, bindingIndex, time);
+        }
+
+        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long mapControlAndBindingIndex, int modifierIndex)
+        {
+            int controlIndex;
+            int bindingIndex;
+            int mapIndex;
+
+            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out mapIndex, out controlIndex, out bindingIndex);
+            ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, modifierIndex);
+        }
+
+        // We mangle the various indices we use into a single long for association with state change
+        // monitors. While we could look up map and binding indices from control indices, keeping
+        // all the information together avoids having to unnecessarily jump around in memory to grab
+        // the various pieces of data.
+
+        private static long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
+        {
+            return ((long)mapIndex << 48) | ((long)bindingIndex << 32) | controlIndex;
+        }
+
+        private static void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
+            out int controlIndex, out int bindingIndex)
+        {
+            controlIndex = (int)(mapControlAndBindingIndex & 0xffffffff);
+            bindingIndex = (int)((mapControlAndBindingIndex >> 32) & 0xffff);
+            mapIndex = (int)(mapControlAndBindingIndex >> 48);
         }
 
         /// <summary>
         /// Process a state change that has happened in one of the controls attached
         /// to this action map state.
         /// </summary>
-        /// <param name="actionMap"></param>
+        /// <param name="mapIndex">Index of the action map to which the binding belongs.</param>
         /// <param name="controlIndex">Index of the control that changed state.</param>
         /// <param name="bindingIndex">Index of the binding associated with the given control.</param>
         /// <param name="time">The timestamp associated with the state change (comes from the state change event).</param>
-        public void ProcessControlValueChange(InputActionMap actionMap, int controlIndex, int bindingIndex, double time)
+        /// <remarks>
+        /// This is where we end up if one of the state monitors we've put in the system has triggered.
+        /// From here we go back to the associated binding and then let it figure out what the state change
+        /// means for it.
+        /// </remarks>
+        private void ProcessControlValueChange(int mapIndex, int controlIndex, int bindingIndex, double time)
         {
-            Debug.Assert(actionMap != null);
+            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
             Debug.Assert(controlIndex >= 0 && controlIndex < controls.Length);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
 
@@ -149,10 +378,11 @@ namespace UnityEngine.Experimental.Input
             {
                 var context = new InputBindingModifierContext
                 {
-                    m_ActionMap = actionMap,
+                    m_State = this,
                     m_TriggerState = new TriggerState
                     {
                         time = time,
+                        mapIndex = mapIndex,
                         bindingIndex = bindingIndex,
                         controlIndex = controlIndex,
                     }
@@ -185,32 +415,34 @@ namespace UnityEngine.Experimental.Input
                 var trigger = new TriggerState
                 {
                     phase = InputActionPhase.Performed,
+                    mapIndex = mapIndex,
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     modifierIndex = kInvalidIndex,
                     time = time,
                     startTime = time
                 };
-                ChangePhaseOfAction(InputActionPhase.Performed, ref trigger, actionMap);
+                ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
             }
         }
 
-        public void ProcessTimeout(InputActionMap actionMap, double time, int controlIndex, int bindingIndex, int modifierIndex)
+        private void ProcessTimeout(double time, int mapIndex, int controlIndex, int bindingIndex, int modifierIndex)
         {
-            Debug.Assert(controlIndex >= 0 && controlIndex < controlCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalNumControls);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < modifierCount);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
 
             var currentState = modifierStates[modifierIndex];
 
             var context = new InputBindingModifierContext
             {
-                m_ActionMap = actionMap,
+                m_State = this,
                 m_TriggerState =
                     new TriggerState
                 {
                     phase = currentState.phase,
                     time = time,
+                    mapIndex = mapIndex,
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     modifierIndex = modifierIndex
@@ -225,9 +457,45 @@ namespace UnityEngine.Experimental.Input
             modifiers[modifierIndex].Process(ref context);
         }
 
-        public void StartTimeout(InputActionMap actionMap, float seconds, int controlIndex, int bindingIndex,
-            int modifierIndex)
+        internal void StartTimeout(float seconds, ref TriggerState trigger)
         {
+            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < maps.Length);
+            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalNumControls);
+            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalNumModifiers);
+
+            var manager = InputSystem.s_Manager;
+            var currentTime = manager.m_Runtime.currentTime;
+            var control = controls[trigger.controlIndex];
+            var modifierIndex = trigger.modifierIndex;
+            var monitorIndex =
+                ToCombinedMapAndControlAndBindingIndex(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex);
+
+            manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, monitorIndex,
+                modifierIndex);
+
+            // Update state.
+            var modifierState = modifierStates[modifierIndex];
+            modifierState.isTimerRunning = true;
+            modifierStates[modifierIndex] = modifierState;
+        }
+
+        private void StopTimeout(int mapIndex, int controlIndex, int bindingIndex, int modifierIndex)
+        {
+            Debug.Assert(mapIndex >= 0 && mapIndex < maps.Length);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalNumControls);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
+
+            var manager = InputSystem.s_Manager;
+            var control = controls[controlIndex];
+            var monitorIndex =
+                ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+
+            manager.RemoveStateChangeMonitorTimeout(this, monitorIndex, modifierIndex);
+
+            // Update state.
+            var modifierState = modifierStates[modifierIndex];
+            modifierState.isTimerRunning = false;
+            modifierStates[modifierIndex] = modifierState;
         }
 
         /// <summary>
@@ -236,7 +504,6 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         /// <param name="newPhase"></param>
         /// <param name="trigger"></param>
-        /// <param name="actionMap"></param>
         /// <remarks>
         /// Multiple modifiers on the same binding can be started concurrently but the
         /// first modifier that starts will get to drive an action until it either cancels
@@ -251,20 +518,19 @@ namespace UnityEngine.Experimental.Input
         /// it comes first; then the TapModifier cancels because the button is held for too
         /// long and the SlowTapModifier will get to drive the action next).
         /// </remarks>
-        internal void ChangePhaseOfModifier(InputActionPhase newPhase, ref TriggerState trigger, InputActionMap actionMap)
+        internal void ChangePhaseOfModifier(InputActionPhase newPhase, ref TriggerState trigger)
         {
             var modifierIndex = trigger.modifierIndex;
             var bindingIndex = trigger.bindingIndex;
 
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < modifierCount);
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
 
             ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
             ////      as the start of the phase
 
             // Update modifier state.
-            ThrowIfPhaseTransitionIsInvalid(modifierStates[modifierIndex].phase, newPhase, bindingIndex,
-                modifierIndex, actionMap);
+            ThrowIfPhaseTransitionIsInvalid(modifierStates[modifierIndex].phase, newPhase, ref trigger);
             modifierStates[modifierIndex].phase = newPhase;
             modifierStates[modifierIndex].triggerControlIndex = trigger.controlIndex;
             if (newPhase == InputActionPhase.Started)
@@ -278,14 +544,14 @@ namespace UnityEngine.Experimental.Input
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
                     // We're the first modifier to go to the start phase.
-                    ChangePhaseOfAction(newPhase, ref trigger, actionMap);
+                    ChangePhaseOfAction(newPhase, ref trigger);
                 }
                 else if (newPhase == InputActionPhase.Cancelled && actionStates[actionIndex].modifierIndex == trigger.modifierIndex)
                 {
                     // We're cancelling but maybe there's another modifier ready
                     // to go into start phase.
 
-                    ChangePhaseOfAction(newPhase, ref trigger, actionMap);
+                    ChangePhaseOfAction(newPhase, ref trigger);
 
                     var modifierStartIndex = bindingStates[bindingIndex].modifierStartIndex;
                     var numModifiers = bindingStates[bindingIndex].modifierCount;
@@ -303,7 +569,7 @@ namespace UnityEngine.Experimental.Input
                                 time = trigger.time,
                                 startTime = modifierStates[index].startTime
                             };
-                            ChangePhaseOfAction(InputActionPhase.Started, ref triggerForModifier, actionMap);
+                            ChangePhaseOfAction(InputActionPhase.Started, ref triggerForModifier);
                             break;
                         }
                     }
@@ -312,7 +578,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     // Any other phase change goes to action if we're the modifier driving
                     // the current phase.
-                    ChangePhaseOfAction(newPhase, ref trigger, actionMap);
+                    ChangePhaseOfAction(newPhase, ref trigger);
 
                     // We're the modifier driving the action and we performed the action,
                     // so reset any other modifier to waiting state.
@@ -324,7 +590,7 @@ namespace UnityEngine.Experimental.Input
                         {
                             var index = modifierStartIndex + i;
                             if (index != trigger.modifierIndex)
-                                ResetModifier(trigger.bindingIndex, index, actionMap);
+                                ResetModifier(trigger.mapIndex, trigger.bindingIndex, index);
                         }
                     }
                 }
@@ -332,31 +598,32 @@ namespace UnityEngine.Experimental.Input
 
             // If the modifier performed or cancelled, go back to waiting.
             if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
-                ResetModifier(trigger.bindingIndex, trigger.modifierIndex, actionMap);
+                ResetModifier(trigger.mapIndex, trigger.bindingIndex, trigger.modifierIndex);
             ////TODO: reset entire chain
         }
 
         // Perform a phase change on the action. Visible to observers.
-        internal void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger, InputActionMap actionMap)
+        internal void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger)
         {
-            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < controlCount);
-            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < bindingStates.Length);
+            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < maps.Length);
+            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalNumControls);
+            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < totalNumBindings);
 
             var actionIndex = bindingStates[trigger.bindingIndex].actionIndex;
-            if (actionIndex == -1)
+            if (actionIndex == kInvalidIndex)
                 return; // No action associated with binding.
 
             // Make sure phase progression is valid.
             var currentPhase = actionStates[actionIndex].phase;
-            ThrowIfPhaseTransitionIsInvalid(currentPhase, newPhase, trigger.bindingIndex, trigger.modifierIndex,
-                actionMap);
+            ThrowIfPhaseTransitionIsInvalid(currentPhase, newPhase, ref trigger);
 
             // Update action state.
             actionStates[actionIndex] = trigger;
             actionStates[actionIndex].phase = newPhase;
 
             // Let listeners know.
-            var action = actionMap.m_Actions[actionIndex];
+            var map = maps[trigger.mapIndex];
+            var action = map.m_Actions[actionIndex - mapIndices[trigger.mapIndex].actionStartIndex];
             switch (newPhase)
             {
                 case InputActionPhase.Started:
@@ -402,7 +669,7 @@ namespace UnityEngine.Experimental.Input
 
             // Fetch control that triggered the action.
             var controlIndex = trigger.controlIndex;
-            Debug.Assert(controlIndex >= 0 && controlIndex < controlCount);
+            Debug.Assert(controlIndex >= 0 && controlIndex < totalNumControls);
             var control = controls[controlIndex];
 
             // We store the relevant state directly on the context instead of looking it
@@ -427,49 +694,73 @@ namespace UnityEngine.Experimental.Input
             Profiler.EndSample();
         }
 
-        private void ThrowIfPhaseTransitionIsInvalid(InputActionPhase currentPhase, InputActionPhase newPhase,
-            int bindingIndex, int modifierIndex, InputActionMap actionMap)
+        private void ThrowIfPhaseTransitionIsInvalid(InputActionPhase currentPhase, InputActionPhase newPhase, ref TriggerState trigger)
         {
+            // Can only go to Started from Waiting.
             if (newPhase == InputActionPhase.Started && currentPhase != InputActionPhase.Waiting)
                 throw new InvalidOperationException(
                     string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
                         currentPhase, InputActionPhase.Started, InputActionPhase.Waiting,
-                        GetActionForBinding(bindingIndex, actionMap), GetModifierOrNull(modifierIndex)));
+                        GetActionOrNoneString(ref trigger), GetModifierOrNull(ref trigger)));
+
+            // Can only go to Performed from Waiting or Started.
             if (newPhase == InputActionPhase.Performed && currentPhase != InputActionPhase.Waiting &&
                 currentPhase != InputActionPhase.Started)
                 throw new InvalidOperationException(
                     string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' or '{3}' (action: {4}, modifier: {5})",
                         currentPhase, InputActionPhase.Performed, InputActionPhase.Waiting, InputActionPhase.Started,
-                        GetActionForBinding(bindingIndex, actionMap),
-                        GetModifierOrNull(bindingIndex)));
+                        GetActionOrNoneString(ref trigger),
+                        GetModifierOrNull(ref trigger)));
+
+            // Can only go to Cancelled from Started.
             if (newPhase == InputActionPhase.Cancelled && currentPhase != InputActionPhase.Started)
                 throw new InvalidOperationException(
                     string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
                         currentPhase, InputActionPhase.Cancelled, InputActionPhase.Started,
-                        GetActionForBinding(bindingIndex, actionMap), GetModifierOrNull(modifierIndex)));
+                        GetActionOrNoneString(ref trigger), GetModifierOrNull(ref trigger)));
         }
 
-        private object GetActionForBinding(int bindingIndex, InputActionMap actionMap)
+        private object GetActionOrNoneString(ref TriggerState trigger)
         {
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
-
-            var actionIndex = bindingStates[bindingIndex].actionIndex;
-            if (actionIndex == kInvalidIndex)
+            var action = GetActionOrNull(ref trigger);
+            if (action == null)
                 return "<none>";
-
-            return actionMap.m_Actions[actionIndex];
+            return action;
         }
 
-        private IInputBindingModifier GetModifierOrNull(int modifierIndex)
+        internal InputAction GetActionOrNull(ref TriggerState trigger)
         {
-            if (modifierIndex == kInvalidIndex)
+            Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < maps.Length);
+            Debug.Assert(trigger.bindingIndex >= 0 && trigger.bindingIndex < bindingStates.Length);
+
+            var actionIndex = bindingStates[trigger.bindingIndex].actionIndex;
+            if (actionIndex == kInvalidIndex)
                 return null;
-            return modifiers[modifierIndex];
+
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalNumActions);
+            var actionStartIndex = mapIndices[trigger.mapIndex].actionStartIndex;
+            return maps[trigger.mapIndex].m_Actions[actionIndex - actionStartIndex];
         }
 
-        private void ResetModifier(int bindingIndex, int modifierIndex, InputActionMap actionMap)
+        internal InputControl GetControl(ref TriggerState trigger)
         {
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < modifierCount);
+            Debug.Assert(trigger.controlIndex != kInvalidIndex);
+            Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalNumControls);
+            return controls[trigger.controlIndex];
+        }
+
+        private IInputBindingModifier GetModifierOrNull(ref TriggerState trigger)
+        {
+            if (trigger.modifierIndex == kInvalidIndex)
+                return null;
+
+            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalNumModifiers);
+            return modifiers[trigger.modifierIndex];
+        }
+
+        private void ResetModifier(int mapIndex, int bindingIndex, int modifierIndex)
+        {
+            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalNumModifiers);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < bindingStates.Length);
 
             modifiers[modifierIndex].Reset();
@@ -477,7 +768,7 @@ namespace UnityEngine.Experimental.Input
             if (modifierStates[modifierIndex].isTimerRunning)
             {
                 var controlIndex = modifierStates[modifierIndex].triggerControlIndex;
-                actionMap.RemoveStateChangeTimeout(controlIndex, bindingIndex, modifierIndex);
+                StopTimeout(mapIndex, controlIndex, bindingIndex, modifierIndex);
             }
 
             modifierStates[modifierIndex] =
@@ -534,6 +825,9 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         internal struct BindingState
         {
+            private short m_ControlCount;
+            private short m_ModifierCount;
+
             [Flags]
             public enum Flags
             {
@@ -550,17 +844,25 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Number of controls associated with this binding.
             /// </summary>
-            public int controlCount;
+            public int controlCount
+            {
+                get { return m_ControlCount; }
+                set { m_ControlCount = (short)value; }
+            }
+
+            /// <summary>
+            /// Number of modifiers associated with this binding.
+            /// </summary>
+            public int modifierCount
+            {
+                get { return m_ModifierCount; }
+                set { m_ModifierCount = (short)value; }
+            }
 
             /// <summary>
             /// Index into <see cref="modifierStates"/> of first modifier associated with the binding.
             /// </summary>
             public int modifierStartIndex;
-
-            /// <summary>
-            /// Number of modifiers associated with this binding.
-            /// </summary>
-            public int modifierCount;
 
             /// <summary>
             /// Index of the action being triggered by the binding (if any).
@@ -624,14 +926,21 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Information about a control value change triggering a phase change.
+        /// Record of an input control change and its related data.
         /// </summary>
         public struct TriggerState
         {
+            private short m_Phase;
+            private short m_MapIndex;
+
             /// <summary>
             /// Phase being triggered by the control value change.
             /// </summary>
-            public InputActionPhase phase;
+            public InputActionPhase phase
+            {
+                get { return (InputActionPhase)m_Phase; }
+                set { m_Phase = (short)value; }
+            }
 
             /// <summary>
             /// The time the binding got triggered.
@@ -639,6 +948,13 @@ namespace UnityEngine.Experimental.Input
             public double time;
 
             public double startTime;
+
+            public int mapIndex
+            {
+                get { return m_MapIndex; }
+                set { m_MapIndex = (short)value; }
+            }
+
             public int controlIndex;
 
             /// <summary>
@@ -652,8 +968,22 @@ namespace UnityEngine.Experimental.Input
             public int modifierIndex;
         }
 
-        public struct CompositeBindingContext
+        /// <summary>
+        /// Tells us where the data for a single action map is found in the
+        /// various arrays.
+        /// </summary>
+        public struct ActionMapIndices
         {
+            public int actionStartIndex;
+            public int actionCount;
+            public int controlStartIndex;
+            public int controlCount;
+            public int bindingStartIndex;
+            public int bindingCount;
+            public int modifierStartIndex;
+            public int modifierCount;
+            public int compositeStartIndex;
+            public int compositeCount;
         }
     }
 }

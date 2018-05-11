@@ -20,7 +20,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return false;
         }
 
-        public static int IndexOf<TValue>(ref TValue[] array, TValue value)
+        public static int IndexOf<TValue>(TValue[] array, TValue value)
         {
             if (array == null)
                 return -1;
@@ -248,7 +248,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static bool Erase<TValue>(ref TValue[] array, TValue value)
         {
-            var index = IndexOf(ref array, value);
+            var index = IndexOf(array, value);
             if (index != -1)
             {
                 EraseAt(ref array, index);
