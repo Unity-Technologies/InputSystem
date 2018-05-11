@@ -117,5 +117,11 @@ namespace UnityEngine.Experimental.Input
         ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllBindingOverrides
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
+
+        ////TODO: make this one happen and also persist it across domain reloads
+        /// <summary>
+        /// Shared state for all action maps in the asset.
+        /// </summary>
+        [NonSerialized] internal InputActionMapState m_ActionMapState;
     }
 }

@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Profiling;
+
+////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
 
 ////REVIEW: allow individual bindings to be enabled/disabled?
 
 ////TODO: allow querying controls *without* requiring actions to be enabled
-
-////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
-////      (this mechanism will likely come in handy for giving jobs access to actions)
 
 ////TODO: event-based processing of input actions
 
@@ -97,18 +95,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// The current phase of the action.
-        /// </summary>
-        /// <remarks>
-        /// When listening for control input and when responding to control value changes,
-        /// actions will go through several possible phases. TODO
-        /// </remarks>
-        public InputActionPhase phase
-        {
-            get { return m_CurrentPhase; }
-        }
-
-        /// <summary>
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
@@ -162,41 +148,98 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        ////REVIEW: expose this as a struct?
+        /// <summary>
+        /// The current phase of the action.
+        /// </summary>
+        /// <remarks>
+        /// When listening for control input and when responding to control value changes,
+        /// actions will go through several possible phases. TODO
+        /// </remarks>
+        public InputActionPhase phase
+        {
+            get { return currentState.phase; }
+        }
+
+        ////REVIEW: expose these as a struct?
+        ////REVIEW: do we need/want the lastTrigger stuff at all?
+
         public InputControl lastTriggerControl
         {
-            get { return m_LastTrigger.triggerControl; }
+            get
+            {
+                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                    return null;
+                var controlIndex = currentState.controlIndex;
+                if (controlIndex == InputActionMapState.kInvalidIndex)
+                    return null;
+                Debug.Assert(m_ActionMap != null);
+                Debug.Assert(m_ActionMap.m_State != null);
+                return m_ActionMap.m_State.controls[controlIndex];
+            }
         }
 
         public double lastTriggerTime
         {
-            get { return m_LastTrigger.time; }
+            get { return currentState.time; }
         }
 
         public double lastTriggerStartTime
         {
-            get { return m_LastTrigger.startTime; }
+            get { return currentState.startTime; }
         }
 
         public double lastTriggerDuration
         {
-            get { return m_LastTrigger.time - m_LastTrigger.startTime; }
+            get
+            {
+                var state = currentState;
+                return state.time - state.startTime;
+            }
         }
 
         public InputBinding lastTriggerBinding
         {
-            get { return GetBinding(m_LastTrigger.bindingIndex); }
+            get
+            {
+                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                    return default(InputBinding);
+                var bindingIndex = currentState.bindingIndex;
+                if (bindingIndex == InputActionMapState.kInvalidIndex)
+                    return default(InputBinding);
+                Debug.Assert(m_ActionMap != null);
+                Debug.Assert(m_ActionMap.m_State != null);
+                var bindingStartIndex = m_ActionMap.m_State.mapIndices[m_ActionMap.m_MapIndex].bindingStartIndex;
+                return m_ActionMap.m_Bindings[bindingIndex - bindingStartIndex];
+            }
         }
 
         public IInputBindingModifier lastTriggerModifier
         {
-            get { return GetModifier(m_LastTrigger.bindingIndex, m_LastTrigger.modifierIndex); }
+            get
+            {
+                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                    return null;
+                var modifierIndex = currentState.modifierIndex;
+                if (modifierIndex == InputActionMapState.kInvalidIndex)
+                    return null;
+                Debug.Assert(m_ActionMap != null);
+                Debug.Assert(m_ActionMap.m_State != null);
+                return m_ActionMap.m_State.modifiers[modifierIndex];
+            }
         }
 
+        /// <summary>
+        /// Whether the action is currently enabled or not.
+        /// </summary>
+        /// <remarks>
+        /// An action is enabled by either calling <see cref="Enable"/> on it directly or by calling
+        /// <see cref="InputActionMap.Enable"/> on the <see cref="InputActionMap"/> containing the action.
+        /// When enabled, an action will listen for changes on the controls it is bound to and trigger
+        /// ...
+        /// </remarks>
         public bool enabled
         {
-            get { return m_Enabled; }
-            internal set { m_Enabled = value; }
+            get { return phase != InputActionPhase.Disabled; }
         }
 
         ////REVIEW: have single delegate that just gives you an InputAction and you get the control and phase from the action?
@@ -248,7 +291,6 @@ namespace UnityEngine.Experimental.Input
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
-            m_CurrentPhase = InputActionPhase.Disabled;
         }
 
         public override string ToString()
@@ -273,33 +315,25 @@ namespace UnityEngine.Experimental.Input
                 CreateInternalActionSetForSingletonAction();
 
             // First time we're enabled, find all controls.
-            /*if (m_ActionMap.m_Controls == null)*/////FIXME
-            m_ActionMap.ResolveBindings();
+            m_ActionMap.ResolveBindingsIfNecessary();
 
             // Go live.
-            m_ActionMap.TellAboutActionChangingEnabledStatus(this, true);
-            //InstallStateChangeMonitors();
-
-            enabled = true;
-            m_CurrentPhase = InputActionPhase.Waiting;
+            m_ActionMap.m_State.EnableSingleAction(this);
+            ++m_ActionMap.m_EnabledActionsCount;
+            m_ActionMap.EnsureMapAddedToGlobalList();
+            m_ActionMap.NotifyListenersEnabledActionsChanged();
         }
 
-        ////TODO: need to cancel action if it's in started state
         public void Disable()
         {
             if (!enabled)
                 return;
 
-            // Remove global state.
-            m_ActionMap.TellAboutActionChangingEnabledStatus(this, false);
-            //UninstallStateChangeMonitors();
-
-            enabled = false;
-
-            m_CurrentPhase = InputActionPhase.Disabled;
-            m_LastTrigger = new InputActionMapState.TriggerState();
-
-            ////TODO: reset all modifier states
+            m_ActionMap.m_State.DisableSingleAction(this);
+            --m_ActionMap.m_EnabledActionsCount;
+            if (m_ActionMap.m_EnabledActionsCount == 0)
+                m_ActionMap.RemoveMapFromGlobalList();
+            m_ActionMap.NotifyListenersEnabledActionsChanged();
         }
 
         ////TODO: support for removing bindings
@@ -395,7 +429,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_BindingsStartIndex;
         [NonSerialized] internal int m_BindingsCount;
 
-        [NonSerialized] internal bool m_Enabled;
+        [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
 
         /// <summary>
         /// The action map that owns the action.
@@ -422,6 +456,18 @@ namespace UnityEngine.Experimental.Input
                 if (m_ActionMap == null)
                     CreateInternalActionSetForSingletonAction();
                 return m_ActionMap;
+            }
+        }
+
+        private InputActionMapState.TriggerState currentState
+        {
+            get
+            {
+                if (m_ActionIndex == InputActionMapState.kInvalidIndex)
+                    return new InputActionMapState.TriggerState();
+                Debug.Assert(m_ActionMap != null);
+                Debug.Assert(m_ActionMap.m_State != null);
+                return m_ActionMap.m_State.FetchActionState(this);
             }
         }
 
@@ -474,54 +520,6 @@ namespace UnityEngine.Experimental.Input
             return -1;
         }
 
-        // Notify observers that we have changed state.
-        private void CallListeners(ref InlinedArray<InputActionListener> listeners, ref InputActionMapState.TriggerState trigger)
-        {
-            // If there's no listeners, don't bother with anything else.
-            if (listeners.length == 0)
-                return;
-
-            // If the binding that triggered is part of a composite, fetch the composite.
-            object composite = null;
-            var bindingIndex = trigger.bindingIndex;
-            if (m_ActionMap.m_State.bindingStates[bindingIndex].isPartOfComposite)
-                composite = m_ResolvedBindings[bindingIndex].composite;
-
-            // If we got triggered under the control of a modifier, fetch its state.
-            IInputBindingModifier modifier = null;
-            var startTime = 0.0;
-            if (m_LastTrigger.modifierIndex != -1)
-            {
-                var modifierState = m_ResolvedBindings[bindingIndex].modifiers[m_LastTrigger.modifierIndex];
-                modifier = modifierState.modifier;
-                startTime = modifierState.startTime;
-            }
-
-            // We store the relevant state directly on the context instead of looking it
-            // up lazily on the action to shield the context from value changes. This prevents
-            // surprises on the caller side (e.g. in tests).
-            var context = new CallbackContext
-            {
-                m_Action = this,
-                m_Control = m_LastTrigger.triggerControl,
-                m_Time = m_LastTrigger.time,
-                m_Modifier = modifier,
-                m_StartTime = startTime,
-                m_Composite = composite,
-            };
-
-            Profiler.BeginSample("InputActionCallback");
-
-            listeners.firstValue(context);
-            if (listeners.additionalValues != null)
-            {
-                for (var i = 0; i < listeners.length - 1; ++i)
-                    listeners.additionalValues[i](context);
-            }
-
-            Profiler.EndSample();
-        }
-
         public struct CallbackContext
         {
             internal InputAction m_Action;
@@ -556,7 +554,7 @@ namespace UnityEngine.Experimental.Input
                 if (m_Composite != null)
                 {
                     var composite = (IInputBindingComposite<TValue>)m_Composite;
-                    var context = new InputActionMapState.CompositeBindingContext();
+                    var context = new InputBindingCompositeContext();
                     return composite.ReadValue(ref context);
                 }
 

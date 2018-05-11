@@ -2415,7 +2415,7 @@ class CoreTests : InputTestFixture
         const int kRightStick = 87654321;
 
         var monitorFired = false;
-        int? receivedMonitorIndex = null;
+        long? receivedMonitorIndex = null;
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
                 (control, time, monitorIndex) =>
             {

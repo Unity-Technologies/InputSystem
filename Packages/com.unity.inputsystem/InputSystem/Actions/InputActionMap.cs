@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.LowLevel;
+using System.Diagnostics;
 using UnityEngine.Experimental.Input.Utilities;
 
 // This file is the workhorse of the action system. Binding resolution and action
@@ -28,7 +28,7 @@ namespace UnityEngine.Experimental.Input
     /// on whether the player is walking or driving around.
     /// </remarks>
     [Serializable]
-    public class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputStateChangeMonitor
+    public class InputActionMap : ICloneable, ISerializationCallbackReceiver
     {
         /// <summary>
         /// Name of the action map.
@@ -116,17 +116,15 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public void Enable()
         {
-            if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)//really?
+            if (m_Actions == null || m_EnabledActionsCount == m_Actions.Length)
                 return;
 
             ResolveBindingsIfNecessary();
-            InstallStateChangeMonitors(0, m_State.controlCount);
+            m_State.EnableAllActions(this);
+            m_EnabledActionsCount = m_Actions.Length;
 
-            // Mark all actions enabled.
-            var actionCount = m_Actions.Length;
-            for (var i = 0; i < actionCount; ++i)
-                m_Actions[i].m_Enabled = true;
-            m_EnabledActionsCount = actionCount;
+            EnsureMapAddedToGlobalList();
+            NotifyListenersEnabledActionsChanged();
         }
 
         /// <summary>
@@ -137,10 +135,11 @@ namespace UnityEngine.Experimental.Input
             if (!enabled)
                 return;
 
-            for (var i = 0; i < m_Actions.Length; ++i)
-                m_Actions[i].Disable();
+            m_State.DisableAllActions(this);
+            m_EnabledActionsCount = 0;
 
-            Debug.Assert(m_EnabledActionsCount == 0);
+            RemoveMapFromGlobalList();
+            NotifyListenersEnabledActionsChanged();
         }
 
         //?????
@@ -173,7 +172,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on set '{0}' while the action is enabled", this.name));
+                    string.Format("Cannot change overrides on map '{0}' while actions in the map are enabled", name));
 
             foreach (var binding in overrides)
             {
@@ -189,7 +188,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (enabled)
                 throw new InvalidOperationException(
-                    string.Format("Cannot removed overrides from set '{0}' while the action is enabled", this.name));
+                    string.Format("Cannot remove overrides from map '{0}' while actions in the map are enabled", name));
 
             for (var i = 0; i < m_Actions.Length; ++i)
             {
@@ -209,7 +208,7 @@ namespace UnityEngine.Experimental.Input
             // them. Cloning them is not allowed.
             if (m_SingletonAction != null)
                 throw new InvalidOperationException(
-                    string.Format("Cloning internal set of singleton action '{0}' is not allowed", m_SingletonAction));
+                    string.Format("Cloning internal map of singleton action '{0}' is not allowed", m_SingletonAction));
 
             var clone = new InputActionMap
             {
@@ -255,318 +254,12 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InputControl[] m_ControlsForEachAction;
         [NonSerialized] internal InputAction[] m_ActionForEachBinding;
 
+        [NonSerialized] internal int m_EnabledActionsCount;
+
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
         // array.
         [NonSerialized] internal InputAction m_SingletonAction;
-
-        /// <summary>
-        /// Current execution state.
-        /// </summary>
-        /// <remarks>
-        /// Initialized when map (or any action in it) is first enabled.
-        /// </remarks>
-        [NonSerialized] internal InputActionMapState m_State;
-
-        #endregion
-
-        private void ResolveBindingsIfNecessary()
-        {
-            if (m_State.bindingStates == null && m_Bindings != null)
-                ResolveBindings();
-        }
-
-        ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
-        // Resolve all bindings to their controls and also add any action modifiers
-        // from the bindings. The best way is for this to happen once for each action
-        // set at the beginning of the game and to then enable and disable the sets
-        // as needed. However, the system will also re-resolve bindings if the control
-        // setup in the system changes (i.e. if devices are added or removed or if
-        // layouts in the system are changed).
-        internal void ResolveBindings()
-        {
-            if (m_Bindings == null)
-                return;
-
-            // Resolve all source paths.
-            var resolver = new InputBindingResolver();
-            resolver.ResolveBindings(m_Bindings, m_ActionForEachBinding);
-
-            // Transfer final arrays into state.
-            m_State.Initialize(resolver);
-        }
-
-        #region Global State
-
-        // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
-        // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
-        // instead we just link all action sets that have enabled actions together in a list that has its link
-        // embedded right here in an action set.
-        private static InputActionMap s_FirstMapInGlobalList;
-        [NonSerialized] private int m_EnabledActionsCount;
-        [NonSerialized] internal InputActionMap m_NextMapInGlobalList;
-        [NonSerialized] internal InputActionMap m_PreviousInGlobalList;
-
-        #if UNITY_EDITOR
-        ////REVIEW: not sure yet whether this warrants a publicly accessible callback so keeping it a private hook for now
-        internal static List<Action> s_OnEnabledActionsChanged;
-        #endif
-
-        internal static void ResetGlobals()
-        {
-            for (var map = s_FirstMapInGlobalList; map != null;)
-            {
-                var next = map.m_NextMapInGlobalList;
-                map.m_NextMapInGlobalList = null;
-                map.m_PreviousInGlobalList = null;
-                map.m_EnabledActionsCount = 0;
-                if (map.m_SingletonAction != null)
-                    map.m_SingletonAction.enabled = false;
-                else
-                {
-                    for (var i = 0; i < map.m_Actions.Length; ++i)
-                        map.m_Actions[i].enabled = false;
-                }
-
-                map = next;
-            }
-            s_FirstMapInGlobalList = null;
-        }
-
-        // Walk all sets with enabled actions and add all enabled actions to the given list.
-        internal static int FindEnabledActions(List<InputAction> actions)
-        {
-            var numFound = 0;
-            for (var map = s_FirstMapInGlobalList; map != null; map = map.m_NextMapInGlobalList)
-            {
-                if (map.m_SingletonAction != null)
-                {
-                    actions.Add(map.m_SingletonAction);
-                }
-                else
-                {
-                    for (var i = 0; i < map.m_Actions.Length; ++i)
-                    {
-                        var action = map.m_Actions[i];
-                        if (!action.enabled)
-                            continue;
-
-                        actions.Add(action);
-                        ++numFound;
-                    }
-                }
-            }
-            return numFound;
-        }
-
-        ////REVIEW: can we do better than just re-resolving *every* enabled action? seems heavy-handed
-        internal static void ReResolveAllEnabledActions()
-        {
-            /*
-            for (var map = s_FirstMapInGlobalList; map != null; map = map.m_NextMapInGlobalList)
-            {
-                // First get rid of all state change monitors currently installed by
-                // actions in the set.
-                if (map.m_SingletonAction != null)
-                {
-                    var action = map.m_SingletonAction;
-                    if (action.enabled)
-                        action.UninstallStateChangeMonitors();
-                }
-                else
-                {
-                    for (var i = 0; i < map.m_Actions.Length; ++i)
-                    {
-                        var action = map.m_Actions[i];
-                        if (action.enabled)
-                            action.UninstallStateChangeMonitors();
-                    }
-                }
-
-                // Now re-resolve all the bindings to update the control lists.
-                map.ResolveBindings();
-
-                // And finally, re-install state change monitors.
-                if (map.m_SingletonAction != null)
-                {
-                    var action = map.m_SingletonAction;
-                    if (action.enabled)
-                        action.InstallStateChangeMonitors();
-                }
-                else
-                {
-                    for (var i = 0; i < map.m_Actions.Length; ++i)
-                    {
-                        var action = map.m_Actions[i];
-                        if (action.enabled)
-                            action.InstallStateChangeMonitors();
-                    }
-                }
-            }
-            */
-        }
-
-        internal static void DisableAllEnabledActions()
-        {
-            for (var map = s_FirstMapInGlobalList; map != null;)
-            {
-                var next = map.m_NextMapInGlobalList;
-
-                if (map.m_SingletonAction != null)
-                    map.m_SingletonAction.Disable();
-                else
-                    map.Disable();
-
-                map = next;
-            }
-            Debug.Assert(s_FirstMapInGlobalList == null);
-        }
-
-        #endregion
-
-        #region State Monitors
-
-        internal void InstallStateChangeMonitors(int controlStartIndex, int numControls)
-        {
-            Debug.Assert(m_State.controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < m_State.controlCount);
-            Debug.Assert(controlStartIndex + numControls <= m_State.controlCount);
-
-            var manager = InputSystem.s_Manager;
-            var controls = m_State.controls;
-            for (var i = 0; i < numControls; ++i)
-            {
-                var controlIndex = controlStartIndex + i;
-                var bindingIndex = m_State.controlIndexToBindingIndex[controlIndex];
-                manager.AddStateChangeMonitor(controls[controlIndex], this, bindingIndex << 32 | controlIndex);
-            }
-        }
-
-        internal void UninstallStateChangeMonitors(int controlStartIndex, int numControls)
-        {
-            Debug.Assert(m_State.controls != null);
-            Debug.Assert(controlStartIndex >= 0 && controlStartIndex < m_State.controlCount);
-            Debug.Assert(controlStartIndex + numControls <= m_State.controlCount);
-
-            var manager = InputSystem.s_Manager;
-            var controls = m_State.controls;
-            for (var i = 0; i < numControls; ++i)
-            {
-                var controlIndex = controlStartIndex + i;
-                var bindingIndex = m_State.controlIndexToBindingIndex[controlIndex];
-                manager.RemoveStateChangeMonitor(controls[controlIndex], this, bindingIndex << 32 | controlIndex);
-            }
-        }
-
-        internal void AddStateChangeTimeout(int controlIndex, int bindingIndex, int modifierIndex, float seconds)
-        {
-            Debug.Assert(m_State.controls != null);
-            Debug.Assert(controlIndex >= 0 && controlIndex < m_State.controlCount);
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < m_State.);
-
-            var manager = InputSystem.s_Manager;
-            var currentTime = manager.m_Runtime.currentTime;
-            var control = m_State.controls[controlIndex];
-
-            manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, bindingIndex << 32 | controlIndex, modifierIndex);
-
-            // Update state.
-            var modifierState = m_State.modifierStates[modifierIndex];
-            modifierState.isTimerRunning = true;
-            m_State.modifierStates[modifierIndex] = modifierState;
-        }
-
-        internal void RemoveStateChangeTimeout(int controlIndex, int bindingIndex, int modifierIndex)
-        {
-        }
-
-        // Called from InputManager when one of our state change monitors has fired.
-        // Tells us the time of the change *according to the state events coming in*.
-        // Also tells us which control of the controls we are binding to triggered the
-        // change and relays the binding index we gave it when we called AddStateChangeMonitor.
-        void IInputStateChangeMonitor.NotifyControlValueChanged(InputControl control, double time, long controlAndBindingIndex)
-        {
-            var controlIndex = (int)(controlAndBindingIndex & 0xffffffff);
-            var bindingIndex = (int)(controlAndBindingIndex >> 32);
-            m_State.ProcessControlValueChange(this, controlIndex, bindingIndex, time);
-        }
-
-        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long controlAndBindingIndex, int modifierIndex)
-        {
-            var controlIndex = (int)(controlAndBindingIndex & 0xffffffff);
-            var bindingIndex = (int)(controlAndBindingIndex >> 32);
-            m_State.ProcessTimeout(this, time, controlIndex, bindingIndex, modifierIndex);
-        }
-
-        #endregion
-
-        internal void EnableAllActions()
-        {
-            Debug.Assert(m_Actions != null);
-
-            var actionCount = m_Actions.Length;
-            for (var i = 0; i < actionCount; ++i)
-            {
-                //var action =
-            }
-        }
-
-        internal void DisableAllActions()
-        {
-            Debug.Assert(m_Actions != null);
-        }
-
-        internal void EnableSingleAction(InputAction action)
-        {
-            Debug.Assert(action != null);
-            Debug.Assert(!action.enabled);
-
-            throw new NotImplementedException();
-        }
-
-        internal void DisableSingleAction(InputAction action)
-        {
-            Debug.Assert(action != null);
-            Debug.Assert(action.enabled);
-
-            throw new NotImplementedException();
-        }
-
-        internal void TellAboutActionChangingEnabledStatus(InputAction action, bool enable)
-        {
-            if (enable)
-            {
-                ++m_EnabledActionsCount;
-                if (m_EnabledActionsCount == 1)
-                {
-                    if (s_FirstMapInGlobalList != null)
-                        s_FirstMapInGlobalList.m_PreviousInGlobalList = this;
-                    m_NextMapInGlobalList = s_FirstMapInGlobalList;
-                    s_FirstMapInGlobalList = this;
-                }
-            }
-            else
-            {
-                --m_EnabledActionsCount;
-                if (m_EnabledActionsCount == 0)
-                {
-                    if (m_NextMapInGlobalList != null)
-                        m_NextMapInGlobalList.m_PreviousInGlobalList = m_PreviousInGlobalList;
-                    if (m_PreviousInGlobalList != null)
-                        m_PreviousInGlobalList.m_NextMapInGlobalList = m_NextMapInGlobalList;
-                    if (s_FirstMapInGlobalList == this)
-                        s_FirstMapInGlobalList = m_NextMapInGlobalList;
-                    m_NextMapInGlobalList = null;
-                    m_PreviousInGlobalList = null;
-                }
-            }
-
-            #if UNITY_EDITOR
-            if (s_OnEnabledActionsChanged != null)
-                foreach (var listener in s_OnEnabledActionsChanged)
-                    listener();
-            #endif
-        }
 
         ////REVIEW: make this also produce a list of controls?
         /// <summary>
@@ -713,6 +406,198 @@ namespace UnityEngine.Experimental.Input
         {
             throw new NotImplementedException();
         }
+
+        #endregion
+
+        #region Execution Data
+
+        [NonSerialized] internal int m_MapIndex = InputActionMapState.kInvalidIndex;
+
+        /// <summary>
+        /// Current execution state.
+        /// </summary>
+        /// <remarks>
+        /// Initialized when map (or any action in it) is first enabled.
+        /// </remarks>
+        [NonSerialized] internal InputActionMapState m_State;
+
+        internal void ResolveBindingsIfNecessary()
+        {
+            if (m_MapIndex == InputActionMapState.kInvalidIndex)
+                ResolveBindings();
+        }
+
+        ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
+        // Resolve all bindings to their controls and also add any action modifiers
+        // from the bindings. The best way is for this to happen once for each action
+        // set at the beginning of the game and to then enable and disable the sets
+        // as needed. However, the system will also re-resolve bindings if the control
+        // setup in the system changes (i.e. if devices are added or removed or if
+        // layouts in the system are changed).
+        internal void ResolveBindings()
+        {
+            Debug.Assert(m_State == null);
+
+            if (m_Bindings == null)
+                return;
+
+            // Resolve all source paths.
+            var resolver = new InputBindingResolver();
+            resolver.AddMap(this);
+
+            // Transfer final arrays into state.
+            m_State = new InputActionMapState();
+            m_State.Initialize(resolver);
+        }
+
+        #endregion
+
+        #region Global State
+
+        ////REVIEW: do we want to have a global InputActionManager after all?
+
+        ////REVIEW: move this over to linking action map states instead of action maps themselves?
+        // We don't want to explicitly keep track of enabled actions as that will most likely be bookkeeping
+        // that isn't used most of the time. However, we do want to be able to find all enabled actions. So,
+        // instead we just link all action sets that have enabled actions together in a list that has its link
+        // embedded right here in an action set.
+        private static InputActionMap s_FirstMapInGlobalList;
+        [NonSerialized] internal InputActionMap m_NextMapInGlobalList;
+        [NonSerialized] internal InputActionMap m_PreviousInGlobalList;
+
+        #if UNITY_EDITOR
+        ////REVIEW: not sure yet whether this warrants a publicly accessible callback so keeping it a private hook for now
+        internal static List<Action> s_OnEnabledActionsChanged;
+        #endif
+
+        internal void EnsureMapAddedToGlobalList()
+        {
+            if (m_NextMapInGlobalList != null || m_PreviousInGlobalList != null || s_FirstMapInGlobalList == this)
+                return;
+
+            if (s_FirstMapInGlobalList != null)
+                s_FirstMapInGlobalList.m_PreviousInGlobalList = this;
+            m_NextMapInGlobalList = s_FirstMapInGlobalList;
+            s_FirstMapInGlobalList = this;
+        }
+
+        internal void RemoveMapFromGlobalList()
+        {
+            if (m_NextMapInGlobalList == null && m_PreviousInGlobalList == null && s_FirstMapInGlobalList != this)
+                return;
+
+            if (m_NextMapInGlobalList != null)
+                m_NextMapInGlobalList.m_PreviousInGlobalList = m_PreviousInGlobalList;
+            if (m_PreviousInGlobalList != null)
+                m_PreviousInGlobalList.m_NextMapInGlobalList = m_NextMapInGlobalList;
+            if (s_FirstMapInGlobalList == this)
+                s_FirstMapInGlobalList = m_NextMapInGlobalList;
+
+            m_NextMapInGlobalList = null;
+            m_PreviousInGlobalList = null;
+        }
+
+        internal void NotifyListenersEnabledActionsChanged()
+        {
+            #if UNITY_EDITOR
+            if (s_OnEnabledActionsChanged != null)
+                foreach (var listener in s_OnEnabledActionsChanged)
+                    listener();
+            #endif
+        }
+
+        internal static void ResetGlobals()
+        {
+            s_FirstMapInGlobalList = null;
+        }
+
+        ////TODO: this can be written in a much more efficient now using the state records
+        // Walk all sets with enabled actions and add all enabled actions to the given list.
+        internal static int FindEnabledActions(List<InputAction> actions)
+        {
+            var numFound = 0;
+            for (var map = s_FirstMapInGlobalList; map != null; map = map.m_NextMapInGlobalList)
+            {
+                Debug.Assert(map.m_State != null);
+                if (map.m_SingletonAction != null)
+                {
+                    actions.Add(map.m_SingletonAction);
+                }
+                else
+                {
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
+                    {
+                        var action = map.m_Actions[i];
+                        if (!action.enabled)
+                            continue;
+
+                        actions.Add(action);
+                        ++numFound;
+                    }
+                }
+            }
+            return numFound;
+        }
+
+        ////REVIEW: can we do better than just re-resolving *every* enabled action? seems heavy-handed
+        internal static void ReResolveAllEnabledActions()
+        {
+            /*
+            for (var map = s_FirstMapInGlobalList; map != null; map = map.m_NextMapInGlobalList)
+            {
+                // First get rid of all state change monitors currently installed by
+                // actions in the set.
+                if (map.m_SingletonAction != null)
+                {
+                    var action = map.m_SingletonAction;
+                    if (action.enabled)
+                        action.UninstallStateChangeMonitors();
+                }
+                else
+                {
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
+                    {
+                        var action = map.m_Actions[i];
+                        if (action.enabled)
+                            action.UninstallStateChangeMonitors();
+                    }
+                }
+
+                // Now re-resolve all the bindings to update the control lists.
+                map.ResolveBindings();
+
+                // And finally, re-install state change monitors.
+                if (map.m_SingletonAction != null)
+                {
+                    var action = map.m_SingletonAction;
+                    if (action.enabled)
+                        action.InstallStateChangeMonitors();
+                }
+                else
+                {
+                    for (var i = 0; i < map.m_Actions.Length; ++i)
+                    {
+                        var action = map.m_Actions[i];
+                        if (action.enabled)
+                            action.InstallStateChangeMonitors();
+                    }
+                }
+            }
+            */
+        }
+
+        internal static void DisableAllEnabledActions()
+        {
+            for (var map = s_FirstMapInGlobalList; map != null;)
+            {
+                var next = map.m_NextMapInGlobalList;
+                map.Disable();
+                map = next;
+            }
+            Debug.Assert(s_FirstMapInGlobalList == null);
+        }
+
+        #endregion
 
         #region Serialization
 

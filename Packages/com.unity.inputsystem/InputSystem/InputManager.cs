@@ -939,6 +939,89 @@ namespace UnityEngine.Experimental.Input
                 m_DeviceChangeListeners[i](device, deviceChange);
         }
 
+        ////TODO: support combining monitors for bitfields
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+        {
+            Debug.Assert(m_Devices != null);
+
+            var device = control.device;
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            // Allocate/reallocate monitor arrays, if necessary.
+            // We lazy-sync it to array of devices.
+            if (m_StateChangeMonitors == null)
+                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_Devices.Length];
+            else if (m_StateChangeMonitors.Length <= deviceIndex)
+                Array.Resize(ref m_StateChangeMonitors, m_Devices.Length);
+
+            // Add record.
+            m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
+        }
+
+        private void RemoveStateChangeMonitors(InputDevice device)
+        {
+            if (m_StateChangeMonitors == null)
+                return;
+
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            if (deviceIndex >= m_StateChangeMonitors.Length)
+                return;
+
+            m_StateChangeMonitors[deviceIndex].Clear();
+        }
+
+        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+        {
+            if (m_StateChangeMonitors == null)
+                return;
+
+            var device = control.device;
+            var deviceIndex = device.m_DeviceIndex;
+
+            // Ignore if device has already been removed.
+            if (deviceIndex == InputDevice.kInvalidDeviceIndex)
+                return;
+
+            // Ignore if there are no state monitors set up for the device.
+            if (deviceIndex >= m_StateChangeMonitors.Length)
+                return;
+
+            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+        }
+
+        public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
+        {
+            m_StateChangeMonitorTimeouts.Append(
+                new StateChangeMonitorTimeout
+            {
+                control = control,
+                time = time,
+                monitor = monitor,
+                monitorIndex = monitorIndex,
+                timerIndex = timerIndex,
+            });
+        }
+
+        public void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex, int timerIndex)
+        {
+            var timeoutCount = m_StateChangeMonitorTimeouts.length;
+            for (var i = 0; i < timeoutCount; ++i)
+            {
+                ////REVIEW: can we avoid the repeated array lookups without copying the struct out?
+                if (ReferenceEquals(m_StateChangeMonitorTimeouts[i].monitor, monitor)
+                    && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
+                    && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
+                {
+                    ////TODO: leave state empty and compact array lazily on traversal
+                    m_StateChangeMonitorTimeouts.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
         public void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
@@ -1203,7 +1286,7 @@ namespace UnityEngine.Experimental.Input
         {
             public InputControl control;
             public IInputStateChangeMonitor monitor;
-            public int monitorIndex;
+            public long monitorIndex;
         }
         private struct StateChangeMonitorsForDevice
         {
@@ -1216,7 +1299,7 @@ namespace UnityEngine.Experimental.Input
                 get { return signalled.length; }
             }
 
-            public void Add(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex)
+            public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
             {
                 // Record listener.
                 var listenerCount = signalled.length;
@@ -1236,7 +1319,7 @@ namespace UnityEngine.Experimental.Input
                 signalled.SetLength(signalled.length + 1);
             }
 
-            public void Remove(IInputStateChangeMonitor monitor, int monitorIndex)
+            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
             {
                 if (listeners == null)
                     return;
@@ -1270,104 +1353,11 @@ namespace UnityEngine.Experimental.Input
             public InputControl control;
             public double time;
             public IInputStateChangeMonitor monitor;
-            public int monitorIndex;
+            public long monitorIndex;
             public int timerIndex;
         }
 
         [NonSerialized] private InlinedArray<StateChangeMonitorTimeout> m_StateChangeMonitorTimeouts;
-
-        ////TODO: support combining monitors for bitfields
-        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex)
-        {
-            Debug.Assert(m_Devices != null);
-
-            var device = control.device;
-            var deviceIndex = device.m_DeviceIndex;
-            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
-
-            // Allocate/reallocate monitor arrays, if necessary.
-            // We lazy-sync it to array of devices.
-            if (m_StateChangeMonitors == null)
-                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_Devices.Length];
-            else if (m_StateChangeMonitors.Length <= deviceIndex)
-                Array.Resize(ref m_StateChangeMonitors, m_Devices.Length);
-
-            // Add record.
-            m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
-        }
-
-        private void RemoveStateChangeMonitors(InputDevice device)
-        {
-            if (m_StateChangeMonitors == null)
-                return;
-
-            var deviceIndex = device.m_DeviceIndex;
-            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
-
-            if (deviceIndex >= m_StateChangeMonitors.Length)
-                return;
-
-            m_StateChangeMonitors[deviceIndex].Clear();
-        }
-
-        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, int monitorIndex)
-        {
-            if (m_StateChangeMonitors == null)
-                return;
-
-            var device = control.device;
-            var deviceIndex = device.m_DeviceIndex;
-
-            // Ignore if device has already been removed.
-            if (deviceIndex == InputDevice.kInvalidDeviceIndex)
-                return;
-
-            // Ignore if there are no state monitors set up for the device.
-            if (deviceIndex >= m_StateChangeMonitors.Length)
-                return;
-
-            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
-        }
-
-        internal void AddActionTimeout(InputAction action, double time, int bindingIndex, int modifierIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void RemoveActionTimeout(InputAction action, int bindingIndex, int modifierIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, int monitorIndex, int timerIndex)
-        {
-            m_StateChangeMonitorTimeouts.Append(
-                new StateChangeMonitorTimeout
-            {
-                control = control,
-                time = time,
-                monitor = monitor,
-                monitorIndex = monitorIndex,
-                timerIndex = timerIndex,
-            });
-        }
-
-        internal void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, int monitorIndex, int timerIndex)
-        {
-            var timeoutCount = m_StateChangeMonitorTimeouts.length;
-            for (var i = 0; i < timeoutCount; ++i)
-            {
-                ////REVIEW: can we avoid the repeated array lookups without copying the struct out?
-                if (ReferenceEquals(m_StateChangeMonitorTimeouts[i].monitor, monitor)
-                    && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
-                    && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
-                {
-                    ////TODO: leave state empty and compact array lazily on traversal
-                    m_StateChangeMonitorTimeouts.RemoveAt(i);
-                    break;
-                }
-            }
-        }
 
         ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
 
