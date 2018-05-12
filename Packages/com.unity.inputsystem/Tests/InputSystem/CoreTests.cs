@@ -5415,21 +5415,10 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotQueryControlsOnActionThatIsNotEnabled()
-    {
-        var action = new InputAction();
-
-        Assert.That(() => action.controls, Throws.InvalidOperationException);
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_CanTargetSingleControl()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-
         var action = new InputAction(binding: "/gamepad/leftStick");
-        action.Enable();
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -5440,9 +5429,7 @@ class CoreTests : InputTestFixture
     public void Actions_CanTargetMultipleControls()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
-
         var action = new InputAction(binding: "/gamepad/*stick");
-        action.Enable();
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -5716,26 +5703,26 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddActionsToSet()
+    public void Actions_CanAddActionsToMap()
     {
-        var set = new InputActionMap();
+        var map = new InputActionMap();
 
-        set.AddAction("action1");
-        set.AddAction("action2");
+        map.AddAction("action1");
+        map.AddAction("action2");
 
-        Assert.That(set.actions, Has.Count.EqualTo(2));
-        Assert.That(set.actions[0], Has.Property("name").EqualTo("action1"));
-        Assert.That(set.actions[1], Has.Property("name").EqualTo("action2"));
+        Assert.That(map.actions, Has.Count.EqualTo(2));
+        Assert.That(map.actions[0], Has.Property("name").EqualTo("action1"));
+        Assert.That(map.actions[1], Has.Property("name").EqualTo("action2"));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddBindingsToActionsInSet()
+    public void Actions_CanAddBindingsToActionsInMap()
     {
-        var set = new InputActionMap();
+        var map = new InputActionMap();
 
-        var action1 = set.AddAction("action1");
-        var action2 = set.AddAction("action2");
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
 
         action1.AppendBinding("/gamepad/leftStick");
         action2.AppendBinding("/gamepad/rightStick");
@@ -5748,20 +5735,20 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotAddUnnamedActionToSet()
+    public void Actions_CannotAddUnnamedActionToMap()
     {
-        var set = new InputActionMap();
-        Assert.That(() => set.AddAction(""), Throws.ArgumentException);
+        var map = new InputActionMap();
+        Assert.That(() => map.AddAction(""), Throws.ArgumentException);
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotAddTwoActionsWithTheSameNameToSet()
+    public void Actions_CannotAddTwoActionsWithTheSameNameToMap()
     {
-        var set = new InputActionMap();
-        set.AddAction("action");
+        var map = new InputActionMap();
+        map.AddAction("action");
 
-        Assert.That(() => set.AddAction("action"), Throws.InvalidOperationException);
+        Assert.That(() => map.AddAction("action"), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -6470,10 +6457,14 @@ class CoreTests : InputTestFixture
         var action = new InputAction(binding: "/gamepad/leftStick");
 
         action.Enable();
+
+        Assert.That(action.enabled, Is.True);
+        Assert.That(action.controls.Count, Is.EqualTo(1));
+
         action.Disable();
 
         Assert.That(InputSystem.ListEnabledActions(), Has.Exactly(0).SameAs(action));
-        Assert.That(() => action.controls, Throws.InvalidOperationException);
+        Assert.That(action.controls.Count, Is.EqualTo(1));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.enabled, Is.False);
     }
@@ -6561,58 +6552,58 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanAddSetsToAsset()
+    public void Actions_CanAddMapsToAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        var set1 = new InputActionMap("set1");
-        var set2 = new InputActionMap("set2");
+        var map1 = new InputActionMap("set1");
+        var map2 = new InputActionMap("set2");
 
-        asset.AddActionMap(set1);
-        asset.AddActionMap(set2);
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
-        Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(set1));
-        Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(set2));
+        Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(map1));
+        Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(map2));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_SetsInAssetMustHaveName()
+    public void Actions_MapsInAssetMustHaveName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var set = new InputActionMap();
+        var map = new InputActionMap();
 
-        Assert.That(() => asset.AddActionMap(set), Throws.InvalidOperationException);
+        Assert.That(() => asset.AddActionMap(map), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_SetsInAssetsMustHaveUniqueNames()
+    public void Actions_MapsInAssetsMustHaveUniqueNames()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        var set1 = new InputActionMap("same");
-        var set2 = new InputActionMap("same");
+        var map1 = new InputActionMap("same");
+        var map2 = new InputActionMap("same");
 
-        asset.AddActionMap(set1);
-        Assert.That(() => asset.AddActionMap(set2), Throws.InvalidOperationException);
+        asset.AddActionMap(map1);
+        Assert.That(() => asset.AddActionMap(map2), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanLookUpSetInAssetByName()
+    public void Actions_CanLookUpMapInAssetByName()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var set = new InputActionMap("test");
-        asset.AddActionMap(set);
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap("test"), Is.SameAs(set));
+        Assert.That(asset.TryGetActionMap("test"), Is.SameAs(map));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanRemoveActionSetFromAsset()
+    public void Actions_CanRemoveActionMapFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(new InputActionMap("test"));
