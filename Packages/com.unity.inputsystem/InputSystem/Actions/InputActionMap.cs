@@ -199,9 +199,33 @@ namespace UnityEngine.Experimental.Input
             var clone = new InputActionMap
             {
                 m_Name = m_Name,
-                ////FIXME: this produces singleton actions! shouldn't call InputAction.Clone() and should set proper m_ActionSet references
-                m_Actions = ArrayHelpers.Clone(m_Actions)
             };
+
+            // Clone actions.
+            if (m_Actions != null)
+            {
+                var actionCount = m_Actions.Length;
+                var actions = new InputAction[actionCount];
+                for (var i = 0; i < actionCount; ++i)
+                {
+                    var original = m_Actions[i];
+                    actions[i] = new InputAction
+                    {
+                        m_Name = original.m_Name,
+                        m_ActionMap = clone,
+                    };
+                }
+                clone.m_Actions = actions;
+            }
+
+            // Clone bindings.
+            if (m_Bindings != null)
+            {
+                var bindingCount = m_Bindings.Length;
+                var bindings = new InputBinding[bindingCount];
+                Array.Copy(m_Bindings, 0, bindings, 0, bindingCount);
+                clone.m_Bindings = bindings;
+            }
 
             return clone;
         }
@@ -282,7 +306,6 @@ namespace UnityEngine.Experimental.Input
 
         internal ReadOnlyArray<InputControl> GetControlsForSingleAction(InputAction action)
         {
-            Debug.Assert(enabled);
             Debug.Assert(m_State != null);
             Debug.Assert(m_MapIndex != InputActionMapState.kInvalidIndex);
             Debug.Assert(m_Actions != null);
@@ -446,12 +469,11 @@ namespace UnityEngine.Experimental.Input
                         : sourceBindingIndex;
 
                     // Collect all bindings for the action.
-                    var actionBindingsCount = currentAction.m_BindingsCount;
-                    for (var i = 0; i < actionBindingsCount; ++i)
+                    var bindingCountForCurrentAction = currentAction.m_BindingsCount;
+                    var sourceBindingToCopy = sourceBindingIndex;
+                    for (var i = 0; i < bindingCountForCurrentAction; ++i)
                     {
-                        var sourceBindingToCopy = sourceBindingIndex;
-
-                        if (m_ActionForEachBinding[i] != currentAction)
+                        if (m_ActionForEachBinding[sourceBindingToCopy] != currentAction)
                         {
                             // If this is the first action that has its bindings scattered around, switch to
                             // having a separate bindings array and copy whatever bindings we already processed
@@ -459,8 +481,8 @@ namespace UnityEngine.Experimental.Input
                             if (newBindingsArray == null)
                             {
                                 newBindingsArray = new InputBinding[totalBindingsCount];
-                                newBindingsArrayIndex = sourceBindingIndex;
-                                Array.Copy(m_Bindings, 0, newBindingsArray, 0, sourceBindingIndex);
+                                newBindingsArrayIndex = sourceBindingToCopy;
+                                Array.Copy(m_Bindings, 0, newBindingsArray, 0, sourceBindingToCopy);
                             }
 
                             // Find the next binding belonging to the action. We've counted bindings for
@@ -468,15 +490,19 @@ namespace UnityEngine.Experimental.Input
                             // can expect.
                             do
                             {
-                                ++i;
-                                Debug.Assert(i < m_ActionForEachBinding.Length);
+                                ++sourceBindingToCopy;
+                                Debug.Assert(sourceBindingToCopy < m_ActionForEachBinding.Length);
                             }
-                            while (m_ActionForEachBinding[i] != currentAction);
+                            while (m_ActionForEachBinding[sourceBindingToCopy] != currentAction);
                         }
+                        else if (sourceBindingIndex == sourceBindingToCopy)
+                            ++sourceBindingIndex;
 
                         // Copy binding over to new bindings array, if need be.
                         if (newBindingsArray != null)
                             newBindingsArray[newBindingsArrayIndex++] = m_Bindings[sourceBindingToCopy];
+
+                        ++sourceBindingToCopy;
                     }
                 }
 
@@ -511,7 +537,7 @@ namespace UnityEngine.Experimental.Input
 
         internal void ResolveBindingsIfNecessary()
         {
-            if (m_MapIndex == InputActionMapState.kInvalidIndex)
+            if (m_State == null)
                 ResolveBindings();
         }
 
@@ -525,9 +551,6 @@ namespace UnityEngine.Experimental.Input
         internal void ResolveBindings()
         {
             Debug.Assert(m_State == null);
-
-            if (m_Bindings == null)
-                return;
 
             // Resolve all source paths.
             var resolver = new InputBindingResolver();

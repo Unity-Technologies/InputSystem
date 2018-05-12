@@ -49,11 +49,6 @@ namespace UnityEngine.Experimental.Input
                 throw new NotImplementedException();
             }
 
-            public BindingSyntax RedirectingTo(InputControlScheme bindingList)
-            {
-                throw new NotImplementedException();
-            }
-
             public BindingSyntax And
             {
                 get { throw new NotImplementedException(); }
@@ -139,7 +134,8 @@ namespace UnityEngine.Experimental.Input
         public static BindingSyntax AppendBinding(this InputAction action, string path, string modifiers = null,
             string groups = null)
         {
-            var binding = new InputBinding {path = path, modifiers = modifiers, group = groups};
+            Debug.Assert(!action.m_Name.IsEmpty() || action.isSingletonAction);
+            var binding = new InputBinding {path = path, modifiers = modifiers, group = groups, action = action.m_Name};
             var bindingIndex = AppendBindingInternal(action.internalMap, action, binding);
             return new BindingSyntax(action.map, action, bindingIndex);
         }

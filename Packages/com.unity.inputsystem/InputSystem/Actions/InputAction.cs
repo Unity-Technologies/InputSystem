@@ -120,12 +120,11 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                // If m_ActionSet is null, we're a singleton action that has had no bindings added
-                // to it yet.
                 if (m_ActionMap == null)
                 {
-                    Debug.Assert(isSingletonAction);
-                    return new ReadOnlyArray<InputBinding>();
+                    if (m_SingletonActionBindings == null)
+                        return new ReadOnlyArray<InputBinding>();
+                    CreateInternalActionMapForSingletonAction();
                 }
 
                 return m_ActionMap.GetBindingsForSingleAction(this);
@@ -278,8 +277,6 @@ namespace UnityEngine.Experimental.Input
 
         public InputAction(InternedString name = new InternedString())
         {
-            if (name.IsEmpty())
-                name = kSingletonActionDefaultName;
             m_Name = name;
         }
 
@@ -302,7 +299,8 @@ namespace UnityEngine.Experimental.Input
 
         public override string ToString()
         {
-            Debug.Assert(!m_Name.IsEmpty());
+            if (m_Name.IsEmpty())
+                return "<Unnamed>";
 
             if (m_ActionMap != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionMap.name))
                 return string.Format("{0}/{1}", m_ActionMap.name, m_Name);
@@ -446,17 +444,6 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnStarted;
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnCancelled;
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnPerformed;
-
-        private static InternedString s_SingletonActionDefaultName;
-        private static InternedString kSingletonActionDefaultName
-        {
-            get
-            {
-                if (s_SingletonActionDefaultName.IsEmpty())
-                    s_SingletonActionDefaultName = new InternedString("<Unnamed>");
-                return s_SingletonActionDefaultName;
-            }
-        }
 
         internal bool isSingletonAction
         {
