@@ -120,12 +120,13 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (length == 0)
             {
                 firstValue = value;
-                ++length;
             }
             else
             {
-                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref length, value);
+                var numAdditionalValues = length - 1;
+                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value);
             }
+            ++length;
         }
 
         public void Remove(TValue value)
