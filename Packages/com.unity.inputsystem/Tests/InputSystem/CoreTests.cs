@@ -5922,71 +5922,132 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanLookUpActionInSet()
+    public void Actions_CanLookUpActionInMap()
     {
-        var set = new InputActionMap();
+        var map = new InputActionMap();
 
-        var action1 = set.AddAction("action1");
-        var action2 = set.AddAction("action2");
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
 
-        Assert.That(set.TryGetAction("action1"), Is.SameAs(action1));
-        Assert.That(set.TryGetAction("action2"), Is.SameAs(action2));
+        Assert.That(map.TryGetAction("action1"), Is.SameAs(action1));
+        Assert.That(map.TryGetAction("action2"), Is.SameAs(action2));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanConvertActionSetToAndFromJson()
+    public void Actions_CanConvertActionMapToAndFromJson()
     {
-        var set = new InputActionMap("test");
+        var map = new InputActionMap("test");
 
-        set.AddAction(name: "action1", binding: "/gamepad/leftStick").AppendBinding("/gamepad/rightStick", groups: "group");
-        set.AddAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
+        map.AddAction(name: "action1", binding: "/gamepad/leftStick").AppendBinding("/gamepad/rightStick", groups: "group");
+        map.AddAction(name: "action2", binding: "/gamepad/buttonSouth", modifiers: "tap,slowTap(duration=0.1)");
 
-        var json = set.ToJson();
-        var sets = InputActionMap.FromJson(json);
+        var json = map.ToJson();
+        var maps = InputActionMap.FromJson(json);
 
-        Assert.That(sets, Has.Length.EqualTo(1));
-        Assert.That(sets[0], Has.Property("name").EqualTo("test"));
-        Assert.That(sets[0].actions, Has.Count.EqualTo(2));
-        Assert.That(sets[0].actions[0].name, Is.EqualTo("action1"));
-        Assert.That(sets[0].actions[1].name, Is.EqualTo("action2"));
-        Assert.That(sets[0].actions[0].bindings, Has.Count.EqualTo(2));
-        Assert.That(sets[0].actions[1].bindings, Has.Count.EqualTo(1));
-        Assert.That(sets[0].actions[0].bindings[0].group, Is.Null);
-        Assert.That(sets[0].actions[0].bindings[1].group, Is.EqualTo("group"));
-        Assert.That(sets[0].actions[0].bindings[0].modifiers, Is.Null);
-        Assert.That(sets[0].actions[0].bindings[1].modifiers, Is.Null);
-        Assert.That(sets[0].actions[1].bindings[0].group, Is.Null);
-        Assert.That(sets[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
-        Assert.That(sets[0].actions[0].map, Is.SameAs(sets[0]));
-        Assert.That(sets[0].actions[1].map, Is.SameAs(sets[0]));
+        Assert.That(maps, Has.Length.EqualTo(1));
+        Assert.That(maps[0], Has.Property("name").EqualTo("test"));
+        Assert.That(maps[0].actions, Has.Count.EqualTo(2));
+        Assert.That(maps[0].actions[0].name, Is.EqualTo("action1"));
+        Assert.That(maps[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(maps[0].actions[0].bindings, Has.Count.EqualTo(2));
+        Assert.That(maps[0].actions[1].bindings, Has.Count.EqualTo(1));
+        Assert.That(maps[0].actions[0].bindings[0].group, Is.Null);
+        Assert.That(maps[0].actions[0].bindings[1].group, Is.EqualTo("group"));
+        Assert.That(maps[0].actions[0].bindings[0].modifiers, Is.Null);
+        Assert.That(maps[0].actions[0].bindings[1].modifiers, Is.Null);
+        Assert.That(maps[0].actions[1].bindings[0].group, Is.Null);
+        Assert.That(maps[0].actions[1].bindings[0].modifiers, Is.EqualTo("tap,slowTap(duration=0.1)"));
+        Assert.That(maps[0].actions[0].map, Is.SameAs(maps[0]));
+        Assert.That(maps[0].actions[1].map, Is.SameAs(maps[0]));
+    }
+
+    // This is the JSON format that action maps had in the earliest versions of the system.
+    // It's a nice and simple format and while we no longer write out action maps in that format,
+    // there's no good reason not to be able to read it. It contains a flat list of actions with
+    // each action listing the map it is contained in as part of its name. Also, bindings are
+    // directly on the actions and thus implicitly refer to the actions they trigger.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateActionMapsInSimplifiedJsonFormat()
+    {
+        const string json = @"
+            {
+                ""actions"" : [
+                    {
+                        ""name"" : ""map1/action1"",
+                        ""bindings"" : [
+                            {
+                                ""path"" : ""<Gamepad>/leftStick""
+                            }
+                        ]
+                    },
+                    {
+                        ""name"" : ""map1/action2"",
+                        ""bindings"" : [
+                            {
+                                ""path"" : ""<Gamepad>/rightStick""
+                            },
+                            {
+                                ""path"" : ""<Gamepad>/leftShoulder""
+                            }
+                        ]
+                    },
+                    {
+                        ""name"" : ""map2/action1"",
+                        ""bindings"" : [
+                            {
+                                ""path"" : ""<Gamepad>/buttonSouth""
+                            }
+                        ]
+                    }
+                ]
+            }
+        ";
+
+        var maps = InputActionMap.FromJson(json);
+
+        Assert.That(maps.Length, Is.EqualTo(2));
+        Assert.That(maps[0].name, Is.EqualTo("map1"));
+        Assert.That(maps[1].name, Is.EqualTo("map2"));
+        Assert.That(maps[0].actions.Count, Is.EqualTo(2));
+        Assert.That(maps[1].actions.Count, Is.EqualTo(1));
+        Assert.That(maps[0].actions[0].name, Is.EqualTo("action1"));
+        Assert.That(maps[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(maps[1].actions[0].name, Is.EqualTo("action1"));
+        Assert.That(maps[0].bindings.Count, Is.EqualTo(3));
+        Assert.That(maps[1].bindings.Count, Is.EqualTo(1));
+        Assert.That(maps[0].bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(maps[0].bindings[1].path, Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(maps[0].bindings[2].path, Is.EqualTo("<Gamepad>/leftShoulder"));
+        Assert.That(maps[1].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_ActionSetJsonCanBeEmpty()
+    public void Actions_ActionMapJsonCanBeEmpty()
     {
-        var sets = InputActionMap.FromJson("{}");
-        Assert.That(sets, Is.Not.Null);
-        Assert.That(sets, Has.Length.EqualTo(0));
+        var maps = InputActionMap.FromJson("{}");
+        Assert.That(maps, Is.Not.Null);
+        Assert.That(maps, Has.Length.EqualTo(0));
     }
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanConvertMultipleActionSetsToAndFromJson()
+    public void Actions_CanConvertMultipleActionMapsToAndFromJson()
     {
-        var set1 = new InputActionMap("set1");
-        var set2 = new InputActionMap("set2");
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
 
-        set1.AddAction(name: "action1", binding: "/gamepad/leftStick");
-        set2.AddAction(name: "action2", binding: "/gamepad/rightStick");
+        map1.AddAction(name: "action1", binding: "/gamepad/leftStick");
+        map2.AddAction(name: "action2", binding: "/gamepad/rightStick");
 
-        var json = InputActionMap.ToJson(new[] {set1, set2});
+        var json = InputActionMap.ToJson(new[] {map1, map2});
         var sets = InputActionMap.FromJson(json);
 
         Assert.That(sets, Has.Length.EqualTo(2));
-        Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("set1"));
-        Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("set2"));
+        Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("map1"));
+        Assert.That(sets, Has.Exactly(1).With.Property("name").EqualTo("map2"));
     }
 
     [Test]
