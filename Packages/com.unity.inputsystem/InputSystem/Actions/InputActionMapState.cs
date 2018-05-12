@@ -1158,6 +1158,8 @@ namespace UnityEngine.Experimental.Input
         // To touch configuration data, state has to be thrown away.
         internal static void ReResolveAllEnabledActions()
         {
+            ////REVIEW: for state that does not have any enabled maps, may be smarter to just nuke the state and
+            ////        let the maps re-resolve should they get enabled again
             var stateCount = s_GlobalList.length;
             for (var i = 0; i < stateCount; ++i)
             {

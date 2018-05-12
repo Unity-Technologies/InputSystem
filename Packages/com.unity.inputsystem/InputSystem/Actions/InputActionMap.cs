@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
@@ -577,6 +578,7 @@ namespace UnityEngine.Experimental.Input
             public string path;
             public string modifiers;
             public string groups;
+            public string action;
             public bool chainWithPrevious;
             public bool isComposite;
             public bool isPartOfComposite;
@@ -587,6 +589,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
                     path = string.IsNullOrEmpty(path) ? null : path,
+                    action = string.IsNullOrEmpty(action) ? new InternedString() : new InternedString(action),
                     modifiers = string.IsNullOrEmpty(modifiers) ? null : modifiers,
                     group = string.IsNullOrEmpty(groups) ? null : groups,
                     chainWithPrevious = chainWithPrevious,
@@ -601,6 +604,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = binding.name,
                     path = binding.path,
+                    action = binding.action,
                     modifiers = binding.modifiers,
                     groups = binding.group,
                     chainWithPrevious = binding.chainWithPrevious,
@@ -614,63 +618,124 @@ namespace UnityEngine.Experimental.Input
         private struct ActionJson
         {
             public string name;
-            public BindingJson[] bindings;
 
-            // ToAction doesn't make sense because all bindings combine on the action set and
-            // thus need conversion logic that operates on the actions in bulk.
+            // Bindings can either be on the action itself (in which case the action name
+            // for each binding is implied) or listed separately in the action file.
+            public BindingJson[] bindings;
 
             public static ActionJson FromAction(InputAction action)
             {
-                var bindings = action.bindings;
-                var bindingsCount = bindings.Count;
-                var bindingsJson = new BindingJson[bindingsCount];
+                // Bindings don't go on the actions when we write them.
+                return new ActionJson {name = action.m_Name};
+            }
+        }
 
-                for (var i = 0; i < bindingsCount; ++i)
+        [Serializable]
+        private struct MapJson
+        {
+            public string name;
+            public ActionJson[] actions;
+            public BindingJson[] bindings;
+
+            public static MapJson FromMap(InputActionMap map)
+            {
+                ActionJson[] jsonActions = null;
+                BindingJson[] jsonBindings = null;
+
+                var actions = map.m_Actions;
+                if (actions != null)
                 {
-                    bindingsJson[i] = BindingJson.FromBinding(bindings[i]);
+                    var actionCount = actions.Length;
+                    jsonActions = new ActionJson[actionCount];
+
+                    for (var i = 0; i < actionCount; ++i)
+                        jsonActions[i] = ActionJson.FromAction(actions[i]);
                 }
 
-                return new ActionJson
+                var bindings = map.m_Bindings;
+                if (bindings != null)
                 {
-                    name = action.name,
-                    bindings = bindingsJson,
+                    var bindingCount = bindings.Length;
+                    jsonBindings = new BindingJson[bindingCount];
+
+                    for (var i = 0; i < bindingCount; ++i)
+                        jsonBindings[i] = BindingJson.FromBinding(bindings[i]);
+                }
+
+                return new MapJson
+                {
+                    name = map.name,
+                    actions = jsonActions,
+                    bindings = jsonBindings,
                 };
             }
         }
 
-        ////TODO: this needs to be updated to be in sync with the binding refactor
+        // We write JSON in a less flexible format than we allow to be read. JSON files
+        // we read can just be flat lists of actions with the map name being contained in
+        // the action name and containing their own bindings directly. JSON files we write
+        // go map by map and separate bindings and actions.
+        [Serializable]
+        private struct WriteFileJson
+        {
+            public MapJson[] maps;
+
+            public static WriteFileJson FromMap(InputActionMap map)
+            {
+                return new WriteFileJson
+                {
+                    maps = new[] {MapJson.FromMap(map)}
+                };
+            }
+
+            public static WriteFileJson FromMaps(IEnumerable<InputActionMap> maps)
+            {
+                var mapCount = Enumerable.Count(maps);
+                if (mapCount == 0)
+                    return new WriteFileJson();
+
+                var mapsJson = new MapJson[mapCount];
+                var index = 0;
+                foreach (var map in maps)
+                    mapsJson[index++] = MapJson.FromMap(map);
+
+                return new WriteFileJson {maps = mapsJson};
+            }
+        }
+
         // A JSON represention of one or more sets of actions.
         // Contains a list of actions. Each action may specify the set it belongs to
         // as part of its name ("set/action").
         [Serializable]
-        private struct ActionFileJson
+        private struct ReadFileJson
         {
             public ActionJson[] actions;
+            public MapJson[] maps;
 
-            public InputActionMap[] ToSets()
+            public InputActionMap[] ToMaps()
             {
-                var sets = new List<InputActionMap>();
+                var mapList = new List<InputActionMap>();
+                var actionLists = new List<List<InputAction>>();
+                var bindingLists = new List<List<InputBinding>>();
 
-                var actions = new List<List<InputAction>>();
-                var bindings = new List<List<InputBinding>>();
-
-                var actionCount = this.actions != null ? this.actions.Length : 0;
+                // Process actions listed at toplevel.
+                var actionCount = actions != null ? actions.Length : 0;
                 for (var i = 0; i < actionCount; ++i)
                 {
-                    var jsonAction = this.actions[i];
+                    var jsonAction = actions[i];
 
                     if (string.IsNullOrEmpty(jsonAction.name))
                         throw new Exception(string.Format("Action number {0} has no name", i + 1));
 
                     ////REVIEW: make sure all action names are unique?
 
-                    // Determine name of action set.
-                    string setName = null;
-                    string actionName = jsonAction.name;
+                    // Determine name of action map.
+                    string mapName = null;
+                    var actionName = jsonAction.name;
                     var indexOfFirstSlash = actionName.IndexOf('/');
                     if (indexOfFirstSlash != -1)
                     {
-                        setName = actionName.Substring(0, indexOfFirstSlash);
+                        mapName = actionName.Substring(0, indexOfFirstSlash);
                         actionName = actionName.Substring(indexOfFirstSlash + 1);
 
                         if (string.IsNullOrEmpty(actionName))
@@ -678,140 +743,154 @@ namespace UnityEngine.Experimental.Input
                                     "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
                     }
 
-                    // Try to find existing set.
+                    // Try to find existing map.
                     InputActionMap map = null;
-                    var setIndex = 0;
-                    for (; setIndex < sets.Count; ++setIndex)
+                    var mapIndex = 0;
+                    for (; mapIndex < mapList.Count; ++mapIndex)
                     {
-                        if (string.Compare(sets[setIndex].name, setName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        if (string.Compare(mapList[mapIndex].name, mapName, StringComparison.InvariantCultureIgnoreCase) == 0)
                         {
-                            map = sets[setIndex];
+                            map = mapList[mapIndex];
                             break;
                         }
                     }
 
-                    // Create new set if it's the first action in the set.
+                    // Create new map if it's the first action in the map.
                     if (map == null)
                     {
-                        map = new InputActionMap(setName);
-                        sets.Add(map);
-                        actions.Add(new List<InputAction>());
-                        bindings.Add(new List<InputBinding>());
+                        map = new InputActionMap(mapName);
+                        mapIndex = mapList.Count;
+                        mapList.Add(map);
+                        actionLists.Add(new List<InputAction>());
+                        bindingLists.Add(new List<InputBinding>());
                     }
 
                     // Create action.
                     var action = new InputAction(actionName);
-                    actions[setIndex].Add(action);
+                    actionLists[mapIndex].Add(action);
 
                     // Add bindings.
                     if (jsonAction.bindings != null)
                     {
-                        var bindingsForSet = bindings[setIndex];
-                        var bindingsStartIndex = bindingsForSet.Count;
-
+                        var bindingsForMap = bindingLists[mapIndex];
                         for (var n = 0; n < jsonAction.bindings.Length; ++n)
                         {
                             var jsonBinding = jsonAction.bindings[n];
                             var binding = jsonBinding.ToBinding();
-                            bindingsForSet.Add(binding);
+                            binding.action = action.m_Name;
+                            bindingsForMap.Add(binding);
                         }
+                    }
+                }
 
-                        action.m_BindingsCount = bindingsForSet.Count - bindingsStartIndex;
-                        action.m_BindingsStartIndex = bindingsStartIndex;
+                // Process maps.
+                var mapCount = maps != null ? maps.Length : 0;
+                for (var i = 0; i < mapCount; ++i)
+                {
+                    var jsonMap = maps[i];
+
+                    var mapName = jsonMap.name;
+                    if (string.IsNullOrEmpty(mapName))
+                        throw new Exception(string.Format("Map number {0} has no name", i + 1));
+
+                    // Try to find existing map.
+                    InputActionMap map = null;
+                    var mapIndex = 0;
+                    for (; mapIndex < mapList.Count; ++mapIndex)
+                    {
+                        if (string.Compare(mapList[mapIndex].name, mapName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        {
+                            map = mapList[mapIndex];
+                            break;
+                        }
+                    }
+
+                    // Create new map if we haven't seen it before.
+                    if (map == null)
+                    {
+                        map = new InputActionMap(mapName);
+                        mapIndex = mapList.Count;
+                        mapList.Add(map);
+                        actionLists.Add(new List<InputAction>());
+                        bindingLists.Add(new List<InputBinding>());
+                    }
+
+                    // Process actions in map.
+                    var actionCountInMap = jsonMap.actions != null ? jsonMap.actions.Length : 0;
+                    for (var n = 0; n < actionCountInMap; ++n)
+                    {
+                        var jsonAction = jsonMap.actions[n];
+
+                        if (string.IsNullOrEmpty(jsonAction.name))
+                            throw new Exception(string.Format("Action number {0} in map '{1}' has no name", i + 1, mapName));
+
+                        // Create action.
+                        var action = new InputAction(jsonAction.name);
+                        actionLists[mapIndex].Add(action);
+
+                        // Add bindings.
+                        if (jsonAction.bindings != null)
+                        {
+                            var bindingList = bindingLists[mapIndex];
+                            for (var k = 0; k < jsonAction.bindings.Length; ++k)
+                            {
+                                var jsonBinding = jsonAction.bindings[k];
+                                var binding = jsonBinding.ToBinding();
+                                binding.action = action.m_Name;
+                                bindingList.Add(binding);
+                            }
+                        }
+                    }
+
+                    // Process bindings in map.
+                    var bindingCountInMap = jsonMap.bindings != null ? jsonMap.bindings.Length : 0;
+                    var bindingsForMap = bindingLists[mapIndex];
+                    for (var n = 0; n < bindingCountInMap; ++n)
+                    {
+                        var jsonBinding = jsonMap.bindings[n];
+                        var binding = jsonBinding.ToBinding();
+                        bindingsForMap.Add(binding);
                     }
                 }
 
                 // Finalize arrays.
-                for (var i = 0; i < sets.Count; ++i)
+                for (var i = 0; i < mapList.Count; ++i)
                 {
-                    var set = sets[i];
+                    var map = mapList[i];
 
-                    var actionArray = actions[i].ToArray();
-                    var bindingArray = bindings[i].ToArray();
+                    var actionArray = actionLists[i].ToArray();
+                    var bindingArray = bindingLists[i].ToArray();
 
-                    set.m_Actions = actionArray;
-                    set.m_Bindings = bindingArray;
+                    map.m_Actions = actionArray;
+                    map.m_Bindings = bindingArray;
 
                     for (var n = 0; n < actionArray.Length; ++n)
                     {
                         var action = actionArray[n];
-                        action.m_ActionMap = set;
+                        action.m_ActionMap = map;
                     }
                 }
 
-                return sets.ToArray();
-            }
-
-            public static ActionFileJson FromSet(InputActionMap map)
-            {
-                var actions = map.actions;
-                var actionCount = actions.Count;
-                var actionsJson = new ActionJson[actionCount];
-                var haveSetName = !string.IsNullOrEmpty(map.name);
-
-                for (var i = 0; i < actionCount; ++i)
-                {
-                    actionsJson[i] = ActionJson.FromAction(actions[i]);
-
-                    if (haveSetName)
-                        actionsJson[i].name = string.Format("{0}/{1}", map.name, actions[i].name);
-                }
-
-                return new ActionFileJson
-                {
-                    actions = actionsJson
-                };
-            }
-
-            public static ActionFileJson FromSets(IEnumerable<InputActionMap> sets)
-            {
-                // Count total number of actions.
-                var actionCount = 0;
-                foreach (var set in sets)
-                    actionCount += set.actions.Count;
-
-                // Collect actions from all sets.
-                var actionsJson = new ActionJson[actionCount];
-                var actionIndex = 0;
-                foreach (var set in sets)
-                {
-                    var haveSetName = !string.IsNullOrEmpty(set.name);
-                    var actions = set.actions;
-
-                    for (var i = 0; i < actions.Count; ++i)
-                    {
-                        actionsJson[actionIndex] = ActionJson.FromAction(actions[i]);
-
-                        if (haveSetName)
-                            actionsJson[actionIndex].name = string.Format("{0}/{1}", set.name, actions[i].name);
-
-                        ++actionIndex;
-                    }
-                }
-
-                return new ActionFileJson
-                {
-                    actions = actionsJson
-                };
+                return mapList.ToArray();
             }
         }
 
         // Load one or more action sets from JSON.
         public static InputActionMap[] FromJson(string json)
         {
-            var fileJson = JsonUtility.FromJson<ActionFileJson>(json);
-            return fileJson.ToSets();
+            var fileJson = JsonUtility.FromJson<ReadFileJson>(json);
+            return fileJson.ToMaps();
         }
 
         public static string ToJson(IEnumerable<InputActionMap> sets)
         {
-            var fileJson = ActionFileJson.FromSets(sets);
+            var fileJson = WriteFileJson.FromMaps(sets);
             return JsonUtility.ToJson(fileJson);
         }
 
         public string ToJson()
         {
-            var fileJson = ActionFileJson.FromSet(this);
+            var fileJson = WriteFileJson.FromMap(this);
             return JsonUtility.ToJson(fileJson);
         }
 
