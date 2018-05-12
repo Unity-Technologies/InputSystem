@@ -51,7 +51,6 @@ namespace UnityEngine.Experimental.Input
         public void AddMap(InputActionMap map)
         {
             Debug.Assert(map != null);
-            Debug.Assert(map.m_Bindings != null);
             Debug.Assert(map.m_MapIndex == InputActionMapState.kInvalidIndex);
 
             // Keep track of indices for this map.
@@ -63,7 +62,7 @@ namespace UnityEngine.Experimental.Input
 
             // Allocate binding states.
             var bindingsInThisMap = map.m_Bindings;
-            var bindingCountInThisMap = bindingsInThisMap.Length;
+            var bindingCountInThisMap = bindingsInThisMap != null ? bindingsInThisMap.Length : 0;
             totalBindingCount += bindingCountInThisMap;
             ArrayHelpers.GrowBy(ref bindingStates, totalBindingCount);
 
@@ -91,6 +90,11 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
                     }
+                }
+                else if (map.m_SingletonAction != null)
+                {
+                    // Special-case for singleton actions that don't have names.
+                    actionIndex = 0;
                 }
 
                 ////TODO: allow specifying parameters for composite on its path (same way as parameters work for modifiers)
@@ -130,6 +134,7 @@ namespace UnityEngine.Experimental.Input
                     controls = new InputControl[10];
                 var resolvedControls = new ArrayOrListWrapper<InputControl>(controls, totalControlCount);
                 var numControls = InputSystem.GetControls(path, ref resolvedControls);
+                controls = resolvedControls.array;
                 totalControlCount = resolvedControls.count;
 
                 // Instantiate modifiers.

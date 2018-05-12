@@ -6288,15 +6288,15 @@ class CoreTests : InputTestFixture
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var set = new InputActionMap();
-        var fire = set.AddAction("fire");
-        var reload = set.AddAction("reload");
+        var map = new InputActionMap();
+        var fire = map.AddAction("fire");
+        var reload = map.AddAction("reload");
 
-        set.AppendBinding("<Keyboard>/space")
+        map.AppendBinding("<Keyboard>/space")
         .WithChild("<Mouse>/leftButton").Triggering(fire)
         .And.WithChild("<Mouse>/rightButton").Triggering(reload);
 
-        set.Enable();
+        map.Enable();
 
         var firePerformed = false;
         var reloadPerformed = false;
@@ -6338,16 +6338,16 @@ class CoreTests : InputTestFixture
     [Category("Actions")]
     public void Actions_CanQueryBindingsTriggeringAction()
     {
-        var set = new InputActionMap();
-        var fire = set.AddAction("fire");
-        var reload = set.AddAction("reload");
+        var map = new InputActionMap();
+        var fire = map.AddAction("fire");
+        var reload = map.AddAction("reload");
 
-        set.AppendBinding("<Keyboard>/space")
+        map.AppendBinding("<Keyboard>/space")
         .WithChild("<Mouse>/leftButton").Triggering(fire)
         .And.WithChild("<Mouse>/rightButton").Triggering(reload);
-        set.AppendBinding("<Keyboard>/leftCtrl").Triggering(fire);
+        map.AppendBinding("<Keyboard>/leftCtrl").Triggering(fire);
 
-        Assert.That(set.bindings.Count, Is.EqualTo(3));
+        Assert.That(map.bindings.Count, Is.EqualTo(3));
         Assert.That(fire.bindings.Count, Is.EqualTo(2));
         Assert.That(reload.bindings.Count, Is.EqualTo(1));
         Assert.That(fire.bindings[0].path, Is.EqualTo("<Mouse>/leftButton"));
@@ -7151,21 +7151,27 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCloneActionSets()
+    public void Actions_CanCloneActionMaps()
     {
-        var set = new InputActionMap("set");
-        var action1 = set.AddAction("action1", binding: "/gamepad/leftStick", modifiers: "tap");
-        var action2 = set.AddAction("action2", binding: "/gamepad/rightStick", modifiers: "tap");
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1", binding: "/gamepad/leftStick", modifiers: "tap");
+        var action2 = map.AddAction("action2", binding: "/gamepad/rightStick", modifiers: "tap");
 
-        var clone = set.Clone();
+        var clone = map.Clone();
 
-        Assert.That(clone, Is.Not.SameAs(set));
-        Assert.That(clone.name, Is.EqualTo(set.name));
-        Assert.That(clone.actions, Has.Count.EqualTo(set.actions.Count));
+        Assert.That(clone, Is.Not.SameAs(map));
+        Assert.That(clone.name, Is.EqualTo(map.name));
+        Assert.That(clone.actions, Has.Count.EqualTo(map.actions.Count));
         Assert.That(clone.actions, Has.None.SameAs(action1));
         Assert.That(clone.actions, Has.None.SameAs(action2));
-        Assert.That(clone.actions[0].name, Is.EqualTo(set.actions[0].name));
-        Assert.That(clone.actions[1].name, Is.EqualTo(set.actions[1].name));
+        Assert.That(clone.actions[0].name, Is.EqualTo(map.actions[0].name));
+        Assert.That(clone.actions[1].name, Is.EqualTo(map.actions[1].name));
+        Assert.That(clone.actions[0].map, Is.SameAs(clone));
+        Assert.That(clone.actions[1].map, Is.SameAs(clone));
+        Assert.That(clone.actions[0].bindings.Count, Is.EqualTo(1));
+        Assert.That(clone.actions[1].bindings.Count, Is.EqualTo(1));
+        Assert.That(clone.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(clone.actions[1].bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
     }
 
     [Test]
