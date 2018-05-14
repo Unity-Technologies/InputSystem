@@ -29,19 +29,6 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // of the system (e.g. they make assumptions about how Gamepad is set up).
 class CoreTests : InputTestFixture
 {
-    class Vector3Comparer : IComparer<Vector3>
-    {
-        private float m_Epsilon;
-        public Vector3Comparer(float epsilon)
-        {
-            m_Epsilon = epsilon;
-        }
-
-        public int Compare(Vector3 a, Vector3 b)
-        {
-            return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
-        }
-    }
     // The test categories give the feature area associated with the test:
     //
     //     a) Controls
@@ -4262,16 +4249,16 @@ class CoreTests : InputTestFixture
     {
         InputConfiguration.CompensateSensorsForScreenOrientation = true;
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeLeft;
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
         Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.y, targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
         Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.x, -targetValue.y, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeRight;
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
         Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(targetValue.y, -targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.Portrait;
+        testRuntime.screenOrientation = ScreenOrientation.Portrait;
         Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
 
         InputConfiguration.CompensateSensorsForScreenOrientation = false;
@@ -7825,5 +7812,19 @@ class CoreTests : InputTestFixture
         Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
         Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
         Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+    }
+
+    class Vector3Comparer : IComparer<Vector3>
+    {
+        private float m_Epsilon;
+        public Vector3Comparer(float epsilon)
+        {
+            m_Epsilon = epsilon;
+        }
+
+        public int Compare(Vector3 a, Vector3 b)
+        {
+            return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
+        }
     }
 }
