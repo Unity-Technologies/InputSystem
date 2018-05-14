@@ -29,6 +29,19 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // of the system (e.g. they make assumptions about how Gamepad is set up).
 class CoreTests : InputTestFixture
 {
+    class Vector3Comparer : IComparer<Vector3>
+    {
+        private float m_Epsilon;
+        public Vector3Comparer(float epsilon)
+        {
+            m_Epsilon = epsilon;
+        }
+
+        public int Compare(Vector3 a, Vector3 b)
+        {
+            return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
+        }
+    }
     // The test categories give the feature area associated with the test:
     //
     //     a) Controls
@@ -3524,7 +3537,7 @@ class CoreTests : InputTestFixture
                         return InputDeviceCommand.kGenericSuccess;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;                
+                    return InputDeviceCommand.kGenericFailure;
                 });
         }
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
@@ -3655,7 +3668,7 @@ class CoreTests : InputTestFixture
                             return QueryKeyboardLayoutCommand.kMaxNameLength;
                     }
 
-                    return InputDeviceCommand.kGenericFailure;                
+                    return InputDeviceCommand.kGenericFailure;
                 });
         }
         Assert.That(keyboard.keyboardLayout, Is.EqualTo("default"));
@@ -4184,15 +4197,13 @@ class CoreTests : InputTestFixture
     public void Devices_CanGetAccelerometerReading()
     {
         var accelerometer = InputSystem.AddDevice<Accelerometer>();
-
-        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.123f, 0.456f, 0.789f) });
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = value });
         InputSystem.Update();
 
         Assert.That(Accelerometer.current, Is.SameAs(accelerometer));
 
-        Assert.That(accelerometer.acceleration.ReadValue().x, Is.EqualTo(0.123).Within(0.00001));
-        Assert.That(accelerometer.acceleration.ReadValue().y, Is.EqualTo(0.456).Within(0.00001));
-        Assert.That(accelerometer.acceleration.ReadValue().z, Is.EqualTo(0.789).Within(0.00001));
+        Assert.That(accelerometer.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
     }
 
     [Test]
@@ -4226,7 +4237,7 @@ class CoreTests : InputTestFixture
     public void Devices_CanGetAttitudeReading()
     {
         var sensor = InputSystem.AddDevice<Attitude>();
-        var value = new Quaternion(0.987f, 0.654f, 0.321f, 0.5f);
+        var value = Quaternion.Euler(10, 20, 30);
         InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = value });
         InputSystem.Update();
 
@@ -4245,6 +4256,88 @@ class CoreTests : InputTestFixture
 
         Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
+    }
+
+    private void ValidateSensorControl(Vector3Control control, Vector3 targetValue)
+    {
+        InputConfiguration.CompensateSensorsForScreenOrientation = true;
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeLeft;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.y, targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.x, -targetValue.y, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeRight;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(targetValue.y, -targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.Portrait;
+        Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = false;
+        Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateAccelerometerValues()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new AccelerometerState { acceleration = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.acceleration, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateGyroValues()
+    {
+        var sensor = InputSystem.AddDevice<Gyroscope>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new GyroscopeState { angularVelocity = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.angularVelocity, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateGravityValues()
+    {
+        var sensor = InputSystem.AddDevice<Gravity>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.gravity, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateAttitudeValues()
+    {
+        var sensor = InputSystem.AddDevice<Attitude>();
+        var angles = new Vector3(11, 22, 33);
+        InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = Quaternion.Euler(angles) });
+        InputSystem.Update();
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = true;
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeLeft;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(new Vector3Comparer(0.0001f)));
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(new Vector3Comparer(0.0001f)));
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeRight;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(new Vector3Comparer(0.0001f)));
+
+        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.Portrait;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = false;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
     }
 
     [Test]
@@ -6437,7 +6530,7 @@ class CoreTests : InputTestFixture
         Assert.That(deserialized[0].actions[0].bindings[4].isPartOfComposite, Is.True);
     }
 
-	[Test]
+    [Test]
     [Category("Actions")]
     public void Actions_WhileActionIsEnabled_CannotApplyOverrides()
     {
