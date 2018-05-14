@@ -49,11 +49,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl primaryButton { get; private set; }
         [InputControl(aliases = new[] { "B", "Y" })]
         public ButtonControl secondaryButton { get; private set; }
+        public ButtonControl gripPressed { get; private set; }
         public ButtonControl start { get; private set; }
         public ButtonControl thumbstickClicked { get; private set; }
-        [InputControl(aliases = new[] { "ATouch", "XTouch" })]
+        [InputControl(aliases = new[] { "ATouched", "XTouched" })]
         public ButtonControl primaryTouched { get; private set; }
-        [InputControl(aliases = new[] { "BTouch", "YTouch" })]
+        [InputControl(aliases = new[] { "BTouched", "YTouched" })]
         public ButtonControl secondaryTouched { get; private set; }
         public ButtonControl indexTouched { get; private set; }
         public ButtonControl thumbstickTouched { get; private set; }
@@ -81,6 +82,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             primaryButton = builder.GetControl<ButtonControl>("primaryButton");
             secondaryButton = builder.GetControl<ButtonControl>("secondaryButton");
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
             start = builder.GetControl<ButtonControl>("start");
             thumbstickClicked = builder.GetControl<ButtonControl>("thumbstickClicked");
             primaryTouched = builder.GetControl<ButtonControl>("primaryTouched");
