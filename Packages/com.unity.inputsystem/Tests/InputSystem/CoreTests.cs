@@ -21,7 +21,7 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEditor;
 #endif
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -4117,6 +4117,92 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanKeepTrackOfMultipleConcurrentTouches()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 92,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 92,
+        });
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 92,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 93,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 93,
+        });
+
+        InputSystem.Update();
+
+        ////FIXME: this test exposes a current weakness of how OnCarryStateForward() is implemented; the fact
+        ////       that Touchscreen blindly overwrites state is visible not just to actions but also when
+        ////       looking at values from the last frame which get destroyed by Touchscreen
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[0].touchId.ReadPreviousValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 93,
+        });
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.None));
+        //Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].touchId.ReadPreviousValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
     {
         Assert.Fail();
@@ -4210,6 +4296,7 @@ class CoreTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanGetGyroReading()
     {
+        ////FIXME: Move non gyro values to other tests
         var gyro = InputSystem.AddDevice<Gyroscope>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
         InputSystem.QueueStateEvent(gyro, new GyroscopeState {angularVelocity = value});
@@ -4256,6 +4343,89 @@ class CoreTests : InputTestFixture
 
         Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
+
+    }
+
+    private void ValidateSensorControl(Vector3Control control, Vector3 targetValue)
+    {
+        InputConfiguration.CompensateSensorsForScreenOrientation = true;
+
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.y, targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.x, -targetValue.y, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(targetValue.y, -targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.Portrait;
+        Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = false;
+        Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateAccelerometerValues()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new AccelerometerState { acceleration = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.acceleration, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateGyroValues()
+    {
+        var sensor = InputSystem.AddDevice<Gyroscope>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new GyroscopeState { angularVelocity = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.angularVelocity, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateGravityValues()
+    {
+        var sensor = InputSystem.AddDevice<Gravity>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.gravity, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateAttitudeValues()
+    {
+        var sensor = InputSystem.AddDevice<Attitude>();
+        var angles = new Vector3(11, 22, 33);
+        InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = Quaternion.Euler(angles) });
+        InputSystem.Update();
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = true;
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.Portrait;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = false;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
     }
 
     private void ValidateSensorControl(Vector3Control control, Vector3 targetValue)
@@ -7825,5 +7995,19 @@ class CoreTests : InputTestFixture
         Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
         Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
         Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+    }
+
+    class Vector3Comparer : IComparer<Vector3>
+    {
+        private float m_Epsilon;
+        public Vector3Comparer(float epsilon)
+        {
+            m_Epsilon = epsilon;
+        }
+
+        public int Compare(Vector3 a, Vector3 b)
+        {
+            return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
+        }
     }
 }

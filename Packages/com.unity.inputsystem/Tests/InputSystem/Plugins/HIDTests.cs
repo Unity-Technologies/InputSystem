@@ -131,19 +131,18 @@ class HIDTests : InputTestFixture
             testRuntime.SetDeviceCommandCallback(deviceId,
                 (id, commandPtr) =>
                 {
+                    if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
+                        return reportDescriptor.Length;
 
-                        if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
-                            return reportDescriptor.Length;
-
-                        if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
-                            && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
+                    if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
+                        && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
+                    {
+                        fixed(byte* ptr = reportDescriptor)
                         {
-                            fixed(byte* ptr = reportDescriptor)
-                            {
-                                UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
-                                return reportDescriptor.Length;
-                            }
+                            UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
+                            return reportDescriptor.Length;
                         }
+                    }
 
                     return InputDeviceCommand.kGenericFailure;
                 });
@@ -251,7 +250,7 @@ class HIDTests : InputTestFixture
 
                         return utf8Length;
                     }
-                return -1;
+                    return -1;
                 });
         }
         testRuntime.ReportNewInputDevice(

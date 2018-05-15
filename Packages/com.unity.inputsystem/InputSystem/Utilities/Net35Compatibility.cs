@@ -1,4 +1,4 @@
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -61,4 +61,4 @@ namespace UnityEngine.Experimental.Input.Net35Compatibility
         }
     }
 }
-#endif // !(NET_4_0 || NET_4_6)
+#endif // !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)

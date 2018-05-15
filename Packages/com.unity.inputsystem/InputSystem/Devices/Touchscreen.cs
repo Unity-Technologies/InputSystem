@@ -326,22 +326,24 @@ namespace UnityEngine.Experimental.Input
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
             // unlike other devices, is hardwired to a single memory layout only.
 
-            var touch = (TouchState*)statePtr;
-            var phase = touch->phase;
-            var touchStatePtr = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
+            var newTouchState = (TouchState*)statePtr;
+            var currentTouchState = (TouchState*)((byte*)currentStatePtr.ToPointer() + stateBlock.byteOffset);
 
             // If it's an ongoing touch, try to find the TouchState we have allocated to the touch
             // previously.
+            var phase = newTouchState->phase;
             if (phase != PointerPhase.Began)
             {
-                var touchId = touch->touchId;
-                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+                var touchId = newTouchState->touchId;
+                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
                 {
-                    if (touchStatePtr->touchId == touchId)
+                    if (currentTouchState->touchId == touchId)
                     {
                         offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
-                        touch->delta = touch->position - touchStatePtr->position;
-                        touch->delta += touchStatePtr->delta;
+                        // We're going to copy the new state over the old state so update the delta
+                        // on the new state to accumulate the old state.
+                        newTouchState->delta = newTouchState->position - currentTouchState->position;
+                        newTouchState->delta += currentTouchState->delta;
                         Profiler.EndSample();
                         return true;
                     }
@@ -353,26 +355,24 @@ namespace UnityEngine.Experimental.Input
                 Profiler.EndSample();
                 return false;
             }
-            else
+
+            // It's a new touch. Try to find an unused TouchState.
+            for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++currentTouchState)
             {
-                // It's a new touch. Try to find an unused TouchState.
-                for (var i = 0; i < TouchscreenState.kMaxTouches; ++i, ++touchStatePtr)
+                if (currentTouchState->phase == PointerPhase.None)
                 {
-                    if (touchStatePtr->phase == PointerPhase.None)
-                    {
-                        offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
-                        touch->delta = Vector2.zero;
-                        Profiler.EndSample();
-                        return true;
-                    }
+                    offsetToStoreAt = (uint)i * TouchState.kSizeInBytes;
+                    newTouchState->delta = Vector2.zero;
+                    Profiler.EndSample();
+                    return true;
                 }
-
-                // We ran out of state and we don't want to stomp an existing ongoing touch.
-                // Drop this touch entirely.
-
-                Profiler.EndSample();
-                return false;
             }
+
+            // We ran out of state and we don't want to stomp an existing ongoing touch.
+            // Drop this touch entirely.
+
+            Profiler.EndSample();
+            return false;
         }
 
         void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)

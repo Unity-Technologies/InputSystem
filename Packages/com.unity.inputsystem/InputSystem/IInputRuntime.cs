@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         InputUpdateType updateMask { set; }
 
-        ScreenOrientation screenOrientation { set; get; }
+        ScreenOrientation screenOrientation { get; }
     }
 
     internal static class InputRuntime

@@ -123,7 +123,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public Vector3 Process(Vector3 vector, InputControl control)
+        public new Vector3 Process(Vector3 vector, InputControl control)
         {
             return base.Process(vector * kAccelerationMultiplier, control);
         }
