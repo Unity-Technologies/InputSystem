@@ -49,21 +49,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             base.FinishSetup(builder);
 
-            var deviceDescriptor = XRDeviceDescriptor.FromJson(description.capabilities);
-            switch (deviceDescriptor.deviceRole)
+            string capabilities = description.capabilities;
+            var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
+
+            if(deviceDescriptor != null)
             {
-                case DeviceRole.LeftHanded:
+                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
                 {
                     InputSystem.SetUsage(this, CommonUsages.LeftHand);
-                    break;
                 }
-                case DeviceRole.RightHanded:
+                else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                 {
                     InputSystem.SetUsage(this, CommonUsages.RightHand);
-                    break;
                 }
-                default:
-                    break;
             }
         }
 

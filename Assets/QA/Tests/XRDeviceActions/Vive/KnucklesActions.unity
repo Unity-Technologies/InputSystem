@@ -11013,7 +11013,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <KnucklesController>{LeftHand}/triggerTouch
+      path: <KnucklesController>{LeftHand}/triggerPressed
       modifiers: 
       group: 
       flags: 0
@@ -12861,7 +12861,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <KnucklesController>{LeftHand}/stickOrPadPress
+      path: <KnucklesController>{LeftHand}/joystickOrPadPressed
       modifiers: 
       group: 
       flags: 0
@@ -12871,7 +12871,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <KnucklesController>{LeftHand}/stickOrPadTouch
+      path: <KnucklesController>{LeftHand}/joystickOrPadTouched
       modifiers: 
       group: 
       flags: 0
@@ -13474,7 +13474,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <KnucklesController>{RightHand}/triggerTouch
+      path: <KnucklesController>{RightHand}/triggerPressed
       modifiers: 
       group: 
       flags: 0
@@ -13803,7 +13803,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <KnucklesController>{RightHand}/stickOrPadPress
+      path: <KnucklesController>{RightHand}/joystickOrPadPressed
       modifiers: 
       group: 
       flags: 0
@@ -13813,7 +13813,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <KnucklesController>{RightHand}/stickOrPadTouch
+      path: <KnucklesController>{RightHand}/joystickOrPadTouched
       modifiers: 
       group: 
       flags: 0

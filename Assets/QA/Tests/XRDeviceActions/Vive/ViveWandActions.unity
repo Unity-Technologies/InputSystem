@@ -7991,7 +7991,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <ViveWand>{LeftHand}/triggerTouch
+      path: <ViveWand>{LeftHand}/triggerPressed
       modifiers: SlowTap
       group: 
       flags: 0
@@ -9215,7 +9215,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <ViveWand>{LeftHand}/stickOrPadPress
+      path: <ViveWand>{LeftHand}/joystickOrPadPressed
       modifiers: 
       group: 
       flags: 0
@@ -9225,7 +9225,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <ViveWand>{LeftHand}/stickOrPadTouch
+      path: <ViveWand>{LeftHand}/joystickOrPadTouched
       modifiers: 
       group: 
       flags: 0
@@ -9725,7 +9725,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <ViveWand>{RightHand}/triggerTouch
+      path: <ViveWand>{RightHand}/triggerPressed
       modifiers: 
       group: 
       flags: 0
@@ -9921,7 +9921,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <ViveWand>{RightHand}/stickOrPadPress
+      path: <ViveWand>{RightHand}/joystickOrPadPressed
       modifiers: 
       group: 
       flags: 0
@@ -9931,7 +9931,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <ViveWand>{RightHand}/stickOrPadTouch
+      path: <ViveWand>{RightHand}/joystickOrPadTouched
       modifiers: 
       group: 
       flags: 0

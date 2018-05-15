@@ -74,8 +74,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector2Control joystick { get; private set; }
         public AxisControl trigger { get; private set; }
         public ButtonControl back { get; private set; }
-        public ButtonControl touchpadClick { get; private set; }
-        public ButtonControl touchpadTouch { get; private set; }
+        public ButtonControl triggerPressed { get; private set; }
+        public ButtonControl touchpadClicked { get; private set; }
+        public ButtonControl touchpadTouched { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
         public Vector3Control devicePosition { get; private set; }
@@ -93,8 +94,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             joystick = builder.GetControl<Vector2Control>("joystick");
             trigger = builder.GetControl<AxisControl>("trigger");
             back = builder.GetControl<ButtonControl>("back");
-            touchpadClick = builder.GetControl<ButtonControl>("touchpadClick");
-            touchpadTouch = builder.GetControl<ButtonControl>("touchpadTouch");
+            triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");
+            touchpadClicked = builder.GetControl<ButtonControl>("touchpadClicked");
+            touchpadTouched = builder.GetControl<ButtonControl>("touchpadTouched");
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
             isTracked = builder.GetControl<ButtonControl>("isTracked");

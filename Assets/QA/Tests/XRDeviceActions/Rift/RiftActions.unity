@@ -288,6 +288,7 @@ RectTransform:
   - {fileID: 1144269144}
   - {fileID: 1888361721}
   - {fileID: 1852894979}
+  - {fileID: 1894220653}
   - {fileID: 2034786406}
   - {fileID: 500660220}
   - {fileID: 1871040713}
@@ -732,6 +733,81 @@ CanvasRenderer:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 186286993}
+  m_CullTransparentMesh: 0
+--- !u!1 &186927055
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 186927056}
+  - component: {fileID: 186927058}
+  - component: {fileID: 186927057}
+  m_Layer: 5
+  m_Name: Title
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &186927056
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 186927055}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 388026638}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 104.99999, y: -0.0000019073}
+  m_SizeDelta: {x: 160, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &186927057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 186927055}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 20
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 2
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: Grip
+--- !u!222 &186927058
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 186927055}
   m_CullTransparentMesh: 0
 --- !u!1 &201204002
 GameObject:
@@ -1391,7 +1467,7 @@ GameObject:
   - component: {fileID: 315319290}
   - component: {fileID: 315319291}
   m_Layer: 5
-  m_Name: ButtonControl (2)
+  m_Name: Button(Secondary)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1442,7 +1518,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/secondaryTouch
+      path: <OculusTouchController>{LeftHand}/secondaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -1668,6 +1744,69 @@ CanvasRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 355060381}
   m_CullTransparentMesh: 0
+--- !u!1 &388026637
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 388026638}
+  - component: {fileID: 388026639}
+  m_Layer: 5
+  m_Name: Button(Grip)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &388026638
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 388026637}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 186927056}
+  - {fileID: 969087348}
+  m_Father: {fileID: 1307617534}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -80, y: -222}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &388026639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 388026637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonPressAction:
+    m_Name: Button Press
+    m_Bindings:
+    - name: 
+      path: <OculusTouchController>{LeftHand}/gripPressed
+      modifiers: 
+      group: 
+      flags: 0
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 1
+  buttonTouchAction:
+    m_Name: Button Touch
+    m_Bindings: []
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 0
+  statusImage: {fileID: 969087349}
 --- !u!1 &392423653
 GameObject:
   m_ObjectHideFlags: 0
@@ -2156,7 +2295,7 @@ GameObject:
   m_Component:
   - component: {fileID: 446768191}
   m_Layer: 5
-  m_Name: ButtonControl
+  m_Name: NotImplemented(Start)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2403,6 +2542,81 @@ CanvasRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 469894015}
   m_CullTransparentMesh: 0
+--- !u!1 &487194256
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 487194257}
+  - component: {fileID: 487194259}
+  - component: {fileID: 487194258}
+  m_Layer: 5
+  m_Name: Title
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &487194257
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 487194256}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1894220653}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 104.99999, y: -0.0000019073}
+  m_SizeDelta: {x: 160, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &487194258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 487194256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 20
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 2
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: Grip
+--- !u!222 &487194259
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 487194256}
+  m_CullTransparentMesh: 0
 --- !u!1 &500116732
 GameObject:
   m_ObjectHideFlags: 0
@@ -2447,7 +2661,7 @@ GameObject:
   - component: {fileID: 500660220}
   - component: {fileID: 500660221}
   m_Layer: 5
-  m_Name: AxisControl
+  m_Name: Axis(Trigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2466,7 +2680,7 @@ RectTransform:
   - {fileID: 252353010}
   - {fileID: 1978521061}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -2816,7 +3030,7 @@ GameObject:
   - component: {fileID: 554403522}
   - component: {fileID: 554403523}
   m_Layer: 5
-  m_Name: ButtonControl (1)
+  m_Name: Button(Primary)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2867,7 +3081,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/primaryTouch
+      path: <OculusTouchController>{RightHand}/primaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -3028,7 +3242,7 @@ GameObject:
   - component: {fileID: 559090993}
   - component: {fileID: 559090994}
   m_Layer: 5
-  m_Name: AxisControl
+  m_Name: Axis(Trigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3546,7 +3760,7 @@ GameObject:
   - component: {fileID: 709200742}
   - component: {fileID: 709200743}
   m_Layer: 5
-  m_Name: Axis2Control
+  m_Name: Axis2D(Thumbstick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3566,7 +3780,7 @@ RectTransform:
   - {fileID: 1625197799}
   - {fileID: 1734179933}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 6
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -5353,7 +5567,7 @@ GameObject:
   - component: {fileID: 967967417}
   - component: {fileID: 967967418}
   m_Layer: 5
-  m_Name: ButtonControl (5)
+  m_Name: Button(Index)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5399,7 +5613,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/indexTouch
+      path: <OculusTouchController>{LeftHand}/indexTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -5475,6 +5689,75 @@ CanvasRenderer:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 968586721}
   m_CullTransparentMesh: 0
+--- !u!1 &969087347
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 969087348}
+  - component: {fileID: 969087350}
+  - component: {fileID: 969087349}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &969087348
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 969087347}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 388026638}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &969087349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 969087347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+--- !u!222 &969087350
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 969087347}
+  m_CullTransparentMesh: 0
 --- !u!1 &977667762
 GameObject:
   m_ObjectHideFlags: 0
@@ -5485,7 +5768,7 @@ GameObject:
   - component: {fileID: 977667763}
   - component: {fileID: 977667764}
   m_Layer: 5
-  m_Name: ButtonControl
+  m_Name: Button(Start)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5982,7 +6265,7 @@ GameObject:
   - component: {fileID: 1057477902}
   - component: {fileID: 1057477903}
   m_Layer: 5
-  m_Name: ButtonControl (2)
+  m_Name: Button(Secondary)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6033,7 +6316,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/secondaryTouch
+      path: <OculusTouchController>{RightHand}/secondaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -6641,7 +6924,7 @@ GameObject:
   - component: {fileID: 1124086392}
   - component: {fileID: 1124086393}
   m_Layer: 5
-  m_Name: ButtonControl (3)
+  m_Name: Button(Thumbrest)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6687,7 +6970,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbrestTouch
+      path: <OculusTouchController>{LeftHand}/thumbrestTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -6704,7 +6987,7 @@ GameObject:
   - component: {fileID: 1130647749}
   - component: {fileID: 1130647750}
   m_Layer: 5
-  m_Name: AxisControl (2)
+  m_Name: Axis(CombinedTrigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6723,7 +7006,7 @@ RectTransform:
   - {fileID: 1224350608}
   - {fileID: 1412795880}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 8
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -6837,7 +7120,7 @@ GameObject:
   - component: {fileID: 1142817234}
   - component: {fileID: 1142817235}
   m_Layer: 5
-  m_Name: AxisControl (1)
+  m_Name: Axis(Grip)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6856,7 +7139,7 @@ RectTransform:
   - {fileID: 1284618399}
   - {fileID: 1295250822}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 9
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -6895,7 +7178,7 @@ GameObject:
   - component: {fileID: 1144269144}
   - component: {fileID: 1144269145}
   m_Layer: 5
-  m_Name: ButtonControl (3)
+  m_Name: Button(Thumbrest)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6941,7 +7224,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbrestTouch
+      path: <OculusTouchController>{RightHand}/thumbrestTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -8301,7 +8584,7 @@ GameObject:
   - component: {fileID: 1303854308}
   - component: {fileID: 1303854309}
   m_Layer: 5
-  m_Name: ButtonControl (1)
+  m_Name: Button(Primary)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8352,7 +8635,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/primaryTouch
+      path: <OculusTouchController>{LeftHand}/primaryTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -8390,8 +8673,9 @@ RectTransform:
   - {fileID: 1124086392}
   - {fileID: 1786174559}
   - {fileID: 967967417}
-  - {fileID: 709200742}
+  - {fileID: 388026638}
   - {fileID: 559090993}
+  - {fileID: 709200742}
   - {fileID: 1130647749}
   - {fileID: 1142817234}
   - {fileID: 1710129073}
@@ -9087,7 +9371,7 @@ GameObject:
   - component: {fileID: 1402865138}
   - component: {fileID: 1402865139}
   m_Layer: 5
-  m_Name: AxisControl (5)
+  m_Name: Axis(Index)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9106,7 +9390,7 @@ RectTransform:
   - {fileID: 1604550850}
   - {fileID: 1872811701}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 10
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -9128,7 +9412,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/indexNearTouch
+      path: <OculusTouchController>{RightHand}/indexNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -10050,7 +10334,7 @@ GameObject:
   - component: {fileID: 1552049532}
   - component: {fileID: 1552049533}
   m_Layer: 5
-  m_Name: AxisControl (4)
+  m_Name: Axis(Thumb)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10069,7 +10353,7 @@ RectTransform:
   - {fileID: 1080963225}
   - {fileID: 2133367573}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 11
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -10091,7 +10375,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbNearTouch
+      path: <OculusTouchController>{LeftHand}/thumbNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -10717,7 +11001,7 @@ GameObject:
   - component: {fileID: 1651830787}
   - component: {fileID: 1651830788}
   m_Layer: 5
-  m_Name: AxisControl (6)
+  m_Name: Axis(Thumb)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10736,7 +11020,7 @@ RectTransform:
   - {fileID: 1900188048}
   - {fileID: 983123576}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 11
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -10758,7 +11042,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbNearTouch
+      path: <OculusTouchController>{RightHand}/thumbNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -10974,7 +11258,7 @@ GameObject:
   - component: {fileID: 1671605617}
   - component: {fileID: 1671605618}
   m_Layer: 5
-  m_Name: AxisControl (3)
+  m_Name: Axis(CombinedTrigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10993,7 +11277,7 @@ RectTransform:
   - {fileID: 2016262014}
   - {fileID: 1918663767}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 9
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -11356,7 +11640,7 @@ GameObject:
   - component: {fileID: 1710129073}
   - component: {fileID: 1710129074}
   m_Layer: 5
-  m_Name: AxisControl (3)
+  m_Name: Axis(Index)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11375,7 +11659,7 @@ RectTransform:
   - {fileID: 392423654}
   - {fileID: 1190590511}
   m_Father: {fileID: 1307617534}
-  m_RootOrder: 10
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -11397,7 +11681,7 @@ MonoBehaviour:
     m_Name: Axis
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/indexNearTouch
+      path: <OculusTouchController>{LeftHand}/indexNearTouched
       modifiers: 
       group: 
       flags: 0
@@ -11730,7 +12014,7 @@ GameObject:
   - component: {fileID: 1786174559}
   - component: {fileID: 1786174560}
   m_Layer: 5
-  m_Name: ButtonControl (4)
+  m_Name: Button(Thumbstick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11771,7 +12055,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbstickClick
+      path: <OculusTouchController>{LeftHand}/thumbstickClicked
       modifiers: SlowTap
       group: 
       flags: 0
@@ -11781,7 +12065,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{LeftHand}/thumbstickTouch
+      path: <OculusTouchController>{LeftHand}/thumbstickTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -12309,7 +12593,7 @@ GameObject:
   - component: {fileID: 1852894979}
   - component: {fileID: 1852894980}
   m_Layer: 5
-  m_Name: ButtonControl (7)
+  m_Name: Button(Index)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12355,7 +12639,7 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/indexTouch
+      path: <OculusTouchController>{RightHand}/indexTouched
       modifiers: SlowTap
       group: 
       flags: 0
@@ -12447,7 +12731,7 @@ GameObject:
   - component: {fileID: 1871040713}
   - component: {fileID: 1871040714}
   m_Layer: 5
-  m_Name: AxisControl (2)
+  m_Name: Axis(Grip)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12466,7 +12750,7 @@ RectTransform:
   - {fileID: 1840855811}
   - {fileID: 394234194}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 8
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -12649,7 +12933,7 @@ GameObject:
   - component: {fileID: 1888361721}
   - component: {fileID: 1888361722}
   m_Layer: 5
-  m_Name: ButtonControl (4)
+  m_Name: Button(Thumbstick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12690,7 +12974,7 @@ MonoBehaviour:
     m_Name: Button Press
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbstickClick
+      path: <OculusTouchController>{RightHand}/thumbstickClicked
       modifiers: SlowTap
       group: 
       flags: 0
@@ -12700,13 +12984,76 @@ MonoBehaviour:
     m_Name: Button Touch
     m_Bindings:
     - name: 
-      path: <OculusTouchController>{RightHand}/thumbstickTouch
+      path: <OculusTouchController>{RightHand}/thumbstickTouched
       modifiers: SlowTap
       group: 
       flags: 0
     m_BindingsStartIndex: 0
     m_BindingsCount: 1
   statusImage: {fileID: 1493438909}
+--- !u!1 &1894220652
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1894220653}
+  - component: {fileID: 1894220654}
+  m_Layer: 5
+  m_Name: Button(Grip)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1894220653
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1894220652}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 487194257}
+  - {fileID: 2054271156}
+  m_Father: {fileID: 97008436}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -33, y: -232.00002}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1894220654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1894220652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e3d8727093597a4f98dcf87c983c117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonPressAction:
+    m_Name: Button Press
+    m_Bindings:
+    - name: 
+      path: <OculusTouchController>{RightHand}/gripPressed
+      modifiers: 
+      group: 
+      flags: 0
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 1
+  buttonTouchAction:
+    m_Name: Button Touch
+    m_Bindings: []
+    m_BindingsStartIndex: 0
+    m_BindingsCount: 0
+  statusImage: {fileID: 2054271157}
 --- !u!1 &1900188047
 GameObject:
   m_ObjectHideFlags: 0
@@ -13815,7 +14162,7 @@ GameObject:
   - component: {fileID: 2034786406}
   - component: {fileID: 2034786407}
   m_Layer: 5
-  m_Name: Axis2Control
+  m_Name: Axis2D(Thumbstick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13835,7 +14182,7 @@ RectTransform:
   - {fileID: 1632131996}
   - {fileID: 527323464}
   m_Father: {fileID: 97008436}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -14011,6 +14358,75 @@ CanvasRenderer:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2049427172}
+  m_CullTransparentMesh: 0
+--- !u!1 &2054271155
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2054271156}
+  - component: {fileID: 2054271158}
+  - component: {fileID: 2054271157}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2054271156
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2054271155}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1894220653}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 50, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2054271157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2054271155}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -765806418, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
+      Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+--- !u!222 &2054271158
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2054271155}
   m_CullTransparentMesh: 0
 --- !u!1 &2058824255
 GameObject:
