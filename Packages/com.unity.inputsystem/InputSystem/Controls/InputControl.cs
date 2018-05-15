@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -39,6 +40,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputDevice"/>
     /// \todo Add ability to get and to set configuration on a control (probably just key/value pairs)
     /// \todo Remove the distinction between input and output controls; allow every InputControl to write values
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public abstract class InputControl
     {
         /// <summary>
@@ -203,6 +205,11 @@ namespace UnityEngine.Experimental.Input
         public override string ToString()
         {
             return string.Format("{0}:{1}", layout, path);
+        }
+
+        private string DebuggerDisplay()
+        {
+            return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
         }
 
         ////TODO: setting value (will it also go through the processor stack?)

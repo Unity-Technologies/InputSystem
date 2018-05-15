@@ -4104,6 +4104,92 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanKeepTrackOfMultipleConcurrentTouches()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 92,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 92,
+        });
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 92,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 93,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 93,
+        });
+
+        InputSystem.Update();
+
+        ////FIXME: this test exposes a current weakness of how OnCarryStateForward() is implemented; the fact
+        ////       that Touchscreen blindly overwrites state is visible not just to actions but also when
+        ////       looking at values from the last frame which get destroyed by Touchscreen
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[0].touchId.ReadPreviousValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 93,
+        });
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.None));
+        //Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].touchId.ReadPreviousValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
     {
         Assert.Fail();
@@ -4311,16 +4397,16 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         InputConfiguration.CompensateSensorsForScreenOrientation = true;
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeLeft;
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
         Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(new Vector3Comparer(0.0001f)));
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
         Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(new Vector3Comparer(0.0001f)));
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.LandscapeRight;
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
         Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(new Vector3Comparer(0.0001f)));
 
-        InputRuntime.s_Instance.screenOrientation = ScreenOrientation.Portrait;
+        testRuntime.screenOrientation = ScreenOrientation.Portrait;
         Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
 
         InputConfiguration.CompensateSensorsForScreenOrientation = false;
