@@ -75,10 +75,10 @@ class DualShockTests : InputTestFixture
         var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
 
         DualShockHIDOutputReport? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(gamepad.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(gamepad.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockHIDOutputReport.Type)
                     {
@@ -89,9 +89,8 @@ class DualShockTests : InputTestFixture
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         ////REVIEW: This illustrates a weekness of the current haptics API; each call results in a separate output command whereas
         ////        what the device really wants is to receive both motor speed and light bar settings in one single command
 
@@ -203,10 +202,10 @@ class DualShockTests : InputTestFixture
         var gamepad = (DualShockGamepadPS4)device;
 
         DualShockPS4OuputCommand? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(gamepad.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(gamepad.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockPS4OuputCommand.Type)
                     {
@@ -217,9 +216,8 @@ class DualShockTests : InputTestFixture
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
 
         Assert.That(receivedCommand.HasValue, Is.True);
@@ -294,10 +292,10 @@ class DualShockTests : InputTestFixture
         }.ToJson(), 1);
 
         bool? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(1,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(1,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryPS4ControllerInfo.Type)
                     {
@@ -310,8 +308,8 @@ class DualShockTests : InputTestFixture
 
                     Assert.Fail("Received wrong type of command");
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
+                });
+        }
         InputSystem.Update();
         var gamepad = (DualShockGamepadPS4)InputSystem.devices[0];
 

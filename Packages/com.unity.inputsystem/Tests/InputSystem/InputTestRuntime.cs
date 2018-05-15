@@ -100,10 +100,10 @@ namespace UnityEngine.Experimental.Input
             where TCommand : struct, IInputDeviceCommandInfo
         {
             bool? receivedCommand = null;
-            SetDeviceCommandCallback(deviceId,
-                (id, commandPtr) =>
-                {
-                    unsafe
+            unsafe
+            {
+                SetDeviceCommandCallback(deviceId,
+                    (id, commandPtr) =>
                     {
                         if (commandPtr->type == result.GetTypeStatic())
                         {
@@ -113,9 +113,10 @@ namespace UnityEngine.Experimental.Input
                                 UnsafeUtility.SizeOf<TCommand>());
                             return InputDeviceCommand.kGenericSuccess;
                         }
+
                         return InputDeviceCommand.kGenericFailure;
-                    }
-                });
+                    });
+            }
         }
 
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
@@ -154,6 +155,19 @@ namespace UnityEngine.Experimental.Input
         public float pollingFrequency { get; set; }
         public InputUpdateType updateMask { get; set; }
 
+        public ScreenOrientation screenOrientation
+        {
+            set
+            {
+                m_ScreenOrientation = value;
+            }
+
+            get
+            {
+                return m_ScreenOrientation;
+            }
+        }
+
         public void Dispose()
         {
             m_EventBuffer.Dispose();
@@ -168,5 +182,6 @@ namespace UnityEngine.Experimental.Input
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
+        private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
     }
 }

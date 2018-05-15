@@ -40,13 +40,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public AxisControl combinedTrigger { get; private set; }
         public Vector2Control joystick { get; private set; }
         public AxisControl trigger { get; private set; }
-        public AxisControl grip { get; private set; }
         public Vector2Control touchpad { get; private set; }
-        public ButtonControl gripPressed { get; private set; }
+        public ButtonControl grip { get; private set; }
         public ButtonControl menu { get; private set; }
         public ButtonControl joystickClick { get; private set; }
         public ButtonControl triggerPressed { get; private set; }
+        [InputControl(aliases = new[] { "touchpadClick" })]
         public ButtonControl touchpadClicked { get; private set; }
+        [InputControl(aliases = new[] { "touchpadTouch" })]
         public ButtonControl touchPadTouched { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -60,9 +61,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             combinedTrigger = builder.GetControl<AxisControl>("combinedTrigger");
             joystick = builder.GetControl<Vector2Control>("joystick");
             trigger = builder.GetControl<AxisControl>("trigger");
-            grip = builder.GetControl<AxisControl>("grip");
             touchpad = builder.GetControl<Vector2Control>("touchpad");
-            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
+            grip = builder.GetControl<ButtonControl>("grip");
             menu = builder.GetControl<ButtonControl>("menu");
             joystickClick = builder.GetControl<ButtonControl>("joystickClick");
             triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");

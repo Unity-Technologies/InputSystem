@@ -21,7 +21,7 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEditor;
 #endif
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -3016,10 +3016,10 @@ class CoreTests : InputTestFixture
         var device = InputSystem.AddDevice<Mouse>();
 
         bool? disabled = null;
-        testRuntime.SetDeviceCommandCallback(device.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(device.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == DisableDeviceCommand.Type)
                     {
@@ -3033,11 +3033,10 @@ class CoreTests : InputTestFixture
                         disabled = false;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                }
 
-                return InputDeviceCommand.kGenericFailure;
-            });
-
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
 
         Assert.That(device.enabled, Is.True);
         Assert.That(disabled, Is.Null);
@@ -3116,10 +3115,10 @@ class CoreTests : InputTestFixture
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
 
         bool? wasDisabled = null;
-        testRuntime.SetDeviceCommandCallback(deviceId,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == DisableDeviceCommand.Type)
                     {
@@ -3127,12 +3126,11 @@ class CoreTests : InputTestFixture
                         wasDisabled = true;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                }
 
-                Assert.Fail("Should not get other IOCTLs");
-                return InputDeviceCommand.kGenericFailure;
-            });
-
+                    Assert.Fail("Should not get other IOCTLs");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         InputSystem.Update();
 
         Assert.That(wasDisabled.HasValue);
@@ -3148,10 +3146,10 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         bool? wasEnabled = null;
-        testRuntime.SetDeviceCommandCallback(deviceId,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == EnableDeviceCommand.Type)
                     {
@@ -3159,12 +3157,11 @@ class CoreTests : InputTestFixture
                         wasEnabled = true;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                }
 
-                Assert.Fail("Should not get other IOCTLs");
-                return InputDeviceCommand.kGenericFailure;
-            });
-
+                    Assert.Fail("Should not get other IOCTLs");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         InputSystem.RegisterControlLayout<Mouse>(matches: new InputDeviceMatcher().WithDeviceClass("TestThing"));
 
         Assert.That(wasEnabled.HasValue);
@@ -3179,10 +3176,10 @@ class CoreTests : InputTestFixture
 
         var queryEnabledStateResult = false;
         bool? receivedQueryEnabledStateCommand = null;
-        testRuntime.SetDeviceCommandCallback(deviceId,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(deviceId,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryEnabledStateCommand.Type)
                     {
@@ -3191,12 +3188,11 @@ class CoreTests : InputTestFixture
                         ((QueryEnabledStateCommand*)commandPtr)->isEnabled = queryEnabledStateResult;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                }
 
-                Assert.Fail("Should not get other IOCTLs");
-                return InputDeviceCommand.kGenericFailure;
-            });
-
+                    Assert.Fail("Should not get other IOCTLs");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Mouse"}.ToJson(), deviceId);
         InputSystem.Update();
         var device = InputSystem.devices.First(x => x.id == deviceId);
@@ -3266,10 +3262,10 @@ class CoreTests : InputTestFixture
         var device = InputSystem.AddDevice<Gamepad>();
         string userId = null;
 
-        testRuntime.SetDeviceCommandCallback(device.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(device.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryUserIdCommand.Type)
                     {
@@ -3278,11 +3274,10 @@ class CoreTests : InputTestFixture
                             QueryUserIdCommand.kMaxIdLength);
                         return 1;
                     }
-                }
 
-                return InputDeviceCommand.kGenericFailure;
-            });
-
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         Assert.That(device.userId, Is.Null);
 
         InputSystem.QueueConfigChangeEvent(device);
@@ -3517,11 +3512,10 @@ class CoreTests : InputTestFixture
         const float kSensitivity = 6f;
 
         InputConfiguration.PointerDeltaSensitivity = kSensitivity;
-
-        testRuntime.SetDeviceCommandCallback(pointer.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(pointer.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryDimensionsCommand.Type)
                     {
@@ -3531,9 +3525,8 @@ class CoreTests : InputTestFixture
                     }
 
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
         InputSystem.Update();
 
@@ -3602,10 +3595,10 @@ class CoreTests : InputTestFixture
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var currentLayoutName = "default";
-        testRuntime.SetDeviceCommandCallback(keyboard.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(keyboard.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryKeyNameCommand.Type)
                     {
@@ -3628,9 +3621,8 @@ class CoreTests : InputTestFixture
                     }
 
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
         Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
 
@@ -3650,10 +3642,10 @@ class CoreTests : InputTestFixture
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var currentLayoutName = "default";
-        testRuntime.SetDeviceCommandCallback(keyboard.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(keyboard.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
                     {
@@ -3664,9 +3656,8 @@ class CoreTests : InputTestFixture
                     }
 
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         Assert.That(keyboard.keyboardLayout, Is.EqualTo("default"));
 
         currentLayoutName = "new";
@@ -3714,10 +3705,10 @@ class CoreTests : InputTestFixture
         var mouse = InputSystem.AddDevice<Mouse>();
 
         WarpMousePositionCommand? receivedCommand = null;
-        testRuntime.SetDeviceCommandCallback(mouse.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(mouse.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == WarpMousePositionCommand.Type)
                     {
@@ -3728,9 +3719,8 @@ class CoreTests : InputTestFixture
 
                     Assert.Fail();
                     return InputDeviceCommand.kGenericFailure;
-                }
-            });
-
+                });
+        }
         mouse.WarpCursorPosition(new Vector2(0.1234f, 0.5678f));
 
         Assert.That(receivedCommand.HasValue, Is.True);
@@ -4114,6 +4104,92 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanKeepTrackOfMultipleConcurrentTouches()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 92,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 92,
+        });
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 92,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 93,
+        });
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Moved,
+            touchId = 93,
+        });
+
+        InputSystem.Update();
+
+        ////FIXME: this test exposes a current weakness of how OnCarryStateForward() is implemented; the fact
+        ////       that Touchscreen blindly overwrites state is visible not just to actions but also when
+        ////       looking at values from the last frame which get destroyed by Touchscreen
+
+        Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[0].touchId.ReadPreviousValue(), Is.EqualTo(92));
+        Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(2));
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 93,
+        });
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.None));
+        //Assert.That(device.allTouchControls[0].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].touchId.ReadValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.allTouchControls[1].touchId.ReadPreviousValue(), Is.EqualTo(93));
+        Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Moved));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(1));
+
+        InputSystem.Update();
+
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Stationary));
+        //Assert.That(device.allTouchControls[1].phase.ReadPreviousValue(), Is.EqualTo(PointerPhase.Ended));
+        Assert.That(device.activeTouches.Count, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
     {
         Assert.Fail();
@@ -4140,10 +4216,10 @@ class CoreTests : InputTestFixture
         var sensor = InputSystem.AddDevice<Accelerometer>();
 
         bool? receivedQueryFrequencyCommand = null;
-        testRuntime.SetDeviceCommandCallback(sensor.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(sensor.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == QuerySamplingFrequencyCommand.Type)
                     {
@@ -4152,10 +4228,10 @@ class CoreTests : InputTestFixture
                         ((QuerySamplingFrequencyCommand*)commandPtr)->frequency = 120.0f;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                }
-                return InputDeviceCommand.kGenericFailure;
-            });
 
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         Assert.That(sensor.samplingFrequency, Is.EqualTo(120.0).Within(0.000001));
         Assert.That(receivedQueryFrequencyCommand, Is.Not.Null);
         Assert.That(receivedQueryFrequencyCommand.Value, Is.True);
@@ -4168,10 +4244,10 @@ class CoreTests : InputTestFixture
         var sensor = InputSystem.AddDevice<Accelerometer>();
 
         bool? receivedSetFrequencyCommand = null;
-        testRuntime.SetDeviceCommandCallback(sensor.id,
-            (id, commandPtr) =>
-            {
-                unsafe
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(sensor.id,
+                (id, commandPtr) =>
                 {
                     if (commandPtr->type == SetSamplingFrequencyCommand.Type)
                     {
@@ -4179,10 +4255,10 @@ class CoreTests : InputTestFixture
                         receivedSetFrequencyCommand = true;
                         return InputDeviceCommand.kGenericSuccess;
                     }
-                }
-                return InputDeviceCommand.kGenericFailure;
-            });
 
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
         sensor.samplingFrequency = 30.0f;
 
         Assert.That(receivedSetFrequencyCommand, Is.Not.Null);
@@ -4194,15 +4270,13 @@ class CoreTests : InputTestFixture
     public void Devices_CanGetAccelerometerReading()
     {
         var accelerometer = InputSystem.AddDevice<Accelerometer>();
-
-        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = new Vector3(0.123f, 0.456f, 0.789f) });
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = value });
         InputSystem.Update();
 
         Assert.That(Accelerometer.current, Is.SameAs(accelerometer));
 
-        Assert.That(accelerometer.acceleration.ReadValue().x, Is.EqualTo(0.123).Within(0.00001));
-        Assert.That(accelerometer.acceleration.ReadValue().y, Is.EqualTo(0.456).Within(0.00001));
-        Assert.That(accelerometer.acceleration.ReadValue().z, Is.EqualTo(0.789).Within(0.00001));
+        Assert.That(accelerometer.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
     }
 
     [Test]
@@ -4237,7 +4311,7 @@ class CoreTests : InputTestFixture
     public void Devices_CanGetAttitudeReading()
     {
         var sensor = InputSystem.AddDevice<Attitude>();
-        var value = new Quaternion(0.987f, 0.654f, 0.321f, 0.5f);
+        var value = Quaternion.Euler(10, 20, 30);
         InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = value });
         InputSystem.Update();
 
@@ -4257,6 +4331,88 @@ class CoreTests : InputTestFixture
         Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
 
+    }
+
+    private void ValidateSensorControl(Vector3Control control, Vector3 targetValue)
+    {
+        InputConfiguration.CompensateSensorsForScreenOrientation = true;
+
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.y, targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(-targetValue.x, -targetValue.y, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
+        Assert.That(control.ReadValue(), Is.EqualTo(new Vector3(targetValue.y, -targetValue.x, targetValue.z)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.Portrait;
+        Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = false;
+        Assert.That(control.ReadValue(), Is.EqualTo(targetValue).Using(new Vector3Comparer(0.0001f)));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateAccelerometerValues()
+    {
+        var sensor = InputSystem.AddDevice<Accelerometer>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new AccelerometerState { acceleration = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.acceleration, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateGyroValues()
+    {
+        var sensor = InputSystem.AddDevice<Gyroscope>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new GyroscopeState { angularVelocity = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.angularVelocity, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateGravityValues()
+    {
+        var sensor = InputSystem.AddDevice<Gravity>();
+        var value = new Vector3(0.123f, 0.456f, 0.789f);
+        InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
+        InputSystem.Update();
+
+        ValidateSensorControl(sensor.gravity, value);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanCompensateAttitudeValues()
+    {
+        var sensor = InputSystem.AddDevice<Attitude>();
+        var angles = new Vector3(11, 22, 33);
+        InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = Quaternion.Euler(angles) });
+        InputSystem.Update();
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = true;
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(new Vector3Comparer(0.0001f)));
+
+        testRuntime.screenOrientation = ScreenOrientation.Portrait;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
+
+        InputConfiguration.CompensateSensorsForScreenOrientation = false;
+        Assert.That(sensor.attitude.ReadValue().eulerAngles, Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
     }
 
     [Test]
@@ -7616,5 +7772,147 @@ class CoreTests : InputTestFixture
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Sets")]
+    public void Sets_OnSetWithMultipleOverrideBindings_ApplyOverrides()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1", "/<keyboard>/enter");
+        var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+        var listOverrides = new List<InputBindingOverride>(3);
+        listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+        listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+        listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+        Assert.DoesNotThrow(() => set.ApplyOverrides(listOverrides));
+
+        action1.Enable();
+        action2.Enable();
+
+        Assert.That(action1.bindings[0].overridePath, Is.Not.Null);
+        Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
+        Assert.That(action1.bindings[0].overridePath, Is.EqualTo("/gamepad/leftTrigger"));
+        Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.Enable();
+    }
+
+    [Test]
+    [Category("Sets")]
+    public void Sets_OnSetWithMultipleOverrideBindings_CannotChangeBindindsThatIsNotEnabled()
+    {
+        var set = new InputActionSet();
+        set.AddAction("action1", "/<keyboard>/enter").Enable();
+        set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+        var listOverrides = new List<InputBindingOverride>(3);
+        listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+        listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+        listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+        Assert.That(() => set.ApplyOverrides(listOverrides), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Sets")]
+    public void Sets_OnSetWithMultipleOverrideBindings_CannotRemoveBindindsThatIsNotEnabled()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1", "/<keyboard>/enter");
+        set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+        var listOverrides = new List<InputBindingOverride>(3);
+        listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+        listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+        listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+        set.ApplyOverrides(listOverrides);
+
+        action1.Enable();
+
+        Assert.That(() => set.RemoveOverrides(listOverrides), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Sets")]
+    public void Sets_OnSetWithMultipleOverrideBindings_CannotRemoveAllBindindsThatIsNotEnabled()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1", "/<keyboard>/enter");
+        set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+        var listOverrides = new List<InputBindingOverride>(3);
+        listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+        listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+        listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+        set.ApplyOverrides(listOverrides);
+
+        action1.Enable();
+
+        Assert.That(() => set.RemoveAllOverrides(), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Sets")]
+    public void Sets_OnSetWithMultipleOverrideBindings_RemoveAllBindindsThatIsNotEnabled()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1", "/<keyboard>/enter");
+        var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+        var listOverrides = new List<InputBindingOverride>(3);
+        listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+        listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+        listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+        set.ApplyOverrides(listOverrides);
+        set.RemoveAllOverrides();
+
+        Assert.That(action1.bindings[0].overridePath, Is.Null);
+        Assert.That(action2.bindings[0].overridePath, Is.Null);
+        Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
+        Assert.That(action2.bindings[0].path, Is.Not.EqualTo("/gamepad/rightTrigger"));
+    }
+
+    [Test]
+    [Category("Sets")]
+    public void Sets_OnSetWithMultipleOverrideBindings_RemoveBindindsThatIsNotEnabled()
+    {
+        var set = new InputActionSet();
+        var action1 = set.AddAction("action1", "/<keyboard>/enter");
+        var action2 = set.AddAction("action2", "/<gamepad>/buttonSouth");
+
+        var listOverrides = new List<InputBindingOverride>(3);
+        listOverrides.Add(new InputBindingOverride { action = "action3", binding = "/gamepad/buttonSouth" });
+        listOverrides.Add(new InputBindingOverride { action = "action2", binding = "/gamepad/rightTrigger" });
+        listOverrides.Add(new InputBindingOverride { action = "action1", binding = "/gamepad/leftTrigger" });
+
+        set.ApplyOverrides(listOverrides);
+        listOverrides.RemoveAt(1);
+        set.RemoveOverrides(listOverrides);
+
+        Assert.That(action1.bindings[0].overridePath, Is.Null);
+        Assert.That(action2.bindings[0].overridePath, Is.Not.Null);
+        Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
+        Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+    }
+
+    class Vector3Comparer : IComparer<Vector3>
+    {
+        private float m_Epsilon;
+        public Vector3Comparer(float epsilon)
+        {
+            m_Epsilon = epsilon;
+        }
+
+        public int Compare(Vector3 a, Vector3 b)
+        {
+            return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
+        }
     }
 }

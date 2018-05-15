@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -39,6 +40,7 @@ namespace UnityEngine.Experimental.Input
     /// <seealso cref="InputDevice"/>
     /// \todo Add ability to get and to set configuration on a control (probably just key/value pairs)
     /// \todo Remove the distinction between input and output controls; allow every InputControl to write values
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public abstract class InputControl
     {
         /// <summary>
@@ -195,9 +197,19 @@ namespace UnityEngine.Experimental.Input
             get { return InputControlPath.TryFindChild(this, path); }
         }
 
+        /// <summary>
+        /// Returns the underlying value type of this control.
+        /// </summary>
+        public abstract Type valueType { get; }
+
         public override string ToString()
         {
             return string.Format("{0}:{1}", layout, path);
+        }
+
+        private string DebuggerDisplay()
+        {
+            return string.Format("{0}:{1}={2}", layout, path, ReadValueAsObject());
         }
 
         ////TODO: setting value (will it also go through the processor stack?)
@@ -365,6 +377,14 @@ namespace UnityEngine.Experimental.Input
     /// values, for example, may be stored in state as byte values instead.</typeparam>
     public abstract class InputControl<TValue> : InputControl
     {
+        public override Type valueType
+        {
+            get
+            {
+                return typeof(TValue);
+            }
+        }
+
         public TValue ReadValue()
         {
             return ReadValueFrom(currentStatePtr);

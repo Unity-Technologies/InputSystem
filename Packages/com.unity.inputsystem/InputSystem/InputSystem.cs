@@ -18,7 +18,7 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -1079,7 +1079,7 @@ namespace UnityEngine.Experimental.Input
             Plugins.Switch.SwitchSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_EDITOR || UNITY_IOS
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_UWP
             Plugins.XR.XRSupport.Initialize();
             #endif
 

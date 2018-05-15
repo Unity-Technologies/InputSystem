@@ -11,7 +11,7 @@ using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
@@ -1061,6 +1061,8 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Deadzone", typeof(DeadzoneProcessor));
             processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
+            processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
+            processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 
             #if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
@@ -1480,6 +1482,10 @@ namespace UnityEngine.Experimental.Input
                 var isDynamicOrFixedUpdate =
                     updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
 
+                ////REVIEW: should we rather allocate a temp buffer on a per-device basis? the current code makes one
+                ////        temp allocation equal to the combined state of all devices in the system; even with touch in the
+                ////        mix, that should amount to less than 3k in most cases
+
                 // For the sake of action state monitors, we need to be able to detect when
                 // an OnCarryStateForward() method writes new values into a state buffer. To do
                 // so, we create a temporary buffer, copy state blocks into that buffer, and then
@@ -1521,8 +1527,6 @@ namespace UnityEngine.Experimental.Input
                         var deviceStateOffset = device.m_StateBlock.byteOffset;
                         var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
 
-                        ////REVIEW: don't we need to flip here?
-
                         // Grab current front buffer.
                         var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
 
@@ -1531,9 +1535,18 @@ namespace UnityEngine.Experimental.Input
                         var tempStatePtr = tempBufferPtr + deviceStateOffset;
                         UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
 
+                        // NOTE: We do *not* perform a buffer flip here as we do not want to change what is the
+                        //       current and what is the previous state when we carry state forward. Rather,
+                        //       OnCarryStateForward, if it modifies state, it modifies the current state directly.
+                        //       Also, for the same reasons, we do not modify the dynamic/fixed update counts
+                        //       on the device. If an event comes in in the upcoming update, it should lead to
+                        //       a buffer flip.
+
                         // Show to device.
                         if (((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer))
                         {
+                            ////REVIEW: should this make the device current?
+
                             // Let listeners know the device's state has changed.
                             for (var n = 0; n < m_DeviceChangeListeners.Count; ++n)
                                 m_DeviceChangeListeners[n](device, InputDeviceChange.StateChanged);
@@ -1542,7 +1555,6 @@ namespace UnityEngine.Experimental.Input
                             if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
                                     deviceStateSize, 0))
                             {
-                                ////REVIEW: should this make the device current?
                                 FireActionStateChangeNotifications(i, time);
                             }
                         }
@@ -1766,11 +1778,6 @@ namespace UnityEngine.Experimental.Input
                                 canIncorporateUnrecognizedState =
                                     stateCallbacks.OnReceiveStateWithDifferentFormat(ptrToReceivedState, receivedStateFormat,
                                         receivedStateSize, ref offsetInDeviceStateToCopyTo);
-
-                                // If the device tells us to put the state somewhere inside of it, we're potentially
-                                // performing a partial state update, so bring the current state forward like for delta
-                                // state events.
-                                needToCopyFromBackBuffer = true;
                             }
 
                             if (!canIncorporateUnrecognizedState)
@@ -1816,7 +1823,12 @@ namespace UnityEngine.Experimental.Input
                             // In case of a delta state event we need to carry forward all state we're
                             // not updating. Instead of optimizing the copy here, we're just bringing the
                             // entire state forward.
-                            if (currentEventType == DeltaStateEvent.Type)
+                            //
+                            // Also, if we received a mismatching state format that the device chose to
+                            // incorporate using OnReceiveStateWithDifferentFormat, we're potentially performing
+                            // a partial state update, so bring the current state forward like for delta
+                            // state events.
+                            if (currentEventType == DeltaStateEvent.Type || receivedStateFormat != stateBlockOfDevice.format)
                                 needToCopyFromBackBuffer = true;
                         }
 
