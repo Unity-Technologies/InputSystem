@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Serialization;
 
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
@@ -275,7 +275,7 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
-        public InputAction(InternedString name = new InternedString())
+        public InputAction(string name = null)
         {
             m_Name = name;
         }
@@ -284,7 +284,7 @@ namespace UnityEngine.Experimental.Input
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
         public InputAction(string name = null, string binding = null, string modifiers = null)
-            : this(new InternedString(name))
+            : this(name)
         {
             if (binding == null && modifiers != null)
                 throw new ArgumentException("Cannot have modifier without binding", "modifiers");
@@ -299,11 +299,11 @@ namespace UnityEngine.Experimental.Input
 
         public override string ToString()
         {
-            if (m_Name.IsEmpty())
+            if (m_Name == null)
                 return "<Unnamed>";
 
-            if (m_ActionMap != null && !isSingletonAction && !string.IsNullOrEmpty(m_ActionMap.name))
-                return string.Format("{0}/{1}", m_ActionMap.name, m_Name);
+            if (m_ActionMap != null && !isSingletonAction && !String.IsNullOrEmpty(m_ActionMap.name))
+                return String.Format("{0}/{1}", m_ActionMap.name, m_Name);
 
             return m_Name;
         }
@@ -335,75 +335,6 @@ namespace UnityEngine.Experimental.Input
             --m_ActionMap.m_EnabledActionsCount;
         }
 
-        ////TODO: support for removing bindings
-
-        public void ApplyBindingOverride(int bindingIndex, string path)
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on action '{0}' while the action is enabled", this));
-
-            if (bindingIndex < 0 || bindingIndex >= m_BindingsCount)
-                throw new IndexOutOfRangeException(
-                    string.Format("Binding index {0} is out of range for action '{1}' which has {2} bindings",
-                        bindingIndex, this, m_BindingsCount));
-
-            m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex].overridePath = path;
-        }
-
-        public void ApplyBindingOverride(string binding, string group = null)
-        {
-            ApplyBindingOverride(new InputBindingOverride {binding = binding, group = group});
-        }
-
-        // Apply the given override to the action.
-        //
-        // NOTE: Ignores the action name in the override.
-        // NOTE: Action must be disabled while applying overrides.
-        // NOTE: If there's already an override on the respective binding, replaces the override.
-        public void ApplyBindingOverride(InputBindingOverride bindingOverride)
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on action '{0}' while the action is enabled", this));
-
-            if (bindingOverride.binding == string.Empty)
-                bindingOverride.binding = null;
-
-            var bindingIndex = FindBindingIndexForOverride(bindingOverride);
-            if (bindingIndex == -1)
-                return;
-
-            m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
-        }
-
-        public void RemoveBindingOverride(InputBindingOverride bindingOverride)
-        {
-            var undoBindingOverride = bindingOverride;
-            undoBindingOverride.binding = null;
-
-            // Simply apply but with a null binding.
-            ApplyBindingOverride(undoBindingOverride);
-        }
-
-        // Restore all bindings to their default paths.
-        public void RemoveAllBindingOverrides()
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot removed overrides from action '{0}' while the action is enabled", this));
-
-            for (var i = 0; i < m_BindingsCount; ++i)
-                m_SingletonActionBindings[m_BindingsStartIndex + i].overridePath = null;
-        }
-
-        // Add all overrides that have been applied to this action to the given list.
-        // Returns the number of overrides found.
-        public int GetBindingOverrides(List<InputBindingOverride> overrides)
-        {
-            throw new NotImplementedException();
-        }
-
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
         // If you clone an action from a set, you get a singleton action in return.
         public InputAction Clone()
@@ -419,10 +350,12 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        [SerializeField] internal InternedString m_Name;
+        ////REVIEW: for binding resolution, it would be best if this was an InternedString; however, for serialization, it has to be a string
+        [SerializeField] internal string m_Name;
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
+        [FormerlySerializedAs("m_Bindings")]
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
 
         [NonSerialized] internal int m_BindingsStartIndex;
@@ -450,16 +383,6 @@ namespace UnityEngine.Experimental.Input
             get { return m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this); }
         }
 
-        internal InputActionMap internalMap
-        {
-            get
-            {
-                if (m_ActionMap == null)
-                    CreateInternalActionMapForSingletonAction();
-                return m_ActionMap;
-            }
-        }
-
         private InputActionMapState.TriggerState currentState
         {
             get
@@ -472,6 +395,13 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        internal InputActionMap GetOrCreateActionMap()
+        {
+            if (m_ActionMap == null)
+                CreateInternalActionMapForSingletonAction();
+            return m_ActionMap;
+        }
+
         private void CreateInternalActionMapForSingletonAction()
         {
             m_ActionMap = new InputActionMap
@@ -482,48 +412,14 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        // Find the binding tha tthe given override addresses.
-        // Return -1 if no corresponding binding is found.
-        private int FindBindingIndexForOverride(InputBindingOverride bindingOverride)
+        public void ThrowIfModifyingBindingsIsNotAllowed()
         {
-            var group = bindingOverride.group;
-            var haveGroup = !string.IsNullOrEmpty(group);
-
-            if (m_BindingsCount == 1)
-            {
-                // Simple case where we have only a single binding on the action.
-
-                if (!haveGroup ||
-                    string.Compare(m_SingletonActionBindings[m_BindingsStartIndex].group, group,
-                        StringComparison.InvariantCultureIgnoreCase) == 0)
-                    return 0;
-            }
-            else if (m_BindingsCount > 1)
-            {
-                // Trickier case where we need to select from a set of bindings.
-
-                if (!haveGroup)
-                    // Group is required to disambiguate.
-                    throw new InvalidOperationException(
-                        string.Format(
-                            "Action {0} has multiple bindings; overriding binding requires the use of binding groups so the action knows which binding to override. Set 'group' property on InputBindingOverride.",
-                            this));
-
-                int groupStringLength;
-                var indexInGroup = bindingOverride.GetIndexInGroup(out groupStringLength);
-                var currentIndexInGroup = 0;
-
-                for (var i = 0; i < m_BindingsCount; ++i)
-                    if (string.Compare(m_SingletonActionBindings[m_BindingsStartIndex + i].group, 0, group, 0, groupStringLength, true) == 0)
-                    {
-                        if (currentIndexInGroup == indexInGroup)
-                            return i;
-
-                        ++currentIndexInGroup;
-                    }
-            }
-
-            return -1;
+            if (enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot modify bindings on action '{0}' while the action is enabled", this));
+            if (GetOrCreateActionMap().enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot modify bindings on action '{0}' while its action map is enabled", this));
         }
 
         public struct CallbackContext

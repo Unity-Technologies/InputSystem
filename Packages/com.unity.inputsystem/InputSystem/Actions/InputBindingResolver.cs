@@ -79,12 +79,13 @@ namespace UnityEngine.Experimental.Input
                 // Try to find action.
                 var actionIndex = InputActionMapState.kInvalidIndex;
                 var actionName = unresolvedBinding.action;
-                if (!actionName.IsEmpty())
+                if (!string.IsNullOrEmpty(actionName))
                 {
                     for (var i = 0; i < actionCountInThisMap; ++i)
                     {
                         var currentAction = actionsInThisMap[i];
-                        if (currentAction.m_Name == actionName) // This is an InternedString comparison and not a full String comparison.
+                        ////REVIEW: this should become an InternedString comparison
+                        if (currentAction.m_Name == actionName)
                         {
                             actionIndex = totalActionCount + i;
                             break;
@@ -105,12 +106,12 @@ namespace UnityEngine.Experimental.Input
 
                     // Instantiate. For composites, the path is the name of the composite.
                     var composite = InstantiateBindingComposite(unresolvedBinding.path);
-                    var compositeIndex =
+                    currentCompositeIndex =
                         ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
                     bindingStates[bindingStartIndex + n] = new InputActionMapState.BindingState
                     {
                         actionIndex = actionIndex,
-                        compositeIndex = compositeIndex,
+                        compositeIndex = currentCompositeIndex,
                     };
 
                     // The composite binding entry itself does not resolve to any controls.

@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: turn these into classes?
 
@@ -15,6 +14,11 @@ namespace UnityEngine.Experimental.Input
     [Serializable]
     public struct InputBinding
     {
+        public const char kGroupSeparator = ';';
+        public const string kGroupSeparatorString = ";";
+        public const char kModifierSeparator = ';';
+        public const string kModifierSeparatorString = ";";
+
         [Flags]
         public enum Flags
         {
@@ -101,7 +105,8 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public string modifiers;
 
-        ////TODO: allow more than one group
+        ////REVIEW: allow overriding modifiers?
+
         // Optional group name. This can be used, for example, to divide bindings into
         // control schemes. So, the binding for keyboard&mouse on an action would have
         // "keyboard&mouse" as its group, the binding for "touch" would have "touch as
@@ -122,8 +127,7 @@ namespace UnityEngine.Experimental.Input
         //       trigger on the gamepad and it'll swap between a primary set of bindings
         //       on the four-button group on the gamepad and a secondary set. You could
         //       mark up every single use of the modifier ...
-        ////REVIEW: this almost begs for a hierarchy of bindings...
-        public string group;////TODO: rename to 'tags'
+        public string groups;
 
         /// <summary>
         /// Name of the action triggered by the binding.
@@ -131,7 +135,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This is null if the binding does not trigger an action.
         /// </remarks>
-        public InternedString action;
+        public string action;
 
         public Flags flags;
 

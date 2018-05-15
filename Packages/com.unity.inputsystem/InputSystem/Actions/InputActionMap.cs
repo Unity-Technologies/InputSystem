@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input
             m_Name = name;
         }
 
-        public InputAction TryGetAction(InternedString name)
+        public InputAction TryGetAction(string name)
         {
             ////REVIEW: have transient lookup table? worth optimizing this?
 
@@ -87,12 +87,6 @@ namespace UnityEngine.Experimental.Input
                     return m_Actions[i];
 
             return null;
-        }
-
-        public InputAction TryGetAction(string name)
-        {
-            var internedName = new InternedString(name);
-            return TryGetAction(internedName);
         }
 
         public InputAction GetAction(string name)
@@ -127,65 +121,6 @@ namespace UnityEngine.Experimental.Input
 
             m_State.DisableAllActions(this);
             m_EnabledActionsCount = 0;
-        }
-
-        //?????
-        public void EnableGroup(string group)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DisableGroup(string group)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ApplyOverrides(IEnumerable<InputBindingOverride> overrides)
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on set '{0}' while the action is enabled", this.name));
-
-            foreach (var binding in overrides)
-            {
-                var action = TryGetAction(binding.action);
-                if (action == null)
-                    continue;
-                action.ApplyBindingOverride(binding);
-            }
-        }
-
-        public void RemoveOverrides(IEnumerable<InputBindingOverride> overrides)
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on map '{0}' while actions in the map are enabled", name));
-
-            foreach (var binding in overrides)
-            {
-                var action = TryGetAction(binding.action);
-                if (action == null)
-                    continue;
-                action.RemoveBindingOverride(binding);
-            }
-        }
-
-        // Restore all bindings on all actions in the set to their defaults.
-        public void RemoveAllOverrides()
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot remove overrides from map '{0}' while actions in the map are enabled", name));
-
-            for (var i = 0; i < m_Actions.Length; ++i)
-            {
-                m_Actions[i].RemoveAllBindingOverrides();
-            }
-        }
-
-        public int GetOverrides(List<InputBindingOverride> overrides)
-        {
-            throw new NotImplementedException();
         }
 
         ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
@@ -241,7 +176,7 @@ namespace UnityEngine.Experimental.Input
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
-        [SerializeField] private string m_Name;////REVIEW: InternedString?
+        [SerializeField] private string m_Name;
 
         /// <summary>
         /// List of actions in this map.
@@ -522,6 +457,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        internal void ClearPerActionCachedBindingData()
+        {
+            m_BindingsForEachAction = null;
+        }
+
+        internal void ThrowIfModifyingBindingsIsNotAllowed()
+        {
+            if (enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot modify bindings on action map '{0}' while the map is enabled", this));
+        }
+
         #endregion
 
         #region Execution Data
@@ -589,9 +536,9 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
                     path = string.IsNullOrEmpty(path) ? null : path,
-                    action = string.IsNullOrEmpty(action) ? new InternedString() : new InternedString(action),
+                    action = string.IsNullOrEmpty(action) ? null : action,
                     modifiers = string.IsNullOrEmpty(modifiers) ? null : modifiers,
-                    group = string.IsNullOrEmpty(groups) ? null : groups,
+                    groups = string.IsNullOrEmpty(groups) ? null : groups,
                     chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
@@ -606,7 +553,7 @@ namespace UnityEngine.Experimental.Input
                     path = binding.path,
                     action = binding.action,
                     modifiers = binding.modifiers,
-                    groups = binding.group,
+                    groups = binding.groups,
                     chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
