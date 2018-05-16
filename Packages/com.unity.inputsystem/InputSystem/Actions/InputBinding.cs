@@ -1,6 +1,5 @@
 using System;
-
-////REVIEW: turn these into classes?
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -10,14 +9,17 @@ namespace UnityEngine.Experimental.Input
     /// <remarks>
     /// A single binding can match arbitrary many controls through its path and then
     /// map their input to a single action.
+    ///
+    /// A binding can also be used as a override specification. In that scenario, <see cref="path"/>,
+    /// <see cref="action"/>, and <see cref="groups"/> become search criteria that can be used to
+    /// find existing bindings, and <see cref="overridePath"/> becomes the path to override existing
+    /// binding paths with.
     /// </remarks>
     [Serializable]
     public struct InputBinding
     {
-        public const char kGroupSeparator = ';';
-        public const string kGroupSeparatorString = ";";
-        public const char kModifierSeparator = ';';
-        public const string kModifierSeparatorString = ";";
+        public const char kSeparator = ';';
+        public const string kSeparatorString = ";";
 
         [Flags]
         public enum Flags
@@ -70,7 +72,7 @@ namespace UnityEngine.Experimental.Input
         /// the name of the field on the binding composite object that should be initialized with
         /// the control target of the binding.
         /// </remarks>
-        public string name;////REVIEW: InternedString?
+        public string name;
 
         /// <summary>
         /// Control path being bound to.
@@ -105,7 +107,7 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public string modifiers;
 
-        ////REVIEW: allow overriding modifiers?
+        [NonSerialized] public string overrideModifiers;
 
         // Optional group name. This can be used, for example, to divide bindings into
         // control schemes. So, the binding for keyboard&mouse on an action would have
@@ -188,6 +190,36 @@ namespace UnityEngine.Experimental.Input
         public int parent
         {
             get { throw new NotImplementedException(); }
+        }
+
+        ////TODO: also support matching by name (taking the binding tree into account so that components
+        ////      of composites can be referenced through their parent)
+
+        internal bool Matches(ref InputBinding other)
+        {
+            if (path != null)
+            {
+                ////TODO: handle things like ignoring leading '/'
+                if (other.path == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, other.path, kSeparator))
+                    return false;
+            }
+
+            if (action != null)
+            {
+                if (other.action == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, kSeparator))
+                    return false;
+            }
+
+            if (groups != null)
+            {
+                if (other.groups == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, kSeparator))
+                    return false;
+            }
+
+            return true;
         }
     }
 }

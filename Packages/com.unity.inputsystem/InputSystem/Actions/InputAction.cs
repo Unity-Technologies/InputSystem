@@ -92,6 +92,7 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
+        ////REVIEW: rename to 'actionMap'?
         /// <summary>
         /// The map the action belongs to.
         /// </summary>
@@ -363,6 +364,14 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_ControlStartIndex;
         [NonSerialized] internal int m_ControlCount;
 
+        /// <summary>
+        /// Index of the action in the <see cref="InputActionMapState"/> associated with the
+        /// action's <see cref="InputActionMap"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is not necessarily the same as the index of the action in its map.
+        /// </remarks>
+        /// <seealso cref="map"/>
         [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
 
         /// <summary>
@@ -378,6 +387,14 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnCancelled;
         [NonSerialized] internal InlinedArray<InputActionListener> m_OnPerformed;
 
+        /// <summary>
+        /// Whether the action is a loose action created in code (e.g. as a property on a component).
+        /// </summary>
+        /// <remarks>
+        /// Singleton actions are not contained in maps visible to the user. Internally, we do create
+        /// a map for them that contains just the singleton action. To the action system, there are no
+        /// actions without action maps.
+        /// </remarks>
         internal bool isSingletonAction
         {
             get { return m_ActionMap == null || ReferenceEquals(m_ActionMap.m_SingletonAction, this); }
@@ -412,7 +429,7 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        public void ThrowIfModifyingBindingsIsNotAllowed()
+        internal void ThrowIfModifyingBindingsIsNotAllowed()
         {
             if (enabled)
                 throw new InvalidOperationException(

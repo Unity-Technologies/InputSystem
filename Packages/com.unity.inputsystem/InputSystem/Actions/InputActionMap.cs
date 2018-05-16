@@ -74,19 +74,29 @@ namespace UnityEngine.Experimental.Input
             m_Name = name;
         }
 
-        public InputAction TryGetAction(string name)
+        internal int TryGetActionIndex(string name)
         {
             ////REVIEW: have transient lookup table? worth optimizing this?
+            ////   Ideally, this should at least be an InternedString comparison but due to serialization,
+            ////   that's quite tricky.
 
             if (m_Actions == null)
-                return null;
+                return InputActionMapState.kInvalidIndex;
 
             var actionCount = m_Actions.Length;
             for (var i = 0; i < actionCount; ++i)
-                if (m_Actions[i].m_Name == name)
-                    return m_Actions[i];
+                if (string.Compare(m_Actions[i].m_Name, name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return i;
 
-            return null;
+            return InputActionMapState.kInvalidIndex;
+        }
+
+        public InputAction TryGetAction(string name)
+        {
+            var index = TryGetActionIndex(name);
+            if (index == -1)
+                return null;
+            return m_Actions[index];
         }
 
         public InputAction GetAction(string name)
