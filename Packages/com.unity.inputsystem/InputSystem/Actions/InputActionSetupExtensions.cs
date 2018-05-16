@@ -48,10 +48,10 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(group))
                     throw new ArgumentException("Group name cannot be null or empty", "group");
-                if (group.IndexOf(InputBinding.kGroupSeparator) != -1)
+                if (group.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
                         string.Format("Group name cannot contain separator character '{0}'",
-                            InputBinding.kGroupSeparator), "group");
+                            InputBinding.kSeparator), "group");
 
                 return WithGroups(group);
             }
@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input
                 // Join with existing group, if any.
                 var currentGroups = m_ActionMap.m_Bindings[m_BindingIndex].groups;
                 if (!string.IsNullOrEmpty(currentGroups))
-                    groups = string.Join(InputBinding.kGroupSeparatorString, new[] { currentGroups, groups });
+                    groups = string.Join(InputBinding.kSeparatorString, new[] { currentGroups, groups });
 
                 // Set groups on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].groups = groups;
@@ -77,10 +77,10 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(modifier))
                     throw new ArgumentException("Modifier cannot be null or empty", "group");
-                if (modifier.IndexOf(InputBinding.kModifierSeparator) != -1)
+                if (modifier.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
                         string.Format("Modifier string cannot contain separator character '{0}'",
-                            InputBinding.kModifierSeparator), "modifier");
+                            InputBinding.kSeparator), "modifier");
 
                 return WithModifiers(modifier);
             }
@@ -93,7 +93,7 @@ namespace UnityEngine.Experimental.Input
                 // Join with existing modifier string, if any.
                 var currentModifiers = m_ActionMap.m_Bindings[m_BindingIndex].modifiers;
                 if (!string.IsNullOrEmpty(currentModifiers))
-                    modifiers = string.Join(InputBinding.kModifierSeparatorString, new[] { currentModifiers, modifiers });
+                    modifiers = string.Join(InputBinding.kSeparatorString, new[] { currentModifiers, modifiers });
 
                 // Set modifiers on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].modifiers = modifiers;
@@ -255,7 +255,7 @@ namespace UnityEngine.Experimental.Input
 
             var actionMap = action.GetOrCreateActionMap();
             ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, flags = InputBinding.Flags.Composite};
+            var binding = new InputBinding {path = composite, flags = InputBinding.Flags.Composite, action = action.name};
             var bindingIndex = AppendBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }

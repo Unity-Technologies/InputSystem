@@ -76,21 +76,17 @@ namespace UnityEngine.Experimental.Input
             {
                 var unresolvedBinding = bindingsInThisMap[n];
 
+                // Skip binding if it is disabled (path is empty string).
+                var path = unresolvedBinding.effectivePath;
+                if (unresolvedBinding.path == "")
+                    continue;
+
                 // Try to find action.
                 var actionIndex = InputActionMapState.kInvalidIndex;
                 var actionName = unresolvedBinding.action;
                 if (!string.IsNullOrEmpty(actionName))
                 {
-                    for (var i = 0; i < actionCountInThisMap; ++i)
-                    {
-                        var currentAction = actionsInThisMap[i];
-                        ////REVIEW: this should become an InternedString comparison
-                        if (currentAction.m_Name == actionName)
-                        {
-                            actionIndex = totalActionCount + i;
-                            break;
-                        }
-                    }
+                    actionIndex = map.TryGetActionIndex(actionName);
                 }
                 else if (map.m_SingletonAction != null)
                 {
@@ -124,10 +120,6 @@ namespace UnityEngine.Experimental.Input
                 // off the current composite.
                 if (!unresolvedBinding.isPartOfComposite && currentCompositeIndex != InputActionMapState.kInvalidIndex)
                     currentCompositeIndex = InputActionMapState.kInvalidIndex;
-
-                // Use override path but fall back to default path if no
-                // override set.
-                var path = unresolvedBinding.overridePath ?? unresolvedBinding.path;
 
                 // Look up controls.
                 var firstControlIndex = totalControlCount;

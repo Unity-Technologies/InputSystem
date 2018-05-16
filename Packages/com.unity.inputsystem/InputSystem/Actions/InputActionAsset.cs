@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllBindingOverrides
+        ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
 

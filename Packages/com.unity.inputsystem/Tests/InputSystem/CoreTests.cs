@@ -5785,6 +5785,10 @@ class CoreTests : InputTestFixture
 
         Assert.That(map.TryGetAction("action1"), Is.SameAs(action1));
         Assert.That(map.TryGetAction("action2"), Is.SameAs(action2));
+
+        // Lookup is case-insensitive.
+        Assert.That(map.TryGetAction("Action1"), Is.SameAs(action1));
+        Assert.That(map.TryGetAction("Action2"), Is.SameAs(action2));
     }
 
     [Test]
@@ -6200,7 +6204,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanSetUpBindingsOnActionSet()
+    public void Actions_CanSetUpBindingsOnActionMap()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -6664,11 +6668,13 @@ class CoreTests : InputTestFixture
         Assert.That(action.lastTriggerBinding.path, Is.EqualTo("/gamepad/rightTrigger"));
     }
 
+    ////TODO: add tests for new matching of InputBindings against one another (e.g. separated lists of paths and actions)
+
     [Test]
     [Category("Actions")]
     public void Actions_CanOverrideBindings()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/gamepad/leftTrigger");
         action.ApplyBindingOverride("/gamepad/rightTrigger");
         action.Enable();
@@ -6680,6 +6686,24 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(wasPerformed);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDeactivateBindingsUsingOverrides()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        action.ApplyBindingOverride("");
+        action.Enable();
+
+        var wasPerformed = false;
+        action.performed += ctx => wasPerformed = true;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1});
+        InputSystem.Update();
+
+        Assert.That(wasPerformed, Is.False);
     }
 
     [Test]
@@ -6807,18 +6831,22 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanSerializeAndDeserializeActionsWithCompositeBindings()
+    public void Actions_CanSerializeAndDeserializeActionMapsWithCompositeBindings()
     {
-        var set = new InputActionMap(name: "test");
-        set.AddAction("test")
+        var map = new InputActionMap(name: "test");
+        map.AddAction("test")
         .AppendCompositeBinding("ButtonVector")
         .With("Up", "/<Keyboard>/w")
         .With("Down", "/<Keyboard>/s")
         .With("Left", "/<Keyboard>/a")
         .With("Right", "/<Keyboard>/d");
 
-        var json = set.ToJson();
+        var json = map.ToJson();
         var deserialized = InputActionMap.FromJson(json);
+
+        ////REVIEW: The code currently puts the composite binding itself plus all its component bindings
+        ////        on the action (i.e. sets the target of each binding to the action). Should only the composite
+        ////        itself reference the action?
 
         Assert.That(deserialized.Length, Is.EqualTo(1));
         Assert.That(deserialized[0].actions.Count, Is.EqualTo(1));
@@ -6856,30 +6884,75 @@ class CoreTests : InputTestFixture
     }
 
     // If there's multiple bindings on an action, we don't readily know which binding to apply
-    // an override to. We use groups to disambiguate the case.
+    // an override to. We both groups and paths to disambiguate the case.
     [Test]
     [Category("Actions")]
-    public void Actions_OnActionWithMultipleBindings_OverridingRequiresGroups()
+    public void Actions_OnActionWithMultipleBindings_OverridingWithoutGroupOrPath_DoesNothing()
     {
         var action = new InputAction(name: "test");
 
         action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
         action.AppendBinding("/gamepad/rightTrigger").WithGroup("b");
 
-        Assert.That(() => action.ApplyBindingOverride("/gamepad/buttonSouth"), Throws.InvalidOperationException);
+        action.ApplyBindingOverride("/gamepad/buttonSouth");
 
-        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a");
-
-        Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[1].overridePath, Is.Null);
         Assert.That(action.bindings[0].overridePath, Is.Null);
     }
 
-    // We don't do anything smart when groups are ambiguous. It's a perfectly valid case to have
-    // multiple bindings in the same group but when you try to override and only give a group,
-    // only the first binding that uses the group is affected.
     [Test]
     [Category("Actions")]
-    public void Actions_OnActionWithMultipleBindings_IfGroupIsAmbiguous_OverridesOnlyFirst()
+    public void Actions_OnActionWithMultipleBindings_CanTargetBindingByGroup()
+    {
+        var action = new InputAction();
+
+        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AppendBinding("/gamepad/rightTrigger").WithGroup("b");
+
+        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a");
+
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[1].overridePath, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_CanTargetBindingByPath()
+    {
+        var action = new InputAction();
+
+        action.AppendBinding("/gamepad/buttonNorth");
+        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AppendBinding("/gamepad/rightTrigger").WithGroup("a");
+
+        action.ApplyBindingOverride("/gamepad/buttonSouth", path: "/gamepad/rightTrigger");
+
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.bindings[1].overridePath, Is.Null);
+        Assert.That(action.bindings[2].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_CanTargetBindingByPathAndGroup()
+    {
+        var action = new InputAction();
+
+        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
+        action.AppendBinding("/gamepad/rightTrigger").WithGroup("a");
+        action.AppendBinding("/gamepad/rightTrigger");
+
+        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a", path: "/gamepad/rightTrigger");
+
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[2].overridePath, Is.Null);
+    }
+
+    // We don't do anything smart when groups are ambiguous. If an override matches, it'll override.
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_IfGroupIsAmbiguous_OverridesAllBindingsInTheGroup()
     {
         var action = new InputAction(name: "test");
 
@@ -6889,23 +6962,6 @@ class CoreTests : InputTestFixture
         action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a");
 
         Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
-        Assert.That(action.bindings[1].overridePath, Is.Null);
-    }
-
-    ////REVIEW: this seems like a very fickle and questionable mechanism; seems much more useful and reliable
-    ////        to mention the binding path that is overridden rather than obscurely 'index into the group'
-    [Test]
-    [Category("Actions")]
-    public void Actions_OnActionWithMultipleBindingsWithSameGroup_CanTargetIndividualBindingsByIndex()
-    {
-        var action = new InputAction(name: "test");
-
-        action.AppendBinding("/gamepad/leftTrigger").WithGroup("a");
-        action.AppendBinding("/gamepad/rightTrigger").WithGroup("a");
-
-        action.ApplyBindingOverride("/gamepad/buttonSouth", group: "a[1]");
-
-        Assert.That(action.bindings[0].overridePath, Is.Null);
         Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
     }
 
@@ -6922,17 +6978,14 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_ApplyingNullOrEmptyOverride_IsSameAsRemovingOverride()
+    public void Actions_ApplyingNullOverride_IsSameAsRemovingOverride()
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
 
-        action.ApplyBindingOverride(new InputBinding {path = "/gamepad/rightTrigger"});
+        action.ApplyBindingOverride(new InputBinding {path = "/gamepad/rightTrigger", modifiers = "tap"});
         action.ApplyBindingOverride(new InputBinding());
         Assert.That(action.bindings[0].overridePath, Is.Null);
-
-        action.ApplyBindingOverride(new InputBinding {path = "/gamepad/rightTrigger"});
-        action.ApplyBindingOverride(new InputBinding { path = "" });
-        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.bindings[0].overrideModifiers, Is.Null);
     }
 
     [Test]
@@ -6983,7 +7036,7 @@ class CoreTests : InputTestFixture
         var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
 
         // Add overrides to make bindings specific to #2 gamepad.
-        var numOverrides = action.ApplyOverridesUsingMatchingControls(gamepad2);
+        var numOverrides = action.ApplyBindingOverridesOnMatchingControls(gamepad2);
         action.Enable();
 
         Assert.That(numOverrides, Is.EqualTo(1));
@@ -7001,7 +7054,7 @@ class CoreTests : InputTestFixture
         var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
 
-        var numOverrides = map.ApplyOverridesUsingMatchingControls(gamepad);
+        var numOverrides = map.ApplyBindingOverridesOnMatchingControls(gamepad);
 
         Assert.That(numOverrides, Is.EqualTo(1));
         Assert.That(action1.bindings[0].overridePath, Is.Null);
@@ -7050,7 +7103,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CloningActionFromSet_ProducesSingletonAction()
+    public void Actions_CloningActionContainedInMap_ProducesSingletonAction()
     {
         var set = new InputActionMap("set");
         var action = set.AddAction("action1");
@@ -7231,18 +7284,18 @@ class CoreTests : InputTestFixture
 
         var overrides = new List<InputBinding>(3)
         {
-            new InputBinding {action = "action3", path = "/gamepad/buttonSouth"}, // Noise.
-            new InputBinding {action = "action2", path = "/gamepad/rightTrigger"},
-            new InputBinding {action = "action1", path = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action3", overridePath = "/gamepad/buttonSouth"}, // Noise.
+            new InputBinding {action = "action2", overridePath = "/gamepad/rightTrigger"},
+            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
         };
 
-        map.ApplyOverrides(overrides);
+        map.ApplyBindingOverrides(overrides);
 
         action1.Enable();
         action2.Enable();
 
         Assert.That(action1.bindings[0].path, Is.EqualTo("/<keyboard>/enter"));
-        Assert.That(action2.bindings[0].path, Is.EqualTo("</gamepad>/buttonSouth"));
+        Assert.That(action2.bindings[0].path, Is.EqualTo("/<gamepad>/buttonSouth"));
         Assert.That(action1.bindings[0].overridePath, Is.EqualTo("/gamepad/leftTrigger"));
         Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
     }
@@ -7256,10 +7309,10 @@ class CoreTests : InputTestFixture
 
         var overrides = new List<InputBinding>
         {
-            new InputBinding {action = "action1", path = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
         };
 
-        Assert.That(() => map.ApplyOverrides(overrides), Throws.InvalidOperationException);
+        Assert.That(() => map.ApplyBindingOverrides(overrides), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -7272,16 +7325,16 @@ class CoreTests : InputTestFixture
 
         var overrides = new List<InputBinding>
         {
-            new InputBinding {action = "action2", path = "/gamepad/rightTrigger"},
-            new InputBinding {action = "action1", path = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action2", overridePath = "/gamepad/rightTrigger"},
+            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
         };
 
-        map.ApplyOverrides(overrides);
-        overrides.RemoveAt(1);
-        map.RemoveOverrides(overrides);
+        map.ApplyBindingOverrides(overrides);
+        overrides.RemoveAt(1); // Leave only override for action2.
+        map.RemoveBindingOverrides(overrides);
 
-        Assert.That(action1.bindings[0].overridePath, Is.Null);
-        Assert.That(action2.bindings[0].overridePath, Is.EqualTo("/gamepad/rightTrigger"));
+        Assert.That(action1.bindings[0].overridePath, Is.EqualTo("/gamepad/leftTrigger"));
+        Assert.That(action2.bindings[0].overridePath, Is.Null); // Should have been removed.
     }
 
     [Test]
@@ -7293,14 +7346,14 @@ class CoreTests : InputTestFixture
 
         var overrides = new List<InputBinding>
         {
-            new InputBinding {action = "action1", path = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
         };
 
-        map.ApplyOverrides(overrides);
+        map.ApplyBindingOverrides(overrides);
 
         action1.Enable();
 
-        Assert.That(() => map.RemoveOverrides(overrides), Throws.InvalidOperationException);
+        Assert.That(() => map.RemoveBindingOverrides(overrides), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -7313,12 +7366,12 @@ class CoreTests : InputTestFixture
 
         var overrides = new List<InputBinding>
         {
-            new InputBinding {action = "action2", path = "/gamepad/rightTrigger"},
-            new InputBinding {action = "action1", path = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action2", overridePath = "/gamepad/rightTrigger"},
+            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
         };
 
-        map.ApplyOverrides(overrides);
-        map.RemoveAllOverrides();
+        map.ApplyBindingOverrides(overrides);
+        map.RemoveAllBindingOverrides();
 
         Assert.That(action1.bindings[0].overridePath, Is.Null);
         Assert.That(action2.bindings[0].overridePath, Is.Null);
@@ -7335,14 +7388,14 @@ class CoreTests : InputTestFixture
 
         var overrides = new List<InputBinding>
         {
-            new InputBinding {action = "action1", path = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
         };
 
-        map.ApplyOverrides(overrides);
+        map.ApplyBindingOverrides(overrides);
 
         action1.Enable();
 
-        Assert.That(() => map.RemoveAllOverrides(), Throws.InvalidOperationException);
+        Assert.That(() => map.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
     }
 
     [Test]

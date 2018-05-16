@@ -1,16 +1,34 @@
 using System;
 using System.Collections.Generic;
 
+// The way target bindings for overrides are found:
+// - If specified, directly by index (e.g. "apply this override to the third binding in the map")
+// - By path (e.g. "search for binding to '<Gamepad>/leftStick' and override it with '<Gamepad>/rightStick'")
+// - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
+// - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Extensions to help with dynamically rebinding <see cref="InputAction">actions</see> in various ways.
+    /// Extensions to help with dynamically rebinding <see cref="InputAction">actions</see> in
+    /// various ways.
     /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="InputActionSetupExtensions"/>, the extension methods in here are meant to be
+    /// called during normal game operation.
+    ///
+    /// The two primary duties of these extensions are to apply binding overrides that non-destructively
+    /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
+    /// actuated by a user.
+    /// </remarks>
     public static class InputActionRebindingExtensions
     {
-        public static void ApplyBindingOverride(this InputAction action, string newBinding, string group = null)
+        public static void ApplyBindingOverride(this InputAction action, string newBinding, string group = null, string path = null)
         {
-            action.ApplyBindingOverride(new InputBinding {path = newBinding, groups = group});
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            ApplyBindingOverride(action, new InputBinding {overridePath = newBinding, groups = group, path = path});
         }
 
         // Apply the given override to the action.
@@ -32,60 +50,168 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public static void ApplyBindingOverride(this InputAction action, InputBinding bindingOverride)
         {
-            action.ThrowIfModifyingBindingsIsNotAllowed();
+            if (action == null)
+                throw new ArgumentNullException("action");
 
-            throw new NotImplementedException();
-            /*
-            if (bindingOverride.binding == string.Empty)
-                bindingOverride.binding = null;
-
-            var bindingIndex = FindBindingIndexForOverride(bindingOverride);
-            if (bindingIndex == -1)
-                return;
-
-            m_SingletonActionBindings[m_BindingsStartIndex + bindingIndex].overridePath = bindingOverride.binding;
-            */
+            bindingOverride.action = action.name;
+            var actionMap = action.GetOrCreateActionMap();
+            ApplyBindingOverride(actionMap, bindingOverride);
         }
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, InputBinding bindingOverride)
         {
-            throw new NotImplementedException();
+            if (action == null)
+                throw new ArgumentNullException("action");
+
+            // We don't want to hit InputAction.bindings here as this requires setting up per-action
+            // binding info which we then nuke as part of the override process. Calling ApplyBindingOverride
+            // repeatedly with an index would thus cause the same data to be computed and thrown away
+            // over and over.
+            // Instead we manually search through the map's bindings to find the right binding index
+            // in the map.
+
+            var actionMap = action.GetOrCreateActionMap();
+            var bindingsInMap = actionMap.m_Bindings;
+            var bindingCountInMap = bindingsInMap != null ? bindingsInMap.Length : 0;
+            var actionName = action.name;
+
+            var currentBindingIndexOnAction = -1;
+            for (var i = 0; i < bindingCountInMap; ++i)
+            {
+                if (string.Compare(bindingsInMap[i].action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                    continue;
+
+                ++currentBindingIndexOnAction;
+                if (currentBindingIndexOnAction == bindingIndex)
+                {
+                    bindingOverride.action = actionName;
+                    ApplyBindingOverride(actionMap, i, bindingOverride);
+                    return;
+                }
+            }
+
+            throw new ArgumentOutOfRangeException(
+                string.Format("Binding index {0} is out of range for action '{1}' with {2} bindings", bindingIndex,
+                    action, currentBindingIndexOnAction), "bindingIndex");
         }
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("Binding path cannot be null or empty", "path");
+            ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
 
-        public static void ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
+        /// <summary>
+        /// Apply the given binding override to all bindings in the map that are matched by the override.
+        /// </summary>
+        /// <param name="actionMap"></param>
+        /// <param name="bindingOverride"></param>
+        /// <returns>The number of bindings overridden in the given map.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="actionMap"/> is currently enabled.</exception>
+        /// <remarks>
+        /// </remarks>
+        public static int ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
-            throw new NotImplementedException();
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
+
+            var bindings = actionMap.m_Bindings;
+            if (bindings == null)
+                return 0;
+
+            // Go through all bindings in the map and match them to the override.
+            var bindingCount = bindings.Length;
+            var matchCount = 0;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                if (!bindingOverride.Matches(ref bindings[i]))
+                    continue;
+
+                // Set overrides on binding.
+                bindings[i].overridePath = bindingOverride.overridePath;
+                bindings[i].overrideModifiers = bindingOverride.overrideModifiers;
+                ++matchCount;
+            }
+
+            if (matchCount > 0)
+                actionMap.ClearPerActionCachedBindingData();
+
+            return matchCount;
+        }
+
+        public static void ApplyBindingOverride(this InputActionMap actionMap, int bindingIndex, InputBinding bindingOverride)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            var bindingsCount = actionMap.m_Bindings != null ? actionMap.m_Bindings.Length : 0;
+            if (bindingIndex < 0 || bindingIndex >= bindingsCount)
+                throw new ArgumentOutOfRangeException(
+                    string.Format("Cannot apply override to binding at index {0} in map '{1}' with only {2} bindings",
+                        bindingIndex, actionMap, bindingsCount), "bindingIndex");
+
+            actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
+            actionMap.m_Bindings[bindingIndex].overrideModifiers = bindingOverride.overrideModifiers;
+            actionMap.ClearPerActionCachedBindingData();
         }
 
         public static void RemoveBindingOverride(this InputAction action, InputBinding bindingOverride)
         {
-            throw new NotImplementedException();
-            /*
-            var undoBindingOverride = bindingOverride;
-            undoBindingOverride.binding = null;
+            if (action == null)
+                throw new ArgumentNullException("action");
+            action.ThrowIfModifyingBindingsIsNotAllowed();
+
+            bindingOverride.overridePath = null;
+            bindingOverride.overrideModifiers = null;
 
             // Simply apply but with a null binding.
-            ApplyBindingOverride(undoBindingOverride);
-            */
+            ApplyBindingOverride(action, bindingOverride);
+        }
+
+        private static void RemoveBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
+
+            bindingOverride.overridePath = null;
+            bindingOverride.overrideModifiers = null;
+
+            // Simply apply but with a null binding.
+            ApplyBindingOverride(actionMap, bindingOverride);
         }
 
         // Restore all bindings to their default paths.
         public static void RemoveAllBindingOverrides(this InputAction action)
         {
-            throw new NotImplementedException();
-            /*
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot removed overrides from action '{0}' while the action is enabled", this));
+            if (action == null)
+                throw new ArgumentNullException("action");
+            action.ThrowIfModifyingBindingsIsNotAllowed();
 
-            for (var i = 0; i < m_BindingsCount; ++i)
-                m_SingletonActionBindings[m_BindingsStartIndex + i].overridePath = null;
-                */
+            var actionName = action.name;
+            var actionMap = action.GetOrCreateActionMap();
+            var bindings = actionMap.m_Bindings;
+            if (bindings == null)
+                return;
+
+            var bindingCount = bindings.Length;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                if (string.Compare(bindings[i].action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                    continue;
+
+                bindings[i].overridePath = null;
+                bindings[i].overrideModifiers = null;
+            }
+
+            actionMap.ClearPerActionCachedBindingData();
+        }
+
+        public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
+        {
+            throw new NotImplementedException();
         }
 
         // Add all overrides that have been applied to this action to the given list.
@@ -95,108 +221,63 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        public static void ApplyOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
+        ////REVIEW: are the IEnumerable variants worth having?
+
+        public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
-            throw new NotImplementedException();
-            /*
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on set '{0}' while the action is enabled", this.name));
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
-            {
-                var action = TryGetAction(binding.action);
-                if (action == null)
-                    continue;
-                action.ApplyBindingOverride(binding);
-            }
-            */
+                ApplyBindingOverride(actionMap, binding);
         }
 
-        public static void RemoveOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
+        public static void RemoveBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
-            throw new NotImplementedException();
-            /*
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot change overrides on map '{0}' while actions in the map are enabled", name));
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
-            {
-                var action = TryGetAction(binding.action);
-                if (action == null)
-                    continue;
-                action.RemoveBindingOverride(binding);
-            }
-            */
+                RemoveBindingOverride(actionMap, binding);
         }
 
-        // Restore all bindings on all actions in the set to their defaults.
-        public static void RemoveAllOverrides(this InputActionMap actionMap)
+        /// <summary>
+        /// Restore all bindings in the map to their defaults.
+        /// </summary>
+        /// <param name="actionMap">Action map to remove overrides from. Must not have enabled actions.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="actionMap"/> is currently enabled.</exception>
+        public static void RemoveAllBindingOverrides(this InputActionMap actionMap)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
+
+            if (actionMap.m_Bindings == null)
+                return; // No bindings in map.
+
+            var emptyBinding = new InputBinding();
+            var bindingCount = actionMap.m_Bindings.Length;
+            for (var i = 0; i < bindingCount; ++i)
+                ApplyBindingOverride(actionMap, i, emptyBinding);
+        }
+
+        /// <summary>
+        /// Get all overrides applied to bindings in the given map.
+        /// </summary>
+        /// <param name="actionMap"></param>
+        /// <returns></returns>
+        public static IEnumerable<InputBinding> GetBindingOverrides(this InputActionMap actionMap)
         {
             throw new NotImplementedException();
-            /*
-            if (enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot remove overrides from map '{0}' while actions in the map are enabled", name));
-
-            for (var i = 0; i < m_Actions.Length; ++i)
-            {
-                m_Actions[i].RemoveAllBindingOverrides();
-            }
-            */
         }
 
-        public static int GetOverrides(this InputActionMap actionMap, List<InputBinding> overrides)
+        public static int GetBindingOverrides(this InputActionMap actionMap, List<InputBinding> overrides)
         {
             throw new NotImplementedException();
         }
-
-        /*
-         // Find the binding tha tthe given override addresses.
-         // Return -1 if no corresponding binding is found.
-         private static int FindBindingIndexForOverride(InputBinding bindingOverride)
-         {
-             var group = bindingOverride.group;
-             var haveGroup = !string.IsNullOrEmpty(group);
-
-             if (m_BindingsCount == 1)
-             {
-                 // Simple case where we have only a single binding on the action.
-
-                 if (!haveGroup ||
-                     string.Compare(m_SingletonActionBindings[m_BindingsStartIndex].groups, group,
-                         StringComparison.InvariantCultureIgnoreCase) == 0)
-                     return 0;
-             }
-             else if (m_BindingsCount > 1)
-             {
-                 // Trickier case where we need to select from a set of bindings.
-
-                 if (!haveGroup)
-                     // Group is required to disambiguate.
-                     throw new InvalidOperationException(
-                         string.Format(
-                             "Action {0} has multiple bindings; overriding binding requires the use of binding groups so the action knows which binding to override. Set 'group' property on InputBindingOverride.",
-                             this));
-
-                 int groupStringLength;
-                 var indexInGroup = bindingOverride.GetIndexInGroup(out groupStringLength);
-                 var currentIndexInGroup = 0;
-
-                 for (var i = 0; i < m_BindingsCount; ++i)
-                     if (string.Compare(m_SingletonActionBindings[m_BindingsStartIndex + i].groups, 0, group, 0, groupStringLength, true) == 0)
-                     {
-                         if (currentIndexInGroup == indexInGroup)
-                             return i;
-
-                         ++currentIndexInGroup;
-                     }
-             }
-
-             return -1;
-         }
-         */
 
         // For all bindings in the given action, if a binding matches a control in the given control
         // hiearchy, set an override on the binding to refer specifically to that control.
@@ -212,7 +293,7 @@ namespace UnityEngine.Experimental.Input
         //           Another example is having two XRControllers and two action maps can be on either hand.
         //           At runtime you can dynamically override and re-override the bindings on the action maps
         //           to use them with the controllers as desired.
-        public static int ApplyOverridesUsingMatchingControls(this InputAction action, InputControl control)
+        public static int ApplyBindingOverridesOnMatchingControls(this InputAction action, InputControl control)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
@@ -236,7 +317,7 @@ namespace UnityEngine.Experimental.Input
             return numMatchingControls;
         }
 
-        public static int ApplyOverridesUsingMatchingControls(this InputActionMap actionMap, InputControl control)
+        public static int ApplyBindingOverridesOnMatchingControls(this InputActionMap actionMap, InputControl control)
         {
             if (actionMap == null)
                 throw new ArgumentNullException("actionMap");
@@ -250,7 +331,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < actionCount; ++i)
             {
                 var action = actions[i];
-                numMatchingControls = action.ApplyOverridesUsingMatchingControls(control);
+                numMatchingControls = action.ApplyBindingOverridesOnMatchingControls(control);
             }
 
             return numMatchingControls;
