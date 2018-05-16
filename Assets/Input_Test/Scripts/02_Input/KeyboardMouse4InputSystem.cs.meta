@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1ded1355a90e23d429fa37a3fd80e0d2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - hightlight_key_input_system: {fileID: 212665062683625668, guid: c735cc1f4a3bd9a448da92a20107e2a2,
+      type: 2}
+  - unmapped_key_list: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
