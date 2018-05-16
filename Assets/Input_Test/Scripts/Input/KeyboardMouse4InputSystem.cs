@@ -183,14 +183,21 @@ public class KeyboardMouse4InputSystem : MonoBehaviour {
     {
         Transform mAction = transform.Find("Mouse/" + mouseAction);
         if (mAction != null)
+        {
             mAction.GetComponentInChildren<TextHighlight>().Play(move.ToString("F0"));
+            mAction.GetComponentInChildren<ArrowHighlight>().Play();
+        }            
     }
 
     private void StopMouseHighlight(string mouseAction)
     {
         Transform mAction = transform.Find("Mouse/" + mouseAction);
         if (mAction != null)
+        {
             mAction.GetComponentInChildren<TextHighlight>().Stop();
+            mAction.GetComponentInChildren<ArrowHighlight>().Stop();
+        }
+           
     }
 
     private string FirstLetterToUpper(string str)

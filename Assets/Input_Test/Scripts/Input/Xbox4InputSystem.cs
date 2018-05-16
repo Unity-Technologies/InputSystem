@@ -10,6 +10,8 @@ public class Xbox4InputSystem : MonoBehaviour {
     private InputAction button_press_action;
     private InputAction dpad_press_action;
 
+    private AnalogStick[] analog_sticks = new AnalogStick[2];
+
     // Use this for initialization
     void Start () {
         button_press_action = new InputAction(name: "XboxButtonAction", binding: "/XInputController*/<button>");
@@ -20,8 +22,8 @@ public class Xbox4InputSystem : MonoBehaviour {
         dpad_press_action.performed += callbackContext => DpadPress(callbackContext.control as DpadControl);
         dpad_press_action.Enable();
 
-        //analog_sticks[0] = new AnalogStick(transform.Find("Buttons/LeftStick"));
-        //analog_sticks[1] = new AnalogStick(transform.Find("Buttons/RightStick"));
+        analog_sticks[0] = new AnalogStick(transform.Find("Buttons/LeftStick"));
+        analog_sticks[1] = new AnalogStick(transform.Find("Buttons/RightStick"));
     }
 	
 	// Update is called once per frame
@@ -29,8 +31,8 @@ public class Xbox4InputSystem : MonoBehaviour {
         Gamepad xController = Gamepad.current;
         if (xController != null)
         {
-            //analog_sticks[0].UpdatePosition(xController.leftStick.ReadValue());
-            //analog_sticks[1].UpdatePosition(xController.rightStick.ReadValue());
+            analog_sticks[0].UpdatePosition(xController.leftStick.ReadValue());
+            analog_sticks[1].UpdatePosition(xController.rightStick.ReadValue());
             UpdateStick(xController.leftStick);
             UpdateStick(xController.rightStick);
 
