@@ -1,10 +1,10 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
-public class ArrowHighlight: MonoBehaviour {
-
+public class ArrowHighlight : MonoBehaviour
+{
     private byte moveSpeed = 2;
     private byte fadeSpeed = 10;
 
@@ -13,10 +13,11 @@ public class ArrowHighlight: MonoBehaviour {
     private bool isPlaying = false;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         mat = GetComponent<MeshRenderer>().material;
-        SetAlpha(0f);        
-	}
+        SetAlpha(0f);
+    }
 
     // The loop for effect
     private IEnumerator HighlightMovement()
@@ -26,7 +27,7 @@ public class ArrowHighlight: MonoBehaviour {
         isPlaying = true;
 
         while (isMouseMove)
-        {            
+        {
             // Fade in
             while (alpha < 0.8f)
             {

@@ -1,20 +1,21 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class Gamepad4InputSystem : MonoBehaviour {
-
+public class Gamepad4InputSystem : MonoBehaviour
+{
     public InputField unmapped_button_list;
 
     // private List<string> control_pathes = new List<string>();
-    private InputAction button_press_action;    
+    private InputAction button_press_action;
     private InputAction dpad_press_action;
     private InputAction stick_move_action;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         button_press_action = new InputAction(name: "ButtonPressAction", binding: "*/<button>");
         button_press_action.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
         button_press_action.Enable();
@@ -30,7 +31,7 @@ public class Gamepad4InputSystem : MonoBehaviour {
 
     private void DpadPress(DpadControl control)
     {
-        Transform dpad = GetInputTransform(control.name, isDpad:true);
+        Transform dpad = GetInputTransform(control.name, isDpad: true);
         DpadButtonPress(control.up, dpad);
         DpadButtonPress(control.down, dpad);
         DpadButtonPress(control.left, dpad);
@@ -52,12 +53,12 @@ public class Gamepad4InputSystem : MonoBehaviour {
         string device = control.device.description.deviceClass;
         if (device == "Keyboard" || device == "Mouse")
             return;
-        
+
         // If the button input is from pressing a stick
         bool isStick = control.name.Contains("StickPress") ? true : false;
         string buttonName = isStick ? control.name.Replace("Press", "") : control.name.Replace("button", "");
         Transform button = GetInputTransform(buttonName, isStick);
-        
+
         if (button == null) return;
 
         // For stick, the highlighted part is the moving part
@@ -66,7 +67,7 @@ public class Gamepad4InputSystem : MonoBehaviour {
         if (control.ReadValue() > 0)
             StartHighlight(button);
         else
-            StopHighlight(button);            
+            StopHighlight(button);
     }
 
     private void StickMove(StickControl control)
@@ -84,10 +85,10 @@ public class Gamepad4InputSystem : MonoBehaviour {
         Transform input = transform.Find("Input System/" + inputName);
         // First time use
         if (input == null)
-        {           
+        {
             if (isStick)        input = transform.Find("Input System/Gamepad_Stick");
             else if (isDpad)    input = transform.Find("Input System/Gamepad_Dpad");
-            else                input = transform.Find("Input System/Gamepad_Button");            
+            else                input = transform.Find("Input System/Gamepad_Button");
 
             // if unassigned Gameobject ran out. highly unlikely, but in case
             if (input == null)
@@ -96,11 +97,11 @@ public class Gamepad4InputSystem : MonoBehaviour {
             {
                 input.name = inputName;
                 FirstTimeUse(input);
-            }            
+            }
         }
         return input;
     }
-      
+
     // When a input is used for the first time, remove all tranparency from it
     private void FirstTimeUse(Transform controlTrans)
     {
@@ -112,7 +113,6 @@ public class Gamepad4InputSystem : MonoBehaviour {
         TextMesh tm = controlTrans.GetComponentInChildren<TextMesh>();
         tm.color = RemoveColorTranparency(tm.color);
         tm.text = controlTrans.name;
-            
     }
 
     private void StartHighlight(Transform controlTrans)

@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-public class ClickOnDropdown : MonoBehaviour {
-
+public class ClickOnDropdown : MonoBehaviour
+{
     public delegate void OnClickDropdownDelegate();
     public static OnClickDropdownDelegate clickDropdown;
 

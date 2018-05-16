@@ -1,9 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
-public class InputManager : MonoBehaviour
+public class InputUIPicker : MonoBehaviour
 {
-
     // UI elements
     public Button btn_key_mouse;
     public Dropdown btn_others;
@@ -57,7 +56,6 @@ public class InputManager : MonoBehaviour
 #else
         SwitchToDiagram(windows_key_mouse);
 #endif
-
     }
 
     // Pick from the dropdown list to show controller UI

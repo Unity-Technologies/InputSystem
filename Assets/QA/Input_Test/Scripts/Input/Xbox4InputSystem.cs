@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class Xbox4InputSystem : MonoBehaviour {
-
+public class Xbox4InputSystem : MonoBehaviour
+{
     // public InputField unmapped_key_list;
     private InputAction button_press_action;
     private InputAction dpad_press_action;
@@ -13,7 +13,8 @@ public class Xbox4InputSystem : MonoBehaviour {
     private AnalogStick[] analog_sticks = new AnalogStick[2];
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         button_press_action = new InputAction(name: "XboxButtonAction", binding: "/XInputController*/<button>");
         button_press_action.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
         button_press_action.Enable();
@@ -25,9 +26,10 @@ public class Xbox4InputSystem : MonoBehaviour {
         analog_sticks[0] = new AnalogStick(transform.Find("Buttons/LeftStick"));
         analog_sticks[1] = new AnalogStick(transform.Find("Buttons/RightStick"));
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
         Gamepad xController = Gamepad.current;
         if (xController != null)
         {
@@ -35,9 +37,8 @@ public class Xbox4InputSystem : MonoBehaviour {
             analog_sticks[1].UpdatePosition(xController.rightStick.ReadValue());
             UpdateStick(xController.leftStick);
             UpdateStick(xController.rightStick);
-
         }
-	}
+    }
 
     private void UpdateStick(StickControl control)
     {
@@ -64,7 +65,7 @@ public class Xbox4InputSystem : MonoBehaviour {
             buttonName = control.aliases[0];
         else if (buttonName.Contains("Press"))
             buttonName = buttonName.Replace("Press", "");
-        buttonName = isDpad? "Dpad" + FirstLetterToUpper(buttonName) : FirstLetterToUpper(buttonName);    
+        buttonName = isDpad ? "Dpad" + FirstLetterToUpper(buttonName) : FirstLetterToUpper(buttonName);
 
         if (control.ReadValue() > 0)
             StartHighlight(buttonName);
@@ -81,7 +82,7 @@ public class Xbox4InputSystem : MonoBehaviour {
 
     private void StopHighlight(string buttonName)
     {
-        SpriteRenderer highlight = GetHighlightComponent(buttonName); 
+        SpriteRenderer highlight = GetHighlightComponent(buttonName);
         if (highlight != null)
             highlight.enabled = false;
     }

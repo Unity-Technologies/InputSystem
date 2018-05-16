@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class KeyboardMouse4InputSystem : MonoBehaviour {
-
+public class KeyboardMouse4InputSystem : MonoBehaviour
+{
     public SpriteRenderer hightlight_key_input_system;
     public InputField unmapped_key_list;
     public Text mouse_pos_text;
@@ -16,7 +16,8 @@ public class KeyboardMouse4InputSystem : MonoBehaviour {
     private int mouse_move_highlight_threshold = 20;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         keyboard_press_action = new InputAction(name: "KeyboardPressAction", binding: "/<keyboard>/<key>");
         keyboard_press_action.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         keyboard_press_action.Enable();
@@ -36,7 +37,7 @@ public class KeyboardMouse4InputSystem : MonoBehaviour {
         //    };
     }
 
-    void Update ()
+    void Update()
     {
         // Show mouse actions
         Mouse mouse = Mouse.current;
@@ -93,7 +94,7 @@ public class KeyboardMouse4InputSystem : MonoBehaviour {
             if (scrollY > 0)
             {
                 StartMouseHighlight("Wheel_Down", scrollY);
-                StopMouseHighlight("Wheel_Up");                
+                StopMouseHighlight("Wheel_Up");
             }
             else if (scrollY < 0)
             {
@@ -186,7 +187,7 @@ public class KeyboardMouse4InputSystem : MonoBehaviour {
         {
             mAction.GetComponentInChildren<TextHighlight>().Play(move.ToString("F0"));
             mAction.GetComponentInChildren<ArrowHighlight>().Play();
-        }            
+        }
     }
 
     private void StopMouseHighlight(string mouseAction)
@@ -197,7 +198,6 @@ public class KeyboardMouse4InputSystem : MonoBehaviour {
             mAction.GetComponentInChildren<TextHighlight>().Stop();
             mAction.GetComponentInChildren<ArrowHighlight>().Stop();
         }
-           
     }
 
     private string FirstLetterToUpper(string str)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,7 +12,6 @@ using UnityEngine.UI;
 
 public class Xbox4InputManager : MonoBehaviour
 {
-
     public InputField unmapped_button_list;
     public ParticleSystem highlight_input_manager;
 
@@ -22,7 +21,8 @@ public class Xbox4InputManager : MonoBehaviour
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         // Button map is different for each platform
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         button_map.Add("Button0", "A");
@@ -68,7 +68,8 @@ public class Xbox4InputManager : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update () {
+    void Update()
+    {
         // When a joystick button is pressed
         foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
         {
@@ -117,7 +118,7 @@ public class Xbox4InputManager : MonoBehaviour
         {
             StartHighlightButton(buttonName);
             Debug.Log(buttonName + " down");
-        }            
+        }
         else
             AddUnmappedButton(buttonCode);
     }
@@ -133,12 +134,12 @@ public class Xbox4InputManager : MonoBehaviour
         {
             StopHighlightButton(buttonName);
             Debug.Log(buttonName + " up");
-        }            
+        }
     }
 
     private void StartHighlightButton(string buttonName)
     {
-        Transform button = transform.Find("Buttons/" + buttonName);        
+        Transform button = transform.Find("Buttons/" + buttonName);
         ParticleSystem ps = button.GetComponentInChildren<ParticleSystem>();
         if (ps == null)
             Instantiate(highlight_input_manager, button.position - new Vector3(0f, 0f, 0.1f), button.rotation, button);
@@ -148,7 +149,7 @@ public class Xbox4InputManager : MonoBehaviour
 
     private void StopHighlightButton(string buttonName)
     {
-        Transform button = transform.Find("Buttons/" + buttonName);        
+        Transform button = transform.Find("Buttons/" + buttonName);
         ParticleSystem[] ps = button.GetComponentsInChildren<ParticleSystem>();
         if (ps.Length > 0)
         {
@@ -192,7 +193,7 @@ public class AnalogButton
     // In that case, DPad_Left input value range is [-1, 0] while DPad_Right input value range is (0, 1]
     protected float min_input_value = -1;
     protected float max_input_value = 1;
-    protected float deadzone = 0.1f;    
+    protected float deadzone = 0.1f;
 
     public string Name { get { return name; } }
     public string Axis_Name { get { return axis_name; } }

@@ -1,22 +1,23 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class KeyboardMouse4InputManager : MonoBehaviour {
-
+public class KeyboardMouse4InputManager : MonoBehaviour
+{
     public ParticleSystem highlight_key_input_manager;
     public InputField unmapped_key_list;
     public Text mouse_pos_text;
 
-    void Update () {
+    void Update()
+    {
         // Keyboard input or mouse button is pressed
         foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
-        {            
+        {
             if (Input.GetKeyDown(kcode))
                 StartKeyHighlight(kcode.ToString());
 
             if (Input.GetKeyUp(kcode))
-                StopKeyHighlight(kcode.ToString());            
+                StopKeyHighlight(kcode.ToString());
         }
 
         // Mouse move
@@ -24,7 +25,7 @@ public class KeyboardMouse4InputManager : MonoBehaviour {
         float moveY = Input.GetAxis("Mouse Y");
         float wheel = Input.GetAxis("Mouse ScrollWheel");
 
-        if ( Mathf.Abs(moveX) > 0.5)
+        if (Mathf.Abs(moveX) > 0.5)
         {
             if (moveX > 0)
             {
@@ -42,7 +43,7 @@ public class KeyboardMouse4InputManager : MonoBehaviour {
             StopMouseHighlight("Move_Left");
             StopMouseHighlight("Move_Right");
         }
-        
+
         if (Mathf.Abs(moveY) > 0.5)
         {
             if (moveY > 0)
@@ -62,7 +63,7 @@ public class KeyboardMouse4InputManager : MonoBehaviour {
             StopMouseHighlight("Move_Down");
         }
 
-        // Mouse wheel        
+        // Mouse wheel
         if (wheel > 0)
         {
             StartMouseHighlight("Wheel_Up");
@@ -97,7 +98,7 @@ public class KeyboardMouse4InputManager : MonoBehaviour {
                 Instantiate(highlight_key_input_manager, key.position, key.rotation, key);
             else
                 ps.Play();
-        }            
+        }
     }
 
     // Stop the Particle System for keys and mouse buttons
@@ -119,7 +120,7 @@ public class KeyboardMouse4InputManager : MonoBehaviour {
     // Generate the blue arrow for move movement and wheel
     private void StartMouseHighlight(string mouseAction)
     {
-        Transform mAction = transform.Find("Mouse/" + mouseAction);        
+        Transform mAction = transform.Find("Mouse/" + mouseAction);
 
         if (mAction != null)
             mAction.GetComponentInChildren<ArrowHighlight>().Play();
@@ -136,10 +137,7 @@ public class KeyboardMouse4InputManager : MonoBehaviour {
 
     // Show the unmapped key name in the text field
     private void AddUnmappedKey(string keyName)
-    {           
+    {
         unmapped_key_list.text += "<color=blue>" + keyName + "</color>\n";
     }
-    
-
-
 }
