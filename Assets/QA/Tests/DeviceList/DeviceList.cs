@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 
-public class XRDeviceList : MonoBehaviour
+public class DeviceList : MonoBehaviour
 {
     public Text deviceText;
 
