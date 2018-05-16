@@ -273,7 +273,7 @@ GameObject:
   - component: {fileID: 34859753}
   - component: {fileID: 34859754}
   m_Layer: 5
-  m_Name: ButtonControl (4)
+  m_Name: Button(Touchpad)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -375,7 +375,7 @@ GameObject:
   - component: {fileID: 64018798}
   - component: {fileID: 64018799}
   m_Layer: 5
-  m_Name: ButtonControl (5)
+  m_Name: Button(Trigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1403,7 +1403,7 @@ GameObject:
   - component: {fileID: 233203666}
   - component: {fileID: 233203667}
   m_Layer: 5
-  m_Name: Vector3Control (1)
+  m_Name: Vector3(Velocity)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1609,7 +1609,7 @@ GameObject:
   - component: {fileID: 267376730}
   - component: {fileID: 267376731}
   m_Layer: 5
-  m_Name: Vector3Control
+  m_Name: Vector3(Position)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1900,7 +1900,7 @@ GameObject:
   - component: {fileID: 315319290}
   - component: {fileID: 315319291}
   m_Layer: 5
-  m_Name: ButtonControl (2)
+  m_Name: Button(Grip)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2301,7 +2301,7 @@ GameObject:
   - component: {fileID: 394396502}
   - component: {fileID: 394396503}
   m_Layer: 5
-  m_Name: ButtonControl
+  m_Name: Button(isTracked)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2483,7 +2483,7 @@ GameObject:
   - component: {fileID: 421377025}
   - component: {fileID: 421377026}
   m_Layer: 5
-  m_Name: Axis2Control (1)
+  m_Name: Vector2(Touchpad)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2827,7 +2827,7 @@ GameObject:
   - component: {fileID: 500660220}
   - component: {fileID: 500660221}
   m_Layer: 5
-  m_Name: AxisControl
+  m_Name: Axis(Trigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2885,7 +2885,7 @@ GameObject:
   - component: {fileID: 509033314}
   - component: {fileID: 509033315}
   m_Layer: 5
-  m_Name: Vector3Control
+  m_Name: Vector3(CenterEyePosition)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3162,7 +3162,7 @@ GameObject:
   - component: {fileID: 554403522}
   - component: {fileID: 554403523}
   m_Layer: 5
-  m_Name: ButtonControl (1)
+  m_Name: Button(Menu)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3454,7 +3454,7 @@ GameObject:
   - component: {fileID: 559090993}
   - component: {fileID: 559090994}
   m_Layer: 5
-  m_Name: AxisControl
+  m_Name: Axis(Trigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3656,7 +3656,7 @@ GameObject:
   - component: {fileID: 614274902}
   - component: {fileID: 614274903}
   m_Layer: 5
-  m_Name: AxisControl (1)
+  m_Name: Axis(Grip)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3898,7 +3898,7 @@ GameObject:
   - component: {fileID: 635850407}
   - component: {fileID: 635850408}
   m_Layer: 5
-  m_Name: Axis2Control (1)
+  m_Name: Vector2(Touchpad)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4096,7 +4096,7 @@ GameObject:
   - component: {fileID: 709200742}
   - component: {fileID: 709200743}
   m_Layer: 5
-  m_Name: Axis2Control
+  m_Name: Vector2(Joystick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4300,7 +4300,7 @@ GameObject:
   - component: {fileID: 736836513}
   - component: {fileID: 736836514}
   m_Layer: 5
-  m_Name: Vector3Control (4)
+  m_Name: Vector3(AngularAcceleration)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4616,7 +4616,7 @@ GameObject:
   - component: {fileID: 764659985}
   - component: {fileID: 764659986}
   m_Layer: 5
-  m_Name: Vector3Control (3)
+  m_Name: Vector3(AngularVelocity)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4744,7 +4744,7 @@ GameObject:
   - component: {fileID: 786629655}
   - component: {fileID: 786629656}
   m_Layer: 5
-  m_Name: Vector3Control (3)
+  m_Name: Vector3(AngularVelocity)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4872,7 +4872,7 @@ GameObject:
   - component: {fileID: 798663415}
   - component: {fileID: 798663416}
   m_Layer: 5
-  m_Name: ButtonControl (3)
+  m_Name: Button(Joystick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5413,7 +5413,7 @@ GameObject:
   - component: {fileID: 848530309}
   - component: {fileID: 848530310}
   m_Layer: 5
-  m_Name: Vector3Control (4)
+  m_Name: Vector3(AngularAcceleration)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5753,7 +5753,7 @@ GameObject:
   - component: {fileID: 894571355}
   - component: {fileID: 894571356}
   m_Layer: 5
-  m_Name: ButtonControl (2)
+  m_Name: Button(Grip)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6339,7 +6339,7 @@ GameObject:
   - component: {fileID: 975675109}
   - component: {fileID: 975675110}
   m_Layer: 5
-  m_Name: AxisControl (1)
+  m_Name: Axis(Grip)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6397,7 +6397,7 @@ GameObject:
   - component: {fileID: 977667763}
   - component: {fileID: 977667764}
   m_Layer: 5
-  m_Name: ButtonControl
+  m_Name: Button(Joystick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6460,7 +6460,7 @@ GameObject:
   - component: {fileID: 981197693}
   - component: {fileID: 981197694}
   m_Layer: 5
-  m_Name: QuaternionControl
+  m_Name: Quaternion(Rotation)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6761,7 +6761,7 @@ GameObject:
   - component: {fileID: 1057046409}
   - component: {fileID: 1057046410}
   m_Layer: 5
-  m_Name: QuaternionControl
+  m_Name: Quaternion(Rotation)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7376,7 +7376,7 @@ GameObject:
   - component: {fileID: 1124086392}
   - component: {fileID: 1124086393}
   m_Layer: 5
-  m_Name: ButtonControl (3)
+  m_Name: Button(Touchpad)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7444,7 +7444,7 @@ GameObject:
   - component: {fileID: 1130647749}
   - component: {fileID: 1130647750}
   m_Layer: 5
-  m_Name: AxisControl (2)
+  m_Name: Axis(CombinedTriggerL)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7646,7 +7646,7 @@ GameObject:
   - component: {fileID: 1161499116}
   - component: {fileID: 1161499117}
   m_Layer: 5
-  m_Name: ButtonControl
+  m_Name: Button(isTracked)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8500,7 +8500,7 @@ GameObject:
   - component: {fileID: 1262839481}
   - component: {fileID: 1262839482}
   m_Layer: 5
-  m_Name: Vector3Control (1)
+  m_Name: Vector3(Velocity)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8553,7 +8553,7 @@ GameObject:
   - component: {fileID: 1282581082}
   - component: {fileID: 1282581083}
   m_Layer: 5
-  m_Name: IntegerControl
+  m_Name: Integer(TrackingState)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8905,7 +8905,7 @@ GameObject:
   - component: {fileID: 1303854308}
   - component: {fileID: 1303854309}
   m_Layer: 5
-  m_Name: ButtonControl (1)
+  m_Name: Button(Menu)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9380,7 +9380,7 @@ GameObject:
   - component: {fileID: 1395529968}
   - component: {fileID: 1395529969}
   m_Layer: 5
-  m_Name: IntegerControl
+  m_Name: Integer(TrackingState)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9807,7 +9807,7 @@ GameObject:
   - component: {fileID: 1434744045}
   - component: {fileID: 1434744046}
   m_Layer: 5
-  m_Name: Vector3Control (2)
+  m_Name: Vector3(Acceleration)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10107,7 +10107,7 @@ GameObject:
   - component: {fileID: 1500244995}
   - component: {fileID: 1500244996}
   m_Layer: 5
-  m_Name: QuaternionControl
+  m_Name: Quaternion(CenterEyeRotation)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10912,7 +10912,7 @@ GameObject:
   - component: {fileID: 1654346913}
   - component: {fileID: 1654346914}
   m_Layer: 5
-  m_Name: Vector3Control (2)
+  m_Name: Vector3(Acceleration)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11037,7 +11037,7 @@ GameObject:
   - component: {fileID: 1671605617}
   - component: {fileID: 1671605618}
   m_Layer: 5
-  m_Name: AxisControl (3)
+  m_Name: Axis(CombinedTriggerR)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11630,7 +11630,7 @@ GameObject:
   - component: {fileID: 1786174559}
   - component: {fileID: 1786174560}
   m_Layer: 5
-  m_Name: ButtonControl (4)
+  m_Name: Button(Trigger)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13284,7 +13284,7 @@ GameObject:
   - component: {fileID: 2034786406}
   - component: {fileID: 2034786407}
   m_Layer: 5
-  m_Name: Axis2Control
+  m_Name: Vector2(Joystick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13491,7 +13491,7 @@ GameObject:
   - component: {fileID: 2058824256}
   - component: {fileID: 2058824257}
   m_Layer: 5
-  m_Name: Vector3Control
+  m_Name: Vector3(Position)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
