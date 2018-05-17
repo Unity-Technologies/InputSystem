@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         [InputControl(layout = "Integer")][FieldOffset(0)] public int touchId;
-        [InputControl][FieldOffset(4)] public Vector2 position;
+        [InputControl(processors = "TouchPositionTransform")][FieldOffset(4)] public Vector2 position;
         [InputControl][FieldOffset(12)] public Vector2 delta;
         [InputControl(layout = "Axis")][FieldOffset(20)] public float pressure;
         [InputControl][FieldOffset(24)] public Vector2 radius;
@@ -59,6 +59,21 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return kFormat;
         }
     }
+
+    public class TouchPositionTransformProcessor : IInputControlProcessor<Vector2>
+    {
+        public Vector2 Process(Vector2 value, InputControl control)
+        {
+#if UNITY_EDITOR
+            return value;
+#elif PLATFORM_ANDROID
+            return new Vector2(value.x, Screen.height - value.y);
+#else
+            return value;
+#endif
+        }
+    }
+
 
     /// <summary>
     /// Default state layout for touch devices.
@@ -370,7 +385,7 @@ namespace UnityEngine.Experimental.Input
 
             // We ran out of state and we don't want to stomp an existing ongoing touch.
             // Drop this touch entirely.
-
+            Debug.Log("Out of touches");
             Profiler.EndSample();
             return false;
         }
