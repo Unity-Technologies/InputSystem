@@ -1048,6 +1048,10 @@ namespace UnityEngine.Experimental.Input
                 s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
             }
             #endif
+
+            // Send an initial Update so that user methods such as Start and Awake
+            // can access the input devices prior to thier Upate methods.
+            Update();
         }
 
 #endif // UNITY_EDITOR
