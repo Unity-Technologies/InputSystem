@@ -46,7 +46,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     { ""name"" : ""buttonNorth"", ""offset"" : 0, ""bit"" : 15 },
     { ""name"" : ""leftTrigger"", ""offset"" : 2, ""format"" : ""BYTE"" },
     { ""name"" : ""rightTrigger"", ""offset"" : 3, ""format"" : ""BYTE"" },
-    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"" },
+    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"", ""processors"" : ""deadzone(min=0.999,max=0.999)"" },
     { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
