@@ -41,22 +41,26 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector2Control joystick { get; private set; }
 
         public AxisControl trigger { get; private set; }
+
         public AxisControl grip { get; private set; }
+        [InputControl(aliases = new[] { "TriggerPressed" })]
         public AxisControl indexNearTouched { get; private set; }
         public AxisControl thumbNearTouched { get; private set; }
 
-        [InputControl(aliases = new[] { "A", "X" })]
+        [InputControl(aliases = new[] { "A", "X", "Alternate" })]
         public ButtonControl primaryButton { get; private set; }
-        [InputControl(aliases = new[] { "B", "Y" })]
+        [InputControl(aliases = new[] { "B", "Y", "Primary" })]
         public ButtonControl secondaryButton { get; private set; }
         public ButtonControl gripPressed { get; private set; }
         public ButtonControl start { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl thumbstickClicked { get; private set; }
-        [InputControl(aliases = new[] { "ATouched", "XTouched" })]
+        [InputControl(aliases = new[] { "ATouch", "XTouch" })]
         public ButtonControl primaryTouched { get; private set; }
-        [InputControl(aliases = new[] { "BTouched", "YTouched" })]
+        [InputControl(aliases = new[] { "BTouch", "YTouch" })]
         public ButtonControl secondaryTouched { get; private set; }
         public ButtonControl indexTouched { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl thumbstickTouched { get; private set; }
         public ButtonControl thumbrestTouched { get; private set; }
 

@@ -115,17 +115,16 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
                 .WithManufacturer("Oculus")
-                .WithProduct("Oculus Rift"));
+                .WithProduct("^(Oculus Rift)"));
             InputSystem.RegisterControlLayout<OculusTouchController>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
                 .WithManufacturer("Oculus")
-                .WithProduct("^(Oculus Touch Controller)"));
+                .WithProduct(@"((Oculus Touch Controller)|(^(OpenVR Controller\(Oculus Rift CV1)))"));
             InputSystem.RegisterControlLayout<OculusTrackingReference>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(XRUtilities.kXRInterfaceMatchingPattern)
-                .WithManufacturer("Oculus")
-                .WithProduct("^(Tracking Reference)"));
+                .WithProduct(@"((Tracking Reference)|(^(Oculus Rift CV1 \(Camera)))"));
 
             InputSystem.RegisterControlLayout<GearVRHMD>(
                 matches: new InputDeviceMatcher()
