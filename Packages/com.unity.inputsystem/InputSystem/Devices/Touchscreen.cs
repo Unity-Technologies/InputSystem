@@ -385,7 +385,6 @@ namespace UnityEngine.Experimental.Input
 
             // We ran out of state and we don't want to stomp an existing ongoing touch.
             // Drop this touch entirely.
-            Debug.Log("Out of touches");
             Profiler.EndSample();
             return false;
         }
