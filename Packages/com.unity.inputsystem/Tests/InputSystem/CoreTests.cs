@@ -6039,6 +6039,13 @@ class CoreTests : InputTestFixture
         Assert.That(maps[1].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
     }
 
+    ////TODO: test that if we apply overrides, it changes the controls we get
+
+    // This is the JSON format that action maps had in the earliest versions of the system.
+    // It's a nice and simple format and while we no longer write out action maps in that format,
+    // there's no good reason not to be able to read it. It contains a flat list of actions with
+    // each action listing the map it is contained in as part of its name. Also, bindings are
+    // directly on the actions and thus implicitly refer to the actions they trigger.
     [Test]
     [Category("Actions")]
     public void Actions_ActionMapJsonCanBeEmpty()
