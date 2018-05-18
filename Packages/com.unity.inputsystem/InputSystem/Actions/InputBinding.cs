@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input
             /// composite.
             /// </remarks>
             Composite = 1 << 2,
-            PartOfComposite = 1 << 3,////TODO: remove
+            PartOfComposite = 1 << 3,////REVIEW: remove and replace with PushBindingLevel and PopBindingLevel?
 
             /// <summary>
             ///

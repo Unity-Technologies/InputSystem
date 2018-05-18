@@ -102,14 +102,25 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
-            public BindingSyntax WithChild(string binding, string modifiers = null)
+            public BindingSyntax WithChild(string binding, string modifiers = null, string groups = null)
             {
+                /*
+                var child = m_Action != null
+                    ? m_Action.AppendBinding(binding, modifiers, groups)
+                    : m_ActionMap.AppendBinding(binding, modifiers, groups);
+                m_ActionMap.m_Bindings[child.m_BindingIndex].flags |= InputBinding.Flags.PushBindingLevel;
+
+                return child;
+                */
                 throw new NotImplementedException();
             }
 
             public BindingSyntax Triggering(InputAction action)
             {
-                throw new NotImplementedException();
+                if (action == null)
+                    throw new ArgumentNullException("action");
+                m_ActionMap.m_Bindings[m_BindingIndex].action = action.name;
+                return this;
             }
 
             public BindingSyntax And

@@ -857,6 +857,9 @@ namespace UnityEngine.Experimental.Input
 
         public void OnAfterDeserialize()
         {
+            m_State = null;
+            m_MapIndex = InputActionMapState.kInvalidIndex;
+
             // Restore references of actions linking back to us.
             if (m_Actions != null)
             {

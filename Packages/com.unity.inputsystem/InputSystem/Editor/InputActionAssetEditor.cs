@@ -14,6 +14,8 @@ using UnityEditor.IMGUI.Controls;
 ////FIXME: ATM there is a bug in the ScriptedImporter feature where if you edit the .inputactions asset outside of Unity,
 ////       it will correctly re-import but the InputActionAssetEditor will not refresh
 
+////FIXME: undo when editing bindings does not work properly
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Custom inspector that allows modifying action sets in InputActionAssets.

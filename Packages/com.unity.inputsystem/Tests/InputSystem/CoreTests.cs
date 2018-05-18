@@ -6367,7 +6367,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanSetUpBindingsOnActionMap()
+    public void TODO_Actions_CanSetUpBindingsOnActionMap()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -6420,7 +6420,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanQueryBindingsTriggeringAction()
+    public void TODO_Actions_CanQueryBindingsTriggeringAction()
     {
         var map = new InputActionMap();
         var fire = map.AddAction("fire");
@@ -7030,11 +7030,9 @@ class CoreTests : InputTestFixture
             Throws.InvalidOperationException);
     }
 
-    // If there's multiple bindings on an action, we don't readily know which binding to apply
-    // an override to. We both groups and paths to disambiguate the case.
     [Test]
     [Category("Actions")]
-    public void Actions_OnActionWithMultipleBindings_OverridingWithoutGroupOrPath_DoesNothing()
+    public void Actions_OnActionWithMultipleBindings_OverridingWithoutGroupOrPath_OverridesAll()
     {
         var action = new InputAction(name: "test");
 
@@ -7043,8 +7041,8 @@ class CoreTests : InputTestFixture
 
         action.ApplyBindingOverride("/gamepad/buttonSouth");
 
-        Assert.That(action.bindings[1].overridePath, Is.Null);
-        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+        Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
     }
 
     [Test]

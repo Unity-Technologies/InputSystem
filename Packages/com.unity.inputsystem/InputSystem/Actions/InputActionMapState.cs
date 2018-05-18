@@ -1089,7 +1089,7 @@ namespace UnityEngine.Experimental.Input
             s_GlobalList.length = head;
         }
 
-        internal void NotifyListenersThatEnabledActionsChanged()
+        internal static void NotifyListenersThatEnabledActionsChanged()
         {
             #if UNITY_EDITOR
             for (var i = 0; i < s_OnEnabledActionsChanged.length; ++i)
@@ -1235,6 +1235,8 @@ namespace UnityEngine.Experimental.Input
                             state.bindingStates[bindingIndex].controlCount);
                 }
             }
+
+            NotifyListenersThatEnabledActionsChanged();
         }
 
         private bool DataMatches(InputBindingResolver resolver)
@@ -1269,6 +1271,8 @@ namespace UnityEngine.Experimental.Input
                 for (var n = 0; n < mapCount; ++n)
                     maps[n].Disable();
             }
+
+            NotifyListenersThatEnabledActionsChanged();
         }
 
         #endregion

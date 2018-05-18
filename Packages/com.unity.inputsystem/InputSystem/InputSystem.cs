@@ -1105,6 +1105,7 @@ namespace UnityEngine.Experimental.Input
 
                 case PlayModeStateChange.EnteredEditMode:
                     Restore();
+                    DisableAllEnabledActions();
                     break;
             }
         }
