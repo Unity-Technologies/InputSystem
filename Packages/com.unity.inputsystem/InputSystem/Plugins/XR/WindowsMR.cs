@@ -46,8 +46,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl menu { get; private set; }
         public ButtonControl joystickClicked { get; private set; }
         public ButtonControl triggerPressed { get; private set; }
+        [InputControl(aliases = new[] { "touchpadClick" })]
         public ButtonControl touchpadClicked { get; private set; }
-        public ButtonControl touchpadTouched { get; private set; }
+        [InputControl(aliases = new[] { "touchpadTouch" })]
+        public ButtonControl touchPadTouched { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
         public Vector3Control devicePosition { get; private set; }

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 
 namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 {
@@ -77,20 +78,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         // GeomagneticRotationVector - no alternative in old system
         // HeartRate - no alternative in old system
 
-        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Accelerometer")]
+        [InputControl(name = "acceleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "Accelerometer")]
         [InputControl(name = "magneticField", layout = "Vector3", format = "VEC3", offset = 0, variant = "MagneticField")]
         [InputControl(name = "orientation", layout = "Vector3", format = "VEC3", offset = 0, variant = "Orientation")]
-        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gyroscope")]
+        [InputControl(name = "angularVelocity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "Gyroscope")]
         [InputControl(name = "lightLevel", layout = "Float", format = "FLT", offset = 0, variant = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Float", format = "FLT", offset = 0, variant = "Pressure")]
         [InputControl(name = "distance", layout = "Float", format = "FLT", offset = 0, variant = "Proximity")]
-        [InputControl(name = "gravity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "Gravity")]
-        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidSensor", variant = "LinearAcceleration")]
-        [InputControl(name = "attitude", layout = "Quaternion", format = "QUAT", offset = 0, processors = "AndroidSensorRotation", variant = "RotationVector")]
+        [InputControl(name = "gravity", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "Gravity")]
+        [InputControl(name = "accleration", layout = "Vector3", format = "VEC3", offset = 0, processors = "AndroidCompensateDirection", variant = "LinearAcceleration")]
+        [InputControl(name = "attitude", layout = "Quaternion", format = "QUAT", offset = 0, processors = "CompensateRotation", variant = "RotationVector")]
         [InputControl(name = "relativeHumidity", layout = "Float", format = "FLT", offset = 0, variant = "RelativeHumidity")]
         [InputControl(name = "ambientTemperature", layout = "Float", format = "FLT", offset = 0, variant = "AmbientTemperature")]
         [InputControl(name = "stepCounter", layout = "Integer", format = "FLT", offset = 0, variant = "StepCounter")]
-        [InputControl(name = "rotation", layout = "Quaternion", format = "QUAT", offset = 0, processors = "AndroidSensorRotation", variant = "GeomagneticRotationVector")]
+        [InputControl(name = "rotation", layout = "Quaternion", format = "QUAT", offset = 0, processors = "CompensateRotation", variant = "GeomagneticRotationVector")]
         [InputControl(name = "rate", layout = "Integer", format = "FLT", offset = 0, variant = "HeartRate")]
         public fixed float data[16];
 
@@ -115,55 +116,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         }
     }
 
-    public class AndroidSensorProcessor : IInputControlProcessor<Vector3>
+    public class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
         // Taken fron platforms\android-<API>\arch-arm\usr\include\android\sensor.h
         private const float kSensorStandardGravity = 9.80665f;
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public Vector3 Process(Vector3 vector, InputControl control)
+        public new Vector3 Process(Vector3 vector, InputControl control)
         {
-            var newValue = vector * kAccelerationMultiplier;
-            if (InputConfiguration.CompensateSensorsForScreenOrientation)
-            {
-                Quaternion rotation = Quaternion.identity;
-                switch (Screen.orientation)
-                {
-                    case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
-                    case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
-                    case ScreenOrientation.LandscapeRight: rotation = Quaternion.Euler(0, 0, 270); break;
-                }
-                newValue = rotation * newValue;
-            }
-
-            return newValue;
-        }
-    }
-
-    public class AndroidSensorRotationProcessor : IInputControlProcessor<Quaternion>
-    {
-        public Quaternion Process(Quaternion rotation, InputControl control)
-        {
-            float sinRho2 = rotation.x * rotation.x + rotation.y * rotation.y + rotation.z * rotation.z;
-            rotation.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
-
-            if (InputConfiguration.CompensateSensorsForScreenOrientation)
-            {
-                const float kSqrtOfTwo = 1.4142135623731f;
-                Quaternion q = Quaternion.identity;
-
-                switch (Screen.orientation)
-                {
-                    case ScreenOrientation.PortraitUpsideDown: q = new Quaternion(0.0f, 0.0f, 1.0f /*sin(pi/2)*/, 0.0f /*cos(pi/2)*/); break;
-                    case ScreenOrientation.LandscapeLeft:      q = new Quaternion(0.0f, 0.0f, kSqrtOfTwo * 0.5f /*sin(pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(pi/4)*/); break;
-                    case ScreenOrientation.LandscapeRight:     q = new Quaternion(0.0f, 0.0f, -kSqrtOfTwo * 0.5f /*sin(3pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(3pi/4)*/); break;
-                }
-
-                return rotation * q;
-            }
-
-            return rotation;
+            return base.Process(vector * kAccelerationMultiplier, control);
         }
     }
 }

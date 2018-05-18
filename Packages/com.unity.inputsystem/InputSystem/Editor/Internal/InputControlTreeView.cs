@@ -321,39 +321,50 @@ namespace UnityEngine.Experimental.Input.Editor
                 var ptr = statePtr + control.m_StateBlock.byteOffset - m_RootControl.m_StateBlock.byteOffset;
                 var format = control.m_StateBlock.format;
 
+                object value = null;
                 if (format == InputStateBlock.kTypeBit)
                 {
                     if (MemoryHelpers.ReadSingleBit(new IntPtr(ptr), control.m_StateBlock.bitOffset))
-                        return "1";
-                    return "0";
+                        value = "1";
+                    value = "0";
                 }
-
-                if (format == InputStateBlock.kTypeByte)
+                else if (format == InputStateBlock.kTypeByte || format == InputStateBlock.kTypeSByte)
                 {
-                    return (*ptr).ToString();
+                    value = (*ptr);
                 }
-
-                if (format == InputStateBlock.kTypeShort)
+                else if (format == InputStateBlock.kTypeShort)
                 {
-                    return (*((short*)ptr)).ToString();
+                    value = (*((short*)ptr));
                 }
-
-                if (format == InputStateBlock.kTypeInt)
+                else if (format == InputStateBlock.kTypeUShort)
                 {
-                    return (*((int*)ptr)).ToString();
+                    value = (*((ushort*)ptr));
                 }
-
-                if (format == InputStateBlock.kTypeFloat)
+                else if (format == InputStateBlock.kTypeInt)
                 {
-                    return (*((float*)ptr)).ToString();
+                    value = (*((int*)ptr));
                 }
-
-                if (format == InputStateBlock.kTypeDouble)
+                else if (format == InputStateBlock.kTypeUInt)
                 {
-                    return (*((double*)ptr)).ToString();
+                    value = (*((uint*)ptr));
+                }
+                else if (format == InputStateBlock.kTypeFloat)
+                {
+                    value = (*((float*)ptr));
+                }
+                else if (format == InputStateBlock.kTypeDouble)
+                {
+                    value = (*((double*)ptr));
                 }
 
-                return null;
+                // Stringify enum values, for. ex., PointerPhase
+                if (value != null && control.valueType.IsEnum)
+                {
+                    var intValue = Convert.ToInt32(value);
+                    value = Enum.ToObject(control.valueType, intValue);
+                }
+
+                return value != null ? value.ToString() : null;
             }
         }
 

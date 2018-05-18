@@ -117,7 +117,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         {
             InternedString internedNameOrAlias = new InternedString(nameOrAlias);
             ReadOnlyArray<InputControlLayout.ControlItem> controls = layout.controls;
-            for(int i = 0; i < controls.Count; i++)
+            for (int i = 0; i < controls.Count; i++)
             {
                 InputControlLayout.ControlItem controlItem = controls[i];
 
@@ -125,7 +125,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     return nameOrAlias;
 
                 ReadOnlyArray<InternedString> aliases = controlItem.aliases;
-                for(int j = 0; j < aliases.Count; j++)
+                for (int j = 0; j < aliases.Count; j++)
                 {
                     if (aliases[j] == nameOrAlias)
                         return controlItem.name.ToString();

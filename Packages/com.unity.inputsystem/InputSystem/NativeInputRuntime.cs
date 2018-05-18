@@ -83,6 +83,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set { NativeInputSystem.SetPollingFrequency(value); }
         }
 
+        public double currentTime
+        {
+            get { return Time.realtimeSinceStartup; }
+        }
+
         public InputUpdateType updateMask
         {
             set
@@ -103,5 +108,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         private Action<NativeInputUpdateType> m_SetUpdateMaskMethod;
+
+        public ScreenOrientation screenOrientation
+        {
+            set
+            {
+                Screen.orientation = value;
+            }
+
+            get
+            {
+                return Screen.orientation;
+            }
+        }
     }
 }

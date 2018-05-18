@@ -90,6 +90,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// Whether the device has been added to the system.
+        /// </summary>
+        public bool added
+        {
+            get { return (m_DeviceIndex != kInvalidDeviceIndex); }
+        }
+
+        /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
         /// </summary>
@@ -168,6 +176,14 @@ namespace UnityEngine.Experimental.Input
                 // this list will actually deliver a flattened list of all controls in the hierarchy (and without
                 // the device itself being listed).
                 return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
+            }
+        }
+
+        public override Type valueType
+        {
+            get
+            {
+                return null;
             }
         }
 
