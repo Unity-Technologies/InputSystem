@@ -316,7 +316,7 @@ public class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = String.Format("{0}::{1}::{2}", XRUtilities.kXRInterface,
+        var expectedLayoutName = string.Format("{0}::{1}::{2}", XRUtilities.kXRInterface,
                 deviceDescription.manufacturer, deviceDescription.product);
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }

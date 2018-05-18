@@ -12,6 +12,11 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
 
+////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
+////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
+////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
+////        the InputDevice reference itself.
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -43,6 +48,12 @@ namespace UnityEngine.Experimental.Input
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public abstract class InputControl
     {
+        ////REVIEW: we could allow the parenthetical characters if we require escaping them in paths
+        /// <summary>
+        /// Characters that may not appear in control names.
+        /// </summary>
+        public static string ReservedCharacters = "/;{}[]<>";
+
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
         /// </summary>
@@ -291,6 +302,9 @@ namespace UnityEngine.Experimental.Input
         internal InternedString m_Variant;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
+        ////REVIEW: This is stupid. We're storing the array references on here when in fact they should
+        ////        be fetched on demand from InputDevice. What we do here is needlessly add three extra
+        ////        references to every single InputControl
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
@@ -502,11 +516,13 @@ namespace UnityEngine.Experimental.Input
 
         protected TValue Process(TValue value)
         {
-            if (m_ProcessorStack.firstValue != null)
+            if (m_ProcessorStack.length > 0)
+            {
                 value = m_ProcessorStack.firstValue.Process(value, this);
-            if (m_ProcessorStack.additionalValues != null)
-                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    value = m_ProcessorStack.additionalValues[i].Process(value, this);
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        value = m_ProcessorStack.additionalValues[i].Process(value, this);
+            }
             return value;
         }
 
@@ -526,12 +542,15 @@ namespace UnityEngine.Experimental.Input
         internal TProcessor TryGetProcessor<TProcessor>()
             where TProcessor : IInputControlProcessor<TValue>
         {
-            if (m_ProcessorStack.firstValue is TProcessor)
-                return (TProcessor)m_ProcessorStack.firstValue;
-            if (m_ProcessorStack.additionalValues != null)
-                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    if (m_ProcessorStack.additionalValues[i] is TProcessor)
-                        return (TProcessor)m_ProcessorStack.additionalValues[i];
+            if (m_ProcessorStack.length > 0)
+            {
+                if (m_ProcessorStack.firstValue is TProcessor)
+                    return (TProcessor)m_ProcessorStack.firstValue;
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        if (m_ProcessorStack.additionalValues[i] is TProcessor)
+                            return (TProcessor)m_ProcessorStack.additionalValues[i];
+            }
             return default(TProcessor);
         }
 

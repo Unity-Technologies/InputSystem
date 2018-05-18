@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input
 
         public void OnDestroy()
         {
-            InputActionSet.ResetGlobals();
+            InputActionMapState.ResetGlobals();
             manager.Destroy();
             EditorInputControlLayoutCache.Clear();
             DestroyImmediate(playerConnection);

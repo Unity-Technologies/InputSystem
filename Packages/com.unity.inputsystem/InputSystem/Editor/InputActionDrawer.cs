@@ -6,7 +6,7 @@ namespace UnityEngine.Experimental.Input.Editor
     // Custom inspector support for InputActions.
     //
     // NOTE: This only supports singleton actions. It will not work correctly with actions
-    //       that are part of InputActionSets. InputActionSet has its own inspector support
+    //       that are part of InputActionSets. InputActionMap has its own inspector support
     //       that does not use this property drawer.
     [CustomPropertyDrawer(typeof(InputAction))]
     public class InputActionDrawer : PropertyDrawer
