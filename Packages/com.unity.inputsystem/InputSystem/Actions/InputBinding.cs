@@ -187,11 +187,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public int parent
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         ////TODO: also support matching by name (taking the binding tree into account so that components
         ////      of composites can be referenced through their parent)
 

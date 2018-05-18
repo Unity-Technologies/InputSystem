@@ -864,6 +864,12 @@ namespace UnityEngine.Experimental.Input
                 for (var i = 0; i < actionCount; ++i)
                     m_Actions[i].m_ActionMap = this;
             }
+
+            // Make sure we don't retain any cached per-action data when using serialization
+            // to docter around in action map configurations in the editor.
+            m_ActionForEachBinding = null;
+            m_BindingsForEachAction = null;
+            m_ControlsForEachAction = null;
         }
 
         #endregion

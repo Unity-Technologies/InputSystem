@@ -6434,22 +6434,6 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_ChildBindingsReferToTheirParent()
-    {
-        var set = new InputActionMap();
-
-        set.AppendBinding("<Keyboard/a"); // To take index #0.
-        set.AppendBinding("<Keyboard>/space")
-        .WithChild("<Mouse>/leftButton")
-        .And.WithChild("<Mouse>/rightButton");
-
-        Assert.That(set.bindings[0].parent, Is.EqualTo(-1));
-        Assert.That(set.bindings[1].parent, Is.EqualTo(1));
-        Assert.That(set.bindings[2].parent, Is.EqualTo(1));
-    }
-
-    [Test]
-    [Category("Actions")]
     public void TODO_Actions_CanChainBindings()
     {
         // Set up an action that requires the left trigger to be held when pressing the A button.
@@ -7967,13 +7951,13 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAddAndRemoveActionSetThroughSerialization()
+    public void Editor_InputAsset_CanAddAndRemoveActionMapThroughSerialization()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
 
-        InputActionSerializationHelpers.AddActionSet(obj);
-        InputActionSerializationHelpers.AddActionSet(obj);
+        InputActionSerializationHelpers.AddActionMap(obj);
+        InputActionSerializationHelpers.AddActionMap(obj);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
@@ -7981,36 +7965,36 @@ class CoreTests : InputTestFixture
         Assert.That(asset.actionMaps[1].name, Is.Not.Null.Or.Empty);
         Assert.That(asset.actionMaps[0].name, Is.Not.EqualTo(asset.actionMaps[1].name));
 
-        var actionSet2Name = asset.actionMaps[1].name;
+        var actionMap2Name = asset.actionMaps[1].name;
 
-        InputActionSerializationHelpers.DeleteActionSet(obj, 0);
+        InputActionSerializationHelpers.DeleteActionMap(obj, 0);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
-        Assert.That(asset.actionMaps[0].name, Is.EqualTo(actionSet2Name));
+        Assert.That(asset.actionMaps[0].name, Is.EqualTo(actionMap2Name));
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveActionThroughSerialization()
     {
-        var set = new InputActionMap("set");
-        set.AddAction(name: "action", binding: "/gamepad/leftStick");
-        set.AddAction(name: "action1", binding: "/gamepad/rightStick");
+        var map = new InputActionMap("set");
+        map.AddAction(name: "action", binding: "/gamepad/leftStick");
+        map.AddAction(name: "action1", binding: "/gamepad/rightStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set);
+        asset.AddActionMap(map);
 
         var obj = new SerializedObject(asset);
-        var setProperty = obj.FindProperty("m_ActionSets").GetArrayElementAtIndex(0);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AddAction(setProperty);
+        InputActionSerializationHelpers.AddAction(mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
         Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
-        InputActionSerializationHelpers.DeleteAction(setProperty, 2);
+        InputActionSerializationHelpers.DeleteAction(mapProperty, 2);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(2));
@@ -8022,20 +8006,20 @@ class CoreTests : InputTestFixture
     [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveBindingThroughSerialization()
     {
-        var set = new InputActionMap("set");
-        set.AddAction(name: "action1", binding: "/gamepad/leftStick");
-        set.AddAction(name: "action2", binding: "/gamepad/rightStick");
+        var map = new InputActionMap("set");
+        map.AddAction(name: "action1", binding: "/gamepad/leftStick");
+        map.AddAction(name: "action2", binding: "/gamepad/rightStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set);
+        asset.AddActionMap(map);
 
         var obj = new SerializedObject(asset);
-        var setProperty = obj.FindProperty("m_ActionSets").GetArrayElementAtIndex(0);
-        var action1Property = setProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendBinding(action1Property, setProperty);
+        InputActionSerializationHelpers.AppendBinding(action1Property, mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        // Sets and actions aren't UnityEngine.Objects so the modifications will not
+        // Maps and actions aren't UnityEngine.Objects so the modifications will not
         // be in-place. Look up the actions after each apply.
         var action1 = asset.actionMaps[0].TryGetAction("action1");
         var action2 = asset.actionMaps[0].TryGetAction("action2");
@@ -8047,7 +8031,7 @@ class CoreTests : InputTestFixture
         Assert.That(action1.bindings[1].groups, Is.EqualTo(""));
         Assert.That(action2.bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
 
-        InputActionSerializationHelpers.RemoveBinding(action1Property, 1, setProperty);
+        InputActionSerializationHelpers.RemoveBinding(action1Property, 1, mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         action1 = asset.actionMaps[0].TryGetAction("action1");

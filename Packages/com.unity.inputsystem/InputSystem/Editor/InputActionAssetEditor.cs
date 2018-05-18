@@ -20,8 +20,8 @@ namespace UnityEngine.Experimental.Input.Editor
     [CustomEditor(typeof(InputActionAsset))]
     public class InputActionAssetEditor : UnityEditor.Editor
     {
-        [NonSerialized] private int m_ActionSetCount;
-        [NonSerialized] private SerializedProperty m_ActionSetArrayProperty;
+        [NonSerialized] private int m_ActionMapCount;
+        [NonSerialized] private SerializedProperty m_ActionMapArrayProperty;
         [NonSerialized] internal Action m_ApplyAction;
 
         private static List<InputActionAssetEditor> s_EnabledEditors;
@@ -39,10 +39,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void OnEnable()
         {
-            m_ActionSetArrayProperty = serializedObject.FindProperty("m_ActionSets");
-            m_ActionSetCount = m_ActionSetArrayProperty.arraySize;
+            m_ActionMapArrayProperty = serializedObject.FindProperty("m_ActionMaps");
+            m_ActionMapCount = m_ActionMapArrayProperty.arraySize;
 
-            if (m_ActionSetCount > 0)
+            if (m_ActionMapCount > 0)
                 InitializeActionTreeView();
 
             if (s_EnabledEditors == null)
@@ -99,8 +99,8 @@ namespace UnityEngine.Experimental.Input.Editor
         protected void DrawToolbarGUI()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            ////REVIEW: should this work the same as adding actions and just have an "<Add Action Set...>" entry?
-            if (GUILayout.Button(Contents.addNewSet, EditorStyles.toolbarButton))
+            ////REVIEW: should this work the same as adding actions and just have an "<Add Action Map...>" entry?
+            if (GUILayout.Button(Contents.addNewMap, EditorStyles.toolbarButton))
                 AddActionSet();
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -108,8 +108,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected void AddActionSet()
         {
-            InputActionSerializationHelpers.AddActionSet(serializedObject);
-            ++m_ActionSetCount;
+            InputActionSerializationHelpers.AddActionMap(serializedObject);
+            ++m_ActionMapCount;
 
             Apply();
 
@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void InitializeActionTreeView()
         {
-            m_ActionTreeView = InputActionTreeView.Create(serializedObject.FindProperty("m_ActionSets"), Apply,
+            m_ActionTreeView = InputActionTreeView.Create(serializedObject.FindProperty("m_ActionMaps"), Apply,
                     ref m_ActionTreeViewState, ref m_ActionTreeViewHeaderState);
         }
 
@@ -139,7 +139,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static class Contents
         {
-            public static GUIContent addNewSet = new GUIContent("Add New Set");
+            public static GUIContent addNewMap = new GUIContent("Add New Action Map");
         }
     }
 }
