@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
-using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Events;
@@ -1680,9 +1679,9 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanQueryValueFromStateEvents()
+    public void Controls_CanReadValueFromStateEvents()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
@@ -1696,6 +1695,27 @@ class CoreTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanWriteValueIntoStateEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var receivedCalls = 0;
+        InputSystem.onEvent +=
+            eventPtr =>
+            {
+                ++receivedCalls;
+                gamepad.leftTrigger.WriteValueInto(eventPtr, 0.1234f);
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedCalls, Is.EqualTo(1));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.1234).Within(0.000001));
     }
 
     [Test]
