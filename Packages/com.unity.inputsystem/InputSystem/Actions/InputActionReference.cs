@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input
                     if (m_Asset == null)
                         return null;
 
-                    var set = m_Asset.GetActionSet(m_SetName);
+                    var set = m_Asset.GetActionMap(m_SetName);
                     m_Action = set.GetAction(m_ActionName);
                 }
 

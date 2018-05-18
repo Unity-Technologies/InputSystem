@@ -27,6 +27,73 @@ namespace UnityEngine.Experimental.Input.Utilities
             return count;
         }
 
+        ////REVIEW: should we allow whitespace and skip automatically?
+        public static bool CharacterSeparatedListsHaveAtLeastOneCommonElement(string firstList, string secondList,
+            char separator)
+        {
+            if (firstList == null)
+                throw new ArgumentNullException("firstList");
+            if (secondList == null)
+                throw new ArgumentNullException("secondList");
+
+            // Go element by element through firstList and try to find a matching
+            // element in secondList.
+            var indexInFirst = 0;
+            var lengthOfFirst = firstList.Length;
+            var lengthOfSecond = secondList.Length;
+            while (indexInFirst < lengthOfFirst)
+            {
+                // Find end of current element.
+                var endIndexInFirst = indexInFirst + 1;
+                while (endIndexInFirst < lengthOfFirst && firstList[endIndexInFirst] != separator)
+                    ++endIndexInFirst;
+                var lengthOfCurrentInFirst = endIndexInFirst - indexInFirst;
+
+                // Go through element in secondList and match it to the current
+                // element.
+                var indexInSecond = 0;
+                while (indexInSecond < lengthOfSecond)
+                {
+                    // Find end of current element.
+                    var endIndexInSecond = indexInSecond + 1;
+                    while (endIndexInSecond < lengthOfSecond && secondList[endIndexInSecond] != separator)
+                        ++endIndexInSecond;
+                    var lengthOfCurrentInSecond = endIndexInSecond - indexInSecond;
+
+                    // If length matches, do character-by-character comparison.
+                    if (lengthOfCurrentInFirst == lengthOfCurrentInSecond)
+                    {
+                        var startIndexInFirst = indexInFirst;
+                        var startIndexInSecond = indexInSecond;
+
+                        var isMatch = true;
+                        for (var i = 0; i < lengthOfCurrentInFirst; ++i)
+                        {
+                            var first = firstList[startIndexInFirst + i];
+                            var second = secondList[startIndexInSecond + i];
+
+                            if (char.ToLower(first) != char.ToLower(second))
+                            {
+                                isMatch = false;
+                                break;
+                            }
+                        }
+
+                        if (isMatch)
+                            return true;
+                    }
+
+                    // Not a match so go to next.
+                    indexInSecond = endIndexInSecond + 1;
+                }
+
+                // Go to next element.
+                indexInFirst = endIndexInFirst + 1;
+            }
+
+            return false;
+        }
+
         // Parse an int at the given position in the string.
         // Unlike int.Parse(), does not require allocating a new string containing only
         // the substring with the number.

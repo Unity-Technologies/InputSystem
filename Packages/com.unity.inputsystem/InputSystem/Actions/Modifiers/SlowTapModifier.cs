@@ -18,7 +18,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
 
         private double m_SlowTapStartTime;
 
-        public void Process(ref InputAction.ModifierContext context)
+        public void Process(ref InputBindingModifierContext context)
         {
             if (context.isWaiting && !context.controlHasDefaultValue)
             {

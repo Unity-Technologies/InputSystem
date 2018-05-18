@@ -22,7 +22,7 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
+////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native alloations when exiting
 
@@ -30,6 +30,9 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 namespace UnityEngine.Experimental.Input
 {
+    using NotifyControlValueChangeAction = Action<InputControl, double, long>;
+    using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
+
     /// <summary>
     /// This is the central hub for the input system.
     /// </summary>
@@ -643,6 +646,92 @@ namespace UnityEngine.Experimental.Input
 
         #endregion
 
+        #region State Change Monitors
+
+        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+            if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"));
+
+            s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
+        }
+
+        public static IInputStateChangeMonitor AddStateChangeMonitor(InputControl control, NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1, NotifyTimerExpiredAction timerExpiredCallback = null)
+        {
+            if (valueChangeCallback == null)
+                throw new ArgumentNullException("valueChangeCallback");
+            var monitor = new StateChangeMonitorDelegate
+            {
+                valueChangeCallback = valueChangeCallback,
+                timerExpiredCallback = timerExpiredCallback
+            };
+            AddStateChangeMonitor(control, monitor, monitorIndex);
+            return monitor;
+        }
+
+        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.RemoveStateChangeMonitor(control, monitor, monitorIndex);
+        }
+
+        /// <summary>
+        /// Put a timeout on a previously registered state change monitor.
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="monitor"></param>
+        /// <param name="time"></param>
+        /// <param name="monitorIndex"></param>
+        /// <param name="timerIndex"></param>
+        /// <remarks>
+        /// If by the given <paramref name="time"/>, no state change has been registered on the control monitored
+        /// by the given <paramref name="monitor">state change monitor</paramref>, <see cref="IInputStateChangeMonitor.NotifyTimerExpired"/>
+        /// will be called on <paramref name="monitor"/>. If a state change happens by the given <paramref name="time"/>,
+        /// the monitor is notified as usual and the timer is automatically removed.
+        /// </remarks>
+        public static void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex = -1, int timerIndex = -1)
+        {
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
+        }
+
+        public static void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex = -1, int timerIndex = -1)
+        {
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
+        }
+
+        private class StateChangeMonitorDelegate : IInputStateChangeMonitor
+        {
+            public NotifyControlValueChangeAction valueChangeCallback;
+            public NotifyTimerExpiredAction timerExpiredCallback;
+
+            public void NotifyControlValueChanged(InputControl control, double time, long monitorIndex)
+            {
+                valueChangeCallback(control, time, monitorIndex);
+            }
+
+            public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+            {
+                if (timerExpiredCallback != null)
+                    timerExpiredCallback(control, time, monitorIndex, timerIndex);
+            }
+        }
+
+        #endregion
+
         #region Events
 
         public static event Action<InputEventPtr> onEvent
@@ -697,7 +786,7 @@ namespace UnityEngine.Experimental.Input
             var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             StateEventBuffer eventBuffer;
             eventBuffer.stateEvent =
@@ -738,7 +827,7 @@ namespace UnityEngine.Experimental.Input
                         control, device));
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             var deltaSize = (uint)UnsafeUtility.SizeOf<TDelta>();
             if (deltaSize > DeltaStateEventBuffer.kMaxSize)
@@ -776,7 +865,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             var inputEvent = DeviceConfigurationEvent.Create(device.id, time);
             s_Manager.QueueEvent(ref inputEvent);
@@ -799,7 +888,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             var inputEvent = TextEvent.Create(device.id, character, time);
             s_Manager.QueueEvent(ref inputEvent);
@@ -881,7 +970,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.Disable"/>
         public static void DisableAllEnabledActions()
         {
-            InputActionSet.DisableAllEnabledActions();
+            InputActionMapState.DisableAllActions();
         }
 
         /// <summary>
@@ -912,7 +1001,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (actions == null)
                 throw new ArgumentNullException("actions");
-            return InputActionSet.FindEnabledActions(actions);
+            return InputActionMapState.FindAllEnabledActions(actions);
         }
 
         #endregion
@@ -1016,6 +1105,7 @@ namespace UnityEngine.Experimental.Input
 
                 case PlayModeStateChange.EnteredEditMode:
                     Restore();
+                    DisableAllEnabledActions();
                     break;
             }
         }
