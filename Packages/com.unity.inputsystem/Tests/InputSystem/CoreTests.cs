@@ -3677,24 +3677,6 @@ class CoreTests : InputTestFixture
         Assert.That(joystick.stick.name, Is.EqualTo("stick"));
     }
 
-    [Test]
-    [Category("Devices")]
-    public void Devices_PointerDeltasResetBetweenUpdates()
-    {
-        var pointer = InputSystem.AddDevice<Pointer>();
-
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update();
-
-        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-
-        InputSystem.Update();
-
-        Assert.That(pointer.delta.x.ReadValue(), Is.Zero);
-        Assert.That(pointer.delta.y.ReadValue(), Is.Zero);
-    }
-
     // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
     // ECS version, all this should be thrown out entirely.
     //
@@ -3748,53 +3730,54 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_PointerDeltasAccumulateBetweenUpdates()
-    {
-        var pointer = InputSystem.AddDevice<Pointer>();
-
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update();
-
-        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(1).Within(0.0000001));
-        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(1).Within(0.0000001));
-    }
-
-    /*
-    [Test]
-    [Category("Devices")]
+    [TestCase("Pointer", "delta")]
+    [TestCase("Mouse", "scroll")]
     public void Devices_DeltaControlsAccumulateBetweenUpdates(string layoutName, string controlName)
     {
         var device = InputSystem.AddDevice(layoutName);
-        var deltaControl = device[controlName];
+        var deltaControl = (Vector2Control)device[controlName];
         Debug.Assert(deltaControl != null);
 
-        InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0.5f, 0.5f) });
-        InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update();
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            deltaControl.WriteValueInto(stateEventPtr, new Vector2(0.5f, 0.5f));
 
-        Assert.That(mouse.scroll.x.ReadValue(), Is.EqualTo(1).Within(0.0000001));
-        Assert.That(mouse.scroll.y.ReadValue(), Is.EqualTo(1).Within(0.0000001));
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            Assert.That(deltaControl.x.ReadValue(), Is.EqualTo(1).Within(0.0000001));
+            Assert.That(deltaControl.y.ReadValue(), Is.EqualTo(1).Within(0.0000001));
+        }
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_DeltaControlsResetBetweenUpdates()
+    [TestCase("Pointer", "delta")]
+    [TestCase("Mouse", "scroll")]
+    public void Devices_DeltaControlsResetBetweenUpdates(string layoutName, string controlName)
     {
-        var pointer = InputSystem.AddDevice<Mouse>();
+        var device = InputSystem.AddDevice(layoutName);
+        var deltaControl = (Vector2Control)device[controlName];
+        Debug.Assert(deltaControl != null);
 
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update();
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            deltaControl.WriteValueInto(stateEventPtr, new Vector2(0.5f, 0.5f));
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
 
-        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+            Assert.That(deltaControl.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+            Assert.That(deltaControl.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
-        InputSystem.Update();
+            InputSystem.Update();
 
-        Assert.That(pointer.delta.x.ReadValue(), Is.Zero);
-        Assert.That(pointer.delta.y.ReadValue(), Is.Zero);
+            Assert.That(deltaControl.x.ReadValue(), Is.Zero);
+            Assert.That(deltaControl.y.ReadValue(), Is.Zero);
+        }
     }
-    */
 
     [Test]
     [Category("Devices")]
