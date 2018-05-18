@@ -3731,6 +3731,7 @@ class CoreTests : InputTestFixture
     [Test]
     [Category("Devices")]
     [TestCase("Pointer", "delta")]
+    [TestCase("Mouse", "delta")]
     [TestCase("Mouse", "scroll")]
     public void Devices_DeltaControlsAccumulateBetweenUpdates(string layoutName, string controlName)
     {
@@ -3755,6 +3756,7 @@ class CoreTests : InputTestFixture
     [Test]
     [Category("Devices")]
     [TestCase("Pointer", "delta")]
+    [TestCase("Mouse", "delta")]
     [TestCase("Mouse", "scroll")]
     public void Devices_DeltaControlsResetBetweenUpdates(string layoutName, string controlName)
     {
@@ -5713,7 +5715,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCreateActionsWithoutAnActionSet()
+    public void Actions_CanCreateActionsWithoutAnActionMap()
     {
         var action = new InputAction();
 
@@ -5741,7 +5743,7 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_LoseActionHasNoSet()
+    public void Actions_LoseActionHasNoMap()
     {
         var action = new InputAction();
         action.Enable(); // Force to create private action set.
@@ -5815,11 +5817,90 @@ class CoreTests : InputTestFixture
         Assert.That(receivedControl, Is.SameAs(gamepad)); // We do not drill down to find the actual control that changed.
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanMonitorTriggeredActionsOnActionMap()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action = map.AddAction("action", "/<Gamepad>/leftTrigger");
+
+        var wasTriggered = false;
+        InputAction receivedAction = null;
+        InputControl receivedControl = null;
+        map.actionTriggered +=
+            ctx =>
+            {
+                Assert.That(wasTriggered, Is.False);
+                wasTriggered = true;
+                receivedAction = ctx.action;
+                receivedControl = ctx.control;
+            };
+
+        map.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        Assert.That(wasTriggered);
+        Assert.That(receivedAction, Is.SameAs(action));
+        Assert.That(receivedControl, Is.SameAs(gamepad.leftTrigger));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddActionMapsToManager()
+    {
+        var map1 = new InputActionMap();
+        var map2 = new InputActionMap();
+
+        var manager = new InputActionManager();
+
+        manager.AddActionMap(map1);
+        manager.AddActionMap(map2);
+
+        Assert.That(manager.actionMaps.Count, Is.EqualTo(2));
+        Assert.That(manager.actionMaps, Has.Exactly(1).SameAs(map1));
+        Assert.That(manager.actionMaps, Has.Exactly(1).SameAs(map2));
+    }
+
+    // An alternative to putting callbacks on InputActions is to process them on-demand
+    // as events. This also allows putting additional logic in-between the bindings
+    // and actions getting triggered (useful, for example, if there's two actions triggered
+    // from the same control and only one should result in the action getting triggered).
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanProcessActionsAsEvents()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1", binding: "/<Gamepad>/leftStick");
+        var action2 = map.AddAction("action2", binding: "/<Gamepad>/leftStick");
+
+        var manager = new InputActionManager();
+        manager.AddActionMap(map);
+
+        map.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
+        InputSystem.Update();
+
+        var events = manager.triggerEvents;
+
+        Assert.That(events.Count, Is.EqualTo(1));
+        Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
+        Assert.That(events[0].actions.Count, Is.EqualTo(2));
+        Assert.That(events[0].actions, Has.Exactly(1).SameAs(action1));
+        Assert.That(events[0].actions, Has.Exactly(1).SameAs(action2));
+    }
+
     // Actions are able to observe every state change, even if the changes occur within
     // the same frame.
     [Test]
     [Category("Actions")]
-    public void Actions_PressingAndReleasingButtonInSameFrame_StillTriggersAction()
+    public void Actions_PressingAndReleasingButtonInSameUpdate_StillTriggersAction()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/<gamepad>/<button>", modifiers: "press");

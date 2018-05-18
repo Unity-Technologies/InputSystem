@@ -13,6 +13,8 @@ using UnityEngine.Serialization;
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
 ////      a single start cycle
 
+////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
+
 // So, actions are set up to not have a contract. They just monitor state changes and then fire
 // in response to those.
 //
@@ -119,19 +121,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public ReadOnlyArray<InputBinding> bindings
         {
-            get
-            {
-                if (m_ActionMap == null)
-                {
-                    if (m_SingletonActionBindings == null)
-                        return new ReadOnlyArray<InputBinding>();
-                    CreateInternalActionMapForSingletonAction();
-                }
-
-                return m_ActionMap.GetBindingsForSingleAction(this);
-            }
+            get { return GetOrCreateActionMap().GetBindingsForSingleAction(this); }
         }
-
 
         /// <summary>
         /// The set of controls to which the action's bindings resolve.
@@ -144,12 +135,11 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_ActionMap == null)
-                    CreateInternalActionMapForSingletonAction();
+                var actionMap = GetOrCreateActionMap();
                 ////REVIEW: resolving as a side-effect is pretty heavy handed
                 ////FIXME: these don't get re-resolved if the control setup in the system changes
-                m_ActionMap.ResolveBindingsIfNecessary();
-                return m_ActionMap.GetControlsForSingleAction(this);
+                actionMap.ResolveBindingsIfNecessary();
+                return actionMap.GetControlsForSingleAction(this);
             }
         }
 

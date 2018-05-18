@@ -22,14 +22,6 @@ using UnityEngine.Profiling;
 
 ////REVIEW: XmlDoc syntax is totally stupid in its verbosity; is there a more compact, alternative syntax we can use?
 
-// There's two possible modes that this can be driven in:
-// 1) We perform phase progression directly from state monitor callbacks
-// 2) We perform phase progression delayed from a series of state change events
-
-//trace modifier state changes that result in action state changes?
-
-//IInputActionResponse?
-
 ////REVIEW: can we move this from being per-actionmap to being per-action asset? I.e. work for a list of maps?
 
 //allow setup where state monitor is enabled but action is disabled?
@@ -165,9 +157,24 @@ namespace UnityEngine.Experimental.Input
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
         }
 
-        ////TODO
         public void Destroy()
         {
+            for (var i = 0; i < totalMapCount; ++i)
+            {
+                var map = maps[i];
+                Debug.Assert(!map.enabled);
+                map.m_State = null;
+                map.m_MapIndex = kInvalidIndex;
+
+                var actions = map.m_Actions;
+                if (actions != null)
+                {
+                    for (var n = 0; n < actions.Length; ++n)
+                        actions[n].m_ActionIndex = kInvalidIndex;
+                }
+            }
+
+            RemoveMapFromGlobalList();
         }
 
         public TriggerState FetchActionState(InputAction action)
@@ -670,25 +677,26 @@ namespace UnityEngine.Experimental.Input
             switch (newPhase)
             {
                 case InputActionPhase.Started:
-                    CallActionListeners(action, ref action.m_OnStarted, ref trigger);
+                    CallActionListeners(map, action, ref action.m_OnStarted, ref trigger);
                     break;
 
                 case InputActionPhase.Performed:
-                    CallActionListeners(action, ref action.m_OnPerformed, ref trigger);
+                    CallActionListeners(map, action, ref action.m_OnPerformed, ref trigger);
                     actionStates[actionIndex].phase = InputActionPhase.Waiting; // Go back to waiting after performing action.
                     break;
 
                 case InputActionPhase.Cancelled:
-                    CallActionListeners(action, ref action.m_OnCancelled, ref trigger);
+                    CallActionListeners(map, action, ref action.m_OnCancelled, ref trigger);
                     actionStates[actionIndex].phase = InputActionPhase.Waiting; // Go back to waiting after cancelling action.
                     break;
             }
         }
 
-        private void CallActionListeners(InputAction action, ref InlinedArray<InputActionListener> listeners, ref TriggerState trigger)
+        private void CallActionListeners(InputActionMap actionMap, InputAction action, ref InlinedArray<InputActionListener> listeners, ref TriggerState trigger)
         {
             // If there's no listeners, don't bother with anything else.
-            if (listeners.length == 0)
+            var callbacksOnMap = actionMap.m_ActionCallbacks;
+            if (listeners.length == 0 && callbacksOnMap.length == 0)
                 return;
 
             // If the binding that triggered is part of a composite, fetch the composite.
@@ -730,9 +738,15 @@ namespace UnityEngine.Experimental.Input
 
             Profiler.BeginSample("InputActionCallback");
 
+            // Run callbacks (if any) directly on action.
             var listenerCount = listeners.length;
             for (var i = 0; i < listenerCount; ++i)
                 listeners[i](context);
+
+            // Run callbacks (if any) on action map.
+            var listenerCountOnMap = callbacksOnMap.length;
+            for (var i = 0; i < listenerCountOnMap; ++i)
+                callbacksOnMap[i].OnActionTriggered(ref context);
 
             Profiler.EndSample();
         }
@@ -1176,7 +1190,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     var map = maps[n];
                     map.m_MapIndex = kInvalidIndex;
-                    resolver.AddMap(map);
+                    resolver.AddActionMap(map);
                 }
 
                 // See if this changes things for the state. If so, leave the

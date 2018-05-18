@@ -43,12 +43,32 @@ namespace UnityEngine.Experimental.Input
 
         private List<InputControlLayout.NameAndParameters> m_Parameters;
 
+        public void ContinueWithDataFrom(InputActionMapState state)
+        {
+            totalMapCount = state.totalMapCount;
+            totalActionCount = state.totalActionCount;
+            totalBindingCount = state.totalBindingCount;
+            totalModifierCount = state.totalModifierCount;
+            totalCompositeCount = state.totalCompositeCount;
+            totalControlCount = state.totalControlCount;
+
+            maps = state.maps;
+            mapIndices = state.mapIndices;
+            actionStates = state.actionStates;
+            bindingStates = state.bindingStates;
+            modifierStates = state.modifierStates;
+            modifiers = state.modifiers;
+            composites = state.composites;
+            controls = state.controls;
+            controlIndexToBindingIndex = state.controlIndexToBindingIndex;
+        }
+
         /// <summary>
         /// Resolve and add all bindings and actions from the given map.
         /// </summary>
         /// <param name="map"></param>
         /// <exception cref="Exception"></exception>
-        public void AddMap(InputActionMap map)
+        public void AddActionMap(InputActionMap map)
         {
             Debug.Assert(map != null);
             Debug.Assert(map.m_MapIndex == InputActionMapState.kInvalidIndex);
