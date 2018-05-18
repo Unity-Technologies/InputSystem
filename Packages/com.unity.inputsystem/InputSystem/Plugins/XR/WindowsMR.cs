@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         [InputControl(aliases = new[] { "touchpadClick" })]
         public ButtonControl touchpadClicked { get; private set; }
         [InputControl(aliases = new[] { "touchpadTouch" })]
-        public ButtonControl touchPadTouched { get; private set; }
+        public ButtonControl touchpadTouched { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
         public Vector3Control devicePosition { get; private set; }
