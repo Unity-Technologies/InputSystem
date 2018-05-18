@@ -44,14 +44,6 @@ namespace UnityEngine.Experimental.Input
             get { return m_Description; }
         }
 
-        public override Type valueType
-        {
-            get
-            {
-                return null;
-            }
-        }
-
         ////REVIEW: turn this into an object of some kind?
         ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
         /// <summary>
@@ -95,6 +87,14 @@ namespace UnityEngine.Experimental.Input
 
                 return (m_Flags & Flags.Disabled) != Flags.Disabled;
             }
+        }
+
+        /// <summary>
+        /// Whether the device has been added to the system.
+        /// </summary>
+        public bool added
+        {
+            get { return (m_DeviceIndex != kInvalidDeviceIndex); }
         }
 
         /// <summary>
@@ -176,6 +176,14 @@ namespace UnityEngine.Experimental.Input
                 // this list will actually deliver a flattened list of all controls in the hierarchy (and without
                 // the device itself being listed).
                 return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
+            }
+        }
+
+        public override Type valueType
+        {
+            get
+            {
+                return null;
             }
         }
 

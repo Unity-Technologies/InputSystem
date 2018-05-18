@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Events;
@@ -2632,6 +2633,19 @@ class CoreTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_AddingDeviceMarksItAdded()
+    {
+        var device = new InputDeviceBuilder("Gamepad").Finish();
+
+        Assert.That(device.added, Is.False);
+
+        InputSystem.AddDevice(device);
+
+        Assert.That(device.added, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_AddingDeviceThatUsesBeforeRenderUpdates_CausesBeforeRenderUpdatesToBeEnabled()
     {
         const string deviceJson = @"
@@ -3725,6 +3739,42 @@ class CoreTests : InputTestFixture
         Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(1).Within(0.0000001));
         Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(1).Within(0.0000001));
     }
+
+    /*
+    [Test]
+    [Category("Devices")]
+    public void Devices_DeltaControlsAccumulateBetweenUpdates(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var deltaControl = device[controlName];
+        Debug.Assert(deltaControl != null);
+
+        InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0.5f, 0.5f) });
+        InputSystem.QueueStateEvent(mouse, new MouseState { scroll = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(mouse.scroll.x.ReadValue(), Is.EqualTo(1).Within(0.0000001));
+        Assert.That(mouse.scroll.y.ReadValue(), Is.EqualTo(1).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DeltaControlsResetBetweenUpdates()
+    {
+        var pointer = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+
+        InputSystem.Update();
+
+        Assert.That(pointer.delta.x.ReadValue(), Is.Zero);
+        Assert.That(pointer.delta.y.ReadValue(), Is.Zero);
+    }
+    */
 
     [Test]
     [Category("Devices")]
@@ -5027,6 +5077,32 @@ class CoreTests : InputTestFixture
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanInitializeStateEventFromDevice()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(mouse, new MouseState { delta = Vector2.one });
+        InputSystem.Update();
+
+        InputEventPtr eventPtr;
+        using (var buffer = StateEvent.From(mouse, out eventPtr))
+        {
+            Assert.That(mouse.delta.x.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
+            Assert.That(mouse.delta.y.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
+
+            var stateEventPtr = StateEvent.From(eventPtr);
+            Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
+            Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(testRuntime.currentTime));
+            Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
+            Assert.That(stateEventPtr->baseEvent.sizeInBytes,
+                Is.EqualTo(InputEvent.kBaseEventSize + sizeof(FourCC) + mouse.stateBlock.alignedSizeInBytes));
+            Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));
+            Assert.That(stateEventPtr->stateFormat, Is.EqualTo(mouse.stateBlock.format));
+        }
     }
 
     [Test]
