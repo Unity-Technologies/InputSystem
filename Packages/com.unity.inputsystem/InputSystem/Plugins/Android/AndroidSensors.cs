@@ -85,13 +85,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "lightLevel", layout = "Axis", variant = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Axis", variant = "Pressure")]
         [InputControl(name = "distance", layout = "Axis", variant = "Proximity")]
-        [InputControl(name = "gravity", layout = "Vector3", variant = "Gravity")]
+        [InputControl(name = "gravity", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "Gravity")]
         [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "LinearAcceleration")]
         [InputControl(name = "attitude", layout = "Quaternion", processors = "CompensateRotation", variant = "RotationVector")]
         [InputControl(name = "relativeHumidity", layout = "Axis", variant = "RelativeHumidity")]
         [InputControl(name = "ambientTemperature", layout = "Axis", variant = "AmbientTemperature")]
         [InputControl(name = "stepCounter", layout = "Integer", variant = "StepCounter")]
-        [InputControl(name = "rotation", layout = "Quaternion", variant = "GeomagneticRotationVector")]
+        [InputControl(name = "rotation", layout = "Quaternion", processors = "CompensateRotation", variant = "GeomagneticRotationVector")]
         [InputControl(name = "rate", layout = "Integer", variant = "HeartRate")]
         public fixed float data[16];
 
