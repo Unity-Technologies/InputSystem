@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
@@ -3245,6 +3246,47 @@ class CoreTests : InputTestFixture
 
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Within(0.0000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenCreationFails_SystemRecoversGracefully()
+    {
+        // Create an isolated runtime + input manager.
+        var runtime = new InputTestRuntime();
+        var manager = new InputManager();
+
+        manager.InitializeData();
+        manager.InstallRuntime(runtime);
+
+        // Create a template that will fail to instantiate.
+        const string template = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
+                ]
+            }
+        ";
+        manager.RegisterControlLayout(template);
+
+        // Report two devices, one that will fail creation and one that shouldn't.
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "TestDevice"
+        }.ToJson());
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad"
+        }.ToJson());
+
+        LogAssert.Expect(LogType.Error, new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
+
+        Assert.That(() => manager.Update(), Throws.Nothing);
+
+        // Make sure InputManager kept the gamepad.
+        Assert.That(manager.devices.Count, Is.EqualTo(1));
+        Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
     }
 
     [Test]

@@ -287,6 +287,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_Layouts.layoutDeviceMatchers[layout] = matcher;
 
+            ////TODO: protect against exceptions here
             // See if the new description to layout mapping allows us to make
             // sense of a device we couldn't make sense of so far.
             for (var i = 0; i < m_AvailableDevices.Count; ++i)
@@ -884,28 +885,6 @@ namespace UnityEngine.Experimental.Input
             return numFound;
         }
 
-        private void ReportAvailableDevice(InputDeviceDescription description, int deviceId, bool isNative = false)
-        {
-            try
-            {
-                // Try to turn it into a device instance.
-                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId, isNative: isNative);
-            }
-            finally
-            {
-                // Remember it. Do this *after* the AddDevice() call above so that if there's
-                // a listener creating layouts on the fly we won't end up matching this device and
-                // create an InputDevice right away (which would then conflict with the one we
-                // create in AddDevice).
-                m_AvailableDevices.Add(new AvailableDevice
-                {
-                    description = description,
-                    deviceId = deviceId,
-                    isNative = true
-                });
-            }
-        }
-
         public void EnableOrDisableDevice(InputDevice device, bool enable)
         {
             if (device == null)
@@ -1459,8 +1438,34 @@ namespace UnityEngine.Experimental.Input
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
-            // Report it.
-            ReportAvailableDevice(description, deviceId, isNative: true);
+            // Try to add it.
+            try
+            {
+                // Try to turn it into a device instance.
+                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId, isNative: true);
+            }
+            // We're catching exceptions very aggressively here. The reason is that we don't want
+            // exceptions thrown as a result of trying to create devices from device discoveries reported
+            // by native to break the system as a whole. Instead, we want to make the error visible but then
+            // go and work with whatever devices we *did* manage to create successfully.
+            catch (Exception exception)
+            {
+                Debug.LogError(string.Format("Could not create a device for '{0}' (exception: {1})", description,
+                        exception));
+            }
+            finally
+            {
+                // Remember it. Do this *after* the AddDevice() call above so that if there's
+                // a listener creating layouts on the fly we won't end up matching this device and
+                // create an InputDevice right away (which would then conflict with the one we
+                // create in AddDevice).
+                m_AvailableDevices.Add(new AvailableDevice
+                {
+                    description = description,
+                    deviceId = deviceId,
+                    isNative = true
+                });
+            }
         }
 
         private void InstallBeforeUpdateHookIfNecessary()
