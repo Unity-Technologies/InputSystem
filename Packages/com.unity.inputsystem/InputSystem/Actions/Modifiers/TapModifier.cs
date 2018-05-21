@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
 
         ////TODO: make sure 2d doesn't move too far
 
-        public void Process(ref InputAction.ModifierContext context)
+        public void Process(ref InputBindingModifierContext context)
         {
             if (context.timerHasExpired)
             {

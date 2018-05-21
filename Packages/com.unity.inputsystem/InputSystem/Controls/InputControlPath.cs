@@ -5,10 +5,13 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: allow double wildcards to look arbitrarily deep into the hierarchy
 ////TODO: allow stuff like "/gamepad/**/<button>"
 ////TODO: store CRC32s of names on controls and use that for first-level matching of name components
+////TODO: handle arrays
 
 ////TODO: add ability to cache images and display names for an entire action set
 
 ////REVIEW: change "*/{PrimaryAction}" to "*/**/{PrimaryAction}" so that the hierarchy crawling becomes explicit?
+
+////REVIEW: rename to `InputPath`?
 
 namespace UnityEngine.Experimental.Input
 {
