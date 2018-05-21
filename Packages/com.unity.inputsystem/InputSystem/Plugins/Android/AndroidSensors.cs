@@ -129,7 +129,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
-{ 
+{
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Accelerometer")]
     public class AndroidAccelerometer : Accelerometer
     {
@@ -141,11 +141,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         /// <summary>
         /// All values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </summary>
-        public Vector3Control mangeticField { get; private set; }
+        public Vector3Control magneticField { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
-            mangeticField = builder.GetControl<Vector3Control>("magneticField");
+            magneticField = builder.GetControl<Vector3Control>("magneticField");
             base.FinishSetup(builder);
         }
     }
