@@ -111,16 +111,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 .WithInterface(kAndroidInterface)
                 .WithDeviceClass("AndroidSensor")
                 .WithCapability("sensorType", AndroidSensorType.StepCounter));
-            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.GeomagneticRotationVector));
-            InputSystem.RegisterControlLayout<AndroidHeartRate>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.HeartRate));
 
             InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
         }

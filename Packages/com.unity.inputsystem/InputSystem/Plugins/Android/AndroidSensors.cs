@@ -129,9 +129,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
-{
-    ////TODO: Setup InputControls for sensors below
-
+{ 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Accelerometer")]
     public class AndroidAccelerometer : Accelerometer
     {
@@ -140,6 +138,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticField")]
     public class AndroidMagneticField : Sensor
     {
+        /// <summary>
+        /// All values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
+        /// </summary>
         public Vector3Control mangeticField { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -157,16 +158,46 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Light")]
     public class AndroidLight : Sensor
     {
+        /// <summary>
+        /// Light level in SI lux units
+        /// </summary>
+        public AxisControl lightLevel { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            lightLevel = builder.GetControl<AxisControl>("lightLevel");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Pressure")]
     public class AndroidPressure : Sensor
     {
+        /// <summary>
+        /// Atmospheric pressure in hPa (millibar)
+        /// </summary>
+        public AxisControl atmosphericPressure { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            atmosphericPressure = builder.GetControl<AxisControl>("atmosphericPressure");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Proximity")]
     public class AndroidProximity : Sensor
     {
+        /// <summary>
+        /// Proximity sensor distance measured in centimeters
+        /// </summary>
+        public AxisControl distance { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            distance = builder.GetControl<AxisControl>("distance");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gravity")]
@@ -187,16 +218,39 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "RelativeHumidity")]
     public class AndroidRelativeHumidity : Sensor
     {
+        /// <summary>
+        /// Relative ambient air humidity in percent
+        /// </summary>
+        public AxisControl relativeHumidity { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            relativeHumidity = builder.GetControl<AxisControl>("relativeHumidity");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "AmbientTemperature")]
     public class AndroidAmbientTemperature : Sensor
     {
+        /// <summary>
+        /// Ambient (room) temperature in degree Celsius.
+        /// </summary>
+        public AxisControl ambientTemperature { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            ambientTemperature = builder.GetControl<AxisControl>("ambientTemperature");
+            base.FinishSetup(builder);
+        }
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "StepCounter")]
     public class AndroidStepCounter : Sensor
     {
+        /// <summary>
+        /// The number of steps taken by the user since the last reboot while activated.
+        /// </summary>
         public IntegerControl stepCounter { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
@@ -204,16 +258,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
             stepCounter = builder.GetControl<IntegerControl>("stepCounter");
             base.FinishSetup(builder);
         }
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GeomagneticRotationVector")]
-    public class AndroidGeomagneticRotationVector : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "HeartRate")]
-    public class AndroidHeartRate : Sensor
-    {
     }
 }
 
