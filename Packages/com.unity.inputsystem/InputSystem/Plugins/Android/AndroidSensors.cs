@@ -12,12 +12,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     {
         Accelerometer = 1,
         MagneticField = 2,
-        Orientation = 3,
+        Orientation = 3,            // Was deprecated in API 8 https://developer.android.com/reference/android/hardware/Sensor#TYPE_ORIENTATION
         Gyroscope = 4,
         Light = 5,
         Pressure = 6,
         Proximity = 8,
-        Temperature = 7,
+        Temperature = 7,            // Was deprecated in API 14 https://developer.android.com/reference/android/hardware/Sensor#TYPE_TEMPERATURE
         Gravity = 9,
         LinearAcceleration = 10,
         RotationVector = 11,
@@ -64,7 +64,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         ////FIXME: Sensors to check if values matches old system
         // Accelerometer - OK
         // MagneticField - no alternative in old system
-        // Orientation - seems this constant was deprecated in API 8 https://developer.android.com/reference/android/hardware/Sensor#TYPE_ORIENTATION . Remove it?
         // Gyroscope - OK
         // Light - no alternative in old system
         // Pressure - no alternative in old system
@@ -80,7 +79,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
         [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "Accelerometer")]
         [InputControl(name = "magneticField", layout = "Vector3", variant = "MagneticField")]
-        [InputControl(name = "orientation", layout = "Vector3", variant = "Orientation")]
         [InputControl(name = "angularVelocity", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "Gyroscope")]
         [InputControl(name = "lightLevel", layout = "Axis", variant = "Light")]
         [InputControl(name = "atmosphericPressure", layout = "Axis", variant = "Pressure")]
@@ -151,11 +149,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Orientation")]
-    public class AndroidOrientation : Sensor
-    {
-    }
-
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gyroscope")]
     public class AndroidGyroscope : Gyroscope
     {
@@ -173,11 +166,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Proximity")]
     public class AndroidProximity : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Temperature")]
-    public class AndroidTemperature : Sensor
     {
     }
 
@@ -203,31 +191,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "AmbientTemperature")]
     public class AndroidAmbientTemperature : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticFieldUncalibrated")]
-    public class AndroidMagneticFieldUncalibrated : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GameRotationVector")]
-    public class AndroidGameRotationVector : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "GyroscopeUncalibrated")]
-    public class AndroidGyroscopeUncalibrated : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "SignificantMotion")]
-    public class AndroidSignificantMotion : Sensor
-    {
-    }
-
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "StepDetector")]
-    public class AndroidStepDetector : Sensor
     {
     }
 
