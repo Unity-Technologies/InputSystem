@@ -59,6 +59,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Back
         }
 
+        ////REVIEW: move this and the same methods in other states to extension methods?
+        public MouseState WithButton(Button button, bool state = true)
+        {
+            var bit = 1 << (int)button;
+            if (state)
+                buttons |= (ushort)bit;
+            else
+                buttons &= (ushort)~bit;
+            return this;
+        }
+
         public FourCC GetFormat()
         {
             return kFormat;
@@ -78,7 +89,7 @@ namespace UnityEngine.Experimental.Input
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState))]
-    public class Mouse : Pointer
+    public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
         /// The horizontal and vertical scroll wheels.
@@ -141,6 +152,23 @@ namespace UnityEngine.Experimental.Input
             middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
             rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
             base.FinishSetup(builder);
+        }
+
+        bool IInputStateCallbackReceiver.OnCarryStateForward(IntPtr statePtr)
+        {
+            var deltaXChanged = ResetDelta(statePtr, delta.x);
+            var deltaYChanged = ResetDelta(statePtr, delta.y);
+            var scrollXChanged = ResetDelta(statePtr, scroll.x);
+            var scrollYChanged = ResetDelta(statePtr, scroll.y);
+            return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
+        }
+
+        void IInputStateCallbackReceiver.OnBeforeWriteNewState(IntPtr oldStatePtr, IntPtr newStatePtr)
+        {
+            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
+            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
+            AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
+            AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
         }
     }
 

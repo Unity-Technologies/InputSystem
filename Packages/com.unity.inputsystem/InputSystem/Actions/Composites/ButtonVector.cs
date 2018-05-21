@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Composites
         public ButtonControl left;
         public ButtonControl right;
 
-        public Vector2 ReadValue(ref InputAction.CompositeBindingContext context)
+        public Vector2 ReadValue(ref InputBindingCompositeContext context)
         {
             ////TODO: unify code path with DpadControl.ReadRawValueFrom()
             var upIsPressed = up.isPressed;

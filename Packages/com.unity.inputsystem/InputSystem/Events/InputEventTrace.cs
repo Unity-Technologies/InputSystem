@@ -246,7 +246,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             ++m_ChangeCounter;
 
             // Notify listeners.
-            for (var i = 0; i < m_EventListeners.Count; ++i)
+            for (var i = 0; i < m_EventListeners.length; ++i)
                 m_EventListeners[i](new InputEventPtr((InputEvent*)buffer));
 
             Profiler.EndSample();

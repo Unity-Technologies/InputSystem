@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
     // is released again.
     public class PressModifier : IInputBindingModifier
     {
-        public void Process(ref InputAction.ModifierContext context)
+        public void Process(ref InputBindingModifierContext context)
         {
             if (!context.isWaiting)
                 return;

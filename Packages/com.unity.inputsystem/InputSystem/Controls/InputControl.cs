@@ -12,6 +12,11 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
 
+////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
+////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
+////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
+////        the InputDevice reference itself.
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -43,6 +48,12 @@ namespace UnityEngine.Experimental.Input
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public abstract class InputControl
     {
+        ////REVIEW: we could allow the parenthetical characters if we require escaping them in paths
+        /// <summary>
+        /// Characters that may not appear in control names.
+        /// </summary>
+        public static string ReservedCharacters = "/;{}[]<>";
+
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
         /// </summary>
@@ -291,6 +302,9 @@ namespace UnityEngine.Experimental.Input
         internal InternedString m_Variant;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
+        ////REVIEW: This is stupid. We're storing the array references on here when in fact they should
+        ////        be fetched on demand from InputDevice. What we do here is needlessly add three extra
+        ////        references to every single InputControl
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
@@ -405,42 +419,9 @@ namespace UnityEngine.Experimental.Input
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
         //       but also profits from the fact that remapping is already established in a control hierarchy
         //       and reading from the right offsets is taken care of.
-        public unsafe TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
         {
-            if (!inputEvent.valid)
-                throw new ArgumentNullException("inputEvent");
-            if (!inputEvent.IsA<StateEvent>() && !inputEvent.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "inputEvent");
-
-            ////TODO: support delta events
-            if (inputEvent.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
-
-            var stateEvent = StateEvent.From(inputEvent);
-
-            // Make sure we have a state event compatible with our device. The event doesn't
-            // have to be specifically for our device (we don't require device IDs to match) but
-            // the formats have to match and the size must be within range of what we're trying
-            // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
-                throw new InvalidOperationException(
-                    string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
-
-            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
-            // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                throw new Exception(
-                    string.Format(
-                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
-                        stateFormat, stateSizeInBytes, path));
-
-            var statePtr = new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+            var statePtr = GetStatePtrFromStateEvent(inputEvent);
             var value = ReadRawValueFrom(statePtr);
 
             if (process)
@@ -467,9 +448,21 @@ namespace UnityEngine.Experimental.Input
             throw new NotSupportedException();
         }
 
+        public void WriteValueInto(InputEventPtr eventPtr)
+        {
+            ////REVIEW: have an option to write unprocessed values?
+            WriteValueInto(eventPtr, ReadValue());
+        }
+
         public void WriteValueInto(InputEventPtr eventPtr, TValue value)
         {
-            throw new NotImplementedException();
+            var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            WriteValueInto(statePtr, value);
+        }
+
+        public void WriteValueInto(IntPtr statePtr)
+        {
+            WriteValueInto(statePtr, ReadValue());
         }
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
@@ -500,13 +493,53 @@ namespace UnityEngine.Experimental.Input
             WriteValueInto(new IntPtr(adjustedStatePtr), value);
         }
 
+        private unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
+        {
+            if (!eventPtr.valid)
+                throw new ArgumentNullException("eventPtr");
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+
+            ////TODO: support delta events
+            if (eventPtr.IsA<DeltaStateEvent>())
+                throw new NotImplementedException("Read control value from delta state events");
+
+            var stateEvent = StateEvent.From(eventPtr);
+
+            // Make sure we have a state event compatible with our device. The event doesn't
+            // have to be specifically for our device (we don't require device IDs to match) but
+            // the formats have to match and the size must be within range of what we're trying
+            // to read.
+            var stateFormat = stateEvent->stateFormat;
+            if (stateEvent->stateFormat != device.m_StateBlock.format)
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
+                        path, stateFormat, device, device.m_StateBlock.format));
+
+            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
+            // We need to unsubtract those offsets here.
+            var deviceStateOffset = device.m_StateBlock.byteOffset;
+
+            var stateSizeInBytes = stateEvent->stateSizeInBytes;
+            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+                throw new Exception(
+                    string.Format(
+                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
+                        stateFormat, stateSizeInBytes, path));
+
+            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+        }
+
         protected TValue Process(TValue value)
         {
-            if (m_ProcessorStack.firstValue != null)
+            if (m_ProcessorStack.length > 0)
+            {
                 value = m_ProcessorStack.firstValue.Process(value, this);
-            if (m_ProcessorStack.additionalValues != null)
-                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    value = m_ProcessorStack.additionalValues[i].Process(value, this);
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        value = m_ProcessorStack.additionalValues[i].Process(value, this);
+            }
             return value;
         }
 
@@ -526,12 +559,15 @@ namespace UnityEngine.Experimental.Input
         internal TProcessor TryGetProcessor<TProcessor>()
             where TProcessor : IInputControlProcessor<TValue>
         {
-            if (m_ProcessorStack.firstValue is TProcessor)
-                return (TProcessor)m_ProcessorStack.firstValue;
-            if (m_ProcessorStack.additionalValues != null)
-                for (var i = 0; i < m_ProcessorStack.additionalValues.Length; ++i)
-                    if (m_ProcessorStack.additionalValues[i] is TProcessor)
-                        return (TProcessor)m_ProcessorStack.additionalValues[i];
+            if (m_ProcessorStack.length > 0)
+            {
+                if (m_ProcessorStack.firstValue is TProcessor)
+                    return (TProcessor)m_ProcessorStack.firstValue;
+                if (m_ProcessorStack.additionalValues != null)
+                    for (var i = 0; i < m_ProcessorStack.length - 1; ++i)
+                        if (m_ProcessorStack.additionalValues[i] is TProcessor)
+                            return (TProcessor)m_ProcessorStack.additionalValues[i];
+            }
             return default(TProcessor);
         }
 
