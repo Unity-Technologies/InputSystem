@@ -174,6 +174,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public Vector2 screenSize
+        {
+            set
+            {
+                m_ScreenSize = value;
+            }
+            get
+            {
+                return m_ScreenSize;
+            }
+        }
+
         public void Dispose()
         {
             m_EventBuffer.Dispose();
@@ -189,5 +201,6 @@ namespace UnityEngine.Experimental.Input
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
+        private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
     }
 }

@@ -69,7 +69,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #if UNITY_EDITOR
             return value;
 #elif PLATFORM_ANDROID
-            return new Vector2(value.x, Screen.height - value.y);
+            return new Vector2(value.x, InputRuntime.s_Instance.screenSize.y - value.y);
 #else
             return value;
 #endif
