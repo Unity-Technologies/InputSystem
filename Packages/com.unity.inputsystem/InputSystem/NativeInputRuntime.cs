@@ -121,6 +121,5 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get { return new Vector2(Screen.width, Screen.height); }
         }
-
     }
 }

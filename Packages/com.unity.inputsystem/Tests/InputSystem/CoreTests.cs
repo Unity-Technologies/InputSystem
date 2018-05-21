@@ -4662,7 +4662,7 @@ class CoreTests : InputTestFixture
     {
         var sensor = InputSystem.AddDevice(layoutName);
         var value = new Vector3(0.123f, 0.456f, 0.789f);
-        var directionControl = (Vector3Control) sensor[controlName];
+        var directionControl = (Vector3Control)sensor[controlName];
 
         InputEventPtr stateEventPtr;
         using (StateEvent.From(sensor, out stateEventPtr))
