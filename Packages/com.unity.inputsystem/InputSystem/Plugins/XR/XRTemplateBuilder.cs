@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             return nameOrAlias;
         }
 
-        public InputControlLayout Build()
+        internal InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
             {

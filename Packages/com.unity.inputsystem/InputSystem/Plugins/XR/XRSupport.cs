@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public const string kXRInterfaceMatchingPattern = "^(XRInput)";
 
         /// <summary>
-        /// The initial, deprecated interface for XRInput.
+        /// The initial, now deprecated interface for XRInput.  This version handles button packing for Android differently from current.
         /// </summary>
         public const string kXRInterfaceV1 = "XRInput";
 
@@ -77,12 +77,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public int deviceId;
         public List<XRFeatureDescriptor> inputFeatures;
 
-        public string ToJson()
+        internal string ToJson()
         {
             return JsonUtility.ToJson(this);
         }
 
-        public static XRDeviceDescriptor FromJson(string json)
+        internal static XRDeviceDescriptor FromJson(string json)
         {
             return JsonUtility.FromJson<XRDeviceDescriptor>(json);
         }
