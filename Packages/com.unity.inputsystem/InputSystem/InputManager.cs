@@ -1126,8 +1126,9 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
+            processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
