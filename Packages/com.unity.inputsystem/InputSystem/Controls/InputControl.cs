@@ -419,42 +419,9 @@ namespace UnityEngine.Experimental.Input
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
         //       but also profits from the fact that remapping is already established in a control hierarchy
         //       and reading from the right offsets is taken care of.
-        public unsafe TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
         {
-            if (!inputEvent.valid)
-                throw new ArgumentNullException("inputEvent");
-            if (!inputEvent.IsA<StateEvent>() && !inputEvent.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "inputEvent");
-
-            ////TODO: support delta events
-            if (inputEvent.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
-
-            var stateEvent = StateEvent.From(inputEvent);
-
-            // Make sure we have a state event compatible with our device. The event doesn't
-            // have to be specifically for our device (we don't require device IDs to match) but
-            // the formats have to match and the size must be within range of what we're trying
-            // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
-                throw new InvalidOperationException(
-                    string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
-
-            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
-            // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                throw new Exception(
-                    string.Format(
-                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
-                        stateFormat, stateSizeInBytes, path));
-
-            var statePtr = new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+            var statePtr = GetStatePtrFromStateEvent(inputEvent);
             var value = ReadRawValueFrom(statePtr);
 
             if (process)
@@ -481,9 +448,21 @@ namespace UnityEngine.Experimental.Input
             throw new NotSupportedException();
         }
 
+        public void WriteValueInto(InputEventPtr eventPtr)
+        {
+            ////REVIEW: have an option to write unprocessed values?
+            WriteValueInto(eventPtr, ReadValue());
+        }
+
         public void WriteValueInto(InputEventPtr eventPtr, TValue value)
         {
-            throw new NotImplementedException();
+            var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            WriteValueInto(statePtr, value);
+        }
+
+        public void WriteValueInto(IntPtr statePtr)
+        {
+            WriteValueInto(statePtr, ReadValue());
         }
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
@@ -512,6 +491,44 @@ namespace UnityEngine.Experimental.Input
             var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
             var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
             WriteValueInto(new IntPtr(adjustedStatePtr), value);
+        }
+
+        private unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
+        {
+            if (!eventPtr.valid)
+                throw new ArgumentNullException("eventPtr");
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+
+            ////TODO: support delta events
+            if (eventPtr.IsA<DeltaStateEvent>())
+                throw new NotImplementedException("Read control value from delta state events");
+
+            var stateEvent = StateEvent.From(eventPtr);
+
+            // Make sure we have a state event compatible with our device. The event doesn't
+            // have to be specifically for our device (we don't require device IDs to match) but
+            // the formats have to match and the size must be within range of what we're trying
+            // to read.
+            var stateFormat = stateEvent->stateFormat;
+            if (stateEvent->stateFormat != device.m_StateBlock.format)
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
+                        path, stateFormat, device, device.m_StateBlock.format));
+
+            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
+            // We need to unsubtract those offsets here.
+            var deviceStateOffset = device.m_StateBlock.byteOffset;
+
+            var stateSizeInBytes = stateEvent->stateSizeInBytes;
+            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+                throw new Exception(
+                    string.Format(
+                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
+                        stateFormat, stateSizeInBytes, path));
+
+            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }
 
         protected TValue Process(TValue value)

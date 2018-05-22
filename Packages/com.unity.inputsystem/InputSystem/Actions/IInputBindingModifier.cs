@@ -1,6 +1,6 @@
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: rename this to IInputActionTrigger? Or IInputBindingTrigger? Or IInputBindingInteraction?
+////TODO: rename this to IInputBindingInteraction
 
 ////TODO: modifiers should be able to not just control phase flow but also what value is reported through the action
 

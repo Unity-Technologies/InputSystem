@@ -111,15 +111,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public ScreenOrientation screenOrientation
         {
-            set
-            {
-                Screen.orientation = value;
-            }
-
             get
             {
                 return Screen.orientation;
             }
+        }
+
+        public Vector2 screenSize
+        {
+            get { return new Vector2(Screen.width, Screen.height); }
         }
     }
 }

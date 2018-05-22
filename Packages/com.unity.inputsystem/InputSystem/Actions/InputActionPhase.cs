@@ -1,6 +1,6 @@
 using UnityEngine.Experimental.Input.Modifiers;
 
-////REVIEW: this goes beyond just actions; is there a better name?
+////REVIEW: this goes beyond just actions; is there a better name? just InputPhase?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -40,7 +40,42 @@ namespace UnityEngine.Experimental.Input
         /// binding. Without any modifiers, an action will go straight from <see cref="Waiting"/>
         /// into <see cref="Performed"/> and back into <see cref="Waiting"/> whenever an associated
         /// control changes value.
+        ///
+        /// An example of a modifier that uses the <see cref="Started"/> phase is <see cref="SlowTapModifier"/>.
+        /// When the button it is bound to is pressed, the associated action goes into the <see cref="Started"/>
+        /// phase. At this point, the modifier does not yet know whether the button press will result in just
+        /// a tap or will indeed result in slow tap. If the button is released before the time it takes to
+        /// recognize a slow tap, then the action will go to <see cref="Cancelled"/> and then back to <see cref="Waiting"/>.
+        /// If, however, the button is held long enough for it to qualify as a slow tap, the action will progress
+        /// to <see cref="Performed"/> and then go back to <see cref="Waiting"/>.
+        ///
+        /// <see cref="Started"/> can be useful for UI feedback. For example, in a game where the weapon can be charged,
+        /// UI feedback can be initiated when the action is <see cref="Started"/>.
         /// </remarks>
+        /// <example>
+        /// <code>
+        /// fireAction.started +=
+        ///     ctx =>
+        ///     {
+        ///         if (ctx.modifier is SlowTapModifier)
+        ///         {
+        ///             weaponCharging = true;
+        ///             weaponChargeStartTime = ctx.time;
+        ///         }
+        ///     }
+        /// fireAction.cancelled +=
+        ///     ctx =>
+        ///     {
+        ///         weaponCharging = false;
+        ///     }
+        /// fireAction.performed +=
+        ///     ctx =>
+        ///     {
+        ///         Fire();
+        ///         weaponCharging = false;
+        ///     }
+        /// </code>
+        /// </example>
         Started,
 
         Performed,
