@@ -102,6 +102,46 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
+            public BindingSyntax WithModifier<TModifier>()
+                where TModifier : IInputBindingModifier
+            {
+                throw new NotImplementedException();
+            }
+
+            public BindingSyntax WithProcessor(string processor)
+            {
+                if (string.IsNullOrEmpty(processor))
+                    throw new ArgumentException("Processor cannot be null or empty", "group");
+                if (processor.IndexOf(InputBinding.kSeparator) != -1)
+                    throw new ArgumentException(
+                        string.Format("Modifier string cannot contain separator character '{0}'",
+                            InputBinding.kSeparator), "modifier");
+
+                return WithProcessors(processor);
+            }
+
+            public BindingSyntax WithProcessors(string processors)
+            {
+                if (string.IsNullOrEmpty(processors))
+                    return this;
+
+                // Join with existing processor string, if any.
+                var currentProcessors = m_ActionMap.m_Bindings[m_BindingIndex].processors;
+                if (!string.IsNullOrEmpty(currentProcessors))
+                    processors = string.Join(InputBinding.kSeparatorString, new[] { currentProcessors, processors });
+
+                // Set processors on binding.
+                m_ActionMap.m_Bindings[m_BindingIndex].processors = processors;
+                m_ActionMap.ClearPerActionCachedBindingData();
+
+                return this;
+            }
+
+            public BindingSyntax WithProcessor<TProcessor>()
+            {
+                throw new NotImplementedException();
+            }
+
             public BindingSyntax WithChild(string binding, string modifiers = null, string groups = null)
             {
                 /*

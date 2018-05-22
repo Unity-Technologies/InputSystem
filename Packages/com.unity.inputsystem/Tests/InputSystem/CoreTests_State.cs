@@ -473,6 +473,19 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
+    {
+        InputSystem.updateMask = InputUpdateType.None;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftTrigger, Is.Zero);
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanListenForInputUpdates()
     {
         var receivedUpdate = false;
@@ -726,6 +739,29 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(!timeoutFired);
+    }
+
+    // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
+    // the motion curve of a tracking device over time.
+    [Test]
+    [Category("State")]
+    public void TODO_State_CanRecordHistoryOfState()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var history = new InputStateHistory<Vector2>(gamepad.leftStick);
+        history.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+        InputSystem.Update();
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+        InputSystem.Update();
+
+        Assert.That(history.Count, Is.EqualTo(3));
+        Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
+        Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
+        Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
     }
 
     [Test]

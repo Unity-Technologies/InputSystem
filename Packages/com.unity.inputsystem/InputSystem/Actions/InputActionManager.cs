@@ -178,10 +178,16 @@ namespace UnityEngine.Experimental.Input
 
         ~InputActionManager()
         {
-            Dispose();
+            Destroy();
         }
 
         public void Dispose()
+        {
+            Destroy();
+            GC.SuppressFinalize(this);
+        }
+
+        private void Destroy()
         {
             if (m_TriggerDataBuffer.Length > 0)
                 m_TriggerDataBuffer.Dispose();
@@ -195,8 +201,6 @@ namespace UnityEngine.Experimental.Input
             m_StateDataBuffer = new NativeArray<byte>();
 
             InputSystem.onUpdate -= OnBeforeInputSystemUpdate;
-
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>

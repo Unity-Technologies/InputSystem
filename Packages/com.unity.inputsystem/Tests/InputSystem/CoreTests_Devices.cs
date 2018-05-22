@@ -2427,21 +2427,21 @@ partial class CoreTests
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(-value.y, value.x, value.z)).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(new Vector3(-value.y, value.x, value.z)).Using(vector3Comparer));
 
             testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(-value.x, -value.y, value.z)).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(new Vector3(-value.x, -value.y, value.z)).Using(vector3Comparer));
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
             Assert.That(directionControl.ReadValue(),
-                Is.EqualTo(new Vector3(value.y, -value.x, value.z)).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(new Vector3(value.y, -value.x, value.z)).Using(vector3Comparer));
 
             testRuntime.screenOrientation = ScreenOrientation.Portrait;
-            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(new Vector3Comparer(0.0001f)));
+            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(vector3Comparer));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
-            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(new Vector3Comparer(0.0001f)));
+            Assert.That(directionControl.ReadValue(), Is.EqualTo(value).Using(vector3Comparer));
         }
     }
 
@@ -2464,23 +2464,23 @@ partial class CoreTests
             InputConfiguration.CompensateSensorsForScreenOrientation = true;
             testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 270)).Using(vector3Comparer));
 
             testRuntime.screenOrientation = ScreenOrientation.PortraitUpsideDown;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 180)).Using(vector3Comparer));
 
             testRuntime.screenOrientation = ScreenOrientation.LandscapeRight;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(new Vector3(angles.x, angles.y, angles.z + 90)).Using(vector3Comparer));
 
             testRuntime.screenOrientation = ScreenOrientation.Portrait;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(angles).Using(vector3Comparer));
 
             InputConfiguration.CompensateSensorsForScreenOrientation = false;
             Assert.That(rotationControl.ReadValue().eulerAngles,
-                Is.EqualTo(angles).Using(new Vector3Comparer(0.0001f)));
+                Is.EqualTo(angles).Using(vector3Comparer));
         }
     }
 
@@ -2645,19 +2645,5 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.onUpdateCallCount, Is.Zero);
-    }
-
-    class Vector3Comparer : IComparer<Vector3>
-    {
-        private float m_Epsilon;
-        public Vector3Comparer(float epsilon)
-        {
-            m_Epsilon = epsilon;
-        }
-
-        public int Compare(Vector3 a, Vector3 b)
-        {
-            return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
-        }
     }
 }

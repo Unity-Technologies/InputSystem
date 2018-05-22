@@ -109,6 +109,16 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] public string overrideModifiers;
 
+        /// <summary>
+        /// Optional list of processors to apply to control values.
+        /// </summary>
+        /// <remarks>
+        /// This list has the same format as <see cref="InputControlAttribute.processors"/>.
+        /// </remarks>
+        public string processors;
+
+        [NonSerialized] public string overrideProcessors;
+
         // Optional group name. This can be used, for example, to divide bindings into
         // control schemes. So, the binding for keyboard&mouse on an action would have
         // "keyboard&mouse" as its group, the binding for "touch" would have "touch as

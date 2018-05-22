@@ -716,6 +716,41 @@ partial class CoreTests
         Assert.That(performedControl, Is.SameAs(gamepad.rightStick));
     }
 
+    class ConstantVector2TestProcessor : IInputControlProcessor<Vector2>
+    {
+        public Vector2 Process(Vector2 value, InputControl control)
+        {
+            return new Vector2(0.1234f, 0.5678f);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanAddProcessorsToBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        var action = new InputAction();
+        action.AppendBinding("/<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
+        action.Enable();
+
+        Vector2? receivedVector = null;
+        action.performed +=
+            ctx =>
+            {
+                Assert.That(receivedVector, Is.Null);
+                receivedVector = ctx.GetValue<Vector2>();
+            };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.Update();
+
+        Assert.That(receivedVector, Is.Not.Null);
+        Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(receivedVector.Value.x, Is.EqualTo(0.5678).Within(0.00001));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ControlsUpdateWhenNewDeviceIsAdded()
