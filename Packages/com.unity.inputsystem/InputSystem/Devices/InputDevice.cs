@@ -4,6 +4,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
+////        the heap objects of devices he doesn't use?
+
 // per device functions:
 //  - update/poll
 //  - IOCTL

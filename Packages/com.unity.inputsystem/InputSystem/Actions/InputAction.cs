@@ -13,6 +13,8 @@ using UnityEngine.Serialization;
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
 ////      a single start cycle
 
+////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
+
 // So, actions are set up to not have a contract. They just monitor state changes and then fire
 // in response to those.
 //
@@ -119,19 +121,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public ReadOnlyArray<InputBinding> bindings
         {
-            get
-            {
-                if (m_ActionMap == null)
-                {
-                    if (m_SingletonActionBindings == null)
-                        return new ReadOnlyArray<InputBinding>();
-                    CreateInternalActionMapForSingletonAction();
-                }
-
-                return m_ActionMap.GetBindingsForSingleAction(this);
-            }
+            get { return GetOrCreateActionMap().GetBindingsForSingleAction(this); }
         }
-
 
         /// <summary>
         /// The set of controls to which the action's bindings resolve.
@@ -144,12 +135,11 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_ActionMap == null)
-                    CreateInternalActionMapForSingletonAction();
+                var actionMap = GetOrCreateActionMap();
                 ////REVIEW: resolving as a side-effect is pretty heavy handed
                 ////FIXME: these don't get re-resolved if the control setup in the system changes
-                m_ActionMap.ResolveBindingsIfNecessary();
-                return m_ActionMap.GetControlsForSingleAction(this);
+                actionMap.ResolveBindingsIfNecessary();
+                return actionMap.GetControlsForSingleAction(this);
             }
         }
 
@@ -441,26 +431,80 @@ namespace UnityEngine.Experimental.Input
 
         public struct CallbackContext
         {
-            internal InputAction m_Action;
-            internal InputControl m_Control;
-            internal IInputBindingModifier m_Modifier;
-            internal object m_Composite;
+            internal InputActionMapState m_State;
+            internal int m_ControlIndex;
+            internal int m_BindingIndex;
+            internal int m_ModifierIndex;
             internal double m_Time;
-            internal double m_StartTime;
+
+            internal int actionIndex
+            {
+                get
+                {
+                    if (m_State == null)
+                        return InputActionMapState.kInvalidIndex;
+                    return m_State.bindingStates[m_BindingIndex].actionIndex;
+                }
+            }
+
+            public InputActionPhase phase
+            {
+                get
+                {
+                    if (m_State == null)
+                        return InputActionPhase.Disabled;
+                    return m_State.actionStates[actionIndex].phase;
+                }
+            }
 
             public InputAction action
             {
-                get { return m_Action; }
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    return m_State.GetActionOrNull(m_BindingIndex);
+                }
             }
 
             public InputControl control
             {
-                get { return m_Control; }
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    return m_State.controls[m_ControlIndex];
+                }
             }
 
+            /// <summary>
+            /// The modifier that triggered the action or <c>null</c> if the binding triggered without a modifier.
+            /// </summary>
             public IInputBindingModifier modifier
             {
-                get { return m_Modifier; }
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    if (m_ModifierIndex == InputActionMapState.kInvalidIndex)
+                        return null;
+                    return m_State.modifiers[m_ModifierIndex];
+                }
+            }
+
+            public object composite
+            {
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    var bindingStates = m_State.bindingStates;
+                    if (!bindingStates[m_BindingIndex].isPartOfComposite)
+                        return null;
+                    var compositeIndex = bindingStates[m_BindingIndex].compositeIndex;
+                    Debug.Assert(compositeIndex != InputActionMapState.kInvalidIndex);
+                    return m_State.composites[compositeIndex];
+                }
             }
 
             ////REVIEW: rename to ReadValue?
@@ -470,11 +514,12 @@ namespace UnityEngine.Experimental.Input
 
                 // If the binding that triggered the action is part of a composite, let
                 // the composite determine the value we return.
-                if (m_Composite != null)
+                var compositeObject = composite;
+                if (compositeObject != null)
                 {
-                    var composite = (IInputBindingComposite<TValue>)m_Composite;
+                    var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
                     var context = new InputBindingCompositeContext();
-                    return composite.ReadValue(ref context);
+                    return compositeOfType.ReadValue(ref context);
                 }
 
                 return ((InputControl<TValue>)control).ReadValue();
@@ -487,12 +532,19 @@ namespace UnityEngine.Experimental.Input
 
             public double startTime
             {
-                get { return m_StartTime; }
+                get
+                {
+                    if (m_State == null)
+                        return 0;
+                    if (m_ModifierIndex == InputActionMapState.kInvalidIndex)
+                        return time;
+                    return m_State.modifierStates[m_ModifierIndex].startTime;
+                }
             }
 
             public double duration
             {
-                get { return m_Time - m_StartTime; }
+                get { return time - startTime; }
             }
         }
     }

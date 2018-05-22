@@ -69,6 +69,36 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
         }
 
+        /// <summary>
+        /// Add or remove a callback that is triggered when an action in the map changes its <see cref="InputActionPhase">
+        /// phase</see>.
+        /// </summary>
+        /// <remarks>
+        /// This is a convenience wrapper for <see cref="AddActionCallbackReceiver"/>. Internally, it will create
+        /// a wrapper implementing <see cref="IInputActionCallbackReceiver"/>. Note that it is more efficient, though,
+        /// to use <see cref="AddActionCallbackReceiver"/> directly as it will not create an intermediate object and
+        /// not require a two-step dispatch.
+        /// </remarks>
+        /// <seealso cref="InputAction.started"/>
+        /// <seealso cref="InputAction.performed"/>
+        /// <seealso cref="InputAction.cancelled"/>
+        public event InputActionListener actionTriggered
+        {
+            add { AddActionCallbackReceiver(new ActionListenerWrapper { listener = value }); }
+            remove
+            {
+                for (var i = 0; i < m_ActionCallbacks.length; ++i)
+                {
+                    var wrapper = m_ActionCallbacks[i] as ActionListenerWrapper;
+                    if (wrapper != null && wrapper.listener == value)
+                    {
+                        m_ActionCallbacks.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+
         public InputActionMap(string name = null)
         {
             m_Name = name;
@@ -106,6 +136,20 @@ namespace UnityEngine.Experimental.Input
                 throw new KeyNotFoundException(string.Format("Could not find action '{0}' in set '{1}'", name,
                         this.name));
             return action;
+        }
+
+        public void AddActionCallbackReceiver(IInputActionCallbackReceiver receiver)
+        {
+            if (receiver == null)
+                throw new ArgumentNullException("receiver");
+            m_ActionCallbacks.Append(receiver);
+        }
+
+        public void RemoveActionCallbackReceiver(IInputActionCallbackReceiver receiver)
+        {
+            if (receiver == null)
+                throw new ArgumentNullException("receiver");
+            m_ActionCallbacks.Remove(receiver);
         }
 
         /// <summary>
@@ -493,6 +537,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         [NonSerialized] internal InputActionMapState m_State;
 
+        [NonSerialized] internal InlinedArray<IInputActionCallbackReceiver> m_ActionCallbacks;
+
         internal void ResolveBindingsIfNecessary()
         {
             if (m_State == null)
@@ -512,11 +558,20 @@ namespace UnityEngine.Experimental.Input
 
             // Resolve all source paths.
             var resolver = new InputBindingResolver();
-            resolver.AddMap(this);
+            resolver.AddActionMap(this);
 
             // Transfer final arrays into state.
             m_State = new InputActionMapState();
             m_State.Initialize(resolver);
+        }
+
+        private class ActionListenerWrapper : IInputActionCallbackReceiver
+        {
+            public InputActionListener listener;
+            public void OnActionTriggered(ref InputAction.CallbackContext context)
+            {
+                listener(context);
+            }
         }
 
         #endregion
