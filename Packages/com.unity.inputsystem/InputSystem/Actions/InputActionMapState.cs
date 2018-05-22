@@ -1269,8 +1269,8 @@ namespace UnityEngine.Experimental.Input
                 for (var n = 0; n < state.totalActionCount; ++n)
                 {
                     ////TODO: we want to preserve as much state as we can here, not just lose all current execution state of the maps
-                    if (oldActionStates[i].phase != InputActionPhase.Disabled)
-                        newActionStates[i].phase = InputActionPhase.Waiting;
+                    if (oldActionStates[n].phase != InputActionPhase.Disabled)
+                        newActionStates[n].phase = InputActionPhase.Waiting;
                 }
 
                 // Restore state change monitors.
