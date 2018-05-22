@@ -13,6 +13,7 @@ public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
         m_gameplay_look = m_gameplay.GetAction("look");
         m_Initialized = true;
     }
+
     // gameplay
     private UnityEngine.Experimental.Input.InputActionMap m_gameplay;
     private UnityEngine.Experimental.Input.InputAction m_gameplay_fire;

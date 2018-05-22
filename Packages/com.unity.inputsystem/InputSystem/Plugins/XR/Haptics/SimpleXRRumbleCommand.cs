@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 
         [FieldOffset(0)]
         InputDeviceCommand baseCommand;
-        
+
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         float intensity;
 

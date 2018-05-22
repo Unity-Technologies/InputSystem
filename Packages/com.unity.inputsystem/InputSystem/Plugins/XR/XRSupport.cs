@@ -11,10 +11,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public const string kXRInterfaceMatchingPattern = "^(XRInput)";
 
         /// <summary>
-        /// The initial, deprecated interface for XRInput.  
+        /// The initial, deprecated interface for XRInput.
         /// </summary>
         public const string kXRInterfaceV1 = "XRInput";
-        
+
         /// <summary>
         /// The current interface code sent with devices to identify as XRInput devices.
         /// </summary>

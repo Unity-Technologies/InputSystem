@@ -4,7 +4,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
     /// This class controls the intensity and state of a rumble motor on a single XR device.
     /// </summary>
     public struct SimpleXRRumble
-    {      
+    {
         InputDevice device { get; set; }
 
         float m_Intensity;

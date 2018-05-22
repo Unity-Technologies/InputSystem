@@ -77,52 +77,51 @@ public class XRTests : InputTestFixture
                 {
                     deviceRole = DeviceRole.Generic,
                     inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
                     {
-                        name = "Button1",
-                        featureType = FeatureType.Binary
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button2",
-                        featureType = FeatureType.Binary
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button3",
-                        featureType = FeatureType.Binary
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button4",
-                        featureType = FeatureType.Binary
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button5",
-                        featureType = FeatureType.Binary
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button6",
-                        featureType = FeatureType.Binary
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Axis1",
-                        featureType = FeatureType.Axis1D
-                    },
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Button7",
-                        featureType = FeatureType.Binary
-                    },
-                }
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button1",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button2",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button3",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button4",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button5",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button6",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Axis1",
+                            featureType = FeatureType.Axis1D
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button7",
+                            featureType = FeatureType.Binary
+                        },
+                    }
                 }.ToJson()
             };
         }
-
 
         public FourCC GetFormat()
         {

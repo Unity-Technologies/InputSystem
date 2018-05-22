@@ -170,19 +170,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
                 uint nextOffset = GetSizeOfFeature(feature);
 
-                if(interfaceName == XRUtilities.kXRInterfaceV1)
+                if (interfaceName == XRUtilities.kXRInterfaceV1)
                 {
 #if UNITY_ANDROID
-                    if(nextOffset < 4)
+                    if (nextOffset < 4)
                         nextOffset = 4;
-#endif           
+#endif
                 }
                 else
                 {
                     if (nextOffset >= 4 && (currentOffset % 4 != 0))
                         currentOffset += (4 - (currentOffset % 4));
                 }
-                
+
 
                 switch (feature.featureType)
                 {

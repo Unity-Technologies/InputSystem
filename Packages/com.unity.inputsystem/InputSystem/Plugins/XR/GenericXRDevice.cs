@@ -39,7 +39,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         /// A quick accessor for the currently active left handed device.  This is also tracked via usages on the device.
         /// </summary>
         public static XRController leftHand { get; private set; }
-        
+
         //// <summary>
         /// A quick accessor for the currently active right handed device.  This is also tracked via usages on the device.
         /// </summary>
@@ -52,7 +52,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             string capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
 
-            if(deviceDescriptor != null)
+            if (deviceDescriptor != null)
             {
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
                 {
