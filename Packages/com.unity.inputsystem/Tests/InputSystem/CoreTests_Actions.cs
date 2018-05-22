@@ -226,7 +226,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one}, 0.1234);
             InputSystem.Update();
 
-            var events = manager.triggerEvents;
+            var events = manager.triggerEventsForCurrentFrame;
 
             Assert.That(events.Count, Is.EqualTo(1));
             Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
@@ -234,6 +234,62 @@ partial class CoreTests
             Assert.That(events[0].actions.Count, Is.EqualTo(2));
             Assert.That(events[0].actions, Has.Exactly(1).With.Property("action").SameAs(action1));
             Assert.That(events[0].actions, Has.Exactly(1).With.Property("action").SameAs(action2));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ActionManagerFlushesRecordedEventsBetweenUpdates()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        map.AddAction("action1", binding: "/<Gamepad>/leftStick");
+
+        // In the default configuration, both fixed and dynamic updates are enabled.
+        // In that setup, flushes should happen in-between dynamic updates.
+        // The same is true if only dynamic updates are enabled.
+        // If, however, only fixed updates are enabled, flushes should happen in-between fixed updates.
+
+        using (var manager = new InputActionManager())
+        {
+            manager.AddActionMap(map);
+            map.Enable();
+
+            // Fixed update #1.
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
+
+            // Fixed update #2. No flush.
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
+
+            // Dynamic update #1. No flush.
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
+
+            // Dynamic update #1. Flush.
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.Zero);
+
+            // Now disable dynamic updates.
+            InputSystem.updateMask &= ~InputUpdateType.Dynamic;
+
+            // Fixed update #3.
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.up});
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.EqualTo(1));
+
+            // Fixed update #4. Flush.
+            InputSystem.Update(InputUpdateType.Fixed);
+
+            Assert.That(manager.triggerEventsForCurrentFrame.Count, Is.Zero);
         }
     }
 

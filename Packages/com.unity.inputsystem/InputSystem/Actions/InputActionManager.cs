@@ -23,12 +23,22 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputActionManager : IInputActionCallbackReceiver, IDisposable
     {
+        /// <summary>
+        /// List of action maps added to the manager.
+        /// </summary>
         public ReadOnlyArray<InputActionMap> actionMaps
         {
             get { return new ReadOnlyArray<InputActionMap>(m_State.maps, 0, m_State.totalMapCount); }
         }
 
-        public TriggerEventArray triggerEvents
+        /// <summary>
+        /// List of bound controls and associated actions that have triggered in the current frame.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Does not allocate.
+        /// </remarks>
+        public TriggerEventArray triggerEventsForCurrentFrame
         {
             get { return new TriggerEventArray(this); }
         }
@@ -68,12 +78,26 @@ namespace UnityEngine.Experimental.Input
 
             // Listen for actions trigger on the map.
             actionMap.AddActionCallbackReceiver(this);
+
+            // If it's the first map added to us, also hook into the input system to automatically
+            // flush our recorded data between updates.
+            if (m_State.totalMapCount == 1)
+                InputSystem.onUpdate += OnBeforeInputSystemUpdate;
         }
 
         public void RemoveActionMap(InputActionMap actionMap)
         {
             //nuke event data
             throw new NotImplementedException();
+        }
+
+        public void Flush()
+        {
+            m_TriggerDataCount = 0;
+            m_ActionDataCount = 0;
+            m_StateDataSize = 0;
+
+            // We keep the buffers allocated.
         }
 
         /// <summary>
@@ -151,16 +175,10 @@ namespace UnityEngine.Experimental.Input
 
         ~InputActionManager()
         {
-            Destroy();
+            Dispose();
         }
 
         public void Dispose()
-        {
-            Destroy();
-            GC.SuppressFinalize(this);
-        }
-
-        private void Destroy()
         {
             if (m_TriggerDataBuffer.Length > 0)
                 m_TriggerDataBuffer.Dispose();
@@ -172,6 +190,10 @@ namespace UnityEngine.Experimental.Input
             m_TriggerDataBuffer = new NativeArray<TriggerData>();
             m_ActionDataBuffer = new NativeArray<ActionData>();
             m_StateDataBuffer = new NativeArray<byte>();
+
+            InputSystem.onUpdate -= OnBeforeInputSystemUpdate;
+
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -194,6 +216,32 @@ namespace UnityEngine.Experimental.Input
         private NativeArray<TriggerData> m_TriggerDataBuffer;
         private NativeArray<ActionData> m_ActionDataBuffer;
         private NativeArray<byte> m_StateDataBuffer;
+
+        ////TODO: replace this with having global frame-start notifications for input
+        private bool m_HadFixedUpdate;
+
+        private void OnBeforeInputSystemUpdate(InputUpdateType type)
+        {
+            if (type == InputUpdateType.Fixed)
+                m_HadFixedUpdate = true;
+
+            // Check if we need to flush events.
+            var shouldFlush = false;
+            var dynamicUpdateEnabled = (InputSystem.updateMask & InputUpdateType.Dynamic) == InputUpdateType.Dynamic;
+            if (dynamicUpdateEnabled && type == InputUpdateType.Dynamic)
+            {
+                // If it's a dynamic update, we only want to flush if there wasn't a fixed update
+                // that happened in-between the current and the last dynamic update.
+                if (!m_HadFixedUpdate)
+                    shouldFlush = true;
+                m_HadFixedUpdate = false;
+            }
+            shouldFlush = shouldFlush
+                || (!dynamicUpdateEnabled && type == InputUpdateType.Fixed);
+
+            if (shouldFlush)
+                Flush();
+        }
 
         [StructLayout(LayoutKind.Explicit, Size = 20)]
         internal struct TriggerData
