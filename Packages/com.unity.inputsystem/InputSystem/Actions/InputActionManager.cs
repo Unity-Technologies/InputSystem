@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Net35Compatibility;
 using UnityEngine.Experimental.Input.Utilities;
+
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 ////REVIEW: the single state approach makes adding and removing maps costly; may not be flexible enough
 
