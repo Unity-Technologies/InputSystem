@@ -471,6 +471,54 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
     }
 
+    [Test]
+    [Category("State")]
+    public void State_CanListenForInputUpdates()
+    {
+        var receivedUpdate = false;
+        InputUpdateType? receivedUpdateType = null;
+        InputSystem.onUpdate +=
+            type =>
+            {
+                Assert.That(receivedUpdate, Is.False);
+                receivedUpdate = true;
+                receivedUpdateType = type;
+            };
+
+        // Dynamic.
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        receivedUpdate = false;
+        receivedUpdateType = null;
+
+        // Fixed.
+        InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        receivedUpdate = false;
+        receivedUpdateType = null;
+
+        // Before render.
+        InputSystem.Update(InputUpdateType.BeforeRender);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        receivedUpdate = false;
+        receivedUpdateType = null;
+
+        // Editor.
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
+    }
+
     // To build systems that can respond to inputs changing value, there's support for setting
     // up monitor on state (essentially locks around memory regions). This is used by the action
     // system to build its entire machinery but the core mechanism is available to anyone.

@@ -904,10 +904,39 @@ namespace UnityEngine.Experimental.Input
             s_Manager.Update(updateType);
         }
 
+        ////TODO: disable collection of input if all input updates are disabled
+        /// <summary>
+        /// Mask that determines which updates are run by the input system.
+        /// </summary>
+        /// <remarks>
+        /// By default, all update types are enabled. Disabling a specific update
+        ///
+        /// Clearing all flags in this mask will disable all input processing. Note, however,
+        /// that it will not currently disable collection of input.
+        /// </remarks>
         public static InputUpdateType updateMask
         {
             get { return s_Manager.updateMask; }
             set { s_Manager.updateMask = value; }
+        }
+
+        /// <summary>
+        /// Event that is fired before the input system updates.
+        /// </summary>
+        /// <remarks>
+        /// The input system updates in sync with player loop and editor updates. Input updates
+        /// are run right before the respective script update. For example, an input update for
+        /// <see cref="InputUpdateType.Dynamic"/> is run before <c>MonoBehaviour.Update</c> methods
+        /// are executed.
+        ///
+        /// The update callback itself is triggered before the input system runs its own update and
+        /// before it flushes out its event queue. This means that events queued from a callback will
+        /// be fed right into the upcoming update.
+        /// </remarks>
+        public static event Action<InputUpdateType> onUpdate
+        {
+            add { s_Manager.onUpdate += value; }
+            remove { s_Manager.onUpdate -= value; }
         }
 
         #endregion
