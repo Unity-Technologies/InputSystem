@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -135,6 +137,21 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
+        public static int AppendWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, TValue value,
+            int capacityIncrement = 10, Allocator allocator = Allocator.Persistent)
+            where TValue : struct
+        {
+            var capacity = array.Length;
+            if (capacity == count)
+                GrowBy(ref array, capacityIncrement > 1 ? capacityIncrement : 1, allocator);
+
+            var index = count;
+            array[index] = value;
+            ++count;
+
+            return index;
+        }
+
         public static void InsertAt<TValue>(ref TValue[] array, int index, TValue value)
         {
             if (array == null)
@@ -171,6 +188,42 @@ namespace UnityEngine.Experimental.Input.Utilities
             var oldLength = array.Length;
             Array.Resize(ref array, oldLength + count);
             return oldLength;
+        }
+
+        public static unsafe int GrowBy<TValue>(ref NativeArray<TValue> array, int count, Allocator allocator = Allocator.Persistent)
+            where TValue : struct
+        {
+            var length = array.Length;
+            if (length == 0)
+            {
+                array = new NativeArray<TValue>(count, allocator);
+                return 0;
+            }
+
+            var newArray = new NativeArray<TValue>(length + count, allocator);
+            // CopyFrom() expects length to match. Copy manually.
+            UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(), (long)length * UnsafeUtility.SizeOf<TValue>());
+            array.Dispose();
+            array = newArray;
+
+            return length;
+        }
+
+        public static int GrowWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int growBy,
+            int capacityIncrement = 10, Allocator allocator = Allocator.Persistent)
+            where TValue : struct
+        {
+            var length = array.Length;
+            if (length < count + growBy)
+            {
+                if (capacityIncrement < growBy)
+                    capacityIncrement = growBy;
+                GrowBy(ref array, capacityIncrement, allocator);
+            }
+
+            var offset = count;
+            count += growBy;
+            return offset;
         }
 
         public static TValue[] Join<TValue>(TValue value, params TValue[] values)

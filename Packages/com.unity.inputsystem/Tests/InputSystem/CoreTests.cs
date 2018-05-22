@@ -3253,40 +3253,42 @@ class CoreTests : InputTestFixture
     public void Devices_WhenCreationFails_SystemRecoversGracefully()
     {
         // Create an isolated runtime + input manager.
-        var runtime = new InputTestRuntime();
-        var manager = new InputManager();
+        using (var runtime = new InputTestRuntime())
+        {
+            var manager = new InputManager();
 
-        manager.InitializeData();
-        manager.InstallRuntime(runtime);
+            manager.InitializeData();
+            manager.InstallRuntime(runtime);
 
-        // Create a template that will fail to instantiate.
-        const string template = @"
+            // Create a device layout that will fail to instantiate.
+            const string layout = @"
+                {
+                    ""name"" : ""TestDevice"",
+                    ""controls"" : [
+                        { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
+                    ]
+                }
+            ";
+            manager.RegisterControlLayout(layout);
+
+            // Report two devices, one that will fail creation and one that shouldn't.
+            runtime.ReportNewInputDevice(new InputDeviceDescription
             {
-                ""name"" : ""TestDevice"",
-                ""controls"" : [
-                    { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
-                ]
-            }
-        ";
-        manager.RegisterControlLayout(template);
+                deviceClass = "TestDevice"
+            }.ToJson());
+            runtime.ReportNewInputDevice(new InputDeviceDescription
+            {
+                deviceClass = "Gamepad"
+            }.ToJson());
 
-        // Report two devices, one that will fail creation and one that shouldn't.
-        runtime.ReportNewInputDevice(new InputDeviceDescription
-        {
-            deviceClass = "TestDevice"
-        }.ToJson());
-        runtime.ReportNewInputDevice(new InputDeviceDescription
-        {
-            deviceClass = "Gamepad"
-        }.ToJson());
+            LogAssert.Expect(LogType.Error, new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
 
-        LogAssert.Expect(LogType.Error, new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
+            Assert.That(() => manager.Update(), Throws.Nothing);
 
-        Assert.That(() => manager.Update(), Throws.Nothing);
-
-        // Make sure InputManager kept the gamepad.
-        Assert.That(manager.devices.Count, Is.EqualTo(1));
-        Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
+            // Make sure InputManager kept the gamepad.
+            Assert.That(manager.devices.Count, Is.EqualTo(1));
+            Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
+        }
     }
 
     [Test]
@@ -5921,21 +5923,24 @@ class CoreTests : InputTestFixture
         var action1 = map.AddAction("action1", binding: "/<Gamepad>/leftStick");
         var action2 = map.AddAction("action2", binding: "/<Gamepad>/leftStick");
 
-        var manager = new InputActionManager();
-        manager.AddActionMap(map);
+        using (var manager = new InputActionManager())
+        {
+            manager.AddActionMap(map);
 
-        map.Enable();
+            map.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-        InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one}, 0.1234);
+            InputSystem.Update();
 
-        var events = manager.triggerEvents;
+            var events = manager.triggerEvents;
 
-        Assert.That(events.Count, Is.EqualTo(1));
-        Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
-        Assert.That(events[0].actions.Count, Is.EqualTo(2));
-        Assert.That(events[0].actions, Has.Exactly(1).SameAs(action1));
-        Assert.That(events[0].actions, Has.Exactly(1).SameAs(action2));
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
+            Assert.That(events[0].time, Is.EqualTo(0.1234).Within(0.000001));
+            Assert.That(events[0].actions.Count, Is.EqualTo(2));
+            Assert.That(events[0].actions, Has.Exactly(1).With.Property("action").SameAs(action1));
+            Assert.That(events[0].actions, Has.Exactly(1).With.Property("action").SameAs(action2));
+        }
     }
 
     // Actions are able to observe every state change, even if the changes occur within

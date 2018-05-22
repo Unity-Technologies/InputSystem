@@ -128,6 +128,7 @@ namespace UnityEngine.Experimental.Input
                     {
                         actionIndex = actionIndex,
                         compositeIndex = currentCompositeIndex,
+                        mapIndex = totalMapCount,
                     };
 
                     // The composite binding entry itself does not resolve to any controls.
@@ -169,7 +170,8 @@ namespace UnityEngine.Experimental.Input
                     modifierCount = numModifiers,
                     isPartOfComposite = unresolvedBinding.isPartOfComposite,
                     actionIndex = actionIndex,
-                    compositeIndex = currentCompositeIndex
+                    compositeIndex = currentCompositeIndex,
+                    mapIndex = totalMapCount,
                 };
 
                 // If the binding is part of a composite, pass the resolve controls

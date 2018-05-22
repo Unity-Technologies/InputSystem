@@ -677,63 +677,35 @@ namespace UnityEngine.Experimental.Input
             switch (newPhase)
             {
                 case InputActionPhase.Started:
-                    CallActionListeners(map, action, ref action.m_OnStarted, ref trigger);
+                    CallActionListeners(map, ref action.m_OnStarted, ref trigger);
                     break;
 
                 case InputActionPhase.Performed:
-                    CallActionListeners(map, action, ref action.m_OnPerformed, ref trigger);
+                    CallActionListeners(map, ref action.m_OnPerformed, ref trigger);
                     actionStates[actionIndex].phase = InputActionPhase.Waiting; // Go back to waiting after performing action.
                     break;
 
                 case InputActionPhase.Cancelled:
-                    CallActionListeners(map, action, ref action.m_OnCancelled, ref trigger);
+                    CallActionListeners(map, ref action.m_OnCancelled, ref trigger);
                     actionStates[actionIndex].phase = InputActionPhase.Waiting; // Go back to waiting after cancelling action.
                     break;
             }
         }
 
-        private void CallActionListeners(InputActionMap actionMap, InputAction action, ref InlinedArray<InputActionListener> listeners, ref TriggerState trigger)
+        private void CallActionListeners(InputActionMap actionMap, ref InlinedArray<InputActionListener> listeners, ref TriggerState trigger)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
             if (listeners.length == 0 && callbacksOnMap.length == 0)
                 return;
 
-            // If the binding that triggered is part of a composite, fetch the composite.
-            object composite = null;
-            var bindingIndex = trigger.bindingIndex;
-            if (bindingStates[bindingIndex].isPartOfComposite)
-            {
-                var compositeIndex = bindingStates[bindingIndex].compositeIndex;
-                Debug.Assert(compositeIndex >= 0 && compositeIndex < totalCompositeCount);
-                composite = composites[compositeIndex];
-            }
-
-            // If we got triggered under the control of a modifier, fetch its state.
-            IInputBindingModifier modifier = null;
-            var startTime = 0.0;
-            if (trigger.modifierIndex != -1)
-            {
-                modifier = modifiers[trigger.modifierIndex];
-                startTime = modifierStates[trigger.modifierIndex].startTime;
-            }
-
-            // Fetch control that triggered the action.
-            var controlIndex = trigger.controlIndex;
-            Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
-            var control = controls[controlIndex];
-
-            // We store the relevant state directly on the context instead of looking it
-            // up lazily on the action to shield the context from value changes. This prevents
-            // surprises on the caller side (e.g. in tests).
             var context = new InputAction.CallbackContext
             {
-                m_Action = action,
-                m_Control = control,
+                m_State = this,
                 m_Time = trigger.time,
-                m_Modifier = modifier,
-                m_StartTime = startTime,
-                m_Composite = composite,
+                m_BindingIndex = trigger.bindingIndex,
+                m_ModifierIndex = trigger.modifierIndex,
+                m_ControlIndex = trigger.controlIndex,
             };
 
             Profiler.BeginSample("InputActionCallback");
@@ -783,6 +755,20 @@ namespace UnityEngine.Experimental.Input
             if (action == null)
                 return "<none>";
             return action;
+        }
+
+        internal InputAction GetActionOrNull(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+
+            var actionIndex = bindingStates[bindingIndex].actionIndex;
+            if (actionIndex == kInvalidIndex)
+                return null;
+
+            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
+            var mapIndex = bindingStates[bindingIndex].mapIndex;
+            var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
+            return maps[mapIndex].m_Actions[actionIndex - actionStartIndex];
         }
 
         internal InputAction GetActionOrNull(ref TriggerState trigger)
@@ -880,10 +866,15 @@ namespace UnityEngine.Experimental.Input
         ///
         /// Keep references out of this struct. It should be blittable and require no GC scanning.
         /// </remarks>
+        [StructLayout(LayoutKind.Explicit, Size = 16)]
         internal struct BindingState
         {
-            private short m_ControlCount;
-            private short m_ModifierCount;
+            [FieldOffset(0)] private byte m_ControlCount;
+            [FieldOffset(1)] private byte m_ModifierCount;
+            [FieldOffset(2)] private byte m_MapIndex;
+            [FieldOffset(3)] private byte m_Flags;
+            [FieldOffset(4)] private ushort m_ActionIndex;
+            [FieldOffset(6)] private ushort m_CompositeIndex;
 
             [Flags]
             public enum Flags
@@ -896,7 +887,7 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Index into <see cref="controls"/> of first control associated with the binding.
             /// </summary>
-            public int controlStartIndex;
+            [FieldOffset(8)] public int controlStartIndex;
 
             /// <summary>
             /// Number of controls associated with this binding.
@@ -904,7 +895,7 @@ namespace UnityEngine.Experimental.Input
             public int controlCount
             {
                 get { return m_ControlCount; }
-                set { m_ControlCount = (short)value; }
+                set { m_ControlCount = (byte)value; }
             }
 
             /// <summary>
@@ -913,13 +904,13 @@ namespace UnityEngine.Experimental.Input
             public int modifierCount
             {
                 get { return m_ModifierCount; }
-                set { m_ModifierCount = (short)value; }
+                set { m_ModifierCount = (byte)value; }
             }
 
             /// <summary>
             /// Index into <see cref="modifierStates"/> of first modifier associated with the binding.
             /// </summary>
-            public int modifierStartIndex;
+            [FieldOffset(12)] public int modifierStartIndex;
 
             /// <summary>
             /// Index of the action being triggered by the binding (if any).
@@ -927,17 +918,64 @@ namespace UnityEngine.Experimental.Input
             /// <remarks>
             /// For bindings that don't trigger actions, this is <c>-1</c>.
             /// </remarks>
-            public int actionIndex;
+            public int actionIndex
+            {
+                get
+                {
+                    if (m_ActionIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_ActionIndex;
+                }
+                set
+                {
+                    if (value == kInvalidIndex)
+                        m_ActionIndex = ushort.MaxValue;
+                    else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Action count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_ActionIndex = (ushort)value;
+                    }
+                }
+            }
 
-            ////REVIEW: move to separate array for better scanning performance
+            public int mapIndex
+            {
+                get { return m_MapIndex; }
+                set
+                {
+                    Debug.Assert(value != kInvalidIndex);
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Map count cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_MapIndex = (byte)value;
+                }
+            }
+
             /// <summary>
             /// The composite that the binding is part of (if any).
             /// </summary>
-            /// <remarks>
-            /// </remarks>
-            public int compositeIndex;
+            public int compositeIndex
+            {
+                get
+                {
+                    if (m_CompositeIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_CompositeIndex;
+                }
+                set
+                {
+                    if (value == kInvalidIndex)
+                        m_CompositeIndex = ushort.MaxValue;
+                    else
+                        m_CompositeIndex = (ushort)value;
+                }
+            }
 
-            public Flags flags;
+            public Flags flags
+            {
+                get { return (Flags)m_Flags; }
+                set { m_Flags = (byte)value; }
+            }
 
             public bool chainsWithNext
             {
