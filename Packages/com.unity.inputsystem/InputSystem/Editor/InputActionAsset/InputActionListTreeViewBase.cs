@@ -111,13 +111,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override bool CanRename(TreeViewItem item)
         {
-            return item is InputTreeViewLine && (item is InputActionListTreeView.BindingItem);
+            return item is InputTreeViewLine && !(item is BindingItem);
         }
         
         protected override void DoubleClickedItem(int id)
         {
             var item = FindItem(id, rootItem);
             if (item == null)
+                return;
+            if(item is BindingItem)
                 return;
             BeginRename(item);
             (item as InputTreeViewLine).renaming = true;
@@ -189,7 +191,27 @@ namespace UnityEngine.Experimental.Input.Editor
                 depth = 1;
             }
 
-            public abstract void OnGUI(Rect rowRect, bool selected, bool focused, float indent);
+            public void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
+            {
+                var rect = rowRect;
+                if (Event.current.type == EventType.Repaint)
+                {
+                    rowRect.height += 1;
+                    Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
+
+                    rect.x += indent;
+                    rect.width -= indent + 2;
+                    rect.y += 1;
+                    rect.height -= 2;
+
+                    if (!renaming)
+                        Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
+
+                    DrawCustomRect(rowRect);
+                }
+            }
+            
+            public abstract void DrawCustomRect(Rect rowRect);
         }
     }
 }

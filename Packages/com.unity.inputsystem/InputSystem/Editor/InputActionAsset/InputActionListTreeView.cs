@@ -71,7 +71,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 
                 for (var j = action.m_BindingsStartIndex; j < action.m_BindingsStartIndex + action.m_BindingsCount; j++)
                 {
-                    var bindingsItem = new BindingItem(bindingsProperty, j);
+                    var bindingsItem = new BindingItem(bindingsProperty, j, j - action.m_BindingsStartIndex);
                     actionItem.AddChild(bindingsItem);
                 }
             }
@@ -84,27 +84,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
                 id = displayName.GetHashCode();
             }
-
-            public override void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
+            
+            public override void DrawCustomRect(Rect rowRect)
             {
-                var rect = rowRect;
-                if (Event.current.type == EventType.Repaint)
-                {
-                    rowRect.height += 1;
-                    Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
-
-                    rect.x += indent;
-                    rect.width -= indent + 2;
-                    rect.y += 1;
-                    rect.height -= 2;
-                    
-                    if(!renaming)
-                        Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
-
-                    var orangeBoxRect = rowRect;
-                    orangeBoxRect.width = 12;
-                    Styles.yellowRect.Draw(orangeBoxRect, "", false, false, false, false);
-                }
+                var boxRect = rowRect;
+                boxRect.width = 12;
+                Styles.yellowRect.Draw(boxRect, "", false, false, false, false);
             }
         }
         
@@ -117,34 +102,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 id = displayName.GetHashCode();
                 depth = 2;
             }
-
-            public override void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
+            
+            public override void DrawCustomRect(Rect rowRect)
             {
-                var rect = rowRect;
-                if (Event.current.type == EventType.Repaint)
-                {
-                    rowRect.height += 1;
-                    Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
-
-                    rect.x += indent;
-                    rect.width -= indent + 2;
-                    rect.y += 1;
-                    rect.height -= 2;
-                    
-                    if(!renaming)
-                        Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
-
-                    var orangeBoxRect = rowRect;
-                    orangeBoxRect.width = 24;
-                    Styles.orangeRect.Draw(orangeBoxRect, "", false, false, false, false);
-                }
+                var boxRect = rowRect;
+                boxRect.width = 24;
+                Styles.orangeRect.Draw(boxRect, "", false, false, false, false);
             }
         }
         
         internal class BindingItem : InputTreeViewLine
         {
-            public BindingItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+            public BindingItem(SerializedProperty bindingProperty, int index, int localIndex) : base(bindingProperty, index)
             {
+                m_LocalIndex = localIndex;
                 var path = elementProperty.FindPropertyRelative("path").stringValue;
                 var action = elementProperty.FindPropertyRelative("action").stringValue;
                 displayName = ParseName(path);
@@ -154,7 +125,12 @@ namespace UnityEngine.Experimental.Input.Editor
             
             private static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
             private static Regex s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
-            
+            private int m_LocalIndex;
+            public int localIndex
+            {
+                get { return m_LocalIndex; }
+            }
+
             const int kUsageNameGroup = 1;
             const int kDeviceNameGroup = 1;
             const int kDeviceUsageGroup = 3;
@@ -187,32 +163,25 @@ namespace UnityEngine.Experimental.Input.Editor
                 return text;
             }
 
-            public override void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
+            public override void DrawCustomRect(Rect rowRect)
             {
-                var rect = rowRect;
-                if (Event.current.type == EventType.Repaint)
-                {
-                    rowRect.height += 1;
-                    Styles.actionItemRowStyle.Draw(rowRect, "", false, false, selected, focused);
-
-                    rect.x += indent;
-                    rect.width -= indent + 2;
-                    rect.y += 1;
-                    rect.height -= 2;
-
-                    if (!renaming)
-                        Styles.actionSetItemStyle.Draw(rect, displayName, false, false, selected, focused);
-
-                    var boxRect = rowRect;
-                    boxRect.width = 36;
-                    Styles.greenRect.Draw(boxRect, "", false, false, false, false);
-                }
+                var boxRect = rowRect;
+                boxRect.width = 36;
+                Styles.greenRect.Draw(boxRect, "", false, false, false, false);
             }
         }
 
         public void DeleteSelected()
         {
-            throw new NotImplementedException();
+            var row = GetSelectedRow();
+            if (row is BindingItem)
+            {
+                var actionMapProperty = (row.parent.parent as InputTreeViewLine).elementProperty;
+                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingItem).localIndex, actionMapProperty);
+                m_ApplyAction();
+            }
+            
         }
     }
 }
