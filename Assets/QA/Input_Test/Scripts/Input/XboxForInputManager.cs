@@ -51,9 +51,9 @@ public class XboxForInputManager : ControllerDiagramForInputManager
         button_map.Add("Button6", "Dpad/Down");
         button_map.Add("Button7", "Dpad/Left");
         button_map.Add("Button8", "Dpad/Right");
-        button_map.Add("Button15", "Xbox_Button");
-        analog_sticks.Add(new AnalogStick(buttons_container.Find("LeftStick"), "Axis 1", "Axis 2", 0.5f));
-        analog_sticks.Add(new AnalogStick(buttons_container.Find("RightStick"), "Axis 3", "Axis 4", 0.5f));
+        button_map.Add("Button15", "Xbox");
+        analog_sticks.Add(new AnalogStick(buttons_container.Find("LeftStick"), "Axis 1", "Axis 2", isYReversed: true));
+        analog_sticks.Add(new AnalogStick(buttons_container.Find("RightStick"), "Axis 3", "Axis 4", isYReversed: true));
         xbox_triggers.Add(new XboxTrigger(buttons_container.Find("LeftTrigger"), "Axis 5"));
         xbox_triggers.Add(new XboxTrigger(buttons_container.Find("RightTrigger"), "Axis 6"));
 #endif
