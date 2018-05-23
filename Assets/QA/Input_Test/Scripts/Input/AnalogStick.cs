@@ -12,7 +12,7 @@ public class AnalogStick
     // This is only needed for position adjustment
     //-------------------------------------------------------------------------------------------
 
-    private Transform stick;            // The GameObject for the stick;
+    private Transform stick;            // The moving part of the analog stick. It is the child object named "Stick";
     private string name;                // The name for the Transform Stick. It should make sense for the controller used, such as "Left_Stick" for Xbox controller.
     private string x_axis_name;         // The Axis controlled through the stick's movement in X direction. The name is set in Input Manager.
     private string y_axis_name;         // The Axis controlled through the stick's movement in Y direction. The name is set in Input Manager.
@@ -31,8 +31,8 @@ public class AnalogStick
         get { return stick; }
         set
         {
-            stick = value;
-            name = stick.name;
+            name = value.name;
+            stick = value.Find("Stick");
             original_position = stick.position;
         }
     }
