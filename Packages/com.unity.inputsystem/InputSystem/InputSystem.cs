@@ -1155,9 +1155,9 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4
             DualShockSupport.Initialize();
-#endif
+            #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             HIDSupport.Initialize();
             #endif
 
@@ -1175,9 +1175,9 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
             Plugins.XR.XRSupport.Initialize();
-#endif
+            #endif
 
-#if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
             Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
         }

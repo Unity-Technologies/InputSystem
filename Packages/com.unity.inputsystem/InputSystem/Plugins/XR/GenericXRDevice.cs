@@ -11,8 +11,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     public class XRHMD : InputDevice
     {
         /// <summary>
-        /// A quick accessor to grab the currently used HMD, regardless of type. If no HMD is connected, this can be null.
+        /// A quick accessor to grab the currently used HMD, regardless of type.
         /// </summary>
+        /// <remarks>If no HMD is connected, this can be null.</remarks>
         public static XRHMD current { get; private set; }
 
         public override void MakeCurrent()
@@ -30,26 +31,28 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     /// <summary>
-    /// The base type for all XR handed controllers.  This can help retrieve handed-specific information.
+    /// The base type for all XR handed controllers.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class XRController : InputDevice
     {
         /// <summary>
-        /// A quick accessor for the currently active left handed device.  This is also tracked via usages on the device.
+        /// A quick accessor for the currently active left handed device.
         /// </summary>
+        /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'LeftHand' device usage.</remarks>
         public static XRController leftHand { get; private set; }
 
         //// <summary>
         /// A quick accessor for the currently active right handed device.  This is also tracked via usages on the device.
         /// </summary>
+        /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'RightHand' device usage.</remarks>
         public static XRController rightHand { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
 
-            string capabilities = description.capabilities;
+            var capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
 
             if (deviceDescriptor != null)
@@ -115,6 +118,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         /// Set's this device's motor intensity.
         /// </summary>
         /// <param name="intensity">The intensity of [0-1] you'd like to set device's haptic rumbling to.</param>
+        /// <remarks>Intensities are updated immediately, and all values outside of the [0-1] range will be clamped.</remarks>
         public void SetIntensity(float intensity)
         {
             m_Rumble.intensity = intensity;
