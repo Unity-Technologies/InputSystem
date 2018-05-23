@@ -801,6 +801,14 @@ namespace UnityEngine.Experimental.Input
             return modifiers[trigger.modifierIndex];
         }
 
+        internal InputBinding GetBinding(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            var mapIndex = bindingStates[bindingIndex].mapIndex;
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            return maps[mapIndex].m_Bindings[bindingIndex - bindingStartIndex];
+        }
+
         private void ResetModifier(int mapIndex, int bindingIndex, int modifierIndex)
         {
             Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);

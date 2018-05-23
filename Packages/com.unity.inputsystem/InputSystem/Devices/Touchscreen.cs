@@ -6,6 +6,10 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
+////TODO: property that tells whether a Touchscreen is multi-touch capable
+
+////TODO: property that tells whether a Touchscreen supports pressure
+
 ////TODO: if activeTouches is called multiple times in a single frame, only update the array once
 
 ////TODO: click detection / primaryaction handling
