@@ -8,4 +8,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Demo/Demo.unity
     guid: 3b868b211075646d5a6a9e07c61071b6
+  - enabled: 1
+    path: Assets/QA/Input_Test/Scenes/Controller Diagram.unity
+    guid: 61c2d094f0992ee4799446a1b5fd10a0
+  - enabled: 1
+    path: Assets/QA/Input_Test/Scenes/Controller Xbox.unity
+    guid: 8f5a18c7b34093e4b8e68821516bb499
+  - enabled: 1
+    path: Assets/QA/Input_Test/Scenes/Mouse Keyboard.unity
+    guid: 401d9a8859c068f4db3331d02e2854a1
+  - enabled: 1
+    path: Assets/QA/Input_Test/Scenes/Pen.unity
+    guid: bfca4f66fa1693b4fa56be497d438d52
   m_configObjects: {}
