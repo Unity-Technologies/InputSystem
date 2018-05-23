@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Modifiers;
+using UnityEngine.Experimental.Input.Processors;
 
 partial class CoreTests
 {
@@ -231,9 +232,17 @@ partial class CoreTests
             Assert.That(events.Count, Is.EqualTo(1));
             Assert.That(events[0].control, Is.SameAs(gamepad.leftStick));
             Assert.That(events[0].time, Is.EqualTo(0.1234).Within(0.000001));
+            Assert.That(events[0].ReadValue<Vector2>(),
+                Is.EqualTo(new DeadzoneProcessor().Process(Vector2.one, gamepad.leftStick)).Using(vector2Comparer));
             Assert.That(events[0].actions.Count, Is.EqualTo(2));
-            Assert.That(events[0].actions, Has.Exactly(1).With.Property("action").SameAs(action1));
-            Assert.That(events[0].actions, Has.Exactly(1).With.Property("action").SameAs(action2));
+            Assert.That(events[0].actions,
+                Has.Exactly(1).With.Property("action").SameAs(action1)
+                .And.With.Property("phase").EqualTo(InputActionPhase.Performed)
+                .And.With.Property("binding").Matches((InputBinding binding) => binding.path == "/<Gamepad>/leftStick"));
+            Assert.That(events[0].actions,
+                Has.Exactly(1).With.Property("action").SameAs(action2)
+                .And.With.Property("phase").EqualTo(InputActionPhase.Performed)
+                .And.With.Property("binding").Matches((InputBinding binding) => binding.path == "/<Gamepad>/leftStick"));
         }
     }
 

@@ -749,19 +749,22 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var history = new InputStateHistory<Vector2>(gamepad.leftStick);
-        history.Enable();
+        //have to record raw, unprocessed state; deadzone processor will break asserts below, though
+        using (var history = new InputStateHistory<Vector2>(gamepad.leftStick))
+        {
+            history.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
-        InputSystem.Update();
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
-        InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+            InputSystem.Update();
 
-        Assert.That(history.Count, Is.EqualTo(3));
-        Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
-        Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
-        Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
+            Assert.That(history.Count, Is.EqualTo(3));
+            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
+            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
+            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
+        }
     }
 
     [Test]

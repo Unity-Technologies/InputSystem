@@ -125,10 +125,10 @@ namespace UnityEngine.Experimental.Input
                 var isInList = buttons.Contains(controlAsButton);
                 if (!isInList)
                     Assert.That(controlAsButton.isPressed, Is.False,
-                        String.Format("Expected button {0} to NOT be pressed", controlAsButton));
+                        string.Format("Expected button {0} to NOT be pressed", controlAsButton));
                 else
                     Assert.That(controlAsButton.isPressed, Is.True,
-                        String.Format("Expected button {0} to be pressed", controlAsButton));
+                        string.Format("Expected button {0} to be pressed", controlAsButton));
             }
         }
 

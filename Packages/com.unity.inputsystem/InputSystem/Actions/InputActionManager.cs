@@ -23,6 +23,10 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// An action manager owns the state of all action maps added to it.
+    ///
+    /// The data collected by an action manager is stored in unmanaged memory. If, when querying
+    /// trigger events, no enumerators are used, no GC memory will be allocated during action
+    /// processing.
     /// </remarks>
     public class InputActionManager : IInputActionCallbackReceiver, IDisposable
     {
@@ -424,14 +428,37 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            public InputActionPhase phase
+            {
+                get
+                {
+                    if (m_Manager == null)
+                        return InputActionPhase.Disabled;
+                    return m_Data.phase;
+                }
+            }
+
             public InputBinding binding
             {
-                get { throw new NotImplementedException(); }
+                get
+                {
+                    if (m_Manager == null)
+                        return default(InputBinding);
+                    return m_Manager.m_State.GetBinding(m_Data.bindingIndex);
+                }
             }
 
             public IInputBindingModifier modifier
             {
-                get { throw new NotImplementedException(); }
+                get
+                {
+                    if (m_Manager == null)
+                        return null;
+                    var modifierIndex = m_Data.modifierIndex;
+                    if (modifierIndex == InputActionMapState.kInvalidIndex)
+                        return null;
+                    return m_Manager.m_State.modifiers[modifierIndex];
+                }
             }
         }
 
@@ -467,7 +494,10 @@ namespace UnityEngine.Experimental.Input
 
             public ActionEvent this[int index]
             {
-                get { throw new NotImplementedException(); }
+                get
+                {
+                    throw new NotImplementedException();
+                }
             }
 
             internal class Enumerator : IEnumerator<ActionEvent>
@@ -576,9 +606,29 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public TValue ReadValue<TValue>()
+            /// <summary>
+            /// Read the value the control had when it triggered.
+            /// </summary>
+            /// <typeparam name="TValue">Type of value to read. Must match the value type of the control.</typeparam>
+            /// <returns>Value of <see cref="control"/> at the time it triggered.</returns>
+            public unsafe TValue ReadValue<TValue>()
             {
-                throw new NotImplementedException();
+                ////TODO: this here should be moved into a general helper method; "read control value from chunk of memory" is generally useful
+
+                // Grab control and make sure it has a matching type.
+                var controlOfType = control as InputControl<TValue>;
+                if (controlOfType == null)
+                    throw new ArgumentException(
+                        string.Format("Control '{0}' does not have value type {1}", control, typeof(TValue)), "TValue");
+
+                // Fetch state memory and account for the control wanting to
+                // read from an offset into the global state buffers.
+                Debug.Assert(m_Data.stateSizeInBytes == controlOfType.m_StateBlock.alignedSizeInBytes);
+                var statePtr = (byte*)m_Manager.m_StateDataBuffer.GetUnsafeReadOnlyPtr() + m_Data.stateOffset;
+                statePtr -= controlOfType.m_StateBlock.byteOffset;
+
+                // And let the control do the rest.
+                return controlOfType.ReadValueFrom(new IntPtr(statePtr));
             }
         }
 
