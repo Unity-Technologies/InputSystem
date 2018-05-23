@@ -1,10 +1,16 @@
 namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
 {
+    /// <summary>
+    /// This class controls the intensity and state of a rumble motor on a single XR device.
+    /// </summary>
     public struct SimpleXRRumble
     {
-        public InputDevice device { get; private set; }
+        InputDevice device { get; set; }
 
         float m_Intensity;
+        /// <summary>
+        /// Determines the rumble intensity.  This expects a 0-1 value, where 0 is off, and 1 is the maximum amplitude available to the device
+        /// </summary>
         public float intensity
         {
             get
@@ -15,13 +21,16 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             {
                 if (m_Intensity != value)
                 {
-                    m_Intensity = value;
+                    m_Intensity = Mathf.Clamp(value, 0f, 1f);
                     UpdateMotorSpeed();
                 }
             }
         }
 
         bool m_IsPaused;
+        /// <summary>
+        /// This allows you to pause the actual device motors.  This doesn't affect the current intensity, but prevents that intensity from being sent to the device.
+        /// </summary>
         public bool isPaused
         {
             get
@@ -38,6 +47,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             }
         }
 
+        /// <summary>
+        /// A quick accessor to verify that the intensity is greater than 0, and that the rumble motor is not paused.
+        /// </summary>
         public bool isRumbling
         {
             get
@@ -46,6 +58,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             }
         }
 
+        /// <summary>
+        /// Resets the rumble motor state to defaults, which is an intensity of 0 and unpaused.
+        /// </summary>
         public void Reset()
         {
             m_IsPaused = false;
@@ -53,6 +68,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             UpdateMotorSpeed();
         }
 
+        /// <summary>
+        /// Simple constructor that links this SimpleXRRumble class to a specific device.
+        /// </summary>
+        /// <param name="device">The XR device containing the rumble motor you want to link to.</param>
         public SimpleXRRumble(InputDevice device)
         {
             this.device = device;
