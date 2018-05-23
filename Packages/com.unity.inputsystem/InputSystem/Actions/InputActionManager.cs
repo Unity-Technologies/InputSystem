@@ -627,6 +627,9 @@ namespace UnityEngine.Experimental.Input
                 var statePtr = (byte*)m_Manager.m_StateDataBuffer.GetUnsafeReadOnlyPtr() + m_Data.stateOffset;
                 statePtr -= controlOfType.m_StateBlock.byteOffset;
 
+                ////REVIEW: 4 vtable dispatches (InputControl<Vector2>.ReadRawValueFrom, InputControl<float>.ReadRawValueFrom for x,
+                ////        same for y, DeadzoneProcess.Process; plus quite a few direct method calls on top) for a single value read
+                ////        of a Vector2 really isn't awesome; can we cut that down?
                 // And let the control do the rest.
                 return controlOfType.ReadValueFrom(new IntPtr(statePtr));
             }

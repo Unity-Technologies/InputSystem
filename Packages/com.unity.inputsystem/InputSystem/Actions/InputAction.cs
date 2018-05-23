@@ -158,6 +158,7 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: expose these as a struct?
         ////REVIEW: do we need/want the lastTrigger stuff at all?
 
+        ////REVIEW: when looking at this, you're probably interested in the last value more than anything
         public InputControl lastTriggerControl
         {
             get
