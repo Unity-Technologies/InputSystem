@@ -2,6 +2,8 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
+
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector

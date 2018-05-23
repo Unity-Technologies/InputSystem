@@ -1,3 +1,5 @@
+////TODO: rename to QuickTapModifier
+
 namespace UnityEngine.Experimental.Input.Modifiers
 {
     // Performs the action if the control is pressed and *released* within the set

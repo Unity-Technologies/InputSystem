@@ -1,11 +1,6 @@
-////TODO: have ability to also observe release (separate from ReleaseModifier)
-
 namespace UnityEngine.Experimental.Input.Modifiers
 {
-    // A modifier for button-like behavior. Will perform action once
-    // when control is pressed and then not perform again until control
-    // is released again.
-    public class PressModifier : IInputBindingModifier
+    public class PressAndReleaseModifier : IInputBindingModifier
     {
         public float pressPoint;
 
@@ -21,9 +16,6 @@ namespace UnityEngine.Experimental.Input.Modifiers
 
         public void Process(ref InputBindingModifierContext context)
         {
-            if (!context.isWaiting)
-                return;
-
             var control = context.control;
             var floatControl = control as InputControl<float>;
             if (floatControl == null)
@@ -34,8 +26,16 @@ namespace UnityEngine.Experimental.Input.Modifiers
             var previous = floatControl.ReadPreviousValue();
             var threshold = pressPointOrDefault;
 
-            if (previous < threshold && value >= threshold)
-                context.Performed();
+            if (context.isWaiting)
+            {
+                if (previous < threshold && value >= threshold)
+                    context.Started();
+            }
+            else
+            {
+                if (previous >= threshold && value < threshold)
+                    context.Performed();
+            }
         }
 
         public void Reset()

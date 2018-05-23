@@ -1134,6 +1134,7 @@ namespace UnityEngine.Experimental.Input
 
             // Register modifiers.
             modifiers.AddTypeRegistration("Press", typeof(PressModifier));
+            modifiers.AddTypeRegistration("PressAndRelease", typeof(PressAndReleaseModifier));
             modifiers.AddTypeRegistration("Hold", typeof(HoldModifier));
             modifiers.AddTypeRegistration("Tap", typeof(TapModifier));
             modifiers.AddTypeRegistration("SlowTap", typeof(SlowTapModifier));

@@ -329,9 +329,9 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanPerformHoldAction()
+    public void Actions_CanPerformHoldInteraction()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
         InputAction performedAction = null;
@@ -386,9 +386,9 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanPerformTapAction()
+    public void Actions_CanPerformTapInteraction()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
         InputAction performedAction = null;
@@ -439,6 +439,38 @@ partial class CoreTests
 
         // Action should be waiting again.
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformPressAndReleaseInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var performedReceivedCalls = 0;
+        var startedReceivedCalls = 0;
+
+        var action = new InputAction(binding: "/<Gamepad>/buttonSouth", modifiers: "pressAndRelease");
+        action.performed +=
+            ctx => ++ performedReceivedCalls;
+        action.started +=
+            ctx => ++ startedReceivedCalls;
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South), 1);
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedReceivedCalls, Is.Zero);
+
+        startedReceivedCalls = 0;
+        performedReceivedCalls = 0;
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2);
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
     }
 
     [Test]
