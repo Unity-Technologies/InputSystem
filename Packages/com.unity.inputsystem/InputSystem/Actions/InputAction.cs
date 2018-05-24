@@ -554,6 +554,12 @@ namespace UnityEngine.Experimental.Input
                 return value;
             }
 
+            // really read previous value, not value from last frame
+            public TValue ReadPreviousValue<TValue>()
+            {
+                throw new NotImplementedException();
+            }
+
             public double time
             {
                 get { return m_Time; }

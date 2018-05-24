@@ -1485,12 +1485,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCreateButtonAxisComposite()
+    public void Actions_CanCreateAxisComposite()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction();
-        action.AppendCompositeBinding("ButtonAxis")
+        action.AppendCompositeBinding("Axis")
         .With("Negative", "/<Gamepad>/leftShoulder")
         .With("Positive", "/<Gamepad>/rightShoulder");
         action.Enable();
@@ -1514,13 +1514,13 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCreateButtonVectorComposite()
+    public void Actions_CanCreateDpadComposite()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // Set up classic WASD control.
         var action = new InputAction();
-        action.AppendCompositeBinding("ButtonVector")
+        action.AppendCompositeBinding("Dpad")
         .With("Up", "/<Keyboard>/w")
         .With("Down", "/<Keyboard>/s")
         .With("Left", "/<Keyboard>/a")

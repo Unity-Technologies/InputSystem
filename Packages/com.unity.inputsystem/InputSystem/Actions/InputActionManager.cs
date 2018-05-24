@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: the single state approach makes adding and removing maps costly; may not be flexible enough
 
+////REVIEW: can we have a stable, global identification mechanism for actions that comes down to strings?
+
 ////TODO: need to sync when the InputActionMapState is re-resolved
 
 namespace UnityEngine.Experimental.Input
@@ -633,6 +635,8 @@ namespace UnityEngine.Experimental.Input
                 // And let the control do the rest.
                 return controlOfType.ReadValueFrom(new IntPtr(statePtr));
             }
+
+            ////TODO: must be able to read previous values
         }
 
         public struct TriggerEventArray : IReadOnlyList<TriggerEvent>
