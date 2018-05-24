@@ -28,6 +28,7 @@ namespace UnityEngine.Experimental.Input
         public int totalBindingCount;
         public int totalControlCount;
         public int totalInteractionCount;
+        public int totalProcessorCount;
         public int totalCompositeCount;
 
         public InputActionMap[] maps;
@@ -36,6 +37,7 @@ namespace UnityEngine.Experimental.Input
         public InputActionMapState.BindingState[] bindingStates;
         public InputActionMapState.TriggerState[] actionStates;
         public IInputInteraction[] interactions;
+        public object[] processors;
         public object[] composites;
 
         public InputActionMapState.ActionMapIndices[] mapIndices;
@@ -49,6 +51,7 @@ namespace UnityEngine.Experimental.Input
             totalActionCount = state.totalActionCount;
             totalBindingCount = state.totalBindingCount;
             totalInteractionCount = state.totalInteractionCount;
+            totalProcessorCount = state.totalProcessorCount;
             totalCompositeCount = state.totalCompositeCount;
             totalControlCount = state.totalControlCount;
 
@@ -58,6 +61,7 @@ namespace UnityEngine.Experimental.Input
             bindingStates = state.bindingStates;
             interactionStates = state.interactionStates;
             interactions = state.interactions;
+            processors = state.processors;
             composites = state.composites;
             controls = state.controls;
             controlIndexToBindingIndex = state.controlIndexToBindingIndex;
@@ -77,6 +81,7 @@ namespace UnityEngine.Experimental.Input
             var bindingStartIndex = totalBindingCount;
             var controlStartIndex = totalControlCount;
             var interactionStartIndex = totalInteractionCount;
+            var processorStartIndex = totalProcessorCount;
             var compositeStartIndex = totalCompositeCount;
             var actionStartIndex = totalActionCount;
 
@@ -114,6 +119,17 @@ namespace UnityEngine.Experimental.Input
                     actionIndex = 0;
                 }
 
+                // Instantiate processors.
+                var firstProcessorIndex = 0;
+                var numProcessors = 0;
+                var processors = unresolvedBinding.effectiveProcessors;
+                if (!string.IsNullOrEmpty(processors))
+                {
+                    firstProcessorIndex = ResolveProcessors(processors);
+                    if (processors != null)
+                        numProcessors = totalProcessorCount - firstProcessorIndex;
+                }
+
                 ////TODO: allow specifying parameters for composite on its path (same way as parameters work for interactions)
                 // If it's the start of a composite chain, create the composite.
                 if (unresolvedBinding.isComposite)
@@ -128,6 +144,8 @@ namespace UnityEngine.Experimental.Input
                     {
                         actionIndex = actionIndex,
                         compositeIndex = currentCompositeIndex,
+                        processorStartIndex = firstProcessorIndex,
+                        processorCount = numProcessors,
                         mapIndex = totalMapCount,
                     };
 
@@ -154,9 +172,10 @@ namespace UnityEngine.Experimental.Input
                 // Instantiate interactions.
                 var firstInteractionIndex = 0;
                 var numInteractions = 0;
-                if (!string.IsNullOrEmpty(unresolvedBinding.interactions))
+                var interactions = unresolvedBinding.effectiveInteractions;
+                if (!string.IsNullOrEmpty(interactions))
                 {
-                    firstInteractionIndex = ResolveInteractions(unresolvedBinding.interactions);
+                    firstInteractionIndex = ResolveInteractions(interactions);
                     if (interactionStates != null)
                         numInteractions = totalInteractionCount - firstInteractionIndex;
                 }
@@ -168,6 +187,8 @@ namespace UnityEngine.Experimental.Input
                     controlCount = numControls,
                     interactionStartIndex = firstInteractionIndex,
                     interactionCount = numInteractions,
+                    processorStartIndex = firstProcessorIndex,
+                    processorCount = numProcessors,
                     isPartOfComposite = unresolvedBinding.isPartOfComposite,
                     actionIndex = actionIndex,
                     compositeIndex = currentCompositeIndex,
@@ -220,6 +241,8 @@ namespace UnityEngine.Experimental.Input
                 bindingCount = bindingCountInThisMap,
                 interactionStartIndex = interactionStartIndex,
                 interactionCount = totalInteractionCount - interactionStartIndex,
+                processorStartIndex = processorStartIndex,
+                processorCount = totalProcessorCount - processorStartIndex,
                 compositeStartIndex = compositeStartIndex,
                 compositeCount = totalCompositeCount - compositeStartIndex,
             });
@@ -253,10 +276,10 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < m_Parameters.Count; ++i)
             {
                 // Look up interaction.
-                var type = InputInteraction.s_Interactions.LookupTypeRegisteration(m_Parameters[i].name);
+                var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
-                            "No binding interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                            "No interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
                             interactionString));
 
                 // Instantiate it.
@@ -281,10 +304,38 @@ namespace UnityEngine.Experimental.Input
             return firstInteractionIndex;
         }
 
+        private int ResolveProcessors(string processorString)
+        {
+            var firstProcessorIndex = totalProcessorCount;
+            if (!InputControlLayout.ParseNameAndParameterList(processorString, ref m_Parameters))
+                return firstProcessorIndex;
+
+            for (var i = 0; i < m_Parameters.Count; ++i)
+            {
+                // Look up processor.
+                var type = InputControlProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
+                if (type == null)
+                    throw new Exception(string.Format(
+                            "No processor with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                            processorString));
+
+                // Instantiate it.
+                var processor = Activator.CreateInstance(type);
+
+                // Pass parameters to it.
+                InputDeviceBuilder.SetParameters(processor, m_Parameters[i].parameters);
+
+                // Add to list.
+                ArrayHelpers.AppendWithCapacity(ref processors, ref totalProcessorCount, processor);
+            }
+
+            return firstProcessorIndex;
+        }
+
         private static object InstantiateBindingComposite(string name)
         {
             // Look up.
-            var type = InputBindingComposite.s_Composites.LookupTypeRegisteration(name);
+            var type = InputBindingComposite.s_Composites.LookupTypeRegistration(name);
             if (type == null)
                 throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
                         name));

@@ -339,7 +339,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.processors.LookupTypeRegisteration(name);
+            return s_Manager.processors.LookupTypeRegistration(name);
         }
 
         #endregion
@@ -962,7 +962,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetInteraction(string name)
         {
-            return s_Manager.interactions.LookupTypeRegisteration(name);
+            return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
         public static IEnumerable<string> ListInteractions()
@@ -989,7 +989,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetBindingComposite(string name)
         {
-            return s_Manager.composites.LookupTypeRegisteration(name);
+            return s_Manager.composites.LookupTypeRegistration(name);
         }
 
         /// <summary>

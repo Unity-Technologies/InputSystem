@@ -4,6 +4,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: can we have multiple interactions work together on the same binding? E.g. a 'Press' causing a start and a 'Release' interaction causing a performed
 
+////REVIEW: have a default interaction so that there *always* is an interaction object when processing triggers?
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

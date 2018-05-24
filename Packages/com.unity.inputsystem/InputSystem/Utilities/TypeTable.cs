@@ -26,6 +26,16 @@ namespace UnityEngine.Experimental.Input.Utilities
             table = new Dictionary<InternedString, Type>();
         }
 
+        public InternedString FindNameForType(Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+            foreach (var pair in table)
+                if (pair.Value == type)
+                    return pair.Key;
+            return new InternedString();
+        }
+
         public void AddTypeRegistration(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
@@ -37,7 +47,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             table[internedName] = type;
         }
 
-        public Type LookupTypeRegisteration(string name)
+        public Type LookupTypeRegistration(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");

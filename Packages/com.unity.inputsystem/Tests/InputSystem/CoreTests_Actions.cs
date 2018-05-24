@@ -772,7 +772,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_CanAddProcessorsToBindings()
+    public void Actions_CanAddProcessorsToBindings()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -786,7 +786,7 @@ partial class CoreTests
             ctx =>
             {
                 Assert.That(receivedVector, Is.Null);
-                receivedVector = ctx.GetValue<Vector2>();
+                receivedVector = ctx.ReadValue<Vector2>();
             };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
@@ -794,7 +794,7 @@ partial class CoreTests
 
         Assert.That(receivedVector, Is.Not.Null);
         Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
-        Assert.That(receivedVector.Value.x, Is.EqualTo(0.5678).Within(0.00001));
+        Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
     [Test]
@@ -1187,7 +1187,7 @@ partial class CoreTests
             ctx =>
             {
                 performed.Add(ctx);
-                Assert.That(ctx.GetValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.456f)));
+                Assert.That(ctx.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.123f, 0.456f)));
             };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.456f)});
@@ -1496,7 +1496,7 @@ partial class CoreTests
         action.Enable();
 
         float? value = null;
-        action.performed += ctx => { value = ctx.GetValue<float>(); };
+        action.performed += ctx => { value = ctx.ReadValue<float>(); };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.LeftShoulder));
         InputSystem.Update();
@@ -1528,7 +1528,7 @@ partial class CoreTests
         action.Enable();
 
         Vector2? value = null;
-        action.performed += ctx => { value = ctx.GetValue<Vector2>(); };
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
 
         // Up.
         value = null;
@@ -2022,7 +2022,7 @@ partial class CoreTests
 
         Vector2? movement = null;
         action.performed +=
-            ctx => { movement = ctx.GetValue<Vector2>(); };
+            ctx => { movement = ctx.ReadValue<Vector2>(); };
 
         action.Enable();
 

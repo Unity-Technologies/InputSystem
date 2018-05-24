@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 
 ////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
 
+////REVIEW: the entire 'lastXXX' API section is shit and needs a pass
+
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
@@ -481,7 +483,8 @@ namespace UnityEngine.Experimental.Input
             }
 
             /// <summary>
-            /// The interaction that triggered the action or <c>null</c> if the binding triggered without an interaction.
+            /// The interaction that triggered the action or <c>null</c> if the binding that triggered does not
+            /// have any particular interaction set on it.
             /// </summary>
             public IInputInteraction interaction
             {
@@ -510,10 +513,17 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            ////REVIEW: rename to ReadValue?
-            public TValue GetValue<TValue>()
+            public TValue ReadValue<TValue>()
             {
                 ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
+                ////TODO: this needs to be shared with InputActionManager
+
+                var value = default(TValue);
+                if (m_State == null)
+                    return value;
+
+                // In the case of a composite, this will be null.
+                InputControl<TValue> controlOfType = null;
 
                 // If the binding that triggered the action is part of a composite, let
                 // the composite determine the value we return.
@@ -522,10 +532,26 @@ namespace UnityEngine.Experimental.Input
                 {
                     var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
                     var context = new InputBindingCompositeContext();
-                    return compositeOfType.ReadValue(ref context);
+                    value = compositeOfType.ReadValue(ref context);
+                }
+                else
+                {
+                    controlOfType = (InputControl<TValue>)control;
+                    value = controlOfType.ReadValue();
                 }
 
-                return ((InputControl<TValue>)control).ReadValue();
+                // Run value through processors, if any.
+                var bindingStates = m_State.bindingStates;
+                var processorCount = bindingStates[m_BindingIndex].processorCount;
+                if (processorCount > 0)
+                {
+                    var processorStartIndex = bindingStates[m_BindingIndex].processorStartIndex;
+                    var processors = m_State.processors;
+                    for (var i = 0; i < processorCount; ++i)
+                        value = ((IInputControlProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
+                }
+
+                return value;
             }
 
             public double time

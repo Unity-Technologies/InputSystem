@@ -20,8 +20,8 @@ public class SimpleController_v4 : MonoBehaviour
 
     public void Awake()
     {
-        controls.gameplay.move.performed += ctx => m_Move = ctx.GetValue<Vector2>();
-        controls.gameplay.look.performed += ctx => m_Look = ctx.GetValue<Vector2>();
+        controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
+        controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
 
         controls.gameplay.fire.performed +=
             ctx =>
