@@ -98,14 +98,13 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
-        ////REVIEW: rename to 'actionMap'?
         /// <summary>
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
         /// If the action is a loose action created in code, this will be <c>null</c>.
         /// </remarks>
-        public InputActionMap map
+        public InputActionMap actionMap
         {
             get { return isSingletonAction ? null : m_ActionMap; }
         }
@@ -366,7 +365,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This is not necessarily the same as the index of the action in its map.
         /// </remarks>
-        /// <seealso cref="map"/>
+        /// <seealso cref="actionMap"/>
         [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
 
         /// <summary>

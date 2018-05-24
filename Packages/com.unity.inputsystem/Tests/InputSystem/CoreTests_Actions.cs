@@ -57,7 +57,7 @@ partial class CoreTests
     {
         var action = new InputAction();
 
-        Assert.That(action.map, Is.Null);
+        Assert.That(action.actionMap, Is.Null);
     }
 
     ////REVIEW: not sure whether this is the best behavior
@@ -86,7 +86,7 @@ partial class CoreTests
         var action = new InputAction();
         action.Enable(); // Force to create private action set.
 
-        Assert.That(action.map, Is.Null);
+        Assert.That(action.actionMap, Is.Null);
     }
 
     [Test]
@@ -568,8 +568,8 @@ partial class CoreTests
         Assert.That(maps[0].actions[0].bindings[1].interactions, Is.Null);
         Assert.That(maps[0].actions[1].bindings[0].groups, Is.Null);
         Assert.That(maps[0].actions[1].bindings[0].interactions, Is.EqualTo("tap,slowTap(duration=0.1)"));
-        Assert.That(maps[0].actions[0].map, Is.SameAs(maps[0]));
-        Assert.That(maps[0].actions[1].map, Is.SameAs(maps[0]));
+        Assert.That(maps[0].actions[0].actionMap, Is.SameAs(maps[0]));
+        Assert.That(maps[0].actions[1].actionMap, Is.SameAs(maps[0]));
     }
 
     ////TODO: test that if we apply overrides, it changes the controls we get
@@ -715,8 +715,8 @@ partial class CoreTests
         Assert.That(deserializedSet.actions[1].name, Is.EqualTo("action2"));
         Assert.That(deserializedSet.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(deserializedSet.actions[1].bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
-        Assert.That(deserializedSet.actions[0].map, Is.SameAs(deserializedSet));
-        Assert.That(deserializedSet.actions[1].map, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[0].actionMap, Is.SameAs(deserializedSet));
+        Assert.That(deserializedSet.actions[1].actionMap, Is.SameAs(deserializedSet));
     }
 
     [Test]
@@ -1885,7 +1885,7 @@ partial class CoreTests
 
         var clone = action.Clone();
 
-        Assert.That(clone.map, Is.Null);
+        Assert.That(clone.actionMap, Is.Null);
     }
 
     [Test]
@@ -1917,8 +1917,8 @@ partial class CoreTests
         Assert.That(clone.actions, Has.None.SameAs(action2));
         Assert.That(clone.actions[0].name, Is.EqualTo(map.actions[0].name));
         Assert.That(clone.actions[1].name, Is.EqualTo(map.actions[1].name));
-        Assert.That(clone.actions[0].map, Is.SameAs(clone));
-        Assert.That(clone.actions[1].map, Is.SameAs(clone));
+        Assert.That(clone.actions[0].actionMap, Is.SameAs(clone));
+        Assert.That(clone.actions[1].actionMap, Is.SameAs(clone));
         Assert.That(clone.actions[0].bindings.Count, Is.EqualTo(1));
         Assert.That(clone.actions[1].bindings.Count, Is.EqualTo(1));
         Assert.That(clone.actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -1965,18 +1965,25 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanResolveActionReference()
     {
-        var set = new InputActionMap("set");
-        set.AddAction("action1");
-        var action2 = set.AddAction("action2");
+        var map = new InputActionMap("map");
+        map.AddAction("action1");
+        var action2 = map.AddAction("action2");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set);
+        asset.AddActionMap(map);
 
         var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "set", "action2");
+        reference.Set(asset, "map", "action2");
 
         var referencedAction = reference.action;
 
         Assert.That(referencedAction, Is.SameAs(action2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanRenameAction_WithoutBreakingActionReferences()
+    {
+        Assert.Fail();
     }
 
     [Test]
