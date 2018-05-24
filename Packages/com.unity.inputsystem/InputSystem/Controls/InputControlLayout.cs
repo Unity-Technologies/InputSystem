@@ -8,9 +8,13 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: allow things like "-something" and "+something" for usages, processors, etc
+
+////TODO: change interactions and processors to use kSeparator
 
 ////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
 

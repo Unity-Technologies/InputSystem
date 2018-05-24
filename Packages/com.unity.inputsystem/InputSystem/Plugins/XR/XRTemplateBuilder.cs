@@ -9,19 +9,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     [Serializable]
     class XRLayoutBuilder
     {
-        public string parentLayout;
-        public XRDeviceDescriptor descriptor;
+        [SerializeField]
+        string parentLayout;
+        [SerializeField]
+        string interfaceName;
+        [SerializeField]
+        XRDeviceDescriptor descriptor;
 
         static uint GetSizeOfFeature(XRFeatureDescriptor featureDescriptor)
         {
             switch (featureDescriptor.featureType)
             {
                 case FeatureType.Binary:
-#if UNITY_ANDROID
-                    return 4;
-#else
-                    return 1;
-#endif
+                    return sizeof(byte);
                 case FeatureType.DiscreteStates:
                     return sizeof(int);
                 case FeatureType.Axis1D:
@@ -56,7 +56,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
-            if (description.interfaceName != XRUtilities.kXRInterface)
+            if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
             {
                 return null;
             }
@@ -95,22 +95,46 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
-                layoutName = string.Format("{0}::{1}", SanitizeName(XRUtilities.kXRInterface),
+                layoutName = string.Format("{0}::{1}", SanitizeName(description.interfaceName),
                         SanitizeName(description.product));
             }
             else
             {
-                layoutName = string.Format("{0}::{1}::{2}", SanitizeName(XRUtilities.kXRInterface), SanitizeName(description.manufacturer), SanitizeName(description.product));
+                layoutName = string.Format("{0}::{1}::{2}", SanitizeName(description.interfaceName), SanitizeName(description.manufacturer), SanitizeName(description.product));
             }
 
-            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout };
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout,
-                InputDeviceMatcher.FromDeviceDescription(description));
+            // If we are already using a generated layout, we just want to use what's there currently, instead of creating a brand new layout.
+            if (layoutName == matchedLayout)
+                return layoutName;
+
+            var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
+            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(), layoutName, matchedLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
         }
 
-        public InputControlLayout Build()
+        string ConvertPotentialAliasToName(InputControlLayout layout, string nameOrAlias)
+        {
+            InternedString internedNameOrAlias = new InternedString(nameOrAlias);
+            ReadOnlyArray<InputControlLayout.ControlItem> controls = layout.controls;
+            for (int i = 0; i < controls.Count; i++)
+            {
+                InputControlLayout.ControlItem controlItem = controls[i];
+
+                if (controlItem.name == internedNameOrAlias)
+                    return nameOrAlias;
+
+                ReadOnlyArray<InternedString> aliases = controlItem.aliases;
+                for (int j = 0; j < aliases.Count; j++)
+                {
+                    if (aliases[j] == nameOrAlias)
+                        return controlItem.name.ToString();
+                }
+            }
+            return nameOrAlias;
+        }
+
+        internal InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
             {
@@ -118,6 +142,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 extendsLayout = parentLayout,
                 updateBeforeRender = true
             };
+
+            var inherittedLayout = InputSystem.TryLoadLayout(parentLayout);
 
             var currentUsages = new List<string>();
 
@@ -135,8 +161,29 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     }
                 }
 
-                string featureName = SanitizeName(feature.name);
+                string featureName = feature.name;
+                featureName = SanitizeName(featureName);
+                if (inherittedLayout != null)
+                    featureName = ConvertPotentialAliasToName(inherittedLayout, featureName);
+
+                featureName = featureName.ToLower();
+
                 uint nextOffset = GetSizeOfFeature(feature);
+
+                if (interfaceName == XRUtilities.kXRInterfaceV1)
+                {
+#if UNITY_ANDROID
+                    if (nextOffset < 4)
+                        nextOffset = 4;
+#endif
+                }
+                else
+                {
+                    if (nextOffset >= 4 && (currentOffset % 4 != 0))
+                        currentOffset += (4 - (currentOffset % 4));
+                }
+
+
                 switch (feature.featureType)
                 {
                     case FeatureType.Binary:

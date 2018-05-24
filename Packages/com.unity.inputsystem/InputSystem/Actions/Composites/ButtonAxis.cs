@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Composites
         // Parameters.
         ////TODO: add parameters to control ramp up&down
 
-        public float ReadValue(ref InputAction.CompositeBindingContext context)
+        public float ReadValue(ref InputBindingCompositeContext context)
         {
             var negativeIsPressed = negative.isPressed;
             var positiveIsPressed = positive.isPressed;

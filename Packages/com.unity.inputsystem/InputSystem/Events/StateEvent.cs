@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 
@@ -41,6 +42,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        public InputEventPtr ToEventPtr()
+        {
+            fixed(StateEvent * ptr = &this)
+            {
+                return new InputEventPtr((InputEvent*)ptr);
+            }
+        }
+
         public FourCC GetTypeStatic()
         {
             return Type;
@@ -61,6 +70,39 @@ namespace UnityEngine.Experimental.Input.LowLevel
                         ptr.type));
 
             return (StateEvent*)ptr.data;
+        }
+
+        /// <summary>
+        /// Read the current state of <paramref name="device"/> and create a state event from it.
+        /// </summary>
+        /// <param name="device">Device to grab the state from. Must be a device that has been added to the system.</param>
+        /// <param name="eventPtr">Receives a pointer to the newly created state event.</param>
+        /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
+        /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        public static NativeArray<byte> From(InputDevice device, out InputEventPtr eventPtr)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+            if (!device.added)
+                throw new ArgumentException(string.Format("Device '{0}' has not been added to system", device),
+                    "device");
+
+            var stateFormat = device.m_StateBlock.format;
+            var stateSize = device.m_StateBlock.alignedSizeInBytes;
+            var stateOffset = device.m_StateBlock.byteOffset;
+            var statePtr = (byte*)device.currentStatePtr.ToPointer() + (int)stateOffset;
+            var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
+
+            var buffer = new NativeArray<byte>((int)eventSize, Allocator.Temp);
+            var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();
+
+            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
+            stateEventPtr->stateFormat = stateFormat;
+            UnsafeUtility.MemCpy(stateEventPtr->state.ToPointer(), statePtr, stateSize);
+
+            eventPtr = stateEventPtr->ToEventPtr();
+            return buffer;
         }
     }
 }

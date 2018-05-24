@@ -41,19 +41,28 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector2Control joystick { get; private set; }
 
         public AxisControl trigger { get; private set; }
-        public AxisControl grip { get; private set; }
-        public AxisControl indexNearTouch { get; private set; }
-        public AxisControl thumbNearTouch { get; private set; }
 
+        public AxisControl grip { get; private set; }
+        [InputControl(aliases = new[] { "TriggerPressed" })]
+        public AxisControl indexNearTouched { get; private set; }
+        public AxisControl thumbNearTouched { get; private set; }
+
+        [InputControl(aliases = new[] { "A", "X", "Alternate" })]
         public ButtonControl primaryButton { get; private set; }
+        [InputControl(aliases = new[] { "B", "Y", "Primary" })]
         public ButtonControl secondaryButton { get; private set; }
+        public ButtonControl gripPressed { get; private set; }
         public ButtonControl start { get; private set; }
-        public ButtonControl thumbstickClick { get; private set; }
-        public ButtonControl primaryTouch { get; private set; }
-        public ButtonControl secondaryTouch { get; private set; }
-        public ButtonControl indexTouch { get; private set; }
-        public ButtonControl thumbstickTouch { get; private set; }
-        public ButtonControl thumbrestTouch { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
+        public ButtonControl thumbstickClicked { get; private set; }
+        [InputControl(aliases = new[] { "ATouch", "XTouch" })]
+        public ButtonControl primaryTouched { get; private set; }
+        [InputControl(aliases = new[] { "BTouch", "YTouch" })]
+        public ButtonControl secondaryTouched { get; private set; }
+        public ButtonControl indexTouched { get; private set; }
+        [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
+        public ButtonControl thumbstickTouched { get; private set; }
+        public ButtonControl thumbrestTouched { get; private set; }
 
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -72,18 +81,19 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             joystick = builder.GetControl<Vector2Control>("joystick");
             trigger = builder.GetControl<AxisControl>("trigger");
             grip = builder.GetControl<AxisControl>("grip");
-            indexNearTouch = builder.GetControl<AxisControl>("indexNearTouch");
-            thumbNearTouch = builder.GetControl<AxisControl>("thumbNearTouch");
+            indexNearTouched = builder.GetControl<AxisControl>("indexNearTouched");
+            thumbNearTouched = builder.GetControl<AxisControl>("thumbNearTouched");
 
             primaryButton = builder.GetControl<ButtonControl>("primaryButton");
             secondaryButton = builder.GetControl<ButtonControl>("secondaryButton");
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
             start = builder.GetControl<ButtonControl>("start");
-            thumbstickClick = builder.GetControl<ButtonControl>("thumbstickClick");
-            primaryTouch = builder.GetControl<ButtonControl>("primaryTouch");
-            secondaryTouch = builder.GetControl<ButtonControl>("secondaryTouch");
-            indexTouch = builder.GetControl<ButtonControl>("indexTouch");
-            thumbstickTouch = builder.GetControl<ButtonControl>("thumbstickTouch");
-            thumbrestTouch = builder.GetControl<ButtonControl>("thumbrestTouch");
+            thumbstickClicked = builder.GetControl<ButtonControl>("thumbstickClicked");
+            primaryTouched = builder.GetControl<ButtonControl>("primaryTouched");
+            secondaryTouched = builder.GetControl<ButtonControl>("secondaryTouched");
+            indexTouched = builder.GetControl<ButtonControl>("indexTouched");
+            thumbstickTouched = builder.GetControl<ButtonControl>("thumbstickTouched");
+            thumbrestTouched = builder.GetControl<ButtonControl>("thumbrestTouched");
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
             isTracked = builder.GetControl<ButtonControl>("isTracked");

@@ -48,8 +48,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
 }
             ");
 
-            InputSystem.RegisterControlProcessor<AndroidSensorProcessor>();
-            InputSystem.RegisterControlProcessor<AndroidSensorRotationProcessor>();
+            InputSystem.RegisterControlProcessor<AndroidCompensateDirectionProcessor>();
 
             // Add sensors
             InputSystem.RegisterControlLayout<AndroidAccelerometer>(
@@ -62,11 +61,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 .WithInterface(kAndroidInterface)
                 .WithDeviceClass("AndroidSensor")
                 .WithCapability("sensorType", AndroidSensorType.MagneticField));
-            InputSystem.RegisterControlLayout<AndroidOrientation>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.Orientation));
             InputSystem.RegisterControlLayout<AndroidGyroscope>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(kAndroidInterface)
@@ -87,11 +81,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 .WithInterface(kAndroidInterface)
                 .WithDeviceClass("AndroidSensor")
                 .WithCapability("sensorType", AndroidSensorType.Proximity));
-            InputSystem.RegisterControlLayout<AndroidTemperature>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.Temperature));
             InputSystem.RegisterControlLayout<AndroidGravity>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(kAndroidInterface)
@@ -117,46 +106,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
                 .WithInterface(kAndroidInterface)
                 .WithDeviceClass("AndroidSensor")
                 .WithCapability("sensorType", AndroidSensorType.AmbientTemperature));
-            InputSystem.RegisterControlLayout<AndroidMagneticFieldUncalibrated>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.MagneticFieldUncalibrated));
-            InputSystem.RegisterControlLayout<AndroidGameRotationVector>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.GameRotationVector));
-            InputSystem.RegisterControlLayout<AndroidGyroscopeUncalibrated>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.GyroscopeUncalibrated));
-            InputSystem.RegisterControlLayout<AndroidSignificantMotion>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.SignificantMotion));
-            InputSystem.RegisterControlLayout<AndroidStepDetector>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.StepDetector));
             InputSystem.RegisterControlLayout<AndroidStepCounter>(
                 matches: new InputDeviceMatcher()
                 .WithInterface(kAndroidInterface)
                 .WithDeviceClass("AndroidSensor")
                 .WithCapability("sensorType", AndroidSensorType.StepCounter));
-            InputSystem.RegisterControlLayout<AndroidGeomagneticRotationVector>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.GeomagneticRotationVector));
-            InputSystem.RegisterControlLayout<AndroidHeartRate>(
-                matches: new InputDeviceMatcher()
-                .WithInterface(kAndroidInterface)
-                .WithDeviceClass("AndroidSensor")
-                .WithCapability("sensorType", AndroidSensorType.HeartRate));
 
             InputSystem.onFindControlLayoutForDevice += OnFindControlLayoutForDevice;
         }

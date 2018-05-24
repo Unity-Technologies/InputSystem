@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Interactions;
 
 // Using simple actions with callbacks.
 public class SimpleController_UsingActions : MonoBehaviour
@@ -29,7 +29,7 @@ public class SimpleController_UsingActions : MonoBehaviour
         fireAction.performed +=
             ctx =>
             {
-                if (ctx.modifier is SlowTapModifier)
+                if (ctx.interaction is SlowTapInteraction)
                 {
                     StartCoroutine(BurstFire((int)(ctx.duration * burstSpeed)));
                 }
@@ -42,7 +42,7 @@ public class SimpleController_UsingActions : MonoBehaviour
         fireAction.started +=
             ctx =>
             {
-                if (ctx.modifier is SlowTapModifier)
+                if (ctx.interaction is SlowTapInteraction)
                     m_Charging = true;
             };
         fireAction.cancelled +=

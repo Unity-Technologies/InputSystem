@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -17,7 +16,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('A', 'C', 'C', 'L'); }
         }
 
-        [InputControl] public Vector3 acceleration;
+        [InputControl(processors = "CompensateDirection")]
+        public Vector3 acceleration;
 
         public FourCC GetFormat()
         {
@@ -32,7 +32,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'Y', 'R', 'O'); }
         }
 
-        [InputControl] public Vector3 angularVelocity;
+        [InputControl(processors = "CompensateDirection")]
+        public Vector3 angularVelocity;
 
         public FourCC GetFormat()
         {
@@ -47,7 +48,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('G', 'R', 'V', ' '); }
         }
 
-        [InputControl] public Vector3 gravity;
+        [InputControl(processors = "CompensateDirection")]
+        public Vector3 gravity;
 
         public FourCC GetFormat()
         {
@@ -62,7 +64,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('A', 'T', 'T', 'D'); }
         }
 
-        [InputControl] public Quaternion attitude;
+        [InputControl(processors = "CompensateRotation")]
+        public Quaternion attitude;
 
         public FourCC GetFormat()
         {
@@ -77,11 +80,54 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new FourCC('L', 'A', 'A', 'C'); }
         }
 
-        [InputControl] public Vector3 acceleration;
+        [InputControl(processors = "CompensateDirection")]
+        public Vector3 acceleration;
 
         public FourCC GetFormat()
         {
             return kFormat;
+        }
+    }
+
+    public class CompensateDirectionProcessor : IInputControlProcessor<Vector3>
+    {
+        public Vector3 Process(Vector3 value, InputControl control)
+        {
+            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
+                return value;
+
+            var rotation = Quaternion.identity;
+            switch (InputRuntime.s_Instance.screenOrientation)
+            {
+                case ScreenOrientation.PortraitUpsideDown: rotation = Quaternion.Euler(0, 0, 180); break;
+                case ScreenOrientation.LandscapeLeft: rotation = Quaternion.Euler(0, 0, 90); break;
+                case ScreenOrientation.LandscapeRight: rotation = Quaternion.Euler(0, 0, 270); break;
+            }
+            return rotation * value;
+        }
+    }
+
+    public class CompensateRotationProcessor : IInputControlProcessor<Quaternion>
+    {
+        public Quaternion Process(Quaternion value, InputControl control)
+        {
+            if (!InputConfiguration.CompensateSensorsForScreenOrientation)
+                return value;
+
+            float sinRho2 = value.x * value.x + value.y * value.y + value.z * value.z;
+            value.w = (sinRho2 < 1.0f) ? Mathf.Sqrt(1.0f - sinRho2) : 0.0f;
+
+            const float kSqrtOfTwo = 1.4142135623731f;
+            var q = Quaternion.identity;
+
+            switch (InputRuntime.s_Instance.screenOrientation)
+            {
+                case ScreenOrientation.PortraitUpsideDown: q = new Quaternion(0.0f, 0.0f, 1.0f /*sin(pi/2)*/, 0.0f /*cos(pi/2)*/); break;
+                case ScreenOrientation.LandscapeLeft:      q = new Quaternion(0.0f, 0.0f, kSqrtOfTwo * 0.5f /*sin(pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(pi/4)*/); break;
+                case ScreenOrientation.LandscapeRight:     q = new Quaternion(0.0f, 0.0f, -kSqrtOfTwo * 0.5f /*sin(3pi/4)*/, -kSqrtOfTwo * 0.5f /*cos(3pi/4)*/); break;
+            }
+
+            return value * q;
         }
     }
 }
@@ -188,8 +234,8 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
-    //// FIXME: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
-    //          This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
+    //// REVIEW: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
+    ////         This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
     [InputControlLayout(stateType = typeof(AttitudeState))]
     public class Attitude : Sensor
     {

@@ -9,15 +9,16 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public ButtonControl alternate { get; private set; }
         public AxisControl combinedTrigger { get; private set; }
         public AxisControl grip { get; private set; }
+        public ButtonControl gripPressed { get; private set; }
         public AxisControl index { get; private set; }
         public AxisControl middle { get; private set; }
         public AxisControl ring { get; private set; }
         public AxisControl pinky { get; private set; }
         public AxisControl trigger { get; private set; }
-        public ButtonControl stickOrPadPress { get; private set; }
-        public ButtonControl stickOrPadTouch { get; private set; }
+        public ButtonControl joystickOrPadPressed { get; private set; }
+        public ButtonControl joystickOrPadTouched { get; private set; }
         public Vector2Control trackpad { get; private set; }
-        public AxisControl triggerTouch { get; private set; }
+        public AxisControl triggerPressed { get; private set; }
 
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
@@ -38,10 +39,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             middle = builder.GetControl<AxisControl>("middle");
             ring = builder.GetControl<AxisControl>("ring");
             pinky = builder.GetControl<AxisControl>("pinky");
-            stickOrPadPress = builder.GetControl<ButtonControl>("stickOrPadPress");
-            stickOrPadTouch = builder.GetControl<ButtonControl>("stickOrPadTouch");
+            trigger = builder.GetControl<AxisControl>("trigger");
+            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
+            joystickOrPadPressed = builder.GetControl<ButtonControl>("joystickOrPadPressed");
+            joystickOrPadTouched = builder.GetControl<ButtonControl>("joystickOrPadTouched");
             trackpad = builder.GetControl<Vector2Control>("trackpad");
-            triggerTouch = builder.GetControl<AxisControl>("triggerTouch");
+            triggerPressed = builder.GetControl<AxisControl>("triggerPressed");
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
             isTracked = builder.GetControl<ButtonControl>("isTracked");

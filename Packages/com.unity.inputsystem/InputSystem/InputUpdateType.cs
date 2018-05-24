@@ -5,6 +5,7 @@ namespace UnityEngine.Experimental.Input
     [Flags]
     public enum InputUpdateType
     {
+        None = 0,
         Dynamic = 1 << 0,
         Fixed = 1 << 1,
         BeforeRender = 1 << 2,

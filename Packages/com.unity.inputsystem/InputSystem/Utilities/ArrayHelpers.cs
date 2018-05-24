@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -20,7 +22,26 @@ namespace UnityEngine.Experimental.Input.Utilities
             return false;
         }
 
-        public static int IndexOf<TValue>(ref TValue[] array, TValue value)
+        public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
+        {
+            if (first == null || second == null)
+                return second == first;
+
+            var lengthFirst = first.Length;
+            var lengthSecond = second.Length;
+
+            if (lengthFirst != lengthSecond)
+                return false;
+
+            var comparer = EqualityComparer<TValue>.Default;
+            for (var i = 0; i < lengthFirst; ++i)
+                if (!comparer.Equals(first[i], second[i]))
+                    return false;
+
+            return true;
+        }
+
+        public static int IndexOf<TValue>(TValue[] array, TValue value)
         {
             if (array == null)
                 return -1;
@@ -116,6 +137,21 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
+        public static int AppendWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, TValue value,
+            int capacityIncrement = 10, Allocator allocator = Allocator.Persistent)
+            where TValue : struct
+        {
+            var capacity = array.Length;
+            if (capacity == count)
+                GrowBy(ref array, capacityIncrement > 1 ? capacityIncrement : 1, allocator);
+
+            var index = count;
+            array[index] = value;
+            ++count;
+
+            return index;
+        }
+
         public static void InsertAt<TValue>(ref TValue[] array, int index, TValue value)
         {
             if (array == null)
@@ -152,6 +188,42 @@ namespace UnityEngine.Experimental.Input.Utilities
             var oldLength = array.Length;
             Array.Resize(ref array, oldLength + count);
             return oldLength;
+        }
+
+        public static unsafe int GrowBy<TValue>(ref NativeArray<TValue> array, int count, Allocator allocator = Allocator.Persistent)
+            where TValue : struct
+        {
+            var length = array.Length;
+            if (length == 0)
+            {
+                array = new NativeArray<TValue>(count, allocator);
+                return 0;
+            }
+
+            var newArray = new NativeArray<TValue>(length + count, allocator);
+            // CopyFrom() expects length to match. Copy manually.
+            UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(), (long)length * UnsafeUtility.SizeOf<TValue>());
+            array.Dispose();
+            array = newArray;
+
+            return length;
+        }
+
+        public static int GrowWithCapacity<TValue>(ref NativeArray<TValue> array, ref int count, int growBy,
+            int capacityIncrement = 10, Allocator allocator = Allocator.Persistent)
+            where TValue : struct
+        {
+            var length = array.Length;
+            if (length < count + growBy)
+            {
+                if (capacityIncrement < growBy)
+                    capacityIncrement = growBy;
+                GrowBy(ref array, capacityIncrement, allocator);
+            }
+
+            var offset = count;
+            count += growBy;
+            return offset;
         }
 
         public static TValue[] Join<TValue>(TValue value, params TValue[] values)
@@ -226,14 +298,10 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static void EraseAt<TValue>(ref TValue[] array, int index)
         {
-            if (array == null)
-                return;
+            Debug.Assert(array != null);
+            Debug.Assert(index >= 0 && index < array.Length);
 
             var length = array.Length;
-
-            if (index >= length)
-                throw new IndexOutOfRangeException();
-
             if (index == 0 && length == 1)
             {
                 array = null;
@@ -248,13 +316,39 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static bool Erase<TValue>(ref TValue[] array, TValue value)
         {
-            var index = IndexOf(ref array, value);
+            var index = IndexOf(array, value);
             if (index != -1)
             {
                 EraseAt(ref array, index);
                 return true;
             }
             return false;
+        }
+
+        /// <summary>
+        /// Erase an element from the array by moving the tail element into its place.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="count"></param>
+        /// <param name="index"></param>
+        /// <typeparam name="TValue"></typeparam>
+        /// <remarks>
+        /// This method does not re-allocate the array. Instead <paramref name="count"/> is used
+        /// to keep track of how many elements there actually are in the array.
+        /// </remarks>
+        public static void EraseAtByMovingTail<TValue>(TValue[] array, ref int count, int index)
+        {
+            Debug.Assert(array != null);
+            Debug.Assert(index >= 0 && index < array.Length);
+            Debug.Assert(count >= 0 && count <= array.Length);
+
+            // Move tail, if necessary.
+            if (index != count - 1)
+                array[index] = array[count - 1];
+
+            // Destroy current tail.
+            array[count - 1] = default(TValue);
+            --count;
         }
 
         public static TValue[] Clone<TValue>(TValue[] array)
