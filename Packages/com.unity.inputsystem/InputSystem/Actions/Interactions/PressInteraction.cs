@@ -1,11 +1,11 @@
-////TODO: have ability to also observe release (separate from ReleaseModifier)
+////TODO: have ability to also observe release (separate from ReleaseInteraction)
 
-namespace UnityEngine.Experimental.Input.Modifiers
+namespace UnityEngine.Experimental.Input.Interactions
 {
-    // A modifier for button-like behavior. Will perform action once
+    // A interaction for button-like behavior. Will perform action once
     // when control is pressed and then not perform again until control
     // is released again.
-    public class PressModifier : IInputBindingModifier
+    public class PressInteraction : IInputInteraction
     {
         public float pressPoint;
 
@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
             }
         }
 
-        public void Process(ref InputBindingModifierContext context)
+        public void Process(ref InputInteractionContext context)
         {
             if (!context.isWaiting)
                 return;

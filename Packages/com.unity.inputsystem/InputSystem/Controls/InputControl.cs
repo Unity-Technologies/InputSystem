@@ -311,7 +311,7 @@ namespace UnityEngine.Experimental.Input
         internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
         internal bool m_IsNoisy;
 
-        // This method exists only to not slap the internal modifier on all overrides of
+        // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().
         internal void CallFinishSetupRecursive(InputDeviceBuilder builder)
         {

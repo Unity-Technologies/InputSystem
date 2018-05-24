@@ -1,6 +1,6 @@
 using System.Collections;
-using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Interactions;
 
 ////TODO: transform from using action callbacks to using events
 ////TODO: transform previous form that went to 'onEvent' to consuming events in bulk
@@ -28,7 +28,7 @@ public class SimpleController : MonoBehaviour
         controls.gameplay.fire.performed +=
             ctx =>
             {
-                if (ctx.modifier is SlowTapModifier)
+                if (ctx.interaction is SlowTapInteraction)
                 {
                     StartCoroutine(BurstFire((int)(ctx.duration * burstSpeed)));
                 }
@@ -41,7 +41,7 @@ public class SimpleController : MonoBehaviour
         controls.gameplay.fire.started +=
             ctx =>
             {
-                if (ctx.modifier is SlowTapModifier)
+                if (ctx.interaction is SlowTapInteraction)
                     m_Charging = true;
             };
         controls.gameplay.fire.cancelled +=

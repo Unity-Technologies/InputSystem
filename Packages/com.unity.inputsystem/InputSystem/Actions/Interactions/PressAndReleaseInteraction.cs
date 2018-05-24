@@ -1,6 +1,6 @@
-namespace UnityEngine.Experimental.Input.Modifiers
+namespace UnityEngine.Experimental.Input.Interactions
 {
-    public class PressAndReleaseModifier : IInputBindingModifier
+    public class PressAndReleaseInteraction : IInputInteraction
     {
         public float pressPoint;
 
@@ -14,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
             }
         }
 
-        public void Process(ref InputBindingModifierContext context)
+        public void Process(ref InputInteractionContext context)
         {
             var control = context.control;
             var floatControl = control as InputControl<float>;

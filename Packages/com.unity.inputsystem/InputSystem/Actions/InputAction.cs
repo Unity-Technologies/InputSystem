@@ -211,18 +211,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public IInputBindingModifier lastTriggerModifier
+        public IInputInteraction lastTriggerInteraction
         {
             get
             {
                 if (m_ActionIndex == InputActionMapState.kInvalidIndex)
                     return null;
-                var modifierIndex = currentState.modifierIndex;
-                if (modifierIndex == InputActionMapState.kInvalidIndex)
+                var interactionIndex = currentState.interactionIndex;
+                if (interactionIndex == InputActionMapState.kInvalidIndex)
                     return null;
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.modifiers[modifierIndex];
+                return m_ActionMap.m_State.interactions[interactionIndex];
             }
         }
 
@@ -277,15 +277,15 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string modifiers = null)
+        public InputAction(string name = null, string binding = null, string interactions = null)
             : this(name)
         {
-            if (binding == null && modifiers != null)
-                throw new ArgumentException("Cannot have modifier without binding", "modifiers");
+            if (binding == null && interactions != null)
+                throw new ArgumentException("Cannot have interaction without binding", "interactions");
 
             if (binding != null)
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, modifiers = modifiers, action = m_Name}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, action = m_Name}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
@@ -437,7 +437,7 @@ namespace UnityEngine.Experimental.Input
             internal InputActionMapState m_State;
             internal int m_ControlIndex;
             internal int m_BindingIndex;
-            internal int m_ModifierIndex;
+            internal int m_InteractionIndex;
             internal double m_Time;
 
             internal int actionIndex
@@ -481,17 +481,17 @@ namespace UnityEngine.Experimental.Input
             }
 
             /// <summary>
-            /// The modifier that triggered the action or <c>null</c> if the binding triggered without a modifier.
+            /// The interaction that triggered the action or <c>null</c> if the binding triggered without an interaction.
             /// </summary>
-            public IInputBindingModifier modifier
+            public IInputInteraction interaction
             {
                 get
                 {
                     if (m_State == null)
                         return null;
-                    if (m_ModifierIndex == InputActionMapState.kInvalidIndex)
+                    if (m_InteractionIndex == InputActionMapState.kInvalidIndex)
                         return null;
-                    return m_State.modifiers[m_ModifierIndex];
+                    return m_State.interactions[m_InteractionIndex];
                 }
             }
 
@@ -539,9 +539,9 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (m_State == null)
                         return 0;
-                    if (m_ModifierIndex == InputActionMapState.kInvalidIndex)
+                    if (m_InteractionIndex == InputActionMapState.kInvalidIndex)
                         return time;
-                    return m_State.modifierStates[m_ModifierIndex].startTime;
+                    return m_State.interactionStates[m_InteractionIndex].startTime;
                 }
             }
 

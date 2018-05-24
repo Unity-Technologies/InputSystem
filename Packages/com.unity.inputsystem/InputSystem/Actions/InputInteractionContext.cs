@@ -3,10 +3,10 @@ using System;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Information passed to <see cref="IInputBindingModifier">binding modifiers</see>
+    /// Information passed to <see cref="IInputInteraction">interactions</see>
     /// when their associated controls trigger.
     /// </summary>
-    public struct InputBindingModifierContext
+    public struct InputInteractionContext
     {
         /// <summary>
         /// The action associated with the binding.
@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input
 
         /// <summary>
         /// The bound control that changed its state to trigger the binding associated
-        /// with the modifier.
+        /// with the interaction.
         /// </summary>
         public InputControl control
         {
@@ -84,17 +84,17 @@ namespace UnityEngine.Experimental.Input
         public void Started()
         {
             m_TriggerState.startTime = time;
-            m_State.ChangePhaseOfModifier(InputActionPhase.Started, ref m_TriggerState);
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Started, ref m_TriggerState);
         }
 
         public void Performed()
         {
-            m_State.ChangePhaseOfModifier(InputActionPhase.Performed, ref m_TriggerState);
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
 
         public void Cancelled()
         {
-            m_State.ChangePhaseOfModifier(InputActionPhase.Cancelled, ref m_TriggerState);
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Cancelled, ref m_TriggerState);
         }
 
         public void SetTimeout(float seconds)
@@ -121,9 +121,9 @@ namespace UnityEngine.Experimental.Input
             get { return m_TriggerState.bindingIndex; }
         }
 
-        internal int modifierIndex
+        internal int interactionIndex
         {
-            get { return m_TriggerState.modifierIndex; }
+            get { return m_TriggerState.interactionIndex; }
         }
 
 

@@ -1,10 +1,8 @@
-////TODO: rename to QuickTapModifier
-
-namespace UnityEngine.Experimental.Input.Modifiers
+namespace UnityEngine.Experimental.Input.Interactions
 {
     // Performs the action if the control is pressed and *released* within the set
     // duration (which defaults to InputConfiguration.TapTime).
-    public class TapModifier : IInputBindingModifier
+    public class TapInteraction : IInputInteraction
     {
         public float duration;
         public float durationOrDefault
@@ -16,7 +14,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
 
         ////TODO: make sure 2d doesn't move too far
 
-        public void Process(ref InputBindingModifierContext context)
+        public void Process(ref InputInteractionContext context)
         {
             if (context.timerHasExpired)
             {
