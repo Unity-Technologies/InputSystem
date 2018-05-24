@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
 using System;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -8,295 +9,18 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.Experimental.Input.Controls;
 
-public class XRTests : InputTestFixture
+class XRTests : InputTestFixture
 {
-    InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
-    {
-        return new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterfaceCurrent,
-            product = "Device",
-            manufacturer = "Manufacturer",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = role,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "Filler",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        };
-    }
-
-    InputDeviceDescription CreateMangledNameDeviceDescription()
-    {
-        return new InputDeviceDescription
-        {
-            interfaceName = XRUtilities.kXRInterfaceCurrent,
-            product = "XR_This.Layout/Should have 1 Valid::Name",
-            manufacturer = "__Manufacturer::",
-            capabilities = new XRDeviceDescriptor
-            {
-                deviceRole = DeviceRole.Generic,
-                inputFeatures = new List<XRFeatureDescriptor>()
-                {
-                    new XRFeatureDescriptor()
-                    {
-                        name = "SimpleFeature[|.:+-?<1",
-                        featureType = FeatureType.Binary
-                    }
-                }
-            }.ToJson()
-        };
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    unsafe struct ButtonPackedXRDeviceState : IInputStateTypeInfo
-    {
-        [FieldOffset(0)] public byte button1;
-        [FieldOffset(1)] public byte button2;
-        [FieldOffset(2)] public byte button3;
-        [FieldOffset(3)] public byte button4;
-        [FieldOffset(4)] public byte button5;
-        [FieldOffset(5)] public byte button6;
-        [FieldOffset(8)] public float axis1;
-        [FieldOffset(12)] public byte button7;
-
-        public static InputDeviceDescription CreateDeviceDescription()
-        {
-            return new InputDeviceDescription
-            {
-                interfaceName = XRUtilities.kXRInterfaceCurrent,
-                product = "XRDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
-                {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
-                    {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button1",
-                            featureType = FeatureType.Binary
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button2",
-                            featureType = FeatureType.Binary
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button3",
-                            featureType = FeatureType.Binary
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button4",
-                            featureType = FeatureType.Binary
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button5",
-                            featureType = FeatureType.Binary
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button6",
-                            featureType = FeatureType.Binary
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Axis1",
-                            featureType = FeatureType.Axis1D
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button7",
-                            featureType = FeatureType.Binary
-                        },
-                    }
-                }.ToJson()
-            };
-        }
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'R', 'S', '0');
-        }
-    }
-
-    [StructLayout(LayoutKind.Explicit)]
-    unsafe struct TestXRDeviceState : IInputStateTypeInfo
-    {
-        [FieldOffset(0)] public byte button;
-        [FieldOffset(4)] public uint discreteState;
-        [FieldOffset(8)] public float axis;
-        [FieldOffset(12)] public Vector2 axis2D;
-        [FieldOffset(20)] public Vector3 axis3D;
-        [FieldOffset(32)] public Quaternion rotation;
-        [FieldOffset(48)] public fixed byte buffer[256];
-        [FieldOffset(304)] public byte lastElement;
-
-        public static InputDeviceDescription CreateDeviceDescription()
-        {
-            return new InputDeviceDescription()
-            {
-                interfaceName = XRUtilities.kXRInterfaceCurrent,
-                product = "XRDevice",
-                manufacturer = "XRManufacturer",
-                capabilities = new XRDeviceDescriptor
-                {
-                    deviceRole = DeviceRole.Generic,
-                    inputFeatures = new List<XRFeatureDescriptor>()
-                    {
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Button",
-                            featureType = FeatureType.Binary,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "ButtonUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "DiscreteState",
-                            featureType = FeatureType.DiscreteStates,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "DiscreteStateUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Axis",
-                            featureType = FeatureType.Axis1D,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "Axis1DUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Vector2",
-                            featureType = FeatureType.Axis2D,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "Axis2DUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Vector3",
-                            featureType = FeatureType.Axis3D,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "Axis3DUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Rotation",
-                            featureType = FeatureType.Rotation,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "RotationUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Custom",
-                            featureType = FeatureType.Custom,
-                            customSize = 256,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "CustomTypeUsage"
-                                }
-                            }
-                        },
-                        new XRFeatureDescriptor()
-                        {
-                            name = "Last",
-                            featureType = FeatureType.Binary,
-                            usageHints = new List<UsageHint>()
-                            {
-                                new UsageHint()
-                                {
-                                    content = "LastElementUsage"
-                                },
-                                new UsageHint()
-                                {
-                                    content = "SecondUsage"
-                                }
-                            }
-                        }
-                    }
-                }.ToJson()
-            };
-        }
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'R', 'S', '0');
-        }
-    }
-
-
-    [Test]
-    [Category("Layouts")]
-    [TestCase(DeviceRole.Generic, "XRHMD")]
-    [TestCase(DeviceRole.LeftHanded, "XRController")]
-    [TestCase(DeviceRole.RightHanded, "XRController")]
-    [TestCase(DeviceRole.HardwareTracker, null)]
-    [TestCase(DeviceRole.TrackingReference, null)]
-    [TestCase(DeviceRole.GameController, null)]
-    [TestCase(DeviceRole.Unknown, null)]
-    public void Layouts_DeviceRole_ExtendsSpecificDevice(DeviceRole role, string extends)
-    {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
-        testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
-
-        InputSystem.Update();
-
-        var generatedLayout = InputSystem.TryLoadLayout("XRInputV1::Manufacturer::Device");
-        Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo(extends));
-    }
-
     [Test]
     [Category("Devices")]
-    [TestCase(DeviceRole.Generic, typeof(XRHMD))]
-    [TestCase(DeviceRole.LeftHanded, typeof(XRController))]
-    [TestCase(DeviceRole.RightHanded, typeof(XRController))]
-    [TestCase(DeviceRole.HardwareTracker, typeof(InputDevice))]
-    [TestCase(DeviceRole.TrackingReference, typeof(InputDevice))]
-    [TestCase(DeviceRole.GameController, typeof(InputDevice))]
-    [TestCase(DeviceRole.Unknown, typeof(InputDevice))]
-    public void Devices_DeviceRole_CreatesSpecificDeviceType(DeviceRole role, Type expectedType)
+    [TestCase(DeviceRole.Generic, "XRHMD", typeof(XRHMD))]
+    [TestCase(DeviceRole.LeftHanded, "XRController", typeof(XRController))]
+    [TestCase(DeviceRole.RightHanded, "XRController", typeof(XRController))]
+    [TestCase(DeviceRole.HardwareTracker, null, typeof(InputDevice))]
+    [TestCase(DeviceRole.TrackingReference, null, typeof(InputDevice))]
+    [TestCase(DeviceRole.GameController, null, typeof(InputDevice))]
+    [TestCase(DeviceRole.Unknown, null, typeof(InputDevice))]
+    public void Devices_XRDeviceRoleDeterminesTypeOfDevice(DeviceRole role, string baseLayoutName, Type expectedType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
         testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
@@ -305,12 +29,18 @@ public class XRTests : InputTestFixture
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
+
         Assert.That(createdDevice, Is.TypeOf(expectedType));
+
+        var generatedLayout = InputSystem.TryLoadLayout(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
+                    deviceDescription.manufacturer, deviceDescription.product));
+        Assert.That(generatedLayout, Is.Not.Null);
+        Assert.That(generatedLayout.extendsLayout, Is.EqualTo(baseLayoutName));
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_GenericDevice_IsAvailableViaHMDCurrent()
+    public void Devices_CreatingGenericDevice_MakesItTheCurrentHMD()
     {
         Assert.That(XRHMD.current, Is.Null);
 
@@ -378,7 +108,7 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layout_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
+    public void Layouts_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
         testRuntime.ReportNewInputDevice(deviceDescription.ToJson());
@@ -395,7 +125,7 @@ public class XRTests : InputTestFixture
 
     [Test]
     [Category("Layouts")]
-    public void Layout_XRLayoutWithoutManufacturer_IsNamespacedAsInterfaceDevice()
+    public void Layouts_XRLayoutWithoutManufacturer_IsNamespacedAsInterfaceDevice()
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
         deviceDescription.manufacturer = null;
@@ -664,4 +394,260 @@ public class XRTests : InputTestFixture
         Assert.That(currentControl.offset, Is.EqualTo(12));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
+
+    private InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterfaceCurrent,
+            product = "Device",
+            manufacturer = "Manufacturer",
+            capabilities = new XRDeviceDescriptor
+            {
+                deviceRole = role,
+                inputFeatures = new List<XRFeatureDescriptor>()
+                {
+                    new XRFeatureDescriptor()
+                    {
+                        name = "Filler",
+                        featureType = FeatureType.Binary
+                    }
+                }
+            }.ToJson()
+        };
+    }
+
+    private InputDeviceDescription CreateMangledNameDeviceDescription()
+    {
+        return new InputDeviceDescription
+        {
+            interfaceName = XRUtilities.kXRInterfaceCurrent,
+            product = "XR_This.Layout/Should have 1 Valid::Name",
+            manufacturer = "__Manufacturer::",
+            capabilities = new XRDeviceDescriptor
+            {
+                deviceRole = DeviceRole.Generic,
+                inputFeatures = new List<XRFeatureDescriptor>()
+                {
+                    new XRFeatureDescriptor()
+                    {
+                        name = "SimpleFeature[|.:+-?<1",
+                        featureType = FeatureType.Binary
+                    }
+                }
+            }.ToJson()
+        };
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct ButtonPackedXRDeviceState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte button1;
+        [FieldOffset(1)] public byte button2;
+        [FieldOffset(2)] public byte button3;
+        [FieldOffset(3)] public byte button4;
+        [FieldOffset(4)] public byte button5;
+        [FieldOffset(5)] public byte button6;
+        [FieldOffset(8)] public float axis1;
+        [FieldOffset(12)] public byte button7;
+
+        public static InputDeviceDescription CreateDeviceDescription()
+        {
+            return new InputDeviceDescription
+            {
+                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+                    deviceRole = DeviceRole.Generic,
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                    {
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button1",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button2",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button3",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button4",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button5",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button6",
+                            featureType = FeatureType.Binary
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Axis1",
+                            featureType = FeatureType.Axis1D
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button7",
+                            featureType = FeatureType.Binary
+                        },
+                    }
+                }.ToJson()
+            };
+        }
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('X', 'R', 'S', '0');
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    unsafe struct TestXRDeviceState : IInputStateTypeInfo
+    {
+        [FieldOffset(0)] public byte button;
+        [FieldOffset(4)] public uint discreteState;
+        [FieldOffset(8)] public float axis;
+        [FieldOffset(12)] public Vector2 axis2D;
+        [FieldOffset(20)] public Vector3 axis3D;
+        [FieldOffset(32)] public Quaternion rotation;
+        [FieldOffset(48)] public fixed byte buffer[256];
+        [FieldOffset(304)] public byte lastElement;
+
+        public static InputDeviceDescription CreateDeviceDescription()
+        {
+            return new InputDeviceDescription()
+            {
+                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                product = "XRDevice",
+                manufacturer = "XRManufacturer",
+                capabilities = new XRDeviceDescriptor
+                {
+                    deviceRole = DeviceRole.Generic,
+                    inputFeatures = new List<XRFeatureDescriptor>()
+                    {
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Button",
+                            featureType = FeatureType.Binary,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "ButtonUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "DiscreteState",
+                            featureType = FeatureType.DiscreteStates,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "DiscreteStateUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Axis",
+                            featureType = FeatureType.Axis1D,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "Axis1DUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Vector2",
+                            featureType = FeatureType.Axis2D,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "Axis2DUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Vector3",
+                            featureType = FeatureType.Axis3D,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "Axis3DUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Rotation",
+                            featureType = FeatureType.Rotation,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "RotationUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Custom",
+                            featureType = FeatureType.Custom,
+                            customSize = 256,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "CustomTypeUsage"
+                                }
+                            }
+                        },
+                        new XRFeatureDescriptor()
+                        {
+                            name = "Last",
+                            featureType = FeatureType.Binary,
+                            usageHints = new List<UsageHint>()
+                            {
+                                new UsageHint()
+                                {
+                                    content = "LastElementUsage"
+                                },
+                                new UsageHint()
+                                {
+                                    content = "SecondUsage"
+                                }
+                            }
+                        }
+                    }
+                }.ToJson()
+            };
+        }
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('X', 'R', 'S', '0');
+        }
+    }
 }
+#endif // UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA

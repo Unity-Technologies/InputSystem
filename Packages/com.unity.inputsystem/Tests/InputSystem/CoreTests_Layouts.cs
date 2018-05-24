@@ -747,6 +747,9 @@ partial class CoreTests
         Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
     }
 
+    ////TODO: write combined test that applies all possible modifications to a child control
+    ////      (also add - and + capability)
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanModifyLayoutOfChildControlUsingPath()
@@ -766,6 +769,27 @@ partial class CoreTests
         var gamepad = (Gamepad)setup.Finish();
 
         Assert.That(gamepad.dpad.up.layout, Is.EqualTo("DiscreteButton"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void TODO_Layouts_CanModifyUsagesOfChildControlUsingPath()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    { ""name"" : ""stick"", ""layout"" : ""Stick"" },
+                    { ""name"" : ""stick/x"", ""usage"" : ""TestUsage"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        var device = InputSystem.AddDevice("MyDevice");
+
+        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo("TestUsage"));
     }
 
     [Test]
