@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "ambientTemperature", layout = "Axis", variant = "AmbientTemperature")]
         [InputControl(name = "stepCounter", layout = "Integer", variant = "StepCounter")]
         [InputControl(name = "rotation", layout = "Quaternion", processors = "CompensateRotation", variant = "GeomagneticRotationVector")]
-        [InputControl(name = "rate", layout = "Integer", variant = "HeartRate")]
+        [InputControl(name = "rate", layout = "Axis", variant = "HeartRate")]
         public fixed float data[16];
 
         public AndroidSensorState WithData(params float[] data)

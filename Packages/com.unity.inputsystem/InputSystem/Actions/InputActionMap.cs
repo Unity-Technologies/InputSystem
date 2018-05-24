@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -545,8 +546,8 @@ namespace UnityEngine.Experimental.Input
                 ResolveBindings();
         }
 
-        ////TODO: when re-resolving, we need to preserve ModifierStates and not just reset them
-        // Resolve all bindings to their controls and also add any action modifiers
+        ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them
+        // Resolve all bindings to their controls and also add any action interactions
         // from the bindings. The best way is for this to happen once for each action
         // set at the beginning of the game and to then enable and disable the sets
         // as needed. However, the system will also re-resolve bindings if the control
@@ -588,12 +589,16 @@ namespace UnityEngine.Experimental.Input
         {
             public string name;
             public string path;
-            public string modifiers;
+            public string interactions;
             public string groups;
             public string action;
             public bool chainWithPrevious;
             public bool isComposite;
             public bool isPartOfComposite;
+
+            // This is for backwards compatibility with existing serialized action data as of 0.0.1-preview.
+            // Ideally we should be able to nuke this before 1.0.
+            public string modifiers;
 
             public InputBinding ToBinding()
             {
@@ -602,7 +607,7 @@ namespace UnityEngine.Experimental.Input
                     name = string.IsNullOrEmpty(name) ? null : name,
                     path = string.IsNullOrEmpty(path) ? null : path,
                     action = string.IsNullOrEmpty(action) ? null : action,
-                    modifiers = string.IsNullOrEmpty(modifiers) ? null : modifiers,
+                    interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
                     chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
@@ -617,7 +622,7 @@ namespace UnityEngine.Experimental.Input
                     name = binding.name,
                     path = binding.path,
                     action = binding.action,
-                    modifiers = binding.modifiers,
+                    interactions = binding.interactions,
                     groups = binding.groups,
                     chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,

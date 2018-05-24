@@ -2,6 +2,8 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
+
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
@@ -158,6 +160,7 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: expose these as a struct?
         ////REVIEW: do we need/want the lastTrigger stuff at all?
 
+        ////REVIEW: when looking at this, you're probably interested in the last value more than anything
         public InputControl lastTriggerControl
         {
             get
@@ -208,18 +211,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public IInputBindingModifier lastTriggerModifier
+        public IInputInteraction lastTriggerInteraction
         {
             get
             {
                 if (m_ActionIndex == InputActionMapState.kInvalidIndex)
                     return null;
-                var modifierIndex = currentState.modifierIndex;
-                if (modifierIndex == InputActionMapState.kInvalidIndex)
+                var interactionIndex = currentState.interactionIndex;
+                if (interactionIndex == InputActionMapState.kInvalidIndex)
                     return null;
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.modifiers[modifierIndex];
+                return m_ActionMap.m_State.interactions[interactionIndex];
             }
         }
 
@@ -274,15 +277,15 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string modifiers = null)
+        public InputAction(string name = null, string binding = null, string interactions = null)
             : this(name)
         {
-            if (binding == null && modifiers != null)
-                throw new ArgumentException("Cannot have modifier without binding", "modifiers");
+            if (binding == null && interactions != null)
+                throw new ArgumentException("Cannot have interaction without binding", "interactions");
 
             if (binding != null)
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, modifiers = modifiers, action = m_Name}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, action = m_Name}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
@@ -431,26 +434,80 @@ namespace UnityEngine.Experimental.Input
 
         public struct CallbackContext
         {
-            internal InputAction m_Action;
-            internal InputControl m_Control;
-            internal IInputBindingModifier m_Modifier;
-            internal object m_Composite;
+            internal InputActionMapState m_State;
+            internal int m_ControlIndex;
+            internal int m_BindingIndex;
+            internal int m_InteractionIndex;
             internal double m_Time;
-            internal double m_StartTime;
+
+            internal int actionIndex
+            {
+                get
+                {
+                    if (m_State == null)
+                        return InputActionMapState.kInvalidIndex;
+                    return m_State.bindingStates[m_BindingIndex].actionIndex;
+                }
+            }
+
+            public InputActionPhase phase
+            {
+                get
+                {
+                    if (m_State == null)
+                        return InputActionPhase.Disabled;
+                    return m_State.actionStates[actionIndex].phase;
+                }
+            }
 
             public InputAction action
             {
-                get { return m_Action; }
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    return m_State.GetActionOrNull(m_BindingIndex);
+                }
             }
 
             public InputControl control
             {
-                get { return m_Control; }
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    return m_State.controls[m_ControlIndex];
+                }
             }
 
-            public IInputBindingModifier modifier
+            /// <summary>
+            /// The interaction that triggered the action or <c>null</c> if the binding triggered without an interaction.
+            /// </summary>
+            public IInputInteraction interaction
             {
-                get { return m_Modifier; }
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    if (m_InteractionIndex == InputActionMapState.kInvalidIndex)
+                        return null;
+                    return m_State.interactions[m_InteractionIndex];
+                }
+            }
+
+            public object composite
+            {
+                get
+                {
+                    if (m_State == null)
+                        return null;
+                    var bindingStates = m_State.bindingStates;
+                    if (!bindingStates[m_BindingIndex].isPartOfComposite)
+                        return null;
+                    var compositeIndex = bindingStates[m_BindingIndex].compositeIndex;
+                    Debug.Assert(compositeIndex != InputActionMapState.kInvalidIndex);
+                    return m_State.composites[compositeIndex];
+                }
             }
 
             ////REVIEW: rename to ReadValue?
@@ -460,11 +517,12 @@ namespace UnityEngine.Experimental.Input
 
                 // If the binding that triggered the action is part of a composite, let
                 // the composite determine the value we return.
-                if (m_Composite != null)
+                var compositeObject = composite;
+                if (compositeObject != null)
                 {
-                    var composite = (IInputBindingComposite<TValue>)m_Composite;
+                    var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
                     var context = new InputBindingCompositeContext();
-                    return composite.ReadValue(ref context);
+                    return compositeOfType.ReadValue(ref context);
                 }
 
                 return ((InputControl<TValue>)control).ReadValue();
@@ -477,12 +535,19 @@ namespace UnityEngine.Experimental.Input
 
             public double startTime
             {
-                get { return m_StartTime; }
+                get
+                {
+                    if (m_State == null)
+                        return 0;
+                    if (m_InteractionIndex == InputActionMapState.kInvalidIndex)
+                        return time;
+                    return m_State.interactionStates[m_InteractionIndex].startTime;
+                }
             }
 
             public double duration
             {
-                get { return m_Time - m_StartTime; }
+                get { return time - startTime; }
             }
         }
     }

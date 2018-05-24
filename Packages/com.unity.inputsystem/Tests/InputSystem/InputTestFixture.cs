@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
@@ -41,11 +43,6 @@ namespace UnityEngine.Experimental.Input
     /// </example>
     public class InputTestFixture
     {
-        /// <summary>
-        /// The input runtime used during testing.
-        /// </summary>
-        public InputTestRuntime testRuntime { get; private set; }
-
         /// <summary>
         /// Put InputSystem into a known state where it only has a basic set of
         /// layouts and does not have any input devices.
@@ -94,7 +91,7 @@ namespace UnityEngine.Experimental.Input
         {
             ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
             ////        actions and readding devices we refresh all enabled actions. That means that when
-            ////        we restore, the action above will get refreshed and not find a 'test' modifier
+            ////        we restore, the action above will get refreshed and not find a 'test' interaction
             ////        registered in the system. Should we force-disable all actions on Restore()?
             InputSystem.DisableAllEnabledActions();
 
@@ -132,6 +129,63 @@ namespace UnityEngine.Experimental.Input
                 else
                     Assert.That(controlAsButton.isPressed, Is.True,
                         string.Format("Expected button {0} to be pressed", controlAsButton));
+            }
+        }
+
+        /// <summary>
+        /// The input runtime used during testing.
+        /// </summary>
+        public InputTestRuntime testRuntime { get; private set; }
+
+        private Vector3Comparer m_Vector3Comparer;
+        public Vector3Comparer vector3Comparer
+        {
+            get
+            {
+                if (m_Vector3Comparer == null)
+                    m_Vector3Comparer = new Vector3Comparer();
+                return m_Vector3Comparer;
+            }
+        }
+
+        private Vector2Comparer m_Vector2Comparer;
+        public Vector2Comparer vector2Comparer
+        {
+            get
+            {
+                if (m_Vector2Comparer == null)
+                    m_Vector2Comparer = new Vector2Comparer();
+                return m_Vector2Comparer;
+            }
+        }
+
+        public class Vector3Comparer : IComparer<Vector3>
+        {
+            private float m_Epsilon;
+
+            public Vector3Comparer(float epsilon = 0.0001f)
+            {
+                m_Epsilon = epsilon;
+            }
+
+            public int Compare(Vector3 a, Vector3 b)
+            {
+                return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon && Math.Abs(a.z - b.z) < m_Epsilon ? 0 : 1;
+            }
+        }
+
+        public class Vector2Comparer : IComparer<Vector2>
+        {
+            private float m_Epsilon;
+
+            public Vector2Comparer(float epsilon = 0.0001f)
+            {
+                m_Epsilon = epsilon;
+            }
+
+            public int Compare(Vector2 a, Vector2 b)
+            {
+                return Math.Abs(a.x - b.x) < m_Epsilon && Math.Abs(a.y - b.y) < m_Epsilon ? 0 : 1;
             }
         }
     }
