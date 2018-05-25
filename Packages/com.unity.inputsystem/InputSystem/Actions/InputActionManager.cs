@@ -496,7 +496,23 @@ namespace UnityEngine.Experimental.Input
             {
                 get
                 {
-                    throw new NotImplementedException();
+                    if (m_Manager == null)
+                        throw new InvalidOperationException("ActionEventArray not intialized");
+
+                    if (index < 0 || index >= m_ActionEventCount)
+                        throw new ArgumentOutOfRangeException(
+                            string.Format("Index {0} is out of range for trigger event with {1} action entries", index,
+                                m_ActionEventCount), "index");
+
+                    var idx = m_ActionEventIndex;
+                    for (var i = 0; i != index; ++i)
+                    {
+                        ++idx;
+                        while (m_Manager.m_ActionDataBuffer[idx].triggerIndex != m_TriggerIndex)
+                            ++idx;
+                    }
+
+                    return new ActionEvent(m_Manager, idx);
                 }
             }
 

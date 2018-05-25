@@ -248,6 +248,36 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void TODO_Actions_CanGetCompositeBindingValuesFromActionEvents()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+        var action = map.AddAction("action");
+        action.AppendCompositeBinding("Dpad")
+        .With("Left", "<Keyboard>/a")
+        .With("Right", "<Keyboard>/d")
+        .With("Up", "<Keyboard>/w")
+        .With("Down", "<Keyboard>/s");
+
+        using (var manager = new InputActionManager())
+        {
+            manager.AddActionMap(map);
+
+            map.Enable();
+
+            InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
+            InputSystem.Update();
+
+            var events = manager.triggerEventsForCurrentFrame;
+
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(vector2Comparer));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ActionManagerFlushesRecordedEventsBetweenUpdates()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

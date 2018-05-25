@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input.Interactions;
 
 // Use action set asset instead of lose InputActions directly on component.
-public class SimpleController_v4 : MonoBehaviour
+public class SimpleController_UsingActions_InAsset : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;
