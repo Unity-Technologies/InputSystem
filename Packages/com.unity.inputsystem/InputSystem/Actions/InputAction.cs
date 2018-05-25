@@ -2,6 +2,10 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
+
+////REVIEW: the entire 'lastXXX' API section is shit and needs a pass
+
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
@@ -94,14 +98,13 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
-        ////REVIEW: rename to 'actionMap'?
         /// <summary>
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
         /// If the action is a loose action created in code, this will be <c>null</c>.
         /// </remarks>
-        public InputActionMap map
+        public InputActionMap actionMap
         {
             get { return isSingletonAction ? null : m_ActionMap; }
         }
@@ -158,6 +161,7 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: expose these as a struct?
         ////REVIEW: do we need/want the lastTrigger stuff at all?
 
+        ////REVIEW: when looking at this, you're probably interested in the last value more than anything
         public InputControl lastTriggerControl
         {
             get
@@ -208,18 +212,18 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public IInputBindingModifier lastTriggerModifier
+        public IInputInteraction lastTriggerInteraction
         {
             get
             {
                 if (m_ActionIndex == InputActionMapState.kInvalidIndex)
                     return null;
-                var modifierIndex = currentState.modifierIndex;
-                if (modifierIndex == InputActionMapState.kInvalidIndex)
+                var interactionIndex = currentState.interactionIndex;
+                if (interactionIndex == InputActionMapState.kInvalidIndex)
                     return null;
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
-                return m_ActionMap.m_State.modifiers[modifierIndex];
+                return m_ActionMap.m_State.interactions[interactionIndex];
             }
         }
 
@@ -274,15 +278,15 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string modifiers = null)
+        public InputAction(string name = null, string binding = null, string interactions = null)
             : this(name)
         {
-            if (binding == null && modifiers != null)
-                throw new ArgumentException("Cannot have modifier without binding", "modifiers");
+            if (binding == null && interactions != null)
+                throw new ArgumentException("Cannot have interaction without binding", "interactions");
 
             if (binding != null)
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, modifiers = modifiers, action = m_Name}};
+                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, action = m_Name}};
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
@@ -361,7 +365,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This is not necessarily the same as the index of the action in its map.
         /// </remarks>
-        /// <seealso cref="map"/>
+        /// <seealso cref="actionMap"/>
         [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
 
         /// <summary>
@@ -434,7 +438,7 @@ namespace UnityEngine.Experimental.Input
             internal InputActionMapState m_State;
             internal int m_ControlIndex;
             internal int m_BindingIndex;
-            internal int m_ModifierIndex;
+            internal int m_InteractionIndex;
             internal double m_Time;
 
             internal int actionIndex
@@ -478,17 +482,18 @@ namespace UnityEngine.Experimental.Input
             }
 
             /// <summary>
-            /// The modifier that triggered the action or <c>null</c> if the binding triggered without a modifier.
+            /// The interaction that triggered the action or <c>null</c> if the binding that triggered does not
+            /// have any particular interaction set on it.
             /// </summary>
-            public IInputBindingModifier modifier
+            public IInputInteraction interaction
             {
                 get
                 {
                     if (m_State == null)
                         return null;
-                    if (m_ModifierIndex == InputActionMapState.kInvalidIndex)
+                    if (m_InteractionIndex == InputActionMapState.kInvalidIndex)
                         return null;
-                    return m_State.modifiers[m_ModifierIndex];
+                    return m_State.interactions[m_InteractionIndex];
                 }
             }
 
@@ -507,10 +512,17 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            ////REVIEW: rename to ReadValue?
-            public TValue GetValue<TValue>()
+            public TValue ReadValue<TValue>()
             {
                 ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
+                ////TODO: this needs to be shared with InputActionManager
+
+                var value = default(TValue);
+                if (m_State == null)
+                    return value;
+
+                // In the case of a composite, this will be null.
+                InputControl<TValue> controlOfType = null;
 
                 // If the binding that triggered the action is part of a composite, let
                 // the composite determine the value we return.
@@ -519,10 +531,32 @@ namespace UnityEngine.Experimental.Input
                 {
                     var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
                     var context = new InputBindingCompositeContext();
-                    return compositeOfType.ReadValue(ref context);
+                    value = compositeOfType.ReadValue(ref context);
+                }
+                else
+                {
+                    controlOfType = (InputControl<TValue>)control;
+                    value = controlOfType.ReadValue();
                 }
 
-                return ((InputControl<TValue>)control).ReadValue();
+                // Run value through processors, if any.
+                var bindingStates = m_State.bindingStates;
+                var processorCount = bindingStates[m_BindingIndex].processorCount;
+                if (processorCount > 0)
+                {
+                    var processorStartIndex = bindingStates[m_BindingIndex].processorStartIndex;
+                    var processors = m_State.processors;
+                    for (var i = 0; i < processorCount; ++i)
+                        value = ((IInputControlProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
+                }
+
+                return value;
+            }
+
+            // really read previous value, not value from last frame
+            public TValue ReadPreviousValue<TValue>()
+            {
+                throw new NotImplementedException();
             }
 
             public double time
@@ -536,9 +570,9 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (m_State == null)
                         return 0;
-                    if (m_ModifierIndex == InputActionMapState.kInvalidIndex)
+                    if (m_InteractionIndex == InputActionMapState.kInvalidIndex)
                         return time;
-                    return m_State.modifierStates[m_ModifierIndex].startTime;
+                    return m_State.interactionStates[m_InteractionIndex].startTime;
                 }
             }
 

@@ -4,6 +4,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add hierarchical set of binding overrides to asset
 
+////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
+////        "I expect a 'look' and a 'move' action in here"
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

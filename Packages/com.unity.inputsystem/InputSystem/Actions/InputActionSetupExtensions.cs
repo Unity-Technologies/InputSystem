@@ -28,7 +28,7 @@ namespace UnityEngine.Experimental.Input
                 m_BindingIndex = bindingIndex;
             }
 
-            public BindingSyntax ChainedWith(string binding, string modifiers = null, string group = null)
+            public BindingSyntax ChainedWith(string binding, string interactions = null, string group = null)
             {
                 throw new NotImplementedException();
                 /*
@@ -36,7 +36,7 @@ namespace UnityEngine.Experimental.Input
                     throw new InvalidOperationException(
                         "Must not add other bindings in-between calling AddBindings() and ChainedWith()");
 
-                var result = m_Action.AppendBinding(binding, modifiers: modifiers, groups: @group);
+                var result = m_Action.AppendBinding(binding, interactions: interactions, groups: @group);
                 m_Action.m_SingletonActionBindings[m_Action.m_BindingsStartIndex + result.m_BindingIndex].flags |=
                     InputBinding.Flags.ThisAndPreviousCombine;
 
@@ -73,39 +73,45 @@ namespace UnityEngine.Experimental.Input
                 return this;
             }
 
-            public BindingSyntax WithModifier(string modifier)
+            public BindingSyntax WithInteraction(string interaction)
             {
-                if (string.IsNullOrEmpty(modifier))
-                    throw new ArgumentException("Modifier cannot be null or empty", "group");
-                if (modifier.IndexOf(InputBinding.kSeparator) != -1)
+                if (string.IsNullOrEmpty(interaction))
+                    throw new ArgumentException("Interaction cannot be null or empty", "group");
+                if (interaction.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
-                        string.Format("Modifier string cannot contain separator character '{0}'",
-                            InputBinding.kSeparator), "modifier");
+                        string.Format("Interaction string cannot contain separator character '{0}'",
+                            InputBinding.kSeparator), "interaction");
 
-                return WithModifiers(modifier);
+                return WithInteractions(interaction);
             }
 
-            public BindingSyntax WithModifiers(string modifiers)
+            public BindingSyntax WithInteractions(string interactions)
             {
-                if (string.IsNullOrEmpty(modifiers))
+                if (string.IsNullOrEmpty(interactions))
                     return this;
 
-                // Join with existing modifier string, if any.
-                var currentModifiers = m_ActionMap.m_Bindings[m_BindingIndex].modifiers;
-                if (!string.IsNullOrEmpty(currentModifiers))
-                    modifiers = string.Join(InputBinding.kSeparatorString, new[] { currentModifiers, modifiers });
+                // Join with existing interaction string, if any.
+                var currentInteractions = m_ActionMap.m_Bindings[m_BindingIndex].interactions;
+                if (!string.IsNullOrEmpty(currentInteractions))
+                    interactions = string.Join(InputBinding.kSeparatorString, new[] { currentInteractions, interactions });
 
-                // Set modifiers on binding.
-                m_ActionMap.m_Bindings[m_BindingIndex].modifiers = modifiers;
+                // Set interactions on binding.
+                m_ActionMap.m_Bindings[m_BindingIndex].interactions = interactions;
                 m_ActionMap.ClearPerActionCachedBindingData();
 
                 return this;
             }
 
-            public BindingSyntax WithModifier<TModifier>()
-                where TModifier : IInputBindingModifier
+            public BindingSyntax WithInteraction<TInteraction>()
+                where TInteraction : IInputInteraction
             {
-                throw new NotImplementedException();
+                var interactionName = InputControlProcessor.s_Processors.FindNameForType(typeof(TInteraction));
+                if (interactionName.IsEmpty())
+                    throw new ArgumentException(
+                        string.Format("Type '{0}' has not been registered as a processor", typeof(TInteraction)),
+                        "TInteraction");
+
+                return WithInteraction(interactionName);
             }
 
             public BindingSyntax WithProcessor(string processor)
@@ -114,8 +120,8 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException("Processor cannot be null or empty", "group");
                 if (processor.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
-                        string.Format("Modifier string cannot contain separator character '{0}'",
-                            InputBinding.kSeparator), "modifier");
+                        string.Format("Interaction string cannot contain separator character '{0}'",
+                            InputBinding.kSeparator), "processor");
 
                 return WithProcessors(processor);
             }
@@ -139,15 +145,21 @@ namespace UnityEngine.Experimental.Input
 
             public BindingSyntax WithProcessor<TProcessor>()
             {
-                throw new NotImplementedException();
+                var processorName = InputControlProcessor.s_Processors.FindNameForType(typeof(TProcessor));
+                if (processorName.IsEmpty())
+                    throw new ArgumentException(
+                        string.Format("Type '{0}' has not been registered as a processor", typeof(TProcessor)),
+                        "TProcessor");
+
+                return WithProcessor(processorName);
             }
 
-            public BindingSyntax WithChild(string binding, string modifiers = null, string groups = null)
+            public BindingSyntax WithChild(string binding, string interactions = null, string groups = null)
             {
                 /*
                 var child = m_Action != null
-                    ? m_Action.AppendBinding(binding, modifiers, groups)
-                    : m_ActionMap.AppendBinding(binding, modifiers, groups);
+                    ? m_Action.AppendBinding(binding, interactions, groups)
+                    : m_ActionMap.AppendBinding(binding, interactions, groups);
                 m_ActionMap.m_Bindings[child.m_BindingIndex].flags |= InputBinding.Flags.PushBindingLevel;
 
                 return child;
@@ -182,16 +194,16 @@ namespace UnityEngine.Experimental.Input
                 m_CompositeIndex = compositeIndex;
             }
 
-            public CompositeSyntax With(string name, string binding, string modifiers = null, string groups = null)
+            public CompositeSyntax With(string name, string binding, string interactions = null, string groups = null)
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
                 int bindingIndex;
                 if (m_Action != null)
-                    bindingIndex = m_Action.AppendBinding(path: binding, modifiers: modifiers, groups: groups)
+                    bindingIndex = m_Action.AppendBinding(path: binding, interactions: interactions, groups: groups)
                         .m_BindingIndex;
                 else
-                    bindingIndex = m_ActionMap.AppendBinding(path: binding, modifiers: modifiers, groups: groups)
+                    bindingIndex = m_ActionMap.AppendBinding(path: binding, interactions: interactions, groups: groups)
                         .m_BindingIndex;
 
                 m_ActionMap.m_Bindings[bindingIndex].name = name;
@@ -201,7 +213,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static InputAction AddAction(this InputActionMap map, string name, string binding = null, string modifiers = null, string groups = null)
+        public static InputAction AddAction(this InputActionMap map, string name, string binding = null, string interactions = null, string groups = null)
         {
             if (map == null)
                 throw new ArgumentNullException("map");
@@ -223,12 +235,12 @@ namespace UnityEngine.Experimental.Input
 
             // Add binding, if supplied.
             if (!string.IsNullOrEmpty(binding))
-                action.AppendBinding(binding, modifiers: modifiers, groups: groups);
+                action.AppendBinding(binding, interactions: interactions, groups: groups);
 
             return action;
         }
 
-        public static BindingSyntax AppendBinding(this InputAction action, string path, string modifiers = null, string groups = null)
+        public static BindingSyntax AppendBinding(this InputAction action, string path, string interactions = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", "path");
@@ -236,7 +248,7 @@ namespace UnityEngine.Experimental.Input
             return AppendBinding(action, new InputBinding
             {
                 path = path,
-                modifiers = modifiers,
+                interactions = interactions,
                 groups = groups
             });
         }
@@ -272,7 +284,7 @@ namespace UnityEngine.Experimental.Input
             return new BindingSyntax(actionMap, action, bindingIndex);
         }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, string modifiers = null, string groups = null)
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, string interactions = null, string groups = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", "path");
@@ -280,7 +292,7 @@ namespace UnityEngine.Experimental.Input
             return AppendBinding(actionMap, new InputBinding
             {
                 path = path,
-                modifiers = modifiers,
+                interactions = interactions,
                 groups = groups,
             });
         }

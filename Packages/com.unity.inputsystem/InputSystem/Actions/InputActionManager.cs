@@ -12,9 +12,9 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: the single state approach makes adding and removing maps costly; may not be flexible enough
 
-////TODO: need to sync when the InputActionMapState is re-resolved
+////REVIEW: can we have a stable, global identification mechanism for actions that comes down to strings?
 
-//automatically flushes in-between updates?
+////TODO: need to sync when the InputActionMapState is re-resolved
 
 namespace UnityEngine.Experimental.Input
 {
@@ -172,7 +172,7 @@ namespace UnityEngine.Experimental.Input
             {
                 triggerIndex = triggerIndex,
                 bindingIndex = context.m_BindingIndex,
-                modifierIndex = context.m_ModifierIndex,
+                interactionIndex = context.m_InteractionIndex,
                 phase = context.phase,
             });
             if (data.actionEventCount == 1)
@@ -342,12 +342,12 @@ namespace UnityEngine.Experimental.Input
             [FieldOffset(2)] public ushort m_BindingIndex;
 
             /// <summary>
-            /// Index of the modifier on the binding that controlled the triggering.
+            /// Index of the interaction on the binding that controlled the triggering.
             /// </summary>
             /// <remarks>
-            /// <see cref="InputActionMapState.kInvalidIndex"/> if the binding triggered without a modifier.
+            /// <see cref="InputActionMapState.kInvalidIndex"/> if the binding triggered without an interaction.
             /// </remarks>
-            [FieldOffset(4)] public ushort m_ModifierIndex;
+            [FieldOffset(4)] public ushort m_InteractionIndex;
 
             [FieldOffset(6)] public byte m_Phase;
 
@@ -376,24 +376,24 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public int modifierIndex
+            public int interactionIndex
             {
                 get
                 {
-                    if (m_ModifierIndex == ushort.MaxValue)
+                    if (m_InteractionIndex == ushort.MaxValue)
                         return InputActionMapState.kInvalidIndex;
-                    return m_ModifierIndex;
+                    return m_InteractionIndex;
                 }
                 set
                 {
                     if (value == InputActionMapState.kInvalidIndex)
-                        m_ModifierIndex = ushort.MaxValue;
+                        m_InteractionIndex = ushort.MaxValue;
                     else
                     {
                         Debug.Assert(value >= 0);
                         if (value >= ushort.MaxValue)
-                            throw new NotSupportedException("Modifier count must not exceed ushort.MaxValue=" + ushort.MaxValue);
-                        m_ModifierIndex = (ushort)value;
+                            throw new NotSupportedException("Interaction count must not exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_InteractionIndex = (ushort)value;
                     }
                 }
             }
@@ -448,16 +448,16 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public IInputBindingModifier modifier
+            public IInputInteraction interaction
             {
                 get
                 {
                     if (m_Manager == null)
                         return null;
-                    var modifierIndex = m_Data.modifierIndex;
-                    if (modifierIndex == InputActionMapState.kInvalidIndex)
+                    var interactionIndex = m_Data.interactionIndex;
+                    if (interactionIndex == InputActionMapState.kInvalidIndex)
                         return null;
-                    return m_Manager.m_State.modifiers[modifierIndex];
+                    return m_Manager.m_State.interactions[interactionIndex];
                 }
             }
         }
@@ -496,7 +496,23 @@ namespace UnityEngine.Experimental.Input
             {
                 get
                 {
-                    throw new NotImplementedException();
+                    if (m_Manager == null)
+                        throw new InvalidOperationException("ActionEventArray not intialized");
+
+                    if (index < 0 || index >= m_ActionEventCount)
+                        throw new ArgumentOutOfRangeException(
+                            string.Format("Index {0} is out of range for trigger event with {1} action entries", index,
+                                m_ActionEventCount), "index");
+
+                    var idx = m_ActionEventIndex;
+                    for (var i = 0; i != index; ++i)
+                    {
+                        ++idx;
+                        while (m_Manager.m_ActionDataBuffer[idx].triggerIndex != m_TriggerIndex)
+                            ++idx;
+                    }
+
+                    return new ActionEvent(m_Manager, idx);
                 }
             }
 
@@ -627,9 +643,16 @@ namespace UnityEngine.Experimental.Input
                 var statePtr = (byte*)m_Manager.m_StateDataBuffer.GetUnsafeReadOnlyPtr() + m_Data.stateOffset;
                 statePtr -= controlOfType.m_StateBlock.byteOffset;
 
+                ////TODO: this will have to take composites as well as processors on the binding into account
+
+                ////REVIEW: 4 vtable dispatches (InputControl<Vector2>.ReadRawValueFrom, InputControl<float>.ReadRawValueFrom for x,
+                ////        same for y, DeadzoneProcess.Process; plus quite a few direct method calls on top) for a single value read
+                ////        of a Vector2 really isn't awesome; can we cut that down?
                 // And let the control do the rest.
                 return controlOfType.ReadValueFrom(new IntPtr(statePtr));
             }
+
+            ////TODO: must be able to read previous values
         }
 
         public struct TriggerEventArray : IReadOnlyList<TriggerEvent>

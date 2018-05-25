@@ -502,7 +502,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 foreach (var action in m_EnabledActions)
                 {
                     // Add item for action.
-                    var set = action.map;
+                    var set = action.actionMap;
                     var setName = set != null ? set.name + "/" : string.Empty;
                     var item = AddChild(parent, setName + action.name, ref id);
 

@@ -204,10 +204,10 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 306166904}
   m_LocalRotation: {x: 0.40821794, y: -0.23456973, z: 0.10938166, w: 0.8754261}
-  m_LocalPosition: {x: -0.059515193, y: 0.050386827, z: -0.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -0.0025220434, y: 0.0038878687, z: -6.4814763}
+  m_LocalScale: {x: 0.49474508, y: 0.8531308, z: 0.6235117}
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1301579536}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &465839201
@@ -301,7 +301,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &518469519
 GameObject:
@@ -390,7 +390,7 @@ RectTransform:
   m_Children:
   - {fileID: 1037026170}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -599,7 +599,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &901429760
 GameObject:
@@ -820,7 +820,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'Ready?
+  m_Text: 'yada, yada
 
     (2345, 3425)
 
@@ -959,9 +959,9 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.MaskableGraphic+CullStateChangedEvent, UnityEngine.UI,
       Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 5002d98148138b348bd3e229a569fdb4, type: 3}
+    m_Font: {fileID: 12800000, guid: bbb6d2bf56ec66646893f9ae7bde5779, type: 3}
     m_FontSize: 24
-    m_FontStyle: 0
+    m_FontStyle: 1
     m_BestFit: 1
     m_MinSize: 10
     m_MaxSize: 40
@@ -1082,6 +1082,7 @@ Transform:
   m_LocalScale: {x: 23.598007, y: 12.960012, z: 0.54000044}
   m_Children:
   - {fileID: 901429762}
+  - {fileID: 306166906}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5840,7 +5841,7 @@ Transform:
   - {fileID: 746653208}
   - {fileID: 1334569502}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1476455530
 Prefab:
@@ -5967,7 +5968,7 @@ Prefab:
     - target: {fileID: 224409481164657272, guid: a15cf75bdf668dd4da1daa2fdce92bcd,
         type: 2}
       propertyPath: m_AnchoredPosition.y
-      value: -0.000009368899
+      value: -0.000004908475
       objectReference: {fileID: 0}
     - target: {fileID: 224758459058442700, guid: a15cf75bdf668dd4da1daa2fdce92bcd,
         type: 2}

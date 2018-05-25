@@ -212,7 +212,7 @@ partial class CoreTests
         Assert.That(action1.bindings, Has.Count.EqualTo(2));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
         Assert.That(action1.bindings[1].path, Is.EqualTo(""));
-        Assert.That(action1.bindings[1].modifiers, Is.EqualTo(""));
+        Assert.That(action1.bindings[1].interactions, Is.EqualTo(""));
         Assert.That(action1.bindings[1].groups, Is.EqualTo(""));
         Assert.That(action2.bindings[0].path, Is.EqualTo("/gamepad/rightStick"));
 

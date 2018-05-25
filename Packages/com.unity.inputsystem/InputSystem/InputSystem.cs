@@ -339,7 +339,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.processors.LookupTypeRegisteration(name);
+            return s_Manager.processors.LookupTypeRegistration(name);
         }
 
         #endregion
@@ -943,31 +943,31 @@ namespace UnityEngine.Experimental.Input
 
         #region Actions
 
-        public static void RegisterBindingModifier(Type type, string name)
+        public static void RegisterInteraction(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
-                if (name.EndsWith("Modifier"))
-                    name = name.Substring(0, name.Length - "Modifier".Length);
+                if (name.EndsWith("Interaction"))
+                    name = name.Substring(0, name.Length - "Interaction".Length);
             }
 
-            s_Manager.modifiers.AddTypeRegistration(name, type);
+            s_Manager.interactions.AddTypeRegistration(name, type);
         }
 
-        public static void RegisterBindingModifier<T>(string name = null)
+        public static void RegisterInteraction<T>(string name = null)
         {
-            RegisterBindingModifier(typeof(T), name);
+            RegisterInteraction(typeof(T), name);
         }
 
-        public static Type TryGetBindingModifier(string name)
+        public static Type TryGetInteraction(string name)
         {
-            return s_Manager.modifiers.LookupTypeRegisteration(name);
+            return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
-        public static IEnumerable<string> ListBindingModifiers()
+        public static IEnumerable<string> ListInteractions()
         {
-            return s_Manager.modifiers.names;
+            return s_Manager.interactions.names;
         }
 
         public static void RegisterBindingComposite(Type type, string name)
@@ -989,7 +989,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetBindingComposite(string name)
         {
-            return s_Manager.composites.LookupTypeRegisteration(name);
+            return s_Manager.composites.LookupTypeRegistration(name);
         }
 
         /// <summary>
@@ -1186,7 +1186,7 @@ namespace UnityEngine.Experimental.Input
             DualShockSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_UWP
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             HIDSupport.Initialize();
             #endif
 
@@ -1202,11 +1202,11 @@ namespace UnityEngine.Experimental.Input
             Plugins.Switch.SwitchSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_UWP
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
             Plugins.XR.XRSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_UWP
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
             Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
         }

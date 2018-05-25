@@ -1,8 +1,8 @@
 using System.Collections;
-using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
+using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Interactions;
 
-////TODO: transform from using action callbacks to using events
 ////TODO: transform previous form that went to 'onEvent' to consuming events in bulk
 
 public class SimpleController : MonoBehaviour
@@ -20,35 +20,22 @@ public class SimpleController : MonoBehaviour
 
     private Vector2 m_Rotation;
 
+    private InputActionManager m_ActionManager;
+
     public void Awake()
     {
-        controls.gameplay.move.performed += ctx => m_Move = ctx.GetValue<Vector2>();
-        controls.gameplay.look.performed += ctx => m_Look = ctx.GetValue<Vector2>();
+        m_ActionManager = new InputActionManager();
 
-        controls.gameplay.fire.performed +=
-            ctx =>
-            {
-                if (ctx.modifier is SlowTapModifier)
-                {
-                    StartCoroutine(BurstFire((int)(ctx.duration * burstSpeed)));
-                }
-                else
-                {
-                    Fire();
-                }
-                m_Charging = false;
-            };
-        controls.gameplay.fire.started +=
-            ctx =>
-            {
-                if (ctx.modifier is SlowTapModifier)
-                    m_Charging = true;
-            };
-        controls.gameplay.fire.cancelled +=
-            ctx =>
-            {
-                m_Charging = false;
-            };
+        ////TODO: this currently falls over due to missing support for composites in InputActionManager
+        ////TEMP: we don't yet have support for setting up composite bindings in the UI; hack
+        ////      in WASD keybindings as a temp workaround
+        controls.gameplay.move.AppendCompositeBinding("Dpad")
+        .With("Left", "<Keyboard>/a")
+        .With("Right", "<Keyboard>/d")
+        .With("Up", "<Keyboard>/w")
+        .With("Down", "<Keyboard>/s");
+
+        m_ActionManager.AddActionMap(controls.gameplay);
     }
 
     public void OnEnable()
@@ -69,6 +56,61 @@ public class SimpleController : MonoBehaviour
 
     public void Update()
     {
+        var triggerEvents = m_ActionManager.triggerEventsForCurrentFrame;
+        var triggerEventCount = triggerEvents.Count;
+
+        for (var i = 0; i < triggerEventCount; ++i)
+        {
+            var actions = triggerEvents[i].actions;
+            var actionCount = actions.Count;
+
+            ////REVIEW: this is an insanely awkward way of associating actions with responses
+            ////        the API needs serious work
+
+            for (var n = 0; n < actionCount; ++n)
+            {
+                var action = actions[n].action;
+                var phase = actions[n].phase;
+
+                if (action == controls.gameplay.fire)
+                {
+                    var interaction = actions[n].interaction;
+                    switch (phase)
+                    {
+                        case InputActionPhase.Performed:
+                            if (interaction is SlowTapInteraction)
+                            {
+                                //need start time
+                                //StartCoroutine(BurstFire((int) (ctx.duration * burstSpeed)));
+                            }
+                            else
+                            {
+                                Fire();
+                            }
+                            m_Charging = false;
+                            break;
+
+                        case InputActionPhase.Started:
+                            if (interaction is SlowTapInteraction)
+                                m_Charging = true;
+                            break;
+
+                        case InputActionPhase.Cancelled:
+                            m_Charging = false;
+                            break;
+                    }
+                }
+                else if (action == controls.gameplay.look)
+                {
+                    m_Look = triggerEvents[i].ReadValue<Vector2>();
+                }
+                else if (action == controls.gameplay.move)
+                {
+                    m_Move = triggerEvents[i].ReadValue<Vector2>();
+                }
+            }
+        }
+
         Move(m_Move);
         Look(m_Look);
     }

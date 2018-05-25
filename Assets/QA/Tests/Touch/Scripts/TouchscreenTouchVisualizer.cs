@@ -33,7 +33,6 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
     {
         Touchscreen touchscreen = UnityEngine.Experimental.Input.Touchscreen.current;
         Vector3 averagePosition = Vector2.zero;
-        int numActiveTouches = 0;
 
         if (touchscreen == null)
         {
@@ -41,19 +40,10 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < TouchscreenState.kMaxTouches; i++)
-        {
-            if (touchscreen.allTouchControls[i].ReadValue().phase != PointerPhase.None &&
-                touchscreen.allTouchControls[i].ReadValue().phase != PointerPhase.Ended)
-            {
-                numActiveTouches++;
-            }
-        }
-
-        if (numActiveTouches == 0)
+        if (touchscreen.activeTouches.Count == 0)
         {
             m_AveragePositionMarker.SetActive(false);
-            DeleteExtraTouches(numActiveTouches);
+            DeleteExtraTouches(touchscreen.activeTouches.Count);
             return;
         }
         else
@@ -64,7 +54,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
         // Set touch indicator position values, creating them if necessary
         // Also start accumulating average position
         //
-        for (int i = 0; i < numActiveTouches; i++)
+        for (int i = 0; i < touchscreen.activeTouches.Count; i++)
         {
             // Create new indicator if necessary
             if (i >= m_Touches.Count)
@@ -73,8 +63,8 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             }
 
             m_Touches[i].transform.position = m_MainCamera.ScreenToWorldPoint(
-                    new Vector3(touchscreen.allTouchControls[i].position.ReadValue().x,
-                        touchscreen.allTouchControls[i].position.ReadValue().y,
+                    new Vector3(touchscreen.activeTouches[i].position.ReadValue().x,
+                        touchscreen.activeTouches[i].position.ReadValue().y,
                         m_MainCamera.nearClipPlane));
 
 
@@ -84,10 +74,10 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
 
         // Set average indicator value
         //
-        averagePosition /= numActiveTouches;
+        averagePosition /= touchscreen.activeTouches.Count;
         m_AveragePositionMarker.transform.position = averagePosition;
 
-        DeleteExtraTouches(numActiveTouches);
+        DeleteExtraTouches(touchscreen.activeTouches.Count);
     }
 
     void DeleteExtraTouches(int numActiveTouches)
@@ -97,7 +87,7 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             for (int i = 0; i < m_Touches.Count; i++)
             {
                 Destroy(m_Touches[i]);
-                m_Touches.RemoveAt(m_Touches.Count - 1);
+                m_Touches.RemoveAt(i);
             }
         }
     }

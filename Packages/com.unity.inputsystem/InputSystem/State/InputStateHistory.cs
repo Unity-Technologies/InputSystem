@@ -7,6 +7,11 @@ using Unity.Collections;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: What about instead of capturing a control directly, this works on bindings instead?
+////        This would still allow tracing individual controls but at the same time would allow
+////        capturing history including procesors and composites and everything (and multiple
+////        controls at the same time)
+
 namespace UnityEngine.Experimental.Input
 {
     public class InputStateHistory
