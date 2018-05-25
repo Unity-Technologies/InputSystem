@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal partial class InputActionListTreeView
+    partial class InputActionListTreeView
     {
         public static InputActionListTreeView Create(Action applyAction, InputActionAsset asset, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
@@ -19,8 +18,8 @@ namespace UnityEngine.Experimental.Input.Editor
             return treeView;
         }
 
-        private InputActionAsset m_Asset;
-        private SerializedObject m_SerializedObject;
+        InputActionAsset m_Asset;
+        SerializedObject m_SerializedObject;
 
         protected InputActionListTreeView(Action applyAction,  InputActionAsset asset, SerializedObject serializedObject, TreeViewState state)
             : base(state)
@@ -46,32 +45,31 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < m_Asset.actionMaps.Count; i++)
             {
                 var actionItem = new ActionSetItem(actionMapsProperty, i);
-                
-                ParseActionMap(actionItem, m_Asset.actionMaps[i], actionMapsProperty.GetArrayElementAtIndex(i));
-            
+                ParseActionMap(actionItem, m_Asset.actionMaps[i], actionItem.elementProperty);
                 root.AddChild(actionItem);
             }
             return root;
         }
 
-        private void ParseActionMap(TreeViewItem treeViewItem, InputActionMap actionMap, SerializedProperty actionMapProperty)
+        void ParseActionMap(TreeViewItem treeViewItem, InputActionMap actionMap, SerializedProperty actionMapProperty)
         {
-            var bindingsProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
-            var actionsProperty = actionMapProperty.FindPropertyRelative("m_Actions");
+            var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             
-            for (var i = 0; i < actionMap.actions.Count; i++)
+            for (var i = 0; i < actionsArrayProperty.arraySize; i++)
             {
-                var action = actionMap.actions[i];
-                var actionItem = new ActionItem(actionsProperty, i);
+                var action = actionsArrayProperty.GetArrayElementAtIndex(i);
+                
+                var actionItem = new ActionItem(actionsArrayProperty, i);
                 treeViewItem.AddChild(actionItem);
+
+                var actionName = action.FindPropertyRelative("m_Name").stringValue;
+                var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
                 
-                //need to access actions.binding to get m_BindingsStartIndex populated?
-                if(!action.bindings.Any())
-                    continue;
-                
-                for (var j = action.m_BindingsStartIndex; j < action.m_BindingsStartIndex + action.m_BindingsCount; j++)
+                for (var j = 0; j < bindingsCount; j++)
                 {
-                    var bindingsItem = new BindingItem(bindingsProperty, j, j - action.m_BindingsStartIndex);
+                    var binding = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
+                    var bindingsItem = new BindingItem(binding, j);
                     actionItem.AddChild(bindingsItem);
                 }
             }
@@ -113,23 +111,24 @@ namespace UnityEngine.Experimental.Input.Editor
         
         internal class BindingItem : InputTreeViewLine
         {
-            public BindingItem(SerializedProperty bindingProperty, int index, int localIndex) : base(bindingProperty, index)
+            public BindingItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
             {
-                m_LocalIndex = localIndex;
+                m_BindingProperty = bindingProperty;
                 var path = elementProperty.FindPropertyRelative("path").stringValue;
                 var action = elementProperty.FindPropertyRelative("action").stringValue;
                 displayName = ParseName(path);
                 id = (action + " " + path + " " + index).GetHashCode();
                 depth = 2;
             }
-            
-            private static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
-            private static Regex s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
-            private int m_LocalIndex;
-            public int localIndex
+
+            SerializedProperty m_BindingProperty;
+            public override SerializedProperty elementProperty
             {
-                get { return m_LocalIndex; }
+                get { return m_BindingProperty; }
             }
+
+            static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
+            static Regex s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
 
             const int kUsageNameGroup = 1;
             const int kDeviceNameGroup = 1;
@@ -178,8 +177,17 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var actionMapProperty = (row.parent.parent as InputTreeViewLine).elementProperty;
                 var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingItem).localIndex, actionMapProperty);
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingItem).index, actionMapProperty);
                 m_ApplyAction();
+            }
+            else if (row is ActionItem)
+            {
+                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionItem).index);
+            }
+            else if (row is ActionSetItem)
+            {
+                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
             }
             
         }

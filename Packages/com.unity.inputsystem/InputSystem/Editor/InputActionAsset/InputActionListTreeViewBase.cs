@@ -6,7 +6,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal partial class InputActionListTreeView : TreeView
+    partial class InputActionListTreeView : TreeView
     {
         protected static class Styles
         {
@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 blueRect.border = new RectOffset(2, 2, 2, 2);
             }
 
-            private static Texture2D CreateTextureWithBorder(Color innerColor)
+            static Texture2D CreateTextureWithBorder(Color innerColor)
             {
                 var texture = new Texture2D(5, 5);
                 for (int i = 0; i < 5; i++)
@@ -173,9 +173,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 get { return m_SetProperty; }
             }
 
-            public SerializedProperty elementProperty
+            public virtual SerializedProperty elementProperty
             {
-                get { return m_ElementProperty; }
+                get { return m_SetProperty.GetArrayElementAtIndex(index); }
             }
             public int index
             {
@@ -186,8 +186,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_SetProperty = setProperty;
                 m_Index = index;
-                m_ElementProperty = m_SetProperty.GetArrayElementAtIndex(index);
-
                 depth = 1;
             }
 
