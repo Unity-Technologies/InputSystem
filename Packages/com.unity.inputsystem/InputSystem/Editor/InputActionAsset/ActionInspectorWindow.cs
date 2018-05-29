@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
@@ -30,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 columnHeaderLabel.padding.left = 10;
             }
 
-            private static Texture2D CreateTextureWithBorder(Color innerColor)
+            static Texture2D CreateTextureWithBorder(Color innerColor)
             {
                 var texture = new Texture2D(5, 5);
                 for (int i = 0; i < 5; i++)
@@ -74,6 +75,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var window = inputManagers.FirstOrDefault(w => w.m_ReferencedObject.Equals(obj));
                 if (window != null)
                 {
+                    window.Show();
                     window.Focus();
                     return true;
                 }
@@ -87,14 +89,16 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         [SerializeField]
-        private Object m_ReferencedObject;
-        private SerializedObject m_SerializedObject;
-        
-        private InputActionListTreeView m_TreeView;
+        Object m_ReferencedObject;
+        SerializedObject m_SerializedObject;
+
+        InputActionListTreeView m_TreeView;
         [SerializeField]
-        private TreeViewState m_TreeViewState;
-        
-        private PropertiesView m_PropertyView;
+        TreeViewState m_TreeViewState;
+
+        PropertiesView m_PropertyView;
+        int m_GroupIndex;
+        List<string> m_GroupPopupList;
 
         public void OnEnable()
         {
@@ -102,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Undo.undoRedoPerformed += OnUndoCallback;
         }
 
-        private void OnUndoCallback()
+        void OnUndoCallback()
         {
             m_TreeView.Reload();
             m_TreeView.Repaint();
@@ -116,10 +120,11 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void InitiateTrees()
+        void InitiateTrees()
         {
             if (m_SerializedObject != null)
             {
+                ParseGroups(m_ReferencedObject as InputActionAsset);
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
                 
                 m_TreeView.OnSelectionChanged = p =>
@@ -145,14 +150,33 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
         
-        private void Apply()
+        void ParseGroups(InputActionAsset actionMapAsset)
+        {
+            HashSet<string> allGroups = new HashSet<string>();
+            allGroups.Clear();
+            foreach (var actionMap in actionMapAsset.actionMaps)
+            {
+                foreach (var binding in actionMap.bindings)
+                {
+                    foreach (var group in binding.groups.Split(';'))
+                    {
+                        if (!string.IsNullOrEmpty(@group))
+                            allGroups.Add(@group);
+                    }
+                }
+            }
+            m_GroupPopupList = new List<string>() { "<no group>" };
+            m_GroupPopupList.AddRange(allGroups);
+        }
+
+        void Apply()
         {
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
             Repaint();
         }
 
-        private void OnGUI()
+        void OnGUI()
         {
             EditorGUILayout.BeginVertical();
             
@@ -188,6 +212,13 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.Space();
             
             EditorGUILayout.BeginHorizontal();
+            EditorGUI.BeginChangeCheck();
+            m_GroupIndex = EditorGUILayout.Popup(m_GroupIndex, m_GroupPopupList.ToArray());
+            if (EditorGUI.EndChangeCheck())
+            {
+                var filter = m_GroupIndex > 0 ? m_GroupPopupList[m_GroupIndex] : null;
+                m_TreeView.FilterResults(filter);
+            }
             EditorGUILayout.TextField("Search box (not implemeneted)", GUILayout.MaxWidth(200));
             EditorGUILayout.EndHorizontal();
             
@@ -213,7 +244,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        private void DrawMainTree()
+        void DrawMainTree()
         {
             EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder);
             GUILayout.FlexibleSpace();
@@ -240,7 +271,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_TreeView.OnGUI(treeViewRect);
         }
 
-        private void ShowAddMenu()
+        void ShowAddMenu()
         {
             var menu = new GenericMenu();
             menu.AddItem(new GUIContent("Add action set"), false, OnAddActionMap);
@@ -249,7 +280,7 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        private void OnAddBinding()
+        void OnAddBinding()
         {
             var actionMapLine = GetSelectedActionMapLine();
             var actionLine = GetSelectedActionLine();
@@ -257,20 +288,20 @@ namespace UnityEngine.Experimental.Input.Editor
             Apply();
         }
 
-        private void OnAddAction()
+        void OnAddAction()
         {
             var actionLine = GetSelectedActionMapLine();
             InputActionSerializationHelpers.AddAction(actionLine.elementProperty);
             Apply();
         }
 
-        private void OnAddActionMap()
+        void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_SerializedObject);
             Apply();
         }
 
-        private InputActionListTreeView.ActionItem GetSelectedActionLine()
+        InputActionListTreeView.ActionItem GetSelectedActionLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
@@ -282,8 +313,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return null;
         }
-        
-        private InputActionListTreeView.ActionSetItem GetSelectedActionMapLine()
+
+        InputActionListTreeView.ActionSetItem GetSelectedActionMapLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
@@ -295,8 +326,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return null;
         }
-        
-        private void DrawProperties()
+
+        void DrawProperties()
         {
             EditorGUILayout.BeginVertical(Styles.whiteBackgroundWithBorder,GUILayout.MaxWidth(250));
 

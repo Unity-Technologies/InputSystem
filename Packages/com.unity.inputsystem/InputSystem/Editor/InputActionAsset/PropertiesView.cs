@@ -40,10 +40,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsListView.drawHeaderCallback =
                 (rect) => EditorGUI.LabelField(rect, "Interactions");
             
-//            var interactionOptions = InputSystem.li
-//            var interactionOptions = InputSystem.ListBindingModifiers().ToList();
-//            interactionOptions.Sort();
-//            m_InteractionChoices = interactionOptions.Select(x => new GUIContent(x)).ToArray();
             m_InteractionsListView.onAddDropdownCallback =
                 (rect, list) =>
                 {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -20,6 +21,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         InputActionAsset m_Asset;
         SerializedObject m_SerializedObject;
+        string m_GroupFilter;
 
         protected InputActionListTreeView(Action applyAction,  InputActionAsset asset, SerializedObject serializedObject, TreeViewState state)
             : base(state)
@@ -28,6 +30,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ApplyAction = applyAction;
             m_Asset = asset;
             m_SerializedObject = serializedObject;
+            Reload();
+        }
+
+        public void FilterResults(string filter)
+        {
+            m_GroupFilter = filter;
             Reload();
         }
 
@@ -44,8 +52,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionMapsProperty = m_SerializedObject.FindProperty("m_ActionMaps");
             for (var i = 0; i < m_Asset.actionMaps.Count; i++)
             {
+                var actionMap = m_Asset.actionMaps[i];
                 var actionItem = new ActionSetItem(actionMapsProperty, i);
-                ParseActionMap(actionItem, m_Asset.actionMaps[i], actionItem.elementProperty);
+                ParseActionMap(actionItem, actionMap, actionItem.elementProperty);
                 root.AddChild(actionItem);
             }
             return root;
@@ -73,6 +82,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
                     var binding = action.bindings[j];
+                    if(!string.IsNullOrEmpty(m_GroupFilter) && !binding.groups.Split(';').Contains(m_GroupFilter))
+                    {
+                        continue;
+                    }
                     if (binding.isComposite)
                     {
                         compositeGroupItem = new CompositeGroupItem(bindingProperty, j);
@@ -164,6 +177,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             SerializedProperty m_BindingProperty;
+
             public override SerializedProperty elementProperty
             {
                 get { return m_BindingProperty; }
