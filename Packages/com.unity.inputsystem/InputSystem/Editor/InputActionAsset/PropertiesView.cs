@@ -6,21 +6,21 @@ using UnityEditorInternal;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class PropertiesView
+    class PropertiesView
     {
-        private SerializedProperty m_BindingProperty;
-        private SerializedProperty m_SetProperty;
+        SerializedProperty m_BindingProperty;
+        SerializedProperty m_SetProperty;
 
-        private bool m_GeneralFoldout = true;
-        private bool m_ProcessorsFoldout = true;
-        private bool m_ModifierSupport;
-        private ReorderableList m_InteractionsListView;
-        private ReorderableList m_ProcessorsList;
-        private SerializedProperty m_Bindings;
-        private GUIContent[] m_InteractionChoices;
+        bool m_GeneralFoldout = true;
+        bool m_ProcessorsFoldout = true;
+        bool m_ModifierSupport;
+        ReorderableList m_InteractionsListView;
+        ReorderableList m_ProcessorsList;
+        SerializedProperty m_Bindings;
+        GUIContent[] m_InteractionChoices;
 
-        private SerializedProperty m_ModifiersProperty;
-        private Action m_ReloadTree;
+        SerializedProperty m_ModifiersProperty;
+        Action m_ReloadTree;
 
         public PropertiesView(SerializedProperty bindingProperty, Action reloadTree)
         {
@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Editor
             
             m_InteractionsListView = new ReorderableList(new List<string>(), typeof(string));
 
-            m_ModifiersProperty = bindingProperty.FindPropertyRelative("modifiers");
+            m_ModifiersProperty = bindingProperty.FindPropertyRelative("interactions");
             foreach (var s in m_ModifiersProperty.stringValue.Split(','))
             {
                 if(string.IsNullOrEmpty(s))
@@ -40,9 +40,10 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsListView.drawHeaderCallback =
                 (rect) => EditorGUI.LabelField(rect, "Interactions");
             
-            var interactionOptions = InputSystem.ListBindingModifiers().ToList();
-            interactionOptions.Sort();
-            m_InteractionChoices = interactionOptions.Select(x => new GUIContent(x)).ToArray();
+//            var interactionOptions = InputSystem.li
+//            var interactionOptions = InputSystem.ListBindingModifiers().ToList();
+//            interactionOptions.Sort();
+//            m_InteractionChoices = interactionOptions.Select(x => new GUIContent(x)).ToArray();
             m_InteractionsListView.onAddDropdownCallback =
                 (rect, list) =>
                 {
@@ -61,8 +62,8 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsListView.onReorderCallback = list => { ApplyModifiers(); };
             m_ProcessorsList = new ReorderableList(new List<string>{}, typeof(string));
         }
-        
-        private void AddModifier(object modifierNameString)
+
+        void AddModifier(object modifierNameString)
         {
             if (m_InteractionsListView.list.Count == 1 && m_InteractionsListView.list[0] == "")
             {
@@ -73,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ApplyModifiers();
         }
 
-        private void ApplyModifiers()
+        void ApplyModifiers()
         {
             var modifiers = string.Join(",", m_InteractionsListView.list.Cast<string>().Where(s=>!string.IsNullOrEmpty(s)).Select(x => x).ToArray());
             m_ModifiersProperty.stringValue = modifiers;
@@ -94,7 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 EditorGUI.indentLevel++;
                 EditorGUI.BeginDisabledGroup(true);
-                m_ModifierSupport = EditorGUILayout.Toggle("Modifier support", m_ModifierSupport, EditorStyles.toggle);
+                m_ModifierSupport = EditorGUILayout.Toggle("Interactions support", m_ModifierSupport, EditorStyles.toggle);
                 EditorGUI.EndDisabledGroup();
                 
                 var pathProperty = m_BindingProperty.FindPropertyRelative("path");
@@ -137,7 +138,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
         }
 
-        private void OnBindingModified(SerializedProperty obj)
+        void OnBindingModified(SerializedProperty obj)
         {
             var importerEditor = InputActionImporterEditor.FindFor(m_BindingProperty.serializedObject);
             if (importerEditor != null)

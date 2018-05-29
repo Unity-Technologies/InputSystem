@@ -18,6 +18,8 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle orangeRect = new GUIStyle("Label");
             public static GUIStyle greenRect = new GUIStyle("Label");
             public static GUIStyle blueRect = new GUIStyle("Label");
+            public static GUIStyle cyanRect = new GUIStyle("Label");
+            public static GUIStyle magentaRect = new GUIStyle("Label");
             
             static Styles()
             {
@@ -42,6 +44,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 greenRect.border = new RectOffset(2, 2, 2, 2);
                 blueRect.normal.background = CreateTextureWithBorder(new Color(162/256f, 196/256f, 200/256f));
                 blueRect.border = new RectOffset(2, 2, 2, 2);
+                cyanRect.normal.background = CreateTextureWithBorder(Color.cyan);
+                cyanRect.border = new RectOffset(2, 2, 2, 2);
+                magentaRect.normal.background = CreateTextureWithBorder(Color.magenta);
+                magentaRect.border = new RectOffset(2, 2, 2, 2);
             }
 
             static Texture2D CreateTextureWithBorder(Color innerColor)
@@ -208,8 +214,15 @@ namespace UnityEngine.Experimental.Input.Editor
                     DrawCustomRect(rowRect);
                 }
             }
+
+            protected abstract GUIStyle rectStyle { get; }
             
-            public abstract void DrawCustomRect(Rect rowRect);
+            public virtual void DrawCustomRect(Rect rowRect)
+            {
+                var boxRect = rowRect;
+                boxRect.width = depth * 12;
+                rectStyle.Draw(boxRect, "", false, false, false, false);
+            }
         }
     }
 }

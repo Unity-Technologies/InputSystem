@@ -58,18 +58,36 @@ namespace UnityEngine.Experimental.Input.Editor
             
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
             {
-                var action = actionsArrayProperty.GetArrayElementAtIndex(i);
+                var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(i);
+
+                var action = actionMap.actions[i];
                 
                 var actionItem = new ActionItem(actionsArrayProperty, i);
                 treeViewItem.AddChild(actionItem);
 
-                var actionName = action.FindPropertyRelative("m_Name").stringValue;
+                var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
-                
+
+                CompositeGroupItem compositeGroupItem = null;
                 for (var j = 0; j < bindingsCount; j++)
                 {
-                    var binding = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
-                    var bindingsItem = new BindingItem(binding, j);
+                    var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
+                    var binding = action.bindings[j];
+                    if (binding.isComposite)
+                    {
+                        compositeGroupItem = new CompositeGroupItem(bindingProperty, j);
+                        actionItem.AddChild(compositeGroupItem);
+                        continue;
+                    }
+                    if (binding.isPartOfComposite)
+                    {
+                        var compositeItem = new CompositeItem(bindingProperty, j);
+                        if(compositeGroupItem != null)
+                            compositeGroupItem.AddChild(compositeItem);
+                        continue;
+                    }
+                    compositeGroupItem = null;
+                    var bindingsItem = new BindingItem(bindingProperty, j);
                     actionItem.AddChild(bindingsItem);
                 }
             }
@@ -83,11 +101,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 id = displayName.GetHashCode();
             }
             
-            public override void DrawCustomRect(Rect rowRect)
+            protected override GUIStyle rectStyle
             {
-                var boxRect = rowRect;
-                boxRect.width = 12;
-                Styles.yellowRect.Draw(boxRect, "", false, false, false, false);
+                get { return Styles.yellowRect; }
             }
         }
         
@@ -100,15 +116,41 @@ namespace UnityEngine.Experimental.Input.Editor
                 id = displayName.GetHashCode();
                 depth = 2;
             }
-            
-            public override void DrawCustomRect(Rect rowRect)
+
+            protected override GUIStyle rectStyle
             {
-                var boxRect = rowRect;
-                boxRect.width = 24;
-                Styles.orangeRect.Draw(boxRect, "", false, false, false, false);
+                get { return Styles.orangeRect; }
             }
         }
-        
+
+        internal class CompositeGroupItem : BindingItem
+        {
+            public CompositeGroupItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+            {
+                var path = elementProperty.FindPropertyRelative("path").stringValue;
+                displayName = path;
+                depth++;
+            }
+
+            protected override GUIStyle rectStyle
+            {
+                get { return Styles.cyanRect; }
+            }
+        }
+
+        internal class CompositeItem : BindingItem
+        {
+            public CompositeItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+            {
+                depth++;
+            }
+
+            protected override GUIStyle rectStyle
+            {
+                get { return Styles.cyanRect; }
+            }
+        }
+
         internal class BindingItem : InputTreeViewLine
         {
             public BindingItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
@@ -162,11 +204,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 return text;
             }
 
+            protected override GUIStyle rectStyle
+            {
+                get { return Styles.greenRect; }
+            }
+            
             public override void DrawCustomRect(Rect rowRect)
             {
                 var boxRect = rowRect;
-                boxRect.width = 36;
-                Styles.greenRect.Draw(boxRect, "", false, false, false, false);
+                boxRect.width = (1 + depth) * 10;
+                rectStyle.Draw(boxRect, "", false, false, false, false);
             }
         }
 
