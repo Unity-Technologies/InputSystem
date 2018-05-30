@@ -90,11 +90,29 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public InputTreeViewLine GetSelectedRow()
         {
-            
             if (!HasSelection())
                 return null;
             
             return (InputTreeViewLine) FindItem(GetSelection().First(), rootItem);
+        }
+
+
+        public IList<TreeViewItem> GetSelectedRows()
+        {
+            return FindRows(GetSelection());
+        }
+
+        public SerializedProperty GetSelectedActionMap()
+        {
+            if (!HasSelection())
+                return null;
+
+            var item = FindItem(GetSelection().First(), rootItem);
+            
+            if (item == null)
+                return null;
+            
+            return (item as InputTreeViewLine).elementProperty;
         }
 
         public SerializedProperty GetSelectedProperty()
@@ -148,9 +166,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (actionItem == null)
                 return;
-            
-            var nameProperty = actionItem.elementProperty.FindPropertyRelative("m_Name");
-            nameProperty.stringValue = args.newName;
+
+            InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, args.newName);
+
             m_ApplyAction();
             
             item.displayName = args.newName;
@@ -223,6 +241,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 boxRect.width = depth * 12;
                 rectStyle.Draw(boxRect, "", false, false, false, false);
             }
+
+            public abstract string SerializeToString();
         }
     }
 }

@@ -64,6 +64,11 @@ namespace UnityEngine.Experimental.Input.Editor
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
         }
 
+        public static void AddActionMapFromObject(SerializedObject serializedObject, InputActionMap map)
+        {
+            throw new NotImplementedException();
+        }
+
         public static void DeleteActionMap(SerializedObject asset, int index)
         {
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
@@ -184,6 +189,22 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             return result;
+        }
+
+        public static void RenameAction(SerializedProperty actionProperty, string newName)
+        {
+            var nameProperty = actionProperty.FindPropertyRelative("m_Name");
+            nameProperty.stringValue = newName;
+            
+            //TODO Update all references
+        }
+
+        public static void MoveAction(SerializedProperty actionProperty, string newName)
+        {
+            var nameProperty = actionProperty.FindPropertyRelative("m_Name");
+            nameProperty.stringValue = newName;
+            
+            //TODO Update all references
         }
     }
 }

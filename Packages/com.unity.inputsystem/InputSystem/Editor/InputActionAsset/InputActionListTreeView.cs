@@ -53,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < m_Asset.actionMaps.Count; i++)
             {
                 var actionMap = m_Asset.actionMaps[i];
-                var actionItem = new ActionSetItem(actionMapsProperty, i);
+                var actionItem = new ActionSetItem(actionMap, actionMapsProperty, i);
                 ParseActionMap(actionItem, actionMap, actionItem.elementProperty);
                 root.AddChild(actionItem);
             }
@@ -71,7 +71,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 var action = actionMap.actions[i];
                 
-                var actionItem = new ActionItem(actionsArrayProperty, i);
+                var actionItem = new ActionItem(action, actionsArrayProperty, i);
                 treeViewItem.AddChild(actionItem);
 
                 var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
@@ -88,19 +88,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     if (binding.isComposite)
                     {
-                        compositeGroupItem = new CompositeGroupItem(bindingProperty, j);
+                        compositeGroupItem = new CompositeGroupItem(binding, bindingProperty, j);
                         actionItem.AddChild(compositeGroupItem);
                         continue;
                     }
                     if (binding.isPartOfComposite)
                     {
-                        var compositeItem = new CompositeItem(bindingProperty, j);
+                        var compositeItem = new CompositeItem(binding, bindingProperty, j);
                         if(compositeGroupItem != null)
                             compositeGroupItem.AddChild(compositeItem);
                         continue;
                     }
                     compositeGroupItem = null;
-                    var bindingsItem = new BindingItem(bindingProperty, j);
+                    var bindingsItem = new BindingItem(binding, bindingProperty, j);
                     actionItem.AddChild(bindingsItem);
                 }
             }
@@ -108,8 +108,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal class ActionSetItem : InputTreeViewLine
         {
-            public ActionSetItem(SerializedProperty setProperty, int index) : base(setProperty, index)
+            InputActionMap m_ActionMap;
+            public ActionSetItem(InputActionMap actionMap, SerializedProperty setProperty, int index) : base(setProperty, index)
             {
+                m_ActionMap = actionMap;
                 displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
                 id = displayName.GetHashCode();
             }
@@ -118,13 +120,22 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 get { return Styles.yellowRect; }
             }
+
+            public override string SerializeToString()
+            {
+                return JsonUtility.ToJson(m_ActionMap);
+            }
         }
-        
+
 
         internal class ActionItem : InputTreeViewLine
         {
-            public ActionItem(SerializedProperty setProperty, int index) : base(setProperty, index)
+            InputAction m_Action;
+
+            public ActionItem(InputAction action, SerializedProperty setProperty, int index)
+                : base(setProperty, index)
             {
+                m_Action = action;
                 displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
                 id = displayName.GetHashCode();
                 depth = 2;
@@ -134,11 +145,17 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 get { return Styles.orangeRect; }
             }
+
+            public override string SerializeToString()
+            {
+                //TODO Need to add bindings as well    
+                return JsonUtility.ToJson(m_Action);
+            }
         }
 
         internal class CompositeGroupItem : BindingItem
         {
-            public CompositeGroupItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+            public CompositeGroupItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(binding, bindingProperty, index)
             {
                 var path = elementProperty.FindPropertyRelative("path").stringValue;
                 displayName = path;
@@ -153,7 +170,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal class CompositeItem : BindingItem
         {
-            public CompositeItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+            public CompositeItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(binding, bindingProperty, index)
             {
                 depth++;
             }
@@ -166,8 +183,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal class BindingItem : InputTreeViewLine
         {
-            public BindingItem(SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+            public BindingItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
             {
+                m_InputBinding = binding;
                 m_BindingProperty = bindingProperty;
                 var path = elementProperty.FindPropertyRelative("path").stringValue;
                 var action = elementProperty.FindPropertyRelative("action").stringValue;
@@ -176,6 +194,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 depth = 2;
             }
 
+            InputBinding m_InputBinding;
             SerializedProperty m_BindingProperty;
 
             public override SerializedProperty elementProperty
@@ -229,28 +248,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 boxRect.width = (1 + depth) * 10;
                 rectStyle.Draw(boxRect, "", false, false, false, false);
             }
-        }
 
-        public void DeleteSelected()
-        {
-            var row = GetSelectedRow();
-            if (row is BindingItem)
+            public override string SerializeToString()
             {
-                var actionMapProperty = (row.parent.parent as InputTreeViewLine).elementProperty;
-                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingItem).index, actionMapProperty);
-                m_ApplyAction();
+                return JsonUtility.ToJson(m_InputBinding);
             }
-            else if (row is ActionItem)
-            {
-                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionItem).index);
-            }
-            else if (row is ActionSetItem)
-            {
-                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
-            }
-            
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -237,11 +238,60 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     if (m_TreeView.HasFocus())
                     {
-                        m_TreeView.DeleteSelected();
+                        DeleteSelectedRow();
                         Apply();
+                        m_PropertyView = null;
                     }
                 }
+                
+                if (Event.current.keyCode == KeyCode.C && ((Event.current.modifiers & EventModifiers.Control) != 0))
+                {
+                    var row = m_TreeView.GetSelectedRow().SerializeToString();
+                    Debug.Log(row);
+                    EditorGUIUtility.systemCopyBuffer = row ;
+                }
+                
+                if (Event.current.keyCode == KeyCode.V && ((Event.current.modifiers & EventModifiers.Control) != 0))
+                {
+                    HandlePasteEvent();
+                }
             }
+        }
+
+        void DeleteSelectedRow()
+        {
+            var row = m_TreeView.GetSelectedRow();
+            if (row is InputActionListTreeView.BindingItem)
+            {
+                var actionMapProperty = (row.parent.parent as InputActionListTreeView.InputTreeViewLine).elementProperty;
+                var actionProperty = (row.parent as InputActionListTreeView.InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as InputActionListTreeView.BindingItem).index, actionMapProperty);
+                Apply();
+            }
+            else if (row is InputActionListTreeView.ActionItem)
+            {
+                var actionProperty = (row.parent as InputActionListTreeView.InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as InputActionListTreeView.ActionItem).index);
+            }
+            else if (row is InputActionListTreeView.ActionSetItem)
+            {
+                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputActionListTreeView.InputTreeViewLine).index);
+            }
+        }
+
+        void HandlePasteEvent()
+        {
+            var json = EditorGUIUtility.systemCopyBuffer;
+            try
+            {
+                var map = JsonUtility.FromJson<InputActionMap>(json);
+                InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
+                return;
+            }
+            catch (ArgumentException)
+            {
+            }
+            EditorApplication.Beep();
         }
 
         void DrawMainTree()
@@ -258,7 +308,7 @@ namespace UnityEngine.Experimental.Input.Editor
             treeViewRect.x += 2;
             treeViewRect.width -= 4;
             
-            EditorGUI.LabelField(labelRect, "Action sets", Styles.columnHeaderLabel);
+            EditorGUI.LabelField(labelRect, "Action maps", Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.width - 18;
             labelRect.width = 18;
@@ -274,7 +324,7 @@ namespace UnityEngine.Experimental.Input.Editor
         void ShowAddMenu()
         {
             var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Add action set"), false, OnAddActionMap);
+            menu.AddItem(new GUIContent("Add action map"), false, OnAddActionMap);
             menu.AddItem(new GUIContent("Add action"), false, OnAddAction);
             menu.AddItem(new GUIContent("Add binding"), false, OnAddBinding);
             menu.ShowAsContext();
