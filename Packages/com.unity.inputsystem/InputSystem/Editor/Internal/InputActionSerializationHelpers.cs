@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Editor
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
         }
 
-        public static void AddActionMapFromObject(SerializedObject serializedObject, InputActionMap map)
+        public static void AddActionMapFromObject(SerializedObject asset, InputActionMap map)
         {
             throw new NotImplementedException();
         }
@@ -87,6 +87,11 @@ namespace UnityEngine.Experimental.Input.Editor
             actionsArrayProperty.InsertArrayElementAtIndex(actionIndex);
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+        }
+        
+        public static void AddActionFromObject(SerializedProperty actionMap, InputAction action)
+        {
+            throw new NotImplementedException();
         }
 
         public static void DeleteAction(SerializedProperty actionMap, int actionIndex)
@@ -128,6 +133,11 @@ namespace UnityEngine.Experimental.Input.Editor
             ////FIXME: this likely leaves m_Bindings in the map for singleton actions unsync'd in some cases
         }
 
+        public static void AppendBindingFromObject(InputBinding bingind, SerializedProperty actionMapProperty = null)
+        {
+            throw new NotImplementedException();
+        }
+        
         public static void RemoveBinding(SerializedProperty actionProperty, int bindingIndex, SerializedProperty actionMapProperty = null)
         {
             var bindingsArrayProperty = actionMapProperty != null
@@ -199,12 +209,14 @@ namespace UnityEngine.Experimental.Input.Editor
             //TODO Update all references
         }
 
-        public static void MoveAction(SerializedProperty actionProperty, string newName)
+        public static void MoveAction(SerializedProperty srcActionProperty, SerializedProperty srcActionPropertyMap, SerializedProperty destActionProperty, SerializedProperty destActionPropertyMap)
         {
-            var nameProperty = actionProperty.FindPropertyRelative("m_Name");
-            nameProperty.stringValue = newName;
-            
-            //TODO Update all references
+            throw new NotImplementedException();
+        }
+
+        public static void AppendCompositeBinding(SerializedProperty actionLineElementProperty, SerializedProperty elementProperty)
+        {
+            throw new NotImplementedException();
         }
     }
 }

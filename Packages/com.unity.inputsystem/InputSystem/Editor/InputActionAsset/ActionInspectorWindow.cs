@@ -336,7 +336,16 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.AddItem(new GUIContent("Add action map"), false, OnAddActionMap);
             menu.AddItem(new GUIContent("Add action"), false, OnAddAction);
             menu.AddItem(new GUIContent("Add binding"), false, OnAddBinding);
+            menu.AddItem(new GUIContent("Add composite binding"), false, OnAddCompositeBinding);
             menu.ShowAsContext();
+        }
+
+        void OnAddCompositeBinding()
+        {
+            var actionMapLine = GetSelectedActionMapLine();
+            var actionLine = GetSelectedActionLine();
+            InputActionSerializationHelpers.AppendCompositeBinding(actionLine.elementProperty, actionMapLine.elementProperty);
+            Apply();
         }
 
         void OnAddBinding()
