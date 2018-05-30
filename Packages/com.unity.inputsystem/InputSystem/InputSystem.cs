@@ -339,7 +339,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.processors.LookupTypeRegisteration(name);
+            return s_Manager.processors.LookupTypeRegistration(name);
         }
 
         #endregion
@@ -904,41 +904,70 @@ namespace UnityEngine.Experimental.Input
             s_Manager.Update(updateType);
         }
 
+        ////TODO: disable collection of input if all input updates are disabled
+        /// <summary>
+        /// Mask that determines which updates are run by the input system.
+        /// </summary>
+        /// <remarks>
+        /// By default, all update types are enabled. Disabling a specific update
+        ///
+        /// Clearing all flags in this mask will disable all input processing. Note, however,
+        /// that it will not currently disable collection of input.
+        /// </remarks>
         public static InputUpdateType updateMask
         {
             get { return s_Manager.updateMask; }
             set { s_Manager.updateMask = value; }
         }
 
+        /// <summary>
+        /// Event that is fired before the input system updates.
+        /// </summary>
+        /// <remarks>
+        /// The input system updates in sync with player loop and editor updates. Input updates
+        /// are run right before the respective script update. For example, an input update for
+        /// <see cref="InputUpdateType.Dynamic"/> is run before <c>MonoBehaviour.Update</c> methods
+        /// are executed.
+        ///
+        /// The update callback itself is triggered before the input system runs its own update and
+        /// before it flushes out its event queue. This means that events queued from a callback will
+        /// be fed right into the upcoming update.
+        /// </remarks>
+        public static event Action<InputUpdateType> onUpdate
+        {
+            add { s_Manager.onUpdate += value; }
+            remove { s_Manager.onUpdate -= value; }
+        }
+
         #endregion
 
         #region Actions
 
-        public static void RegisterBindingModifier(Type type, string name)
+        public static void RegisterInteraction(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
-                if (name.EndsWith("Modifier"))
-                    name = name.Substring(0, name.Length - "Modifier".Length);
+                if (name.EndsWith("Interaction"))
+                    name = name.Substring(0, name.Length - "Interaction".Length);
             }
 
-            s_Manager.modifiers.AddTypeRegistration(name, type);
+            s_Manager.interactions.AddTypeRegistration(name, type);
         }
 
-        public static void RegisterBindingModifier<T>(string name = null)
+        public static void RegisterInteraction<T>(string name = null)
         {
-            RegisterBindingModifier(typeof(T), name);
+            RegisterInteraction(typeof(T), name);
         }
 
-        public static Type TryGetBindingModifier(string name)
+        public static Type TryGetInteraction(string name)
         {
-            return s_Manager.modifiers.LookupTypeRegisteration(name);
+            return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
-        public static IEnumerable<string> ListBindingModifiers()
+        public static IEnumerable<string> ListInteractions()
         {
-            return s_Manager.modifiers.names;
+            return s_Manager.interactions.names;
         }
 
         public static void RegisterBindingComposite(Type type, string name)
@@ -960,7 +989,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetBindingComposite(string name)
         {
-            return s_Manager.composites.LookupTypeRegisteration(name);
+            return s_Manager.composites.LookupTypeRegistration(name);
         }
 
         /// <summary>

@@ -62,14 +62,16 @@ namespace UnityEngine.Experimental.Input
         public InputControl[] controls;
 
         /// <summary>
-        /// Array of instantiated modifier objects.
+        /// Array of instantiated interaction objects.
         /// </summary>
         /// <remarks>
-        /// Every binding that has modifiers corresponds to a slice of this array.
+        /// Every binding that has interactions corresponds to a slice of this array.
         ///
-        /// Indices match between this and <see cref="modifierStates"/>.
+        /// Indices match between this and <see cref="interactionStates"/>.
         /// </remarks>
-        public IInputBindingModifier[] modifiers;
+        public IInputInteraction[] interactions;
+
+        public object[] processors;
 
         /// <summary>
         /// Array of instantiated composite objects.
@@ -88,7 +90,9 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public int totalControlCount;
 
-        public int totalModifierCount;
+        public int totalInteractionCount;
+
+        public int totalProcessorCount;
 
         public int totalCompositeCount;
 
@@ -101,15 +105,15 @@ namespace UnityEngine.Experimental.Input
         public BindingState[] bindingStates;
 
         /// <summary>
-        /// State of all modifiers on bindings in the action map.
+        /// State of all interactions on bindings in the action map.
         /// </summary>
         /// <remarks>
-        /// Any modifier mentioned on any of the bindings gets its own execution state record
-        /// in here. The modifiers for any one binding are grouped together.
+        /// Any interaction mentioned on any of the bindings gets its own execution state record
+        /// in here. The interactions for any one binding are grouped together.
         ///
         /// This array should not require GC scanning.
         /// </remarks>
-        public ModifierState[] modifierStates;
+        public InteractionState[] interactionStates;
 
         /// <summary>
         /// Trigger state of each action in the map. Indices correspond to <see cref="InputActionMap.m_Actions"/>.
@@ -142,7 +146,8 @@ namespace UnityEngine.Experimental.Input
             totalMapCount = resolver.totalMapCount;
             totalActionCount = resolver.totalActionCount;
             totalBindingCount = resolver.totalBindingCount;
-            totalModifierCount = resolver.totalModifierCount;
+            totalInteractionCount = resolver.totalInteractionCount;
+            totalProcessorCount = resolver.totalProcessorCount;
             totalCompositeCount = resolver.totalCompositeCount;
             totalControlCount = resolver.totalControlCount;
 
@@ -150,8 +155,9 @@ namespace UnityEngine.Experimental.Input
             mapIndices = resolver.mapIndices;
             actionStates = resolver.actionStates;
             bindingStates = resolver.bindingStates;
-            modifierStates = resolver.modifierStates;
-            modifiers = resolver.modifiers;
+            interactionStates = resolver.interactionStates;
+            interactions = resolver.interactions;
+            processors = resolver.processors;
             composites = resolver.composites;
             controls = resolver.controls;
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
@@ -257,7 +263,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////TODO: need to cancel actions if they are in started state
-        ////TODO: reset all modifier states
+        ////TODO: reset all interaction states
 
         public void DisableAllActions(InputActionMap map)
         {
@@ -370,14 +376,14 @@ namespace UnityEngine.Experimental.Input
             ProcessControlValueChange(mapIndex, controlIndex, bindingIndex, time);
         }
 
-        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long mapControlAndBindingIndex, int modifierIndex)
+        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long mapControlAndBindingIndex, int interactionIndex)
         {
             int controlIndex;
             int bindingIndex;
             int mapIndex;
 
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out mapIndex, out controlIndex, out bindingIndex);
-            ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, modifierIndex);
+            ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, interactionIndex);
         }
 
         // We mangle the various indices we use into a single long for association with state change
@@ -422,12 +428,12 @@ namespace UnityEngine.Experimental.Input
 
             ////TODO: this is where we should filter out state changes that do not result in value changes
 
-            // If we have modifiers, let them do all the processing. The precense of a modifier
+            // If we have interactions, let them do all the processing. The precense of an interaction
             // essentially bypasses the default phase progression logic of an action.
-            var modifierCount = bindingStates[bindingIndex].modifierCount;
-            if (modifierCount > 0)
+            var interactionCount = bindingStates[bindingIndex].interactionCount;
+            if (interactionCount > 0)
             {
-                var context = new InputBindingModifierContext
+                var context = new InputInteractionContext
                 {
                     m_State = this,
                     m_TriggerState = new TriggerState
@@ -439,18 +445,18 @@ namespace UnityEngine.Experimental.Input
                     }
                 };
 
-                var modifierStartIndex = bindingStates[bindingIndex].modifierStartIndex;
-                for (var i = 0; i < modifierCount; ++i)
+                var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
+                for (var i = 0; i < interactionCount; ++i)
                 {
-                    var index = modifierStartIndex + i;
-                    var state = modifierStates[index];
-                    var modifier = modifiers[index];
+                    var index = interactionStartIndex + i;
+                    var state = interactionStates[index];
+                    var interaction = interactions[index];
 
                     context.m_TriggerState.phase = state.phase;
                     context.m_TriggerState.startTime = state.startTime;
-                    context.m_TriggerState.modifierIndex = index;
+                    context.m_TriggerState.interactionIndex = index;
 
-                    modifier.Process(ref context);
+                    interaction.Process(ref context);
                 }
             }
             else
@@ -460,7 +466,7 @@ namespace UnityEngine.Experimental.Input
                 // again.
                 //
                 // Also, we perform the action on *any* value change. For buttons, this means that
-                // if you use the default logic without a modifier, the action will be performed
+                // if you use the default logic without an interaction, the action will be performed
                 // both when you press and when you release the button.
 
                 var trigger = new TriggerState
@@ -469,7 +475,7 @@ namespace UnityEngine.Experimental.Input
                     mapIndex = mapIndex,
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
-                    modifierIndex = kInvalidIndex,
+                    interactionIndex = kInvalidIndex,
                     time = time,
                     startTime = time
                 };
@@ -477,15 +483,15 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private void ProcessTimeout(double time, int mapIndex, int controlIndex, int bindingIndex, int modifierIndex)
+        private void ProcessTimeout(double time, int mapIndex, int controlIndex, int bindingIndex, int interactionIndex)
         {
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
+            Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount);
 
-            var currentState = modifierStates[modifierIndex];
+            var currentState = interactionStates[interactionIndex];
 
-            var context = new InputBindingModifierContext
+            var context = new InputInteractionContext
             {
                 m_State = this,
                 m_TriggerState =
@@ -496,95 +502,95 @@ namespace UnityEngine.Experimental.Input
                     mapIndex = mapIndex,
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
-                    modifierIndex = modifierIndex
+                    interactionIndex = interactionIndex
                 },
                 timerHasExpired = true,
             };
 
             currentState.isTimerRunning = false;
-            modifierStates[modifierIndex] = currentState;
+            interactionStates[interactionIndex] = currentState;
 
-            // Let modifier handle timer expiration.
-            modifiers[modifierIndex].Process(ref context);
+            // Let interaction handle timer expiration.
+            interactions[interactionIndex].Process(ref context);
         }
 
         internal void StartTimeout(float seconds, ref TriggerState trigger)
         {
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount);
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount);
-            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalModifierCount);
+            Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount);
 
             var manager = InputSystem.s_Manager;
             var currentTime = manager.m_Runtime.currentTime;
             var control = controls[trigger.controlIndex];
-            var modifierIndex = trigger.modifierIndex;
+            var interactionIndex = trigger.interactionIndex;
             var monitorIndex =
                 ToCombinedMapAndControlAndBindingIndex(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex);
 
             manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, monitorIndex,
-                modifierIndex);
+                interactionIndex);
 
             // Update state.
-            var modifierState = modifierStates[modifierIndex];
-            modifierState.isTimerRunning = true;
-            modifierStates[modifierIndex] = modifierState;
+            var interactionState = interactionStates[interactionIndex];
+            interactionState.isTimerRunning = true;
+            interactionStates[interactionIndex] = interactionState;
         }
 
-        private void StopTimeout(int mapIndex, int controlIndex, int bindingIndex, int modifierIndex)
+        private void StopTimeout(int mapIndex, int controlIndex, int bindingIndex, int interactionIndex)
         {
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount);
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
+            Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount);
 
             var manager = InputSystem.s_Manager;
             var monitorIndex =
                 ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-            manager.RemoveStateChangeMonitorTimeout(this, monitorIndex, modifierIndex);
+            manager.RemoveStateChangeMonitorTimeout(this, monitorIndex, interactionIndex);
 
             // Update state.
-            var modifierState = modifierStates[modifierIndex];
-            modifierState.isTimerRunning = false;
-            modifierStates[modifierIndex] = modifierState;
+            var interactionState = interactionStates[interactionIndex];
+            interactionState.isTimerRunning = false;
+            interactionStates[interactionIndex] = interactionState;
         }
 
         /// <summary>
-        /// Perform a phase change on the given modifier. Only visible to observers
+        /// Perform a phase change on the given interaction. Only visible to observers
         /// if it happens to change the phase of the action, too.
         /// </summary>
         /// <param name="newPhase"></param>
         /// <param name="trigger"></param>
         /// <remarks>
-        /// Multiple modifiers on the same binding can be started concurrently but the
-        /// first modifier that starts will get to drive an action until it either cancels
+        /// Multiple interactions on the same binding can be started concurrently but the
+        /// first interaction that starts will get to drive an action until it either cancels
         /// or performs the action.
         ///
-        /// If a modifier driving an action performs it, all modifiers will reset and
+        /// If an interaction driving an action performs it, all interactions will reset and
         /// go back waiting.
         ///
-        /// If a modifier driving an action cancels it, the next modifier in the list which
-        /// has already started will get to drive the action (example: a TapModifier and a
-        /// SlowTapModifier both start and the TapModifier gets to drive the action because
-        /// it comes first; then the TapModifier cancels because the button is held for too
-        /// long and the SlowTapModifier will get to drive the action next).
+        /// If an interaction driving an action cancels it, the next interaction in the list which
+        /// has already started will get to drive the action (example: a TapInteraction and a
+        /// SlowTapInteraction both start and the TapInteraction gets to drive the action because
+        /// it comes first; then the TapInteraction cancels because the button is held for too
+        /// long and the SlowTapInteraction will get to drive the action next).
         /// </remarks>
-        internal void ChangePhaseOfModifier(InputActionPhase newPhase, ref TriggerState trigger)
+        internal void ChangePhaseOfInteraction(InputActionPhase newPhase, ref TriggerState trigger)
         {
-            var modifierIndex = trigger.modifierIndex;
+            var interactionIndex = trigger.interactionIndex;
             var bindingIndex = trigger.bindingIndex;
 
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
+            Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
 
             ////TODO: need to make sure that performed and cancelled phase changes happen on the *same* binding&control
             ////      as the start of the phase
 
-            // Update modifier state.
-            ThrowIfPhaseTransitionIsInvalid(modifierStates[modifierIndex].phase, newPhase, ref trigger);
-            modifierStates[modifierIndex].phase = newPhase;
-            modifierStates[modifierIndex].triggerControlIndex = trigger.controlIndex;
+            // Update interaction state.
+            ThrowIfPhaseTransitionIsInvalid(interactionStates[interactionIndex].phase, newPhase, ref trigger);
+            interactionStates[interactionIndex].phase = newPhase;
+            interactionStates[interactionIndex].triggerControlIndex = trigger.controlIndex;
             if (newPhase == InputActionPhase.Started)
-                modifierStates[modifierIndex].startTime = trigger.time;
+                interactionStates[interactionIndex].startTime = trigger.time;
 
             ////REVIEW: If we want to defer triggering of actions, this is the point where we probably need to cut things off
             // See if it affects the phase of an associated action.
@@ -593,62 +599,62 @@ namespace UnityEngine.Experimental.Input
             {
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
-                    // We're the first modifier to go to the start phase.
+                    // We're the first interaction to go to the start phase.
                     ChangePhaseOfAction(newPhase, ref trigger);
                 }
-                else if (newPhase == InputActionPhase.Cancelled && actionStates[actionIndex].modifierIndex == trigger.modifierIndex)
+                else if (newPhase == InputActionPhase.Cancelled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
-                    // We're cancelling but maybe there's another modifier ready
+                    // We're cancelling but maybe there's another interaction ready
                     // to go into start phase.
 
                     ChangePhaseOfAction(newPhase, ref trigger);
 
-                    var modifierStartIndex = bindingStates[bindingIndex].modifierStartIndex;
-                    var numModifiers = bindingStates[bindingIndex].modifierCount;
-                    for (var i = 0; i < numModifiers; ++i)
+                    var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
+                    var numInteractions = bindingStates[bindingIndex].interactionCount;
+                    for (var i = 0; i < numInteractions; ++i)
                     {
-                        var index = modifierStartIndex + i;
-                        if (index != trigger.modifierIndex && modifierStates[index].phase == InputActionPhase.Started)
+                        var index = interactionStartIndex + i;
+                        if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
                         {
-                            var triggerForModifier = new TriggerState
+                            var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
-                                controlIndex = modifierStates[index].triggerControlIndex,
+                                controlIndex = interactionStates[index].triggerControlIndex,
                                 bindingIndex = trigger.bindingIndex,
-                                modifierIndex = index,
+                                interactionIndex = index,
                                 time = trigger.time,
-                                startTime = modifierStates[index].startTime
+                                startTime = interactionStates[index].startTime
                             };
-                            ChangePhaseOfAction(InputActionPhase.Started, ref triggerForModifier);
+                            ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction);
                             break;
                         }
                     }
                 }
-                else if (actionStates[actionIndex].modifierIndex == trigger.modifierIndex)
+                else if (actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
-                    // Any other phase change goes to action if we're the modifier driving
+                    // Any other phase change goes to action if we're the interaction driving
                     // the current phase.
                     ChangePhaseOfAction(newPhase, ref trigger);
 
-                    // We're the modifier driving the action and we performed the action,
-                    // so reset any other modifier to waiting state.
+                    // We're the interaction driving the action and we performed the action,
+                    // so reset any other interaction to waiting state.
                     if (newPhase == InputActionPhase.Performed)
                     {
-                        var modifierStartIndex = bindingStates[bindingIndex].modifierStartIndex;
-                        var numModifiers = bindingStates[bindingIndex].modifierCount;
-                        for (var i = 0; i < numModifiers; ++i)
+                        var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
+                        var numInteractions = bindingStates[bindingIndex].interactionCount;
+                        for (var i = 0; i < numInteractions; ++i)
                         {
-                            var index = modifierStartIndex + i;
-                            if (index != trigger.modifierIndex)
-                                ResetModifier(trigger.mapIndex, trigger.bindingIndex, index);
+                            var index = interactionStartIndex + i;
+                            if (index != trigger.interactionIndex)
+                                ResetInteraction(trigger.mapIndex, trigger.bindingIndex, index);
                         }
                     }
                 }
             }
 
-            // If the modifier performed or cancelled, go back to waiting.
+            // If the interaction performed or cancelled, go back to waiting.
             if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
-                ResetModifier(trigger.mapIndex, trigger.bindingIndex, trigger.modifierIndex);
+                ResetInteraction(trigger.mapIndex, trigger.bindingIndex, trigger.interactionIndex);
             ////TODO: reset entire chain
         }
 
@@ -704,7 +710,7 @@ namespace UnityEngine.Experimental.Input
                 m_State = this,
                 m_Time = trigger.time,
                 m_BindingIndex = trigger.bindingIndex,
-                m_ModifierIndex = trigger.modifierIndex,
+                m_InteractionIndex = trigger.interactionIndex,
                 m_ControlIndex = trigger.controlIndex,
             };
 
@@ -728,25 +734,25 @@ namespace UnityEngine.Experimental.Input
             // Can only go to Started from Waiting.
             if (newPhase == InputActionPhase.Started && currentPhase != InputActionPhase.Waiting)
                 throw new InvalidOperationException(
-                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
+                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, interaction: {4})",
                         currentPhase, InputActionPhase.Started, InputActionPhase.Waiting,
-                        GetActionOrNoneString(ref trigger), GetModifierOrNull(ref trigger)));
+                        GetActionOrNoneString(ref trigger), GetInteractionOrNull(ref trigger)));
 
             // Can only go to Performed from Waiting or Started.
             if (newPhase == InputActionPhase.Performed && currentPhase != InputActionPhase.Waiting &&
                 currentPhase != InputActionPhase.Started)
                 throw new InvalidOperationException(
-                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' or '{3}' (action: {4}, modifier: {5})",
+                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' or '{3}' (action: {4}, interaction: {5})",
                         currentPhase, InputActionPhase.Performed, InputActionPhase.Waiting, InputActionPhase.Started,
                         GetActionOrNoneString(ref trigger),
-                        GetModifierOrNull(ref trigger)));
+                        GetInteractionOrNull(ref trigger)));
 
             // Can only go to Cancelled from Started.
             if (newPhase == InputActionPhase.Cancelled && currentPhase != InputActionPhase.Started)
                 throw new InvalidOperationException(
-                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, modifier: {4})",
+                    string.Format("Cannot go from '{0}' to '{1}'; must be '{2}' (action: {3}, interaction: {4})",
                         currentPhase, InputActionPhase.Cancelled, InputActionPhase.Started,
-                        GetActionOrNoneString(ref trigger), GetModifierOrNull(ref trigger)));
+                        GetActionOrNoneString(ref trigger), GetInteractionOrNull(ref trigger)));
         }
 
         private object GetActionOrNoneString(ref TriggerState trigger)
@@ -792,40 +798,48 @@ namespace UnityEngine.Experimental.Input
             return controls[trigger.controlIndex];
         }
 
-        private IInputBindingModifier GetModifierOrNull(ref TriggerState trigger)
+        private IInputInteraction GetInteractionOrNull(ref TriggerState trigger)
         {
-            if (trigger.modifierIndex == kInvalidIndex)
+            if (trigger.interactionIndex == kInvalidIndex)
                 return null;
 
-            Debug.Assert(trigger.modifierIndex >= 0 && trigger.modifierIndex < totalModifierCount);
-            return modifiers[trigger.modifierIndex];
+            Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount);
+            return interactions[trigger.interactionIndex];
         }
 
-        private void ResetModifier(int mapIndex, int bindingIndex, int modifierIndex)
+        internal InputBinding GetBinding(int bindingIndex)
         {
-            Debug.Assert(modifierIndex >= 0 && modifierIndex < totalModifierCount);
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
+            var mapIndex = bindingStates[bindingIndex].mapIndex;
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            return maps[mapIndex].m_Bindings[bindingIndex - bindingStartIndex];
+        }
+
+        private void ResetInteraction(int mapIndex, int bindingIndex, int interactionIndex)
+        {
+            Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount);
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount);
 
-            modifiers[modifierIndex].Reset();
+            interactions[interactionIndex].Reset();
 
-            if (modifierStates[modifierIndex].isTimerRunning)
+            if (interactionStates[interactionIndex].isTimerRunning)
             {
-                var controlIndex = modifierStates[modifierIndex].triggerControlIndex;
-                StopTimeout(mapIndex, controlIndex, bindingIndex, modifierIndex);
+                var controlIndex = interactionStates[interactionIndex].triggerControlIndex;
+                StopTimeout(mapIndex, controlIndex, bindingIndex, interactionIndex);
             }
 
-            modifierStates[modifierIndex] =
-                new ModifierState
+            interactionStates[interactionIndex] =
+                new InteractionState
             {
                 phase = InputActionPhase.Waiting
             };
         }
 
         /// <summary>
-        /// Records the current state of a single modifier attached to a binding.
-        /// Each modifier keeps track of its own trigger control and phase progression.
+        /// Records the current state of a single interaction attached to a binding.
+        /// Each interaction keeps track of its own trigger control and phase progression.
         /// </summary>
-        internal struct ModifierState
+        internal struct InteractionState
         {
             public int triggerControlIndex;
             public Flags flags;
@@ -870,11 +884,16 @@ namespace UnityEngine.Experimental.Input
         internal struct BindingState
         {
             [FieldOffset(0)] private byte m_ControlCount;
-            [FieldOffset(1)] private byte m_ModifierCount;
-            [FieldOffset(2)] private byte m_MapIndex;
-            [FieldOffset(3)] private byte m_Flags;
-            [FieldOffset(4)] private ushort m_ActionIndex;
-            [FieldOffset(6)] private ushort m_CompositeIndex;
+            [FieldOffset(1)] private byte m_InteractionCount;
+            [FieldOffset(2)] private byte m_ProcessorCount;
+            [FieldOffset(3)] private byte m_MapIndex;
+            [FieldOffset(4)] private byte m_Flags;
+            // One unused byte.
+            [FieldOffset(6)] private ushort m_ActionIndex;
+            [FieldOffset(8)] private ushort m_CompositeIndex;
+            [FieldOffset(10)] private ushort m_ProcessorStartIndex;
+            [FieldOffset(12)] private ushort m_InteractionStartIndex;
+            [FieldOffset(14)] private ushort m_ControlStartIndex;
 
             [Flags]
             public enum Flags
@@ -887,7 +906,17 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Index into <see cref="controls"/> of first control associated with the binding.
             /// </summary>
-            [FieldOffset(8)] public int controlStartIndex;
+            public int controlStartIndex
+            {
+                get { return m_ControlStartIndex; }
+                set
+                {
+                    Debug.Assert(value != kInvalidIndex);
+                    if (value >= ushort.MaxValue)
+                        throw new NotSupportedException("Control count per binding cannot exceed byte.MaxValue=" + ushort.MaxValue);
+                    m_ControlStartIndex = (ushort)value;
+                }
+            }
 
             /// <summary>
             /// Number of controls associated with this binding.
@@ -895,22 +924,83 @@ namespace UnityEngine.Experimental.Input
             public int controlCount
             {
                 get { return m_ControlCount; }
-                set { m_ControlCount = (byte)value; }
+                set
+                {
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Control count per binding cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_ControlCount = (byte)value;
+                }
             }
 
             /// <summary>
-            /// Number of modifiers associated with this binding.
+            /// Index into <see cref="InputActionMapState.interactionStates"/> of first interaction associated with the binding.
             /// </summary>
-            public int modifierCount
+            public int interactionStartIndex
             {
-                get { return m_ModifierCount; }
-                set { m_ModifierCount = (byte)value; }
+                get
+                {
+                    if (m_InteractionStartIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_InteractionStartIndex;
+                }
+                set
+                {
+                    if (value == kInvalidIndex)
+                        m_InteractionStartIndex = ushort.MaxValue;
+                    else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Interaction count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_InteractionStartIndex = (ushort)value;
+                    }
+                }
             }
 
             /// <summary>
-            /// Index into <see cref="modifierStates"/> of first modifier associated with the binding.
+            /// Number of interactions associated with this binding.
             /// </summary>
-            [FieldOffset(12)] public int modifierStartIndex;
+            public int interactionCount
+            {
+                get { return m_InteractionCount; }
+                set
+                {
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Interaction count per binding cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_InteractionCount = (byte)value;
+                }
+            }
+
+            public int processorStartIndex
+            {
+                get
+                {
+                    if (m_ProcessorStartIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_ProcessorStartIndex;
+                }
+                set
+                {
+                    if (value == kInvalidIndex)
+                        m_ProcessorStartIndex = ushort.MaxValue;
+                    else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Processor count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_ProcessorStartIndex = (ushort)value;
+                    }
+                }
+            }
+
+            public int processorCount
+            {
+                get { return m_ProcessorCount; }
+                set
+                {
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Processor count per binding cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_ProcessorCount = (byte)value;
+                }
+            }
 
             /// <summary>
             /// Index of the action being triggered by the binding (if any).
@@ -967,7 +1057,11 @@ namespace UnityEngine.Experimental.Input
                     if (value == kInvalidIndex)
                         m_CompositeIndex = ushort.MaxValue;
                     else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Composite count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
                         m_CompositeIndex = (ushort)value;
+                    }
                 }
             }
 
@@ -1058,9 +1152,9 @@ namespace UnityEngine.Experimental.Input
             public int bindingIndex;
 
             /// <summary>
-            /// Index into <see cref="modifierStates"/> for the modifier that triggered.
+            /// Index into <see cref="InputActionMapState.interactionStates"/> for the interaction that triggered.
             /// </summary>
-            public int modifierIndex;
+            public int interactionIndex;
         }
 
         /// <summary>
@@ -1075,8 +1169,10 @@ namespace UnityEngine.Experimental.Input
             public int controlCount;
             public int bindingStartIndex;
             public int bindingCount;
-            public int modifierStartIndex;
-            public int modifierCount;
+            public int interactionStartIndex;
+            public int interactionCount;
+            public int processorStartIndex;
+            public int processorCount;
             public int compositeStartIndex;
             public int compositeCount;
         }
@@ -1298,12 +1394,12 @@ namespace UnityEngine.Experimental.Input
                 || totalBindingCount != resolver.totalBindingCount
                 || totalCompositeCount != resolver.totalCompositeCount
                 || totalControlCount != resolver.totalControlCount
-                || totalModifierCount != resolver.totalModifierCount)
+                || totalInteractionCount != resolver.totalInteractionCount)
                 return false;
 
             if (!ArrayHelpers.HaveEqualElements(maps, resolver.maps)
                 || !ArrayHelpers.HaveEqualElements(controls, resolver.controls)
-                || !ArrayHelpers.HaveEqualElements(modifiers, resolver.modifiers)
+                || !ArrayHelpers.HaveEqualElements(interactions, resolver.interactions)
                 || !ArrayHelpers.HaveEqualElements(composites, resolver.composites))
                 return false;
 

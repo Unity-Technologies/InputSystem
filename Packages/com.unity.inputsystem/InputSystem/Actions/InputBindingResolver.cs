@@ -27,15 +27,17 @@ namespace UnityEngine.Experimental.Input
         public int totalActionCount;
         public int totalBindingCount;
         public int totalControlCount;
-        public int totalModifierCount;
+        public int totalInteractionCount;
+        public int totalProcessorCount;
         public int totalCompositeCount;
 
         public InputActionMap[] maps;
         public InputControl[] controls;
-        public InputActionMapState.ModifierState[] modifierStates;
+        public InputActionMapState.InteractionState[] interactionStates;
         public InputActionMapState.BindingState[] bindingStates;
         public InputActionMapState.TriggerState[] actionStates;
-        public IInputBindingModifier[] modifiers;
+        public IInputInteraction[] interactions;
+        public object[] processors;
         public object[] composites;
 
         public InputActionMapState.ActionMapIndices[] mapIndices;
@@ -48,7 +50,8 @@ namespace UnityEngine.Experimental.Input
             totalMapCount = state.totalMapCount;
             totalActionCount = state.totalActionCount;
             totalBindingCount = state.totalBindingCount;
-            totalModifierCount = state.totalModifierCount;
+            totalInteractionCount = state.totalInteractionCount;
+            totalProcessorCount = state.totalProcessorCount;
             totalCompositeCount = state.totalCompositeCount;
             totalControlCount = state.totalControlCount;
 
@@ -56,8 +59,9 @@ namespace UnityEngine.Experimental.Input
             mapIndices = state.mapIndices;
             actionStates = state.actionStates;
             bindingStates = state.bindingStates;
-            modifierStates = state.modifierStates;
-            modifiers = state.modifiers;
+            interactionStates = state.interactionStates;
+            interactions = state.interactions;
+            processors = state.processors;
             composites = state.composites;
             controls = state.controls;
             controlIndexToBindingIndex = state.controlIndexToBindingIndex;
@@ -76,7 +80,8 @@ namespace UnityEngine.Experimental.Input
             // Keep track of indices for this map.
             var bindingStartIndex = totalBindingCount;
             var controlStartIndex = totalControlCount;
-            var modifierStartIndex = totalModifierCount;
+            var interactionStartIndex = totalInteractionCount;
+            var processorStartIndex = totalProcessorCount;
             var compositeStartIndex = totalCompositeCount;
             var actionStartIndex = totalActionCount;
 
@@ -88,7 +93,7 @@ namespace UnityEngine.Experimental.Input
 
             ////TODO: make sure composite objects get all the bindings they need
             ////TODO: handle case where we have bindings resolving to the same control
-            ////      (not so clear cut what to do there; each binding may have a different modifier setup, for example)
+            ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
             var currentCompositeIndex = InputActionMapState.kInvalidIndex;
             var actionsInThisMap = map.m_Actions;
             var actionCountInThisMap = actionsInThisMap != null ? actionsInThisMap.Length : 0;
@@ -114,11 +119,22 @@ namespace UnityEngine.Experimental.Input
                     actionIndex = 0;
                 }
 
-                ////TODO: allow specifying parameters for composite on its path (same way as parameters work for modifiers)
+                // Instantiate processors.
+                var firstProcessorIndex = 0;
+                var numProcessors = 0;
+                var processors = unresolvedBinding.effectiveProcessors;
+                if (!string.IsNullOrEmpty(processors))
+                {
+                    firstProcessorIndex = ResolveProcessors(processors);
+                    if (processors != null)
+                        numProcessors = totalProcessorCount - firstProcessorIndex;
+                }
+
+                ////TODO: allow specifying parameters for composite on its path (same way as parameters work for interactions)
                 // If it's the start of a composite chain, create the composite.
                 if (unresolvedBinding.isComposite)
                 {
-                    ////REVIEW: what to do about modifiers on composites?
+                    ////REVIEW: what to do about interactions on composites?
 
                     // Instantiate. For composites, the path is the name of the composite.
                     var composite = InstantiateBindingComposite(unresolvedBinding.path);
@@ -128,6 +144,8 @@ namespace UnityEngine.Experimental.Input
                     {
                         actionIndex = actionIndex,
                         compositeIndex = currentCompositeIndex,
+                        processorStartIndex = firstProcessorIndex,
+                        processorCount = numProcessors,
                         mapIndex = totalMapCount,
                     };
 
@@ -151,14 +169,15 @@ namespace UnityEngine.Experimental.Input
                 controls = resolvedControls.array;
                 totalControlCount = resolvedControls.count;
 
-                // Instantiate modifiers.
-                var firstModifierIndex = 0;
-                var numModifiers = 0;
-                if (!string.IsNullOrEmpty(unresolvedBinding.modifiers))
+                // Instantiate interactions.
+                var firstInteractionIndex = 0;
+                var numInteractions = 0;
+                var interactions = unresolvedBinding.effectiveInteractions;
+                if (!string.IsNullOrEmpty(interactions))
                 {
-                    firstModifierIndex = ResolveModifiers(unresolvedBinding.modifiers);
-                    if (modifierStates != null)
-                        numModifiers = totalModifierCount - firstModifierIndex;
+                    firstInteractionIndex = ResolveInteractions(interactions);
+                    if (interactionStates != null)
+                        numInteractions = totalInteractionCount - firstInteractionIndex;
                 }
 
                 // Add entry for resolved binding.
@@ -166,8 +185,10 @@ namespace UnityEngine.Experimental.Input
                 {
                     controlStartIndex = firstControlIndex,
                     controlCount = numControls,
-                    modifierStartIndex = firstModifierIndex,
-                    modifierCount = numModifiers,
+                    interactionStartIndex = firstInteractionIndex,
+                    interactionCount = numInteractions,
+                    processorStartIndex = firstProcessorIndex,
+                    processorCount = numProcessors,
                     isPartOfComposite = unresolvedBinding.isPartOfComposite,
                     actionIndex = actionIndex,
                     compositeIndex = currentCompositeIndex,
@@ -218,8 +239,10 @@ namespace UnityEngine.Experimental.Input
                 controlCount = controlCountInThisMap,
                 bindingStartIndex = bindingStartIndex,
                 bindingCount = bindingCountInThisMap,
-                modifierStartIndex = modifierStartIndex,
-                modifierCount = totalModifierCount - modifierStartIndex,
+                interactionStartIndex = interactionStartIndex,
+                interactionCount = totalInteractionCount - interactionStartIndex,
+                processorStartIndex = processorStartIndex,
+                processorCount = totalProcessorCount - processorStartIndex,
                 compositeStartIndex = compositeStartIndex,
                 compositeCount = totalCompositeCount - compositeStartIndex,
             });
@@ -240,51 +263,79 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private int ResolveModifiers(string modifierString)
+        private int ResolveInteractions(string interactionString)
         {
             ////REVIEW: We're piggybacking off the processor parsing here as the two syntaxes are identical. Might consider
             ////        moving the logic to a shared place.
             ////        Alternatively, may split the paths. May help in getting rid of unnecessary allocations.
 
-            var firstModifierIndex = totalModifierCount;
-            if (!InputControlLayout.ParseNameAndParameterList(modifierString, ref m_Parameters))
-                return firstModifierIndex;
+            var firstInteractionIndex = totalInteractionCount;
+            if (!InputControlLayout.ParseNameAndParameterList(interactionString, ref m_Parameters))
+                return firstInteractionIndex;
 
             for (var i = 0; i < m_Parameters.Count; ++i)
             {
-                // Look up modifier.
-                var type = InputBindingModifier.s_Modifiers.LookupTypeRegisteration(m_Parameters[i].name);
+                // Look up interaction.
+                var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
-                            "No binding modifier with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
-                            modifierString));
+                            "No interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                            interactionString));
 
                 // Instantiate it.
-                var modifier = Activator.CreateInstance(type) as IInputBindingModifier;
-                if (modifier == null)
-                    throw new Exception(string.Format("Modifier '{0}' is not an IInputBindingModifier", m_Parameters[i].name));
+                var interaction = Activator.CreateInstance(type) as IInputInteraction;
+                if (interaction == null)
+                    throw new Exception(string.Format("Interaction '{0}' is not an IInputInteraction", m_Parameters[i].name));
 
                 // Pass parameters to it.
-                InputDeviceBuilder.SetParameters(modifier, m_Parameters[i].parameters);
+                InputDeviceBuilder.SetParameters(interaction, m_Parameters[i].parameters);
 
                 // Add to list.
-                var modifierStateCount = totalModifierCount;
-                ArrayHelpers.AppendWithCapacity(ref modifierStates, ref modifierStateCount,
-                    new InputActionMapState.ModifierState
+                var interactionStateCount = totalInteractionCount;
+                ArrayHelpers.AppendWithCapacity(ref interactionStates, ref interactionStateCount,
+                    new InputActionMapState.InteractionState
                 {
                     phase = InputActionPhase.Waiting
                 });
-                ArrayHelpers.AppendWithCapacity(ref modifiers, ref totalModifierCount, modifier);
-                Debug.Assert(modifierStateCount == totalModifierCount);
+                ArrayHelpers.AppendWithCapacity(ref interactions, ref totalInteractionCount, interaction);
+                Debug.Assert(interactionStateCount == totalInteractionCount);
             }
 
-            return firstModifierIndex;
+            return firstInteractionIndex;
+        }
+
+        private int ResolveProcessors(string processorString)
+        {
+            var firstProcessorIndex = totalProcessorCount;
+            if (!InputControlLayout.ParseNameAndParameterList(processorString, ref m_Parameters))
+                return firstProcessorIndex;
+
+            for (var i = 0; i < m_Parameters.Count; ++i)
+            {
+                // Look up processor.
+                var type = InputControlProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
+                if (type == null)
+                    throw new Exception(string.Format(
+                            "No processor with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                            processorString));
+
+                // Instantiate it.
+                var processor = Activator.CreateInstance(type);
+
+                // Pass parameters to it.
+                InputDeviceBuilder.SetParameters(processor, m_Parameters[i].parameters);
+
+                // Add to list.
+                ArrayHelpers.AppendWithCapacity(ref processors, ref totalProcessorCount, processor);
+            }
+
+            return firstProcessorIndex;
         }
 
         private static object InstantiateBindingComposite(string name)
         {
             // Look up.
-            var type = InputBindingComposite.s_Composites.LookupTypeRegisteration(name);
+            var type = InputBindingComposite.s_Composites.LookupTypeRegistration(name);
             if (type == null)
                 throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
                         name));

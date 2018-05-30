@@ -471,6 +471,67 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
     }
 
+    [Test]
+    [Category("State")]
+    public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
+    {
+        InputSystem.updateMask = InputUpdateType.None;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftTrigger, Is.Zero);
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanListenForInputUpdates()
+    {
+        var receivedUpdate = false;
+        InputUpdateType? receivedUpdateType = null;
+        InputSystem.onUpdate +=
+            type =>
+            {
+                Assert.That(receivedUpdate, Is.False);
+                receivedUpdate = true;
+                receivedUpdateType = type;
+            };
+
+        // Dynamic.
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        receivedUpdate = false;
+        receivedUpdateType = null;
+
+        // Fixed.
+        InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        receivedUpdate = false;
+        receivedUpdateType = null;
+
+        // Before render.
+        InputSystem.Update(InputUpdateType.BeforeRender);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        receivedUpdate = false;
+        receivedUpdateType = null;
+
+        // Editor.
+        InputSystem.Update(InputUpdateType.Editor);
+
+        Assert.That(receivedUpdate, Is.True);
+        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
+    }
+
     // To build systems that can respond to inputs changing value, there's support for setting
     // up monitor on state (essentially locks around memory regions). This is used by the action
     // system to build its entire machinery but the core mechanism is available to anyone.
@@ -678,6 +739,32 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(!timeoutFired);
+    }
+
+    // InputStateHistory helps creating traces of input over time. This is useful, for example, to track
+    // the motion curve of a tracking device over time.
+    [Test]
+    [Category("State")]
+    public void TODO_State_CanRecordHistoryOfState()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        //have to record raw, unprocessed state; deadzone processor will break asserts below, though
+        using (var history = new InputStateHistory<Vector2>(gamepad.leftStick))
+        {
+            history.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f)});
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.345f, 0.456f)});
+            InputSystem.Update();
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.567f, 0.678f)});
+            InputSystem.Update();
+
+            Assert.That(history.Count, Is.EqualTo(3));
+            Assert.That(history[0], Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(vector2Comparer));
+            Assert.That(history[1], Is.EqualTo(new Vector2(0.345f, 0.456f)).Using(vector2Comparer));
+            Assert.That(history[2], Is.EqualTo(new Vector2(0.567f, 0.678f)).Using(vector2Comparer));
+        }
     }
 
     [Test]

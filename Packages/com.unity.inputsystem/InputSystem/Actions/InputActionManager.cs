@@ -4,14 +4,17 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Net35Compatibility;
 using UnityEngine.Experimental.Input.Utilities;
+
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
+using UnityEngine.Experimental.Input.Net35Compatibility;
+#endif
 
 ////REVIEW: the single state approach makes adding and removing maps costly; may not be flexible enough
 
-////TODO: need to sync when the InputActionMapState is re-resolved
+////REVIEW: can we have a stable, global identification mechanism for actions that comes down to strings?
 
-//automatically flushes in-between updates?
+////TODO: need to sync when the InputActionMapState is re-resolved
 
 namespace UnityEngine.Experimental.Input
 {
@@ -20,15 +23,29 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// An action manager owns the state of all action maps added to it.
+    ///
+    /// The data collected by an action manager is stored in unmanaged memory. If, when querying
+    /// trigger events, no enumerators are used, no GC memory will be allocated during action
+    /// processing.
     /// </remarks>
     public class InputActionManager : IInputActionCallbackReceiver, IDisposable
     {
+        /// <summary>
+        /// List of action maps added to the manager.
+        /// </summary>
         public ReadOnlyArray<InputActionMap> actionMaps
         {
             get { return new ReadOnlyArray<InputActionMap>(m_State.maps, 0, m_State.totalMapCount); }
         }
 
-        public TriggerEventArray triggerEvents
+        /// <summary>
+        /// List of bound controls and associated actions that have triggered in the current frame.
+        /// </summary>
+        /// <remarks>
+        ///
+        /// Does not allocate.
+        /// </remarks>
+        public TriggerEventArray triggerEventsForCurrentFrame
         {
             get { return new TriggerEventArray(this); }
         }
@@ -68,12 +85,26 @@ namespace UnityEngine.Experimental.Input
 
             // Listen for actions trigger on the map.
             actionMap.AddActionCallbackReceiver(this);
+
+            // If it's the first map added to us, also hook into the input system to automatically
+            // flush our recorded data between updates.
+            if (m_State.totalMapCount == 1)
+                InputSystem.onUpdate += OnBeforeInputSystemUpdate;
         }
 
         public void RemoveActionMap(InputActionMap actionMap)
         {
             //nuke event data
             throw new NotImplementedException();
+        }
+
+        public void Flush()
+        {
+            m_TriggerDataCount = 0;
+            m_ActionDataCount = 0;
+            m_StateDataSize = 0;
+
+            // We keep the buffers allocated.
         }
 
         /// <summary>
@@ -141,7 +172,7 @@ namespace UnityEngine.Experimental.Input
             {
                 triggerIndex = triggerIndex,
                 bindingIndex = context.m_BindingIndex,
-                modifierIndex = context.m_ModifierIndex,
+                interactionIndex = context.m_InteractionIndex,
                 phase = context.phase,
             });
             if (data.actionEventCount == 1)
@@ -172,6 +203,8 @@ namespace UnityEngine.Experimental.Input
             m_TriggerDataBuffer = new NativeArray<TriggerData>();
             m_ActionDataBuffer = new NativeArray<ActionData>();
             m_StateDataBuffer = new NativeArray<byte>();
+
+            InputSystem.onUpdate -= OnBeforeInputSystemUpdate;
         }
 
         /// <summary>
@@ -194,6 +227,32 @@ namespace UnityEngine.Experimental.Input
         private NativeArray<TriggerData> m_TriggerDataBuffer;
         private NativeArray<ActionData> m_ActionDataBuffer;
         private NativeArray<byte> m_StateDataBuffer;
+
+        ////TODO: replace this with having global frame-start notifications for input
+        private bool m_HadFixedUpdate;
+
+        private void OnBeforeInputSystemUpdate(InputUpdateType type)
+        {
+            if (type == InputUpdateType.Fixed)
+                m_HadFixedUpdate = true;
+
+            // Check if we need to flush events.
+            var shouldFlush = false;
+            var dynamicUpdateEnabled = (InputSystem.updateMask & InputUpdateType.Dynamic) == InputUpdateType.Dynamic;
+            if (dynamicUpdateEnabled && type == InputUpdateType.Dynamic)
+            {
+                // If it's a dynamic update, we only want to flush if there wasn't a fixed update
+                // that happened in-between the current and the last dynamic update.
+                if (!m_HadFixedUpdate)
+                    shouldFlush = true;
+                m_HadFixedUpdate = false;
+            }
+            shouldFlush = shouldFlush
+                || (!dynamicUpdateEnabled && type == InputUpdateType.Fixed);
+
+            if (shouldFlush)
+                Flush();
+        }
 
         [StructLayout(LayoutKind.Explicit, Size = 20)]
         internal struct TriggerData
@@ -283,12 +342,12 @@ namespace UnityEngine.Experimental.Input
             [FieldOffset(2)] public ushort m_BindingIndex;
 
             /// <summary>
-            /// Index of the modifier on the binding that controlled the triggering.
+            /// Index of the interaction on the binding that controlled the triggering.
             /// </summary>
             /// <remarks>
-            /// <see cref="InputActionMapState.kInvalidIndex"/> if the binding triggered without a modifier.
+            /// <see cref="InputActionMapState.kInvalidIndex"/> if the binding triggered without an interaction.
             /// </remarks>
-            [FieldOffset(4)] public ushort m_ModifierIndex;
+            [FieldOffset(4)] public ushort m_InteractionIndex;
 
             [FieldOffset(6)] public byte m_Phase;
 
@@ -317,24 +376,24 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public int modifierIndex
+            public int interactionIndex
             {
                 get
                 {
-                    if (m_ModifierIndex == ushort.MaxValue)
+                    if (m_InteractionIndex == ushort.MaxValue)
                         return InputActionMapState.kInvalidIndex;
-                    return m_ModifierIndex;
+                    return m_InteractionIndex;
                 }
                 set
                 {
                     if (value == InputActionMapState.kInvalidIndex)
-                        m_ModifierIndex = ushort.MaxValue;
+                        m_InteractionIndex = ushort.MaxValue;
                     else
                     {
                         Debug.Assert(value >= 0);
                         if (value >= ushort.MaxValue)
-                            throw new NotSupportedException("Modifier count must not exceed ushort.MaxValue=" + ushort.MaxValue);
-                        m_ModifierIndex = (ushort)value;
+                            throw new NotSupportedException("Interaction count must not exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_InteractionIndex = (ushort)value;
                     }
                 }
             }
@@ -369,14 +428,37 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public InputBinding binding
+            public InputActionPhase phase
             {
-                get { throw new NotImplementedException(); }
+                get
+                {
+                    if (m_Manager == null)
+                        return InputActionPhase.Disabled;
+                    return m_Data.phase;
+                }
             }
 
-            public IInputBindingModifier modifier
+            public InputBinding binding
             {
-                get { throw new NotImplementedException(); }
+                get
+                {
+                    if (m_Manager == null)
+                        return default(InputBinding);
+                    return m_Manager.m_State.GetBinding(m_Data.bindingIndex);
+                }
+            }
+
+            public IInputInteraction interaction
+            {
+                get
+                {
+                    if (m_Manager == null)
+                        return null;
+                    var interactionIndex = m_Data.interactionIndex;
+                    if (interactionIndex == InputActionMapState.kInvalidIndex)
+                        return null;
+                    return m_Manager.m_State.interactions[interactionIndex];
+                }
             }
         }
 
@@ -412,7 +494,26 @@ namespace UnityEngine.Experimental.Input
 
             public ActionEvent this[int index]
             {
-                get { throw new NotImplementedException(); }
+                get
+                {
+                    if (m_Manager == null)
+                        throw new InvalidOperationException("ActionEventArray not intialized");
+
+                    if (index < 0 || index >= m_ActionEventCount)
+                        throw new ArgumentOutOfRangeException(
+                            string.Format("Index {0} is out of range for trigger event with {1} action entries", index,
+                                m_ActionEventCount), "index");
+
+                    var idx = m_ActionEventIndex;
+                    for (var i = 0; i != index; ++i)
+                    {
+                        ++idx;
+                        while (m_Manager.m_ActionDataBuffer[idx].triggerIndex != m_TriggerIndex)
+                            ++idx;
+                    }
+
+                    return new ActionEvent(m_Manager, idx);
+                }
             }
 
             internal class Enumerator : IEnumerator<ActionEvent>
@@ -521,10 +622,37 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public TValue ReadValue<TValue>()
+            /// <summary>
+            /// Read the value the control had when it triggered.
+            /// </summary>
+            /// <typeparam name="TValue">Type of value to read. Must match the value type of the control.</typeparam>
+            /// <returns>Value of <see cref="control"/> at the time it triggered.</returns>
+            public unsafe TValue ReadValue<TValue>()
             {
-                throw new NotImplementedException();
+                ////TODO: this here should be moved into a general helper method; "read control value from chunk of memory" is generally useful
+
+                // Grab control and make sure it has a matching type.
+                var controlOfType = control as InputControl<TValue>;
+                if (controlOfType == null)
+                    throw new ArgumentException(
+                        string.Format("Control '{0}' does not have value type {1}", control, typeof(TValue)), "TValue");
+
+                // Fetch state memory and account for the control wanting to
+                // read from an offset into the global state buffers.
+                Debug.Assert(m_Data.stateSizeInBytes == controlOfType.m_StateBlock.alignedSizeInBytes);
+                var statePtr = (byte*)m_Manager.m_StateDataBuffer.GetUnsafeReadOnlyPtr() + m_Data.stateOffset;
+                statePtr -= controlOfType.m_StateBlock.byteOffset;
+
+                ////TODO: this will have to take composites as well as processors on the binding into account
+
+                ////REVIEW: 4 vtable dispatches (InputControl<Vector2>.ReadRawValueFrom, InputControl<float>.ReadRawValueFrom for x,
+                ////        same for y, DeadzoneProcess.Process; plus quite a few direct method calls on top) for a single value read
+                ////        of a Vector2 really isn't awesome; can we cut that down?
+                // And let the control do the rest.
+                return controlOfType.ReadValueFrom(new IntPtr(statePtr));
             }
+
+            ////TODO: must be able to read previous values
         }
 
         public struct TriggerEventArray : IReadOnlyList<TriggerEvent>

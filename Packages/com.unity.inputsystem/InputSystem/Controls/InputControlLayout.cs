@@ -12,6 +12,10 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: allow things like "-something" and "+something" for usages, processors, etc
+
+////TODO: change interactions and processors to use kSeparator
+
 ////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
 
 ////TODO: turn 'overrides' into feature where layouts can be registered as overrides and they get merged *into* the layout

@@ -185,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Editor
             item.bindingListView =
                 new InputBindingListView(item.property, actionSetItem.property, displayHeader: false);
 
-            ////FIXME: need to also trigger m_ApplyAction when bindings are changed (paths and modifiers)
+            ////FIXME: need to also trigger m_ApplyAction when bindings are changed (paths and interactions)
             item.bindingListView.onChangedCallback =
                 (list) =>
                 {

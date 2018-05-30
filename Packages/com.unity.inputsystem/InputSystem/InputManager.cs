@@ -7,8 +7,8 @@ using UnityEngine.Experimental.Input.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 #if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
@@ -23,7 +23,9 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterBindingModifier and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+
+////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -56,9 +58,9 @@ namespace UnityEngine.Experimental.Input
             get { return m_Processors; }
         }
 
-        public TypeTable modifiers
+        public TypeTable interactions
         {
-            get { return m_Modifiers; }
+            get { return m_Interactions; }
         }
 
         public TypeTable composites
@@ -1046,8 +1048,8 @@ namespace UnityEngine.Experimental.Input
                 InputControlLayout.s_Layouts = new InputControlLayout.Collection();
             if (ReferenceEquals(InputControlProcessor.s_Processors.table, m_Processors.table))
                 InputControlProcessor.s_Processors = new TypeTable();
-            if (ReferenceEquals(InputBindingModifier.s_Modifiers.table, m_Modifiers.table))
-                InputBindingModifier.s_Modifiers = new TypeTable();
+            if (ReferenceEquals(InputInteraction.s_Interactions.table, m_Interactions.table))
+                InputInteraction.s_Interactions = new TypeTable();
             if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
                 InputBindingComposite.s_Composites = new TypeTable();
 
@@ -1067,7 +1069,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_Layouts.Allocate();
             m_Processors.Initialize();
-            m_Modifiers.Initialize();
+            m_Interactions.Initialize();
             m_Composites.Initialize();
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = new List<AvailableDevice>();
@@ -1132,17 +1134,18 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
-            // Register modifiers.
-            modifiers.AddTypeRegistration("Press", typeof(PressModifier));
-            modifiers.AddTypeRegistration("Hold", typeof(HoldModifier));
-            modifiers.AddTypeRegistration("Tap", typeof(TapModifier));
-            modifiers.AddTypeRegistration("SlowTap", typeof(SlowTapModifier));
-            //modifiers.AddTypeRegistration("DoubleTap", typeof(DoubleTapModifier));
-            modifiers.AddTypeRegistration("Swipe", typeof(SwipeModifier));
+            // Register interactions.
+            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
+            interactions.AddTypeRegistration("PressAndRelease", typeof(PressAndReleaseInteraction));
+            interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
+            interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
+            interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
+            //interactions.AddTypeRegistration("DoubleTap", typeof(DoubleTapInteraction));
+            interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
 
             // Register composites.
-            composites.AddTypeRegistration("ButtonAxis", typeof(ButtonAxis));
-            composites.AddTypeRegistration("ButtonVector", typeof(ButtonVector));
+            composites.AddTypeRegistration("Axis", typeof(AxisComposite));
+            composites.AddTypeRegistration("Dpad", typeof(DpadComposite));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1172,7 +1175,7 @@ namespace UnityEngine.Experimental.Input
         {
             InputControlLayout.s_Layouts = m_Layouts;
             InputControlProcessor.s_Processors = m_Processors;
-            InputBindingModifier.s_Modifiers = m_Modifiers;
+            InputInteraction.s_Interactions = m_Interactions;
             InputBindingComposite.s_Composites = m_Composites;
 
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
@@ -1200,7 +1203,7 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] internal InputControlLayout.Collection m_Layouts;
         [NonSerialized] private TypeTable m_Processors;
-        [NonSerialized] private TypeTable m_Modifiers;
+        [NonSerialized] private TypeTable m_Interactions;
         [NonSerialized] private TypeTable m_Composites;
 
         [NonSerialized] private InputDevice[] m_Devices;
@@ -2260,7 +2263,7 @@ namespace UnityEngine.Experimental.Input
             public BaseLayoutState[] baseLayouts;
             public LayoutDeviceState[] layoutDeviceMatchers;
             public TypeTable.SavedState processors;
-            public TypeTable.SavedState modifiers;
+            public TypeTable.SavedState interactions;
             public TypeTable.SavedState composites;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -2353,7 +2356,7 @@ namespace UnityEngine.Experimental.Input
                 baseLayouts = m_Layouts.baseLayoutTable.Select(x => new BaseLayoutState { derivedLayout = x.Key, baseLayout = x.Value }).ToArray(),
                 layoutDeviceMatchers = m_Layouts.layoutDeviceMatchers.Select(x => new LayoutDeviceState { matcherJson = x.Value.ToJson(), layoutName = x.Key }).ToArray(),
                 processors = m_Processors.SaveState(),
-                modifiers = m_Modifiers.SaveState(),
+                interactions = m_Interactions.SaveState(),
                 composites = m_Composites.SaveState(),
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
@@ -2477,7 +2480,7 @@ namespace UnityEngine.Experimental.Input
 
             // Type registrations.
             m_Processors.RestoreState(state.processors, "Input processor");
-            m_Modifiers.RestoreState(state.processors, "Input binding modifier");
+            m_Interactions.RestoreState(state.processors, "Input binding interaction");
             m_Composites.RestoreState(state.composites, "Input binding composite");
 
             // Re-create devices.

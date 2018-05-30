@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -98,16 +99,27 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] public string overridePath;
 
         /// <summary>
-        /// Optional list of modifiers and their parameters.
+        /// Optional list of interactions and their parameters.
         /// </summary>
         /// <example>
         /// <code>
         /// "tap,slowTap(duration=1.2)"
         /// </code>
         /// </example>
-        public string modifiers;
+        [FormerlySerializedAs("modifiers")]
+        public string interactions;
 
-        [NonSerialized] public string overrideModifiers;
+        [NonSerialized] public string overrideInteractions;
+
+        /// <summary>
+        /// Optional list of processors to apply to control values.
+        /// </summary>
+        /// <remarks>
+        /// This list has the same format as <see cref="InputControlAttribute.processors"/>.
+        /// </remarks>
+        public string processors;
+
+        [NonSerialized] public string overrideProcessors;
 
         // Optional group name. This can be used, for example, to divide bindings into
         // control schemes. So, the binding for keyboard&mouse on an action would have
@@ -125,10 +137,10 @@ namespace UnityEngine.Experimental.Input
         //       One good use case for groups is to mark up bindings that have a certain
         //       common meaning. Say, for example, you have a several binding chains
         //       (maybe even across different action sets) where the first binding in the
-        //       chain always represents the same "modifier". Let's say it's the left
+        //       chain always represents the same "interaction". Let's say it's the left
         //       trigger on the gamepad and it'll swap between a primary set of bindings
         //       on the four-button group on the gamepad and a secondary set. You could
-        //       mark up every single use of the modifier ...
+        //       mark up every single use of the interaction ...
         public string groups;
 
         /// <summary>
@@ -143,12 +155,17 @@ namespace UnityEngine.Experimental.Input
 
         internal string effectivePath
         {
-            get
-            {
-                if (overridePath != null)
-                    return overridePath;
-                return path;
-            }
+            get { return overridePath ?? path; }
+        }
+
+        internal string effectiveInteractions
+        {
+            get { return overrideInteractions ?? interactions; }
+        }
+
+        internal string effectiveProcessors
+        {
+            get { return overrideProcessors ?? processors; }
         }
 
         public bool chainWithPrevious
