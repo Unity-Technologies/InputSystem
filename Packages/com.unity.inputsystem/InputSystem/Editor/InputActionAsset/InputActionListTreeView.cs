@@ -1,14 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    partial class InputActionListTreeView
+    class InputActionListTreeView : TreeView
     {
+        InputActionAsset m_Asset;
+        SerializedObject m_SerializedObject;
+        string m_GroupFilter;
+        Action m_ApplyAction;
+        
+        public Action<InputTreeViewLine> OnSelectionChanged;
+        
         public static InputActionListTreeView Create(Action applyAction, InputActionAsset asset, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
             if (treeViewState == null)
@@ -19,14 +25,9 @@ namespace UnityEngine.Experimental.Input.Editor
             return treeView;
         }
 
-        InputActionAsset m_Asset;
-        SerializedObject m_SerializedObject;
-        string m_GroupFilter;
-
         protected InputActionListTreeView(Action applyAction,  InputActionAsset asset, SerializedObject serializedObject, TreeViewState state)
             : base(state)
         {
-            
             m_ApplyAction = applyAction;
             m_Asset = asset;
             m_SerializedObject = serializedObject;
@@ -105,153 +106,117 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
         }
-
-        internal class ActionSetItem : InputTreeViewLine
+        
+        protected override void SelectionChanged(IList<int> selectedIds)
         {
-            InputActionMap m_ActionMap;
-            public ActionSetItem(InputActionMap actionMap, SerializedProperty setProperty, int index) : base(setProperty, index)
-            {
-                m_ActionMap = actionMap;
-                displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-                id = displayName.GetHashCode();
-            }
+            if (!HasSelection())
+                return;
             
-            protected override GUIStyle rectStyle
-            {
-                get { return Styles.yellowRect; }
-            }
-
-            public override string SerializeToString()
-            {
-                return JsonUtility.ToJson(m_ActionMap);
-            }
+            var item = FindItem(selectedIds.First(), rootItem);
+            OnSelectionChanged((InputTreeViewLine)item);
         }
 
-
-        internal class ActionItem : InputTreeViewLine
+        public InputTreeViewLine GetSelectedRow()
         {
-            InputAction m_Action;
-
-            public ActionItem(InputAction action, SerializedProperty setProperty, int index)
-                : base(setProperty, index)
-            {
-                m_Action = action;
-                displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-                id = displayName.GetHashCode();
-                depth = 2;
-            }
-
-            protected override GUIStyle rectStyle
-            {
-                get { return Styles.orangeRect; }
-            }
-
-            public override string SerializeToString()
-            {
-                //TODO Need to add bindings as well    
-                return JsonUtility.ToJson(m_Action);
-            }
-        }
-
-        internal class CompositeGroupItem : BindingItem
-        {
-            public CompositeGroupItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(binding, bindingProperty, index)
-            {
-                var path = elementProperty.FindPropertyRelative("path").stringValue;
-                displayName = path;
-                depth++;
-            }
-
-            protected override GUIStyle rectStyle
-            {
-                get { return Styles.cyanRect; }
-            }
-        }
-
-        internal class CompositeItem : BindingItem
-        {
-            public CompositeItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(binding, bindingProperty, index)
-            {
-                depth++;
-            }
-
-            protected override GUIStyle rectStyle
-            {
-                get { return Styles.cyanRect; }
-            }
-        }
-
-        internal class BindingItem : InputTreeViewLine
-        {
-            public BindingItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
-            {
-                m_InputBinding = binding;
-                m_BindingProperty = bindingProperty;
-                var path = elementProperty.FindPropertyRelative("path").stringValue;
-                var action = elementProperty.FindPropertyRelative("action").stringValue;
-                displayName = ParseName(path);
-                id = (action + " " + path + " " + index).GetHashCode();
-                depth = 2;
-            }
-
-            InputBinding m_InputBinding;
-            SerializedProperty m_BindingProperty;
-
-            public override SerializedProperty elementProperty
-            {
-                get { return m_BindingProperty; }
-            }
-
-            static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
-            static Regex s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
-
-            const int kUsageNameGroup = 1;
-            const int kDeviceNameGroup = 1;
-            const int kDeviceUsageGroup = 3;
-            const int kControlPathGroup = 4;
+            if (!HasSelection())
+                return null;
             
-            internal static string ParseName(string path)
-            {
-                string text = "";
-                var usageMatch = s_UsageRegex.Match(path);
-                if (usageMatch.Success)
-                {
-                    text = usageMatch.Groups[kUsageNameGroup].Value;
-                }
-                else
-                {
-                    var controlMatch = s_ControlRegex.Match(path);
-                    if (controlMatch.Success)
-                    {
-                        var device = controlMatch.Groups[kDeviceNameGroup].Value;
-                        var deviceUsage = controlMatch.Groups[kDeviceUsageGroup].Value;
-                        var control = controlMatch.Groups[kControlPathGroup].Value;
+            return (InputTreeViewLine) FindItem(GetSelection().First(), rootItem);
+        }
 
-                        if (!string.IsNullOrEmpty(deviceUsage))
-                            text = string.Format("{0} {1} {2}", deviceUsage, device, control);
-                        else
-                            text = string.Format("{0} {1}", device, control);
-                    }
-                }
 
-                return text;
-            }
+        public IList<TreeViewItem> GetSelectedRows()
+        {
+            return FindRows(GetSelection());
+        }
 
-            protected override GUIStyle rectStyle
-            {
-                get { return Styles.greenRect; }
-            }
+        public SerializedProperty GetSelectedActionMap()
+        {
+            if (!HasSelection())
+                return null;
+
+            var item = FindItem(GetSelection().First(), rootItem);
             
-            public override void DrawCustomRect(Rect rowRect)
+            if (item == null)
+                return null;
+            
+            return (item as InputTreeViewLine).elementProperty;
+        }
+
+        public SerializedProperty GetSelectedProperty()
+        {
+            if (!HasSelection())
+                return null;
+
+            var item = FindItem(GetSelection().First(), rootItem);
+            
+            if (item == null)
+                return null;
+            
+            return (item as InputTreeViewLine).elementProperty;
+        }
+        
+        protected override float GetCustomRowHeight(int row, TreeViewItem item)
+        {
+            return 18;
+        }
+
+        protected override bool CanRename(TreeViewItem item)
+        {
+            return item is InputTreeViewLine && !(item is BindingItem);
+        }
+        
+        protected override void DoubleClickedItem(int id)
+        {
+            var item = FindItem(id, rootItem);
+            if (item == null)
+                return;
+            if(item is BindingItem)
+                return;
+            BeginRename(item);
+            (item as InputTreeViewLine).renaming = true;
+        }
+
+        protected override void RenameEnded(RenameEndedArgs args)
+        {
+            var item = FindItem(args.itemID, rootItem);
+            if (item == null)
+                return;
+
+            (item as InputTreeViewLine).renaming = false;
+
+            if (!args.acceptedRename)
+                return;
+
+            ////TODO: verify that name is unique; if it isn't, make it unique automatically by appending some suffix
+
+            var actionItem = item as InputTreeViewLine;
+
+            if (actionItem == null)
+                return;
+
+            if (actionItem is ActionItem)
             {
-                var boxRect = rowRect;
-                boxRect.width = (1 + depth) * 10;
-                rectStyle.Draw(boxRect, "", false, false, false, false);
+                InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, args.newName);
+            }
+            else
+            {
+                var nameProperty = actionItem.elementProperty.FindPropertyRelative("m_Name");
+                nameProperty.stringValue = args.newName;
             }
 
-            public override string SerializeToString()
+            m_ApplyAction();
+            
+            item.displayName = args.newName;
+            Reload();
+        }
+        
+        protected override void RowGUI(RowGUIArgs args)
+        {
+            var indent = GetContentIndent(args.item);
+            if (args.item is InputTreeViewLine)
             {
-                return JsonUtility.ToJson(m_InputBinding);
+                (args.item as InputTreeViewLine).OnGUI(args.rowRect, args.selected, args.focused, indent);
             }
         }
     }

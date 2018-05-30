@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUI.EndDisabledGroup();
                 
                 var pathProperty = m_BindingProperty.FindPropertyRelative("path");
-                var path = InputActionListTreeView.BindingItem.ParseName(pathProperty.stringValue);
+                var path = BindingItem.ParseName(pathProperty.stringValue);
                 
                 var btnRect = GUILayoutUtility.GetRect(0, EditorStyles.miniButton.lineHeight);
                 btnRect = EditorGUI.IndentedRect(btnRect);

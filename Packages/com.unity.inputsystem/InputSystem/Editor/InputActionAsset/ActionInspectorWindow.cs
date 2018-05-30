@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_TreeView.GetSelectedProperty() != null)
             {
                 var p = m_TreeView.GetSelectedRow();
-                if (p is InputActionListTreeView.BindingItem)
+                if (p is BindingItem)
                 {
                     m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                 }
@@ -130,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 
                 m_TreeView.OnSelectionChanged = p =>
                 {
-                    if (p is InputActionListTreeView.BindingItem)
+                    if (p is BindingItem)
                     {
                         m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                     }
@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (m_PropertyView == null && m_TreeView.GetSelectedProperty() != null)
                 {
                     var p = m_TreeView.GetSelectedRow();
-                    if (p is InputActionListTreeView.BindingItem)
+                    if (p is BindingItem)
                     {
                         m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                     }
@@ -244,38 +244,47 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                 }
                 
-                if (Event.current.keyCode == KeyCode.C && ((Event.current.modifiers & EventModifiers.Control) != 0))
+                if (Event.current.keyCode == KeyCode.C 
+                    && ((Event.current.modifiers & EventModifiers.Control) != 0 
+                        || (Event.current.modifiers & EventModifiers.Command) != 0))
                 {
-                    var row = m_TreeView.GetSelectedRow().SerializeToString();
-                    Debug.Log(row);
-                    EditorGUIUtility.systemCopyBuffer = row ;
+                    HandleCopyEvent();
                 }
                 
-                if (Event.current.keyCode == KeyCode.V && ((Event.current.modifiers & EventModifiers.Control) != 0))
+                if (Event.current.keyCode == KeyCode.V 
+                    && ((Event.current.modifiers & EventModifiers.Control) != 0 
+                        || (Event.current.modifiers & EventModifiers.Command) != 0))
                 {
                     HandlePasteEvent();
                 }
             }
         }
 
+        void HandleCopyEvent()
+        {
+            var row = m_TreeView.GetSelectedRow().SerializeToString();
+            Debug.Log(row);
+            EditorGUIUtility.systemCopyBuffer = row;
+        }
+
         void DeleteSelectedRow()
         {
             var row = m_TreeView.GetSelectedRow();
-            if (row is InputActionListTreeView.BindingItem)
+            if (row is BindingItem)
             {
-                var actionMapProperty = (row.parent.parent as InputActionListTreeView.InputTreeViewLine).elementProperty;
-                var actionProperty = (row.parent as InputActionListTreeView.InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as InputActionListTreeView.BindingItem).index, actionMapProperty);
+                var actionMapProperty = (row.parent.parent as InputTreeViewLine).elementProperty;
+                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingItem).index, actionMapProperty);
                 Apply();
             }
-            else if (row is InputActionListTreeView.ActionItem)
+            else if (row is ActionItem)
             {
-                var actionProperty = (row.parent as InputActionListTreeView.InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as InputActionListTreeView.ActionItem).index);
+                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionItem).index);
             }
-            else if (row is InputActionListTreeView.ActionSetItem)
+            else if (row is ActionSetItem)
             {
-                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputActionListTreeView.InputTreeViewLine).index);
+                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
             }
         }
 
@@ -351,26 +360,26 @@ namespace UnityEngine.Experimental.Input.Editor
             Apply();
         }
 
-        InputActionListTreeView.ActionItem GetSelectedActionLine()
+        ActionItem GetSelectedActionLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
             {
-                if (selectedRow is InputActionListTreeView.ActionItem)
-                    return (InputActionListTreeView.ActionItem) selectedRow;
+                if (selectedRow is ActionItem)
+                    return (ActionItem) selectedRow;
                 selectedRow = selectedRow.parent;
             } while (selectedRow.parent != null);
 
             return null;
         }
 
-        InputActionListTreeView.ActionSetItem GetSelectedActionMapLine()
+        ActionSetItem GetSelectedActionMapLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
             {
-                if (selectedRow is InputActionListTreeView.ActionSetItem)
-                    return (InputActionListTreeView.ActionSetItem) selectedRow;
+                if (selectedRow is ActionSetItem)
+                    return (ActionSetItem) selectedRow;
                 selectedRow = selectedRow.parent;
             } while (selectedRow.parent != null);
 
