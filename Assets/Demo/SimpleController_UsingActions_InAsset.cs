@@ -1,9 +1,9 @@
 using System.Collections;
-using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Interactions;
 
 // Use action set asset instead of lose InputActions directly on component.
-public class SimpleController_v4 : MonoBehaviour
+public class SimpleController_UsingActions_InAsset : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;
@@ -20,13 +20,13 @@ public class SimpleController_v4 : MonoBehaviour
 
     public void Awake()
     {
-        controls.gameplay.move.performed += ctx => m_Move = ctx.GetValue<Vector2>();
-        controls.gameplay.look.performed += ctx => m_Look = ctx.GetValue<Vector2>();
+        controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
+        controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
 
         controls.gameplay.fire.performed +=
             ctx =>
             {
-                if (ctx.modifier is SlowTapModifier)
+                if (ctx.interaction is SlowTapInteraction)
                 {
                     StartCoroutine(BurstFire((int)(ctx.duration * burstSpeed)));
                 }
@@ -39,7 +39,7 @@ public class SimpleController_v4 : MonoBehaviour
         controls.gameplay.fire.started +=
             ctx =>
             {
-                if (ctx.modifier is SlowTapModifier)
+                if (ctx.interaction is SlowTapInteraction)
                     m_Charging = true;
             };
         controls.gameplay.fire.cancelled +=

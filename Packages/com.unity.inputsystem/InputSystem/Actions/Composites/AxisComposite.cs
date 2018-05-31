@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Composites
     /// axis configuration such that one button pushes in one direction and the other
     /// pushes in the opposite direction.
     /// </remarks>
-    public class ButtonAxis : IInputBindingComposite<float>
+    public class AxisComposite : IInputBindingComposite<float>
     {
         // Controls.
         public ButtonControl negative;

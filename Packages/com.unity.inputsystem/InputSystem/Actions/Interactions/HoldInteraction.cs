@@ -1,8 +1,8 @@
-namespace UnityEngine.Experimental.Input.Modifiers
+namespace UnityEngine.Experimental.Input.Interactions
 {
     // Performs the action if the control is pressed and *held* for at least the
     // set duration (which defaults to InputConfiguration.HoldTime).
-    public class HoldModifier : IInputBindingModifier
+    public class HoldInteraction : IInputInteraction
     {
         public float duration;
         public float durationOrDefault
@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Modifiers
 
         private double m_TimePressed;
 
-        public void Process(ref InputBindingModifierContext context)
+        public void Process(ref InputInteractionContext context)
         {
             if (context.timerHasExpired)
             {

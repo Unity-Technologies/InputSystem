@@ -91,7 +91,7 @@ namespace UnityEngine.Experimental.Input
         {
             ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
             ////        actions and readding devices we refresh all enabled actions. That means that when
-            ////        we restore, the action above will get refreshed and not find a 'test' modifier
+            ////        we restore, the action above will get refreshed and not find a 'test' interaction
             ////        registered in the system. Should we force-disable all actions on Restore()?
             InputSystem.DisableAllEnabledActions();
 

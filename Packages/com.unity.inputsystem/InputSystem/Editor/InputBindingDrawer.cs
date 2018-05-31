@@ -6,7 +6,7 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
 
-////TODO: reordering support for modifiers
+////TODO: reordering support for interactions
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -28,14 +28,14 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.BeginProperty(rect, label, property);
 
             var pathProperty = property.FindPropertyRelative("path");
-            var modifiersProperty = property.FindPropertyRelative("modifiers");
+            var interactionsProperty = property.FindPropertyRelative("interactions");
             var flagsProperty = property.FindPropertyRelative("flags");
 
             var path = pathProperty.stringValue;
-            var modifiers = modifiersProperty.stringValue;
+            var interactions = interactionsProperty.stringValue;
             var flags = (InputBinding.Flags)flagsProperty.intValue;
 
-            var pathContent = GetContentForPath(path, modifiers, flags);
+            var pathContent = GetContentForPath(path, interactions, flags);
 
             var modifyButtonRect = new Rect(rect.x + rect.width - 4 - kModifyButtonWidth, rect.y, kModifyButtonWidth, rect.height);
             var pickButtonRect = new Rect(modifyButtonRect.x - 4 - kPickButtonWidth, rect.y, kPickButtonWidth, rect.height);
@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////TODO: move this out into a general routine that can take a path and construct a display name
-        private GUIContent GetContentForPath(string path, string modifiers, InputBinding.Flags flags)
+        private GUIContent GetContentForPath(string path, string interactions, InputBinding.Flags flags)
         {
             const int kUsageNameGroup = 1;
             const int kDeviceNameGroup = 1;
@@ -118,12 +118,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
             ////REVIEW: would be nice to have icons for these
 
-            // Show modifiers.
-            if (!string.IsNullOrEmpty(modifiers))
+            // Show interactions.
+            if (!string.IsNullOrEmpty(interactions))
             {
-                var modifierList = InputControlLayout.ParseNameAndParameterList(modifiers);
-                var modifierString = string.Join(" OR ", modifierList.Select(x => x.name).ToArray());
-                text = string.Format("{0} {1}", modifierString, text);
+                var interactionList = InputControlLayout.ParseNameAndParameterList(interactions);
+                var interactionString = string.Join(" OR ", interactionList.Select(x => x.name).ToArray());
+                text = string.Format("{0} {1}", interactionString, text);
             }
 
             ////TODO: this looks ugly and not very obvious; find a better way
@@ -144,11 +144,11 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIContent pick = new GUIContent("Pick");
             public static GUIContent modify = new GUIContent("Modify");
             public static GUIContent chain = new GUIContent("Chain with previous binding");
-            public static GUIContent modifiers = new GUIContent("Modifiers");
+            public static GUIContent interactions = new GUIContent("Interactions");
         }
 
         // This will most likely go away but for now it provides a way to customize an InputBinding
-        // beyond its path. Provides access to flags and modifiers.
+        // beyond its path. Provides access to flags and interactions.
         private class ModifyPopupWindow : PopupWindowContent
         {
             private const int kPaddingTop = 10;
@@ -156,33 +156,33 @@ namespace UnityEngine.Experimental.Input.Editor
             private const int kCombineToggleHeight = 20;
 
             private SerializedProperty m_FlagsProperty;
-            private SerializedProperty m_ModifiersProperty;
+            private SerializedProperty m_InteractionsProperty;
             private InputBinding.Flags m_Flags;
-            private InputControlLayout.NameAndParameters[] m_Modifiers;
+            private InputControlLayout.NameAndParameters[] m_Interactions;
             private Vector2 m_ScrollPosition;
-            private GUIContent[] m_ModifierChoices;
-            private int m_SelectedModifier;
-            private ReorderableList m_ModifierListView;
+            private GUIContent[] m_InteractionChoices;
+            private int m_SelectedInteraction;
+            private ReorderableList m_InteractionListView;
 
             public Action<SerializedProperty> onApplyCallback;
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
                 m_FlagsProperty = bindingProperty.FindPropertyRelative("flags");
-                m_ModifiersProperty = bindingProperty.FindPropertyRelative("modifiers");
+                m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
                 m_Flags = (InputBinding.Flags)m_FlagsProperty.intValue;
 
-                var modifiers = InputSystem.ListBindingModifiers().ToList();
-                modifiers.Sort();
-                m_ModifierChoices = modifiers.Select(x => new GUIContent(x)).ToArray();
+                var interactions = InputSystem.ListInteractions().ToList();
+                interactions.Sort();
+                m_InteractionChoices = interactions.Select(x => new GUIContent(x)).ToArray();
 
-                var modifierString = m_ModifiersProperty.stringValue;
-                if (!string.IsNullOrEmpty(modifierString))
-                    m_Modifiers = InputControlLayout.ParseNameAndParameterList(modifierString);
+                var interactionString = m_InteractionsProperty.stringValue;
+                if (!string.IsNullOrEmpty(interactionString))
+                    m_Interactions = InputControlLayout.ParseNameAndParameterList(interactionString);
                 else
-                    m_Modifiers = new InputControlLayout.NameAndParameters[0];
+                    m_Interactions = new InputControlLayout.NameAndParameters[0];
 
-                InitializeModifierListView();
+                InitializeInteractionListView();
             }
 
             ////TODO: close with escape
@@ -191,19 +191,19 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ScrollPosition = GUI.BeginScrollView(rect, m_ScrollPosition, rect);
 
-                // Modifiers section.
-                var modifierListRect = rect;
-                modifierListRect.x += kPaddingLeftRight;
-                modifierListRect.y += kPaddingTop;
-                modifierListRect.width -= kPaddingLeftRight * 2;
-                modifierListRect.height = m_ModifierListView.GetHeight();
-                m_ModifierListView.DoList(modifierListRect);
+                // Interactions section.
+                var interactionListRect = rect;
+                interactionListRect.x += kPaddingLeftRight;
+                interactionListRect.y += kPaddingTop;
+                interactionListRect.width -= kPaddingLeftRight * 2;
+                interactionListRect.height = m_InteractionListView.GetHeight();
+                m_InteractionListView.DoList(interactionListRect);
 
                 ////TODO: draw box around following section
 
                 // Chaining toggle.
-                var chainingToggleRect = modifierListRect;
-                chainingToggleRect.y += modifierListRect.height + 5;
+                var chainingToggleRect = interactionListRect;
+                chainingToggleRect.y += interactionListRect.height + 5;
                 chainingToggleRect.height = kCombineToggleHeight;
 
                 ////TODO: disable toggle if property is first in list (bit tricky to find out from the SerializedProperty)
@@ -228,59 +228,59 @@ namespace UnityEngine.Experimental.Input.Editor
                 GUI.EndScrollView();
             }
 
-            private void AddModifier(object modifierNameString)
+            private void AddInteraction(object interactionNameString)
             {
-                ArrayHelpers.Append(ref m_Modifiers,
-                    new InputControlLayout.NameAndParameters {name = (string)modifierNameString});
-                m_ModifierListView.list = m_Modifiers;
-                ApplyModifiers();
+                ArrayHelpers.Append(ref m_Interactions,
+                    new InputControlLayout.NameAndParameters {name = (string)interactionNameString});
+                m_InteractionListView.list = m_Interactions;
+                ApplyInteractions();
             }
 
-            private void ApplyModifiers()
+            private void ApplyInteractions()
             {
-                var modifiers = string.Join(",", m_Modifiers.Select(x => x.ToString()).ToArray());
-                m_ModifiersProperty.stringValue = modifiers;
-                m_ModifiersProperty.serializedObject.ApplyModifiedProperties();
-                InitializeModifierListView();
+                var interactions = string.Join(",", m_Interactions.Select(x => x.ToString()).ToArray());
+                m_InteractionsProperty.stringValue = interactions;
+                m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
+                InitializeInteractionListView();
 
                 if (onApplyCallback != null)
-                    onApplyCallback(m_ModifiersProperty);
+                    onApplyCallback(m_InteractionsProperty);
             }
 
-            private void InitializeModifierListView()
+            private void InitializeInteractionListView()
             {
-                m_ModifierListView = new ReorderableList(m_Modifiers, typeof(InputControlLayout.NameAndParameters));
+                m_InteractionListView = new ReorderableList(m_Interactions, typeof(InputControlLayout.NameAndParameters));
 
-                m_ModifierListView.drawHeaderCallback =
-                    (rect) => EditorGUI.LabelField(rect, Contents.modifiers);
+                m_InteractionListView.drawHeaderCallback =
+                    (rect) => EditorGUI.LabelField(rect, Contents.interactions);
 
-                m_ModifierListView.drawElementCallback =
+                m_InteractionListView.drawElementCallback =
                     (rect, index, isActive, isFocused) =>
                     {
                         ////TODO: parameters
-                        EditorGUI.LabelField(rect, m_Modifiers[index].name);
+                        EditorGUI.LabelField(rect, m_Interactions[index].name);
                     };
 
-                m_ModifierListView.onAddDropdownCallback =
+                m_InteractionListView.onAddDropdownCallback =
                     (rect, list) =>
                     {
                         var menu = new GenericMenu();
-                        for (var i = 0; i < m_ModifierChoices.Length; ++i)
-                            menu.AddItem(m_ModifierChoices[i], false, AddModifier, m_ModifierChoices[i].text);
+                        for (var i = 0; i < m_InteractionChoices.Length; ++i)
+                            menu.AddItem(m_InteractionChoices[i], false, AddInteraction, m_InteractionChoices[i].text);
                         menu.ShowAsContext();
                     };
 
-                m_ModifierListView.onRemoveCallback =
+                m_InteractionListView.onRemoveCallback =
                     (list) =>
                     {
                         var indexToRemove = list.index;
-                        if (indexToRemove == m_Modifiers.Length - 1)
+                        if (indexToRemove == m_Interactions.Length - 1)
                             --list.index;
-                        ArrayHelpers.EraseAt(ref m_Modifiers, indexToRemove);
-                        if (m_Modifiers == null)
-                            m_Modifiers = new InputControlLayout.NameAndParameters[0];
-                        list.list = m_Modifiers;
-                        ApplyModifiers();
+                        ArrayHelpers.EraseAt(ref m_Interactions, indexToRemove);
+                        if (m_Interactions == null)
+                            m_Interactions = new InputControlLayout.NameAndParameters[0];
+                        list.list = m_Interactions;
+                        ApplyInteractions();
                     };
             }
         }

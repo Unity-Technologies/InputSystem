@@ -132,7 +132,7 @@ namespace UnityEngine.Experimental.Input
 
                 // Set overrides on binding.
                 bindings[i].overridePath = bindingOverride.overridePath;
-                bindings[i].overrideModifiers = bindingOverride.overrideModifiers;
+                bindings[i].overrideInteractions = bindingOverride.overrideInteractions;
                 ++matchCount;
             }
 
@@ -153,7 +153,7 @@ namespace UnityEngine.Experimental.Input
                         bindingIndex, actionMap, bindingsCount), "bindingIndex");
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
-            actionMap.m_Bindings[bindingIndex].overrideModifiers = bindingOverride.overrideModifiers;
+            actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.ClearPerActionCachedBindingData();
         }
 
@@ -164,7 +164,7 @@ namespace UnityEngine.Experimental.Input
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
             bindingOverride.overridePath = null;
-            bindingOverride.overrideModifiers = null;
+            bindingOverride.overrideInteractions = null;
 
             // Simply apply but with a null binding.
             ApplyBindingOverride(action, bindingOverride);
@@ -177,7 +177,7 @@ namespace UnityEngine.Experimental.Input
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             bindingOverride.overridePath = null;
-            bindingOverride.overrideModifiers = null;
+            bindingOverride.overrideInteractions = null;
 
             // Simply apply but with a null binding.
             ApplyBindingOverride(actionMap, bindingOverride);
@@ -203,7 +203,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
 
                 bindings[i].overridePath = null;
-                bindings[i].overrideModifiers = null;
+                bindings[i].overrideInteractions = null;
             }
 
             actionMap.ClearPerActionCachedBindingData();
