@@ -88,6 +88,14 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        #if UNITY_EDITOR
+        public bool oldInputWarnUserFlag
+        {
+            get { return m_OldInputWarnUserFlag; }
+            set { m_OldInputWarnUserFlag = value; }
+        }
+        #endif
+
         public event DeviceChangeListener onDeviceChange
         {
             add { m_DeviceChangeListeners.Append(value); }
@@ -1227,6 +1235,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal IInputRuntime m_Runtime;
 
         #if UNITY_EDITOR
+        [NonSerialized] private bool m_OldInputWarnUserFlag;  // Let the user know if they have the old input manager set, but the new input system installed.
         [NonSerialized] internal IInputDiagnostics m_Diagnostics;
         #endif
 
@@ -2272,6 +2281,10 @@ namespace UnityEngine.Experimental.Input
             public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
 
+            #if UNITY_EDITOR
+            public bool oldInputWarnUserFlag;
+            #endif
+
             // The rest is state that we want to preserve across Save() and Restore() but
             // not across domain reloads.
 
@@ -2371,6 +2384,7 @@ namespace UnityEngine.Experimental.Input
                 runtime = m_Runtime,
 
                 #if UNITY_EDITOR
+                oldInputWarnUserFlag = m_OldInputWarnUserFlag,
                 diagnostics = m_Diagnostics
                 #endif
             };
@@ -2399,8 +2413,9 @@ namespace UnityEngine.Experimental.Input
             m_LayoutChangeListeners = state.layoutChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
-
+            
             #if UNITY_EDITOR
+            m_OldInputWarnUserFlag = state.oldInputWarnUserFlag;
             m_Diagnostics = state.diagnostics;
             #endif
 

@@ -1096,6 +1096,23 @@ namespace UnityEngine.Experimental.Input
 #if UNITY_EDITOR
         private static InputSystemObject s_SystemObject;
 
+        private static void CheckCurrentPlayerSettingForInputSystem()
+        {
+            PlayerSettings[] array = Resources.FindObjectsOfTypeAll<PlayerSettings>();
+            var playerSettings = array.Length > 0 ? array[0] : null;
+            if (playerSettings)
+            {
+                var s_PlayerSettings = new SerializedObject(playerSettings);
+
+                // Only warn the user once.  Save the warning flag across domain reloads.
+                if (s_PlayerSettings.FindProperty("enableNativePlatformBackendsForNewInputSystem").boolValue == false && !s_Manager.oldInputWarnUserFlag)
+                {
+                     EditorUtility.DisplayDialog("Input Manager Active", "You currently have the input system package installed, however it is not active due to the Active Input Handling player setting set to Input Manager.", "OK");
+                     s_Manager.oldInputWarnUserFlag = true;
+                }
+            }
+        }
+
         private static void InitializeInEditor()
         {
             var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
@@ -1116,6 +1133,8 @@ namespace UnityEngine.Experimental.Input
             }
 
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+
+            CheckCurrentPlayerSettingForInputSystem();           
         }
 
         // We don't want play mode modifications to layouts and controls to seep
