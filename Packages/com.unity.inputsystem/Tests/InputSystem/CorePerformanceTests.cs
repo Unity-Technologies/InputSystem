@@ -29,7 +29,7 @@ public class CorePerformanceTests
 
         var gamepads = new Gamepad[kNumGamepads];
         for (var i = 0; i < kNumGamepads; ++i)
-            gamepads[i] = (Gamepad)InputSystem.AddDevice("Gamepad");
+            gamepads[i] = InputSystem.AddDevice<Gamepad>();
 
         var startTime = Time.realtimeSinceStartup;
 

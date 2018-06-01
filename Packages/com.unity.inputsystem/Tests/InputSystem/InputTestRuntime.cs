@@ -20,6 +20,8 @@ namespace UnityEngine.Experimental.Input
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
+        public const double kTimeIncrementPerUpdate = 0.1;
+
         ~InputTestRuntime()
         {
             Dispose();
@@ -37,6 +39,9 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
+                // Advance time on every update. We choose an arbitrary amount here.
+                currentTime += kTimeIncrementPerUpdate;
+
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)
@@ -105,7 +110,6 @@ namespace UnityEngine.Experimental.Input
                 SetDeviceCommandCallback(deviceId,
                     (id, commandPtr) =>
                     {
-
                         if (commandPtr->type == result.GetTypeStatic())
                         {
                             Assert.That(receivedCommand.HasValue, Is.False);
@@ -116,7 +120,6 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         return InputDeviceCommand.kGenericFailure;
-
                     });
             }
         }
@@ -155,7 +158,33 @@ namespace UnityEngine.Experimental.Input
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public float pollingFrequency { get; set; }
+        public double currentTime { get; set; }
         public InputUpdateType updateMask { get; set; }
+
+        public ScreenOrientation screenOrientation
+        {
+            set
+            {
+                m_ScreenOrientation = value;
+            }
+
+            get
+            {
+                return m_ScreenOrientation;
+            }
+        }
+
+        public Vector2 screenSize
+        {
+            set
+            {
+                m_ScreenSize = value;
+            }
+            get
+            {
+                return m_ScreenSize;
+            }
+        }
 
         public void Dispose()
         {
@@ -171,5 +200,7 @@ namespace UnityEngine.Experimental.Input
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         internal List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
+        private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
+        private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
     }
 }

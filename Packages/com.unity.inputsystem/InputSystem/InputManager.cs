@@ -7,13 +7,15 @@ using UnityEngine.Experimental.Input.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Modifiers;
 using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: work towards InputManager having no direct knowledge of actions
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
 
@@ -21,7 +23,9 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterBindingModifier and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+
+////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -54,9 +58,9 @@ namespace UnityEngine.Experimental.Input
             get { return m_Processors; }
         }
 
-        public TypeTable modifiers
+        public TypeTable interactions
         {
-            get { return m_Modifiers; }
+            get { return m_Interactions; }
         }
 
         public TypeTable composites
@@ -277,7 +281,7 @@ namespace UnityEngine.Experimental.Input
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            for (var i = 0; i < m_LayoutChangeListeners.Count; ++i)
+            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](name.ToString(), change);
         }
 
@@ -285,6 +289,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_Layouts.layoutDeviceMatchers[layout] = matcher;
 
+            ////TODO: protect against exceptions here
             // See if the new description to layout mapping allows us to make
             // sense of a device we couldn't make sense of so far.
             for (var i = 0; i < m_AvailableDevices.Count; ++i)
@@ -419,7 +424,7 @@ namespace UnityEngine.Experimental.Input
             ////      remove those layouts, too
 
             // Let listeners know.
-            for (var i = 0; i < m_LayoutChangeListeners.Count; ++i)
+            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
         }
 
@@ -538,7 +543,7 @@ namespace UnityEngine.Experimental.Input
             device.SetUsage(usage);
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
 
             // Usage may affect current device so update.
@@ -658,7 +663,7 @@ namespace UnityEngine.Experimental.Input
             ReallocateStateBuffers();
 
             // Let actions re-resolve their paths.
-            InputActionSet.RefreshAllEnabledActions();
+            InputActionMapState.ReResolveAllEnabledActions();
 
             // If the device wants automatic callbacks before input updates,
             // put it on the list.
@@ -687,7 +692,7 @@ namespace UnityEngine.Experimental.Input
             device.MakeCurrent();
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
         }
 
@@ -703,7 +708,7 @@ namespace UnityEngine.Experimental.Input
 
             ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
             // Give listeners a shot to select/create a layout.
-            for (var i = 0; i < m_DeviceFindLayoutCallbacks.Count; ++i)
+            for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
             {
                 var newLayout = m_DeviceFindLayoutCallbacks[i](deviceId, ref description, layout, m_Runtime);
                 if (!string.IsNullOrEmpty(newLayout))
@@ -792,7 +797,7 @@ namespace UnityEngine.Experimental.Input
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
             // by actions to uninstall state monitors will get ignored.
-            InputActionSet.RefreshAllEnabledActions();
+            InputActionMapState.ReResolveAllEnabledActions();
 
             // Kill before update callback, if applicable.
             var beforeUpdateCallbackReceiver = device as IInputUpdateCallbackReceiver;
@@ -820,7 +825,7 @@ namespace UnityEngine.Experimental.Input
             device.NotifyRemoved();
 
             // Let listeners know.
-            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
         }
 
@@ -882,28 +887,6 @@ namespace UnityEngine.Experimental.Input
             return numFound;
         }
 
-        private void ReportAvailableDevice(InputDeviceDescription description, int deviceId, bool isNative = false)
-        {
-            try
-            {
-                // Try to turn it into a device instance.
-                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId, isNative: isNative);
-            }
-            finally
-            {
-                // Remember it. Do this *after* the AddDevice() call above so that if there's
-                // a listener creating layouts on the fly we won't end up matching this device and
-                // create an InputDevice right away (which would then conflict with the one we
-                // create in AddDevice).
-                m_AvailableDevices.Add(new AvailableDevice
-                {
-                    description = description,
-                    deviceId = deviceId,
-                    isNative = true
-                });
-            }
-        }
-
         public void EnableOrDisableDevice(InputDevice device, bool enable)
         {
             if (device == null)
@@ -933,8 +916,91 @@ namespace UnityEngine.Experimental.Input
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, deviceChange);
+        }
+
+        ////TODO: support combining monitors for bitfields
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+        {
+            Debug.Assert(m_Devices != null);
+
+            var device = control.device;
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            // Allocate/reallocate monitor arrays, if necessary.
+            // We lazy-sync it to array of devices.
+            if (m_StateChangeMonitors == null)
+                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_Devices.Length];
+            else if (m_StateChangeMonitors.Length <= deviceIndex)
+                Array.Resize(ref m_StateChangeMonitors, m_Devices.Length);
+
+            // Add record.
+            m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex);
+        }
+
+        private void RemoveStateChangeMonitors(InputDevice device)
+        {
+            if (m_StateChangeMonitors == null)
+                return;
+
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            if (deviceIndex >= m_StateChangeMonitors.Length)
+                return;
+
+            m_StateChangeMonitors[deviceIndex].Clear();
+        }
+
+        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+        {
+            if (m_StateChangeMonitors == null)
+                return;
+
+            var device = control.device;
+            var deviceIndex = device.m_DeviceIndex;
+
+            // Ignore if device has already been removed.
+            if (deviceIndex == InputDevice.kInvalidDeviceIndex)
+                return;
+
+            // Ignore if there are no state monitors set up for the device.
+            if (deviceIndex >= m_StateChangeMonitors.Length)
+                return;
+
+            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+        }
+
+        public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
+        {
+            m_StateChangeMonitorTimeouts.Append(
+                new StateChangeMonitorTimeout
+            {
+                control = control,
+                time = time,
+                monitor = monitor,
+                monitorIndex = monitorIndex,
+                timerIndex = timerIndex,
+            });
+        }
+
+        public void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex, int timerIndex)
+        {
+            var timeoutCount = m_StateChangeMonitorTimeouts.length;
+            for (var i = 0; i < timeoutCount; ++i)
+            {
+                ////REVIEW: can we avoid the repeated array lookups without copying the struct out?
+                if (ReferenceEquals(m_StateChangeMonitorTimeouts[i].monitor, monitor)
+                    && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
+                    && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
+                {
+                    ////TODO: leave state empty and compact array lazily on traversal
+                    m_StateChangeMonitorTimeouts.RemoveAt(i);
+                    break;
+                }
+            }
         }
 
         public void QueueEvent(InputEventPtr ptr)
@@ -982,8 +1048,8 @@ namespace UnityEngine.Experimental.Input
                 InputControlLayout.s_Layouts = new InputControlLayout.Collection();
             if (ReferenceEquals(InputControlProcessor.s_Processors.table, m_Processors.table))
                 InputControlProcessor.s_Processors = new TypeTable();
-            if (ReferenceEquals(InputBindingModifier.s_Modifiers.table, m_Modifiers.table))
-                InputBindingModifier.s_Modifiers = new TypeTable();
+            if (ReferenceEquals(InputInteraction.s_Interactions.table, m_Interactions.table))
+                InputInteraction.s_Interactions = new TypeTable();
             if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
                 InputBindingComposite.s_Composites = new TypeTable();
 
@@ -1003,7 +1069,7 @@ namespace UnityEngine.Experimental.Input
         {
             m_Layouts.Allocate();
             m_Processors.Initialize();
-            m_Modifiers.Initialize();
+            m_Interactions.Initialize();
             m_Composites.Initialize();
             m_DevicesById = new Dictionary<int, InputDevice>();
             m_AvailableDevices = new List<AvailableDevice>();
@@ -1032,7 +1098,6 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Magnitude2", typeof(Magnitude2Control));
             RegisterControlLayout("Magnitude3", typeof(Magnitude3Control));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
-            RegisterControlLayout("Pose", typeof(PoseControl));
             RegisterControlLayout("Stick", typeof(StickControl));
             RegisterControlLayout("Dpad", typeof(DpadControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
@@ -1063,22 +1128,24 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
+            processors.AddTypeRegistration("TouchPositionTransform", typeof(TouchPositionTransformProcessor));
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
             #endif
 
-            // Register modifiers.
-            modifiers.AddTypeRegistration("Press", typeof(PressModifier));
-            modifiers.AddTypeRegistration("Hold", typeof(HoldModifier));
-            modifiers.AddTypeRegistration("Tap", typeof(TapModifier));
-            modifiers.AddTypeRegistration("SlowTap", typeof(SlowTapModifier));
-            //modifiers.AddTypeRegistration("DoubleTap", typeof(DoubleTapModifier));
-            modifiers.AddTypeRegistration("Swipe", typeof(SwipeModifier));
+            // Register interactions.
+            interactions.AddTypeRegistration("Press", typeof(PressInteraction));
+            interactions.AddTypeRegistration("PressAndRelease", typeof(PressAndReleaseInteraction));
+            interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
+            interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
+            interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
+            //interactions.AddTypeRegistration("DoubleTap", typeof(DoubleTapInteraction));
+            interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
 
             // Register composites.
-            composites.AddTypeRegistration("ButtonAxis", typeof(ButtonAxis));
-            composites.AddTypeRegistration("ButtonVector", typeof(ButtonVector));
+            composites.AddTypeRegistration("Axis", typeof(AxisComposite));
+            composites.AddTypeRegistration("Dpad", typeof(DpadComposite));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1096,7 +1163,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.updateMask = updateMask;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
-            if (m_UpdateListeners.Count > 0 || m_HaveDevicesWithStateCallbackReceivers)
+            if (m_UpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
             {
                 m_Runtime.onBeforeUpdate = OnBeforeUpdate;
                 m_NativeBeforeUpdateHooked = true;
@@ -1108,7 +1175,7 @@ namespace UnityEngine.Experimental.Input
         {
             InputControlLayout.s_Layouts = m_Layouts;
             InputControlProcessor.s_Processors = m_Processors;
-            InputBindingModifier.s_Modifiers = m_Modifiers;
+            InputInteraction.s_Interactions = m_Interactions;
             InputBindingComposite.s_Composites = m_Composites;
 
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
@@ -1136,7 +1203,7 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] internal InputControlLayout.Collection m_Layouts;
         [NonSerialized] private TypeTable m_Processors;
-        [NonSerialized] private TypeTable m_Modifiers;
+        [NonSerialized] private TypeTable m_Interactions;
         [NonSerialized] private TypeTable m_Composites;
 
         [NonSerialized] private InputDevice[] m_Devices;
@@ -1157,7 +1224,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
         [NonSerialized] private bool m_HaveDevicesWithStateCallbackReceivers;
 
-        [NonSerialized] private IInputRuntime m_Runtime;
+        [NonSerialized] internal IInputRuntime m_Runtime;
 
         #if UNITY_EDITOR
         [NonSerialized] internal IInputDiagnostics m_Diagnostics;
@@ -1186,9 +1253,6 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        ////REVIEW: Right now actions are pretty tightly tied into the system; should this be opened up more
-        ////        to present mechanisms that the user could build different action systems on?
-
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
         // processing the control repeatedly but we assume this is the exception
@@ -1206,160 +1270,79 @@ namespace UnityEngine.Experimental.Input
         private struct StateChangeMonitorListener
         {
             public InputControl control;
-            ////REVIEW: this could easily be generalized to take an arbitrary user object plus a "user data" value
-            public InputAction action;
-            public int bindingIndex;
+            public IInputStateChangeMonitor monitor;
+            public long monitorIndex;
+        }
+        private struct StateChangeMonitorsForDevice
+        {
+            public StateChangeMonitorMemoryRegion[] memoryRegions;
+            public StateChangeMonitorListener[] listeners;
+            public DynamicBitfield signalled;
+
+            public int count
+            {
+                get { return signalled.length; }
+            }
+
+            public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+            {
+                // Record listener.
+                var listenerCount = signalled.length;
+                ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
+                    new StateChangeMonitorListener {monitor = monitor, monitorIndex = monitorIndex, control = control});
+
+                // Record memory region.
+                var memoryRegionCount = signalled.length;
+                ArrayHelpers.AppendWithCapacity(ref memoryRegions, ref memoryRegionCount,
+                    new StateChangeMonitorMemoryRegion
+                {
+                    offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
+                    sizeInBits = control.stateBlock.sizeInBits,
+                    bitOffset = control.stateBlock.bitOffset
+                });
+
+                signalled.SetLength(signalled.length + 1);
+            }
+
+            public void Remove(IInputStateChangeMonitor monitor, long monitorIndex)
+            {
+                if (listeners == null)
+                    return;
+
+                ////REVIEW: would be better to clean these up implicitly during the next traversal
+                for (var i = 0; i < listeners.Length; ++i)
+                    if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
+                    {
+                        ArrayHelpers.EraseAt(ref listeners, i);
+                        ArrayHelpers.EraseAt(ref memoryRegions, i);
+                        signalled.SetLength(signalled.length - 1);
+                    }
+            }
+
+            public void Clear()
+            {
+                // We don't actually release memory we've potentially allocated but rather just reset
+                // our count to zero.
+                signalled.SetLength(0);
+            }
         }
 
-        ////TODO: optimize the lists away
-        ////REVIEW: I think these can be organized smarter to make bookkeeping cheaper
         // Indices correspond with those in m_Devices.
-        [NonSerialized] private List<StateChangeMonitorMemoryRegion>[] m_StateChangeMonitorMemoryRegions;
-        [NonSerialized] private List<StateChangeMonitorListener>[] m_StateChangeMonitorListeners;
-        [NonSerialized] private List<bool>[] m_StateChangeSignalled; ////TODO: make bitfield
+        [NonSerialized] private StateChangeMonitorsForDevice[] m_StateChangeMonitors;
 
-        private struct ActionTimeout
+        /// <summary>
+        /// Record for a timeout installed on a state change monitor.
+        /// </summary>
+        private struct StateChangeMonitorTimeout
         {
+            public InputControl control;
             public double time;
-            public InputAction action;
-            public int bindingIndex;
-            public int modifierIndex;
+            public IInputStateChangeMonitor monitor;
+            public long monitorIndex;
+            public int timerIndex;
         }
 
-        [NonSerialized] private List<ActionTimeout> m_ActionTimeouts;
-
-        ////TODO: move this out into a generic mechanism that produces change events
-        ////TODO: support combining monitors for bitfields
-        internal void AddStateChangeMonitor(InputControl control, InputAction action, int bindingIndex)
-        {
-            var device = control.device;
-            Debug.Assert(device != null);
-
-            var deviceIndex = device.m_DeviceIndex;
-
-            // Allocate/reallocate monitor arrays, if necessary.
-            if (m_StateChangeMonitorListeners == null)
-            {
-                var deviceCount = m_Devices.Length;
-                m_StateChangeMonitorListeners = new List<StateChangeMonitorListener>[deviceCount];
-                m_StateChangeMonitorMemoryRegions = new List<StateChangeMonitorMemoryRegion>[deviceCount];
-                m_StateChangeSignalled = new List<bool>[deviceCount];
-            }
-            else if (m_StateChangeMonitorListeners.Length <= deviceIndex)
-            {
-                var deviceCount = m_Devices.Length;
-                Array.Resize(ref m_StateChangeMonitorListeners, deviceCount);
-                Array.Resize(ref m_StateChangeMonitorMemoryRegions, deviceCount);
-                Array.Resize(ref m_StateChangeSignalled, deviceCount);
-            }
-
-            // Allocate lists, if necessary.
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
-            var memoryRegions = m_StateChangeMonitorMemoryRegions[deviceIndex];
-            var signals = m_StateChangeSignalled[deviceIndex];
-            if (listeners == null)
-            {
-                listeners = new List<StateChangeMonitorListener>();
-                memoryRegions = new List<StateChangeMonitorMemoryRegion>();
-                signals = new List<bool>();
-
-                m_StateChangeMonitorListeners[deviceIndex] = listeners;
-                m_StateChangeMonitorMemoryRegions[deviceIndex] = memoryRegions;
-                m_StateChangeSignalled[deviceIndex] = signals;
-            }
-
-            // Add monitor.
-            listeners.Add(new StateChangeMonitorListener {action = action, bindingIndex = bindingIndex, control = control});
-            memoryRegions.Add(new StateChangeMonitorMemoryRegion
-            {
-                offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
-                sizeInBits = control.stateBlock.sizeInBits,
-                bitOffset = control.stateBlock.bitOffset
-            });
-            signals.Add(false);
-        }
-
-        private void RemoveStateChangeMonitors(InputDevice device)
-        {
-            if (m_StateChangeMonitorListeners == null)
-                return;
-
-            var deviceIndex = device.m_DeviceIndex;
-            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
-
-            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
-                return;
-
-            ArrayHelpers.EraseAt(ref m_StateChangeMonitorListeners, deviceIndex);
-            ArrayHelpers.EraseAt(ref m_StateChangeMonitorMemoryRegions, deviceIndex);
-            ArrayHelpers.EraseAt(ref m_StateChangeSignalled, deviceIndex);
-        }
-
-        ////REVIEW: better to to just pass device+action and remove all state change monitors for the pair?
-        internal void RemoveStateChangeMonitor(InputControl control, InputAction action)
-        {
-            if (m_StateChangeMonitorListeners == null)
-                return;
-
-            var device = control.device;
-            var deviceIndex = device.m_DeviceIndex;
-
-            // Ignore if device has already been removed.
-            if (deviceIndex == InputDevice.kInvalidDeviceIndex)
-                return;
-
-            // Ignore if there are no state monitors set up for the device.
-            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
-                return;
-
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
-            var regions = m_StateChangeMonitorMemoryRegions[deviceIndex];
-            var signals = m_StateChangeSignalled[deviceIndex];
-
-            for (var i = 0; i < listeners.Count; ++i)
-            {
-                if (listeners[i].action == action && listeners[i].control == control)
-                {
-                    ////TODO: use InlinedArrays for these and only null out entries; clean up array when traversing it during processing
-                    listeners.RemoveAt(i);
-                    regions.RemoveAt(i);
-                    signals.RemoveAt(i);
-                    break;
-                }
-            }
-        }
-
-        internal void AddActionTimeout(InputAction action, double time, int bindingIndex, int modifierIndex)
-        {
-            if (m_ActionTimeouts == null)
-                m_ActionTimeouts = new List<ActionTimeout>();
-
-            m_ActionTimeouts.Add(new ActionTimeout
-            {
-                time = time,
-                action = action,
-                bindingIndex = bindingIndex,
-                modifierIndex = modifierIndex
-            });
-        }
-
-        internal void RemoveActionTimeout(InputAction action, int bindingIndex, int modifierIndex)
-        {
-            if (m_ActionTimeouts == null)
-                return;
-
-            for (var i = 0; i < m_ActionTimeouts.Count; ++i)
-            {
-                if (m_ActionTimeouts[i].action == action
-                    && m_ActionTimeouts[i].bindingIndex == bindingIndex
-                    && m_ActionTimeouts[i].modifierIndex == modifierIndex)
-                {
-                    ////TODO: leave state empty and compact array lazily on traversal
-                    m_ActionTimeouts.RemoveAt(i);
-                    break;
-                }
-            }
-        }
+        [NonSerialized] private InlinedArray<StateChangeMonitorTimeout> m_StateChangeMonitorTimeouts;
 
         ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
 
@@ -1459,8 +1442,34 @@ namespace UnityEngine.Experimental.Input
             // Parse description.
             var description = InputDeviceDescription.FromJson(deviceDescriptor);
 
-            // Report it.
-            ReportAvailableDevice(description, deviceId, isNative: true);
+            // Try to add it.
+            try
+            {
+                // Try to turn it into a device instance.
+                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId, isNative: true);
+            }
+            // We're catching exceptions very aggressively here. The reason is that we don't want
+            // exceptions thrown as a result of trying to create devices from device discoveries reported
+            // by native to break the system as a whole. Instead, we want to make the error visible but then
+            // go and work with whatever devices we *did* manage to create successfully.
+            catch (Exception exception)
+            {
+                Debug.LogError(string.Format("Could not create a device for '{0}' (exception: {1})", description,
+                        exception));
+            }
+            finally
+            {
+                // Remember it. Do this *after* the AddDevice() call above so that if there's
+                // a listener creating layouts on the fly we won't end up matching this device and
+                // create an InputDevice right away (which would then conflict with the one we
+                // create in AddDevice).
+                m_AvailableDevices.Add(new AvailableDevice
+                {
+                    description = description,
+                    deviceId = deviceId,
+                    isNative = true
+                });
+            }
         }
 
         private void InstallBeforeUpdateHookIfNecessary()
@@ -1482,6 +1491,10 @@ namespace UnityEngine.Experimental.Input
                 var isDynamicOrFixedUpdate =
                     updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
 
+                ////REVIEW: should we rather allocate a temp buffer on a per-device basis? the current code makes one
+                ////        temp allocation equal to the combined state of all devices in the system; even with touch in the
+                ////        mix, that should amount to less than 3k in most cases
+
                 // For the sake of action state monitors, we need to be able to detect when
                 // an OnCarryStateForward() method writes new values into a state buffer. To do
                 // so, we create a temporary buffer, copy state blocks into that buffer, and then
@@ -1489,7 +1502,7 @@ namespace UnityEngine.Experimental.Input
                 using (var tempBuffer = new NativeArray<byte>((int)m_StateBuffers.sizePerBuffer, Allocator.Temp))
                 {
                     var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
-                    var time = Time.time;
+                    var currentTime = m_Runtime.currentTime;
 
                     for (var i = 0; i < m_Devices.Length; ++i)
                     {
@@ -1523,8 +1536,6 @@ namespace UnityEngine.Experimental.Input
                         var deviceStateOffset = device.m_StateBlock.byteOffset;
                         var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
 
-                        ////REVIEW: don't we need to flip here?
-
                         // Grab current front buffer.
                         var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
 
@@ -1533,19 +1544,27 @@ namespace UnityEngine.Experimental.Input
                         var tempStatePtr = tempBufferPtr + deviceStateOffset;
                         UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
 
+                        // NOTE: We do *not* perform a buffer flip here as we do not want to change what is the
+                        //       current and what is the previous state when we carry state forward. Rather,
+                        //       OnCarryStateForward, if it modifies state, it modifies the current state directly.
+                        //       Also, for the same reasons, we do not modify the dynamic/fixed update counts
+                        //       on the device. If an event comes in in the upcoming update, it should lead to
+                        //       a buffer flip.
+
                         // Show to device.
                         if (((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer))
                         {
+                            ////REVIEW: should this make the device current? (and update m_LastUpdateTime)
+
                             // Let listeners know the device's state has changed.
-                            for (var n = 0; n < m_DeviceChangeListeners.Count; ++n)
+                            for (var n = 0; n < m_DeviceChangeListeners.length; ++n)
                                 m_DeviceChangeListeners[n](device, InputDeviceChange.StateChanged);
 
                             // Process action state change monitors.
                             if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
                                     deviceStateSize, 0))
                             {
-                                ////REVIEW: should this make the device current?
-                                FireActionStateChangeNotifications(i, time);
+                                FireStateChangeNotifications(i, currentTime);
                             }
                         }
                     }
@@ -1553,7 +1572,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             ////REVIEW: should we activate the buffers for the given update here?
-            for (var i = 0; i < m_UpdateListeners.Count; ++i)
+            for (var i = 0; i < m_UpdateListeners.length; ++i)
                 m_UpdateListeners[i](updateType);
         }
 
@@ -1590,8 +1609,8 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
-            if (m_ActionTimeouts != null && gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
-                ProcessActionTimeouts();
+            if (gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
+                ProcessStateChangeMonitorTimeouts();
 
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic)
@@ -1655,7 +1674,7 @@ namespace UnityEngine.Experimental.Input
                     break;
 
                 // Give listeners a shot at the event.
-                var listenerCount = m_EventListeners.Count;
+                var listenerCount = m_EventListeners.length;
                 if (listenerCount > 0)
                 {
                     for (var i = 0; i < listenerCount; ++i)
@@ -1768,11 +1787,6 @@ namespace UnityEngine.Experimental.Input
                                 canIncorporateUnrecognizedState =
                                     stateCallbacks.OnReceiveStateWithDifferentFormat(ptrToReceivedState, receivedStateFormat,
                                         receivedStateSize, ref offsetInDeviceStateToCopyTo);
-
-                                // If the device tells us to put the state somewhere inside of it, we're potentially
-                                // performing a partial state update, so bring the current state forward like for delta
-                                // state events.
-                                needToCopyFromBackBuffer = true;
                             }
 
                             if (!canIncorporateUnrecognizedState)
@@ -1818,7 +1832,12 @@ namespace UnityEngine.Experimental.Input
                             // In case of a delta state event we need to carry forward all state we're
                             // not updating. Instead of optimizing the copy here, we're just bringing the
                             // entire state forward.
-                            if (currentEventType == DeltaStateEvent.Type)
+                            //
+                            // Also, if we received a mismatching state format that the device chose to
+                            // incorporate using OnReceiveStateWithDifferentFormat, we're potentially performing
+                            // a partial state update, so bring the current state forward like for delta
+                            // state events.
+                            if (currentEventType == DeltaStateEvent.Type || receivedStateFormat != stateBlockOfDevice.format)
                                 needToCopyFromBackBuffer = true;
                         }
 
@@ -1882,14 +1901,14 @@ namespace UnityEngine.Experimental.Input
                         device.m_LastUpdateTime = currentEventTime;
 
                         // Notify listeners.
-                        for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                        for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                             m_DeviceChangeListeners[i](device, InputDeviceChange.StateChanged);
 
                         // Now that we've committed the new state to memory, if any of the change
                         // monitors fired, let the associated actions know.
                         ////FIXME: this needs to happen with player buffers active
                         if (haveSignalledMonitors)
-                            FireActionStateChangeNotifications(deviceIndex, currentEventTime);
+                            FireStateChangeNotifications(deviceIndex, currentEventTime);
 
                         break;
 
@@ -1906,7 +1925,7 @@ namespace UnityEngine.Experimental.Input
 
                     case DeviceConfigurationEvent.Type:
                         device.OnConfigurationChanged();
-                        for (var i = 0; i < m_DeviceChangeListeners.Count; ++i)
+                        for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                             m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
                         break;
                 }
@@ -1941,22 +1960,21 @@ namespace UnityEngine.Experimental.Input
         //       give the size of memory slice to be updated.
         private unsafe bool ProcessStateChangeMonitors(int deviceIndex, IntPtr newState, IntPtr oldState, uint newStateSize, uint newStateOffset)
         {
-            if (m_StateChangeMonitorListeners == null)
+            if (m_StateChangeMonitors == null)
                 return false;
 
             // We resize the monitor arrays only when someone adds to them so they
             // may be out of sync with the size of m_Devices.
-            if (deviceIndex >= m_StateChangeMonitorListeners.Length)
+            if (deviceIndex >= m_StateChangeMonitors.Length)
                 return false;
 
-            var changeMonitors = m_StateChangeMonitorMemoryRegions[deviceIndex];
-            if (changeMonitors == null)
-                return false; // No action cares about state changes on this device.
+            var memoryRegions = m_StateChangeMonitors[deviceIndex].memoryRegions;
+            if (memoryRegions == null)
+                return false; // No one cares about state changes on this device.
 
-            var signals = m_StateChangeSignalled[deviceIndex];
-
-            var numMonitors = changeMonitors.Count;
+            var numMonitors = m_StateChangeMonitors[deviceIndex].count;
             var signalled = false;
+            var signals = m_StateChangeMonitors[deviceIndex].signalled;
 
             // Bake offsets into state pointers so that we don't have to adjust for
             // them repeatedly.
@@ -1968,7 +1986,7 @@ namespace UnityEngine.Experimental.Input
 
             for (var i = 0; i < numMonitors; ++i)
             {
-                var memoryRegion = changeMonitors[i];
+                var memoryRegion = memoryRegions[i];
                 var offset = (int)memoryRegion.offsetRelativeToDevice;
                 var sizeInBits = memoryRegion.sizeInBits;
                 var bitOffset = memoryRegion.bitOffset;
@@ -2007,39 +2025,94 @@ namespace UnityEngine.Experimental.Input
                         continue;
                 }
 
-                signals[i] = true;
+                signals.SetBit(i);
                 signalled = true;
             }
+
+            if (signalled)
+                m_StateChangeMonitors[deviceIndex].signalled = signals;
 
             return signalled;
         }
 
-        private void FireActionStateChangeNotifications(int deviceIndex, double time)
+        private void FireStateChangeNotifications(int deviceIndex, double time)
         {
-            var signals = m_StateChangeSignalled[deviceIndex];
-            var listeners = m_StateChangeMonitorListeners[deviceIndex];
+            Debug.Assert(m_StateChangeMonitors != null);
+            Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
 
-            for (var i = 0; i < signals.Count; ++i)
+            var signals = m_StateChangeMonitors[deviceIndex].signalled;
+            var listeners = m_StateChangeMonitors[deviceIndex].listeners;
+
+            for (var i = 0; i < signals.length; ++i)
             {
-                if (signals[i])
+                ////TODO: we're going linear here so instead of computing a byte and bit index from scratch every
+                ////      time, shift indices and masks incrementally
+                if (signals.TestBit(i))
                 {
                     var listener = listeners[i];
-                    listener.action.NotifyControlValueChanged(listener.control, listener.bindingIndex, time);
-                    signals[i] = false;
+                    listener.monitor.NotifyControlValueChanged(listener.control, time, listener.monitorIndex);
+                    signals.ClearBit(i);
+
+                    RemoveStateChangeMonitorTimeouts(listener.control);
                 }
+            }
+
+            m_StateChangeMonitors[deviceIndex].signalled = signals;
+        }
+
+        private void RemoveStateChangeMonitorTimeouts(InputControl control)
+        {
+            Debug.Assert(control != null);
+
+            // Reset all timeout entries referring to the given control. We compact
+            // the array in ProcessStateChangeMonitorTimeouts.
+            var timeoutCount = m_StateChangeMonitorTimeouts.length;
+            for (var i = 0; i < timeoutCount; ++i)
+            {
+                if (m_StateChangeMonitorTimeouts[i].control == control)
+                    m_StateChangeMonitorTimeouts[i] = default(StateChangeMonitorTimeout);
             }
         }
 
-        private void ProcessActionTimeouts()
+        private void ProcessStateChangeMonitorTimeouts()
         {
-            var time = Time.time;
-            for (var i = 0; i < m_ActionTimeouts.Count; ++i)
-                if (m_ActionTimeouts[i].time <= time)
+            var timeoutCount = m_StateChangeMonitorTimeouts.length;
+            if (timeoutCount == 0)
+                return;
+
+            // Go through the list and both trigger expired timers and remove any irrelevant
+            // ones by compacting the array.
+            // NOTE: We do not actually release any memory we may have allocated.
+            var currentTime = m_Runtime.currentTime;
+            var remainingTimeoutCount = 0;
+            for (var i = 0; i < timeoutCount; ++i)
+            {
+                // If we have reset this entry in RemoveStateChangeMonitorTimeouts(),
+                // skip over it and let compaction get rid of it.
+                if (m_StateChangeMonitorTimeouts[i].control == null)
+                    continue;
+
+                var timerExpirationTime = m_StateChangeMonitorTimeouts[i].time;
+                if (timerExpirationTime <= currentTime)
                 {
-                    m_ActionTimeouts[i].action.NotifyTimerExpired(m_ActionTimeouts[i].bindingIndex, m_ActionTimeouts[i].modifierIndex, time);
-                    ////TODO: use plain array and compact entries on traversal
-                    m_ActionTimeouts.RemoveAt(i);
+                    var timeout = m_StateChangeMonitorTimeouts[i];
+                    timeout.monitor.NotifyTimerExpired(timeout.control,
+                        currentTime, timeout.monitorIndex, timeout.timerIndex);
+
+                    // Compaction will get rid of the entry.
                 }
+                else
+                {
+                    // Rather than repeatedly calling RemoveAt() and thus potentially
+                    // moving the same data over and over again, we compact the array
+                    // on the fly and move entries in the array down as needed.
+                    if (i != remainingTimeoutCount)
+                        m_StateChangeMonitorTimeouts[remainingTimeoutCount] = m_StateChangeMonitorTimeouts[i];
+                    ++remainingTimeoutCount;
+                }
+            }
+
+            m_StateChangeMonitorTimeouts.SetLength(remainingTimeoutCount);
         }
 
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
@@ -2190,7 +2263,7 @@ namespace UnityEngine.Experimental.Input
             public BaseLayoutState[] baseLayouts;
             public LayoutDeviceState[] layoutDeviceMatchers;
             public TypeTable.SavedState processors;
-            public TypeTable.SavedState modifiers;
+            public TypeTable.SavedState interactions;
             public TypeTable.SavedState composites;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -2283,7 +2356,7 @@ namespace UnityEngine.Experimental.Input
                 baseLayouts = m_Layouts.baseLayoutTable.Select(x => new BaseLayoutState { derivedLayout = x.Key, baseLayout = x.Value }).ToArray(),
                 layoutDeviceMatchers = m_Layouts.layoutDeviceMatchers.Select(x => new LayoutDeviceState { matcherJson = x.Value.ToJson(), layoutName = x.Key }).ToArray(),
                 processors = m_Processors.SaveState(),
-                modifiers = m_Modifiers.SaveState(),
+                interactions = m_Interactions.SaveState(),
                 composites = m_Composites.SaveState(),
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices.ToArray(),
@@ -2407,7 +2480,7 @@ namespace UnityEngine.Experimental.Input
 
             // Type registrations.
             m_Processors.RestoreState(state.processors, "Input processor");
-            m_Modifiers.RestoreState(state.processors, "Input binding modifier");
+            m_Interactions.RestoreState(state.processors, "Input binding interaction");
             m_Composites.RestoreState(state.composites, "Input binding composite");
 
             // Re-create devices.

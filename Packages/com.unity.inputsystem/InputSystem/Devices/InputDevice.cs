@@ -4,6 +4,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
+////        the heap objects of devices he doesn't use?
+
 // per device functions:
 //  - update/poll
 //  - IOCTL
@@ -42,14 +45,6 @@ namespace UnityEngine.Experimental.Input
         public InputDeviceDescription description
         {
             get { return m_Description; }
-        }
-
-        public override Type valueType
-        {
-            get
-            {
-                return null;
-            }
         }
 
         ////REVIEW: turn this into an object of some kind?
@@ -95,6 +90,14 @@ namespace UnityEngine.Experimental.Input
 
                 return (m_Flags & Flags.Disabled) != Flags.Disabled;
             }
+        }
+
+        /// <summary>
+        /// Whether the device has been added to the system.
+        /// </summary>
+        public bool added
+        {
+            get { return (m_DeviceIndex != kInvalidDeviceIndex); }
         }
 
         /// <summary>
@@ -176,6 +179,14 @@ namespace UnityEngine.Experimental.Input
                 // this list will actually deliver a flattened list of all controls in the hierarchy (and without
                 // the device itself being listed).
                 return new ReadOnlyArray<InputControl>(m_ChildrenForEachControl);
+            }
+        }
+
+        public override Type valueType
+        {
+            get
+            {
+                return null;
             }
         }
 

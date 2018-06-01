@@ -18,11 +18,11 @@ using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Networking.PlayerConnection;
 #endif
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
-////FIXME: replaces uses of Time.time as event timestamps with Time.realtimeSinceStartup
+////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native alloations when exiting
 
@@ -30,6 +30,9 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 namespace UnityEngine.Experimental.Input
 {
+    using NotifyControlValueChangeAction = Action<InputControl, double, long>;
+    using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
+
     /// <summary>
     /// This is the central hub for the input system.
     /// </summary>
@@ -336,7 +339,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetProcessor(string name)
         {
-            return s_Manager.processors.LookupTypeRegisteration(name);
+            return s_Manager.processors.LookupTypeRegistration(name);
         }
 
         #endregion
@@ -643,6 +646,92 @@ namespace UnityEngine.Experimental.Input
 
         #endregion
 
+        #region State Change Monitors
+
+        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+            if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"));
+
+            s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
+        }
+
+        public static IInputStateChangeMonitor AddStateChangeMonitor(InputControl control, NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1, NotifyTimerExpiredAction timerExpiredCallback = null)
+        {
+            if (valueChangeCallback == null)
+                throw new ArgumentNullException("valueChangeCallback");
+            var monitor = new StateChangeMonitorDelegate
+            {
+                valueChangeCallback = valueChangeCallback,
+                timerExpiredCallback = timerExpiredCallback
+            };
+            AddStateChangeMonitor(control, monitor, monitorIndex);
+            return monitor;
+        }
+
+        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
+        {
+            if (control == null)
+                throw new ArgumentNullException("control");
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.RemoveStateChangeMonitor(control, monitor, monitorIndex);
+        }
+
+        /// <summary>
+        /// Put a timeout on a previously registered state change monitor.
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="monitor"></param>
+        /// <param name="time"></param>
+        /// <param name="monitorIndex"></param>
+        /// <param name="timerIndex"></param>
+        /// <remarks>
+        /// If by the given <paramref name="time"/>, no state change has been registered on the control monitored
+        /// by the given <paramref name="monitor">state change monitor</paramref>, <see cref="IInputStateChangeMonitor.NotifyTimerExpired"/>
+        /// will be called on <paramref name="monitor"/>. If a state change happens by the given <paramref name="time"/>,
+        /// the monitor is notified as usual and the timer is automatically removed.
+        /// </remarks>
+        public static void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex = -1, int timerIndex = -1)
+        {
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
+        }
+
+        public static void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex = -1, int timerIndex = -1)
+        {
+            if (monitor == null)
+                throw new ArgumentNullException("monitor");
+
+            s_Manager.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
+        }
+
+        private class StateChangeMonitorDelegate : IInputStateChangeMonitor
+        {
+            public NotifyControlValueChangeAction valueChangeCallback;
+            public NotifyTimerExpiredAction timerExpiredCallback;
+
+            public void NotifyControlValueChanged(InputControl control, double time, long monitorIndex)
+            {
+                valueChangeCallback(control, time, monitorIndex);
+            }
+
+            public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+            {
+                if (timerExpiredCallback != null)
+                    timerExpiredCallback(control, time, monitorIndex, timerIndex);
+            }
+        }
+
+        #endregion
+
         #region Events
 
         public static event Action<InputEventPtr> onEvent
@@ -697,7 +786,7 @@ namespace UnityEngine.Experimental.Input
             var eventSize = UnsafeUtility.SizeOf<StateEvent>() + stateSize - 1;
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             StateEventBuffer eventBuffer;
             eventBuffer.stateEvent =
@@ -738,7 +827,7 @@ namespace UnityEngine.Experimental.Input
                         control, device));
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             var deltaSize = (uint)UnsafeUtility.SizeOf<TDelta>();
             if (deltaSize > DeltaStateEventBuffer.kMaxSize)
@@ -776,7 +865,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             var inputEvent = DeviceConfigurationEvent.Create(device.id, time);
             s_Manager.QueueEvent(ref inputEvent);
@@ -799,7 +888,7 @@ namespace UnityEngine.Experimental.Input
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
-                time = Time.time;
+                time = InputRuntime.s_Instance.currentTime;
 
             var inputEvent = TextEvent.Create(device.id, character, time);
             s_Manager.QueueEvent(ref inputEvent);
@@ -815,41 +904,70 @@ namespace UnityEngine.Experimental.Input
             s_Manager.Update(updateType);
         }
 
+        ////TODO: disable collection of input if all input updates are disabled
+        /// <summary>
+        /// Mask that determines which updates are run by the input system.
+        /// </summary>
+        /// <remarks>
+        /// By default, all update types are enabled. Disabling a specific update
+        ///
+        /// Clearing all flags in this mask will disable all input processing. Note, however,
+        /// that it will not currently disable collection of input.
+        /// </remarks>
         public static InputUpdateType updateMask
         {
             get { return s_Manager.updateMask; }
             set { s_Manager.updateMask = value; }
         }
 
+        /// <summary>
+        /// Event that is fired before the input system updates.
+        /// </summary>
+        /// <remarks>
+        /// The input system updates in sync with player loop and editor updates. Input updates
+        /// are run right before the respective script update. For example, an input update for
+        /// <see cref="InputUpdateType.Dynamic"/> is run before <c>MonoBehaviour.Update</c> methods
+        /// are executed.
+        ///
+        /// The update callback itself is triggered before the input system runs its own update and
+        /// before it flushes out its event queue. This means that events queued from a callback will
+        /// be fed right into the upcoming update.
+        /// </remarks>
+        public static event Action<InputUpdateType> onUpdate
+        {
+            add { s_Manager.onUpdate += value; }
+            remove { s_Manager.onUpdate -= value; }
+        }
+
         #endregion
 
         #region Actions
 
-        public static void RegisterBindingModifier(Type type, string name)
+        public static void RegisterInteraction(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
-                if (name.EndsWith("Modifier"))
-                    name = name.Substring(0, name.Length - "Modifier".Length);
+                if (name.EndsWith("Interaction"))
+                    name = name.Substring(0, name.Length - "Interaction".Length);
             }
 
-            s_Manager.modifiers.AddTypeRegistration(name, type);
+            s_Manager.interactions.AddTypeRegistration(name, type);
         }
 
-        public static void RegisterBindingModifier<T>(string name = null)
+        public static void RegisterInteraction<T>(string name = null)
         {
-            RegisterBindingModifier(typeof(T), name);
+            RegisterInteraction(typeof(T), name);
         }
 
-        public static Type TryGetBindingModifier(string name)
+        public static Type TryGetInteraction(string name)
         {
-            return s_Manager.modifiers.LookupTypeRegisteration(name);
+            return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
-        public static IEnumerable<string> ListBindingModifiers()
+        public static IEnumerable<string> ListInteractions()
         {
-            return s_Manager.modifiers.names;
+            return s_Manager.interactions.names;
         }
 
         public static void RegisterBindingComposite(Type type, string name)
@@ -871,7 +989,7 @@ namespace UnityEngine.Experimental.Input
 
         public static Type TryGetBindingComposite(string name)
         {
-            return s_Manager.composites.LookupTypeRegisteration(name);
+            return s_Manager.composites.LookupTypeRegistration(name);
         }
 
         /// <summary>
@@ -881,7 +999,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputAction.Disable"/>
         public static void DisableAllEnabledActions()
         {
-            InputActionSet.DisableAllEnabledActions();
+            InputActionMapState.DisableAllActions();
         }
 
         /// <summary>
@@ -912,7 +1030,7 @@ namespace UnityEngine.Experimental.Input
         {
             if (actions == null)
                 throw new ArgumentNullException("actions");
-            return InputActionSet.FindEnabledActions(actions);
+            return InputActionMapState.FindAllEnabledActions(actions);
         }
 
         #endregion
@@ -1016,6 +1134,7 @@ namespace UnityEngine.Experimental.Input
 
                 case PlayModeStateChange.EnteredEditMode:
                     Restore();
+                    DisableAllEnabledActions();
                     break;
             }
         }
@@ -1048,6 +1167,10 @@ namespace UnityEngine.Experimental.Input
                 s_ConnectionToEditor.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
             }
             #endif
+
+            // Send an initial Update so that user methods such as Start and Awake
+            // can access the input devices prior to thier Upate methods.
+            Update();
         }
 
 #endif // UNITY_EDITOR
@@ -1063,7 +1186,7 @@ namespace UnityEngine.Experimental.Input
             DualShockSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_UWP
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             HIDSupport.Initialize();
             #endif
 
@@ -1079,11 +1202,11 @@ namespace UnityEngine.Experimental.Input
             Plugins.Switch.SwitchSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_UWP
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
             Plugins.XR.XRSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_UWP
+            #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
             Plugins.OnScreen.OnScreenSupport.Initialize();
             #endif
         }

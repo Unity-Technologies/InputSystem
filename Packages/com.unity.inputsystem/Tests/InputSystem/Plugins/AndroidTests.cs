@@ -4,6 +4,9 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.Android;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 
 class AndroidTests : InputTestFixture
 {
@@ -167,25 +170,16 @@ class AndroidTests : InputTestFixture
     [Category("Devices")]
     [TestCase(typeof(AndroidAccelerometer))]
     [TestCase(typeof(AndroidMagneticField))]
-    [TestCase(typeof(AndroidOrientation))]
     [TestCase(typeof(AndroidGyroscope))]
     [TestCase(typeof(AndroidLight))]
     [TestCase(typeof(AndroidPressure))]
     [TestCase(typeof(AndroidProximity))]
-    [TestCase(typeof(AndroidTemperature))]
     [TestCase(typeof(AndroidGravity))]
     [TestCase(typeof(AndroidLinearAcceleration))]
     [TestCase(typeof(AndroidRotationVector))]
     [TestCase(typeof(AndroidRelativeHumidity))]
     [TestCase(typeof(AndroidAmbientTemperature))]
-    [TestCase(typeof(AndroidMagneticFieldUncalibrated))]
-    [TestCase(typeof(AndroidGameRotationVector))]
-    [TestCase(typeof(AndroidGyroscopeUncalibrated))]
-    [TestCase(typeof(AndroidSignificantMotion))]
-    [TestCase(typeof(AndroidStepDetector))]
     [TestCase(typeof(AndroidStepCounter))]
-    [TestCase(typeof(AndroidGeomagneticRotationVector))]
-    [TestCase(typeof(AndroidHeartRate))]
     public void Devices_CanCreateAndroidSensors(Type type)
     {
         var device = InputSystem.AddDevice(type.Name);
@@ -196,30 +190,74 @@ class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidAccelerometer()
+    [TestCase("AndroidAmbientTemperature", "ambientTemperature")]
+    [TestCase("AndroidLight", "lightLevel")]
+    [TestCase("AndroidPressure", "atmosphericPressure")]
+    [TestCase("AndroidProximity", "distance")]
+    [TestCase("AndroidRelativeHumidity", "relativeHumidity")]
+    [TestCase("AndroidAmbientTemperature", "ambientTemperature")]
+    public void Devices_SupportSensorsWithAxisControl(string layoutName, string controlName)
     {
-        var accelerometer = (Accelerometer)InputSystem.AddDevice(
-                new InputDeviceDescription
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (AxisControl)device[controlName];
+
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
         {
-            interfaceName = "Android",
-            deviceClass = "AndroidSensor",
-            capabilities = new AndroidSensorCapabilities()
-            {
-                sensorType = AndroidSensorType.Accelerometer
-            }.ToJson()
-        });
+            control.WriteValueInto(stateEventPtr, 0.123f);
 
-        InputSystem.QueueStateEvent(accelerometer,
-            new AndroidSensorState()
-            .WithData(0.1f, 0.2f, 0.3f));
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
 
-        InputSystem.Update();
+            Assert.That(control.ReadValue(), Is.EqualTo(0.123f).Within(0.0000001));
+        }
+    }
 
-        ////TODO: test processing of AndroidAccelerationProcessor
+    [Test]
+    [Category("Devices")]
+    [TestCase("AndroidStepCounter", "stepCounter")]
+    public void Devices_SupportSensorsWithIntegerControl(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (IntegerControl)device[controlName];
 
-        Assert.That(accelerometer.acceleration.x.ReadValue(), Is.EqualTo(0.1).Within(0.000001));
-        Assert.That(accelerometer.acceleration.y.ReadValue(), Is.EqualTo(0.2).Within(0.000001));
-        Assert.That(accelerometer.acceleration.z.ReadValue(), Is.EqualTo(0.3).Within(0.000001));
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            control.WriteValueInto(stateEventPtr, 5);
+
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            Assert.That(control.ReadValue(), Is.EqualTo(5));
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase("AndroidAccelerometer", "acceleration")]
+    [TestCase("AndroidMagneticField", "magneticField")]
+    public void Devices_SupportSensorsWithVector3Control(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (Vector3Control)device[controlName];
+
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            ////FIXME: Seems like written value doesn't through processor, for ex, AndroidCompensateDirectionProcessor
+            control.WriteValueInto(stateEventPtr, new Vector3(0.1f, 0.2f, 0.3f));
+
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            Assert.That(control.x.ReadValue(), Is.EqualTo(0.1f).Within(0.000001));
+            Assert.That(control.y.ReadValue(), Is.EqualTo(0.2f).Within(0.000001));
+            Assert.That(control.z.ReadValue(), Is.EqualTo(0.3f).Within(0.000001));
+        }
     }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

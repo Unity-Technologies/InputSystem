@@ -8,6 +8,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.
     /// </summary>
+    /// <remarks>
+    /// The runtime owns the input event queue, reports device discoveries, and runs
+    /// periodic updates that out events from the queue. Updates can also be manually
+    /// triggered by calling <see cref="Update"/>.
+    /// </remarks>
     public unsafe interface IInputRuntime
     {
         /// <summary>
@@ -92,7 +97,22 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         float pollingFrequency { set; }
 
+        /// <summary>
+        /// The current time on the same timeline that input events are delivered on.
+        /// </summary>
+        double currentTime { get; }
+
+        /// <summary>
+        /// Mask that determines which input updates are executed by the runtime.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to turn off unneeded updates (like fixed updates) or turn on updates
+        /// that are disabled by default (like before-render updates).
+        /// </remarks>
         InputUpdateType updateMask { set; }
+
+        ScreenOrientation screenOrientation { get; }
+        Vector2 screenSize { get; }
     }
 
     internal static class InputRuntime

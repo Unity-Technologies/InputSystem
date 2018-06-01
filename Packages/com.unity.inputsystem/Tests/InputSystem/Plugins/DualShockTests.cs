@@ -215,7 +215,7 @@ class DualShockTests : InputTestFixture
                     }
 
                     Assert.Fail("Received wrong type of command");
-                    return InputDeviceCommand.kGenericFailure;       
+                    return InputDeviceCommand.kGenericFailure;
                 });
         }
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);

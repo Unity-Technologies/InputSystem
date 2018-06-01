@@ -60,13 +60,13 @@ namespace UnityEngine.Experimental.Input.Editor
             return new MultiColumnHeaderState(columns);
         }
 
-        private SerializedProperty m_ActionSetsProperty;
+        private SerializedProperty m_ActionMapsProperty;
         private Action m_ApplyAction;
 
-        protected InputActionTreeView(SerializedProperty actionSetsProperty, Action applyAction, TreeViewState state, MultiColumnHeader multiColumnHeader)
+        protected InputActionTreeView(SerializedProperty actionMapsProperty, Action applyAction, TreeViewState state, MultiColumnHeader multiColumnHeader)
             : base(state, multiColumnHeader)
         {
-            m_ActionSetsProperty = actionSetsProperty;
+            m_ActionMapsProperty = actionMapsProperty;
             m_ApplyAction = applyAction;
             Reload();
         }
@@ -82,12 +82,12 @@ namespace UnityEngine.Experimental.Input.Editor
             };
 
             // Add tree for each action set.
-            var actionSetCount = m_ActionSetsProperty.arraySize;
+            var actionSetCount = m_ActionMapsProperty.arraySize;
             if (actionSetCount > 0)
             {
                 for (var i = 0; i < actionSetCount; ++i)
                 {
-                    var actionSet = m_ActionSetsProperty.GetArrayElementAtIndex(i);
+                    var actionSet = m_ActionMapsProperty.GetArrayElementAtIndex(i);
                     var item = BuildActionSetItem(actionSet, ref id);
                     item.actionSetIndex = i;
                     root.AddChild(item);
@@ -185,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Editor
             item.bindingListView =
                 new InputBindingListView(item.property, actionSetItem.property, displayHeader: false);
 
-            ////FIXME: need to also trigger m_ApplyAction when bindings are changed (paths and modifiers)
+            ////FIXME: need to also trigger m_ApplyAction when bindings are changed (paths and interactions)
             item.bindingListView.onChangedCallback =
                 (list) =>
                 {
@@ -296,7 +296,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (item is ActionSetItem)
                 {
                     var actionSetItem = (ActionSetItem)item;
-                    InputActionSerializationHelpers.DeleteActionSet(actionSetItem.property.serializedObject, actionSetItem.actionSetIndex);
+                    InputActionSerializationHelpers.DeleteActionMap(actionSetItem.property.serializedObject, actionSetItem.actionSetIndex);
                 }
             }
 

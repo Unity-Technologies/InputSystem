@@ -4,6 +4,8 @@ using System.Collections;
 using UnityEditor;
 using UnityEditorInternal;
 
+////REVIEW: after we've redone the action UIs, this hopefully won't be needed anymore
+
 ////TODO: reordering support
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -13,19 +15,19 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         // Constructor for binding list of singleton actions.
         public InputBindingListView(SerializedProperty actionProperty, bool displayHeader = true)
-            : base(actionProperty.serializedObject, actionProperty.FindPropertyRelative("m_Bindings"))
+            : base(actionProperty.serializedObject, actionProperty.FindPropertyRelative("m_SingletonActionBindings"))
         {
             Initialize(actionProperty, null, displayHeader);
         }
 
-        // Constructor for binding list of actions that are part of action sets.
-        public InputBindingListView(SerializedProperty actionProperty, SerializedProperty actionSetProperty, bool displayHeader = true)
-            : base(new BindingList(actionProperty, actionSetProperty), typeof(SerializedProperty))
+        // Constructor for binding list of actions that are part of action maps.
+        public InputBindingListView(SerializedProperty actionProperty, SerializedProperty actionMapProperty, bool displayHeader = true)
+            : base(new BindingList(actionProperty, actionMapProperty.FindPropertyRelative("m_Bindings")), typeof(SerializedProperty))
         {
-            Initialize(actionProperty, actionSetProperty, displayHeader);
+            Initialize(actionProperty, actionMapProperty, displayHeader);
         }
 
-        private void Initialize(SerializedProperty actionProperty, SerializedProperty actionSetProperty, bool displayHeader)
+        private void Initialize(SerializedProperty actionProperty, SerializedProperty actionMapProperty, bool displayHeader)
         {
             if (!displayHeader)
                 headerHeight = 2;
@@ -53,10 +55,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 };
 
             onAddCallback =
-                (list) => InputActionSerializationHelpers.AppendBinding(actionProperty, actionSetProperty);
+                (list) => InputActionSerializationHelpers.AppendBinding(actionProperty, actionMapProperty);
 
             onRemoveCallback =
-                (list) => InputActionSerializationHelpers.RemoveBinding(actionProperty, list.index, actionSetProperty);
+                (list) => InputActionSerializationHelpers.RemoveBinding(actionProperty, list.index, actionMapProperty);
         }
 
         private static GUIContent s_NoBindingsText = new GUIContent("None.");
@@ -71,28 +73,28 @@ namespace UnityEngine.Experimental.Input.Editor
         // needs Count and the indexer.
         private class BindingList : IList
         {
-            private SerializedProperty m_BindingsCountProperty;
-            private SerializedProperty m_BindingsStartIndexProperty;
-            private SerializedProperty m_BindingsArrayProperty;
+            private string m_ActionName;
+            private SerializedProperty m_BindingArrayProperty;
 
-            public BindingList(SerializedProperty actionProperty, SerializedProperty actionSetProperty)
+            public BindingList(SerializedProperty actionProperty, SerializedProperty bindingArrayProperty)
             {
-                m_BindingsCountProperty = actionProperty.FindPropertyRelative("m_BindingsCount");
-                m_BindingsStartIndexProperty = actionProperty.FindPropertyRelative("m_BindingsStartIndex");
-                m_BindingsArrayProperty = actionSetProperty.FindPropertyRelative("m_Bindings");
+                m_BindingArrayProperty = bindingArrayProperty;
+                m_ActionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
             }
 
             public int Count
             {
-                get { return m_BindingsCountProperty.intValue; }
+                get
+                {
+                    return InputActionSerializationHelpers.GetBindingCount(m_BindingArrayProperty, m_ActionName);
+                }
             }
 
             public object this[int index]
             {
                 get
                 {
-                    var startIndex = m_BindingsStartIndexProperty.intValue;
-                    return m_BindingsArrayProperty.GetArrayElementAtIndex(startIndex + index);
+                    return InputActionSerializationHelpers.GetBinding(m_BindingArrayProperty, m_ActionName, index);
                 }
                 set { throw new NotSupportedException(); }
             }
