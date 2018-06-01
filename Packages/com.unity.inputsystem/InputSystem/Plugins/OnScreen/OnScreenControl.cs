@@ -33,10 +33,18 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// <remarks>
         /// This also provides access to the device.
         /// </remarks>
-        [NonSerialized] private InputControl m_Control;
+        [NonSerialized] public InputControl m_Control;
 
         void OnEnable()
         {
+        }
+
+        public void SetControlPath(string controlPath)
+        {
+            m_ControlPath = controlPath;
+            var layout = InputControlPath.TryGetDeviceLayout(m_ControlPath);
+            var control = InputSystem.AddDevice(layout);
+            m_Control = InputControlPath.TryFindControl(control, m_ControlPath);
         }
     }
 }

@@ -1,34 +1,29 @@
 using NUnit.Framework;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Plugins.OnScreen;
+
 
 public class OnScreenTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_CanCreateOnScreenDevice()
+    public void Devices_CanCreateOnScreenDevice()
     {
-        Assert.Fail();
-        /*
         var gameObject = new GameObject();
         var button1 = gameObject.AddComponent<OnScreenButton>();
-        var button2 = gameObject.AddComponent<OnScreenButton>();
-        var stick1 = gameObject.AddComponent<OnSceenStick>();
-        var stick2 = gameObject.AddComponent<OnSceenStick>();
+        button1.SetControlPath("/<Keyboard>/a");
 
-        var device = InputSystem.devices.FirstOrDefault(x => x is OnScreenDevice);
+        var device = InputSystem.devices.FirstOrDefault(x => x is Keyboard);
         Assert.That(device, Is.Not.Null);
 
-        Assert.That(device["button1"], Is.Not.Null);
-        Assert.That(device["button2"], Is.Not.Null);
-        Assert.That(device["stick1"], Is.Not.Null);
-        Assert.That(device["stick2"], Is.Not.Null);
-        */
-    }
+        Assert.That(device["space"], Is.Not.Null);
 
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_CanShowAndHideOnScreenKeyboard()
-    {
-        Assert.Fail();
+        Assert.That(button1.m_Control.displayName, Is.EqualTo("a"));
+
+        var matches = InputSystem.GetControls("/<Keyboard>");
+
+        Assert.That(matches, Has.Count.EqualTo(1));
     }
 }
