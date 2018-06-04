@@ -125,9 +125,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
 
-        public IList<TreeViewItem> GetSelectedRows()
+        public IEnumerable<InputTreeViewLine> GetSelectedRows()
         {
-            return FindRows(GetSelection());
+            return FindRows(GetSelection()).Cast<InputTreeViewLine>();
         }
 
         public SerializedProperty GetSelectedActionMap()

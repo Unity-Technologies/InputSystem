@@ -218,6 +218,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             throw new NotImplementedException();
         }
+
+        public static void AddBindingFromObject(SerializedProperty actionMap, InputBinding binding)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 #endif // UNITY_EDITOR

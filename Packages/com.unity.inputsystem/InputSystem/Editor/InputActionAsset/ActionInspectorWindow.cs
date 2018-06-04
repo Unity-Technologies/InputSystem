@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
@@ -260,11 +261,70 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        string m_InputAssetMarker = "\nINPUTASSET\n";
         void HandleCopyEvent()
         {
-            var row = m_TreeView.GetSelectedRow().SerializeToString();
-            Debug.Log(row);
-            EditorGUIUtility.systemCopyBuffer = row;
+            var copyList = new StringBuilder(m_InputAssetMarker);
+            foreach (var selectedRow in m_TreeView.GetSelectedRows())
+            {
+                copyList.Append(selectedRow.SerializeToString());
+                copyList.Append(m_InputAssetMarker);
+
+                if (selectedRow is ActionItem)
+                {
+                    var action = selectedRow as ActionItem;
+
+                    foreach (var child in action.children)
+                    {
+                        if(!(child is BindingItem))
+                            continue;
+                        copyList.Append((child as BindingItem).SerializeToString());
+                        copyList.Append(m_InputAssetMarker);
+                    }
+                }
+                
+            }
+            EditorGUIUtility.systemCopyBuffer = copyList.ToString();
+            Debug.Log(EditorGUIUtility.systemCopyBuffer);
+        }
+
+        void HandlePasteEvent()
+        {
+            var json = EditorGUIUtility.systemCopyBuffer;
+            if (!json.StartsWith(m_InputAssetMarker))
+                return;
+            foreach (var row in json.Split(new[] { m_InputAssetMarker }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                Debug.Log(row);
+                // InputActionMap
+                try
+                {
+                    var map = JsonUtility.FromJson<InputActionMap>(json);
+                    InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
+                    continue;
+                }
+                catch (ArgumentException) { }
+                
+                // InputAction
+                try
+                {
+                    var action = JsonUtility.FromJson<InputAction>(json);
+                    var actionMap = m_TreeView.GetSelectedActionMap();
+                    InputActionSerializationHelpers.AddActionFromObject(actionMap, action);
+                    continue;
+                }
+                catch (ArgumentException) { }
+                
+                // InputBinding
+                try
+                {
+                    var binding = JsonUtility.FromJson<InputBinding>(json);
+                    var actionMap = m_TreeView.GetSelectedActionMap();
+                    InputActionSerializationHelpers.AddBindingFromObject(actionMap, binding);
+                    continue;
+                }
+                catch (ArgumentException) { }
+            }
         }
 
         void DeleteSelectedRow()
@@ -286,21 +346,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
             }
-        }
-
-        void HandlePasteEvent()
-        {
-            var json = EditorGUIUtility.systemCopyBuffer;
-            try
-            {
-                var map = JsonUtility.FromJson<InputActionMap>(json);
-                InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
-                return;
-            }
-            catch (ArgumentException)
-            {
-            }
-            EditorApplication.Beep();
         }
 
         void DrawMainTree()

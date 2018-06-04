@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -170,6 +172,11 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override GUIStyle rectStyle
         {
             get { return Styles.orangeRect; }
+        }
+
+        public IList<InputBinding> GetAllBindings()
+        {
+            return m_Action.bindings.ToList();
         }
 
         public override string SerializeToString()
