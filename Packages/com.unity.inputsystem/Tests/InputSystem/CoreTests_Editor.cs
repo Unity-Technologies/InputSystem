@@ -120,7 +120,7 @@ partial class CoreTests
     {
         InputConfiguration.LockInputToGame = true;
 
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
