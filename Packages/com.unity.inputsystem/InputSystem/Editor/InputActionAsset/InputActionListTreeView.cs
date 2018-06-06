@@ -72,7 +72,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 var action = actionMap.actions[i];
                 
-                var actionItem = new ActionItem(action, actionsArrayProperty, i);
+                var actionItem = new ActionItem(actionMap.name, action, actionsArrayProperty, i);
                 treeViewItem.AddChild(actionItem);
 
                 var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
@@ -89,19 +89,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     if (binding.isComposite)
                     {
-                        compositeGroupItem = new CompositeGroupItem(binding, bindingProperty, j);
+                        compositeGroupItem = new CompositeGroupItem(actionMap.name, binding, bindingProperty, j);
                         actionItem.AddChild(compositeGroupItem);
                         continue;
                     }
                     if (binding.isPartOfComposite)
                     {
-                        var compositeItem = new CompositeItem(binding, bindingProperty, j);
+                        var compositeItem = new CompositeItem(actionMap.name, binding, bindingProperty, j);
                         if(compositeGroupItem != null)
                             compositeGroupItem.AddChild(compositeItem);
                         continue;
                     }
                     compositeGroupItem = null;
-                    var bindingsItem = new BindingItem(binding, bindingProperty, j);
+                    var bindingsItem = new BindingItem(actionMap.name, binding, bindingProperty, j);
                     actionItem.AddChild(bindingsItem);
                 }
             }
@@ -130,17 +130,34 @@ namespace UnityEngine.Experimental.Input.Editor
             return FindRows(GetSelection()).Cast<InputTreeViewLine>();
         }
 
-        public SerializedProperty GetSelectedActionMap()
+        public ActionItem GetSelectedAction()
         {
             if (!HasSelection())
                 return null;
 
             var item = FindItem(GetSelection().First(), rootItem);
-            
-            if (item == null)
+
+            while (!(item is ActionItem) && item.parent != null)
+            {
+                item = item.parent;
+            }
+
+            return item as ActionItem;
+        }
+
+        public ActionSetItem GetSelectedActionMap()
+        {
+            if (!HasSelection())
                 return null;
-            
-            return (item as InputTreeViewLine).elementProperty;
+
+            var item = FindItem(GetSelection().First(), rootItem);
+
+            while (!(item is ActionSetItem) && item.parent != null)
+            {
+                item = item.parent;
+            }
+
+            return item as ActionSetItem;
         }
 
         public SerializedProperty GetSelectedProperty()
@@ -199,10 +216,13 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, args.newName);
             }
+            else if(actionItem is ActionSetItem)
+            {
+                InputActionSerializationHelpers.RenameActionMap(actionItem.elementProperty, args.newName);
+            }
             else
             {
-                var nameProperty = actionItem.elementProperty.FindPropertyRelative("m_Name");
-                nameProperty.stringValue = args.newName;
+                throw new NotImplementedException("Can't rename this row");
             }
 
             m_ApplyAction();

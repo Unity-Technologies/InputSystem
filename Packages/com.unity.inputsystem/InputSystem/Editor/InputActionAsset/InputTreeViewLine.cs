@@ -160,14 +160,15 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         InputAction m_Action;
 
-        public ActionItem(InputAction action, SerializedProperty setProperty, int index)
+        public ActionItem(string actionMapName, InputAction action, SerializedProperty setProperty, int index)
             : base(setProperty, index)
         {
             m_Action = action;
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-            id = displayName.GetHashCode();
+            id = (actionMapName + "/" + displayName).GetHashCode();
             depth = 2;
         }
+        
 
         protected override GUIStyle rectStyle
         {
@@ -188,7 +189,8 @@ namespace UnityEngine.Experimental.Input.Editor
     
     class CompositeGroupItem : BindingItem
     {
-        public CompositeGroupItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(binding, bindingProperty, index)
+        public CompositeGroupItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
+            : base(actionMapName, binding, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             displayName = path;
@@ -203,7 +205,8 @@ namespace UnityEngine.Experimental.Input.Editor
     
     class CompositeItem : BindingItem
     {
-        public CompositeItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(binding, bindingProperty, index)
+        public CompositeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
+            : base(actionMapName, binding, bindingProperty, index)
         {
             depth++;
         }
@@ -216,14 +219,14 @@ namespace UnityEngine.Experimental.Input.Editor
     
     class BindingItem : InputTreeViewLine
     {
-        public BindingItem(InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+        public BindingItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
         {
             m_InputBinding = binding;
             m_BindingProperty = bindingProperty;
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
             displayName = ParseName(path);
-            id = (action + " " + path + " " + index).GetHashCode();
+            id = (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
             depth = 2;
         }
 
