@@ -213,7 +213,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (actionItem is ActionItem)
             {
-                InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, args.newName);
+                var a = actionItem as ActionItem;
+                var map = GetSelectedActionMap();
+                InputActionSerializationHelpers.RenameAction(actionItem as ActionItem, actionItem.elementProperty, map.elementProperty, args.newName);
             }
             else if(actionItem is ActionSetItem)
             {

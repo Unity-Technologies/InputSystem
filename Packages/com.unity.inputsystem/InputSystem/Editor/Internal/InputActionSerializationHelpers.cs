@@ -254,22 +254,26 @@ namespace UnityEngine.Experimental.Input.Editor
             return result;
         }
 
-        public static void RenameAction(SerializedProperty actionProperty, string newName)
+        public static void RenameAction(ActionItem actionItem, SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
         {
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");
+            var bindingsProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
+            for (var i = 0; i < bindingsProperty.arraySize; i++)
+            {
+                var element = bindingsProperty.GetArrayElementAtIndex(i);
+                var actionNameProperty = element.FindPropertyRelative("action");
+                if (actionNameProperty.stringValue == nameProperty.stringValue)
+                {
+                    actionNameProperty.stringValue = newName;
+                }
+            }
             nameProperty.stringValue = newName;
-            
-            //TODO Update all references
         }
 
-        public static void RenameActionMap(SerializedProperty actionItemElementProperty, string argsNewName)
+        public static void RenameActionMap(SerializedProperty actionMapProperty, string newName)
         {
-            throw new NotImplementedException();
-        }
-
-        public static void MoveAction(SerializedProperty srcActionProperty, SerializedProperty srcActionPropertyMap, SerializedProperty destActionProperty, SerializedProperty destActionPropertyMap)
-        {
-            throw new NotImplementedException();
+            var nameProperty = actionMapProperty.FindPropertyRelative("m_Name");
+            nameProperty.stringValue = newName;
         }
 
         public static void AppendCompositeBinding(SerializedProperty actionLineElementProperty, SerializedProperty elementProperty)
