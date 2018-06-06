@@ -124,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_TreeView.GetSelectedProperty() != null)
             {
                 var p = m_TreeView.GetSelectedRow();
-                if (p is BindingItem)
+                if (p is BindingTreeItem)
                 {
                     m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                 }
@@ -147,7 +147,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (m_PropertyView == null && m_TreeView.GetSelectedProperty() != null)
                 {
                     var p = m_TreeView.GetSelectedRow();
-                    if (p is BindingItem)
+                    if (p is BindingTreeItem)
                     {
                         m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                     }
@@ -281,20 +281,20 @@ namespace UnityEngine.Experimental.Input.Editor
         void DeleteSelectedRow()
         {
             var row = m_TreeView.GetSelectedRow();
-            if (row is BindingItem)
+            if (row is BindingTreeItem)
             {
                 var actionMapProperty = (row.parent.parent as InputTreeViewLine).elementProperty;
                 var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingItem).index, actionMapProperty);
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingTreeItem).index, actionMapProperty);
                 Apply();
             }
-            else if (row is ActionItem)
+            else if (row is ActionTreeItem)
             {
                 var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionItem).index);
+                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionTreeItem).index);
                 Apply();
             }
-            else if (row is ActionSetItem)
+            else if (row is ActionMapTreeItem)
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
                 Apply();
@@ -332,10 +332,11 @@ namespace UnityEngine.Experimental.Input.Editor
         void ShowAddMenu()
         {
             var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Add action map"), false, OnAddActionMap);
-            menu.AddItem(new GUIContent("Add action"), false, OnAddAction);
-            menu.AddItem(new GUIContent("Add binding"), false, OnAddBinding);
-            menu.AddItem(new GUIContent("Add composite binding"), false, OnAddCompositeBinding);
+            menu.AddItem(new GUIContent("Action"), false, OnAddAction);
+            menu.AddItem(new GUIContent("Action map"), false, OnAddActionMap);
+            menu.AddSeparator("");
+            menu.AddItem(new GUIContent("Binding"), false, OnAddBinding);
+            menu.AddItem(new GUIContent("Composite binding"), false, OnAddCompositeBinding);
             menu.ShowAsContext();
         }
 
@@ -368,26 +369,26 @@ namespace UnityEngine.Experimental.Input.Editor
             Apply();
         }
 
-        ActionItem GetSelectedActionLine()
+        ActionTreeItem GetSelectedActionLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
             {
-                if (selectedRow is ActionItem)
-                    return (ActionItem) selectedRow;
+                if (selectedRow is ActionTreeItem)
+                    return (ActionTreeItem) selectedRow;
                 selectedRow = selectedRow.parent;
             } while (selectedRow.parent != null);
 
             return null;
         }
 
-        ActionSetItem GetSelectedActionMapLine()
+        ActionMapTreeItem GetSelectedActionMapLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
             {
-                if (selectedRow is ActionSetItem)
-                    return (ActionSetItem) selectedRow;
+                if (selectedRow is ActionMapTreeItem)
+                    return (ActionMapTreeItem) selectedRow;
                 selectedRow = selectedRow.parent;
             } while (selectedRow.parent != null);
 

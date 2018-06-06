@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < m_Asset.actionMaps.Count; i++)
             {
                 var actionMap = m_Asset.actionMaps[i];
-                var actionItem = new ActionSetItem(actionMap, actionMapsProperty, i);
+                var actionItem = new ActionMapTreeItem(actionMap, actionMapsProperty, i);
                 ParseActionMap(actionItem, actionMap, actionItem.elementProperty);
                 root.AddChild(actionItem);
             }
@@ -72,13 +72,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 var action = actionMap.actions[i];
                 
-                var actionItem = new ActionItem(actionMap.name, action, actionsArrayProperty, i);
+                var actionItem = new ActionTreeItem(actionMap.name, action, actionsArrayProperty, i);
                 treeViewItem.AddChild(actionItem);
 
                 var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
 
-                CompositeGroupItem compositeGroupItem = null;
+                CompositeGroupTreeItem compositeGroupTreeItem = null;
                 for (var j = 0; j < bindingsCount; j++)
                 {
                     var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
@@ -89,19 +89,19 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     if (binding.isComposite)
                     {
-                        compositeGroupItem = new CompositeGroupItem(actionMap.name, binding, bindingProperty, j);
-                        actionItem.AddChild(compositeGroupItem);
+                        compositeGroupTreeItem = new CompositeGroupTreeItem(actionMap.name, binding, bindingProperty, j);
+                        actionItem.AddChild(compositeGroupTreeItem);
                         continue;
                     }
                     if (binding.isPartOfComposite)
                     {
-                        var compositeItem = new CompositeItem(actionMap.name, binding, bindingProperty, j);
-                        if(compositeGroupItem != null)
-                            compositeGroupItem.AddChild(compositeItem);
+                        var compositeItem = new CompositeTreeItem(actionMap.name, binding, bindingProperty, j);
+                        if(compositeGroupTreeItem != null)
+                            compositeGroupTreeItem.AddChild(compositeItem);
                         continue;
                     }
-                    compositeGroupItem = null;
-                    var bindingsItem = new BindingItem(actionMap.name, binding, bindingProperty, j);
+                    compositeGroupTreeItem = null;
+                    var bindingsItem = new BindingTreeItem(actionMap.name, binding, bindingProperty, j);
                     actionItem.AddChild(bindingsItem);
                 }
             }
@@ -129,34 +129,34 @@ namespace UnityEngine.Experimental.Input.Editor
             return FindRows(GetSelection()).Cast<InputTreeViewLine>();
         }
 
-        public ActionItem GetSelectedAction()
+        public ActionTreeItem GetSelectedAction()
         {
             if (!HasSelection())
                 return null;
 
             var item = FindItem(GetSelection().First(), rootItem);
 
-            while (!(item is ActionItem) && item.parent != null)
+            while (!(item is ActionTreeItem) && item.parent != null)
             {
                 item = item.parent;
             }
 
-            return item as ActionItem;
+            return item as ActionTreeItem;
         }
 
-        public ActionSetItem GetSelectedActionMap()
+        public ActionMapTreeItem GetSelectedActionMap()
         {
             if (!HasSelection())
                 return null;
 
             var item = FindItem(GetSelection().First(), rootItem);
 
-            while (!(item is ActionSetItem) && item.parent != null)
+            while (!(item is ActionMapTreeItem) && item.parent != null)
             {
                 item = item.parent;
             }
 
-            return item as ActionSetItem;
+            return item as ActionMapTreeItem;
         }
 
         public SerializedProperty GetSelectedProperty()
@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override bool CanRename(TreeViewItem item)
         {
-            return item is InputTreeViewLine && !(item is BindingItem);
+            return item is InputTreeViewLine && !(item is BindingTreeItem);
         }
         
         protected override void DoubleClickedItem(int id)
@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var item = FindItem(id, rootItem);
             if (item == null)
                 return;
-            if(item is BindingItem)
+            if(item is BindingTreeItem)
                 return;
             BeginRename(item);
             (item as InputTreeViewLine).renaming = true;
@@ -211,13 +211,13 @@ namespace UnityEngine.Experimental.Input.Editor
             if (actionItem == null)
                 return;
 
-            if (actionItem is ActionItem)
+            if (actionItem is ActionTreeItem)
             {
-                var a = actionItem as ActionItem;
+                var a = actionItem as ActionTreeItem;
                 var map = GetSelectedActionMap();
-                InputActionSerializationHelpers.RenameAction(actionItem as ActionItem, actionItem.elementProperty, map.elementProperty, args.newName);
+                InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, map.elementProperty, args.newName);
             }
-            else if(actionItem is ActionSetItem)
+            else if(actionItem is ActionMapTreeItem)
             {
                 InputActionSerializationHelpers.RenameActionMap(actionItem.elementProperty, args.newName);
             }

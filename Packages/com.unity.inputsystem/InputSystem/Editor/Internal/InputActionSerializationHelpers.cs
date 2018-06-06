@@ -254,7 +254,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return result;
         }
 
-        public static void RenameAction(ActionItem actionItem, SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
+        public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
         {
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");
             var bindingsProperty = actionMapProperty.FindPropertyRelative("m_Bindings");

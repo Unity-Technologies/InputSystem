@@ -135,10 +135,10 @@ namespace UnityEngine.Experimental.Input.Editor
         public abstract string SerializeToString();
     }
     
-    class ActionSetItem : InputTreeViewLine
+    class ActionMapTreeItem : InputTreeViewLine
     {
         InputActionMap m_ActionMap;
-        public ActionSetItem(InputActionMap actionMap, SerializedProperty setProperty, int index) : base(setProperty, index)
+        public ActionMapTreeItem(InputActionMap actionMap, SerializedProperty setProperty, int index) : base(setProperty, index)
         {
             m_ActionMap = actionMap;
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
@@ -156,11 +156,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
     
-    class ActionItem : InputTreeViewLine
+    class ActionTreeItem : InputTreeViewLine
     {
         InputAction m_Action;
 
-        public ActionItem(string actionMapName, InputAction action, SerializedProperty setProperty, int index)
+        public ActionTreeItem(string actionMapName, InputAction action, SerializedProperty setProperty, int index)
             : base(setProperty, index)
         {
             m_Action = action;
@@ -187,9 +187,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
     
-    class CompositeGroupItem : BindingItem
+    class CompositeGroupTreeItem : BindingTreeItem
     {
-        public CompositeGroupItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
+        public CompositeGroupTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
             : base(actionMapName, binding, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
@@ -203,9 +203,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
     
-    class CompositeItem : BindingItem
+    class CompositeTreeItem : BindingTreeItem
     {
-        public CompositeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
+        public CompositeTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
             : base(actionMapName, binding, bindingProperty, index)
         {
             depth++;
@@ -217,9 +217,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
     
-    class BindingItem : InputTreeViewLine
+    class BindingTreeItem : InputTreeViewLine
     {
-        public BindingItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+        public BindingTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
         {
             m_InputBinding = binding;
             m_BindingProperty = bindingProperty;

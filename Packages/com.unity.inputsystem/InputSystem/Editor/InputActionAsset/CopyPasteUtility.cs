@@ -36,16 +36,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 copyList.Append(selectedRow.SerializeToString());
                 copyList.Append(m_InputAssetMarker);
 
-                if (selectedRow is ActionItem && selectedRow.children != null && selectedRow.children.Count > 0)
+                if (selectedRow is ActionTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
                 {
-                    var action = selectedRow as ActionItem;
+                    var action = selectedRow as ActionTreeItem;
                     
                     foreach (var child in action.children)
                     {
-                        if(!(child is BindingItem))
+                        if(!(child is BindingTreeItem))
                             continue;
                         copyList.Append(child.GetType().Name);
-                        copyList.Append((child as BindingItem).SerializeToString());
+                        copyList.Append((child as BindingTreeItem).SerializeToString());
                         copyList.Append(m_InputAssetMarker);
                     }
                 }
@@ -63,18 +63,18 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < elements.Length; i++)
             {
                 var row = elements[i];
-                if (row.StartsWith(typeof(ActionSetItem).Name))
+                if (row.StartsWith(typeof(ActionMapTreeItem).Name))
                 {
-                    row = row.Substring(typeof(ActionSetItem).Name.Length);
+                    row = row.Substring(typeof(ActionMapTreeItem).Name.Length);
                     var map = JsonUtility.FromJson<InputActionMap>(row);
                     InputActionSerializationHelpers.AddActionMapFromObject(m_Window.m_SerializedObject, map);
                     m_Window.Apply();
                     continue;
                 }
 
-                if (row.StartsWith(typeof(ActionItem).Name))
+                if (row.StartsWith(typeof(ActionTreeItem).Name))
                 {
-                    row = row.Substring(typeof(ActionItem).Name.Length);
+                    row = row.Substring(typeof(ActionTreeItem).Name.Length);
                     var action = JsonUtility.FromJson<InputAction>(row);
                     var actionMap = m_TreeView.GetSelectedActionMap();
                     SerializedProperty newActionProperty = null;
@@ -86,7 +86,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         try
                         {
                             var nextRow = elements[i + 1];
-                            nextRow = nextRow.Substring(typeof(BindingItem).Name.Length);
+                            nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
                             var binding = JsonUtility.FromJson<InputBinding>(nextRow);
                             InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
                             m_Window.Apply();
@@ -102,9 +102,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     continue;
                 }
 
-                if (row.StartsWith(typeof(BindingItem).Name))
+                if (row.StartsWith(typeof(BindingTreeItem).Name))
                 {
-                    row = row.Substring(typeof(BindingItem).Name.Length);
+                    row = row.Substring(typeof(BindingTreeItem).Name.Length);
                     var binding = JsonUtility.FromJson<InputBinding>(row);
                     var selectedRow = m_TreeView.GetSelectedAction();
                     if (selectedRow == null)
