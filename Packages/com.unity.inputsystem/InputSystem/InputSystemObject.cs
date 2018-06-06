@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
@@ -16,7 +17,7 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] public InputManager manager;
         [NonSerialized] public InputRemoting remote;
         [SerializeField] public RemoteInputPlayerConnection playerConnection;
-        [SerializeField] private bool oldInputSystemWarningTriggered;
+        [SerializeField] private bool m_OldInputSystemWarningTriggered;
 
         [SerializeField] private InputRemoting.SerializedState m_RemotingState;
 
@@ -42,39 +43,33 @@ namespace UnityEngine.Experimental.Input
             SetUpRemoting();
         }
 
-        private SerializedObject GetPlayerSerializedPlayerSettings()
+        private SerializedObject GetSerializedPlayerSettings()
         {
-            PlayerSettings[] array = Resources.FindObjectsOfTypeAll<PlayerSettings>();
-            var playerSettings = array.Length > 0 ? array[0] : null;
-
-            if (playerSettings)
-                return new SerializedObject(playerSettings);
-
-            return null;
+            return new SerializedObject(Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault());
         }
 
         public bool IsNewInputSystemActiveInPlayerSettings()
         {
-            var serializedPlayerSettings = GetPlayerSerializedPlayerSettings();
+            var serializedPlayerSettings = GetSerializedPlayerSettings();
 
             if (serializedPlayerSettings != null)
                 return serializedPlayerSettings.FindProperty("enableNativePlatformBackendsForNewInputSystem").boolValue;
 
-            return false;
+            return true;
         }
 
-        public void DisplayOldInputSystemWarningDialog()
+        public void DisplayNativeBackendsDisabledWarningDialog()
         {
-            var dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
+            const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
                 "This means that no input from native devices will come through." +
                 "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
 
             // Only display this dialog once to the user per editor session.
-            if (!oldInputSystemWarningTriggered)
+            if (!m_OldInputSystemWarningTriggered)
             {
                 if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
                 {
-                    var serializedPlayerSettings = GetPlayerSerializedPlayerSettings();
+                    var serializedPlayerSettings = GetSerializedPlayerSettings();
                     if (serializedPlayerSettings != null)
                     {
                         serializedPlayerSettings.FindProperty("enableNativePlatformBackendsForNewInputSystem").boolValue = true;
@@ -82,7 +77,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                oldInputSystemWarningTriggered = true;
+                m_OldInputSystemWarningTriggered = true;
             }
         }
 
