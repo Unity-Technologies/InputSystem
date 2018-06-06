@@ -700,7 +700,6 @@ namespace UnityEngine.Experimental.Input
                 if (!string.IsNullOrEmpty(controlItem.displayName))
                     child.m_DisplayNameFromLayout = controlItem.displayName;
 
-                ////TODO: usages
                 ////TODO: other modifications
             }
 
