@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
         string m_GroupFilter;
         Action m_ApplyAction;
         
-        public Action<InputTreeViewLine> OnSelectionChanged;
+        public Action OnSelectionChanged;
         
         public static InputActionListTreeView Create(Action applyAction, InputActionAsset asset, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
@@ -112,8 +112,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!HasSelection())
                 return;
             
-            var item = FindItem(selectedIds.First(), rootItem);
-            OnSelectionChanged((InputTreeViewLine)item);
+            OnSelectionChanged();
         }
 
         public InputTreeViewLine GetSelectedRow()

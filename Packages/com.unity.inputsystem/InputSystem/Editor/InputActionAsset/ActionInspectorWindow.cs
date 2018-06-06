@@ -92,15 +92,17 @@ namespace UnityEngine.Experimental.Input.Editor
 
         [SerializeField]
         Object m_ReferencedObject;
-        SerializedObject m_SerializedObject;
+        internal SerializedObject m_SerializedObject;
 
-        InputActionListTreeView m_TreeView;
+        internal InputActionListTreeView m_TreeView;
         [SerializeField]
         TreeViewState m_TreeViewState;
 
         PropertiesView m_PropertyView;
         int m_GroupIndex;
         List<string> m_GroupPopupList;
+
+        CopyPasteUtility m_CopyPasteUtility;
 
         public void OnEnable()
         {
@@ -114,6 +116,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             m_TreeView.Reload();
             m_TreeView.Repaint();
+            OnSelectionChanged();
+        }
+
+        void OnSelectionChanged()
+        {
             if (m_TreeView.GetSelectedProperty() != null)
             {
                 var p = m_TreeView.GetSelectedRow();
@@ -134,18 +141,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 ParseGroups(m_ReferencedObject as InputActionAsset);
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
-                
-                m_TreeView.OnSelectionChanged = p =>
-                {
-                    if (p is BindingItem)
-                    {
-                        m_PropertyView = new PropertiesView(p.elementProperty, Apply);
-                    }
-                    else
-                    {
-                        m_PropertyView = null;
-                    }
-                };
+
+                m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 
                 if (m_PropertyView == null && m_TreeView.GetSelectedProperty() != null)
                 {
@@ -155,6 +152,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                     }
                 }
+                m_CopyPasteUtility = new CopyPasteUtility(this);
             }
         }
         
@@ -177,7 +175,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_GroupPopupList.AddRange(allGroups);
         }
 
-        void Apply()
+        internal void Apply()
         {
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
@@ -242,7 +240,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (Event.current.type == EventType.ValidateCommand)
             {
                 if (Event.current.commandName == "Copy"
-                    || Event.current.commandName == "Paste")
+                    || Event.current.commandName == "Paste"
+                    || Event.current.commandName == "Delete")
                 {
                     Event.current.Use();
                 }
@@ -251,123 +250,18 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 switch (Event.current.commandName)
                 {
-                        case "Copy":
-                            HandleCopyEvent();
-                            Event.current.Use();
-                            break;
-                        case "Paste":
-                            HandlePasteEvent();
-                            Event.current.Use();
-                            break;
-                }
-            }
-        }
-        
-
-        string m_InputAssetMarker = "INPUTASSET\n";
-        void HandleCopyEvent()
-        {
-            var selectedRows = m_TreeView.GetSelectedRows();
-            var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
-            
-            // Don't allow to copy different type. It will hard to handle pasting
-            if (rowTypes.Count() > 1)
-            {
-                EditorApplication.Beep();
-                return;
-            }
-            
-            var copyList = new StringBuilder(m_InputAssetMarker);
-            foreach (var selectedRow in selectedRows)
-            {
-                copyList.Append(selectedRow.GetType().Name);
-                copyList.Append(selectedRow.SerializeToString());
-                copyList.Append(m_InputAssetMarker);
-
-                if (selectedRow is ActionItem && selectedRow.children != null && selectedRow.children.Count > 0)
-                {
-                    var action = selectedRow as ActionItem;
-                    
-                    foreach (var child in action.children)
-                    {
-                        if(!(child is BindingItem))
-                            continue;
-                        copyList.Append(child.GetType().Name);
-                        copyList.Append((child as BindingItem).SerializeToString());
-                        copyList.Append(m_InputAssetMarker);
-                    }
-                }
-                
-            }
-            EditorGUIUtility.systemCopyBuffer = copyList.ToString();
-            Debug.Log(EditorGUIUtility.systemCopyBuffer);
-        }
-
-        void HandlePasteEvent()
-        {
-            var json = EditorGUIUtility.systemCopyBuffer;
-            var elements = json.Split(new[] { m_InputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
-            if (!json.StartsWith(m_InputAssetMarker))
-                return;
-            for (var i = 0; i < elements.Length; i++)
-            {
-                var row = elements[i];
-                Debug.Log(row);
-
-                if (row.StartsWith(typeof(ActionSetItem).Name))
-                {
-                    row = row.Substring(typeof(ActionSetItem).Name.Length);
-                    var map = JsonUtility.FromJson<InputActionMap>(row);
-                    InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
-                    Apply();
-                    continue;
-                }
-
-                if (row.StartsWith(typeof(ActionItem).Name))
-                {
-                    row = row.Substring(typeof(ActionItem).Name.Length);
-                    var action = JsonUtility.FromJson<InputAction>(row);
-                    var actionMap = m_TreeView.GetSelectedActionMap();
-                    SerializedProperty newActionProperty = null;
-                    InputActionSerializationHelpers.AddActionFromObject(action, actionMap.elementProperty, ref newActionProperty);
-                    Apply();
-
-                    while (i + 1 < elements.Length)
-                    {
-                        try
-                        {
-                            var nextRow = elements[i + 1];
-                            nextRow = nextRow.Substring(typeof(BindingItem).Name.Length);
-                            var binding = JsonUtility.FromJson<InputBinding>(nextRow);
-                            InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
-                            Apply();
-                            i++;
-                        }
-                        
-                        catch (ArgumentException e)
-                        {
-                            Debug.LogException(e);
-                            break;
-                        }
-                    }
-                    continue;
-                }
-
-                if (row.StartsWith(typeof(BindingItem).Name))
-                {
-                    row = row.Substring(typeof(BindingItem).Name.Length);
-                    var binding = JsonUtility.FromJson<InputBinding>(row);
-                    var selectedRow = m_TreeView.GetSelectedAction();
-                    if (selectedRow == null)
-                    {
-                        EditorApplication.Beep();
-                        continue;
-                    }
-
-                    var actionMap = m_TreeView.GetSelectedActionMap();
-                    InputActionSerializationHelpers.AppendBindingFromObject(binding, selectedRow.elementProperty, actionMap.elementProperty);
-                    Apply();
-                    continue;
+                    case "Copy":
+                        m_CopyPasteUtility.HandleCopyEvent();
+                        Event.current.Use();
+                        break;
+                    case "Paste":
+                        m_CopyPasteUtility.HandlePasteEvent();
+                        Event.current.Use();
+                        break;
+                    case "Delete":
+                        DeleteSelectedRow();
+                        Event.current.Use();
+                        break;
                 }
             }
         }
@@ -386,11 +280,14 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
                 InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionItem).index);
+                Apply();
             }
             else if (row is ActionSetItem)
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
+                Apply();
             }
+            OnSelectionChanged();
         }
 
         void DrawMainTree()
