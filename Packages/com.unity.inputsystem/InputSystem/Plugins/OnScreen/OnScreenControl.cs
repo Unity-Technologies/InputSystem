@@ -25,24 +25,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
-        public string controlPath
-        {
-            get { return m_ControlPath; }
-            set 
-                {   m_ControlPath = value; 
-                    var layout = InputControlPath.TryGetDeviceLayout(m_ControlPath); 
-                    var control = InputSystem.AddDevice(layout);
-                    m_Control = InputControlPath.TryFindControl(control, m_ControlPath);
-                }
-        }
-
-        public InputControl inputControl
-        {
-            get { return m_Control; }
-        }
-
-
-        [SerializeField] private string m_ControlPath;
+        [SerializeField] public string controlPath;
 
         /// <summary>
         /// The input control that is created for this on-screen control.
@@ -54,6 +37,18 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         void OnEnable()
         {
+            if (!string.IsNullOrEmpty(controlPath))
+            {
+                SetupInputControl(controlPath);
+            }
+        }
+
+        public void SetupInputControl(string controlPath)
+        {
+            this.controlPath = controlPath;
+            var layout = InputControlPath.TryGetDeviceLayout(controlPath);
+            var control = InputSystem.AddDevice(layout);
+            m_Control = InputControlPath.TryFindControl(control, controlPath);
         }
     }
 }
