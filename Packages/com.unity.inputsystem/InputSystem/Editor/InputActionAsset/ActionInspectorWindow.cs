@@ -262,7 +262,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         break;
                     case "Cut":
                         m_CopyPasteUtility.HandleCopyEvent();
-                        DeleteSelectedRow();
+                        DeleteSelectedRows();
                         Event.current.Use();
                         break;
                     case "Duplicate":
@@ -271,34 +271,34 @@ namespace UnityEngine.Experimental.Input.Editor
                         Event.current.Use();
                         break;
                     case "Delete":
-                        DeleteSelectedRow();
+                        DeleteSelectedRows();
                         Event.current.Use();
                         break;
                 }
             }
         }
-
-        void DeleteSelectedRow()
+        
+        void DeleteSelectedRows()
         {
-            var row = m_TreeView.GetSelectedRow();
-            if (row is BindingTreeItem)
+            var rows = m_TreeView.GetSelectedRows().ToArray();
+            foreach (var bindingRow in rows.Where(r=>r.GetType() == typeof(BindingTreeItem)).OrderByDescending(r=>r.index).Cast<BindingTreeItem>())
             {
-                var actionMapProperty = (row.parent.parent as InputTreeViewLine).elementProperty;
-                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, (row as BindingTreeItem).index, actionMapProperty);
-                Apply();
+                var actionMapProperty = (bindingRow.parent.parent as InputTreeViewLine).elementProperty;
+                var actionProperty = (bindingRow.parent as InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, bindingRow.index, actionMapProperty);
             }
-            else if (row is ActionTreeItem)
+
+            foreach (var actionRow in rows.Where(r=>r.GetType() == typeof(ActionTreeItem)).OrderByDescending(r=>r.index).Cast<ActionTreeItem>())
             {
-                var actionProperty = (row.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.DeleteAction(actionProperty, (row as ActionTreeItem).index);
-                Apply();
+                var actionProperty = (actionRow.parent as InputTreeViewLine).elementProperty;
+                InputActionSerializationHelpers.DeleteAction(actionProperty, actionRow.index);
             }
-            else if (row is ActionMapTreeItem)
+
+            foreach (var mapRow in rows.Where(r=>r.GetType() == typeof(ActionMapTreeItem)).OrderByDescending(r=>r.index).Cast<ActionMapTreeItem>())
             {
-                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, (row as InputTreeViewLine).index);
-                Apply();
+                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
+            Apply();
             OnSelectionChanged();
         }
 
