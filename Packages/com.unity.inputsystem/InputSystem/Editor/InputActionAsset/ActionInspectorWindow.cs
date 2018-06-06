@@ -241,6 +241,8 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (Event.current.commandName == "Copy"
                     || Event.current.commandName == "Paste"
+                    || Event.current.commandName == "Cut"
+                    || Event.current.commandName == "Duplicate"
                     || Event.current.commandName == "Delete")
                 {
                     Event.current.Use();
@@ -255,6 +257,16 @@ namespace UnityEngine.Experimental.Input.Editor
                         Event.current.Use();
                         break;
                     case "Paste":
+                        m_CopyPasteUtility.HandlePasteEvent();
+                        Event.current.Use();
+                        break;
+                    case "Cut":
+                        m_CopyPasteUtility.HandleCopyEvent();
+                        DeleteSelectedRow();
+                        Event.current.Use();
+                        break;
+                    case "Duplicate":
+                        m_CopyPasteUtility.HandleCopyEvent();
                         m_CopyPasteUtility.HandlePasteEvent();
                         Event.current.Use();
                         break;

@@ -24,6 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Don't allow to copy different type. It will hard to handle pasting
             if (rowTypes.Count() > 1)
             {
+                EditorGUIUtility.systemCopyBuffer = null;
                 EditorApplication.Beep();
                 return;
             }
@@ -51,7 +52,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 
             }
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
-            Debug.Log(EditorGUIUtility.systemCopyBuffer);
         }
 
         public void HandlePasteEvent()
@@ -63,8 +63,6 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < elements.Length; i++)
             {
                 var row = elements[i];
-                Debug.Log(row);
-
                 if (row.StartsWith(typeof(ActionSetItem).Name))
                 {
                     row = row.Substring(typeof(ActionSetItem).Name.Length);
