@@ -12,6 +12,7 @@
 
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.EventSystems;
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
@@ -19,7 +20,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// A button that is visually represented on-screen and triggered by touch or other pointer
     /// input.
     /// </summary>
-    public class OnScreenButton : OnScreenControl
+    public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
         /// <summary>
         /// If true, the button's value is driven from the pressure value of touch or pen input.
@@ -28,31 +29,32 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// This essentially allows having trigger-like buttons as on-screen controls.
         /// </remarks>
         [SerializeField] private bool m_UsePressure;
+        private InputControl<float> m_ButtonControl;
 
-
-        // This is just temporary code , currenty using as a testing utility to send event
-        // The code in this method will be set to UI events but this method won't be callable later.
-        public void SendButtonPushEventToControl()
+        private void SendButtonPushToControl(float value)
         {
-            // Take the mapped InputControl to the "button" and send an event
-            // to the compatible DeveiceState
+            if (m_ButtonControl == null)
+                m_ButtonControl = (InputControl<float>)m_Control;
 
+            InputEventPtr eventPtr;
+            var buffer = StateEvent.From(m_Control.device, out eventPtr);
+            m_ButtonControl.WriteValueInto(eventPtr, value);
 
-            // Is this the correct approah?  set up a case for any type of control?
-            // Or will we limit OnScreenButtons to only GamePadButtons,  OnScreenKeyboards to only Keyboards? etc?
+            // This isn't working, need to fix
+            //  eventPtr.time = InputRuntime.s_Runtime.currentTime;
 
-            if (m_Control.GetType() == typeof(KeyControl))
-            {
-                var key = (KeyControl)m_Control;
-                InputSystem.QueueStateEvent(m_Control.m_Device, new KeyboardState(key.keyCode));
-            }
-            // do same for GamePad
-            // .
-            // .
-            // .
-            // so same for mouse etc etc
-
+            InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
+        }
+
+        public void OnPointerUp(PointerEventData data)
+        {
+            SendButtonPushToControl(0.0f);
+        }
+
+        public void OnPointerDown(PointerEventData data)
+        {
+            SendButtonPushToControl(1.0f);
         }
     }
 }
