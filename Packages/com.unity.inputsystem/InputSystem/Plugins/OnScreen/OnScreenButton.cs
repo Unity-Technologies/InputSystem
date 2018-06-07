@@ -10,6 +10,9 @@
 
 // should on-screen controls be proper UI elements? have them as prefabs?
 
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
+
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
     /// <summary>
@@ -25,5 +28,31 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// This essentially allows having trigger-like buttons as on-screen controls.
         /// </remarks>
         [SerializeField] private bool m_UsePressure;
+
+
+        // This is just temporary code , currenty using as a testing utility to send event
+        // The code in this method will be set to UI events but this method won't be callable later.
+        public void SendButtonPushEventToControl()
+        {
+            // Take the mapped InputControl to the "button" and send an event
+            // to the compatible DeveiceState
+
+
+            // Is this the correct approah?  set up a case for any type of control?
+            // Or will we limit OnScreenButtons to only GamePadButtons,  OnScreenKeyboards to only Keyboards? etc?
+
+            if (m_Control.GetType() == typeof(KeyControl))
+            {
+                var key = (KeyControl)m_Control;
+                InputSystem.QueueStateEvent(m_Control.m_Device, new KeyboardState(key.keyCode));
+            }
+            // do same for GamePad
+            // .
+            // .
+            // .
+            // so same for mouse etc etc
+
+            InputSystem.Update();
+        }
     }
 }

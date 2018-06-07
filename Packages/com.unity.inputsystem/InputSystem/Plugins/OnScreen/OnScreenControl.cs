@@ -33,7 +33,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// <remarks>
         /// This also provides access to the device.
         /// </remarks>
-        [NonSerialized] private InputControl m_Control;
+        [NonSerialized] internal InputControl m_Control;
 
         void OnEnable()
         {
