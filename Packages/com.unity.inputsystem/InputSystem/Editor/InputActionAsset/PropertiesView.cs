@@ -24,6 +24,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public PropertiesView(SerializedProperty bindingProperty, Action reloadTree)
         {
+            m_InteractionChoices = InputSystem.ListInteractions().OrderBy(a=>a).Select(x => new GUIContent(x)).ToArray();
+            
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
             
