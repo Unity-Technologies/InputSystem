@@ -16,7 +16,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
 
         InputSystem.QueueStateEvent(gamepad, newState);
@@ -30,7 +30,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdatePartialStateOfDeviceWithEvent()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Full state update to make sure we won't be overwriting other
         // controls with state. Also, make sure we actually carry over
@@ -108,7 +108,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
 
         InputSystem.QueueStateEvent(gamepad, newState);
@@ -326,7 +326,7 @@ partial class CoreTests
                 inputEvent.handled = true;
             };
 
-        var device = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var device = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(device, new GamepadState {rightTrigger = 0.45f});
         InputSystem.Update();
@@ -494,7 +494,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_IfOldStateEventIsSentToDevice_IsIgnored()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.5f}, 2.0);
         InputSystem.Update();

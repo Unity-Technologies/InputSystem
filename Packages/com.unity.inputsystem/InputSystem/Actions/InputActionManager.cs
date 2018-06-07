@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: the single state approach makes adding and removing maps costly; may not be flexible enough
 
+////REVIEW: can we have a stable, global identification mechanism for actions that comes down to strings?
+
 ////TODO: need to sync when the InputActionMapState is re-resolved
 
 namespace UnityEngine.Experimental.Input
@@ -494,7 +496,23 @@ namespace UnityEngine.Experimental.Input
             {
                 get
                 {
-                    throw new NotImplementedException();
+                    if (m_Manager == null)
+                        throw new InvalidOperationException("ActionEventArray not intialized");
+
+                    if (index < 0 || index >= m_ActionEventCount)
+                        throw new ArgumentOutOfRangeException(
+                            string.Format("Index {0} is out of range for trigger event with {1} action entries", index,
+                                m_ActionEventCount), "index");
+
+                    var idx = m_ActionEventIndex;
+                    for (var i = 0; i != index; ++i)
+                    {
+                        ++idx;
+                        while (m_Manager.m_ActionDataBuffer[idx].triggerIndex != m_TriggerIndex)
+                            ++idx;
+                    }
+
+                    return new ActionEvent(m_Manager, idx);
                 }
             }
 
@@ -625,12 +643,16 @@ namespace UnityEngine.Experimental.Input
                 var statePtr = (byte*)m_Manager.m_StateDataBuffer.GetUnsafeReadOnlyPtr() + m_Data.stateOffset;
                 statePtr -= controlOfType.m_StateBlock.byteOffset;
 
+                ////TODO: this will have to take composites as well as processors on the binding into account
+
                 ////REVIEW: 4 vtable dispatches (InputControl<Vector2>.ReadRawValueFrom, InputControl<float>.ReadRawValueFrom for x,
                 ////        same for y, DeadzoneProcess.Process; plus quite a few direct method calls on top) for a single value read
                 ////        of a Vector2 really isn't awesome; can we cut that down?
                 // And let the control do the rest.
                 return controlOfType.ReadValueFrom(new IntPtr(statePtr));
             }
+
+            ////TODO: must be able to read previous values
         }
 
         public struct TriggerEventArray : IReadOnlyList<TriggerEvent>

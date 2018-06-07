@@ -25,6 +25,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
 
+////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
+
 namespace UnityEngine.Experimental.Input
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
@@ -1142,8 +1144,8 @@ namespace UnityEngine.Experimental.Input
             interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
 
             // Register composites.
-            composites.AddTypeRegistration("ButtonAxis", typeof(ButtonAxis));
-            composites.AddTypeRegistration("ButtonVector", typeof(ButtonVector));
+            composites.AddTypeRegistration("Axis", typeof(AxisComposite));
+            composites.AddTypeRegistration("Dpad", typeof(DpadComposite));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)

@@ -1,7 +1,5 @@
 using UnityEngine.Experimental.Input.Controls;
 
-////REVIEW: rename to ButtonDpad?
-
 ////TODO: add support for ramp up/down
 
 namespace UnityEngine.Experimental.Input.Composites
@@ -15,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Composites
     /// a D-Pad like configuration. Based on button presses, the composite will return a
     /// normalized direction vector.
     /// </remarks>
-    public class ButtonVector : IInputBindingComposite<Vector2>
+    public class DpadComposite : IInputBindingComposite<Vector2>
     {
         public ButtonControl up;
         public ButtonControl down;

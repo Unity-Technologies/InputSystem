@@ -71,6 +71,8 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public IInputInteraction[] interactions;
 
+        public object[] processors;
+
         /// <summary>
         /// Array of instantiated composite objects.
         /// </summary>
@@ -89,6 +91,8 @@ namespace UnityEngine.Experimental.Input
         public int totalControlCount;
 
         public int totalInteractionCount;
+
+        public int totalProcessorCount;
 
         public int totalCompositeCount;
 
@@ -143,6 +147,7 @@ namespace UnityEngine.Experimental.Input
             totalActionCount = resolver.totalActionCount;
             totalBindingCount = resolver.totalBindingCount;
             totalInteractionCount = resolver.totalInteractionCount;
+            totalProcessorCount = resolver.totalProcessorCount;
             totalCompositeCount = resolver.totalCompositeCount;
             totalControlCount = resolver.totalControlCount;
 
@@ -152,6 +157,7 @@ namespace UnityEngine.Experimental.Input
             bindingStates = resolver.bindingStates;
             interactionStates = resolver.interactionStates;
             interactions = resolver.interactions;
+            processors = resolver.processors;
             composites = resolver.composites;
             controls = resolver.controls;
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
@@ -713,12 +719,34 @@ namespace UnityEngine.Experimental.Input
             // Run callbacks (if any) directly on action.
             var listenerCount = listeners.length;
             for (var i = 0; i < listenerCount; ++i)
-                listeners[i](context);
+            {
+                try
+                {
+                    listeners[i](context);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("{0} thrown during execution of '{1}' callback on action '{2}'",
+                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger)));
+                    Debug.LogException(exception);
+                }
+            }
 
             // Run callbacks (if any) on action map.
             var listenerCountOnMap = callbacksOnMap.length;
             for (var i = 0; i < listenerCountOnMap; ++i)
-                callbacksOnMap[i].OnActionTriggered(ref context);
+            {
+                try
+                {
+                    callbacksOnMap[i].OnActionTriggered(ref context);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("{0} thrown during execution of callback for '{1}' phase of '{2}' action in map '{3}'",
+                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger).name, actionMap.name));
+                    Debug.LogException(exception);
+                }
+            }
 
             Profiler.EndSample();
         }
@@ -879,10 +907,15 @@ namespace UnityEngine.Experimental.Input
         {
             [FieldOffset(0)] private byte m_ControlCount;
             [FieldOffset(1)] private byte m_InteractionCount;
-            [FieldOffset(2)] private byte m_MapIndex;
-            [FieldOffset(3)] private byte m_Flags;
-            [FieldOffset(4)] private ushort m_ActionIndex;
-            [FieldOffset(6)] private ushort m_CompositeIndex;
+            [FieldOffset(2)] private byte m_ProcessorCount;
+            [FieldOffset(3)] private byte m_MapIndex;
+            [FieldOffset(4)] private byte m_Flags;
+            // One unused byte.
+            [FieldOffset(6)] private ushort m_ActionIndex;
+            [FieldOffset(8)] private ushort m_CompositeIndex;
+            [FieldOffset(10)] private ushort m_ProcessorStartIndex;
+            [FieldOffset(12)] private ushort m_InteractionStartIndex;
+            [FieldOffset(14)] private ushort m_ControlStartIndex;
 
             [Flags]
             public enum Flags
@@ -895,7 +928,17 @@ namespace UnityEngine.Experimental.Input
             /// <summary>
             /// Index into <see cref="controls"/> of first control associated with the binding.
             /// </summary>
-            [FieldOffset(8)] public int controlStartIndex;
+            public int controlStartIndex
+            {
+                get { return m_ControlStartIndex; }
+                set
+                {
+                    Debug.Assert(value != kInvalidIndex);
+                    if (value >= ushort.MaxValue)
+                        throw new NotSupportedException("Control count per binding cannot exceed byte.MaxValue=" + ushort.MaxValue);
+                    m_ControlStartIndex = (ushort)value;
+                }
+            }
 
             /// <summary>
             /// Number of controls associated with this binding.
@@ -903,7 +946,36 @@ namespace UnityEngine.Experimental.Input
             public int controlCount
             {
                 get { return m_ControlCount; }
-                set { m_ControlCount = (byte)value; }
+                set
+                {
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Control count per binding cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_ControlCount = (byte)value;
+                }
+            }
+
+            /// <summary>
+            /// Index into <see cref="InputActionMapState.interactionStates"/> of first interaction associated with the binding.
+            /// </summary>
+            public int interactionStartIndex
+            {
+                get
+                {
+                    if (m_InteractionStartIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_InteractionStartIndex;
+                }
+                set
+                {
+                    if (value == kInvalidIndex)
+                        m_InteractionStartIndex = ushort.MaxValue;
+                    else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Interaction count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_InteractionStartIndex = (ushort)value;
+                    }
+                }
             }
 
             /// <summary>
@@ -912,13 +984,45 @@ namespace UnityEngine.Experimental.Input
             public int interactionCount
             {
                 get { return m_InteractionCount; }
-                set { m_InteractionCount = (byte)value; }
+                set
+                {
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Interaction count per binding cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_InteractionCount = (byte)value;
+                }
             }
 
-            /// <summary>
-            /// Index into <see cref="InputActionMapState.interactionStates"/> of first interaction associated with the binding.
-            /// </summary>
-            [FieldOffset(12)] public int interactionStartIndex;
+            public int processorStartIndex
+            {
+                get
+                {
+                    if (m_ProcessorStartIndex == ushort.MaxValue)
+                        return kInvalidIndex;
+                    return m_ProcessorStartIndex;
+                }
+                set
+                {
+                    if (value == kInvalidIndex)
+                        m_ProcessorStartIndex = ushort.MaxValue;
+                    else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Processor count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
+                        m_ProcessorStartIndex = (ushort)value;
+                    }
+                }
+            }
+
+            public int processorCount
+            {
+                get { return m_ProcessorCount; }
+                set
+                {
+                    if (value >= byte.MaxValue)
+                        throw new NotSupportedException("Processor count per binding cannot exceed byte.MaxValue=" + byte.MaxValue);
+                    m_ProcessorCount = (byte)value;
+                }
+            }
 
             /// <summary>
             /// Index of the action being triggered by the binding (if any).
@@ -975,7 +1079,11 @@ namespace UnityEngine.Experimental.Input
                     if (value == kInvalidIndex)
                         m_CompositeIndex = ushort.MaxValue;
                     else
+                    {
+                        if (value >= ushort.MaxValue)
+                            throw new NotSupportedException("Composite count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
                         m_CompositeIndex = (ushort)value;
+                    }
                 }
             }
 
@@ -1085,6 +1193,8 @@ namespace UnityEngine.Experimental.Input
             public int bindingCount;
             public int interactionStartIndex;
             public int interactionCount;
+            public int processorStartIndex;
+            public int processorCount;
             public int compositeStartIndex;
             public int compositeCount;
         }

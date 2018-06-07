@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var actionObject = ScriptableObject.CreateInstance<InputActionReference>();
 
                     actionObject.m_Asset = asset;
-                    actionObject.m_SetName = set.name;
+                    actionObject.m_MapName = set.name;
                     actionObject.m_ActionName = action.name;
 
                     var objectName = action.name;

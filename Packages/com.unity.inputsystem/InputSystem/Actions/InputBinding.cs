@@ -155,12 +155,17 @@ namespace UnityEngine.Experimental.Input
 
         internal string effectivePath
         {
-            get
-            {
-                if (overridePath != null)
-                    return overridePath;
-                return path;
-            }
+            get { return overridePath ?? path; }
+        }
+
+        internal string effectiveInteractions
+        {
+            get { return overrideInteractions ?? interactions; }
+        }
+
+        internal string effectiveProcessors
+        {
+            get { return overrideProcessors ?? processors; }
         }
 
         public bool chainWithPrevious
