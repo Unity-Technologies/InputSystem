@@ -404,6 +404,7 @@ namespace UnityEngine.Experimental.Input
             return ReadValueFrom(currentStatePtr);
         }
 
+        ////REVIEW: rename this to something like ReadValueFromPreviousFrame()?
         public TValue ReadPreviousValue()
         {
             return ReadValueFrom(previousStatePtr);

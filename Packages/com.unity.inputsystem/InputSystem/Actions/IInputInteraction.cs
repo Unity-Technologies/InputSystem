@@ -1,8 +1,12 @@
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: rename to IInputBindingInteraction (and RegisterBindingInteraction)
+
 ////REVIEW: what about putting an instance of one of these on every resolved control instead of sharing it between all controls resolved from a binding?
 
 ////REVIEW: can we have multiple interactions work together on the same binding? E.g. a 'Press' causing a start and a 'Release' interaction causing a performed
+
+////REVIEW: have a default interaction so that there *always* is an interaction object when processing triggers?
 
 namespace UnityEngine.Experimental.Input
 {

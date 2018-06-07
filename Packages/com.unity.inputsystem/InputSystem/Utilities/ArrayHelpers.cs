@@ -257,7 +257,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (first == null)
                 return second;
             if (second == null)
-                return null;
+                return first;
 
             var merged = new List<TValue>();
             merged.AddRange(first);

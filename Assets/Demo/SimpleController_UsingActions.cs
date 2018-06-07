@@ -23,8 +23,8 @@ public class SimpleController_UsingActions : MonoBehaviour
 
     public void Awake()
     {
-        moveAction.performed += ctx => m_Move = ctx.GetValue<Vector2>();
-        lookAction.performed += ctx => m_Look = ctx.GetValue<Vector2>();
+        moveAction.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
+        lookAction.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
 
         fireAction.performed +=
             ctx =>

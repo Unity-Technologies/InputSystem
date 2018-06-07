@@ -352,6 +352,26 @@ namespace UnityEngine.Experimental.Input
             get { return !isDeviceLayout; }
         }
 
+        public ControlItem this[string path]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+
+                if (m_Controls != null)
+                {
+                    for (var i = 0; i < m_Controls.Length; ++i)
+                    {
+                        if (m_Controls[i].name == path)
+                            return m_Controls[i];
+                    }
+                }
+
+                throw new KeyNotFoundException(string.Format("Cannot find control '{0}' in layout '{1}'", path, name));
+            }
+        }
+
         /// <summary>
         /// Build a layout programmatically. Primarily for use by layout builders
         /// registered with the system.

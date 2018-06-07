@@ -105,7 +105,13 @@ namespace UnityEngine.Experimental.Input
             public BindingSyntax WithInteraction<TInteraction>()
                 where TInteraction : IInputInteraction
             {
-                throw new NotImplementedException();
+                var interactionName = InputControlProcessor.s_Processors.FindNameForType(typeof(TInteraction));
+                if (interactionName.IsEmpty())
+                    throw new ArgumentException(
+                        string.Format("Type '{0}' has not been registered as a processor", typeof(TInteraction)),
+                        "TInteraction");
+
+                return WithInteraction(interactionName);
             }
 
             public BindingSyntax WithProcessor(string processor)
@@ -115,7 +121,7 @@ namespace UnityEngine.Experimental.Input
                 if (processor.IndexOf(InputBinding.kSeparator) != -1)
                     throw new ArgumentException(
                         string.Format("Interaction string cannot contain separator character '{0}'",
-                            InputBinding.kSeparator), "interaction");
+                            InputBinding.kSeparator), "processor");
 
                 return WithProcessors(processor);
             }
@@ -139,7 +145,13 @@ namespace UnityEngine.Experimental.Input
 
             public BindingSyntax WithProcessor<TProcessor>()
             {
-                throw new NotImplementedException();
+                var processorName = InputControlProcessor.s_Processors.FindNameForType(typeof(TProcessor));
+                if (processorName.IsEmpty())
+                    throw new ArgumentException(
+                        string.Format("Type '{0}' has not been registered as a processor", typeof(TProcessor)),
+                        "TProcessor");
+
+                return WithProcessor(processorName);
             }
 
             public BindingSyntax WithChild(string binding, string interactions = null, string groups = null)

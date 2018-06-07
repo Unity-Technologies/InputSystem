@@ -4,6 +4,8 @@ using UnityEngine.Serialization;
 
 ////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
 
+////REVIEW: the entire 'lastXXX' API section is shit and needs a pass
+
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
@@ -96,14 +98,13 @@ namespace UnityEngine.Experimental.Input
             get { return m_Name; }
         }
 
-        ////REVIEW: rename to 'actionMap'?
         /// <summary>
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
         /// If the action is a loose action created in code, this will be <c>null</c>.
         /// </remarks>
-        public InputActionMap map
+        public InputActionMap actionMap
         {
             get { return isSingletonAction ? null : m_ActionMap; }
         }
@@ -364,7 +365,7 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This is not necessarily the same as the index of the action in its map.
         /// </remarks>
-        /// <seealso cref="map"/>
+        /// <seealso cref="actionMap"/>
         [NonSerialized] internal int m_ActionIndex = InputActionMapState.kInvalidIndex;
 
         /// <summary>
@@ -481,7 +482,8 @@ namespace UnityEngine.Experimental.Input
             }
 
             /// <summary>
-            /// The interaction that triggered the action or <c>null</c> if the binding triggered without an interaction.
+            /// The interaction that triggered the action or <c>null</c> if the binding that triggered does not
+            /// have any particular interaction set on it.
             /// </summary>
             public IInputInteraction interaction
             {
@@ -510,10 +512,17 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            ////REVIEW: rename to ReadValue?
-            public TValue GetValue<TValue>()
+            public TValue ReadValue<TValue>()
             {
                 ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
+                ////TODO: this needs to be shared with InputActionManager
+
+                var value = default(TValue);
+                if (m_State == null)
+                    return value;
+
+                // In the case of a composite, this will be null.
+                InputControl<TValue> controlOfType = null;
 
                 // If the binding that triggered the action is part of a composite, let
                 // the composite determine the value we return.
@@ -522,10 +531,32 @@ namespace UnityEngine.Experimental.Input
                 {
                     var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
                     var context = new InputBindingCompositeContext();
-                    return compositeOfType.ReadValue(ref context);
+                    value = compositeOfType.ReadValue(ref context);
+                }
+                else
+                {
+                    controlOfType = (InputControl<TValue>)control;
+                    value = controlOfType.ReadValue();
                 }
 
-                return ((InputControl<TValue>)control).ReadValue();
+                // Run value through processors, if any.
+                var bindingStates = m_State.bindingStates;
+                var processorCount = bindingStates[m_BindingIndex].processorCount;
+                if (processorCount > 0)
+                {
+                    var processorStartIndex = bindingStates[m_BindingIndex].processorStartIndex;
+                    var processors = m_State.processors;
+                    for (var i = 0; i < processorCount; ++i)
+                        value = ((IInputControlProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
+                }
+
+                return value;
+            }
+
+            // really read previous value, not value from last frame
+            public TValue ReadPreviousValue<TValue>()
+            {
+                throw new NotImplementedException();
             }
 
             public double time
