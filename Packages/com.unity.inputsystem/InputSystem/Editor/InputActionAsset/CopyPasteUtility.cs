@@ -18,6 +18,13 @@ namespace UnityEngine.Experimental.Input.Editor
         }
         public void HandleCopyEvent()
         {
+            if (!CanCopySelection())
+            {
+                EditorGUIUtility.systemCopyBuffer = null;
+                EditorApplication.Beep();
+                return;
+            }
+            
             var selectedRows = m_TreeView.GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
             
@@ -54,6 +61,13 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
         }
 
+        public bool CanCopySelection()
+        {
+            var selectedRows = m_TreeView.GetSelectedRows();
+            var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
+            return rowTypes.Count == 1;
+        }
+
         public void HandlePasteEvent()
         {
             var json = EditorGUIUtility.systemCopyBuffer;
@@ -86,13 +100,16 @@ namespace UnityEngine.Experimental.Input.Editor
                         try
                         {
                             var nextRow = elements[i + 1];
+                            if (!nextRow.StartsWith(typeof(BindingTreeItem).Name))
+                            {
+                                break;
+                            }
                             nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
                             var binding = JsonUtility.FromJson<InputBinding>(nextRow);
                             InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
                             m_Window.Apply();
                             i++;
                         }
-                        
                         catch (ArgumentException e)
                         {
                             Debug.LogException(e);

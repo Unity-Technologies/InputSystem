@@ -128,11 +128,43 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     m_PropertyView = new PropertiesView(p.elementProperty, Apply);
                 }
+                else
+                {
+                    m_PropertyView = null;
+                }
             }
             else
             {
                 m_PropertyView = null;
             }
+        }
+
+        void OnContextClick()
+        {
+            Repaint();
+            var canCopySelection = m_CopyPasteUtility.CanCopySelection();
+            var menu = new GenericMenu();
+            if (canCopySelection)
+            {
+                menu.AddItem(new GUIContent("Cut"), false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
+                menu.AddItem(new GUIContent("Copy"), false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Cut"), false);
+                menu.AddDisabledItem(new GUIContent("Copy"), false);
+            }
+            menu.AddItem(new GUIContent("Paste"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Paste"));
+            menu.AddItem(new GUIContent("Delete"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Delete"));
+            if (canCopySelection)
+            {
+                menu.AddItem(new GUIContent("Duplicate"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Duplicate"), false);
+            }
+            menu.ShowAsContext();
         }
 
         void InitiateTrees()
@@ -143,6 +175,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
 
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
+                m_TreeView.OnContextClick = OnContextClick;
                 
                 if (m_PropertyView == null && m_TreeView.GetSelectedProperty() != null)
                 {
@@ -331,12 +364,41 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void ShowAddMenu()
         {
+            var canAddBinding = false;
+            var row = m_TreeView.GetSelectedAction();
+            if (row != null)
+            {
+                canAddBinding = true;
+            }
+
+            var canAddAction = false;
+            var action = m_TreeView.GetSelectedActionMap();
+            if (action != null)
+            {
+                canAddAction = true;
+            }
+            
             var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Action"), false, OnAddAction);
+            if (canAddAction)
+            {
+                menu.AddItem(new GUIContent("Action"), false, OnAddAction);
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Action"), false);
+            }
             menu.AddItem(new GUIContent("Action map"), false, OnAddActionMap);
             menu.AddSeparator("");
-            menu.AddItem(new GUIContent("Binding"), false, OnAddBinding);
-            menu.AddItem(new GUIContent("Composite binding"), false, OnAddCompositeBinding);
+            if (canAddBinding)
+            {
+                menu.AddItem(new GUIContent("Binding"), false, OnAddBinding);
+                menu.AddItem(new GUIContent("Composite binding"), false, OnAddCompositeBinding);
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Binding"), false);
+                menu.AddDisabledItem(new GUIContent("Composite binding"), false);
+            }
             menu.ShowAsContext();
         }
 

@@ -14,6 +14,7 @@ namespace UnityEngine.Experimental.Input.Editor
         Action m_ApplyAction;
         
         public Action OnSelectionChanged;
+        public Action OnContextClick;
         
         public static InputActionListTreeView Create(Action applyAction, InputActionAsset asset, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
@@ -106,7 +107,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
         }
-        
+
+        protected override void ContextClickedItem(int id)
+        {
+            OnContextClick();
+        }
+
         protected override void SelectionChanged(IList<int> selectedIds)
         {
             if (!HasSelection())
