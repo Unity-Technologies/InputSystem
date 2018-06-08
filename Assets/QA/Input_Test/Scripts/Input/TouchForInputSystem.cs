@@ -1,10 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class TouchForInputSystem : MonoBehaviour {
-
+public class TouchForInputSystem : MonoBehaviour
+{
     [Tooltip("The Gameobject holds all the highlight objects for Input System")]
     public Transform m_HighlightPool;
 
@@ -18,14 +18,15 @@ public class TouchForInputSystem : MonoBehaviour {
     // the index number for the array is also the index for the child object in the pool
     private int[] touch_id_order = new int[10];
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         touch_action = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
         touch_action.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
         touch_action.Enable();
     }
-	
-	private void TouchInput(TouchControl control)
+
+    private void TouchInput(TouchControl control)
     {
         switch (control.phase.ReadValue())
         {
@@ -81,7 +82,6 @@ public class TouchForInputSystem : MonoBehaviour {
                 if (posText != null)
                     posText.GetComponent<TextMesh>().text = control.position.ReadValue().ToString("F0");
             }
-                
         }
     }
 

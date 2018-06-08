@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TouchForInputManager : MonoBehaviour {
-
+public class TouchForInputManager : MonoBehaviour
+{
     // This is the object contains all the highlight for touch inputs
     // There should be 10 highlight gameobjects in the pool for 10 touches at the same time
     // They are assigned to a touch input accord to the fingerId
@@ -18,16 +18,18 @@ public class TouchForInputManager : MonoBehaviour {
     // The old input manager does not support touch input for Standalone build, even when the device does.
 #if !UNITY_STANDALONE
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         if (!Input.touchSupported)
             throw new Exception("Current device does not support touch input for old Input Manager.");
 
         if (!Input.touchPressureSupported)
             ShowMessage("Touch Pressue is not supported.");
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
         if (Input.touchCount > 0)
         {
             foreach (Touch touch in Input.touches)
@@ -50,7 +52,7 @@ public class TouchForInputManager : MonoBehaviour {
                         break;
                 }
             }
-        }          
+        }
     }
 
     private void UpdateTouchInput(Touch touch)

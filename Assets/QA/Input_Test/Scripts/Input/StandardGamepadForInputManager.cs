@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -101,7 +101,6 @@ public class StandardGamepadForInputManager : MonoBehaviour
             else
                 ps.Play();
         }
-
     }
 
     protected void StopHighlightButton(string buttonName)

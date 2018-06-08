@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class KeyboardMouseForInputSystem : MonoBehaviour {
-
+public class KeyboardMouseForInputSystem : MonoBehaviour
+{
     [Tooltip("Highlight Prefab")]
     public SpriteRenderer m_keyHighlight;
 
@@ -22,7 +22,8 @@ public class KeyboardMouseForInputSystem : MonoBehaviour {
     private const int MOUSE_MOVE_DEADZONE = 30;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         keyboard_press_action = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>");
         keyboard_press_action.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         keyboard_press_action.Enable();
@@ -34,7 +35,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour {
         Keyboard.current.onTextInput += new Action<char>(RecordKey);
     }
 
-    void Update ()
+    void Update()
     {
         // Show mouse actions
         Mouse mouse = Mouse.current;
@@ -91,7 +92,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour {
             if (scrollY > 0)
             {
                 StartMouseHighlight("Wheel Down");
-                StopMouseHighlight("Wheel Up");                
+                StopMouseHighlight("Wheel Up");
             }
             else if (scrollY < 0)
             {
@@ -106,8 +107,8 @@ public class KeyboardMouseForInputSystem : MonoBehaviour {
 
             // Update mouse position
             m_mouseInfoText.text = mouse.position.ReadValue().ToString("F0") + "\n"
-                                 + mouse.scroll.ReadValue().ToString("F0") + "\n"
-                                 + mouse.delta.ReadValue().ToString("F1");
+                + mouse.scroll.ReadValue().ToString("F0") + "\n"
+                + mouse.delta.ReadValue().ToString("F1");
         }
     }
 

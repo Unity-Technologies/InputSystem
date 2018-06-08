@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
@@ -8,8 +8,8 @@ using UnityEngine.Experimental.Input.Controls;
 // Parent Class for All Gamepad/Controller Input from New Input System.
 //---------------------------------------------------------------------------
 
-public class StandardGamepadForInputSystem : MonoBehaviour {
-
+public class StandardGamepadForInputSystem : MonoBehaviour
+{
     [Tooltip("The GameObject that is the parent for all the buttons.")]
     public Transform m_buttonContainer;
 
@@ -67,8 +67,8 @@ public class StandardGamepadForInputSystem : MonoBehaviour {
             StopHighlight(button);
     }
 
-    // Find a transform for a input. 
-    // isDpad: 
+    // Find a transform for a input.
+    // isDpad:
     // isStick: Used when stick is moved or pressed. Find the child transform named "stick"
     protected virtual Transform GetInputTransform(string inputName, bool isStick = false, string dpadName = null)
     {

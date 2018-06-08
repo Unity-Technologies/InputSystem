@@ -1,9 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
-public class ArrowHighlight: MonoBehaviour {
-
+public class ArrowHighlight : MonoBehaviour
+{
     private byte moveSpeed = 16;
     private byte fadeSpeed = 10;
     private float move_offset = 4f;
@@ -12,18 +12,19 @@ public class ArrowHighlight: MonoBehaviour {
     private Vector3 origin_pos;
 
     private bool isMouseMove = false;
-    private bool isPlaying = false; 
+    private bool isPlaying = false;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         sp_render = GetComponent<SpriteRenderer>();
         origin_pos = transform.localPosition;
-        SetAlpha(0f);        
-	}
+        SetAlpha(0f);
+    }
 
     // The loop for effect
     private IEnumerator HighlightMovement()
-    {              
+    {
         isPlaying = true;
 
         while (isMouseMove)
@@ -31,7 +32,7 @@ public class ArrowHighlight: MonoBehaviour {
             // Reset
             float offset = 0f;
             float alpha = 0f;
-            transform.localPosition = origin_pos;           
+            transform.localPosition = origin_pos;
 
             // Fade in
             while (alpha < 0.8f)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 // ------------------------- Setup Requirement ------------------------------------
@@ -13,7 +13,8 @@ public class XboxForInputManager : StandardGamepadForInputManager
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         // Button map is different for each platform
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         button_map.Add("Button0", "A");
@@ -30,7 +31,7 @@ public class XboxForInputManager : StandardGamepadForInputManager
         analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick"), "Axis 4", "Axis 5", isYReversed: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("LeftTrigger"), "Axis 3", -1f, 0f));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("RightTrigger"), "Axis 3", 0f, 1f));
-        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Left"), "Axis 6", -1f, 0f, isDpad:true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Left"), "Axis 6", -1f, 0f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Right"), "Axis 6", 0f, 1f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Up"), "Axis 7", 0f, 1f, isDpad: true));
         analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Down"), "Axis 7", -1f, 0f, isDpad: true));
@@ -59,14 +60,14 @@ public class XboxForInputManager : StandardGamepadForInputManager
     }
 
     // Update is called once per frame
-    void Update () {
-        
+    void Update()
+    {
         UpdateAllButtons();
         UpdateAllAnalogSticks();
         UpdateAllAnalogButtons();
 
         // XboxTrigger is only used in MacOS
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX        
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
         foreach (XboxTrigger trigger in xbox_triggers)
         {
             float inputValue = Input.GetAxis(trigger.Axis_Name);

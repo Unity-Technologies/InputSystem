@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DebugInfo : MonoBehaviour {
-
+public class DebugInfo : MonoBehaviour
+{
     public static bool IsOn = false;
     private bool m_isPlaying = false;       // if the menu is in the process of sliding in/out
 
@@ -12,6 +12,11 @@ public class DebugInfo : MonoBehaviour {
     public RectTransform m_infoContainer;
 
     private int m_moveTime = 500;     // millinsecond
+
+    void Start()
+    {
+        ToggleDebugInfo();
+    }
 
     public void ToggleDebugInfo()
     {
@@ -32,7 +37,7 @@ public class DebugInfo : MonoBehaviour {
         float targetX = currentX + posDifference;
 
         Quaternion targetAngle = m_arrowUI.rotation * Quaternion.Euler(0f, 0f, 180f);
-      
+
 
         while (Mathf.Abs(currentX - targetX) > 10f)
         {
@@ -61,5 +66,5 @@ public class DebugInfo : MonoBehaviour {
         Vector3 pos = transform.position;
         pos.x = posX;
         transform.position = pos;
-    }    
+    }
 }

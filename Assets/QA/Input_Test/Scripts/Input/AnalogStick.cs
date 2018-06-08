@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 [Serializable]
@@ -25,14 +25,14 @@ public class AnalogStick
     public string Name { get { return name; } }
     public string X_Axis_Name { get { return x_axis_name; } }
     public string Y_Axis_Name { get { return y_axis_name; } }
-    public float Max_Move_Distance { get { return max_move_distance; } }    
+    public float Max_Move_Distance { get { return max_move_distance; } }
     public Transform Stick
     {
         get { return stick; }
         set
         {
             name = value.name;
-            stick = value.Find("Stick");            
+            stick = value.Find("Stick");
             original_position = stick.position;
         }
     }

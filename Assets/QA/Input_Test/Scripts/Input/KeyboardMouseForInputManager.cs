@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class KeyboardMouseForInputManager : MonoBehaviour {
-
+public class KeyboardMouseForInputManager : MonoBehaviour
+{
     [Tooltip("Highlight Prefab")]
     public ParticleSystem m_keyHighlight;
 
@@ -14,15 +14,16 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
     public Text m_keyboardInfoText;
     public Text m_mouseInfoText;
 
-    void Update () {
+    void Update()
+    {
         // Keyboard input or mouse button is pressed
         foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))
-        {            
+        {
             if (Input.GetKeyDown(kcode))
                 StartKeyHighlight(kcode.ToString());
 
             if (Input.GetKeyUp(kcode))
-                StopKeyHighlight(kcode.ToString());            
+                StopKeyHighlight(kcode.ToString());
         }
 
         // Mouse move
@@ -30,7 +31,7 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
         float moveY = Input.GetAxis("Mouse Y");
         float wheel = Input.mouseScrollDelta.y;
 
-        if ( Mathf.Abs(moveX) > 0.5)
+        if (Mathf.Abs(moveX) > 0.5)
         {
             if (moveX > 0)
             {
@@ -48,7 +49,7 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
             StopMouseHighlight("Move Left");
             StopMouseHighlight("Move Right");
         }
-        
+
         if (Mathf.Abs(moveY) > 0.5)
         {
             if (moveY > 0)
@@ -68,7 +69,7 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
             StopMouseHighlight("Move Down");
         }
 
-        // Mouse wheel        
+        // Mouse wheel
         if (wheel > 0)
         {
             StartMouseHighlight("Wheel Up");
@@ -89,8 +90,8 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
         if (!String.IsNullOrEmpty(Input.inputString))
             m_keyboardInfoText.text = Input.inputString;
         m_mouseInfoText.text = Input.mousePosition.ToString("F0") + "\n"
-                             + Input.mouseScrollDelta.ToString("F0") + "\n"
-                             + "(" + moveX + " ," + moveY + ")";
+            + Input.mouseScrollDelta.ToString("F0") + "\n"
+            + "(" + moveX + " ," + moveY + ")";
     }
 
     // Generate the blue ring Particle System over the key or mouse button
@@ -107,7 +108,7 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
                 Instantiate(m_keyHighlight, key.position, key.rotation, key);
             else
                 ps.Play();
-        }            
+        }
     }
 
     // Stop the Particle System for keys and mouse buttons
@@ -148,5 +149,5 @@ public class KeyboardMouseForInputManager : MonoBehaviour {
     private void ShowMessage(string msg)
     {
         m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
-    }  
+    }
 }

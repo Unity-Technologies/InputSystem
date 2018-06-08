@@ -1,13 +1,13 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
-public class InputUIPicker: MonoBehaviour
+public class InputUIPicker : MonoBehaviour
 {
     // Input Gameobjects
     public GameObject m_windowsKeyboardMouse;
     public GameObject m_macKeyboardMouse;
     public GameObject m_controllerDiagram;
-    public GameObject m_xboxController;    
+    public GameObject m_xboxController;
     public GameObject m_pen;
     public GameObject m_touch;
 
@@ -21,7 +21,7 @@ public class InputUIPicker: MonoBehaviour
 
     public void SwitchToInputMethod(Dropdown picker)
     {
-        switch(picker.value)
+        switch (picker.value)
         {
             case 1:
                 SwitchToDiagram(m_xboxController);
@@ -44,7 +44,6 @@ public class InputUIPicker: MonoBehaviour
 
     private void SwitchToKeyMouse()
     {
-
 #if (UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX)
         SwitchToDiagram(m_macKeyboardMouse);
 #elif (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA)
@@ -52,7 +51,6 @@ public class InputUIPicker: MonoBehaviour
 #else
         SwitchToDiagram(m_windowsKeyboardMouse);
 #endif
-
     }
 
     private void SwitchToDiagram(GameObject newDiagram)
