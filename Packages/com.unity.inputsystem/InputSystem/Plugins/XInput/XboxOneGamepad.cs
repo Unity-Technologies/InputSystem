@@ -4,6 +4,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
+using System.Collections.Generic;
 
 ////TODO: player ID
 
@@ -141,6 +142,47 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
             };
         }
     }
+
+    /// <summary>
+    /// Retrieve the slot index, default color and user ID of the controller.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct QueryXboxControllerInfo : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC('I', 'N', 'F', 'O'); } }
+
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
+        public ulong gamepadId;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
+        public int userId;
+
+        public FourCC GetTypeStatic()
+        {
+            return Type;
+        }
+
+        public QueryXboxControllerInfo WithGamepadId(ulong id)
+        {
+            gamepadId = id;
+            return this;
+        }
+
+        public static QueryXboxControllerInfo Create()
+        {
+            return new QueryXboxControllerInfo()
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                gamepadId = 0,
+                userId = -1
+            };
+        }
+    }
 }
 
 namespace UnityEngine.Experimental.Input.Plugins.XInput
@@ -148,6 +190,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     [InputControlLayout(stateType = typeof(XboxOneGamepadState))]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
+        private ulong m_GamepadId = 0;
+        private int m_XboxOneUserId = -1;
+
+        private static List<XboxOneGamepad> s_Devices = new List<XboxOneGamepad>();
+
         public ButtonControl paddle1 { get; private set; }
         public ButtonControl paddle2 { get; private set; }
         public ButtonControl paddle3 { get; private set; }
@@ -161,6 +208,76 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             paddle2 = builder.GetControl<ButtonControl>(this, "paddle2");
             paddle3 = builder.GetControl<ButtonControl>(this, "paddle3");
             paddle4 = builder.GetControl<ButtonControl>(this, "paddle4");
+        }
+
+        public ulong gamepadId
+        {
+            get
+            {
+                UpdatePadSettings();
+                return m_GamepadId;
+            }
+        }
+
+        public int xboxOneUserId
+        {
+            get
+            {
+                UpdatePadSettings();
+                return m_XboxOneUserId;
+            }
+        }
+
+        public new static List<XboxOneGamepad> all
+        {
+            // Needs to return a copy just in case anything else might be enumerating the returned list while gamepads are being added and removed.
+            // This will generate garbage and should be used sparingly.
+            get { return new List<XboxOneGamepad>(s_Devices); }
+        }
+
+        public static XboxOneGamepad GetByGamepadId(ulong gamepadId)
+        {
+            for (int i = 0; i < s_Devices.Count; i++)
+            {
+                if (s_Devices[i] != null && s_Devices[i].gamepadId == gamepadId)
+                {
+                    return s_Devices[i];
+                }
+            }
+
+            return null;
+        }
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            s_Devices.Add(this);
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+
+            for (int i = 0; i < s_Devices.Count; i++)
+            {
+                if (s_Devices[i] != null && s_Devices[i].gamepadId == gamepadId)
+                {
+                    s_Devices.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+
+        private void UpdatePadSettings()
+        {
+            var command = QueryXboxControllerInfo.Create();
+
+            if (ExecuteCommand(ref command) > 0)
+            {
+                m_GamepadId = command.gamepadId;
+                m_XboxOneUserId = command.userId;
+            }
         }
 
         public new static XboxOneGamepad current { get; set; }
