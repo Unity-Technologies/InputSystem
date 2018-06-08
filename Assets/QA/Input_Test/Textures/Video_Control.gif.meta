@@ -1,9 +1,9 @@
 fileFormatVersion: 2
-guid: 64dc8e90fbf9a5d44acf66d961953108
+guid: 635b22f8631e6f94685e66a9da8da65b
 TextureImporter:
   fileIDToRecycleName:
-    21300000: Hightlight_Arrow_Upper
-    21300002: Hightlight_Arrow_Lower
+    21300000: Play
+    21300002: Pause
   externalObjects: {}
   serializedVersion: 6
   mipmaps:
@@ -42,7 +42,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -65,7 +65,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -76,7 +76,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -87,7 +87,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -97,41 +97,41 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hightlight_Arrow_Upper
+      name: Play
       rect:
         serializedVersion: 2
-        x: 0
-        y: 163
-        width: 416
-        height: 169
+        x: 1
+        y: 0
+        width: 169
+        height: 195
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 155228f972d236a468182339ef3c6a43
+      spriteID: 64b48186de3a39f48a63d59e8a2cce98
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Hightlight_Arrow_Lower
+      name: Pause
       rect:
         serializedVersion: 2
-        x: 0
+        x: 190
         y: 0
-        width: 416
-        height: 163
+        width: 144
+        height: 196
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 726fc54cb294078479b8e7cd5f40e991
+      spriteID: 11ec5a4985e23b043807ad19c96aea46
       vertices: []
       indices: 
       edges: []
@@ -139,7 +139,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 04a213e40c2258f47952686929b04521
+    spriteID: 53656caee28f24c488f00641cf31433a
     vertices: []
     indices: 
     edges: []

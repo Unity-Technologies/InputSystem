@@ -1,9 +1,10 @@
 fileFormatVersion: 2
-guid: 64dc8e90fbf9a5d44acf66d961953108
+guid: 0f50a4711a560924bb75c8f211de868b
 TextureImporter:
   fileIDToRecycleName:
-    21300000: Hightlight_Arrow_Upper
-    21300002: Hightlight_Arrow_Lower
+    21300000: Pen
+    21300002: Pen_Button_1
+    21300004: Pen_Button_2
   externalObjects: {}
   serializedVersion: 6
   mipmaps:
@@ -42,7 +43,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -65,7 +66,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -76,7 +77,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -87,7 +88,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -97,13 +98,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hightlight_Arrow_Upper
+      name: Pen
       rect:
         serializedVersion: 2
         x: 0
-        y: 163
-        width: 416
-        height: 169
+        y: 124
+        width: 107
+        height: 1114
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -111,19 +112,19 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 155228f972d236a468182339ef3c6a43
+      spriteID: 13bdd14adf18a904d891270af96eb156
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Hightlight_Arrow_Lower
+      name: Pen_Button_1
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 416
-        height: 163
+        x: 7
+        y: 45
+        width: 42
+        height: 71
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -131,7 +132,27 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 726fc54cb294078479b8e7cd5f40e991
+      spriteID: 40074d0d9e901b348beaf8c8211222a4
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Pen_Button_2
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 2
+        width: 43
+        height: 122
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 156885c1f58eac747973e8cadb80f27a
       vertices: []
       indices: 
       edges: []
@@ -139,7 +160,7 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: 04a213e40c2258f47952686929b04521
+    spriteID: eedc1e77625bbbf429aa5bffb1d90010
     vertices: []
     indices: 
     edges: []

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 // ------------------------- Setup Requirement ------------------------------------
@@ -8,13 +8,12 @@ using UnityEngine;
 // Alternatively, ingore the requirement and change the code
 // --------------------------------------------------------------------------------
 
-public class XboxForInputManager : ControllerDiagramForInputManager
+public class XboxForInputManager : StandardGamepadForInputManager
 {
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
 
     // Use this for initialization
-    void Start()
-    {
+    void Start () {
         // Button map is different for each platform
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         button_map.Add("Button0", "A");
@@ -27,14 +26,14 @@ public class XboxForInputManager : ControllerDiagramForInputManager
         button_map.Add("Button7", "Start");
         button_map.Add("Button8", "LeftStick/Stick");
         button_map.Add("Button9", "RightStick/Stick");
-        analog_sticks.Add(new AnalogStick(buttons_container.Find("LeftStick"), "Axis 1", "Axis 2", isYReversed: true));
-        analog_sticks.Add(new AnalogStick(buttons_container.Find("RightStick"), "Axis 4", "Axis 5", isYReversed: true));
-        analog_buttons.Add(new AnalogButton(buttons_container.Find("LeftTrigger"), "Axis 3", -1f, 0f));
-        analog_buttons.Add(new AnalogButton(buttons_container.Find("RightTrigger"), "Axis 3", 0f, 1f));
-        analog_buttons.Add(new AnalogButton(buttons_container.Find("Dpad/Left"), "Axis 6", -1f, 0f, isDpad: true));
-        analog_buttons.Add(new AnalogButton(buttons_container.Find("Dpad/Right"), "Axis 6", 0f, 1f, isDpad: true));
-        analog_buttons.Add(new AnalogButton(buttons_container.Find("Dpad/Up"), "Axis 7", 0f, 1f, isDpad: true));
-        analog_buttons.Add(new AnalogButton(buttons_container.Find("Dpad/Down"), "Axis 7", -1f, 0f, isDpad: true));
+        analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("LeftStick"), "Axis 1", "Axis 2", isYReversed: true));
+        analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick"), "Axis 4", "Axis 5", isYReversed: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("LeftTrigger"), "Axis 3", -1f, 0f));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("RightTrigger"), "Axis 3", 0f, 1f));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Left"), "Axis 6", -1f, 0f, isDpad:true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Right"), "Axis 6", 0f, 1f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Up"), "Axis 7", 0f, 1f, isDpad: true));
+        analog_buttons.Add(new AnalogButton(m_buttonContainer.Find("Dpad/Down"), "Axis 7", -1f, 0f, isDpad: true));
 
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
         button_map.Add("Button16", "A");
@@ -52,22 +51,22 @@ public class XboxForInputManager : ControllerDiagramForInputManager
         button_map.Add("Button7", "Dpad/Left");
         button_map.Add("Button8", "Dpad/Right");
         button_map.Add("Button15", "Xbox");
-        analog_sticks.Add(new AnalogStick(buttons_container.Find("LeftStick"), "Axis 1", "Axis 2", isYReversed: true));
-        analog_sticks.Add(new AnalogStick(buttons_container.Find("RightStick"), "Axis 3", "Axis 4", isYReversed: true));
-        xbox_triggers.Add(new XboxTrigger(buttons_container.Find("LeftTrigger"), "Axis 5"));
-        xbox_triggers.Add(new XboxTrigger(buttons_container.Find("RightTrigger"), "Axis 6"));
+        analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("LeftStick"), "Axis 1", "Axis 2", isYReversed: true));
+        analog_sticks.Add(new AnalogStick(m_buttonContainer.Find("RightStick"), "Axis 3", "Axis 4", isYReversed: true));
+        xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("LeftTrigger"), "Axis 5"));
+        xbox_triggers.Add(new XboxTrigger(m_buttonContainer.Find("RightTrigger"), "Axis 6"));
 #endif
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update () {
+        
         UpdateAllButtons();
         UpdateAllAnalogSticks();
         UpdateAllAnalogButtons();
 
         // XboxTrigger is only used in MacOS
-#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX        
         foreach (XboxTrigger trigger in xbox_triggers)
         {
             float inputValue = Input.GetAxis(trigger.Axis_Name);

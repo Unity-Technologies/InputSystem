@@ -1,24 +1,23 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(TextMesh))]
-public class TextHighlight : MonoBehaviour
-{
+public class TextHighlight : MonoBehaviour {
+
     private TextMesh text_mesh;
 
     private bool is_playing = false;        // if a highligh is current in play
-    private bool is_mouse_moving = false;   // if the highligh should keep playing
+    private bool is_needed = false;         // if the highligh should keep playing
 
     private byte fade_speed = 10;
 
-    // Use this for initialization
-    void Start()
-    {
+	// Use this for initialization
+	void Start () {
         text_mesh = GetComponent<TextMesh>();
         SetAlpha(0f);
-    }
-
-    // The display sequence
+	}
+	
+	// The display sequence
     private IEnumerator Highlight()
     {
         is_playing = true;
@@ -31,7 +30,7 @@ public class TextHighlight : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
 
-        while (is_mouse_moving)
+        while (is_needed)           
             yield return new WaitForEndOfFrame();
 
         while (alpha > 0f)
@@ -47,7 +46,7 @@ public class TextHighlight : MonoBehaviour
     public void Play(string txt)
     {
         text_mesh.text = txt;
-        is_mouse_moving = true;
+        is_needed = true;
 
         if (is_playing)
             StopCoroutine("Highlight");
@@ -56,7 +55,7 @@ public class TextHighlight : MonoBehaviour
 
     public void Stop()
     {
-        is_mouse_moving = false;
+        is_needed = false;
     }
 
     // Set alpha for the text

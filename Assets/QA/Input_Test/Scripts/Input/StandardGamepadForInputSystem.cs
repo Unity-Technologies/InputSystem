@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
@@ -8,11 +8,13 @@ using UnityEngine.Experimental.Input.Controls;
 // Parent Class for All Gamepad/Controller Input from New Input System.
 //---------------------------------------------------------------------------
 
-public class StandardGamepadForInputSystem : MonoBehaviour
-{
+public class StandardGamepadForInputSystem : MonoBehaviour {
+
     [Tooltip("The GameObject that is the parent for all the buttons.")]
-    public Transform buttons_container;
-    public InputField unmapped_button_list;
+    public Transform m_buttonContainer;
+
+    [Tooltip("Where all the messages go")]
+    public InputField m_MessageWindow;
 
     protected InputAction button_press_action;
     protected InputAction dpad_press_action;
@@ -65,19 +67,19 @@ public class StandardGamepadForInputSystem : MonoBehaviour
             StopHighlight(button);
     }
 
-    // Find a transform for a input.
-    // isDpad:
+    // Find a transform for a input. 
+    // isDpad: 
     // isStick: Used when stick is moved or pressed. Find the child transform named "stick"
     protected virtual Transform GetInputTransform(string inputName, bool isStick = false, string dpadName = null)
     {
         Transform input;
-        if (isStick)               input = buttons_container.Find(inputName + "/Stick");
-        else if (dpadName != null) input = buttons_container.Find(dpadName + "/" + inputName);
-        else                       input = buttons_container.Find(inputName);
+        if (isStick)               input = m_buttonContainer.Find(inputName + "/Stick");
+        else if (dpadName != null) input = m_buttonContainer.Find(dpadName + "/" + inputName);
+        else                       input = m_buttonContainer.Find(inputName);
 
         // The transform does not exist for the input button
         if (input == null)
-            AddUnmappedButton(inputName);
+            ShowMessage(inputName);
 
         return input;
     }
@@ -96,11 +98,6 @@ public class StandardGamepadForInputSystem : MonoBehaviour
             sr.enabled = false;
     }
 
-    protected void AddUnmappedButton(string buttonName)
-    {
-        unmapped_button_list.text += "<color=red>" + buttonName + "</color>\n";
-    }
-
     protected string FirstLetterToUpper(string str)
     {
         if (String.IsNullOrEmpty(str))
@@ -109,5 +106,10 @@ public class StandardGamepadForInputSystem : MonoBehaviour
             return str.ToUpper();
         else
             return char.ToUpper(str[0]) + str.Substring(1);
+    }
+
+    protected void ShowMessage(string msg)
+    {
+        m_MessageWindow.text += "<color=red>" + msg + "</color>\n";
     }
 }

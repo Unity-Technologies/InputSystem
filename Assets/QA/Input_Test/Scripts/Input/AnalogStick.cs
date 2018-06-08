@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 [Serializable]
@@ -9,7 +9,7 @@ public class AnalogStick
     // Each Analog Stck has 2 different axis associated with it
     // One is control by the stick's movement in X direction; the other is controled by Y.
     // For Input System:
-    // This is only needed for position adjustment
+    // This is only needed for position update
     //-------------------------------------------------------------------------------------------
 
     private Transform stick;            // The moving part of the analog stick. It is the child object named "Stick";
@@ -25,14 +25,14 @@ public class AnalogStick
     public string Name { get { return name; } }
     public string X_Axis_Name { get { return x_axis_name; } }
     public string Y_Axis_Name { get { return y_axis_name; } }
-    public float Max_Move_Distance { get { return max_move_distance; } }
+    public float Max_Move_Distance { get { return max_move_distance; } }    
     public Transform Stick
     {
         get { return stick; }
         set
         {
             name = value.name;
-            stick = value.Find("Stick");
+            stick = value.Find("Stick");            
             original_position = stick.position;
         }
     }
