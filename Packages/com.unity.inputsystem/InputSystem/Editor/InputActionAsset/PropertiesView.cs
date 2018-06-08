@@ -15,16 +15,20 @@ namespace UnityEngine.Experimental.Input.Editor
         bool m_ProcessorsFoldout = true;
         bool m_ModifierSupport;
         ReorderableList m_InteractionsListView;
-        ReorderableList m_ProcessorsList;
+        ReorderableList m_ProcessorsListView;
         SerializedProperty m_Bindings;
         GUIContent[] m_InteractionChoices;
+        GUIContent[] m_ProcessorsChoices;
+
 
         SerializedProperty m_ModifiersProperty;
+        SerializedProperty m_ProcessorsProperty;
         Action m_ReloadTree;
 
         public PropertiesView(SerializedProperty bindingProperty, Action reloadTree)
         {
             m_InteractionChoices = InputSystem.ListInteractions().OrderBy(a=>a).Select(x => new GUIContent(x)).ToArray();
+            m_ProcessorsChoices = InputSystem.s_Manager.processors.names.OrderBy(a=>a).Select(x => new GUIContent(x)).ToArray();
             
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
@@ -32,7 +36,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsListView = new ReorderableList(new List<string>(), typeof(string));
 
             m_ModifiersProperty = bindingProperty.FindPropertyRelative("interactions");
-            foreach (var s in m_ModifiersProperty.stringValue.Split(','))
+            foreach (var s in m_ModifiersProperty.stringValue.Split(new[]{','}, StringSplitOptions.RemoveEmptyEntries))
             {
                 if(string.IsNullOrEmpty(s))
                     continue;
@@ -58,7 +62,31 @@ namespace UnityEngine.Experimental.Input.Editor
                     ApplyModifiers();
                 };
             m_InteractionsListView.onReorderCallback = list => { ApplyModifiers(); };
-            m_ProcessorsList = new ReorderableList(new List<string>{}, typeof(string));
+            
+            m_ProcessorsListView = new ReorderableList(new List<string>{}, typeof(string));
+            m_ProcessorsListView.drawHeaderCallback =
+                (rect) => EditorGUI.LabelField(rect, "Processors");
+            m_ProcessorsProperty = bindingProperty.FindPropertyRelative("processors");
+            foreach (var s in m_ProcessorsProperty.stringValue.Split(new []{InputBinding.kSeparatorString}, StringSplitOptions.RemoveEmptyEntries))
+            {
+                m_ProcessorsListView.list.Add(s);
+            }
+            m_ProcessorsListView.onAddDropdownCallback =
+                (rect, list) =>
+                {
+                    var menu = new GenericMenu();
+                    for (var i = 0; i < m_ProcessorsChoices.Length; ++i)
+                        menu.AddItem(m_ProcessorsChoices[i], false, AddProcessor, m_ProcessorsChoices[i].text);
+                    menu.ShowAsContext();
+                };
+            
+            m_ProcessorsListView.onRemoveCallback =
+                (list) =>
+                {
+                    list.list.RemoveAt(list.index);
+                    ApplyModifiers();
+                };
+            m_ProcessorsListView.onReorderCallback = list => { ApplyModifiers(); };
         }
 
         void AddModifier(object modifierNameString)
@@ -72,11 +100,25 @@ namespace UnityEngine.Experimental.Input.Editor
             ApplyModifiers();
         }
 
+        void AddProcessor(object processorNameString)
+        {
+            if (m_ProcessorsListView.list.Count == 1 && m_ProcessorsListView.list[0] == "")
+            {
+                m_ProcessorsListView.list.Clear();
+            }
+                
+            m_ProcessorsListView.list.Add((string)processorNameString);
+            ApplyModifiers();
+        }
+
         void ApplyModifiers()
         {
             var modifiers = string.Join(",", m_InteractionsListView.list.Cast<string>().Where(s=>!string.IsNullOrEmpty(s)).Select(x => x).ToArray());
             m_ModifiersProperty.stringValue = modifiers;
             m_ModifiersProperty.serializedObject.ApplyModifiedProperties();
+            var processors = string.Join(InputBinding.kSeparatorString, m_ProcessorsListView.list.Cast<string>().Where(s=>!string.IsNullOrEmpty(s)).Select(x => x).ToArray());
+            m_ProcessorsProperty.stringValue = processors;
+            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_ReloadTree();
         }
 
@@ -116,18 +158,18 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUI.indentLevel--;
             }
           
-            EditorGUI.BeginDisabledGroup(true);
             m_ProcessorsFoldout = EditorGUILayout.Foldout(m_ProcessorsFoldout, "Processors");
 
             if (m_ProcessorsFoldout)
             {
                 EditorGUI.indentLevel++;
-                var listRect = GUILayoutUtility.GetRect(200, m_ProcessorsList.GetHeight());
+                var listRect = GUILayoutUtility.GetRect(200, m_ProcessorsListView.GetHeight());
                 listRect = EditorGUI.IndentedRect(listRect);
-                m_ProcessorsList.DoList(listRect);
+                m_ProcessorsListView.DoList(listRect);
                 EditorGUI.indentLevel--;
             }
             
+            EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.LabelField("Axis Response Curve", EditorStyles.boldLabel);
             
             EditorGUILayout.LabelField("Response Curve");
