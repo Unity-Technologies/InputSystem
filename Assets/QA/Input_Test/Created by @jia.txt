@@ -1,16 +1,20 @@
-What is this?
-This is a additional test to the New Input System.
-It includes keyboard, mouse, xbox controller and pen. 
-It also comes with a generic diagram for other controllers.
+Q: What is this?
+A: This is a additional test to the New Input System.
+   It includes keyboard, mouse, xbox controller, pen and newly added touch. 
+   It also comes with a generic diagram for other gamepads.
 
-Who made this?
-This is made by @jia. 
-Please email me any comment/concern or poke me in Slack directly.
+Q: Who made this?
+   This is made by @jia. 
+   Please email me any comment/concern or poke me in Slack directly.
 
-How to use this?
-Go to folder: Input_Test -> Scenes and pick the one you need.
+Q: How to use this?
+   Go to folder: Input_Test -> Scenes and open the scene in there.
+   Since the new Input System does not support the UI element yet, I suggest use this with the old Input Manager.
+   The setting can be changed at: Player Settings -> Other Settings -> Active Input Handling
 
-Why are there so many scripts for Old Input Manager?
-Because the ultimate goal is to test both old and new input together at the same time. 
+Q: Why are there so many scripts for Old Input Manager?
+   Because the goal is to test both old and new input together at the same time. 
 
-
+Q: There are so much going on at the same time! I don't know what I'm looking at...
+A: Generally speaking, anything blue is for the Old Input Manager, and the other red things are for the New Input System.
+   For example: if a message shows up in blue font, it is related to the Old Input Manager.
