@@ -10,6 +10,7 @@
 
 // should on-screen controls be proper UI elements? have them as prefabs?
 
+using System;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.EventSystems;
@@ -29,32 +30,15 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// This essentially allows having trigger-like buttons as on-screen controls.
         /// </remarks>
         [SerializeField] private bool m_UsePressure;
-        private InputControl<float> m_ButtonControl;
-
-        private void SendButtonPushToControl(float value)
-        {
-            if (m_ButtonControl == null)
-                m_ButtonControl = (InputControl<float>)m_Control;
-
-            InputEventPtr eventPtr;
-            var buffer = StateEvent.From(m_Control.device, out eventPtr);
-            m_ButtonControl.WriteValueInto(eventPtr, value);
-
-            // This isn't working, need to fix
-            //  eventPtr.time = InputRuntime.s_Runtime.currentTime;
-
-            InputSystem.QueueEvent(eventPtr);
-            InputSystem.Update();
-        }
 
         public void OnPointerUp(PointerEventData data)
         {
-            SendButtonPushToControl(0.0f);
+            SendStateEventToControl(0.0f);
         }
 
         public void OnPointerDown(PointerEventData data)
         {
-            SendButtonPushToControl(1.0f);
+            SendStateEventToControl(1.0f);
         }
     }
 }

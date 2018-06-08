@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 
 // need to be able to define hit area
 
@@ -25,7 +29,18 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
-        [SerializeField] public string controlPath;
+        public string controlPath
+        {
+            get { return m_ControlPath; }
+            set
+            {
+                m_ControlPath = value;
+                if (enabled)
+                {
+                    SetupInputControl();
+                }
+            }
+        }
 
         /// <summary>
         /// The input control that is created for this on-screen control.
@@ -34,21 +49,42 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         /// This also provides access to the device.
         /// </remarks>
         [NonSerialized] internal InputControl m_Control;
+        [SerializeField] internal string m_ControlPath;
 
         void OnEnable()
         {
             if (!string.IsNullOrEmpty(controlPath))
             {
-                SetupInputControl(controlPath);
+                SetupInputControl();
             }
         }
 
-        public void SetupInputControl(string controlPath)
+        private void SetupInputControl()
         {
-            this.controlPath = controlPath;
             var layout = InputControlPath.TryGetDeviceLayout(controlPath);
             var control = InputSystem.AddDevice(layout);
             m_Control = InputControlPath.TryFindControl(control, controlPath);
+        }
+
+        protected void SendStateEventToControl<TValue>(TValue value)
+        {
+            // NEED TO FIX THIS.   Only cast once.
+            var control = m_Control as InputControl<TValue>;
+            if (control == null)
+            {
+                throw new Exception(string.Format("The control path {0} yields a control of type {1} which is not an InputControl",
+                        controlPath, m_Control.GetType().Name));
+            }
+
+            InputEventPtr eventPtr;
+            var buffer = StateEvent.From(m_Control.device, out eventPtr);
+            control.WriteValueInto(eventPtr, value);
+
+            // NEED TO FIX THIS.
+            //  eventPtr.time = InputRuntime.s_Runtime.currentTime;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
         }
     }
 }

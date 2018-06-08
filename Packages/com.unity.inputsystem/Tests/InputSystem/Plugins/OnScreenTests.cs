@@ -12,10 +12,8 @@ public class OnScreenTests : InputTestFixture
     {
         var gameObject = new GameObject();
         var stick = gameObject.AddComponent<OnScreenStick>();
-        stick.SetupInputControl("/<Gamepad>/leftStick");
-        var device = InputSystem.devices.FirstOrDefault(x => x is Gamepad);
-        Assert.That(device, Is.Not.Null);
-        Assert.That(device["dpad"], Is.Not.Null);
+        stick.controlPath = "/<Gamepad>/leftStick";
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
     }
 
     [Test]
@@ -24,10 +22,8 @@ public class OnScreenTests : InputTestFixture
     {
         var gameObject = new GameObject();
         var button = gameObject.AddComponent<OnScreenButton>();
-        button.SetupInputControl("/<Keyboard>/a");
-        var device = InputSystem.devices.FirstOrDefault(x => x is Keyboard);
-        Assert.That(device, Is.Not.Null);
-        Assert.That(device["space"], Is.Not.Null);
+        button.controlPath = "/<Keyboard>/a";
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
     }
 
     [Test]
@@ -36,7 +32,7 @@ public class OnScreenTests : InputTestFixture
     {
         var gameObject = new GameObject();
         var button = gameObject.AddComponent<OnScreenButton>();
-        button.SetupInputControl("/<Keyboard>/a");
+        button.controlPath = "/<Keyboard>/a";
         var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
         Assert.That(keyboard.aKey.isPressed, Is.False);
         button.OnPointerDown(null);
@@ -51,7 +47,7 @@ public class OnScreenTests : InputTestFixture
     {
         var gameObject = new GameObject();
         var stick = gameObject.AddComponent<OnScreenStick>();
-        stick.SetupInputControl("/<Gamepad>/leftStick");
+        stick.controlPath = "/<Gamepad>/leftStick";
         var gamepad = (Gamepad)InputSystem.devices.FirstOrDefault(x => x is Gamepad);
         stick.OnDrag(null);
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.00001));
