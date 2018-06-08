@@ -179,9 +179,8 @@ namespace UnityEngine.Experimental.Input
                 isKnownToBeDeviceLayout: isDeviceLayout);
         }
 
-        ////TODO: nuke namespace argument
         // Add a layout constructed from a JSON string.
-        public void RegisterControlLayout(string json, string name = null, string @namespace = null, InputDeviceMatcher? matcher = null)
+        public void RegisterControlLayout(string json, string name = null, InputDeviceMatcher? matcher = null)
         {
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException("json");
@@ -207,13 +206,6 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentException("Layout name has not been given and is not set in JSON layout",
                         "name");
-            }
-
-            if (@namespace != null)
-            {
-                name = string.Format("{0}::{1}", @namespace, name);
-                if (!string.IsNullOrEmpty(baseLayout))
-                    baseLayout = string.Format("{0}::{1}", @namespace, baseLayout);
             }
 
             var internedName = new InternedString(name);
