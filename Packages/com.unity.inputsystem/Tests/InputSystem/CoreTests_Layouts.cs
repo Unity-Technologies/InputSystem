@@ -80,7 +80,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_UsagesAreMergedWithBaseLayout()
+    public void Layouts_UsagesOverrideThoseFromBaseLayout()
     {
         const string baseLayout = @"
             {
@@ -128,8 +128,7 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
-        Assert.That(layout["stick"].usages.Count, Is.EqualTo(2));
-        Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("BaseUsage")));
+        Assert.That(layout["stick"].usages.Count, Is.EqualTo(1));
         Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
         Assert.That(layout["axis"].usages.Count, Is.EqualTo(1));
         Assert.That(layout["axis"].usages, Has.Exactly(1).EqualTo(new InternedString("BaseUsage")));
@@ -139,7 +138,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanExtendControlInBaseLayoutUsingPath()
+    public void Layouts_CanModifyControlInBaseLayoutUsingPath()
     {
         const string json = @"
             {
@@ -832,7 +831,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void TODO_Layouts_CanModifyUsagesOfChildControlUsingPath()
+    public void Layouts_CanModifyUsagesOfChildControlUsingPath()
     {
         const string json = @"
             {
@@ -848,7 +847,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice("MyDevice");
 
-        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo("TestUsage"));
+        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo(new InternedString("TestUsage")));
     }
 
     [Test]

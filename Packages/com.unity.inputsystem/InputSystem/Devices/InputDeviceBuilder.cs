@@ -24,7 +24,8 @@ namespace UnityEngine.Experimental.Input
     /// Can be used both to create control hierarchies from scratch as well as to re-create or
     /// change existing hierarchies.
     ///
-    /// InputDeviceBuilder is the only way to create control hierarchies.
+    /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
+    /// <c>new</c>'d directlty.
     ///
     /// Also computes a final state layout when setup is finished.
     ///
@@ -585,11 +586,12 @@ namespace UnityEngine.Experimental.Input
             ////        of successive re-allocations
 
             // Add usages.
-            if (controlItem.usages.Count > 0)
+            var usages = controlOverride != null ? controlOverride.Value.usages : controlItem.usages;
+            if (usages.Count > 0)
             {
-                var usageCount = controlItem.usages.Count;
+                var usageCount = usages.Count;
                 var usageIndex =
-                    ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, controlItem.usages.m_Array);
+                    ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, usages.m_Array);
                 control.m_UsagesReadOnly =
                     new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
 
