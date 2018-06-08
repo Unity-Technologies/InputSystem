@@ -246,5 +246,47 @@ namespace UnityEngine.Experimental.Input.Editor
                 (args.item as InputTreeViewLine).OnGUI(args.rowRect, args.selected, args.focused, indent);
             }
         }
+
+        protected override bool CanStartDrag(CanStartDragArgs args)
+        {
+            if (args.draggedItemIDs.Count > 1)
+                return false;
+            if (FindItem(args.draggedItemIDs[0], rootItem).GetType() == typeof(BindingTreeItem))
+                return true;
+            return false;
+        }
+
+        protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
+        {
+            var row = FindItem(args.draggedItemIDs.First(), rootItem);
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.paths = args.draggedItemIDs.Select(i=>""+i).ToArray();
+            DragAndDrop.StartDrag(row.displayName);
+        }
+
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
+        {
+            var id = Int32.Parse(DragAndDrop.paths.First());
+            var row = (BindingTreeItem)FindItem(id, rootItem);
+
+            if (args.parentItem.GetType() != typeof(ActionTreeItem)
+                || args.parentItem != row.parent)
+            {
+                return DragAndDropVisualMode.None;
+            }
+
+            if (args.performDrop)
+            {
+                var action = (ActionTreeItem) args.parentItem;
+                var map = (ActionMapTreeItem) args.parentItem.parent;
+                var srcIndex = action.bindingsStartIndex + row.index;
+                var dstIndex = action.bindingsStartIndex + args.insertAtIndex;
+                if (dstIndex > srcIndex)
+                    dstIndex--;
+                InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
+                m_ApplyAction();
+            }
+            return DragAndDropVisualMode.Move;
+        }
     }
 }

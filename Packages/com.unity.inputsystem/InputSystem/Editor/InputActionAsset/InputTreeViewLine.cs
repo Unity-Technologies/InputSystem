@@ -159,6 +159,11 @@ namespace UnityEngine.Experimental.Input.Editor
     class ActionTreeItem : InputTreeViewLine
     {
         InputAction m_Action;
+        
+        public int bindingsStartIndex
+        {
+            get { return m_Action.m_BindingsStartIndex; }
+        }
 
         public ActionTreeItem(string actionMapName, InputAction action, SerializedProperty setProperty, int index)
             : base(setProperty, index)

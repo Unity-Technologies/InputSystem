@@ -121,6 +121,12 @@ namespace UnityEngine.Experimental.Input.Editor
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
             newSerializedProperty = actionProperty;
         }
+        
+        public static void MoveBinding(SerializedProperty actionMap, int srcIndex, int dstIndex)
+        {
+            var actionsArrayProperty = actionMap.FindPropertyRelative("m_Bindings");
+            actionsArrayProperty.MoveArrayElement(srcIndex, dstIndex);
+        }
 
         public static void DeleteAction(SerializedProperty actionMap, int actionIndex)
         {
