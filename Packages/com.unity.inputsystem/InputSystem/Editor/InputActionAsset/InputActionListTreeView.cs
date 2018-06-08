@@ -285,6 +285,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     dstIndex--;
                 InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
                 m_ApplyAction();
+                DragAndDrop.AcceptDrag();
             }
             return DragAndDropVisualMode.Move;
         }

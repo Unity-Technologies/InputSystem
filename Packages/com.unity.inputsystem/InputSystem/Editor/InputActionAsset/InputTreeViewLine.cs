@@ -164,6 +164,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return m_Action.m_BindingsStartIndex; }
         }
+        
+        public int bindingsCount
+        {
+            get { return m_Action.m_BindingsCount; }
+        }
 
         public ActionTreeItem(string actionMapName, InputAction action, SerializedProperty setProperty, int index)
             : base(setProperty, index)
@@ -230,7 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_BindingProperty = bindingProperty;
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
-            displayName = ParseName(path);
+            displayName = ParseName(path) + index;
             id = (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
             depth = 2;
         }

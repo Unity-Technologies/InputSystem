@@ -193,24 +193,25 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             HashSet<string> allGroups = new HashSet<string>();
             allGroups.Clear();
+            m_GroupPopupList = new List<string>() { "<no group>" };
             foreach (var actionMap in actionMapAsset.actionMaps)
             {
                 foreach (var binding in actionMap.bindings)
                 {
-                    foreach (var group in binding.groups.Split(';'))
+                    foreach (var group in binding.groups.Split(new[]{';'}, StringSplitOptions.RemoveEmptyEntries))
                     {
                         if (!string.IsNullOrEmpty(@group))
                             allGroups.Add(@group);
                     }
                 }
             }
-            m_GroupPopupList = new List<string>() { "<no group>" };
             m_GroupPopupList.AddRange(allGroups);
         }
 
         internal void Apply()
         {
             m_SerializedObject.ApplyModifiedProperties();
+            m_SerializedObject.Update();
             m_TreeView.Reload();
             Repaint();
         }
@@ -320,13 +321,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 var actionProperty = (bindingRow.parent as InputTreeViewLine).elementProperty;
                 InputActionSerializationHelpers.RemoveBinding(actionProperty, bindingRow.index, actionMapProperty);
             }
-
             foreach (var actionRow in rows.Where(r=>r.GetType() == typeof(ActionTreeItem)).OrderByDescending(r=>r.index).Cast<ActionTreeItem>())
             {
-                var actionProperty = (actionRow.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.DeleteAction(actionProperty, actionRow.index);
-            }
+                var actionProperty = (actionRow).elementProperty;
+                var actionMapProperty = (actionRow.parent as InputTreeViewLine).elementProperty;
 
+                for (var i = actionRow.bindingsCount - 1; i >= 0; i--) 
+                    InputActionSerializationHelpers.RemoveBinding(actionProperty, i, actionMapProperty);
+                
+                InputActionSerializationHelpers.DeleteAction(actionMapProperty, actionRow.index);
+            }
             foreach (var mapRow in rows.Where(r=>r.GetType() == typeof(ActionMapTreeItem)).OrderByDescending(r=>r.index).Cast<ActionMapTreeItem>())
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
