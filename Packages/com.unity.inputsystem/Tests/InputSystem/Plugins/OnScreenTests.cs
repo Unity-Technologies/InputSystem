@@ -43,6 +43,26 @@ public class OnScreenTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_MultipleOnScreenButtonInstancesPushToSameDevice()
+    {
+        var gameObject = new GameObject();
+        var buttonMappedToKeyA = gameObject.AddComponent<OnScreenButton>();
+        var buttonMappedToKeyB = gameObject.AddComponent<OnScreenButton>();
+
+        buttonMappedToKeyA.controlPath = "/<Keyboard>/a";
+        buttonMappedToKeyB.controlPath = "/<Keyboard>/b";
+
+        var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
+
+        buttonMappedToKeyA.OnPointerDown(null);
+        buttonMappedToKeyB.OnPointerDown(null);
+
+        Assert.That(keyboard.aKey.isPressed, Is.True);
+        Assert.That(keyboard.bKey.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_OnScreenStickSendsMovementToDevice()
     {
         var gameObject = new GameObject();
