@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.TestTools;
 
 partial class CoreTests
 {
@@ -2196,7 +2199,7 @@ partial class CoreTests
     public void Actions_CannotRemoveAllBindingOverridesFromMap_WhenEnabled()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
+        var action = map.AddAction("action1", "/<keyboard>/enter");
 
         var overrides = new List<InputBinding>
         {
@@ -2205,8 +2208,34 @@ partial class CoreTests
 
         map.ApplyBindingOverrides(overrides);
 
-        action1.Enable();
+        action.Enable();
 
         Assert.That(() => map.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ExceptionsInCallbacksAreCaughtAndLogged()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap("testMap");
+        var action = map.AddAction(name: "testAction", binding: "<Gamepad>/buttonSouth");
+        action.performed += ctx => { throw new InvalidOperationException("TEST EXCEPTION FROM ACTION"); };
+        map.actionTriggered += ctx => { throw new InvalidOperationException("TEST EXCEPTION FROM MAP"); };
+        action.Enable();
+
+        LogAssert.Expect(LogType.Error,
+            new Regex(
+                ".*InvalidOperationException thrown during execution of 'Performed' callback on action 'testMap/testAction'.*"));
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM ACTION.*"));
+
+        LogAssert.Expect(LogType.Error,
+            new Regex(
+                ".*InvalidOperationException thrown during execution of callback for 'Performed' phase of 'testAction' action in map 'testMap'.*"));
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
     }
 }

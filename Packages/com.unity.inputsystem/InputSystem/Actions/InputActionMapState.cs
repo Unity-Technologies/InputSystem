@@ -719,12 +719,34 @@ namespace UnityEngine.Experimental.Input
             // Run callbacks (if any) directly on action.
             var listenerCount = listeners.length;
             for (var i = 0; i < listenerCount; ++i)
-                listeners[i](context);
+            {
+                try
+                {
+                    listeners[i](context);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("{0} thrown during execution of '{1}' callback on action '{2}'",
+                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger)));
+                    Debug.LogException(exception);
+                }
+            }
 
             // Run callbacks (if any) on action map.
             var listenerCountOnMap = callbacksOnMap.length;
             for (var i = 0; i < listenerCountOnMap; ++i)
-                callbacksOnMap[i].OnActionTriggered(ref context);
+            {
+                try
+                {
+                    callbacksOnMap[i].OnActionTriggered(ref context);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("{0} thrown during execution of callback for '{1}' phase of '{2}' action in map '{3}'",
+                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger).name, actionMap.name));
+                    Debug.LogException(exception);
+                }
+            }
 
             Profiler.EndSample();
         }
