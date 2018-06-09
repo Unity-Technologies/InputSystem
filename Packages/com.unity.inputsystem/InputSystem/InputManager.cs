@@ -303,6 +303,7 @@ namespace UnityEngine.Experimental.Input
                                 "Layout '{0}' matches existing device '{1}' but failed to instantiate: {2}", layout,
                                 m_AvailableDevices[i].description, exception));
                         Debug.LogException(exception);
+                        continue;
                     }
 
                     // Re-enable device.
