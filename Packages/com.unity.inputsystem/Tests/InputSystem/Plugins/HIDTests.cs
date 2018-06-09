@@ -480,7 +480,7 @@ class HIDTests : InputTestFixture
     // https://github.com/Unity-Technologies/InputSystem/issues/134
     [Test]
     [Category("Devices")]
-    public void Devices_HIDAxisLimits_AreSetCorrectlyInNonEnglishLocales()
+    public void Devices_HIDAxisLimits_DoNotUseDecimalFormatOfCurrentCulture()
     {
         var oldCulture = Thread.CurrentThread.CurrentCulture;
         try
@@ -491,7 +491,6 @@ class HIDTests : InputTestFixture
             var hidDescriptor =
                 new HID.HIDDeviceDescriptorBuilder(HID.GenericDesktop.MultiAxisController)
                 .StartReport(HID.HIDReportType.Input)
-                // 16bit [0..65535]
                 .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535).Finish();
 
             testRuntime.ReportNewInputDevice(
