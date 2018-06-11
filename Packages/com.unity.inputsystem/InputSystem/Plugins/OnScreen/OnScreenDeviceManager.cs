@@ -6,8 +6,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
-// need to be able to define hit area
-
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
     public class OnScreenDeviceManager : MonoBehaviour
