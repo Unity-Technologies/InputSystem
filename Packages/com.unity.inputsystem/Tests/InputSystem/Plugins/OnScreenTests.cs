@@ -57,7 +57,6 @@ public class OnScreenTests : InputTestFixture
         Assert.That(keyboard.aKey.isPressed, Is.False);
     }
 
-
     [Test]
     [Category("Devices")]
     public void Devices_MultipleOnScreenButtonInstancesPushToSameDevice()

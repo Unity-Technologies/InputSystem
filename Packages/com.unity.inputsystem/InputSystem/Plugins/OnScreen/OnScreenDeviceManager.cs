@@ -52,7 +52,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                 if (device.Value.eventPtr.valid)
                 {
                     // RENE - Need to check this.... Memory corruption happening somewhere.
-                    // Can't manually dispose without a 
+                    // Can't manually dispose without a
                     // InvalidOperationException: The NativeArray has been deallocated, it is not allowed to access it
                     // at(wrapper managed - to - native)
                     // device.Value.buffer.Dispose();
