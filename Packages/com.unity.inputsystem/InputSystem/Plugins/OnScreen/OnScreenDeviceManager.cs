@@ -37,9 +37,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         {
             OnScreenDeviceEventData result;
             if (m_Devices.TryGetValue(device, out result))
-            {
                 return result.eventPtr;
-            }
 
             result.buffer = StateEvent.From(device, out result.eventPtr);
             m_Devices[device] = result;
@@ -51,8 +49,17 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         {
             foreach (var device in m_Devices)
             {
-                device.Value.buffer.Dispose();
+                if (device.Value.eventPtr.valid)
+                {
+                    // RENE - Need to check this.... Memory corruption happening somewhere.
+                    // Can't manually dispose without a 
+                    // InvalidOperationException: The NativeArray has been deallocated, it is not allowed to access it
+                    // at(wrapper managed - to - native)
+                    // device.Value.buffer.Dispose();
+                }
             }
+
+            m_Devices.Clear();
         }
     }
 }

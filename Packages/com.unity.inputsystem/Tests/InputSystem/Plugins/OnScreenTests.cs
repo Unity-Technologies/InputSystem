@@ -28,7 +28,7 @@ public class OnScreenTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_OnScreenButtonSendsButtonPushToDevice()
+    public void Devices_OnScreenButtonSendsButtonPushToDeviceWithNoExistingDeviceYet()
     {
         var gameObject = new GameObject();
         var button = gameObject.AddComponent<OnScreenButton>();
@@ -40,6 +40,23 @@ public class OnScreenTests : InputTestFixture
         button.OnPointerUp(null);
         Assert.That(keyboard.aKey.isPressed, Is.False);
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_OnScreenButtonSendsButtonPushToDeviceWithAlreadyExistingDevice()
+    {
+        InputSystem.AddDevice<Keyboard>();
+        var gameObject = new GameObject();
+        var button = gameObject.AddComponent<OnScreenButton>();
+        button.controlPath = "/<Keyboard>/a";
+        var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
+        Assert.That(keyboard.aKey.isPressed, Is.False);
+        button.OnPointerDown(null);
+        Assert.That(keyboard.aKey.isPressed, Is.True);
+        button.OnPointerUp(null);
+        Assert.That(keyboard.aKey.isPressed, Is.False);
+    }
+
 
     [Test]
     [Category("Devices")]
