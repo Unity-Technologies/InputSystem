@@ -1,12 +1,5 @@
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-
-// need to be able to define hit area
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
@@ -44,12 +37,6 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             }
         }
 
-        /// <summary>
-        /// The input control that is created for this on-screen control.
-        /// </summary>
-        /// <remarks>
-        /// This also provides access to the device.
-        /// </remarks>
         [NonSerialized] internal InputControl m_Control;
         [SerializeField] internal string m_ControlPath;
 
@@ -67,12 +54,10 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         private void SetupInputControl()
         {
-            var layout = InputControlPath.TryGetDeviceLayout(controlPath);
-            var control = InputSystem.AddDevice(layout);
-            m_Control = InputControlPath.TryFindControl(control, controlPath);
+            m_Control = s_DeviceManager.SetupInputControl(controlPath);
         }
 
-        protected unsafe void SendStateEventToControl<TValue>(TValue value)
+        protected void SendStateEventToControl<TValue>(TValue value)
         {
             // NEED TO FIX THIS.   Only cast once.
             var control = m_Control as InputControl<TValue>;
@@ -83,10 +68,9 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             }
 
             var eventPtr = s_DeviceManager.GetInputEventPtrForDevice(m_Control.device);
-            control.WriteValueInto(eventPtr, value);
 
             eventPtr.time = InputRuntime.s_Instance.currentTime;
-
+            control.WriteValueInto(eventPtr, value);
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
         }
