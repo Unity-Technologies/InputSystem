@@ -235,7 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_BindingProperty = bindingProperty;
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
-            displayName = ParseName(path) + index;
+            displayName = ParseName(path);
             id = (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
             depth = 2;
         }

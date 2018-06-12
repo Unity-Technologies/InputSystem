@@ -266,6 +266,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args)
         {
+            if (args.dragAndDropPosition != DragAndDropPosition.BetweenItems)
+                return DragAndDropVisualMode.None;
+
             var id = Int32.Parse(DragAndDrop.paths.First());
             var row = (BindingTreeItem)FindItem(id, rootItem);
 
