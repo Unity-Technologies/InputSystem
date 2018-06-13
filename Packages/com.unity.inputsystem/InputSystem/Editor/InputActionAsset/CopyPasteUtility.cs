@@ -56,6 +56,19 @@ namespace UnityEngine.Experimental.Input.Editor
                         copyList.Append(m_InputAssetMarker);
                     }
                 }
+                if (selectedRow is CompositeGroupTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
+                {
+                    var composite = selectedRow as CompositeGroupTreeItem;
+                    
+                    foreach (var child in composite.children)
+                    {
+                        if(!(child is CompositeTreeItem))
+                            continue;
+                        copyList.Append(child.GetType().Name);
+                        copyList.Append((child as CompositeTreeItem).SerializeToString());
+                        copyList.Append(m_InputAssetMarker);
+                    }
+                }
                 
             }
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
@@ -122,6 +135,40 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (row.StartsWith(typeof(BindingTreeItem).Name))
                 {
                     row = row.Substring(typeof(BindingTreeItem).Name.Length);
+                    var binding = JsonUtility.FromJson<InputBinding>(row);
+                    var selectedRow = m_TreeView.GetSelectedAction();
+                    if (selectedRow == null)
+                    {
+                        EditorApplication.Beep();
+                        continue;
+                    }
+
+                    var actionMap = m_TreeView.GetSelectedActionMap();
+                    InputActionSerializationHelpers.AppendBindingFromObject(binding, selectedRow.elementProperty, actionMap.elementProperty);
+                    m_Window.Apply();
+                    continue;
+                }
+
+                if (row.StartsWith(typeof(CompositeGroupTreeItem).Name))
+                {
+                    row = row.Substring(typeof(CompositeGroupTreeItem).Name.Length);
+                    var binding = JsonUtility.FromJson<InputBinding>(row);
+                    var selectedRow = m_TreeView.GetSelectedAction();
+                    if (selectedRow == null)
+                    {
+                        EditorApplication.Beep();
+                        continue;
+                    }
+
+                    var actionMap = m_TreeView.GetSelectedActionMap();
+                    InputActionSerializationHelpers.AppendBindingFromObject(binding, selectedRow.elementProperty, actionMap.elementProperty);
+                    m_Window.Apply();
+                    continue;
+                }
+
+                if (row.StartsWith(typeof(CompositeTreeItem).Name))
+                {
+                    row = row.Substring(typeof(CompositeTreeItem).Name.Length);
                     var binding = JsonUtility.FromJson<InputBinding>(row);
                     var selectedRow = m_TreeView.GetSelectedAction();
                     if (selectedRow == null)
