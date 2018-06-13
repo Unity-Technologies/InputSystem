@@ -73,14 +73,72 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CannotUseControlLayoutAsToplevelLayout()
+    public void Layouts_CannotUseLayoutForControlToBuildDevice()
     {
         Assert.That(() => new InputDeviceBuilder("Button"), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanExtendControlInBaseLayoutUsingPath()
+    public void Layouts_UsagesOverrideThoseFromBaseLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""layout"" : ""Stick"",
+                        ""usage"" : ""BaseUsage""
+                    },
+                    {
+                        ""name"" : ""axis"",
+                        ""layout"" : ""Axis"",
+                        ""usage"" : ""BaseUsage""
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""usage"" : ""DerivedUsage""
+                    },
+                    {
+                        ""name"" : ""axis""
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""usage"" : ""DerivedUsage""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(baseLayout);
+        InputSystem.RegisterControlLayout(derivedLayout);
+
+        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+
+        Assert.That(layout["stick"].usages.Count, Is.EqualTo(1));
+        Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
+        Assert.That(layout["axis"].usages.Count, Is.EqualTo(1));
+        Assert.That(layout["axis"].usages, Has.Exactly(1).EqualTo(new InternedString("BaseUsage")));
+        Assert.That(layout["button"].usages.Count, Is.EqualTo(1));
+        Assert.That(layout["button"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanModifyControlInBaseLayoutUsingPath()
     {
         const string json = @"
             {
@@ -110,7 +168,7 @@ partial class CoreTests
         // StickControl sets parameters on its axis controls. Check that they are
         // there.
 
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.leftStick.up.clamp, Is.True);
         Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
@@ -121,7 +179,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanSetUsagesThroughControlAttribute()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(CommonUsages.Primary2DMotion));
     }
@@ -130,7 +188,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanSetAliasesThroughControlAttribute()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.buttonWest.aliases, Has.Exactly(1).EqualTo(new InternedString("square")));
         Assert.That(gamepad.buttonWest.aliases, Has.Exactly(1).EqualTo(new InternedString("x")));
@@ -517,7 +575,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_ReplacingControlLayoutAffectsAllDevicesUsingLayout()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Replace "Button" layout.
         InputSystem.RegisterControlLayout<MyButtonControl>("Button");
@@ -773,7 +831,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void TODO_Layouts_CanModifyUsagesOfChildControlUsingPath()
+    public void Layouts_CanModifyUsagesOfChildControlUsingPath()
     {
         const string json = @"
             {
@@ -789,7 +847,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice("MyDevice");
 
-        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo("TestUsage"));
+        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo(new InternedString("TestUsage")));
     }
 
     [Test]

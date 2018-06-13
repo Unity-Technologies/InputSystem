@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 198773322244654988}
   - component: {fileID: 199698625530820818}
   m_Layer: 0
-  m_Name: Highlight_Key_Input_Manager
+  m_Name: Key Highlight - Input Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4296830747364328}
   - component: {fileID: 212665062683625668}
   m_Layer: 0
-  m_Name: Highlight_Key_Input_System
+  m_Name: Key Highlight - Input System
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

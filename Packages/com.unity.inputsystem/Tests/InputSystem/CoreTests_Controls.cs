@@ -186,7 +186,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_SticksProvideAccessToHalfAxes()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
         InputSystem.Update();
@@ -250,7 +250,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_CanWriteValueIntoState()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var state = new GamepadState();
         var value = new Vector2(0.5f, 0.5f);
 
@@ -263,7 +263,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_DpadVectorsAreCircular()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Up.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadState.Button.DpadUp});
@@ -421,7 +421,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_CanFindControlsByExactPath()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var matches = InputSystem.GetControls("/Gamepad/leftStick");
 
         Assert.That(matches, Has.Count.EqualTo(1));

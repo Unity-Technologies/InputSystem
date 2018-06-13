@@ -70,7 +70,7 @@ partial class CoreTests
     public void State_AfterAddingDevice_AllControlOffsetsAreRelativeToGlobalStateBuffer()
     {
         InputSystem.AddDevice("Gamepad");
-        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
         var leftStickOffset = Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32();
         var leftStickXOffset = leftStickOffset;
@@ -99,7 +99,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RunningUpdateSwapsCurrentAndPrevious()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var oldState = new GamepadState
         {
@@ -126,7 +126,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RunningMultipleFixedUpdates_FlipsDynamicUpdateBuffersOnlyOnFirstUpdate()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Fixed); // Dynamic: current=0.25, previous=0.0
@@ -143,7 +143,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RunningNoFixedUpdateInFrame_StillCapturesStateForNextFixedUpdate()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
         InputSystem.Update(InputUpdateType.Fixed); // Fixed: current=0.75, previous=0.0
@@ -164,7 +164,7 @@ partial class CoreTests
     [Category("State")]
     public void State_UpdateWithoutStateEventDoesNotAlterStateOfDevice()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var state = new GamepadState
         {
             leftTrigger = 0.25f
@@ -321,7 +321,7 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSpecifyBitOffsetsOnControlProperties()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.dpad.right.stateBlock.bitOffset, Is.EqualTo((int)DpadControl.ButtonBits.Right));
         Assert.That(gamepad.dpad.right.stateBlock.byteOffset, Is.EqualTo(gamepad.dpad.stateBlock.byteOffset));
@@ -340,7 +340,7 @@ partial class CoreTests
     [Category("State")]
     public void State_CanUpdateButtonState()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
 
@@ -387,7 +387,7 @@ partial class CoreTests
     [Category("State")]
     public void State_PressingAndReleasingButtonInSameFrame_DoesNotShowStateChange()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadState.Button.B};
         var secondState = new GamepadState {buttons = 0};

@@ -179,9 +179,8 @@ namespace UnityEngine.Experimental.Input
                 isKnownToBeDeviceLayout: isDeviceLayout);
         }
 
-        ////TODO: nuke namespace argument
         // Add a layout constructed from a JSON string.
-        public void RegisterControlLayout(string json, string name = null, string @namespace = null, InputDeviceMatcher? matcher = null)
+        public void RegisterControlLayout(string json, string name = null, InputDeviceMatcher? matcher = null)
         {
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException("json");
@@ -207,13 +206,6 @@ namespace UnityEngine.Experimental.Input
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentException("Layout name has not been given and is not set in JSON layout",
                         "name");
-            }
-
-            if (@namespace != null)
-            {
-                name = string.Format("{0}::{1}", @namespace, name);
-                if (!string.IsNullOrEmpty(baseLayout))
-                    baseLayout = string.Format("{0}::{1}", @namespace, baseLayout);
             }
 
             var internedName = new InternedString(name);
@@ -300,12 +292,23 @@ namespace UnityEngine.Experimental.Input
 
                 if (matcher.MatchPercentage(m_AvailableDevices[i].description) > 0f)
                 {
+                    // Try to create InputDevice instance.
+                    try
+                    {
+                        AddDevice(layout, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogError(string.Format(
+                                "Layout '{0}' matches existing device '{1}' but failed to instantiate: {2}", layout,
+                                m_AvailableDevices[i].description, exception));
+                        Debug.LogException(exception);
+                        continue;
+                    }
+
                     // Re-enable device.
                     var command = EnableDeviceCommand.Create();
                     m_Runtime.DeviceCommand(deviceId, ref command);
-
-                    // Create InputDevice instance.
-                    AddDevice(layout, deviceId, m_AvailableDevices[i].description, m_AvailableDevices[i].isNative);
                 }
             }
         }
@@ -2498,7 +2501,19 @@ namespace UnityEngine.Experimental.Input
                 if (!m_Layouts.HasLayout(layout))
                     continue;
 
-                setup.Setup(layout, null, new InternedString(deviceState.variant));
+                try
+                {
+                    setup.Setup(layout, null, new InternedString(deviceState.variant));
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format(
+                            "Could not re-recreate device '{0}' with layout '{1}' and variant '{2}' after domain reload: {3}",
+                            deviceState.description, deviceState.layout, deviceState.variant, exception));
+                    Debug.LogException(exception);
+                    continue;
+                }
+
                 var device = setup.Finish();
                 device.m_Name = new InternedString(deviceState.name);
                 device.m_Id = deviceState.deviceId;

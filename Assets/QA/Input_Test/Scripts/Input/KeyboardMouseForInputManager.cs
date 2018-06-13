@@ -2,11 +2,17 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class KeyboardMouse4InputManager : MonoBehaviour
+public class KeyboardMouseForInputManager : MonoBehaviour
 {
-    public ParticleSystem highlight_key_input_manager;
-    public InputField unmapped_key_list;
-    public Text mouse_pos_text;
+    [Tooltip("Highlight Prefab")]
+    public ParticleSystem m_keyHighlight;
+
+    [Tooltip("Where all the messages go")]
+    public InputField m_MessageWindow;
+
+    [Header("UI Elements for Debug Info")]
+    public Text m_keyboardInfoText;
+    public Text m_mouseInfoText;
 
     void Update()
     {
@@ -23,65 +29,69 @@ public class KeyboardMouse4InputManager : MonoBehaviour
         // Mouse move
         float moveX = Input.GetAxis("Mouse X");
         float moveY = Input.GetAxis("Mouse Y");
-        float wheel = Input.GetAxis("Mouse ScrollWheel");
+        float wheel = Input.mouseScrollDelta.y;
 
         if (Mathf.Abs(moveX) > 0.5)
         {
             if (moveX > 0)
             {
-                StartMouseHighlight("Move_Right");
-                StopMouseHighlight("Move_Left");
+                StartMouseHighlight("Move Right");
+                StopMouseHighlight("Move Left");
             }
             else
             {
-                StartMouseHighlight("Move_Left");
-                StopMouseHighlight("Move_Right");
+                StartMouseHighlight("Move Left");
+                StopMouseHighlight("Move Right");
             }
         }
         else
         {
-            StopMouseHighlight("Move_Left");
-            StopMouseHighlight("Move_Right");
+            StopMouseHighlight("Move Left");
+            StopMouseHighlight("Move Right");
         }
 
         if (Mathf.Abs(moveY) > 0.5)
         {
             if (moveY > 0)
             {
-                StartMouseHighlight("Move_Up");
-                StopMouseHighlight("Move_Down");
+                StartMouseHighlight("Move Up");
+                StopMouseHighlight("Move Down");
             }
             else
             {
-                StartMouseHighlight("Move_Down");
-                StopMouseHighlight("Move_Up");
+                StartMouseHighlight("Move Down");
+                StopMouseHighlight("Move Up");
             }
         }
         else
         {
-            StopMouseHighlight("Move_Up");
-            StopMouseHighlight("Move_Down");
+            StopMouseHighlight("Move Up");
+            StopMouseHighlight("Move Down");
         }
 
         // Mouse wheel
         if (wheel > 0)
         {
-            StartMouseHighlight("Wheel_Up");
-            StopMouseHighlight("Wheel_Down");
+            StartMouseHighlight("Wheel Up");
+            StopMouseHighlight("Wheel Down");
         }
         else if (wheel < 0)
         {
-            StartMouseHighlight("Wheel_Down");
-            StopMouseHighlight("Wheel_Up");
+            StartMouseHighlight("Wheel Down");
+            StopMouseHighlight("Wheel Up");
         }
         else
         {
-            StopMouseHighlight("Wheel_Up");
-            StopMouseHighlight("Wheel_Down");
+            StopMouseHighlight("Wheel Up");
+            StopMouseHighlight("Wheel Down");
         }
 
-        // Update mouse position
-        mouse_pos_text.text = Input.mousePosition.ToString("F0");
+        // Update debug mouse info
+        if (!String.IsNullOrEmpty(Input.inputString))
+            m_keyboardInfoText.text = Input.inputString;
+        m_mouseInfoText.text = Input.mousePosition.ToString("F0") + "\n"
+            + Input.mouseScrollDelta.ToString("F0") + "\n"
+            + "(" + moveX + " ," + moveY + ")";
     }
 
     // Generate the blue ring Particle System over the key or mouse button
@@ -90,12 +100,12 @@ public class KeyboardMouse4InputManager : MonoBehaviour
         Transform key = transform.Find("Keys/" + keyName);
 
         if (key == null)
-            AddUnmappedKey(keyName);
+            ShowMessage(keyName);
         else
         {
             ParticleSystem ps = key.GetComponentInChildren<ParticleSystem>();
             if (ps == null)
-                Instantiate(highlight_key_input_manager, key.position, key.rotation, key);
+                Instantiate(m_keyHighlight, key.position, key.rotation, key);
             else
                 ps.Play();
         }
@@ -120,24 +130,24 @@ public class KeyboardMouse4InputManager : MonoBehaviour
     // Generate the blue arrow for move movement and wheel
     private void StartMouseHighlight(string mouseAction)
     {
-        Transform mAction = transform.Find("Mouse/" + mouseAction);
+        Transform mAction = transform.Find("Mouse/" + mouseAction + "/Highlight_Arrow_Input_Manager");
 
         if (mAction != null)
-            mAction.GetComponentInChildren<ArrowHighlight>().Play();
+            mAction.GetComponent<ArrowHighlight>().Play();
     }
 
     // Stop the arrow highlight
     private void StopMouseHighlight(string mouseAction)
     {
-        Transform mAction = transform.Find("Mouse/" + mouseAction);
+        Transform mAction = transform.Find("Mouse/" + mouseAction + "/Highlight_Arrow_Input_Manager");
 
         if (mAction != null)
-            mAction.GetComponentInChildren<ArrowHighlight>().Stop();
+            mAction.GetComponent<ArrowHighlight>().Stop();
     }
 
     // Show the unmapped key name in the text field
-    private void AddUnmappedKey(string keyName)
+    private void ShowMessage(string msg)
     {
-        unmapped_key_list.text += "<color=blue>" + keyName + "</color>\n";
+        m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
     }
 }

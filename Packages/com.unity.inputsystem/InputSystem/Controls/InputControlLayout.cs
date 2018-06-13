@@ -265,22 +265,21 @@ namespace UnityEngine.Experimental.Input
                 else
                     result.sizeInBits = other.sizeInBits;
 
-                result.aliases = new ReadOnlyArray<InternedString>(
-                        ArrayHelpers.Merge(aliases.m_Array,
-                            other.aliases.m_Array));
+                if (aliases.Count > 0)
+                    result.aliases = aliases;
+                else
+                    result.aliases = other.aliases;
 
-                result.usages = new ReadOnlyArray<InternedString>(
-                        ArrayHelpers.Merge(usages.m_Array,
-                            other.usages.m_Array));
+                if (usages.Count > 0)
+                    result.usages = usages;
+                else
+                    result.usages = other.usages;
 
-                // We don't merge parameters. If a control sets parameters, it'll overwrite
-                // parameters inherited from the base.
                 if (parameters.Count == 0)
                     result.parameters = other.parameters;
                 else
                     result.parameters = parameters;
 
-                // Same for processors.
                 if (processors.Count == 0)
                     result.processors = other.processors;
                 else
@@ -350,6 +349,26 @@ namespace UnityEngine.Experimental.Input
         public bool isControlLayout
         {
             get { return !isDeviceLayout; }
+        }
+
+        public ControlItem this[string path]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+
+                if (m_Controls != null)
+                {
+                    for (var i = 0; i < m_Controls.Length; ++i)
+                    {
+                        if (m_Controls[i].name == path)
+                            return m_Controls[i];
+                    }
+                }
+
+                throw new KeyNotFoundException(string.Format("Cannot find control '{0}' in layout '{1}'", path, name));
+            }
         }
 
         /// <summary>

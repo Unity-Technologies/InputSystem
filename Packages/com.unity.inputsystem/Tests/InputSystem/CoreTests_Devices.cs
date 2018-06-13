@@ -354,7 +354,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_AddingDeviceDoesNotCauseExistingDevicesToForgetTheirState()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f});
         InputSystem.Update();
@@ -881,9 +881,9 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanBeRemoved()
     {
-        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
-        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
-        var gamepad3 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
 
         var gamepad2Offset = gamepad2.stateBlock.byteOffset;
 
@@ -1631,7 +1631,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCheckAnyKeyOnKeyboard()
     {
-        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
         InputSystem.Update();
@@ -1643,7 +1643,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetTextInputFromKeyboard()
     {
-        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var textReceived = "";
         keyboard.onTextInput += ch => textReceived += ch;
@@ -1742,7 +1742,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetKeyCodeFromKeyboardKey()
     {
-        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         Assert.That(keyboard.aKey.keyCode, Is.EqualTo(Key.A));
     }
@@ -1751,7 +1751,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanLookUpKeyFromKeyboardUsingKeyCode()
     {
-        var keyboard = (Keyboard)InputSystem.AddDevice("Keyboard");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         Assert.That(keyboard[Key.A], Is.SameAs(keyboard.aKey));
     }

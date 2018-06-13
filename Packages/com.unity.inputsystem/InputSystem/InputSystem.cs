@@ -1121,6 +1121,12 @@ namespace UnityEngine.Experimental.Input
             }
 
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+
+            // Check the editor player settings to see which input system is active.
+            // If it is the old system, warn the user that they have the new
+            // input system installed, but have not switched it to active.
+            if (!s_SystemObject.IsNewInputSystemActiveInPlayerSettings())
+                s_SystemObject.DisplayNativeBackendsDisabledWarningDialog();
         }
 
         // We don't want play mode modifications to layouts and controls to seep

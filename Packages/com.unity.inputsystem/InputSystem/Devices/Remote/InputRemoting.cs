@@ -37,8 +37,6 @@ namespace UnityEngine.Experimental.Input
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
     public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
-        public const string kRemoteLayoutNamespacePrefix = "remote";
-
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
         /// </summary>
@@ -111,7 +109,7 @@ namespace UnityEngine.Experimental.Input
 
             sending = true;
 
-            SendAllCurrentData();
+            SendAllDevices();
         }
 
         public void StopSending()
@@ -174,28 +172,6 @@ namespace UnityEngine.Experimental.Input
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
 
             return subscriber;
-        }
-
-        private void SendAllCurrentData(int recipientId = 0)
-        {
-            SendAllLayouts();
-            SendAllDevices();
-        }
-
-        private void SendAllLayouts()
-        {
-            var allLayouts = new List<string>();
-            m_LocalManager.ListControlLayouts(allLayouts);
-
-            foreach (var layoutName in allLayouts)
-                SendLayout(layoutName);
-        }
-
-        private void SendLayout(string layoutName)
-        {
-            var message = NewLayoutMsg.Create(this, layoutName);
-            if (message != null)
-                Send(message.Value);
         }
 
         private void SendAllDevices()
@@ -261,10 +237,6 @@ namespace UnityEngine.Experimental.Input
             if (m_Subscribers == null)
                 return;
 
-            // Don't mirror remoted layouts to other remotes.
-            if (layout.StartsWith(kRemoteLayoutNamespacePrefix))
-                return;
-
             Message msg;
             switch (change)
             {
@@ -307,7 +279,6 @@ namespace UnityEngine.Experimental.Input
             var sender = new RemoteSender
             {
                 senderId = senderId,
-                layoutNamespace = string.Format("{0}{1}", kRemoteLayoutNamespacePrefix, senderId)
             };
             return ArrayHelpers.Append(ref m_Senders, sender);
         }
@@ -354,7 +325,6 @@ namespace UnityEngine.Experimental.Input
         internal struct RemoteSender
         {
             public int senderId;
-            public string layoutNamespace;
             public string[] layouts;
             public RemoteInputDevice[] devices;
         }
@@ -364,18 +334,9 @@ namespace UnityEngine.Experimental.Input
         {
             public int remoteId; // Device ID used by sender.
             public int localId; // Device ID used by us in local system.
+            public string layoutName;
 
             public InputDeviceDescription description;
-
-            // Senders give us the full layouts in JSON for the devices they
-            // are using so we can recreate devices exactly like they appear
-            // in the player. This also means that we don't need to have the same
-            // layouts available that the player does.
-            //
-            // When registering layouts from remote senders, we prefix them
-            // with "remote{senderId}::" to distinguish them from normal local
-            // layouts.
-            public string layoutName;
         }
 
         internal class Subscriber : IDisposable
@@ -393,7 +354,9 @@ namespace UnityEngine.Experimental.Input
             public static void Process(InputRemoting receiver, Message msg)
             {
                 if (receiver.sending)
-                    receiver.SendAllCurrentData(msg.participantId);
+                {
+                    receiver.SendAllDevices();
+                }
                 else if ((receiver.m_Flags & Flags.StartSendingOnConnect) == Flags.StartSendingOnConnect)
                     receiver.StartSending();
             }
@@ -466,9 +429,8 @@ namespace UnityEngine.Experimental.Input
             {
                 var json = Encoding.UTF8.GetString(msg.data);
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-                var @namespace = receiver.m_Senders[senderIndex].layoutNamespace;
 
-                receiver.m_LocalManager.RegisterControlLayout(json, @namespace: @namespace);
+                receiver.m_LocalManager.RegisterControlLayout(json);
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].layouts, json);
             }
         }
@@ -487,11 +449,9 @@ namespace UnityEngine.Experimental.Input
 
             public static void Process(InputRemoting receiver, Message msg)
             {
-                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-                var @namespace = receiver.m_Senders[senderIndex].layoutNamespace;
-
+                ////REVIEW: we probably don't want to do this blindly
                 var layoutName = Encoding.UTF8.GetString(msg.data);
-                receiver.m_LocalManager.RemoveControlLayout(layoutName, @namespace: @namespace);
+                receiver.m_LocalManager.RemoveControlLayout(layoutName);
             }
         }
 
@@ -550,12 +510,10 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Create device.
-                var layout = string.Format("{0}::{1}", receiver.m_Senders[senderIndex].layoutNamespace,
-                        data.layout);
                 InputDevice device;
                 try
                 {
-                    device = receiver.m_LocalManager.AddDevice(layout,
+                    device = receiver.m_LocalManager.AddDevice(data.layout,
                             string.Format("Remote{0}::{1}", msg.participantId, data.name));
                 }
                 catch (Exception exception)
@@ -575,7 +533,7 @@ namespace UnityEngine.Experimental.Input
                     remoteId = data.deviceId,
                     localId = device.id,
                     description = data.description,
-                    layoutName = layout
+                    layoutName = data.layout
                 };
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].devices, record);
             }

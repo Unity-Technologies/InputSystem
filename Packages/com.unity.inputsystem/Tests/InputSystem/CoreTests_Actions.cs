@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
+using UnityEngine.TestTools;
 
 partial class CoreTests
 {
@@ -13,7 +16,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanTargetSingleControl()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/gamepad/leftStick");
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
@@ -24,7 +27,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanTargetMultipleControls()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/gamepad/*stick");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
@@ -93,7 +96,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_ActionIsPerformedWhenSourceControlChangesValue()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
         InputAction receivedAction = null;
@@ -130,7 +133,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanListenForStateChangeOnEntireDevice()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
         InputControl receivedControl = null;
@@ -338,7 +341,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_PressingAndReleasingButtonInSameUpdate_StillTriggersAction()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/<gamepad>/<button>", interactions: "press");
 
         var receivedCalls = 0;
@@ -753,7 +756,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanAddMultipleBindings()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(name: "test");
 
         action.AppendBinding("/gamepad/leftStick");
@@ -831,7 +834,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_ControlsUpdateWhenNewDeviceIsAdded()
     {
-        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(binding: "/<gamepad>/buttonSouth");
         action.Enable();
@@ -839,7 +842,7 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls[0], Is.SameAs(gamepad1.buttonSouth));
 
-        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.buttonSouth));
@@ -939,7 +942,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanTriggerActionFromPartialStateUpdate()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/gamepad/leftStick");
         action.Enable();
 
@@ -1105,7 +1108,7 @@ partial class CoreTests
     {
         // Set up an action that requires the left trigger to be held when pressing the A button.
 
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(name: "Test");
         action.AppendBinding("/gamepad/leftTrigger").ChainedWith("/gamepad/buttonSouth");
@@ -1248,7 +1251,7 @@ partial class CoreTests
 
         Assert.That(action.controls, Has.Count.Zero);
 
-        var gamepad1 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls[0], Is.SameAs(gamepad1.leftTrigger));
@@ -1274,7 +1277,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_RemovingDeviceWillUpdateControlsOnAction()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/gamepad/leftStick");
         action.Enable();
 
@@ -1452,7 +1455,7 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanQueryLastTrigger()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "/gamepad/rightTrigger", interactions: "slowTap(duration=1)");
         action.Enable();
 
@@ -1835,7 +1838,7 @@ partial class CoreTests
         action.AppendBinding("/keyboard/enter"); // Add unrelated binding which should not be touched.
 
         InputSystem.AddDevice("Gamepad");
-        var gamepad2 = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
         // Add overrides to make bindings specific to #2 gamepad.
         var numOverrides = action.ApplyBindingOverridesOnMatchingControls(gamepad2);
@@ -1857,7 +1860,7 @@ partial class CoreTests
         var map = new InputActionMap();
         var action1 = map.AddAction("action1", "/<keyboard>/enter");
         var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var numOverrides = map.ApplyBindingOverridesOnMatchingControls(gamepad);
 
@@ -2196,7 +2199,7 @@ partial class CoreTests
     public void Actions_CannotRemoveAllBindingOverridesFromMap_WhenEnabled()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
+        var action = map.AddAction("action1", "/<keyboard>/enter");
 
         var overrides = new List<InputBinding>
         {
@@ -2205,8 +2208,34 @@ partial class CoreTests
 
         map.ApplyBindingOverrides(overrides);
 
-        action1.Enable();
+        action.Enable();
 
         Assert.That(() => map.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ExceptionsInCallbacksAreCaughtAndLogged()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap("testMap");
+        var action = map.AddAction(name: "testAction", binding: "<Gamepad>/buttonSouth");
+        action.performed += ctx => { throw new InvalidOperationException("TEST EXCEPTION FROM ACTION"); };
+        map.actionTriggered += ctx => { throw new InvalidOperationException("TEST EXCEPTION FROM MAP"); };
+        action.Enable();
+
+        LogAssert.Expect(LogType.Error,
+            new Regex(
+                ".*InvalidOperationException thrown during execution of 'Performed' callback on action 'testMap/testAction'.*"));
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM ACTION.*"));
+
+        LogAssert.Expect(LogType.Error,
+            new Regex(
+                ".*InvalidOperationException thrown during execution of callback for 'Performed' phase of 'testAction' action in map 'testMap'.*"));
+        LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
     }
 }

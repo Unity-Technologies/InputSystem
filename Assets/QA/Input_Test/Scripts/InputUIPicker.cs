@@ -4,11 +4,12 @@ using UnityEngine.UI;
 public class InputUIPicker : MonoBehaviour
 {
     // Input Gameobjects
-    public GameObject mac_key_mouse;
-    public GameObject windows_key_mouse;
-    public GameObject xbox_controller;
-    public GameObject generic_controller;
-    public GameObject pen;
+    public GameObject m_windowsKeyboardMouse;
+    public GameObject m_macKeyboardMouse;
+    public GameObject m_controllerDiagram;
+    public GameObject m_xboxController;
+    public GameObject m_pen;
+    public GameObject m_touch;
 
     // Current displayed diagram
     private GameObject current;
@@ -23,13 +24,16 @@ public class InputUIPicker : MonoBehaviour
         switch (picker.value)
         {
             case 1:
-                SwitchToDiagram(xbox_controller);
+                SwitchToDiagram(m_xboxController);
                 break;
             case 2:
-                SwitchToDiagram(generic_controller);
+                SwitchToDiagram(m_controllerDiagram);
                 break;
             case 3:
-                SwitchToDiagram(pen);
+                SwitchToDiagram(m_pen);
+                break;
+            case 4:
+                SwitchToDiagram(m_touch);
                 break;
             case 0:
             default:
@@ -41,11 +45,11 @@ public class InputUIPicker : MonoBehaviour
     private void SwitchToKeyMouse()
     {
 #if (UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX)
-        SwitchToDiagram(mac_key_mouse);
+        SwitchToDiagram(m_macKeyboardMouse);
 #elif (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA)
-        SwitchToDiagram(windows_key_mouse);
+        SwitchToDiagram(m_windowsKeyboardMouse);
 #else
-        SwitchToDiagram(windows_key_mouse);
+        SwitchToDiagram(m_windowsKeyboardMouse);
 #endif
     }
 
