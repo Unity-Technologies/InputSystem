@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -79,14 +77,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public bool renaming;
             
         protected SerializedProperty m_SetProperty;
-        protected SerializedProperty m_ElementProperty;
         protected int m_Index;
             
-        public SerializedProperty setProperty
-        {
-            get { return m_SetProperty; }
-        }
-    
         public virtual SerializedProperty elementProperty
         {
             get { return m_SetProperty.GetArrayElementAtIndex(index); }
@@ -178,21 +170,14 @@ namespace UnityEngine.Experimental.Input.Editor
             id = (actionMapName + "/" + displayName).GetHashCode();
             depth = 2;
         }
-        
 
         protected override GUIStyle rectStyle
         {
             get { return Styles.orangeRect; }
         }
 
-        public IList<InputBinding> GetAllBindings()
-        {
-            return m_Action.bindings.ToList();
-        }
-
         public override string SerializeToString()
         {
-            //TODO Need to add bindings as well    
             return JsonUtility.ToJson(m_Action);
         }
     }

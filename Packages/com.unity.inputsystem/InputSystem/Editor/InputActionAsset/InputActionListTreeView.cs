@@ -90,11 +90,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
 
-                var actionSearchMatched = false;
-                if(IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower()))
-                {
-                    actionSearchMatched = true;
-                }
+                bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
 
                 CompositeGroupTreeItem compositeGroupTreeItem = null;
                 for (var j = 0; j < bindingsCount; j++)
@@ -249,7 +245,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (actionItem is ActionTreeItem)
             {
-                var a = actionItem as ActionTreeItem;
                 var map = GetSelectedActionMap();
                 InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, map.elementProperty, args.newName);
             }
