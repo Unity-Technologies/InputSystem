@@ -137,34 +137,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void OnContextClick()
-        {
-            Repaint();
-            var canCopySelection = m_CopyPasteUtility.CanCopySelection();
-            var menu = new GenericMenu();
-            if (canCopySelection)
-            {
-                menu.AddItem(new GUIContent("Cut"), false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
-                menu.AddItem(new GUIContent("Copy"), false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
-            }
-            else
-            {
-                menu.AddDisabledItem(new GUIContent("Cut"), false);
-                menu.AddDisabledItem(new GUIContent("Copy"), false);
-            }
-            menu.AddItem(new GUIContent("Paste"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Paste"));
-            menu.AddItem(new GUIContent("Delete"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Delete"));
-            if (canCopySelection)
-            {
-                menu.AddItem(new GUIContent("Duplicate"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
-            }
-            else
-            {
-                menu.AddDisabledItem(new GUIContent("Duplicate"), false);
-            }
-            menu.ShowAsContext();
-        }
-
         void InitiateTrees()
         {
             if (m_SerializedObject != null)
@@ -378,6 +350,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void ShowAddMenu()
         {
+            var menu = new GenericMenu();
+            AddAddOptionsToMenu(menu, false);
+            menu.ShowAsContext();
+        }
+
+        void AddAddOptionsToMenu(GenericMenu menu, bool includeAddPrefix)
+        {
             var canAddBinding = false;
             var row = m_TreeView.GetSelectedAction();
             if (row != null)
@@ -391,30 +370,63 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 canAddAction = true;
             }
-            
-            var menu = new GenericMenu();
+
+            var actionString = includeAddPrefix ? "Add action" : "Action";
             if (canAddAction)
             {
-                menu.AddItem(new GUIContent("Action"), false, OnAddAction);
+                menu.AddItem(new GUIContent(actionString), false, OnAddAction);
             }
             else
             {
-                menu.AddDisabledItem(new GUIContent("Action"), false);
+                menu.AddDisabledItem(new GUIContent(actionString), false);
             }
-            menu.AddItem(new GUIContent("Action map"), false, OnAddActionMap);
+
+            var actionMapString = includeAddPrefix ? "Add action map" : "Action map";
+            menu.AddItem(new GUIContent(actionMapString), false, OnAddActionMap);
             menu.AddSeparator("");
+            var bindingString = includeAddPrefix ? "Add binding" : "Binding";
+            var compositeString = includeAddPrefix ? "Add composite binding" : "Composite binding";
             if (canAddBinding)
             {
-                menu.AddItem(new GUIContent("Binding"), false, OnAddBinding);
-                menu.AddItem(new GUIContent("Composite binding"), false, OnAddCompositeBinding);
+                menu.AddItem(new GUIContent(bindingString), false, OnAddBinding);
+                menu.AddItem(new GUIContent(compositeString), false, OnAddCompositeBinding);
             }
             else
             {
-                menu.AddDisabledItem(new GUIContent("Binding"), false);
-                menu.AddDisabledItem(new GUIContent("Composite binding"), false);
+                menu.AddDisabledItem(new GUIContent(bindingString), false);
+                menu.AddDisabledItem(new GUIContent(compositeString), false);
+            }
+        }
+
+        void OnContextClick()
+        {
+            var canCopySelection = m_CopyPasteUtility.CanCopySelection();
+            var menu = new GenericMenu();
+            AddAddOptionsToMenu(menu, true);
+            menu.AddSeparator("");
+            if (canCopySelection)
+            {
+                menu.AddItem(new GUIContent("Cut"), false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
+                menu.AddItem(new GUIContent("Copy"), false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Cut"), false);
+                menu.AddDisabledItem(new GUIContent("Copy"), false);
+            }
+            menu.AddItem(new GUIContent("Paste"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Paste"));
+            menu.AddItem(new GUIContent("Delete"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Delete"));
+            if (canCopySelection)
+            {
+                menu.AddItem(new GUIContent("Duplicate"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent("Duplicate"), false);
             }
             menu.ShowAsContext();
         }
+
 
         void OnAddCompositeBinding()
         {
