@@ -294,6 +294,17 @@ namespace UnityEngine.Experimental.Input.Editor
         void DeleteSelectedRows()
         {
             var rows = m_TreeView.GetSelectedRows().ToArray();
+            foreach (var compositeGroup in rows.Where(r=>r.GetType() == typeof(CompositeGroupTreeItem)).OrderByDescending(r=>r.index).Cast<CompositeGroupTreeItem>())
+            {
+                var actionMapProperty = (compositeGroup.parent.parent as InputTreeViewLine).elementProperty;
+                var actionProperty = (compositeGroup.parent as ActionTreeItem).elementProperty;
+                for (var i = compositeGroup.children.Count - 1; i >= 0; i--)
+                {
+                    var composite = (CompositeTreeItem) compositeGroup.children[i];
+                    InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index, actionMapProperty);
+                }
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, compositeGroup.index, actionMapProperty);
+            }
             foreach (var bindingRow in rows.Where(r=>r.GetType() == typeof(BindingTreeItem)).OrderByDescending(r=>r.index).Cast<BindingTreeItem>())
             {
                 var actionMapProperty = (bindingRow.parent.parent as InputTreeViewLine).elementProperty;
@@ -389,7 +400,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (canAddBinding)
             {
                 menu.AddItem(new GUIContent(bindingString), false, OnAddBinding);
-                menu.AddItem(new GUIContent(compositeString), false, OnAddCompositeBinding);
+                menu.AddItem(new GUIContent(compositeString + "/2 dimensions"), false, OnAddCompositeBinding, 2);
+                menu.AddItem(new GUIContent(compositeString+ "/4 dimensions"), false, OnAddCompositeBinding, 4);
             }
             else
             {
@@ -427,12 +439,11 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-
-        void OnAddCompositeBinding()
+        void OnAddCompositeBinding(object dimensionNumber)
         {
             var actionMapLine = GetSelectedActionMapLine();
             var actionLine = GetSelectedActionLine();
-            InputActionSerializationHelpers.AppendCompositeBinding(actionLine.elementProperty, actionMapLine.elementProperty);
+            InputActionSerializationHelpers.AppendCompositeBinding(actionLine.elementProperty, actionMapLine.elementProperty, (int)dimensionNumber);
             Apply();
         }
 

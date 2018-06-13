@@ -204,12 +204,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             displayName = path;
-            depth++;
         }
 
         protected override GUIStyle rectStyle
         {
-            get { return Styles.cyanRect; }
+            get { return Styles.greenRect; }
         }
     }
     

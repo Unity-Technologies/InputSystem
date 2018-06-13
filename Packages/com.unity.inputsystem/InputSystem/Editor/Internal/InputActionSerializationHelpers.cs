@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         // Equivalent to InputAction.AppendBinding().
-        public static void AppendBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        public static SerializedProperty AppendBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
         {
             var bindingsArrayProperty = actionMapProperty != null
                 ? actionMapProperty.FindPropertyRelative("m_Bindings")
@@ -163,6 +163,8 @@ namespace UnityEngine.Experimental.Input.Editor
             newActionProperty.FindPropertyRelative("interactions").stringValue = string.Empty;
             newActionProperty.FindPropertyRelative("flags").intValue = 0;
             newActionProperty.FindPropertyRelative("action").stringValue = actionName;
+
+            return newActionProperty;
 
             ////FIXME: this likely leaves m_Bindings in the map for singleton actions unsync'd in some cases
         }
@@ -282,9 +284,17 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = newName;
         }
 
-        public static void AppendCompositeBinding(SerializedProperty actionLineElementProperty, SerializedProperty elementProperty)
+        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, int numberOfDimensions)
         {
-            throw new NotImplementedException();
+            var newProperty = AppendBinding(actionProperty, actionMapProperty);
+            newProperty.FindPropertyRelative("path").stringValue = "Composite " + numberOfDimensions + "d";
+            newProperty.FindPropertyRelative("flags").intValue = (int) InputBinding.Flags.Composite;
+
+            for (var i = 0; i < numberOfDimensions; i++)
+            {
+                newProperty = AppendBinding(actionProperty, actionMapProperty);
+                newProperty.FindPropertyRelative("flags").intValue = (int) InputBinding.Flags.PartOfComposite;
+            }
         }
     }
 }

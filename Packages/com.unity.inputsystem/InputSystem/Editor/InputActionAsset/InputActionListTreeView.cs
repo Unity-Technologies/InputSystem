@@ -281,7 +281,10 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (args.draggedItemIDs.Count > 1)
                 return false;
-            if (FindItem(args.draggedItemIDs[0], rootItem).GetType() == typeof(BindingTreeItem))
+            var item = FindItem(args.draggedItemIDs[0], rootItem);
+            if (item.GetType() == typeof(BindingTreeItem))
+                return true;
+            if (item.GetType() == typeof(CompositeGroupTreeItem))
                 return true;
             return false;
         }
@@ -300,7 +303,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 return DragAndDropVisualMode.None;
 
             var id = Int32.Parse(DragAndDrop.paths.First());
-            var row = (BindingTreeItem)FindItem(id, rootItem);
+            var item = FindItem(id, rootItem);
+            var row = (BindingTreeItem)item;
+            if (row == null)
+                row = (CompositeGroupTreeItem)item;
 
             if (args.parentItem.GetType() != typeof(ActionTreeItem)
                 || args.parentItem != row.parent)
@@ -310,13 +316,46 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (args.performDrop)
             {
+                var counter = 0;
+                for (var i = 0; i < args.insertAtIndex; i++)
+                {
+                    item = args.parentItem.children[i];
+                    if (item.GetType() == typeof(CompositeGroupTreeItem))
+                    {
+                        counter += item.children.Count;
+                    }
+                }
+                args.insertAtIndex += counter;
+                
                 var action = (ActionTreeItem) args.parentItem;
                 var map = (ActionMapTreeItem) args.parentItem.parent;
-                var srcIndex = action.bindingsStartIndex + row.index;
                 var dstIndex = action.bindingsStartIndex + args.insertAtIndex;
+                var srcIndex = action.bindingsStartIndex + row.index;
                 if (dstIndex > srcIndex)
+                {
                     dstIndex--;
+                }
+                
                 InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
+                
+                if (row.GetType() == typeof(CompositeGroupTreeItem))
+                {
+                    for (var i = 0; i < row.children.Count; i++)
+                    {
+                        if (dstIndex > srcIndex)
+                        {
+                            // when moving composite down
+                            InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
+                            continue;
+                        }
+                        
+                        // when moving composite up
+                        dstIndex++;
+                        srcIndex = action.bindingsStartIndex + (row.children[i] as CompositeTreeItem).index;
+                        InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
+                    } 
+                }
+
                 m_ApplyAction();
                 DragAndDrop.AcceptDrag();
             }
