@@ -19,12 +19,12 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         {
             // Need to make this real.
             // right now just send it something for tests
-            SendStateEventToControl(new Vector2(0.0f, 0.5f));
+            SendValueToControl(new Vector2(0.0f, 0.5f));
         }
 
         public void OnPointerUp(PointerEventData data)
         {
-            SendStateEventToControl(new Vector2(0.0f, 0.0f));
+            SendValueToControl(new Vector2(0.0f, 0.0f));
         }
     }
 }

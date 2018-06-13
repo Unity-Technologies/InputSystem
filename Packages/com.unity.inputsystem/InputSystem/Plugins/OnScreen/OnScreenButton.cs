@@ -33,12 +33,12 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         public void OnPointerUp(PointerEventData data)
         {
-            SendStateEventToControl(0.0f);
+            SendValueToControl(0.0f);
         }
 
         public void OnPointerDown(PointerEventData data)
         {
-            SendStateEventToControl(1.0f);
+            SendValueToControl(1.0f);
         }
     }
 }

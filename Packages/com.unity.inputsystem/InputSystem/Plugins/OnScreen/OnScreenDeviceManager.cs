@@ -30,5 +30,14 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
             return InputControlPath.TryFindControl(device, controlPath);
         }
+
+        public void ProcessDeviceStateEventForValue<TValue>(InputDevice device, InputControl<TValue> control,  TValue value)
+        {
+            var eventPtr = GetInputEventPtrForDevice(device);
+            eventPtr.time = InputRuntime.s_Instance.currentTime;
+            control.WriteValueInto(eventPtr, value);
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+        }
     }
 }

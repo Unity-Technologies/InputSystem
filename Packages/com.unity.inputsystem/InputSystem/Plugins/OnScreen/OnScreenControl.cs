@@ -57,7 +57,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             m_Control = s_DeviceManager.SetupInputControl(controlPath);
         }
 
-        protected void SendStateEventToControl<TValue>(TValue value)
+        protected void SendValueToControl<TValue>(TValue value)
         {
             // NEED TO FIX THIS.   Only cast once.
             var control = m_Control as InputControl<TValue>;
@@ -67,12 +67,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                         controlPath, m_Control.GetType().Name));
             }
 
-            var eventPtr = s_DeviceManager.GetInputEventPtrForDevice(m_Control.device);
-
-            eventPtr.time = InputRuntime.s_Instance.currentTime;
-            control.WriteValueInto(eventPtr, value);
-            InputSystem.QueueEvent(eventPtr);
-            InputSystem.Update();
+            s_DeviceManager.ProcessDeviceStateEventForValue(control.device, control, value);
         }
     }
 }
