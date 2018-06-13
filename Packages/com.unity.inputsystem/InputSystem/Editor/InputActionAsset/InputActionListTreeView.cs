@@ -11,6 +11,7 @@ namespace UnityEngine.Experimental.Input.Editor
         InputActionAsset m_Asset;
         SerializedObject m_SerializedObject;
         string m_GroupFilter;
+        string m_NameFilter;
         Action m_ApplyAction;
         
         public Action OnSelectionChanged;
@@ -35,10 +36,21 @@ namespace UnityEngine.Experimental.Input.Editor
             Reload();
         }
 
-        public void FilterResults(string filter)
+        public void SetGroupFilter(string filter)
         {
             m_GroupFilter = filter;
             Reload();
+        }
+
+        public void SetNameFilter(string filter)
+        {
+            m_NameFilter = filter;
+            Reload();
+        }
+
+        public bool IsSearching()
+        {
+            return !string.IsNullOrEmpty(m_NameFilter);
         }
 
         protected override TreeViewItem BuildRoot()
@@ -74,10 +86,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 var action = actionMap.actions[i];
                 
                 var actionItem = new ActionTreeItem(actionMap.name, action, actionsArrayProperty, i);
-                treeViewItem.AddChild(actionItem);
 
                 var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
+
+                var actionSearchMatched = false;
+                if(IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower()))
+                {
+                    actionSearchMatched = true;
+                }
 
                 CompositeGroupTreeItem compositeGroupTreeItem = null;
                 for (var j = 0; j < bindingsCount; j++)
@@ -103,7 +120,20 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     compositeGroupTreeItem = null;
                     var bindingsItem = new BindingTreeItem(actionMap.name, binding, bindingProperty, j);
+                    if(!actionSearchMatched && IsSearching() && !binding.path.ToLower().Contains(m_NameFilter.ToLower()))
+                    {
+                        continue;
+                    }
                     actionItem.AddChild(bindingsItem);
+                }
+
+                if (actionSearchMatched || IsSearching() && actionItem.children != null && actionItem.children.Any())
+                {
+                    treeViewItem.AddChild(actionItem);
+                }
+                else if(!IsSearching())
+                {
+                    treeViewItem.AddChild(actionItem);
                 }
             }
         }

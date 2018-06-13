@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
@@ -92,17 +91,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
         [SerializeField]
         Object m_ReferencedObject;
-        internal SerializedObject m_SerializedObject;
-
-        internal InputActionListTreeView m_TreeView;
         [SerializeField]
         TreeViewState m_TreeViewState;
-
+        internal InputActionListTreeView m_TreeView;
+        internal SerializedObject m_SerializedObject;
         PropertiesView m_PropertyView;
-        int m_GroupIndex;
         List<string> m_GroupPopupList;
-
         CopyPasteUtility m_CopyPasteUtility;
+        SearchField m_SearchField;
+        string m_SearchText;
+        int m_GroupIndex;
 
         public void OnEnable()
         {
@@ -186,6 +184,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                 }
                 m_CopyPasteUtility = new CopyPasteUtility(this);
+                m_SearchField = new SearchField();
             }
         }
         
@@ -253,13 +252,21 @@ namespace UnityEngine.Experimental.Input.Editor
             
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginChangeCheck();
-            m_GroupIndex = EditorGUILayout.Popup(m_GroupIndex, m_GroupPopupList.ToArray());
+            EditorGUILayout.LabelField("Group filter", GUILayout.MaxWidth(70));
+            m_GroupIndex = EditorGUILayout.Popup(m_GroupIndex, m_GroupPopupList.ToArray(), GUILayout.MaxWidth(200));
             if (EditorGUI.EndChangeCheck())
             {
                 var filter = m_GroupIndex > 0 ? m_GroupPopupList[m_GroupIndex] : null;
-                m_TreeView.FilterResults(filter);
+                m_TreeView.SetGroupFilter(filter);
             }
-            EditorGUILayout.TextField("Search box (not implemeneted)", GUILayout.MaxWidth(200));
+            
+            GUILayout.FlexibleSpace();
+            EditorGUI.BeginChangeCheck();
+            m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
+            if (EditorGUI.EndChangeCheck())
+            {
+                m_TreeView.SetNameFilter(m_SearchText);
+            }
             EditorGUILayout.EndHorizontal();
             
             EditorGUILayout.Space();
@@ -352,8 +359,11 @@ namespace UnityEngine.Experimental.Input.Editor
             treeViewRect.height -= 20;
             treeViewRect.x += 2;
             treeViewRect.width -= 4;
-            
-            EditorGUI.LabelField(labelRect, "Action maps", Styles.columnHeaderLabel);
+
+            var header = "Action maps";
+            if (!string.IsNullOrEmpty(m_SearchText))
+                header += " (Searching)";
+            EditorGUI.LabelField(labelRect, header, Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.width - 18;
             labelRect.width = 18;
