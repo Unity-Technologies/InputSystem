@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -70,7 +71,6 @@ namespace UnityEngine.Experimental.Input.Editor
             var path = AssetDatabase.GetAssetPath(instanceID);
             if (path.EndsWith(".inputactions"))
             {
-
                 var obj = EditorUtility.InstanceIDToObject(instanceID);
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
                 var window = inputManagers.FirstOrDefault(w => w.m_ReferencedObject.Equals(obj));
@@ -182,9 +182,17 @@ namespace UnityEngine.Experimental.Input.Editor
         internal void Apply()
         {
             m_SerializedObject.ApplyModifiedProperties();
+            SaveChangesToAsset();
             m_SerializedObject.Update();
             m_TreeView.Reload();
             Repaint();
+        }
+
+        void SaveChangesToAsset()
+        {
+            var asset = (InputActionAsset)m_ReferencedObject;
+            var path = AssetDatabase.GetAssetPath(asset);
+            File.WriteAllText(path, asset.ToJson());
         }
 
         void OnGUI()
