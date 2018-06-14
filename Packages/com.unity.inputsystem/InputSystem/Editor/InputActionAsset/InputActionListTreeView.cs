@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        protected override void ContextClickedItem(int id)
+        protected override void ContextClicked()
         {
             OnContextClick();
         }

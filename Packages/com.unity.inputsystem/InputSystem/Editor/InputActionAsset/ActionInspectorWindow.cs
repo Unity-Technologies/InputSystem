@@ -93,6 +93,8 @@ namespace UnityEngine.Experimental.Input.Editor
         Object m_ReferencedObject;
         [SerializeField]
         TreeViewState m_TreeViewState;
+        [SerializeField]
+        TreeViewState m_PickerTreeViewState;
         internal InputActionListTreeView m_TreeView;
         internal SerializedObject m_SerializedObject;
         PropertiesView m_PropertyView;
@@ -124,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var p = m_TreeView.GetSelectedRow();
                 if (p is BindingTreeItem)
                 {
-                    m_PropertyView = new PropertiesView(p.elementProperty, Apply);
+                    m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
                 }
                 else
                 {
@@ -152,7 +154,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var p = m_TreeView.GetSelectedRow();
                     if (p is BindingTreeItem)
                     {
-                        m_PropertyView = new PropertiesView(p.elementProperty, Apply);
+                        m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
                     }
                 }
                 m_CopyPasteUtility = new CopyPasteUtility(this);

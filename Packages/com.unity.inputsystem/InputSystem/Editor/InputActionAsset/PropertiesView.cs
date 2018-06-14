@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEditorInternal;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -24,9 +25,11 @@ namespace UnityEngine.Experimental.Input.Editor
         SerializedProperty m_ModifiersProperty;
         SerializedProperty m_ProcessorsProperty;
         Action m_ReloadTree;
+        TreeViewState m_TreeViewState;
 
-        public PropertiesView(SerializedProperty bindingProperty, Action reloadTree)
+        public PropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
         {
+            m_TreeViewState = treeViewState;
             m_InteractionChoices = InputSystem.ListInteractions().OrderBy(a=>a).Select(x => new GUIContent(x)).ToArray();
             m_ProcessorsChoices = InputSystem.ListProcessors().OrderBy(a=>a).Select(x => new GUIContent(x)).ToArray();
             
@@ -146,7 +149,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (EditorGUI.DropdownButton(btnRect, new GUIContent(path), FocusType.Keyboard))
                 {
                     PopupWindow.Show(btnRect,
-                        new InputControlPicker(pathProperty) {onPickCallback = OnBindingModified});
+                        new InputControlPicker(pathProperty, ref m_TreeViewState) {onPickCallback = OnBindingModified});
                 }
                 
                 EditorGUILayout.Space();
