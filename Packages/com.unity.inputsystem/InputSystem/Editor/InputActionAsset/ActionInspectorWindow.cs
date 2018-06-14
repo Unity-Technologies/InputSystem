@@ -376,16 +376,17 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void AddAddOptionsToMenu(GenericMenu menu, bool includeAddPrefix)
         {
+            var hasSelection = m_TreeView.HasSelection();
             var canAddBinding = false;
             var row = m_TreeView.GetSelectedAction();
-            if (row != null)
+            if (row != null && hasSelection)
             {
                 canAddBinding = true;
             }
 
             var canAddAction = false;
             var action = m_TreeView.GetSelectedActionMap();
-            if (action != null)
+            if (action != null && hasSelection)
             {
                 canAddAction = true;
             }

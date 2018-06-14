@@ -187,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public CompositeGroupTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
             : base(actionMapName, binding, bindingProperty, index)
         {
-            var path = elementProperty.FindPropertyRelative("path").stringValue;
+            var path = elementProperty.FindPropertyRelative("name").stringValue;
             displayName = path;
         }
 

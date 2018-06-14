@@ -211,7 +211,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override bool CanRename(TreeViewItem item)
         {
-            return item is InputTreeViewLine && !(item is BindingTreeItem);
+            return item is CompositeGroupTreeItem || item is InputTreeViewLine && !(item is BindingTreeItem);
         }
         
         protected override void DoubleClickedItem(int id)
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var item = FindItem(id, rootItem);
             if (item == null)
                 return;
-            if(item is BindingTreeItem)
+            if(item is BindingTreeItem && !(item is CompositeGroupTreeItem))
                 return;
             BeginRename(item);
             (item as InputTreeViewLine).renaming = true;
@@ -251,6 +251,10 @@ namespace UnityEngine.Experimental.Input.Editor
             else if(actionItem is ActionMapTreeItem)
             {
                 InputActionSerializationHelpers.RenameActionMap(actionItem.elementProperty, args.newName);
+            }
+            else if(actionItem is CompositeGroupTreeItem)
+            {
+                InputActionSerializationHelpers.RenameComposite(actionItem.elementProperty, args.newName);
             }
             else
             {

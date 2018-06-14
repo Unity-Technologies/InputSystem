@@ -284,10 +284,16 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = newName;
         }
 
+        public static void RenameComposite(SerializedProperty actionMapProperty, string newName)
+        {
+            var nameProperty = actionMapProperty.FindPropertyRelative("name");
+            nameProperty.stringValue = newName;
+        }
+
         public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, int numberOfDimensions)
         {
             var newProperty = AppendBinding(actionProperty, actionMapProperty);
-            newProperty.FindPropertyRelative("path").stringValue = "Composite " + numberOfDimensions + "d";
+            newProperty.FindPropertyRelative("name").stringValue = "Composite " + numberOfDimensions + "d";
             newProperty.FindPropertyRelative("flags").intValue = (int) InputBinding.Flags.Composite;
 
             for (var i = 0; i < numberOfDimensions; i++)
