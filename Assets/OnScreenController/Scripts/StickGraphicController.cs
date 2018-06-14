@@ -4,7 +4,8 @@ using UnityEngine.EventSystems;
 public class StickGraphicController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     Vector3 m_StartPos;
-    public int MovementRange = 100;
+    public int MovementRange = 50;
+    public Vector3 deltaPos;
 
     // Use this for initialization
     void Start()
@@ -12,14 +13,13 @@ public class StickGraphicController : MonoBehaviour, IPointerDownHandler, IPoint
         m_StartPos = transform.position;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-    }
-
     public void OnPointerDown(PointerEventData data) {}
 
-    public void OnPointerUp(PointerEventData data) { transform.position = m_StartPos; }
+    public void OnPointerUp(PointerEventData data)
+    {
+        transform.position = m_StartPos;
+        deltaPos = Vector3.zero;
+    }
 
     public void OnDrag(PointerEventData data)
     {
@@ -36,6 +36,9 @@ public class StickGraphicController : MonoBehaviour, IPointerDownHandler, IPoint
             delta = Mathf.Clamp(delta, -MovementRange, MovementRange);
             newPos.y = delta;
         }
+
+        deltaPos = newPos;
+
         transform.position = new Vector3(m_StartPos.x + newPos.x, m_StartPos.y + newPos.y, m_StartPos.z + newPos.z);
     }
 }
