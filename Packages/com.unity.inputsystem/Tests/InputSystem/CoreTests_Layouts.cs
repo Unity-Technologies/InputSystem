@@ -73,7 +73,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CannotUseControlLayoutAsToplevelLayout()
+    public void Layouts_CannotUseLayoutForControlToBuildDevice()
     {
         Assert.That(() => new InputDeviceBuilder("Button"), Throws.InvalidOperationException);
     }
