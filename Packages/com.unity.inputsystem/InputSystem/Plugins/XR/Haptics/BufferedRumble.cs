@@ -49,9 +49,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         {
             this.device = device;
 
-            var command = HapticCapabilitiesCommand.Create();
+            var command = GetHapticCapabilitiesCommand.Create();
             device.ExecuteCommand(ref command);
-            capabilities = command.Capabilities;
+            capabilities = command.capabilities;
 
             m_IsPaused = false;
         }
