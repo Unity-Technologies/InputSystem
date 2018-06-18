@@ -222,7 +222,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_InputBinding = binding;
             m_BindingProperty = bindingProperty;
-            m_ActionMapName = actionMapName;
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
             var name = elementProperty.FindPropertyRelative("name").stringValue;

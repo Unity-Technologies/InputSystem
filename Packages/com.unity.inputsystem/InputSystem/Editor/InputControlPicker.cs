@@ -119,6 +119,19 @@ namespace UnityEngine.Experimental.Input.Editor
                 Reload();
             }
 
+            protected override bool DoesItemMatchSearch(TreeViewItem treeViewItem, string search)
+            {
+                if (treeViewItem.hasChildren)
+                    return false;
+                var item = (Item)treeViewItem;
+                search = search.ToLower();
+                if (item.device!=null && item.device.ToLower().Contains(search))
+                    return true;
+                if (item.controlPath != null && item.controlPath.ToLower().Contains(search))
+                    return true;
+                return false;
+            }
+
             protected override void RowGUI(RowGUIArgs args)
             {
                 var item = args.item as Item;

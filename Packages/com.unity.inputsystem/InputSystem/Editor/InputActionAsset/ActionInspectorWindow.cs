@@ -128,21 +128,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void LoadPropertiesForSelection()
         {
-            if (m_TreeView.GetSelectedProperty() != null)
+            m_PropertyView = null;
+            if (m_TreeView.GetSelectedProperty() == null)
             {
-                var p = m_TreeView.GetSelectedRow();
-                if (p is BindingTreeItem)
-                {
-                    m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
-                }
-                else
-                {
-                    m_PropertyView = null;
-                }
+                return;
             }
-            else
+            var p = m_TreeView.GetSelectedRow();
+            if (p.GetType() == typeof(BindingTreeItem) || p.GetType() == typeof(CompositeTreeItem))
             {
-                m_PropertyView = null;
+                m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
             }
         }
 
