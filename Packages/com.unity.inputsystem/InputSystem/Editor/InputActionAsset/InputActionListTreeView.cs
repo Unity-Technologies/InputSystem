@@ -168,7 +168,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var item = FindItem(GetSelection().First(), rootItem);
 
-            while (!(item is ActionTreeItem) && item.parent != null)
+            while (!(item is ActionTreeItem) && item != null && item.parent != null)
             {
                 item = item.parent;
             }
@@ -183,7 +183,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var item = FindItem(GetSelection().First(), rootItem);
 
-            while (!(item is ActionMapTreeItem) && item.parent != null)
+            while (!(item is ActionMapTreeItem) && item != null && item.parent != null)
             {
                 item = item.parent;
             }

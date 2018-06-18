@@ -193,6 +193,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var newActionProperty = bindingsArrayProperty.GetArrayElementAtIndex(bindingIndex);
             newActionProperty.FindPropertyRelative("path").stringValue = binding.path;
+            newActionProperty.FindPropertyRelative("name").stringValue = binding.name;
             newActionProperty.FindPropertyRelative("groups").stringValue = binding.groups;
             newActionProperty.FindPropertyRelative("interactions").stringValue = binding.interactions;
             newActionProperty.FindPropertyRelative("flags").intValue = (int) binding.flags;

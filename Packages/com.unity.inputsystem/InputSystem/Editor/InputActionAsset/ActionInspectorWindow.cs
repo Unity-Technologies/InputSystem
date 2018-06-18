@@ -103,6 +103,8 @@ namespace UnityEngine.Experimental.Input.Editor
         SearchField m_SearchField;
         string m_SearchText;
         int m_GroupIndex;
+        [SerializeField]
+        string m_AssetPath;
 
         public void OnEnable()
         {
@@ -120,6 +122,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         void OnSelectionChanged()
+        {
+            LoadPropertiesForSelection();
+        }
+
+        void LoadPropertiesForSelection()
         {
             if (m_TreeView.GetSelectedProperty() != null)
             {
@@ -145,20 +152,11 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 ParseGroups(m_ReferencedObject as InputActionAsset);
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
-
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
-                
-                if (m_PropertyView == null && m_TreeView.GetSelectedProperty() != null)
-                {
-                    var p = m_TreeView.GetSelectedRow();
-                    if (p is BindingTreeItem)
-                    {
-                        m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
-                    }
-                }
                 m_CopyPasteUtility = new CopyPasteUtility(this);
                 m_SearchField = new SearchField();
+                LoadPropertiesForSelection();
             }
         }
         
@@ -171,6 +169,9 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var binding in actionMap.bindings)
                 {
+                    if(binding.groups == null)
+                        continue;
+                    
                     foreach (var group in binding.groups.Split(new[]{';'}, StringSplitOptions.RemoveEmptyEntries))
                     {
                         if (!string.IsNullOrEmpty(@group))
@@ -211,8 +212,17 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
 
+            if (m_ReferencedObject == null && !string.IsNullOrEmpty(m_AssetPath))
+            {
+                m_ReferencedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
+                m_SerializedObject = null;
+                m_TreeView = null;
+                return;
+            }
+
             if (m_SerializedObject == null && m_ReferencedObject != null)
             {
+                m_AssetPath = AssetDatabase.GetAssetPath(m_ReferencedObject);
                 m_SerializedObject = new SerializedObject(m_ReferencedObject);
                 var pr = m_SerializedObject.FindProperty("m_ActionMaps");
                 if (pr == null)

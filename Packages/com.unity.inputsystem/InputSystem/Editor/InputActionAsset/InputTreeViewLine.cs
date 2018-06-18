@@ -187,8 +187,13 @@ namespace UnityEngine.Experimental.Input.Editor
         public CompositeGroupTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) 
             : base(actionMapName, binding, bindingProperty, index)
         {
-            var path = elementProperty.FindPropertyRelative("name").stringValue;
-            displayName = path;
+            var name = elementProperty.FindPropertyRelative("name").stringValue;
+            displayName = name;
+        }
+
+        protected override int GetId(string actionMapName, int index, string action, string path, string name)
+        {
+            return (actionMapName + " " + action + " " + name).GetHashCode();
         }
 
         protected override GUIStyle rectStyle
@@ -217,10 +222,12 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_InputBinding = binding;
             m_BindingProperty = bindingProperty;
+            m_ActionMapName = actionMapName;
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
+            var name = elementProperty.FindPropertyRelative("name").stringValue;
             displayName = ParseName(path);
-            id = (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
+            id = GetId(actionMapName, index, action, path, name);
             depth = 2;
         }
 
@@ -230,6 +237,15 @@ namespace UnityEngine.Experimental.Input.Editor
         public override SerializedProperty elementProperty
         {
             get { return m_BindingProperty; }
+        }
+
+        protected virtual int GetId(string actionMapName, int index, string action, string path, string name)
+        {
+            if (path == "")
+            {
+                return (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
+            }
+            return (actionMapName + " " + action + " " + path).GetHashCode();
         }
 
         static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
