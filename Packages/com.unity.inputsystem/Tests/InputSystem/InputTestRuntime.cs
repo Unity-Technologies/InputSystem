@@ -202,5 +202,24 @@ namespace UnityEngine.Experimental.Input
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
+        public Action<string, object> onSendAnalyticsEvent { get; set; }
+
+        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        {
+            if (onRegisterAnalyticsEvent != null)
+                onRegisterAnalyticsEvent(name, maxPerHour, maxPropertiesPerEvent);
+        }
+
+        public void SendAnalyticsEvent(string name, object data)
+        {
+            if (onSendAnalyticsEvent != null)
+                onSendAnalyticsEvent(name, data);
+        }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

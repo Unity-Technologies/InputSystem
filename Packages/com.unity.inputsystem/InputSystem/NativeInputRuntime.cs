@@ -121,5 +121,28 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get { return new Vector2(Screen.width, Screen.height); }
         }
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        {
+            const string vendorKey = "unity.input";
+            #if UNITY_EDITOR
+            UnityEditor.EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            #else
+            Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
+            #endif
+        }
+
+        public void SendAnalyticsEvent(string name, object data)
+        {
+            #if UNITY_EDITOR
+            UnityEditor.EditorAnalytics.SendEventWithLimit(name, data);
+            #else
+            Analytics.Analytics.SendEvent(name, data);
+            #endif
+        }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

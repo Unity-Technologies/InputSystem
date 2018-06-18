@@ -1171,6 +1171,13 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onBeforeUpdate = OnBeforeUpdate;
                 m_NativeBeforeUpdateHooked = true;
             }
+
+            #if UNITY_ANALYTICS || UNITY_EDITOR
+            if (m_Runtime != null)
+            {
+                InputAnalytics.Initialize(this);
+            }
+            #endif
         }
 
         // Revive after domain reload.

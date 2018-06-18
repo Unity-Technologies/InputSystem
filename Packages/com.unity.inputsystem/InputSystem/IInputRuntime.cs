@@ -113,6 +113,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+        void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
+        void SendAnalyticsEvent(string name, object data);
+        #endif
     }
 
     internal static class InputRuntime
