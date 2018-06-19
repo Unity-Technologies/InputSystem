@@ -27,7 +27,6 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
-
         private struct OnScreenDeviceEventInfo
         {
             public InputEventPtr eventPtr;
@@ -118,8 +117,8 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             if (control == null)
             {
                 throw new Exception(string.Format(
-                    "The control path {0} yields a control of type {1} which is not an InputControl",
-                    controlPath, m_Control.GetType().Name));
+                        "The control path {0} yields a control of type {1} which is not an InputControl",
+                        controlPath, m_Control.GetType().Name));
             }
 
             ProcessDeviceStateEventForValue(m_OnScreenDeviceId, control, value);
@@ -129,7 +128,6 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         {
             m_Control = RegisterInputControl(controlPath, out m_OnScreenDeviceId);
             s_RegisteredOnScreenControls.Add(m_OnScreenDeviceId);
-
         }
 
         void OnEnable()
