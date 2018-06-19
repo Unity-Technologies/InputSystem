@@ -80,7 +80,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
         /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
-        public static NativeArray<byte> From(InputDevice device, out InputEventPtr eventPtr)
+        public static NativeArray<byte> From(InputDevice device, out InputEventPtr eventPtr,  Allocator allocator = Allocator.Temp)
         {
             if (device == null)
                 throw new ArgumentNullException("device");
@@ -94,7 +94,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             var statePtr = (byte*)device.currentStatePtr.ToPointer() + (int)stateOffset;
             var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
 
-            var buffer = new NativeArray<byte>((int)eventSize, Allocator.Temp);
+            var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();
 
             stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
