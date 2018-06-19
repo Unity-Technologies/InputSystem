@@ -43,10 +43,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             set
             {
                 m_ControlPath = value;
-                if (enabled)
-                {
-                    SetupInputControl();
-                }
+                SetupInputControl();
             }
         }
 
@@ -107,7 +104,6 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             eventPtr.time = InputRuntime.s_Instance.currentTime;
             control.WriteValueInto(eventPtr, value);
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.Update();
         }
 
         protected void SendValueToControl<TValue>(TValue value)
