@@ -75,14 +75,19 @@ namespace UnityEngine.Experimental.Input.Editor
         }
         
         public bool renaming;
-            
         protected SerializedProperty m_SetProperty;
         protected int m_Index;
+        
+        public virtual bool isDraggable
+        {
+            get { return false; }
+        }
             
         public virtual SerializedProperty elementProperty
         {
             get { return m_SetProperty.GetArrayElementAtIndex(index); }
         }
+        
         public int index
         {
             get { return m_Index; }
@@ -116,7 +121,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     
         protected abstract GUIStyle rectStyle { get; }
-            
+        public virtual bool hasProperties
+        {
+            get { return false; }
+        }
+
         public virtual void DrawCustomRect(Rect rowRect)
         {
             var boxRect = rowRect;
@@ -130,6 +139,7 @@ namespace UnityEngine.Experimental.Input.Editor
     class ActionMapTreeItem : InputTreeViewLine
     {
         InputActionMap m_ActionMap;
+        
         public ActionMapTreeItem(InputActionMap actionMap, SerializedProperty setProperty, int index) : base(setProperty, index)
         {
             m_ActionMap = actionMap;
@@ -200,6 +210,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return Styles.greenRect; }
         }
+
+        public override bool hasProperties
+        {
+            get { return false; }
+        }
     }
     
     class CompositeTreeItem : BindingTreeItem
@@ -214,10 +229,18 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return Styles.cyanRect; }
         }
+
+        public override bool isDraggable
+        {
+            get { return false; }
+        }
     }
     
     class BindingTreeItem : InputTreeViewLine
     {
+        InputBinding m_InputBinding;
+        SerializedProperty m_BindingProperty;
+
         public BindingTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
         {
             m_InputBinding = binding;
@@ -230,8 +253,10 @@ namespace UnityEngine.Experimental.Input.Editor
             depth = 2;
         }
 
-        InputBinding m_InputBinding;
-        SerializedProperty m_BindingProperty;
+        public override bool isDraggable
+        {
+            get { return true; }
+        }
 
         public override SerializedProperty elementProperty
         {
@@ -297,6 +322,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public override string SerializeToString()
         {
             return JsonUtility.ToJson(m_InputBinding);
+        }
+
+        public override bool hasProperties
+        {
+            get { return true; }
         }
     }
 }

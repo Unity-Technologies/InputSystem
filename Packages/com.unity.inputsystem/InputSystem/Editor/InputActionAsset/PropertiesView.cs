@@ -14,13 +14,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         bool m_GeneralFoldout = true;
         bool m_ProcessorsFoldout = true;
-        bool m_ModifierSupport;
         ReorderableList m_InteractionsListView;
         ReorderableList m_ProcessorsListView;
         SerializedProperty m_Bindings;
         GUIContent[] m_InteractionChoices;
         GUIContent[] m_ProcessorsChoices;
-
 
         SerializedProperty m_ModifiersProperty;
         SerializedProperty m_ProcessorsProperty;
@@ -137,9 +135,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_GeneralFoldout)
             {
                 EditorGUI.indentLevel++;
-                EditorGUI.BeginDisabledGroup(true);
-                m_ModifierSupport = EditorGUILayout.Toggle("Interactions support", m_ModifierSupport, EditorStyles.toggle);
-                EditorGUI.EndDisabledGroup();
                 
                 var pathProperty = m_BindingProperty.FindPropertyRelative("path");
                 var path = BindingTreeItem.ParseName(pathProperty.stringValue);
@@ -172,12 +167,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUI.indentLevel--;
             }
             
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.LabelField("Axis Response Curve", EditorStyles.boldLabel);
-            
-            EditorGUILayout.LabelField("Response Curve");
-            EditorGUI.EndDisabledGroup();
-
             EditorGUILayout.EndVertical();
         }
 

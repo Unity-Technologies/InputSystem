@@ -134,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
             var p = m_TreeView.GetSelectedRow();
-            if (p.GetType() == typeof(BindingTreeItem) || p.GetType() == typeof(CompositeTreeItem))
+            if (p.hasProperties)
             {
                 m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
             }

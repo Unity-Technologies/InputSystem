@@ -236,10 +236,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!args.acceptedRename)
                 return;
 
-            ////TODO: verify that name is unique; if it isn't, make it unique automatically by appending some suffix
-
             var actionItem = item as InputTreeViewLine;
-
             if (actionItem == null)
                 return;
 
@@ -280,12 +277,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (args.draggedItemIDs.Count > 1)
                 return false;
-            var item = FindItem(args.draggedItemIDs[0], rootItem);
-            if (item.GetType() == typeof(BindingTreeItem))
-                return true;
-            if (item.GetType() == typeof(CompositeGroupTreeItem))
-                return true;
-            return false;
+            var item = FindItem(args.draggedItemIDs[0], rootItem) as InputTreeViewLine;
+            return item.isDraggable;
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args)
@@ -303,28 +296,25 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var id = Int32.Parse(DragAndDrop.paths.First());
             var item = FindItem(id, rootItem);
-            var row = (BindingTreeItem)item;
-            if (row == null)
-                row = (CompositeGroupTreeItem)item;
+            var row = (InputTreeViewLine)item;
 
-            if (args.parentItem.GetType() != typeof(ActionTreeItem)
-                || args.parentItem != row.parent)
+            if (!row.isDraggable || args.parentItem != row.parent)
             {
                 return DragAndDropVisualMode.None;
             }
-
+            
             if (args.performDrop)
             {
-                var counter = 0;
+                var compositeChildrenCount = 0;
                 for (var i = 0; i < args.insertAtIndex; i++)
                 {
                     item = args.parentItem.children[i];
-                    if (item.GetType() == typeof(CompositeGroupTreeItem))
+                    if (item.hasChildren)
                     {
-                        counter += item.children.Count;
+                        compositeChildrenCount += item.children.Count;
                     }
                 }
-                args.insertAtIndex += counter;
+                args.insertAtIndex += compositeChildrenCount;
                 
                 var action = (ActionTreeItem) args.parentItem;
                 var map = (ActionMapTreeItem) args.parentItem.parent;
@@ -337,7 +327,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 
                 InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
                 
-                if (row.GetType() == typeof(CompositeGroupTreeItem))
+                if (row.hasChildren)
                 {
                     for (var i = 0; i < row.children.Count; i++)
                     {

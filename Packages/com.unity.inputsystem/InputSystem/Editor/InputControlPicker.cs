@@ -125,7 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     return false;
                 var item = (Item)treeViewItem;
                 search = search.ToLower();
-                if (item.device!=null && item.device.ToLower().Contains(search))
+                if (item.device !=null && item.device.ToLower().Contains(search))
                     return true;
                 if (item.controlPath != null && item.controlPath.ToLower().Contains(search))
                     return true;
