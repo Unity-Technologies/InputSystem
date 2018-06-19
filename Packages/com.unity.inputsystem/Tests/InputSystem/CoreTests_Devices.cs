@@ -2034,6 +2034,78 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_TouchesWithSameIdDontGetStuck()
+    {
+        ////FIXME: Fails - touches stuck in Stationary phase
+        /// While it's not recommended for two different touches to share an id, it shoudn't get stuck in Stationary phase
+        /// Can we add checks for Development build ?
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 0,
+        });
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 0,
+        });
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 0,
+        });
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 0,
+        });
+        InputSystem.Update();
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(0));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_TouchesWithWrongTimestampCorrectlyRecognized()
+    {
+        ////FIXME: fails - events which have timestamp which is less than previous event are ignored implictly
+        /// Can we add checks for Development build ?
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Began,
+            touchId = 0,
+        }, 1.0);
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+        {
+            phase = PointerPhase.Ended,
+            touchId = 0,
+        }, 0.9);
+
+        InputSystem.Update();
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches.Count, Is.EqualTo(0));
+        Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_TouchDeltasAreComputedAutomatically()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
