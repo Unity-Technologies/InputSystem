@@ -28,6 +28,11 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 
+// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
+// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
+//       "-preview" suffixes here.
+[assembly: AssemblyVersion("0.0.3")]
+
 namespace UnityEngine.Experimental.Input
 {
     using NotifyControlValueChangeAction = Action<InputControl, double, long>;
@@ -1061,6 +1066,14 @@ namespace UnityEngine.Experimental.Input
 
         #endregion
 
+        /// <summary>
+        /// The current version of the input system package.
+        /// </summary>
+        public static Version version
+        {
+            get { return Assembly.GetExecutingAssembly().GetName().Version; }
+        }
+
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
 
@@ -1117,11 +1130,19 @@ namespace UnityEngine.Experimental.Input
 
             EditorApplication.playModeStateChanged += OnPlayModeChange;
 
-            // Check the editor player settings to see which input system is active.
-            // If it is the old system, warn the user that they have the new
-            // input system installed, but have not switched it to active.
-            if (!s_SystemObject.IsNewInputSystemActiveInPlayerSettings())
-                s_SystemObject.DisplayNativeBackendsDisabledWarningDialog();
+            // If native backends for new input system aren't enabled, ask user whether we should
+            // enable them (requires restart). We only ask once per session.
+            if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
+                !EditorPlayerSettings.newSystemBackendsEnabled)
+            {
+                const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
+                    "This means that no input from native devices will come through." +
+                    "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
+
+                if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
+                    EditorPlayerSettings.newSystemBackendsEnabled = true;
+            }
+            s_SystemObject.newInputBackendsCheckedAsEnabled = true;
         }
 
         // We don't want play mode modifications to layouts and controls to seep

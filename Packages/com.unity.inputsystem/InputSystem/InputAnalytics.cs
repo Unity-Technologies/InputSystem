@@ -1,5 +1,11 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.Experimental.Input.Editor;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UnityEngine.Experimental.Input
 {
@@ -23,6 +29,46 @@ namespace UnityEngine.Experimental.Input
 
         public static void OnStartup(InputManager manager)
         {
+            var data = new StartupEventData
+            {
+                version = InputSystem.version.ToString(),
+            };
+
+            // Collect recognized devices.
+            var devices = manager.devices;
+            var deviceList = new List<StartupEventData.DeviceInfo>();
+            for (var i = 0; i < devices.Count; ++i)
+            {
+                var device = devices[i];
+                if (IsIgnoredDevice(device.description))
+                    continue;
+
+                deviceList.Add(
+                    StartupEventData.DeviceInfo.FromDescription(device.description, device.native, device.layout));
+            }
+            data.devices = deviceList.ToArray();
+
+            // Collect unrecognized devices.
+            deviceList.Clear();
+            var availableDevices = manager.m_AvailableDevices;
+            for (var i = 0; i < availableDevices.Count; ++i)
+            {
+                var deviceId = availableDevices[i].deviceId;
+                if (manager.TryGetDeviceById(deviceId) != null)
+                    continue;
+
+                deviceList.Add(StartupEventData.DeviceInfo.FromDescription(availableDevices[i].description,
+                        availableDevices[i].isNative));
+            }
+
+            data.unrecognized_devices = deviceList.ToArray();
+
+            #if UNITY_EDITOR
+            data.new_enabled = EditorPlayerSettings.newSystemBackendsEnabled;
+            data.old_enabled = EditorPlayerSettings.oldSystemBackendsEnabled;
+            #endif
+
+            manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
         public static void OnFirstUserInteraction(double time, InputControl control)
@@ -31,6 +77,14 @@ namespace UnityEngine.Experimental.Input
 
         public static void OnShutdown(ref InputMetrics metrics)
         {
+        }
+
+        private static bool IsIgnoredDevice(InputDeviceDescription description)
+        {
+            #if UNITY_STANDALONE_WIN
+            #endif
+
+            return false;
         }
 
         /// <summary>
@@ -48,7 +102,7 @@ namespace UnityEngine.Experimental.Input
         {
             public string version;
             public DeviceInfo[] devices;
-            public string[] unrecognizedDevices;
+            public DeviceInfo[] unrecognized_devices;
 
             ////REVIEW: ATM we have no way of retrieving these in the player
             #if UNITY_EDITOR
@@ -60,9 +114,31 @@ namespace UnityEngine.Experimental.Input
             public struct DeviceInfo
             {
                 public string layout;
-                public string type;
-                public string description;
+                public string @interface;
+                public string product;
                 public bool native;
+
+                public static DeviceInfo FromDescription(InputDeviceDescription description, bool native = false, string layout = null)
+                {
+                    string product;
+                    if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
+                        product = string.Format("{0} {1}", description.manufacturer, description.product);
+                    else if (!string.IsNullOrEmpty(description.product))
+                        product = description.product;
+                    else
+                        product = description.manufacturer;
+
+                    if (string.IsNullOrEmpty(layout))
+                        layout = description.deviceClass;
+
+                    return new DeviceInfo
+                    {
+                        layout = layout,
+                        @interface = description.interfaceName,
+                        product = product,
+                        native = native
+                    };
+                }
             }
         }
 

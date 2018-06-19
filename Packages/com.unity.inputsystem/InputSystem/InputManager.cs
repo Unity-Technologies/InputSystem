@@ -1218,7 +1218,7 @@ namespace UnityEngine.Experimental.Input
 
         [NonSerialized] private InputDevice[] m_Devices;
         [NonSerialized] private Dictionary<int, InputDevice> m_DevicesById;
-        [NonSerialized] private List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
+        [NonSerialized] internal List<AvailableDevice> m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
         [NonSerialized] private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
         [NonSerialized] internal InputStateBuffers m_StateBuffers;
@@ -1233,6 +1233,11 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] private InlinedArray<UpdateListener> m_UpdateListeners;
         [NonSerialized] private bool m_NativeBeforeUpdateHooked;
         [NonSerialized] private bool m_HaveDevicesWithStateCallbackReceivers;
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+        [NonSerialized] private bool m_HaveSentStartupAnalytics;
+        [NonSerialized] private bool m_HaveSentFirstUserInterationAnalytics;
+        #endif
 
         [NonSerialized] internal IInputRuntime m_Runtime;
 
@@ -1594,6 +1599,14 @@ namespace UnityEngine.Experimental.Input
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
+
+            #if UNITY_ANALYTICS || UNITY_EDITOR
+            if (!m_HaveSentStartupAnalytics)
+            {
+                InputAnalytics.OnStartup(this);
+                m_HaveSentStartupAnalytics = true;
+            }
+            #endif
 
             // In the editor, we need to decide where to route state. Whenever the game is playing and
             // has focus, we route all input to play mode buffers. When the game is stopped or if any
@@ -2295,6 +2308,11 @@ namespace UnityEngine.Experimental.Input
             #if UNITY_EDITOR
             [NonSerialized] public IInputDiagnostics diagnostics;
             #endif
+
+            #if UNITY_ANALYTICS || UNITY_EDITOR
+            public bool haveSentStartupAnalytics;
+            public bool haveSentFirstUserInteractionAnalytics;
+            #endif
         }
 
         internal SerializedState SaveState()
@@ -2380,6 +2398,11 @@ namespace UnityEngine.Experimental.Input
                 updateMask = m_UpdateMask,
                 runtime = m_Runtime,
 
+                #if UNITY_ANALYTICS || UNITY_EDITOR
+                haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
+                haveSentFirstUserInteractionAnalytics = m_HaveSentFirstUserInterationAnalytics,
+                #endif
+
                 #if UNITY_EDITOR
                 diagnostics = m_Diagnostics
                 #endif
@@ -2409,6 +2432,11 @@ namespace UnityEngine.Experimental.Input
             m_LayoutChangeListeners = state.layoutChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
+
+            #if UNITY_ANALYTICS || UNITY_EDITOR
+            m_HaveSentStartupAnalytics = m_HaveSentStartupAnalytics;
+            m_HaveSentFirstUserInterationAnalytics = m_HaveSentFirstUserInterationAnalytics;
+            #endif
 
             #if UNITY_EDITOR
             m_Diagnostics = state.diagnostics;
