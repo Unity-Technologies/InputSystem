@@ -80,6 +80,12 @@ namespace UnityEngine.Experimental.Input
             var metrics = manager.metrics;
             var data = new ShutdownEventData
             {
+                max_num_devices = metrics.maxNumDevices,
+                max_state_size_in_bytes = metrics.maxStateSizeInBytes,
+                total_event_bytes = metrics.totalEventBytes,
+                total_event_count = metrics.totalEventCount,
+                total_frame_count = metrics.totalFrameCount,
+                total_event_processing_time = (float)metrics.totalEventProcessingTime,
             };
 
             manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
@@ -162,6 +168,12 @@ namespace UnityEngine.Experimental.Input
         [Serializable]
         public struct ShutdownEventData
         {
+            public int max_num_devices;
+            public int max_state_size_in_bytes;
+            public int total_event_bytes;
+            public int total_event_count;
+            public int total_frame_count;
+            public float total_event_processing_time;
         }
     }
 }

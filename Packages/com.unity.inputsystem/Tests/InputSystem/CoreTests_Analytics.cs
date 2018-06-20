@@ -1,10 +1,11 @@
 // We always send analytics in the editor (though the actual sending may be disabled in Pro) but we
 // only send analytics in the player if enabled.
 #if UNITY_ANALYTICS || UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEditor.VersionControl;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.LowLevel;
 
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
@@ -169,14 +170,50 @@ partial class CoreTests
 
     [Test]
     [Category("Analytics")]
-    public void Analytics_ReceivesEventOnFirstUserInteraction()
+    public void Analytics_ReceivesEventOnShutdown()
     {
-        Assert.Fail();
+        // Add and pump some data so we're getting some meaningful metrics.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update(InputUpdateType.Fixed);
+
+        string receivedName = null;
+        object receivedData = null;
+        testRuntime.onSendAnalyticsEvent =
+            (name, data) =>
+            {
+                Assert.That(receivedData, Is.Null);
+                receivedName = name;
+                receivedData = data;
+            };
+
+        // Simulate shutdown.
+        testRuntime.onShutdown();
+
+        Assert.That(receivedName, Is.EqualTo(InputAnalytics.kEventShutdown));
+        Assert.That(receivedData, Is.TypeOf<InputAnalytics.ShutdownEventData>());
+
+        var shutdownData = (InputAnalytics.ShutdownEventData)receivedData;
+        var metrics = InputSystem.GetMetrics();
+
+        Assert.That(shutdownData.max_num_devices, Is.EqualTo(metrics.maxNumDevices));
+        Assert.That(shutdownData.max_state_size_in_bytes, Is.EqualTo(metrics.maxStateSizeInBytes));
+        Assert.That(shutdownData.total_event_bytes, Is.EqualTo(metrics.totalEventBytes));
+        Assert.That(shutdownData.total_event_count, Is.EqualTo(metrics.totalEventCount));
+        Assert.That(shutdownData.total_frame_count, Is.EqualTo(metrics.totalFrameCount));
+        Assert.That(shutdownData.total_event_processing_time, Is.EqualTo(metrics.totalEventProcessingTime).Within(0.00001));
     }
 
+    ////TODO: for this one to make sense, we first need noise filtering to be able to tell real user interaction from garbage data
     [Test]
     [Category("Analytics")]
-    public void Analytics_ReceivesEventOnShutdown()
+    public void TODO_Analytics_ReceivesEventOnFirstUserInteraction()
     {
         Assert.Fail();
     }
