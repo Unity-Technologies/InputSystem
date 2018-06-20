@@ -71,12 +71,18 @@ namespace UnityEngine.Experimental.Input
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
-        public static void OnFirstUserInteraction(double time, InputControl control)
+        public static void OnFirstUserInteraction(InputManager manager, double time, InputControl control)
         {
         }
 
-        public static void OnShutdown(ref InputMetrics metrics)
+        public static void OnShutdown(InputManager manager)
         {
+            var metrics = manager.metrics;
+            var data = new ShutdownEventData
+            {
+            };
+
+            manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
         }
 
         private static bool IsIgnoredDevice(InputDeviceDescription description)

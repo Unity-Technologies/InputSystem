@@ -518,6 +518,11 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
+        public static void ResetState()
+        {
+            throw new NotImplementedException();
+        }
+
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
 
         /// <summary>
@@ -1072,6 +1077,13 @@ namespace UnityEngine.Experimental.Input
         public static Version version
         {
             get { return Assembly.GetExecutingAssembly().GetName().Version; }
+        }
+
+        ////TODO: put metrics gathering behind #if
+
+        public static InputMetrics GetMetrics()
+        {
+            return s_Manager.metrics;
         }
 
         internal static InputManager s_Manager;

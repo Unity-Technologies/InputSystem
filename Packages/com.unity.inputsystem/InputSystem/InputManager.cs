@@ -68,6 +68,17 @@ namespace UnityEngine.Experimental.Input
             get { return m_Composites; }
         }
 
+        public InputMetrics metrics
+        {
+            get
+            {
+                var result = m_Metrics;
+                if (m_Runtime != null)
+                    result.totalFrameCount = m_Runtime.frameCount;
+                return result;
+            }
+        }
+
         public InputUpdateType updateMask
         {
             get { return m_UpdateMask; }
@@ -665,6 +676,10 @@ namespace UnityEngine.Experimental.Input
             // Let InputStateBuffers allocate state buffers.
             ReallocateStateBuffers();
 
+            // Update metrics.
+            m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
+            m_Metrics.maxStateSizeInBytes = Mathf.Max((int)m_StateBuffers.totalSize, m_Metrics.maxStateSizeInBytes);
+
             // Let actions re-resolve their paths.
             InputActionMapState.ReResolveAllEnabledActions();
 
@@ -1176,6 +1191,7 @@ namespace UnityEngine.Experimental.Input
             if (m_Runtime != null)
             {
                 InputAnalytics.Initialize(this);
+                m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
             }
             #endif
         }
@@ -1240,6 +1256,7 @@ namespace UnityEngine.Experimental.Input
         #endif
 
         [NonSerialized] internal IInputRuntime m_Runtime;
+        [NonSerialized] internal InputMetrics m_Metrics;
 
         #if UNITY_EDITOR
         [NonSerialized] internal IInputDiagnostics m_Diagnostics;
@@ -1631,6 +1648,9 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.lastUpdateType = updateType;
             InputStateBuffers.SwitchTo(m_StateBuffers, buffersToUseForUpdate);
 
+            if (updateType != InputUpdateType.BeforeRender) // Events in before-render we see twice (buffer is not flushed).
+                m_Metrics.totalEventCount += eventCount;
+
             ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
                 ProcessStateChangeMonitorTimeouts();
@@ -1666,6 +1686,7 @@ namespace UnityEngine.Experimental.Input
 
             var currentEventPtr = (InputEvent*)eventData;
             var remainingEventCount = eventCount;
+            var processingStartTime = Time.realtimeSinceStartup;
 
             // Handle events.
             while (remainingEventCount > 0)
@@ -1695,6 +1716,9 @@ namespace UnityEngine.Experimental.Input
                 }
                 if (remainingEventCount == 0)
                     break;
+
+                if (updateType != InputUpdateType.BeforeRender) // Events in before-render we see twice (buffer is not flushed).
+                    m_Metrics.totalEventBytes += (int)currentEventPtr->sizeInBytes;
 
                 // Give listeners a shot at the event.
                 var listenerCount = m_EventListeners.length;
@@ -1870,17 +1894,21 @@ namespace UnityEngine.Experimental.Input
 #if UNITY_EDITOR
                         if (!gameIsPlayingAndHasFocus)
                         {
-                            var buffer = m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
-                            Debug.Assert(buffer != IntPtr.Zero);
+                            var frontBuffer = m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
+                            Debug.Assert(frontBuffer != IntPtr.Zero);
 
                             if (needToCopyFromBackBuffer)
-                                UnsafeUtility.MemCpy(
-                                    (void*)(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
-                                    (void*)(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
-                                            (int)device.m_StateBlock.byteOffset),
-                                    device.m_StateBlock.alignedSizeInBytes);
+                            {
+                                var backBuffer = m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex);
+                                Debug.Assert(backBuffer != IntPtr.Zero);
 
-                            UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
+                                UnsafeUtility.MemCpy(
+                                    (void*)(frontBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                    (void*)(backBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                    stateBlockSizeOfDevice);
+                            }
+
+                            UnsafeUtility.MemCpy((void*)(frontBuffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                         }
                         else
 #endif
@@ -1893,31 +1921,39 @@ namespace UnityEngine.Experimental.Input
                             // memcpy here.
                             if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
                             {
-                                var buffer = m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
-                                Debug.Assert(buffer != IntPtr.Zero);
+                                var frontBuffer = m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
+                                Debug.Assert(frontBuffer != IntPtr.Zero);
 
                                 if (needToCopyFromBackBuffer)
-                                    UnsafeUtility.MemCpy(
-                                        (void*)(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
-                                        (void*)(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
-                                                (int)device.m_StateBlock.byteOffset),
-                                        device.m_StateBlock.alignedSizeInBytes);
+                                {
+                                    var backBuffer = m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex);
+                                    Debug.Assert(backBuffer != IntPtr.Zero);
 
-                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
+                                    UnsafeUtility.MemCpy(
+                                        (void*)(frontBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                        (void*)(backBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                        stateBlockSizeOfDevice);
+                                }
+
+                                UnsafeUtility.MemCpy((void*)(frontBuffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                             }
                             if (m_StateBuffers.m_FixedUpdateBuffers.valid)
                             {
-                                var buffer = m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
-                                Debug.Assert(buffer != IntPtr.Zero);
+                                var frontBuffer = m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
+                                Debug.Assert(frontBuffer != IntPtr.Zero);
 
                                 if (needToCopyFromBackBuffer)
-                                    UnsafeUtility.MemCpy(
-                                        (void*)(buffer.ToInt64() + (int)device.m_StateBlock.byteOffset),
-                                        (void*)(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex).ToInt64() +
-                                                (int)device.m_StateBlock.byteOffset),
-                                        device.m_StateBlock.alignedSizeInBytes);
+                                {
+                                    var backBuffer = m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex);
+                                    Debug.Assert(backBuffer != IntPtr.Zero);
 
-                                UnsafeUtility.MemCpy((void*)(buffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
+                                    UnsafeUtility.MemCpy(
+                                        (void*)(frontBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                        (void*)(backBuffer.ToInt64() + (int)stateBlockOfDevice.byteOffset),
+                                        stateBlockSizeOfDevice);
+                                }
+
+                                UnsafeUtility.MemCpy((void*)(frontBuffer.ToInt64() + (int)deviceStateOffset), ptrToReceivedState.ToPointer(), sizeOfStateToCopy);
                             }
                         }
 
@@ -1969,6 +2005,8 @@ namespace UnityEngine.Experimental.Input
                 if (!doNotMakeDeviceCurrent)
                     device.MakeCurrent();
             }
+
+            m_Metrics.totalEventProcessingTime = Time.realtimeSinceStartup - processingStartTime;
 
             ////TODO: fire event that allows code to update state *from* state we just updated
 
@@ -2294,6 +2332,7 @@ namespace UnityEngine.Experimental.Input
             public InputConfiguration.SerializedState configuration;
             public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
+            public InputMetrics metrics;
 
             // The rest is state that we want to preserve across Save() and Restore() but
             // not across domain reloads.
@@ -2397,6 +2436,7 @@ namespace UnityEngine.Experimental.Input
                 eventListeners = m_EventListeners.Clone(),
                 updateMask = m_UpdateMask,
                 runtime = m_Runtime,
+                metrics = m_Metrics,
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
@@ -2432,10 +2472,11 @@ namespace UnityEngine.Experimental.Input
             m_LayoutChangeListeners = state.layoutChangeListeners;
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
+            m_Metrics = state.metrics;
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
-            m_HaveSentStartupAnalytics = m_HaveSentStartupAnalytics;
-            m_HaveSentFirstUserInterationAnalytics = m_HaveSentFirstUserInterationAnalytics;
+            m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
+            m_HaveSentFirstUserInterationAnalytics = state.haveSentFirstUserInteractionAnalytics;
             #endif
 
             #if UNITY_EDITOR

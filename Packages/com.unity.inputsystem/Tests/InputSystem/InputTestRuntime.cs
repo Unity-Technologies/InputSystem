@@ -61,6 +61,7 @@ namespace UnityEngine.Experimental.Input
 
                 m_EventCount = 0;
                 m_EventWritePosition = 0;
+                ++frameCount;
             }
         }
 
@@ -157,9 +158,11 @@ namespace UnityEngine.Experimental.Input
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
+        public Action onShutdown { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public InputUpdateType updateMask { get; set; }
+        public int frameCount { get; set; }
 
         public ScreenOrientation screenOrientation
         {

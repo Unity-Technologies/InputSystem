@@ -78,6 +78,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set { NativeInputSystem.onDeviceDiscovered = value; }
         }
 
+        public Action onShutdown
+        {
+            set { Application.quitting += value; }
+        }
+
         public float pollingFrequency
         {
             set { NativeInputSystem.SetPollingFrequency(value); }
@@ -122,7 +127,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get { return new Vector2(Screen.width, Screen.height); }
         }
 
-        #if UNITY_ANALYTICS || UNITY_EDITOR
+        public int frameCount
+        {
+            get { return Time.frameCount; }
+        }
+
+#if UNITY_ANALYTICS || UNITY_EDITOR
 
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
