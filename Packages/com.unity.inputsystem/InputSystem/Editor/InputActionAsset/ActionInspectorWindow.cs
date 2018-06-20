@@ -18,6 +18,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
             static Styles()
             {
+                Initialize();
+                EditorApplication.playModeStateChanged += s =>
+                {
+                    if (s == PlayModeStateChange.ExitingPlayMode) 
+                        Initialize();
+                };
+            }
+
+            static void Initialize()
+            {
                 var darkGreyBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(114, 114, 114, 255));
                 darkGreyBackgroundWithBorder.normal.background = darkGreyBackgroundWithBorderTexture;
                 darkGreyBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
@@ -25,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var whiteBackgroundWithBorderTexture = CreateTextureWithBorder(Color.white);
                 whiteBackgroundWithBorder.normal.background = whiteBackgroundWithBorderTexture;
                 whiteBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
-                
+
                 columnHeaderLabel.normal.background = whiteBackgroundWithBorderTexture;
                 columnHeaderLabel.border = new RectOffset(3, 3, 3, 3);
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
@@ -35,6 +45,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
             static Texture2D CreateTextureWithBorder(Color innerColor)
             {
+                var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t=>t.name == "ISX " + innerColor);
+                if (objs.Any())
+                    return objs.First();
+                
                 var texture = new Texture2D(5, 5);
                 for (int i = 0; i < 5; i++)
                 {
@@ -51,8 +65,10 @@ namespace UnityEngine.Experimental.Input.Editor
                         texture.SetPixel(i, j, innerColor);
                     }
                 }
-
                 texture.filterMode = FilterMode.Point;
+                texture.name = "ISX " + innerColor;
+                texture.hideFlags |= HideFlags.DontSaveInEditor;
+                texture.hideFlags |= HideFlags.DontUnloadUnusedAsset;
                 texture.Apply();
                 return texture;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -19,9 +20,19 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle blueRect = new GUIStyle("Label");
             public static GUIStyle cyanRect = new GUIStyle("Label");
             public static GUIStyle magentaRect = new GUIStyle("Label");
-            
+
             static Styles()
             {
+                Initialize();
+                EditorApplication.playModeStateChanged += s =>
+                {
+                    if (s == PlayModeStateChange.ExitingPlayMode) 
+                        Initialize();
+                };
+            }
+
+            static void Initialize()
+            {    
                 var whiteBackgroundWithBorderTexture = CreateTextureWithBorder(Color.white);
                 var blueBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(62, 125, 231, 255));
                 
@@ -51,6 +62,10 @@ namespace UnityEngine.Experimental.Input.Editor
     
             static Texture2D CreateTextureWithBorder(Color innerColor)
             {
+                var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t=>t.name == "ISX " + innerColor);
+                if (objs.Any())
+                    return objs.First();
+                
                 var texture = new Texture2D(5, 5);
                 for (int i = 0; i < 5; i++)
                 {
@@ -59,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         texture.SetPixel(i, j, Color.black);
                     }
                 }
-    
+
                 for (int i = 1; i < 4; i++)
                 {
                     for (int j = 1; j < 4; j++)
@@ -67,8 +82,10 @@ namespace UnityEngine.Experimental.Input.Editor
                         texture.SetPixel(i, j, innerColor);
                     }
                 }
-    
                 texture.filterMode = FilterMode.Point;
+                texture.name = "ISX " + innerColor;
+                texture.hideFlags |= HideFlags.DontSaveInEditor;
+                texture.hideFlags |= HideFlags.DontUnloadUnusedAsset;
                 texture.Apply();
                 return texture;
             }
