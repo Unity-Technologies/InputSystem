@@ -17,7 +17,6 @@ public class OnScreenTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
         InputSystem.Update();
         stick.OnDisable();
- 
     }
 
     [Test]
