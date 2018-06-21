@@ -449,6 +449,7 @@ namespace UnityEngine.Experimental.Input
         /// <param name="name">Name to assign to the device. If null, the layout name is used instead. Note that
         /// device names are made unique automatically by the system by appending numbers to them (e.g. "gamepad",
         /// "gamepad1", "gamepad2", etc.).</param>
+        /// <param name="variants">Semicolon-separated list of layout variants to use for the device.</param>
         /// <returns>The newly created input device.</returns>
         /// <remarks>
         /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
@@ -458,9 +459,9 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.AddDevice("Gamepad");
         /// </code>
         /// </example>
-        public static InputDevice AddDevice(string layout, string name = null)
+        public static InputDevice AddDevice(string layout, string name = null, string variants = null)
         {
-            return s_Manager.AddDevice(layout, name);
+            return s_Manager.AddDevice(layout, name, new InternedString(variants));
         }
 
         public static TDevice AddDevice<TDevice>(string name = null)

@@ -134,14 +134,14 @@ namespace UnityEngine.Experimental.Input
 
 
         /// <summary>
-        /// Variant of the control layout or "default".
+        /// Semicolon-separated list of variants of the control layout or "default".
         /// </summary>
         /// <example>
         /// "Lefty" when using the "Lefty" gamepad layout.
         /// </example>
-        public string variant
+        public string variants
         {
-            get { return m_Variant; }
+            get { return m_Variants; }
         }
 
         /// <summary>
@@ -299,7 +299,7 @@ namespace UnityEngine.Experimental.Input
         internal string m_DisplayName; // Display name set by the control itself (may be null).
         internal string m_DisplayNameFromLayout; // Display name coming from layout (may be null).
         internal InternedString m_Layout;
-        internal InternedString m_Variant;
+        internal InternedString m_Variants;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
         ////REVIEW: This is stupid. We're storing the array references on here when in fact they should

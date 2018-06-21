@@ -101,7 +101,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayoutVariant()
     {
-        var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variant: "Lefty");
+        var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variants: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
         var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
         //var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
@@ -117,7 +117,7 @@ partial class CoreTests
         var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
         var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
 
-        Assert.That(leftyGamepad.variant, Is.EqualTo("Lefty"));
+        Assert.That(leftyGamepad.variants, Is.EqualTo("Lefty"));
         Assert.That(leftyGamepadPrimary2DMotion, Is.SameAs(leftyGamepad.rightStick));
         Assert.That(leftyGamepadSecondary2DMotion, Is.SameAs(leftyGamepad.leftStick));
 

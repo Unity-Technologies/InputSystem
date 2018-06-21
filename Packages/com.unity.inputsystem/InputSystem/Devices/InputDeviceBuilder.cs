@@ -44,27 +44,27 @@ namespace UnityEngine.Experimental.Input
             m_LayoutCache.layouts = layouts;
         }
 
-        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variant = null)
+        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variants = null)
         {
             m_LayoutCache.layouts = InputControlLayout.s_Layouts;
-            Setup(new InternedString(layout), existingDevice, new InternedString(variant));
+            Setup(new InternedString(layout), existingDevice, new InternedString(variants));
         }
 
-        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variant)
+        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variants)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
                     string.Format("Cannot modify control setup of existing device {0} while added to system.",
                         existingDevice));
 
-            InstantiateLayout(layout, variant, new InternedString(), null, existingDevice);
+            InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
             m_Device.CallFinishSetupRecursive(this);
         }
 
-        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variant)
+        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variants)
         {
-            InstantiateLayout(layout, variant, new InternedString(), null, null);
+            InstantiateLayout(layout, variants, new InternedString(), null, null);
             FinalizeControlHierarchy();
 
             if (!deviceDescription.empty)
@@ -208,16 +208,16 @@ namespace UnityEngine.Experimental.Input
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl InstantiateLayout(InternedString layout, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateLayout(InternedString layout, InternedString variants, InternedString name, InputControl parent, InputControl existingControl)
         {
             // Look up layout by name.
             var layoutInstance = FindOrLoadLayout(layout);
 
             // Create control hierarchy.
-            return InstantiateLayout(layoutInstance, variant, name, parent, existingControl);
+            return InstantiateLayout(layoutInstance, variants, name, parent, existingControl);
         }
 
-        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variant, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variants, InternedString name, InputControl parent, InputControl existingControl)
         {
             InputControl control;
 
@@ -299,19 +299,19 @@ namespace UnityEngine.Experimental.Input
                     name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
             }
 
-            // Variant defaults to variant of layout.
-            if (variant.IsEmpty())
+            // Variant defaults to variants of layout.
+            if (variants.IsEmpty())
             {
-                variant = layout.variant;
+                variants = layout.variants;
 
-                if (variant.IsEmpty())
-                    variant = InputControlLayout.DefaultVariant;
+                if (variants.IsEmpty())
+                    variants = InputControlLayout.DefaultVariant;
             }
 
             control.m_Name = name;
             control.m_DisplayNameFromLayout = layout.m_DisplayName;
             control.m_Layout = layout.name;
-            control.m_Variant = variant;
+            control.m_Variants = variants;
             control.m_Parent = parent;
             control.m_Device = m_Device;
 
@@ -324,7 +324,7 @@ namespace UnityEngine.Experimental.Input
                 // actually reuse the existing control (and thus control.m_ChildrenReadOnly will
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
-                AddChildControls(layout, variant, control,
+                AddChildControls(layout, variants, control,
                     existingControl != null ? existingControl.m_ChildrenReadOnly : (ReadOnlyArray<InputControl>?)null,
                     ref haveChildrenUsingStateFromOtherControl);
             }
@@ -373,7 +373,7 @@ namespace UnityEngine.Experimental.Input
 
         private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.kInvalidOffset;
 
-        private void AddChildControls(InputControlLayout layout, InternedString variant, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
+        private void AddChildControls(InputControlLayout layout, InternedString variants, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
         {
             var controlLayouts = layout.m_Controls;
             if (controlLayouts == null)
@@ -403,9 +403,10 @@ namespace UnityEngine.Experimental.Input
                     continue;
                 }
 
-                // Skip if variant doesn't match.
-                if (!controlLayouts[i].variant.IsEmpty() &&
-                    controlLayouts[i].variant != variant)
+                // Skip if variants don't match.
+                if (!controlLayouts[i].variants.IsEmpty() &&
+                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
+                        variants, InputControlLayout.kListSeparator))
                     continue;
 
                 if (controlLayouts[i].isArray)
@@ -430,9 +431,11 @@ namespace UnityEngine.Experimental.Input
                 if (controlLayout.isModifyingChildControlByPath)
                     continue;
 
-                // If the control is part of a variant, skip it if it isn't the variant we're
+                // If the control is part of a variant, skip it if it isn't in the variants we're
                 // looking for.
-                if (!controlLayout.variant.IsEmpty() && controlLayout.variant != variant)
+                if (!controlLayout.variants.IsEmpty() &&
+                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayout.variants, variants,
+                        InputControlLayout.kListSeparator))
                     continue;
 
                 // If it's an array, add a control for each array element.
@@ -441,7 +444,7 @@ namespace UnityEngine.Experimental.Input
                     for (var n = 0; n < controlLayout.arraySize; ++n)
                     {
                         var name = controlLayout.name + n;
-                        var control = AddChildControl(layout, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
+                        var control = AddChildControl(layout, variants, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
                                 ref controlLayout, ref childIndex, nameOverride: name);
 
                         // Adjust offset, if the control uses explicit offsets.
@@ -451,7 +454,7 @@ namespace UnityEngine.Experimental.Input
                 }
                 else
                 {
-                    AddChildControl(layout, variant, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
+                    AddChildControl(layout, variants, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
                         ref controlLayout, ref childIndex);
                 }
             }
@@ -478,18 +481,18 @@ namespace UnityEngine.Experimental.Input
                     if (!controlLayout.isModifyingChildControlByPath)
                         continue;
 
-                    // If the control is part of a variant, skip it if it isn't the variant we're
+                    // If the control is part of a variants, skip it if it isn't the variants we're
                     // looking for.
-                    if (!controlLayout.variant.IsEmpty() && controlLayout.variant != variant)
+                    if (!controlLayout.variants.IsEmpty() && controlLayout.variants != variants)
                         continue;
 
-                    ModifyChildControl(layout, variant, parent, ref haveChildrenUsingStateFromOtherControls,
+                    ModifyChildControl(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
                         ref controlLayout);
                 }
             }
         }
 
-        private InputControl AddChildControl(InputControlLayout layout, InternedString variant, InputControl parent,
+        private InputControl AddChildControl(InputControlLayout layout, InternedString variants, InputControl parent,
             ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls,
             ref InputControlLayout.ControlItem controlItem, ref int childIndex, string nameOverride = null)
         {
@@ -541,7 +544,7 @@ namespace UnityEngine.Experimental.Input
             InputControl control;
             try
             {
-                control = InstantiateLayout(layoutName, variant, nameInterned, parent, existingControl);
+                control = InstantiateLayout(layoutName, variants, nameInterned, parent, existingControl);
             }
             catch (InputControlLayout.LayoutNotFoundException exception)
             {
@@ -643,7 +646,7 @@ namespace UnityEngine.Experimental.Input
             m_ChildControlOverrides[pathLowerCase] = existingOverrides;
         }
 
-        private void ModifyChildControl(InputControlLayout layout, InternedString variant, InputControl parent,
+        private void ModifyChildControl(InputControlLayout layout, InternedString variants, InputControl parent,
             ref bool haveChildrenUsingStateFromOtherControls,
             ref InputControlLayout.ControlItem controlItem)
         {
@@ -664,7 +667,7 @@ namespace UnityEngine.Experimental.Input
 
                 ////TODO: this path does not support recovering existing controls? does it matter?
 
-                child = InsertChildControl(layout, variant, parent,
+                child = InsertChildControl(layout, variants, parent,
                         ref haveChildrenUsingStateFromOtherControls, ref controlItem);
                 haveChangedLayoutOfParent = true;
             }

@@ -366,7 +366,7 @@ namespace UnityEngine.Experimental.Input
                 RemoveDevice(device);
 
                 // Re-setup device.
-                setup.Setup(device.m_Layout, device, device.m_Variant);
+                setup.Setup(device.m_Layout, device, device.m_Variants);
                 var newDevice = setup.Finish();
 
                 // Re-add.
@@ -604,7 +604,7 @@ namespace UnityEngine.Experimental.Input
 
         // Creates a device from the given layout and adds it to the system.
         // NOTE: Creates garbage.
-        public InputDevice AddDevice(string layout, string name = null)
+        public InputDevice AddDevice(string layout, string name = null, InternedString variants = new InternedString())
         {
             if (string.IsNullOrEmpty(layout))
                 throw new ArgumentException("layout");
@@ -612,7 +612,7 @@ namespace UnityEngine.Experimental.Input
             var internedLayoutName = new InternedString(layout);
 
             var setup = new InputDeviceBuilder(m_Layouts);
-            setup.Setup(internedLayoutName, null, new InternedString());
+            setup.Setup(internedLayoutName, null, variants);
             var device = setup.Finish();
 
             if (!string.IsNullOrEmpty(name))
@@ -2404,7 +2404,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = device.name,
                     layout = device.layout,
-                    variant = device.variant,
+                    variant = device.variants,
                     deviceId = device.id,
                     usages = device.usages.Select(x => x.ToString()).ToArray(),
                     stateOffset = device.m_StateBlock.byteOffset,
@@ -2584,7 +2584,7 @@ namespace UnityEngine.Experimental.Input
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format(
-                            "Could not re-recreate device '{0}' with layout '{1}' and variant '{2}' after domain reload: {3}",
+                            "Could not re-recreate device '{0}' with layout '{1}' and variants '{2}' after domain reload: {3}",
                             deviceState.description, deviceState.layout, deviceState.variant, exception));
                     Debug.LogException(exception);
                     continue;

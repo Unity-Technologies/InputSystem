@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input
     public class InputControlAttribute : Attribute
     {
         public string layout;
-        public string variant;
+        public string variants;
         public string name;
         public string format;
         public string usage;
