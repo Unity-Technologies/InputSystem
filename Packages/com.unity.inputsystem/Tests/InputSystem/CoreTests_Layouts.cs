@@ -1321,7 +1321,21 @@ partial class CoreTests
     [Category("Layouts")]
     public void TODO_Layouts_CurrentPlatformIsImplicitLayoutVariant()
     {
-        Assert.Fail();
+        var json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""Button"", ""layout"" : ""Button"", ""variants"" : ""__PLATFORM__"" }
+                ]
+            }
+        ".Replace("__PLATFORM__", Application.platform.ToString());
+
+        InputSystem.RegisterControlLayout(json);
+
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device.allControls, Has.Count.EqualTo(1));
+        Assert.That(device.allControls[0].name, Is.EqualTo("Button"));
     }
 
     [Test]
