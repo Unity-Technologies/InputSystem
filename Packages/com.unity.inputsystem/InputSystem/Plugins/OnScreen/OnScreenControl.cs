@@ -45,7 +45,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             set
             {
                 m_ControlPath = value;
-                if (enabled)
+                if (m_Control == null)
                 {
                     SetupInputControl();
                 }
@@ -157,7 +157,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             m_InputEventPtr = s_DeviceEventInfoArray[GetDeviceEventIndex(m_Layout)].eventPtr;
         }
 
-        void OnEnable()
+        public void OnEnable()
         {
             if (!string.IsNullOrEmpty(controlPath))
             {
@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             }
         }
 
-        void OnDisable()
+        public void OnDisable()
         {
             int deviceIndex = GetDeviceEventIndex(m_Layout);
             if (deviceIndex != -1)

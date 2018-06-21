@@ -16,6 +16,8 @@ public class OnScreenTests : InputTestFixture
         stick.controlPath = "/<Gamepad>/leftStick";
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
         InputSystem.Update();
+        stick.OnDisable();
+ 
     }
 
     [Test]
@@ -26,6 +28,7 @@ public class OnScreenTests : InputTestFixture
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "/<Keyboard>/a";
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+        button.OnDisable();
     }
 
     [Test]
@@ -43,6 +46,7 @@ public class OnScreenTests : InputTestFixture
         button.OnPointerUp(null);
         InputSystem.Update();
         Assert.That(keyboard.aKey.isPressed, Is.False);
+        button.OnDisable();
     }
 
     [Test]
@@ -60,6 +64,7 @@ public class OnScreenTests : InputTestFixture
         Assert.That(exitingKeyboard.aKey.isPressed, Is.False);
         button.OnPointerUp(null);
         InputSystem.Update();
+        button.OnDisable();
     }
 
     [Test]
@@ -82,5 +87,8 @@ public class OnScreenTests : InputTestFixture
 
         Assert.That(keyboard.aKey.isPressed, Is.True);
         Assert.That(keyboard.bKey.isPressed, Is.True);
+
+        buttonMappedToKeyA.OnDisable();
+        buttonMappedToKeyB.OnDisable();
     }
 }
