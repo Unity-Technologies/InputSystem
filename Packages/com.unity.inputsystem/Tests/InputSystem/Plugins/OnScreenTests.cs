@@ -15,6 +15,7 @@ public class OnScreenTests : InputTestFixture
         var stick = gameObject.AddComponent<OnScreenStick>();
         stick.controlPath = "/<Gamepad>/leftStick";
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
+        InputSystem.Update();
     }
 
     [Test]
@@ -25,7 +26,6 @@ public class OnScreenTests : InputTestFixture
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "/<Keyboard>/a";
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
-        InputSystem.Update();
     }
 
     [Test]
@@ -43,25 +43,22 @@ public class OnScreenTests : InputTestFixture
         button.OnPointerUp(null);
         InputSystem.Update();
         Assert.That(keyboard.aKey.isPressed, Is.False);
-        InputSystem.Update();
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_OnScreenButtonSendsButtonPushToDeviceWithAlreadyExistingDevice()
+    public void Devices_OnScreenButtonDoesNotMapToExistingDevice()
     {
-        InputSystem.AddDevice<Keyboard>();
+        var exitingKeyboard = InputSystem.AddDevice<Keyboard>();
         var gameObject = new GameObject();
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "/<Keyboard>/a";
-        var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
-        Assert.That(keyboard.aKey.isPressed, Is.False);
+
+        Assert.That(exitingKeyboard.aKey.isPressed, Is.False);
         button.OnPointerDown(null);
         InputSystem.Update();
-        Assert.That(keyboard.aKey.isPressed, Is.True);
+        Assert.That(exitingKeyboard.aKey.isPressed, Is.False);
         button.OnPointerUp(null);
-        InputSystem.Update();
-        Assert.That(keyboard.aKey.isPressed, Is.False);
         InputSystem.Update();
     }
 
@@ -85,29 +82,5 @@ public class OnScreenTests : InputTestFixture
 
         Assert.That(keyboard.aKey.isPressed, Is.True);
         Assert.That(keyboard.bKey.isPressed, Is.True);
-        InputSystem.Update();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_OnScreenStickSendsMovementToDevice()
-    {
-        /*
-        var gameObject = new GameObject();
-        var stick = gameObject.AddComponent<OnScreenStick>();
-        stick.controlPath = "/<Gamepad>/leftStick";
-        var gamepad = (Gamepad)InputSystem.devices.FirstOrDefault(x => x is Gamepad);
-        var data = new PointerEventData(EventSystem.current);
-
-        // TODO
-        // Now that the OnScreenStick is working,
-        // need to figure out how to actually fake a drag.
-        stick.OnDrag(data);
-        InputSystem.Update();
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.00001));
-        stick.OnPointerUp(data);
-        InputSystem.Update();
-        Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
-        InputSystem.Update(); */
     }
 }

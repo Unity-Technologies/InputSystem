@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.UI;
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
@@ -32,15 +34,10 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             public InputEventPtr eventPtr;
             public NativeArray<byte> buffer;
             public InputDevice device;
+            public OnScreenControl firstControl;
         }
 
         private static InlinedArray<OnScreenDeviceEventInfo> s_DeviceEventInfoArray = new InlinedArray<OnScreenDeviceEventInfo>();
-
-        // We will have N devices mapped to X number of OnScreenControls
-        // Need to keep track and reference count how many controls are sharing
-        // the same device, so that when the last control is ready to be destroyed
-        // it can clean up the memory and remove the device from the input system.
-        private static List<int> s_RegisteredOnScreenControls = new List<int>();
 
         public string controlPath
         {
@@ -58,8 +55,9 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         [NonSerialized] internal InputControl m_Control;
         [SerializeField] internal string m_ControlPath;
 
-        private int m_DeviceEventInfoIndex;
+        private OnScreenControl m_NextControlOnDevice;
         private string m_Layout;
+        private InputEventPtr m_InputEventPtr;
 
         private static int GetDeviceEventIndex(string layout)
         {
@@ -68,27 +66,25 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                 if (s_DeviceEventInfoArray[index].device.layout == layout)
                     return index;
             }
+
             return -1;
         }
 
-        private static int CreateOnScreenDevice(string layout)
+        private static InputDevice CreateOnScreenDevice(string layout, OnScreenControl onScreenControl)
         {
             var device = InputSystem.AddDevice(layout);
             InputEventPtr eventPtr;
             var buffer = StateEvent.From(device, out eventPtr, Allocator.Persistent);
 
-            // Need to cache the buffer, device and InputEventPointer
-            // so that muliple OnScreenControlInstances can share
-            // the same OnScreenDevice and input memory;
             OnScreenDeviceEventInfo deviceEventInfo;
             deviceEventInfo.eventPtr = eventPtr;
             deviceEventInfo.buffer = buffer;
             deviceEventInfo.device = device;
+            deviceEventInfo.firstControl = onScreenControl;
 
             s_DeviceEventInfoArray.Append(deviceEventInfo);
 
-            // Give the caller the index in the cache.
-            return s_DeviceEventInfoArray.length - 1;
+            return device;
         }
 
         private static void RemoveOnScreenDevice(int id)
@@ -97,35 +93,11 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             InputSystem.RemoveDevice(s_DeviceEventInfoArray[id].device);
         }
 
-        private static InputControl RegisterInputControl(string controlPath, out int id)
+        private void ProcessDeviceStateEventForValue<TValue>(InputControl<TValue> control, TValue value)
         {
-            var layout = InputControlPath.TryGetDeviceLayout(controlPath);
-            id = GetDeviceEventIndex(layout);
-
-            // If we do not have a device created yet, create a new one
-            // for OnScreenProcessing
-            if (id < 0)
-            {
-                id = CreateOnScreenDevice(layout);
-            }
-
-            // If we couldn't create the device, need to error out
-            if (id < 0)
-            {
-                throw new Exception(string.Format("Could nor create a device for the {0} control path",
-                        controlPath));
-            }
-
-            var device = s_DeviceEventInfoArray[id].device;
-            return InputControlPath.TryFindControl(device, controlPath);
-        }
-
-        private static void ProcessDeviceStateEventForValue<TValue>(int id, InputControl<TValue> control, TValue value)
-        {
-            var eventPtr = s_DeviceEventInfoArray[id].eventPtr;
-            eventPtr.time = InputRuntime.s_Instance.currentTime;
-            control.WriteValueInto(eventPtr, value);
-            InputSystem.QueueEvent(eventPtr);
+            m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;
+            control.WriteValueInto(m_InputEventPtr, value);
+            InputSystem.QueueEvent(m_InputEventPtr);
         }
 
         protected void SendValueToControl<TValue>(TValue value)
@@ -139,13 +111,50 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                         controlPath, m_Control.GetType().Name));
             }
 
-            ProcessDeviceStateEventForValue(m_DeviceEventInfoIndex, control, value);
+            ProcessDeviceStateEventForValue(control, value);
+        }
+
+        private InputControl RegisterInputControl(string controlPath)
+        {
+            var layout = InputControlPath.TryGetDeviceLayout(controlPath);
+
+            if (layout == null)
+            {
+                throw new Exception(string.Format("Could not parse a device layout for the {0} control path",
+                        controlPath));
+            }
+
+            m_Layout = layout;
+
+            // Check if we already have a a device created for this type of OnScreenControl
+            int deviceIndex = GetDeviceEventIndex(layout);
+
+            // If we do not have a device created yet, create a new one
+            if (deviceIndex < 0)
+            {
+                var device = CreateOnScreenDevice(layout, this);
+                if (device == null)
+                {
+                    throw new Exception(string.Format("Could not create a device for the {0} control path",
+                            controlPath));
+                }
+
+                return InputControlPath.TryFindControl(device, controlPath);
+            }
+            else
+            {
+                m_NextControlOnDevice = s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice;
+                var temp = s_DeviceEventInfoArray[deviceIndex].firstControl;
+                temp.m_NextControlOnDevice = this;
+
+                return InputControlPath.TryFindControl(s_DeviceEventInfoArray[deviceIndex].device, controlPath);
+            }
         }
 
         private void SetupInputControl()
         {
-            m_Control = RegisterInputControl(controlPath, out m_DeviceEventInfoIndex);
-            s_RegisteredOnScreenControls.Add(m_DeviceEventInfoIndex);
+            m_Control = RegisterInputControl(controlPath);
+            m_InputEventPtr = s_DeviceEventInfoArray[GetDeviceEventIndex(m_Layout)].eventPtr;
         }
 
         void OnEnable()
@@ -158,9 +167,22 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         void OnDisable()
         {
-            s_RegisteredOnScreenControls.Remove(m_DeviceEventInfoIndex);
-            if (!s_RegisteredOnScreenControls.Contains(m_DeviceEventInfoIndex))
-                RemoveOnScreenDevice(m_DeviceEventInfoIndex);
+            int deviceIndex = GetDeviceEventIndex(m_Layout);
+            if (deviceIndex != -1)
+            {
+                if (s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice == null)
+                {
+                    RemoveOnScreenDevice(deviceIndex);
+                    s_DeviceEventInfoArray.RemoveAt(deviceIndex);
+                }
+                else
+                {
+                    // Not going to search entire list to match exact object.  Just remove head of list
+                    // Unit we get to no other devices left.
+                    s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice =
+                        s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice.m_NextControlOnDevice;
+                }
+            }
         }
     }
 }
