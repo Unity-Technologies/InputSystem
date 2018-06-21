@@ -17,6 +17,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: add toggle to that switches to displaying raw control values
 
+////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputStateHistory)
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Shows status and activity of a single input device in a separate window.

@@ -4,82 +4,89 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add hierarchical set of binding overrides to asset
 
+////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
+////        "I expect a 'look' and a 'move' action in here"
+
 namespace UnityEngine.Experimental.Input
 {
-    // An asset containing one or more action sets.
-    // Usually imported from JSON using InputActionImporter.
-    // Names of each action set in the asset ust be unique.
-    // Allows applying overrides in bulk to all sets in the asset.
-    //
-    // NOTE: You don't have to use action sets this way. InputActionAsset
-    //       is a ready-made way to use Unity's default serialization and
-    //       have action sets go into the asset database. However, you can
-    //       just as well have action sets directly as JSON in your game.
+    /// <summary>
+    /// An asset containing one or more action maps.
+    /// </summary>
+    /// <remarks>
+    /// Usually imported from JSON using InputActionImporter.
+    /// Names of each action set in the asset ust be unique.
+    /// Allows applying overrides in bulk to all sets in the asset.
+    ///
+    /// NOTE: You don't have to use action sets this way. InputActionAsset
+    ///       is a ready-made way to use Unity's default serialization and
+    ///       have action sets go into the asset database. However, you can
+    ///       just as well have action sets directly as JSON in your game.
+    /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable
     {
         public const string kExtension = "inputactions";
 
-        public ReadOnlyArray<InputActionSet> actionSets
+        public ReadOnlyArray<InputActionMap> actionMaps
         {
-            get { return new ReadOnlyArray<InputActionSet>(m_ActionSets); }
+            get { return new ReadOnlyArray<InputActionMap>(m_ActionMaps); }
         }
 
         // Return a JSON representation of the asset.
         public string ToJson()
         {
-            return InputActionSet.ToJson(m_ActionSets);
+            return InputActionMap.ToJson(m_ActionMaps);
         }
 
         // Replace the contents of the asset with the action sets in the
         // given JSON string.
         public void LoadFromJson(string json)
         {
-            m_ActionSets = InputActionSet.FromJson(json);
+            m_ActionMaps = InputActionMap.FromJson(json);
         }
 
-        public void AddActionSet(InputActionSet set)
+        public void AddActionMap(InputActionMap map)
         {
-            if (set == null)
-                throw new ArgumentNullException("set");
-            if (string.IsNullOrEmpty(set.name))
-                throw new InvalidOperationException("Sets added to an input action asset must be named");
+            if (map == null)
+                throw new ArgumentNullException("map");
+            if (string.IsNullOrEmpty(map.name))
+                throw new InvalidOperationException("Maps added to an input action asset must be named");
             ////REVIEW: some of the rules here seem stupid; just replace?
-            if (TryGetActionSet(set.name) != null)
+            if (TryGetActionMap(map.name) != null)
                 throw new InvalidOperationException(
-                    string.Format("An action set called '{0}' already exists in the asset", set.name));
+                    string.Format("An action map called '{0}' already exists in the asset", map.name));
 
-            ArrayHelpers.Append(ref m_ActionSets, set);
+            ArrayHelpers.Append(ref m_ActionMaps, map);
         }
 
-        public void RemoveActionSet(InputActionSet set)
+        public void RemoveActionMap(InputActionMap map)
         {
-            if (set == null)
-                throw new ArgumentNullException("set");
+            if (map == null)
+                throw new ArgumentNullException("map");
 
-            ArrayHelpers.Erase(ref m_ActionSets, set);
+            ArrayHelpers.Erase(ref m_ActionMaps, map);
         }
 
-        public void RemoveActionSet(string name)
+        public void RemoveActionMap(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name");
 
-            var set = TryGetActionSet(name);
+            var set = TryGetActionMap(name);
             if (set != null)
-                RemoveActionSet(set);
+                RemoveActionMap(set);
         }
 
-        public InputActionSet TryGetActionSet(string name)
+        public InputActionMap TryGetActionMap(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
 
-            if (m_ActionSets == null)
+            if (m_ActionMaps == null)
                 return null;
 
-            for (var i = 0; i < m_ActionSets.Length; ++i)
+            for (var i = 0; i < m_ActionMaps.Length; ++i)
             {
-                var set = m_ActionSets[i];
+                var set = m_ActionMaps[i];
                 if (string.Compare(name, set.name, StringComparison.InvariantCultureIgnoreCase) == 0)
                     return set;
             }
@@ -87,11 +94,11 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
-        public InputActionSet GetActionSet(string name)
+        public InputActionMap GetActionMap(string name)
         {
-            var set = TryGetActionSet(name);
+            var set = TryGetActionMap(name);
             if (set == null)
-                throw new KeyNotFoundException(string.Format("Could not find an action set called '{0}' in asset '{1}'",
+                throw new KeyNotFoundException(string.Format("Could not find an action map called '{0}' in asset '{1}'",
                         name, this));
             return set;
         }
@@ -101,7 +108,7 @@ namespace UnityEngine.Experimental.Input
             // Can't MemberwiseClone() ScriptableObject. Unfortunatly, Unity doesn't
             // prevent the call. Result will be a duplicate wrapper object, though.
             var clone = (InputActionAsset)CreateInstance(GetType());
-            clone.m_ActionSets = ArrayHelpers.Clone(m_ActionSets);
+            clone.m_ActionMaps = ArrayHelpers.Clone(m_ActionMaps);
             return clone;
         }
 
@@ -110,8 +117,14 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        ////TODO: ApplyOverrides, RemoveOverrides, RemoveAllBindingOverrides
+        ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
 
-        [SerializeField] internal InputActionSet[] m_ActionSets;
+        [SerializeField] internal InputActionMap[] m_ActionMaps;
+
+        ////TODO: make this one happen and also persist it across domain reloads
+        /// <summary>
+        /// Shared state for all action maps in the asset.
+        /// </summary>
+        [NonSerialized] internal InputActionMapState m_ActionMapState;
     }
 }

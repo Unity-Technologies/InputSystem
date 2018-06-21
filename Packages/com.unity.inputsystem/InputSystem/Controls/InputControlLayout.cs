@@ -8,9 +8,13 @@ using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
-#if !(NET_4_0 || NET_4_6)
+#if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
+
+////TODO: allow things like "-something" and "+something" for usages, processors, etc
+
+////TODO: change interactions and processors to use kSeparator
 
 ////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
 
@@ -346,6 +350,26 @@ namespace UnityEngine.Experimental.Input
         public bool isControlLayout
         {
             get { return !isDeviceLayout; }
+        }
+
+        public ControlItem this[string path]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new ArgumentNullException("path");
+
+                if (m_Controls != null)
+                {
+                    for (var i = 0; i < m_Controls.Length; ++i)
+                    {
+                        if (m_Controls[i].name == path)
+                            return m_Controls[i];
+                    }
+                }
+
+                throw new KeyNotFoundException(string.Format("Cannot find control '{0}' in layout '{1}'", path, name));
+            }
         }
 
         /// <summary>

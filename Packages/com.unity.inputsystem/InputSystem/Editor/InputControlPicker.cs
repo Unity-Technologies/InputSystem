@@ -316,7 +316,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var child = new Item
                     {
                         id = id++,
-                        depth = 1,
+                        depth = parent.depth + 1,
                         displayName = controlPath,
                         device = parent.layout.name,
                         controlPath = controlPath,

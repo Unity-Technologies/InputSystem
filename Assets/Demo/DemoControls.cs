@@ -7,7 +7,7 @@ public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
     private void Initialize()
     {
         // gameplay
-        m_gameplay = asset.GetActionSet("gameplay");
+        m_gameplay = asset.GetActionMap("gameplay");
         m_gameplay_fire = m_gameplay.GetAction("fire");
         m_gameplay_move = m_gameplay.GetAction("move");
         m_gameplay_look = m_gameplay.GetAction("look");
@@ -15,7 +15,7 @@ public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
     }
 
     // gameplay
-    private UnityEngine.Experimental.Input.InputActionSet m_gameplay;
+    private UnityEngine.Experimental.Input.InputActionMap m_gameplay;
     private UnityEngine.Experimental.Input.InputAction m_gameplay_fire;
     private UnityEngine.Experimental.Input.InputAction m_gameplay_move;
     private UnityEngine.Experimental.Input.InputAction m_gameplay_look;
@@ -26,11 +26,11 @@ public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
         public UnityEngine.Experimental.Input.InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
         public UnityEngine.Experimental.Input.InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
         public UnityEngine.Experimental.Input.InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
-        public UnityEngine.Experimental.Input.InputActionSet Get() { return m_Wrapper.m_gameplay; }
+        public UnityEngine.Experimental.Input.InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
-        public UnityEngine.Experimental.Input.InputActionSet Clone() { return Get().Clone(); }
-        public static implicit operator UnityEngine.Experimental.Input.InputActionSet(GameplayActions set) { return set.Get(); }
+        public UnityEngine.Experimental.Input.InputActionMap Clone() { return Get().Clone(); }
+        public static implicit operator UnityEngine.Experimental.Input.InputActionMap(GameplayActions set) { return set.Get(); }
     }
     public GameplayActions @gameplay
     {

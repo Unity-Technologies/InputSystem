@@ -8,9 +8,11 @@ namespace UnityEngine.Experimental.Input.Editor
     // Imports an InputActionAsset from JSON.
     // Can generate code wrappers for the contained action sets as a convenience.
     // Will not overwrite existing wrappers except if the generated code actually differs.
-    [ScriptedImporter(1, InputActionAsset.kExtension)]
+    [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
+        private const int kVersion = 2;
+
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
         [SerializeField] internal string m_WrapperClassName;
@@ -20,14 +22,14 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Parse JSON.
             var text = File.ReadAllText(ctx.assetPath);
-            var sets = InputActionSet.FromJson(text);
+            var sets = InputActionMap.FromJson(text);
             ////TODO: catch errors
 
             ////TODO: make sure action names are unique
 
             // Create asset.
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.m_ActionSets = sets;
+            asset.m_ActionMaps = sets;
             ctx.AddObjectToAsset("<root>", asset);
             ctx.SetMainObject(asset);
 
@@ -42,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var actionObject = ScriptableObject.CreateInstance<InputActionReference>();
 
                     actionObject.m_Asset = asset;
-                    actionObject.m_SetName = set.name;
+                    actionObject.m_MapName = set.name;
                     actionObject.m_ActionName = action.name;
 
                     var objectName = action.name;

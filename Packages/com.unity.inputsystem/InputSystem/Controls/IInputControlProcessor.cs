@@ -1,5 +1,8 @@
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should control processors on parent controls somehow affect their children automatically as well?
+////        (ATM it can be confusing that leftStick is deadzoned but leftStick/x and leftStick/y are not)
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

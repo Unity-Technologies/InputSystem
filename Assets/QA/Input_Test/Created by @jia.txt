@@ -1,0 +1,16 @@
+What is this?
+This is a additional test to the New Input System.
+It includes keyboard, mouse, xbox controller and pen. 
+It also comes with a generic diagram for other controllers.
+
+Who made this?
+This is made by @jia. 
+Please email me any comment/concern or poke me in Slack directly.
+
+How to use this?
+Go to folder: Input_Test -> Scenes and pick the one you need.
+
+Why are there so many scripts for Old Input Manager?
+Because the ultimate goal is to test both old and new input together at the same time. 
+
+

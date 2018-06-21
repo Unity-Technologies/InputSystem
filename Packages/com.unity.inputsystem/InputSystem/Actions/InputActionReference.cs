@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Serialization;
 
 ////REVIEW: akin to this, also have an InputActionSetReference? :(
 
@@ -18,7 +19,8 @@ namespace UnityEngine.Experimental.Input
     {
         [SerializeField] internal InputActionAsset m_Asset;
 
-        [SerializeField] internal string m_SetName;
+        [FormerlySerializedAs("m_SetName")]
+        [SerializeField] internal string m_MapName;
         [SerializeField] internal string m_ActionName;
 
         [NonSerialized] private InputAction m_Action;
@@ -32,7 +34,7 @@ namespace UnityEngine.Experimental.Input
                     if (m_Asset == null)
                         return null;
 
-                    var set = m_Asset.GetActionSet(m_SetName);
+                    var set = m_Asset.GetActionMap(m_MapName);
                     m_Action = set.GetAction(m_ActionName);
                 }
 
@@ -40,22 +42,22 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void Set(InputActionAsset asset, string set, string action)
+        public void Set(InputActionAsset asset, string mapName, string actionName)
         {
-            if (string.IsNullOrEmpty(set))
-                throw new ArgumentException("set");
-            if (string.IsNullOrEmpty(action))
-                throw new ArgumentException("action");
+            if (string.IsNullOrEmpty(mapName))
+                throw new ArgumentException("mapName");
+            if (string.IsNullOrEmpty(actionName))
+                throw new ArgumentException("actionName");
 
             m_Asset = asset;
-            m_SetName = set;
-            m_ActionName = action;
+            m_MapName = mapName;
+            m_ActionName = actionName;
         }
 
         public override string ToString()
         {
             if (m_Asset != null)
-                return string.Format("{0}:{1}/{2}", m_Action.name, m_SetName, m_ActionName);
+                return string.Format("{0}:{1}/{2}", m_Action.name, m_MapName, m_ActionName);
 
             return base.ToString();
         }
