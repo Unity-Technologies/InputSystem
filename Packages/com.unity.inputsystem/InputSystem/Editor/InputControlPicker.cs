@@ -309,7 +309,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
 
                     // Skip variants.
-                    if (!string.IsNullOrEmpty(control.variant) && control.variant.ToLower() != "default")
+                    if (!string.IsNullOrEmpty(control.variants) && control.variants.ToLower() != "default")
                         continue;
 
                     var controlPath = prefix + control.name;

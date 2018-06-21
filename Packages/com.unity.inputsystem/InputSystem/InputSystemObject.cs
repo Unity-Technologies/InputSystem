@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Linq;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
@@ -8,19 +7,21 @@ using UnityEditor.Networking.PlayerConnection;
 
 namespace UnityEngine.Experimental.Input
 {
-    // A hidden object we put in the editor to bundle input system state
-    // and help us survive domain relods.
-    // Player doesn't need this stuff because there's no domain reloads to
-    // survive.
+    /// <summary>
+    /// A hidden object we put in the editor to bundle input system state
+    /// and help us survive domain relods.
+    /// </summary>
+    /// <remarks>
+    /// Player doesn't need this stuff because there's no domain reloads to survive.
+    /// </remarks>
     internal class InputSystemObject : ScriptableObject, ISerializationCallbackReceiver
     {
         [SerializeField] public InputManager manager;
         [NonSerialized] public InputRemoting remote;
         [SerializeField] public RemoteInputPlayerConnection playerConnection;
-        [SerializeField] private bool m_OldInputSystemWarningTriggered;
+        [SerializeField] public bool newInputBackendsCheckedAsEnabled;
 
         [SerializeField] private InputRemoting.SerializedState m_RemotingState;
-
 
         public void Awake()
         {
@@ -41,44 +42,6 @@ namespace UnityEngine.Experimental.Input
             manager.InstallRuntime(NativeInputRuntime.instance);
             manager.InstallGlobals();
             SetUpRemoting();
-        }
-
-        private SerializedObject GetSerializedPlayerSettings()
-        {
-            return new SerializedObject(Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault());
-        }
-
-        public bool IsNewInputSystemActiveInPlayerSettings()
-        {
-            var serializedPlayerSettings = GetSerializedPlayerSettings();
-
-            if (serializedPlayerSettings != null)
-                return serializedPlayerSettings.FindProperty("enableNativePlatformBackendsForNewInputSystem").boolValue;
-
-            return true;
-        }
-
-        public void DisplayNativeBackendsDisabledWarningDialog()
-        {
-            const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
-                "This means that no input from native devices will come through." +
-                "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
-
-            // Only display this dialog once to the user per editor session.
-            if (!m_OldInputSystemWarningTriggered)
-            {
-                if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
-                {
-                    var serializedPlayerSettings = GetSerializedPlayerSettings();
-                    if (serializedPlayerSettings != null)
-                    {
-                        serializedPlayerSettings.FindProperty("enableNativePlatformBackendsForNewInputSystem").boolValue = true;
-                        serializedPlayerSettings.ApplyModifiedProperties();
-                    }
-                }
-
-                m_OldInputSystemWarningTriggered = true;
-            }
         }
 
         private void SetUpRemoting()
