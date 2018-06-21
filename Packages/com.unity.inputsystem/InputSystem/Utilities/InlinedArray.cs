@@ -130,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
-        public void Append(TValue value)
+        public int Append(TValue value)
         {
             if (length == 0)
             {
@@ -147,7 +147,9 @@ namespace UnityEngine.Experimental.Input.Utilities
                 additionalValues[length - 1] = value;
             }
 
+            var index = length;
             ++length;
+            return index;
         }
 
         public void AppendWithCapacity(TValue value)

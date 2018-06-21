@@ -1,19 +1,6 @@
-// display image from button
-// allow setting image by dragging in image
-
-// need to be able to have separate pressed and not-pressed images
-//   (should this something that's doable with stock image support for controls?)
-
-// allow not using an image at all but rather just have a screen area
-
-// have any visual representation at all?
-
-// should on-screen controls be proper UI elements? have them as prefabs?
-
-using System;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.EventSystems;
+
+////TODO: pressure support
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {

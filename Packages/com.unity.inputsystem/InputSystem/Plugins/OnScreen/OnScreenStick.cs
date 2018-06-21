@@ -1,8 +1,3 @@
-using System;
-using UnityEngine;
-using UnityEngine.Assertions.Comparers;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.EventSystems;
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
@@ -13,14 +8,9 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// </summary>
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
-        Vector3 m_StartPos;
-        public int MovementRange = 50;
-        public Vector2 StickPosition;
-
-        void Start()
+        private void Start()
         {
             m_StartPos = transform.position;
-            StickPosition = Vector2.zero;
         }
 
         public void OnPointerDown(PointerEventData data)
@@ -29,21 +19,21 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         public void OnDrag(PointerEventData data)
         {
-            Vector3 newPos = Vector3.zero;
-            int delta = 0;
+            var newPos = Vector3.zero;
+            var delta = 0;
 
             delta = (int)(data.position.x - m_StartPos.x);
-            delta = Mathf.Clamp(delta, -MovementRange, MovementRange);
+            delta = Mathf.Clamp(delta, -movementRange, movementRange);
             newPos.x = delta;
 
             delta = (int)(data.position.y - m_StartPos.y);
-            delta = Mathf.Clamp(delta, -MovementRange, MovementRange);
+            delta = Mathf.Clamp(delta, -movementRange, movementRange);
             newPos.y = delta;
 
-            StickPosition.x = newPos.x / MovementRange;
-            StickPosition.y = newPos.y / MovementRange;
+            newPos.x /= movementRange;
+            newPos.y /= movementRange;
 
-            SendValueToControl(StickPosition);
+            SendValueToControl(newPos);
 
             transform.position = new Vector3(m_StartPos.x + newPos.x, m_StartPos.y + newPos.y, m_StartPos.z + newPos.z);
         }
@@ -51,8 +41,11 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         public void OnPointerUp(PointerEventData data)
         {
             transform.position = m_StartPos;
-            StickPosition = Vector2.zero;
-            SendValueToControl(StickPosition);
+            SendValueToControl(Vector2.zero);
         }
+
+        public int movementRange = 50;
+
+        private Vector3 m_StartPos;
     }
 }

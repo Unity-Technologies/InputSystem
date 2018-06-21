@@ -1,10 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Unity.Collections;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.UI;
+
+////TODO: make this survive domain reloads
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
@@ -29,80 +28,125 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
-        private struct OnScreenDeviceEventInfo
-        {
-            public InputEventPtr eventPtr;
-            public NativeArray<byte> buffer;
-            public InputDevice device;
-            public OnScreenControl firstControl;
-        }
-
-        private static InlinedArray<OnScreenDeviceEventInfo> s_DeviceEventInfoArray = new InlinedArray<OnScreenDeviceEventInfo>();
-
         public string controlPath
         {
             get { return m_ControlPath; }
             set
             {
                 m_ControlPath = value;
-                if (m_Control == null)
+                if (enabled)
                 {
                     SetupInputControl();
                 }
             }
         }
 
-        [NonSerialized] internal InputControl m_Control;
+        public InputControl control
+        {
+            get { return m_Control; }
+        }
+
         [SerializeField] internal string m_ControlPath;
 
+        private InputControl m_Control;
         private OnScreenControl m_NextControlOnDevice;
-        private string m_Layout;
         private InputEventPtr m_InputEventPtr;
 
-        private static int GetDeviceEventIndex(string layout)
+        private void SetupInputControl()
         {
-            for (int index = 0; index < s_DeviceEventInfoArray.length; index++)
+            Debug.Assert(m_Control == null);
+            Debug.Assert(m_NextControlOnDevice == null);
+            Debug.Assert(!m_InputEventPtr.valid);
+
+            // Nothing to do if we don't have a control path.
+            if (string.IsNullOrEmpty(m_ControlPath))
+                return;
+
+            // Determine what type of device to work with.
+            var layoutName = InputControlPath.TryGetDeviceLayout(m_ControlPath);
+            if (layoutName == null)
             {
-                if (s_DeviceEventInfoArray[index].device.layout == layout)
-                    return index;
+                Debug.LogError(
+                    string.Format(
+                        "Cannot determine device layout to use based on control path '{0}' used in {1} component",
+                        m_ControlPath, GetType().Name), this);
+                return;
             }
 
-            return -1;
-        }
+            // Try to find existing on-screen device that matches.
+            var internedLayoutName = new InternedString(layoutName);
+            var deviceInfoIndex = -1;
+            for (var i = 0; i < s_OnScreenDevices.length; ++i)
+            {
+                if (s_OnScreenDevices[i].device.m_Layout == internedLayoutName)
+                {
+                    deviceInfoIndex = i;
+                    break;
+                }
+            }
 
-        private static InputDevice CreateOnScreenDevice(string layout, OnScreenControl onScreenControl)
-        {
-            var device = InputSystem.AddDevice(layout);
-            InputEventPtr eventPtr;
-            var buffer = StateEvent.From(device, out eventPtr, Allocator.Persistent);
+            // If we don't have a matching one, create a new one.
+            InputDevice device;
+            if (deviceInfoIndex == -1)
+            {
+                // Try to create device.
+                try
+                {
+                    device = InputSystem.AddDevice(layoutName);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("Could not create device with layout '{0}' used in '{1}' component", layoutName,
+                            GetType().Name));
+                    Debug.LogException(exception);
+                    return;
+                }
 
-            OnScreenDeviceEventInfo deviceEventInfo;
-            deviceEventInfo.eventPtr = eventPtr;
-            deviceEventInfo.buffer = buffer;
-            deviceEventInfo.device = device;
-            deviceEventInfo.firstControl = onScreenControl;
+                // Create event buffer.
+                InputEventPtr eventPtr;
+                var buffer = StateEvent.From(device, out eventPtr, Allocator.Persistent);
 
-            s_DeviceEventInfoArray.Append(deviceEventInfo);
+                // Add to list.
+                deviceInfoIndex = s_OnScreenDevices.Append(new OnScreenDeviceInfo
+                {
+                    eventPtr = eventPtr,
+                    buffer = buffer,
+                    device = device,
+                });
+            }
+            else
+            {
+                device = s_OnScreenDevices[deviceInfoIndex].device;
+            }
 
-            return device;
-        }
+            // Try to find control on device.
+            m_Control = InputControlPath.TryFindControl(device, m_ControlPath);
+            if (m_Control == null)
+            {
+                Debug.LogError(
+                    string.Format(
+                        "Cannot find control with path '{0}' on device of type '{1}' referenced by component '{2}'",
+                        m_ControlPath, layoutName, GetType().Name), this);
 
-        private static void RemoveOnScreenDevice(int id)
-        {
-            s_DeviceEventInfoArray[id].buffer.Dispose();
-            InputSystem.RemoveDevice(s_DeviceEventInfoArray[id].device);
-        }
+                // Remove the device, if we just created one.
+                if (s_OnScreenDevices[deviceInfoIndex].firstControl == null)
+                {
+                    s_OnScreenDevices[deviceInfoIndex].Destroy();
+                    s_OnScreenDevices.RemoveAt(deviceInfoIndex);
+                }
 
-        private void ProcessDeviceStateEventForValue<TValue>(InputControl<TValue> control, TValue value)
-        {
-            m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;
-            control.WriteValueInto(m_InputEventPtr, value);
-            InputSystem.QueueEvent(m_InputEventPtr);
+                return;
+            }
+            m_InputEventPtr = s_OnScreenDevices[deviceInfoIndex].eventPtr;
+
+            // We have all we need. Permanently add us.
+            s_OnScreenDevices[deviceInfoIndex] =
+                s_OnScreenDevices[deviceInfoIndex].AddControl(this);
         }
 
         protected void SendValueToControl<TValue>(TValue value)
         {
-            // NEED TO FIX THIS.   Only cast once.
+            ////TODO: only cast once
             var control = m_Control as InputControl<TValue>;
             if (control == null)
             {
@@ -111,78 +155,93 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                         controlPath, m_Control.GetType().Name));
             }
 
-            ProcessDeviceStateEventForValue(control, value);
+            m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;
+            control.WriteValueInto(m_InputEventPtr, value);
+            InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-        private InputControl RegisterInputControl(string controlPath)
+        void OnEnable()
         {
-            var layout = InputControlPath.TryGetDeviceLayout(controlPath);
+            SetupInputControl();
+        }
 
-            if (layout == null)
+        void OnDisable()
+        {
+            if (m_Control != null)
             {
-                throw new Exception(string.Format("Could not parse a device layout for the {0} control path",
-                        controlPath));
-            }
-
-            m_Layout = layout;
-
-            // Check if we already have a a device created for this type of OnScreenControl
-            int deviceIndex = GetDeviceEventIndex(layout);
-
-            // If we do not have a device created yet, create a new one
-            if (deviceIndex < 0)
-            {
-                var device = CreateOnScreenDevice(layout, this);
-                if (device == null)
+                var device = m_Control.device;
+                for (var i = 0; i < s_OnScreenDevices.length; ++i)
                 {
-                    throw new Exception(string.Format("Could not create a device for the {0} control path",
-                            controlPath));
+                    if (s_OnScreenDevices[i].device != device)
+                        continue;
+
+                    var deviceInfo = s_OnScreenDevices[i].RemoveControl(this);
+                    if (deviceInfo.firstControl == null)
+                    {
+                        // We're the last on-screen control on this device. Remove the device.
+                        s_OnScreenDevices[i].Destroy();
+                        s_OnScreenDevices.RemoveAt(i);
+                    }
+                    else
+                    {
+                        s_OnScreenDevices[i] = deviceInfo;
+                    }
+
+                    m_Control = null;
+                    m_InputEventPtr = new InputEventPtr();
+                    Debug.Assert(m_NextControlOnDevice == null);
+
+                    break;
                 }
-
-                return InputControlPath.TryFindControl(device, controlPath);
-            }
-            else
-            {
-                m_NextControlOnDevice = s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice;
-                var temp = s_DeviceEventInfoArray[deviceIndex].firstControl;
-                temp.m_NextControlOnDevice = this;
-
-                return InputControlPath.TryFindControl(s_DeviceEventInfoArray[deviceIndex].device, controlPath);
             }
         }
 
-        private void SetupInputControl()
+        private struct OnScreenDeviceInfo
         {
-            m_Control = RegisterInputControl(controlPath);
-            m_InputEventPtr = s_DeviceEventInfoArray[GetDeviceEventIndex(m_Layout)].eventPtr;
-        }
+            public InputEventPtr eventPtr;
+            public NativeArray<byte> buffer;
+            public InputDevice device;
+            public OnScreenControl firstControl;
 
-        public void OnEnable()
-        {
-            if (!string.IsNullOrEmpty(controlPath))
+            public OnScreenDeviceInfo AddControl(OnScreenControl control)
             {
-                SetupInputControl();
+                control.m_NextControlOnDevice = firstControl;
+                firstControl = control;
+                return this;
             }
-        }
 
-        public void OnDisable()
-        {
-            int deviceIndex = GetDeviceEventIndex(m_Layout);
-            if (deviceIndex != -1)
+            public OnScreenDeviceInfo RemoveControl(OnScreenControl control)
             {
-                if (s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice == null)
-                {
-                    RemoveOnScreenDevice(deviceIndex);
-                    s_DeviceEventInfoArray.RemoveAt(deviceIndex);
-                }
+                if (firstControl == control)
+                    firstControl = control.m_NextControlOnDevice;
                 else
                 {
-                    // Not going to search entire list to match exact object.  Just remove head of list
-                    // Unit we get to no other devices left.
-                    s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice =
-                        s_DeviceEventInfoArray[deviceIndex].firstControl.m_NextControlOnDevice.m_NextControlOnDevice;
+                    for (OnScreenControl current = firstControl.m_NextControlOnDevice, previous = firstControl;
+                         current != null; previous = current, current = current.m_NextControlOnDevice)
+                    {
+                        if (current != control)
+                            continue;
+
+                        previous.m_NextControlOnDevice = current.m_NextControlOnDevice;
+                        break;
+                    }
                 }
+
+                control.m_NextControlOnDevice = null;
+                return this;
+            }
+
+            public void Destroy()
+            {
+                if (buffer.IsCreated)
+                    buffer.Dispose();
+                if (device != null)
+                    InputSystem.RemoveDevice(device);
+                device = null;
+                buffer = new NativeArray<byte>();
             }
         }
+
+        private static InlinedArray<OnScreenDeviceInfo> s_OnScreenDevices;
     }
 }
