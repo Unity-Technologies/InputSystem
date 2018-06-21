@@ -784,7 +784,7 @@ partial class CoreTests
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
-        Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.00001));
+        Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.000001));
     }
 
     // InputStateHistory helps creating traces of input over time. This is useful, for example, to track

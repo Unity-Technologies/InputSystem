@@ -1,6 +1,10 @@
 using System;
 using UnityEngineInternal.Input;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -80,7 +84,27 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public Action onShutdown
         {
-            set { Application.quitting += value; }
+            set
+            {
+                if (value == null)
+                {
+                    #if UNITY_EDITOR
+                    EditorApplication.quitting -= OnShutdown;
+                    #else
+                    Application.quitting -= OnShutdown;
+                    #endif
+                }
+                else if (m_ShutdownMethod == null)
+                {
+                    #if UNITY_EDITOR
+                    EditorApplication.quitting += OnShutdown;
+                    #else
+                    Application.quitting += OnShutdown;
+                    #endif
+                }
+
+                m_ShutdownMethod = value;
+            }
         }
 
         public float pollingFrequency
@@ -113,6 +137,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         private Action<NativeInputUpdateType> m_SetUpdateMaskMethod;
+        private Action m_ShutdownMethod;
+
+        private void OnShutdown()
+        {
+            m_ShutdownMethod();
+        }
 
         public ScreenOrientation screenOrientation
         {
