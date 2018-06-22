@@ -981,6 +981,11 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.interactions.names;
         }
 
+        public static IEnumerable<string> ListProcessors()
+        {
+            return s_Manager.processors.names;
+        }
+
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
