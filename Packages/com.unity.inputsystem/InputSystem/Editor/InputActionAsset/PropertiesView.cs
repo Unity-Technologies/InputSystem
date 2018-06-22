@@ -10,10 +10,35 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     class PropertiesView
     {
+         static class Styles
+        {
+            public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
+            public static GUIStyle foldoutStyle = new GUIStyle("foldout");
+
+            static Styles()
+            {
+                Initialize();
+                EditorApplication.playModeStateChanged += s =>
+                {
+                    if (s == PlayModeStateChange.ExitingPlayMode) 
+                        Initialize();
+                };
+            }
+
+            static void Initialize()
+            {
+                var darkGreyBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(221, 223, 221, 255));
+                foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
+                foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
+                foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
+            }
+        }
+        
         SerializedProperty m_BindingProperty;
         SerializedProperty m_SetProperty;
 
         bool m_GeneralFoldout = true;
+        bool m_InteractionsFoldout = true;
         bool m_ProcessorsFoldout = true;
         ReorderableList m_InteractionsListView;
         ReorderableList m_ProcessorsListView;
@@ -25,6 +50,9 @@ namespace UnityEngine.Experimental.Input.Editor
         SerializedProperty m_ProcessorsProperty;
         Action m_ReloadTree;
         TreeViewState m_TreeViewState;
+        GUIContent m_ProcessorsContent = new GUIContent("Processors");
+        GUIContent m_InteractionsContent = new GUIContent("Interactions");
+        GUIContent m_GeneralContent = new GUIContent("General");
 
         public PropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
         {
@@ -45,8 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_InteractionsListView.list.Add(s);
             }
             
-            m_InteractionsListView.drawHeaderCallback =
-                (rect) => EditorGUI.LabelField(rect, "Interactions");
+            m_InteractionsListView.headerHeight = 3;
             
             m_InteractionsListView.onAddDropdownCallback =
                 (rect, list) =>
@@ -66,8 +93,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_InteractionsListView.onReorderCallback = list => { ApplyModifiers(); };
             
             m_ProcessorsListView = new ReorderableList(new List<string>{}, typeof(string));
-            m_ProcessorsListView.drawHeaderCallback =
-                (rect) => EditorGUI.LabelField(rect, "Processors");
+            m_ProcessorsListView.headerHeight = 3;
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("processors");
             foreach (var s in m_ProcessorsProperty.stringValue.Split(new []{InputBinding.kSeparatorString}, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -131,34 +157,40 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
             
-            m_GeneralFoldout = EditorGUILayout.Foldout(m_GeneralFoldout, "General");
+            m_GeneralFoldout = DrawFoldout(m_GeneralContent, m_GeneralFoldout);
 
             if (m_GeneralFoldout)
             {
                 EditorGUI.indentLevel++;
-                
+
                 var pathProperty = m_BindingProperty.FindPropertyRelative("path");
                 var path = BindingTreeItem.ParseName(pathProperty.stringValue);
-                
+
                 var btnRect = GUILayoutUtility.GetRect(0, EditorStyles.miniButton.lineHeight);
                 btnRect = EditorGUI.IndentedRect(btnRect);
                 if (EditorGUI.DropdownButton(btnRect, new GUIContent(path), FocusType.Keyboard))
                 {
                     PopupWindow.Show(btnRect,
-                        new InputControlPicker(pathProperty, ref m_TreeViewState) {onPickCallback = OnBindingModified});
+                        new InputControlPicker(pathProperty, ref m_TreeViewState) { onPickCallback = OnBindingModified });
                 }
-                
-                EditorGUILayout.Space();
-                
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space();    
+            m_InteractionsFoldout = DrawFoldout(m_InteractionsContent, m_InteractionsFoldout);
+            
+            if (m_InteractionsFoldout)
+            {
+                EditorGUI.indentLevel++;
                 var listRect = GUILayoutUtility.GetRect(200, m_InteractionsListView.GetHeight());
                 listRect = EditorGUI.IndentedRect(listRect);
                 m_InteractionsListView.DoList(listRect);
-                
                 EditorGUI.indentLevel--;
             }
-          
-            m_ProcessorsFoldout = EditorGUILayout.Foldout(m_ProcessorsFoldout, "Processors");
-
+            
+            EditorGUILayout.Space(); 
+            m_ProcessorsFoldout = DrawFoldout(m_ProcessorsContent, m_ProcessorsFoldout);
+            
             if (m_ProcessorsFoldout)
             {
                 EditorGUI.indentLevel++;
@@ -168,7 +200,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorGUI.indentLevel--;
             }
             
+            GUILayout.FlexibleSpace();
+            
             EditorGUILayout.EndVertical();
+        }
+
+        bool DrawFoldout(GUIContent content, bool folded)
+        {
+            var bgRect = GUILayoutUtility.GetRect(m_ProcessorsContent, Styles.foldoutBackgroundStyle);
+            EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
+            return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
         }
 
         void OnBindingModified(SerializedProperty obj)

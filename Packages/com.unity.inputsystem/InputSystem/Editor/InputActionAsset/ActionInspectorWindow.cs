@@ -10,7 +10,7 @@ using UnityEditor.IMGUI.Controls;
 namespace UnityEngine.Experimental.Input.Editor
 {
     public class ActionInspectorWindow : EditorWindow
-    {
+    {       
         static class Styles
         {
             public static GUIStyle darkGreyBackgroundWithBorder = new GUIStyle("Label");
@@ -29,47 +29,17 @@ namespace UnityEngine.Experimental.Input.Editor
 
             static void Initialize()
             {
-                var darkGreyBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(181, 181, 181, 255));
+                var darkGreyBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(181, 181, 181, 255), Color.grey);
                 darkGreyBackgroundWithBorder.normal.background = darkGreyBackgroundWithBorderTexture;
                 darkGreyBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
 
-                var whiteBackgroundWithBorderTexture = CreateTextureWithBorder(Color.white);
+                var whiteBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(Color.white, Color.grey);
                 whiteBackgroundWithBorder.normal.background = whiteBackgroundWithBorderTexture;
                 whiteBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
-            }
-
-            static Texture2D CreateTextureWithBorder(Color innerColor)
-            {
-                var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t=>t.name == "ISX " + innerColor);
-                if (objs.Any())
-                    return objs.First();
-                
-                var texture = new Texture2D(5, 5);
-                for (int i = 0; i < 5; i++)
-                {
-                    for (int j = 0; j < 5; j++)
-                    {
-                        texture.SetPixel(i, j, Color.grey);
-                    }
-                }
-
-                for (int i = 1; i < 4; i++)
-                {
-                    for (int j = 1; j < 4; j++)
-                    {
-                        texture.SetPixel(i, j, innerColor);
-                    }
-                }
-                texture.filterMode = FilterMode.Point;
-                texture.name = "ISX " + innerColor;
-                texture.hideFlags |= HideFlags.DontSaveInEditor;
-                texture.hideFlags |= HideFlags.DontUnloadUnusedAsset;
-                texture.Apply();
-                return texture;
             }
         }
         
@@ -210,17 +180,6 @@ namespace UnityEngine.Experimental.Input.Editor
         void OnGUI()
         {
             EditorGUILayout.BeginVertical();
-            
-            EditorGUI.BeginChangeCheck();
-            m_ReferencedObject = EditorGUILayout.ObjectField("Input Actions Asset", m_ReferencedObject, typeof(Object), false);
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (m_ReferencedObject == null)
-                {
-                    m_SerializedObject = null;
-                }
-            }
-
             if (m_ReferencedObject == null && !string.IsNullOrEmpty(m_AssetPath))
             {
                 m_ReferencedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
@@ -529,14 +488,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void DrawProperties()
         {
-            EditorGUILayout.BeginVertical(Styles.whiteBackgroundWithBorder,GUILayout.MaxWidth(250));
+            EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder,GUILayout.Width(position.width/2));
 
             var rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
             rect.x -= 2;
             rect.y -= 1;
             rect.width += 4;
             
-            EditorGUI.LabelField(rect, "Properties", Styles.columnHeaderLabel);
+            EditorGUI.LabelField(rect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
+            var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
+            EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
             
             if (m_PropertyView != null)
                 m_PropertyView.OnGUI();

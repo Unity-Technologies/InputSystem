@@ -35,13 +35,13 @@ namespace UnityEngine.Experimental.Input.Editor
 
             static void Initialize()
             {
-                var whiteBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(210, 210, 210, 255));
-                var blueBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(62, 125, 231, 255));
-
-                var backgroundTexture = CreateTextureWithBorder(new Color32(181, 181, 181, 255), false);
+                var backgroundTexture = StyleHelpers.CreateTextureWithBorder(new Color32(181, 181, 181, 255));
                 backgroundStyle.normal.background = backgroundTexture;
                 backgroundStyle.border = new RectOffset(3, 3, 3, 3);
-
+                
+                var borderColor = new Color32(181, 181, 181, 255);
+                var whiteBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(210, 210, 210, 255), borderColor);
+                var blueBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(62, 125, 231, 255), borderColor);
 
                 actionItemRowStyle.normal.background = whiteBackgroundWithBorderTexture;
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
@@ -54,49 +54,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
 
-                yellowRect.normal.background = CreateTextureWithBorder(new Color(256f / 256f, 230f / 256f, 148f / 256f));
+                yellowRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(256f / 256f, 230f / 256f, 148f / 256f));
                 yellowRect.border = new RectOffset(2, 2, 2, 2);
-                orangeRect.normal.background = CreateTextureWithBorder(new Color(246f / 256f, 192f / 256f, 129f / 256f));
+                orangeRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(246f / 256f, 192f / 256f, 129f / 256f));
                 orangeRect.border = new RectOffset(2, 2, 2, 2);
-                greenRect.normal.background = CreateTextureWithBorder(new Color(168 / 256f, 208 / 256f, 152 / 256f));
+                greenRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(168 / 256f, 208 / 256f, 152 / 256f));
                 greenRect.border = new RectOffset(2, 2, 2, 2);
-                blueRect.normal.background = CreateTextureWithBorder(new Color(147 / 256f, 184 / 256f, 187 / 256f));
+                blueRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(147 / 256f, 184 / 256f, 187 / 256f));
                 blueRect.border = new RectOffset(2, 2, 2, 2);
-                pinkRect.normal.background = CreateTextureWithBorder(new Color(200/256f, 149/256f, 175/256f));
+                pinkRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(200/256f, 149/256f, 175/256f));
                 pinkRect.border = new RectOffset(2, 2, 2, 2);
-            }
-
-            static Texture2D CreateTextureWithBorder(Color innerColor, bool border = true)
-            {
-                var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t=>t.name == "ISX " + innerColor);
-                if (objs.Any())
-                    return objs.First();
-                
-                var texture = new Texture2D(5, 5);
-                for (int i = 0; i < 5; i++)
-                {
-                    for (int j = 0; j < 5; j++)
-                    {
-                        if(border)
-                            texture.SetPixel(i, j, new Color32(181, 181, 181, 255));
-                        else
-                            texture.SetPixel(i, j, innerColor);
-                    }
-                }
-
-                for (int i = 1; i < 4; i++)
-                {
-                    for (int j = 1; j < 4; j++)
-                    {
-                        texture.SetPixel(i, j, innerColor);
-                    }
-                }
-                texture.filterMode = FilterMode.Point;
-                texture.name = "ISX " + innerColor;
-                texture.hideFlags |= HideFlags.DontSaveInEditor;
-                texture.hideFlags |= HideFlags.DontUnloadUnusedAsset;
-                texture.Apply();
-                return texture;
             }
         }
         
