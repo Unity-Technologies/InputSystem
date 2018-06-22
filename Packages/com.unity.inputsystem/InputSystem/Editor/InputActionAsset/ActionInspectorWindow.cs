@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIStyle darkGreyBackgroundWithBorder = new GUIStyle("Label");
             public static GUIStyle whiteBackgroundWithBorder = new GUIStyle("Label");
-            public static GUIStyle columnHeaderLabel = new GUIStyle("Label");
+            public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
 
             static Styles()
             {
@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             static void Initialize()
             {
-                var darkGreyBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(114, 114, 114, 255));
+                var darkGreyBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(181, 181, 181, 255));
                 darkGreyBackgroundWithBorder.normal.background = darkGreyBackgroundWithBorderTexture;
                 darkGreyBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
 
@@ -37,8 +37,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 whiteBackgroundWithBorder.normal.background = whiteBackgroundWithBorderTexture;
                 whiteBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
 
-                columnHeaderLabel.normal.background = whiteBackgroundWithBorderTexture;
-                columnHeaderLabel.border = new RectOffset(3, 3, 3, 3);
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
@@ -55,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     for (int j = 0; j < 5; j++)
                     {
-                        texture.SetPixel(i, j, Color.black);
+                        texture.SetPixel(i, j, Color.grey);
                     }
                 }
 
@@ -369,15 +367,18 @@ namespace UnityEngine.Experimental.Input.Editor
             var treeViewRect = GUILayoutUtility.GetLastRect();
             var labelRect = new Rect(treeViewRect);
             labelRect.height = 20;
-            treeViewRect.y += 20 - 1;
+            treeViewRect.y += 20;
             treeViewRect.height -= 20;
-            treeViewRect.x += 2;
-            treeViewRect.width -= 4;
+            treeViewRect.x += 1;
+            treeViewRect.width -= 2;
 
             var header = "Action maps";
             if (!string.IsNullOrEmpty(m_SearchText))
                 header += " (Searching)";
-            EditorGUI.LabelField(labelRect, header, Styles.columnHeaderLabel);
+            
+            EditorGUI.LabelField(labelRect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
+            var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
+            EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
 
             labelRect.x = labelRect.width - 18;
             labelRect.width = 18;

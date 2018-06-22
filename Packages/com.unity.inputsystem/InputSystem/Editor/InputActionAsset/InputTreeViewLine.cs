@@ -15,12 +15,13 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle actionSetItemStyle = new GUIStyle("Label");
             public static GUIStyle actionItemLabelStyle = new GUIStyle("Label");
             
+            public static GUIStyle backgroundStyle = new GUIStyle("Label");
+            
             public static GUIStyle yellowRect = new GUIStyle("Label");
             public static GUIStyle orangeRect = new GUIStyle("Label");
             public static GUIStyle greenRect = new GUIStyle("Label");
             public static GUIStyle blueRect = new GUIStyle("Label");
-            public static GUIStyle cyanRect = new GUIStyle("Label");
-            public static GUIStyle magentaRect = new GUIStyle("Label");
+            public static GUIStyle pinkRect = new GUIStyle("Label");
 
             static Styles()
             {
@@ -33,35 +34,39 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             static void Initialize()
-            {    
-                var whiteBackgroundWithBorderTexture = CreateTextureWithBorder(Color.white);
+            {
+                var whiteBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(210, 210, 210, 255));
                 var blueBackgroundWithBorderTexture = CreateTextureWithBorder(new Color32(62, 125, 231, 255));
-                
+
+                var backgroundTexture = CreateTextureWithBorder(new Color32(181, 181, 181, 255), false);
+                backgroundStyle.normal.background = backgroundTexture;
+                backgroundStyle.border = new RectOffset(3, 3, 3, 3);
+
+
                 actionItemRowStyle.normal.background = whiteBackgroundWithBorderTexture;
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
+
                 actionItemRowStyle.onFocused.background = blueBackgroundWithBorderTexture;
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
                 actionItemRowStyle.onNormal.background = blueBackgroundWithBorderTexture;
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
                 actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
-    
+
                 actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
-    
-                yellowRect.normal.background = CreateTextureWithBorder(new Color(256f/256f, 230f/256f, 148f/256f));
+
+                yellowRect.normal.background = CreateTextureWithBorder(new Color(256f / 256f, 230f / 256f, 148f / 256f));
                 yellowRect.border = new RectOffset(2, 2, 2, 2);
-                orangeRect.normal.background = CreateTextureWithBorder(new Color(246f/256f, 192f/256f, 129f/256f));
+                orangeRect.normal.background = CreateTextureWithBorder(new Color(246f / 256f, 192f / 256f, 129f / 256f));
                 orangeRect.border = new RectOffset(2, 2, 2, 2);
-                greenRect.normal.background = CreateTextureWithBorder(new Color(168/256f, 208/256f, 152/256f));
+                greenRect.normal.background = CreateTextureWithBorder(new Color(168 / 256f, 208 / 256f, 152 / 256f));
                 greenRect.border = new RectOffset(2, 2, 2, 2);
-                blueRect.normal.background = CreateTextureWithBorder(new Color(162/256f, 196/256f, 200/256f));
+                blueRect.normal.background = CreateTextureWithBorder(new Color(147 / 256f, 184 / 256f, 187 / 256f));
                 blueRect.border = new RectOffset(2, 2, 2, 2);
-                cyanRect.normal.background = CreateTextureWithBorder(Color.cyan);
-                cyanRect.border = new RectOffset(2, 2, 2, 2);
-                magentaRect.normal.background = CreateTextureWithBorder(Color.magenta);
-                magentaRect.border = new RectOffset(2, 2, 2, 2);
+                pinkRect.normal.background = CreateTextureWithBorder(new Color(200/256f, 149/256f, 175/256f));
+                pinkRect.border = new RectOffset(2, 2, 2, 2);
             }
-    
-            static Texture2D CreateTextureWithBorder(Color innerColor)
+
+            static Texture2D CreateTextureWithBorder(Color innerColor, bool border = true)
             {
                 var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t=>t.name == "ISX " + innerColor);
                 if (objs.Any())
@@ -72,7 +77,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     for (int j = 0; j < 5; j++)
                     {
-                        texture.SetPixel(i, j, Color.black);
+                        if(border)
+                            texture.SetPixel(i, j, new Color32(181, 181, 181, 255));
+                        else
+                            texture.SetPixel(i, j, innerColor);
                     }
                 }
 
@@ -115,7 +123,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_SetProperty = setProperty;
             m_Index = index;
-            depth = 1;
+            depth = 0;
         }
     
         public void OnGUI(Rect rowRect, bool selected, bool focused, float indent)
@@ -147,8 +155,12 @@ namespace UnityEngine.Experimental.Input.Editor
         public virtual void DrawCustomRect(Rect rowRect)
         {
             var boxRect = rowRect;
-            boxRect.width = depth * 12;
-            rectStyle.Draw(boxRect, "", false, false, false, false);
+            boxRect.width = (depth + 1) * 6;
+            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+            if (depth == 0)
+                return;
+            boxRect.width = 6 * depth;
+            Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
         }
     
         public abstract string SerializeToString();
@@ -196,12 +208,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Action = action;
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
             id = (actionMapName + "/" + displayName).GetHashCode();
-            depth = 2;
+            depth = 1;
         }
 
         protected override GUIStyle rectStyle
         {
-            get { return Styles.orangeRect; }
+            get { return Styles.greenRect; }
         }
 
         public override string SerializeToString()
@@ -226,7 +238,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override GUIStyle rectStyle
         {
-            get { return Styles.greenRect; }
+            get { return Styles.blueRect; }
         }
 
         public override bool hasProperties
@@ -245,7 +257,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override GUIStyle rectStyle
         {
-            get { return Styles.cyanRect; }
+            get { return Styles.pinkRect; }
         }
 
         public override bool isDraggable
@@ -327,14 +339,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override GUIStyle rectStyle
         {
-            get { return Styles.greenRect; }
+            get { return Styles.blueRect; }
         }
         
         public override void DrawCustomRect(Rect rowRect)
         {
             var boxRect = rowRect;
-            boxRect.width = (1 + depth) * 10;
-            rectStyle.Draw(boxRect, "", false, false, false, false);
+            boxRect.width = (depth + 1) * 6;
+            rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
+            boxRect.width = 6 * depth;
+            Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
         }
 
         public override string SerializeToString()

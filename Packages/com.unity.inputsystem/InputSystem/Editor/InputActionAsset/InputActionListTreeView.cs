@@ -24,8 +24,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 treeViewState = new TreeViewState();
             
             var treeView = new InputActionListTreeView(applyAction, asset, serializedObject, treeViewState);
+            treeView.foldoutOverride += OnFoldoutDraw;
             treeView.ExpandAll();
             return treeView;
+        }
+
+        static bool OnFoldoutDraw(Rect position, bool expandedstate, GUIStyle style)
+        {
+            var indent = (int) (position.x / 15);
+            position.x = 6 * indent + 8;
+            return EditorGUI.Foldout(position, expandedstate, GUIContent.none, style);
         }
 
         protected InputActionListTreeView(Action applyAction,  InputActionAsset asset, SerializedObject serializedObject, TreeViewState state)
@@ -267,7 +275,8 @@ namespace UnityEngine.Experimental.Input.Editor
         
         protected override void RowGUI(RowGUIArgs args)
         {
-            var indent = GetContentIndent(args.item);
+            // We try to predict the indentation
+            var indent = (args.item.depth + 2) * 6 + 10;
             if (args.item is InputTreeViewLine)
             {
                 (args.item as InputTreeViewLine).OnGUI(args.rowRect, args.selected, args.focused, indent);
