@@ -1802,6 +1802,20 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanDetectIfPenInRange()
+    {
+        var pen = InputSystem.AddDevice<Pen>();
+        
+        Assert.That(pen.inRange.ReadValue(), Is.EqualTo(0).Within(0.00001));
+
+        InputSystem.QueueStateEvent(pen, new PenState().WithButton(PenState.Button.InRange));
+        InputSystem.Update();
+        
+        Assert.That(pen.inRange.ReadValue(), Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_TouchscreenCanFunctionAsPointer()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
