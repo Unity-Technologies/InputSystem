@@ -1,10 +1,9 @@
 #if UNITY_EDITOR || UNITY_XBOXONE
+using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
-using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
-using System.Collections.Generic;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: player ID
 
@@ -193,7 +192,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         private ulong m_GamepadId = 0;
         private int m_XboxOneUserId = -1;
 
-        private static List<XboxOneGamepad> s_Devices = new List<XboxOneGamepad>();
+        private static XboxOneGamepad[] s_Devices;
 
         public ButtonControl paddle1 { get; private set; }
         public ButtonControl paddle2 { get; private set; }
@@ -228,16 +227,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             }
         }
 
-        public new static List<XboxOneGamepad> all
+        public new static ReadOnlyArray<XboxOneGamepad> all
         {
-            // Needs to return a copy just in case anything else might be enumerating the returned list while gamepads are being added and removed.
-            // This will generate garbage and should be used sparingly.
-            get { return new List<XboxOneGamepad>(s_Devices); }
+            get { return new ReadOnlyArray<XboxOneGamepad>(s_Devices); }
         }
 
         public static XboxOneGamepad GetByGamepadId(ulong gamepadId)
         {
-            for (int i = 0; i < s_Devices.Count; i++)
+            for (int i = 0; i < s_Devices.Length; i++)
             {
                 if (s_Devices[i] != null && s_Devices[i].gamepadId == gamepadId)
                 {
@@ -252,21 +249,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         {
             base.OnAdded();
 
-            s_Devices.Add(this);
+            ArrayHelpers.Append(ref s_Devices, this);
         }
 
         protected override void OnRemoved()
         {
             base.OnRemoved();
 
-            for (int i = 0; i < s_Devices.Count; i++)
-            {
-                if (s_Devices[i] != null && s_Devices[i].gamepadId == gamepadId)
-                {
-                    s_Devices.RemoveAt(i);
-                    return;
-                }
-            }
+            ArrayHelpers.Erase(ref s_Devices, this);
         }
 
         private void UpdatePadSettings()
