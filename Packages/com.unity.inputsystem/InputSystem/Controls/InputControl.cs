@@ -532,7 +532,7 @@ namespace UnityEngine.Experimental.Input
             return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }
 
-        protected TValue Process(TValue value)
+        public TValue Process(TValue value)
         {
             if (m_ProcessorStack.length > 0)
             {

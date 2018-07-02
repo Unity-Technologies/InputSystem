@@ -1,7 +1,9 @@
 using NUnit.Framework;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.OnScreen;
 
 public class OnScreenTests : InputTestFixture
@@ -11,12 +13,30 @@ public class OnScreenTests : InputTestFixture
     public void Devices_CanCreateOnScreenStick()
     {
         var gameObject = new GameObject();
+        var eventSystem = gameObject.AddComponent<EventSystem>();
+
         var stick = gameObject.AddComponent<OnScreenStick>();
         stick.controlPath = "/<Gamepad>/leftStick";
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
+        Assert.That(stick.control.device, Is.TypeOf<Gamepad>());
+        Assert.That(stick.control, Is.SameAs(stick.control.device["leftStick"]));
+        Assert.That(stick.control, Is.TypeOf<StickControl>());
+        var stickControl = (StickControl)stick.control;
 
-        ////TODO: test stick movement
+        ////FIXME: OnScreenStick mixes up transform.position and 2D position space
+
+        stick.OnDrag(new PointerEventData(eventSystem)
+        {
+            position = new Vector2(stick.movementRange, stick.movementRange)
+        });
+
+        InputSystem.Update();
+
+        Assert.That(stick.control.ReadValueAsObject(),
+            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2)))
+            .Using(vector2Comparer));
+
+        ////REVIEW: check transform?
     }
 
     [Test]
