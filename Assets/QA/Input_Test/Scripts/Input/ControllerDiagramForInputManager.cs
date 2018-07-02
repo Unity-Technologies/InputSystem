@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ControllerDiagramForInputManager : StandardGamepadForInputManager
+public class ControllerDiagramForInputManager : GamepadForInputManager
 {
     // Update is called once per frame
     void Update()
