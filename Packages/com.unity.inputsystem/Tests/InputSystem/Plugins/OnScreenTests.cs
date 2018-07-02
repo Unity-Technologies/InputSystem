@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Plugins.OnScreen;
 
 public class OnScreenTests : InputTestFixture
@@ -12,11 +13,30 @@ public class OnScreenTests : InputTestFixture
     public void Devices_CanCreateOnScreenStick()
     {
         var gameObject = new GameObject();
+        var eventSystem = gameObject.AddComponent<EventSystem>();
+
         var stick = gameObject.AddComponent<OnScreenStick>();
         stick.controlPath = "/<Gamepad>/leftStick";
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
+
+        Assert.That(stick.control.device, Is.TypeOf<Gamepad>());
+        Assert.That(stick.control, Is.SameAs(stick.control.device["leftStick"]));
+        Assert.That(stick.control, Is.TypeOf<StickControl>());
+        var stickControl = (StickControl)stick.control;
+
+        ////FIXME: OnScreenStick mixes up transform.position and 2D position space
+
+        stick.OnDrag(new PointerEventData(eventSystem)
+        {
+            position = new Vector2(stick.movementRange, stick.movementRange)
+        });
+
         InputSystem.Update();
-        stick.OnDisable();
+
+        Assert.That(stick.control.ReadValueAsObject(),
+            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2)))
+            .Using(vector2Comparer));
+
+        ////REVIEW: check transform?
     }
 
     [Test]
@@ -26,68 +46,52 @@ public class OnScreenTests : InputTestFixture
         var gameObject = new GameObject();
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "/<Keyboard>/a";
+
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
-        button.OnDisable();
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_OnScreenButtonSendsButtonPushToDeviceWithNoExistingDeviceYet()
-    {
-        var gameObject = new GameObject();
-        var button = gameObject.AddComponent<OnScreenButton>();
-        button.controlPath = "/<Keyboard>/a";
         var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
+
         Assert.That(keyboard.aKey.isPressed, Is.False);
+
         button.OnPointerDown(null);
         InputSystem.Update();
         Assert.That(keyboard.aKey.isPressed, Is.True);
+
         button.OnPointerUp(null);
         InputSystem.Update();
         Assert.That(keyboard.aKey.isPressed, Is.False);
-        button.OnDisable();
     }
 
+    ////TODO: we should allow this as an optional feature
     [Test]
     [Category("Devices")]
-    public void Devices_OnScreenButtonDoesNotMapToExistingDevice()
+    public void Devices_OnScreenControlsDoNotUseExistingDevices()
     {
-        var exitingKeyboard = InputSystem.AddDevice<Keyboard>();
+        var existingKeyboard = InputSystem.AddDevice<Keyboard>();
         var gameObject = new GameObject();
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "/<Keyboard>/a";
 
-        Assert.That(exitingKeyboard.aKey.isPressed, Is.False);
+        Assert.That(existingKeyboard.aKey.isPressed, Is.False);
         button.OnPointerDown(null);
         InputSystem.Update();
-        Assert.That(exitingKeyboard.aKey.isPressed, Is.False);
-        button.OnPointerUp(null);
-        InputSystem.Update();
-        button.OnDisable();
+        Assert.That(existingKeyboard.aKey.isPressed, Is.False);
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_MultipleOnScreenButtonInstancesPushToSameDevice()
+    public void Devices_OnScreenControlsShareDevicesOfTheSameType()
     {
         var gameObject = new GameObject();
-        var buttonMappedToKeyA = gameObject.AddComponent<OnScreenButton>();
-        var buttonMappedToKeyB = gameObject.AddComponent<OnScreenButton>();
+        var aKey = gameObject.AddComponent<OnScreenButton>();
+        var bKey = gameObject.AddComponent<OnScreenButton>();
+        var leftTrigger = gameObject.AddComponent<OnScreenButton>();
 
-        buttonMappedToKeyA.controlPath = "/<Keyboard>/a";
-        buttonMappedToKeyB.controlPath = "/<Keyboard>/b";
+        aKey.controlPath = "/<Keyboard>/a";
+        bKey.controlPath = "/<Keyboard>/b";
+        leftTrigger.controlPath = "/<Gamepad>/leftTrigger";
 
-        var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
-
-        buttonMappedToKeyA.OnPointerDown(null);
-        InputSystem.Update();
-        buttonMappedToKeyB.OnPointerDown(null);
-        InputSystem.Update();
-
-        Assert.That(keyboard.aKey.isPressed, Is.True);
-        Assert.That(keyboard.bKey.isPressed, Is.True);
-
-        buttonMappedToKeyA.OnDisable();
-        buttonMappedToKeyB.OnDisable();
+        Assert.That(aKey.control.device, Is.SameAs(bKey.control.device));
+        Assert.That(aKey.control.device, Is.Not.SameAs(leftTrigger.control.device));
+        Assert.That(bKey.control.device, Is.Not.SameAs(leftTrigger.control.device));
     }
 }

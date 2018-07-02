@@ -1,8 +1,3 @@
-using System;
-using UnityEngine;
-using UnityEngine.Assertions.Comparers;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.EventSystems;
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
@@ -13,14 +8,9 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// </summary>
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
-        Vector3 m_StartPos;
-        public int MovementRange = 50;
-        public Vector2 StickPosition;
-
-        void Start()
+        private void Start()
         {
             m_StartPos = transform.position;
-            StickPosition = Vector2.zero;
         }
 
         public void OnPointerDown(PointerEventData data)
@@ -29,30 +19,38 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         public void OnDrag(PointerEventData data)
         {
-            Vector3 newPos = Vector3.zero;
-            int delta = 0;
+            var newPos = Vector2.zero;
 
-            delta = (int)(data.position.x - m_StartPos.x);
-            delta = Mathf.Clamp(delta, -MovementRange, MovementRange);
-            newPos.x = delta;
+            ////REVIEW: is this Y up?
 
-            delta = (int)(data.position.y - m_StartPos.y);
-            delta = Mathf.Clamp(delta, -MovementRange, MovementRange);
-            newPos.y = delta;
+            ////REVIEW: this doesn't make sense; data.position and transform.position are not in the same coordinate space
 
-            StickPosition.x = newPos.x / MovementRange;
-            StickPosition.y = newPos.y / MovementRange;
+            var deltaX = (int)(data.position.x - m_StartPos.x);
+            deltaX = Mathf.Clamp(deltaX, -movementRange, movementRange);
+            newPos.x = deltaX;
 
-            SendValueToControl(StickPosition);
+            var deltaY = (int)(data.position.y - m_StartPos.y);
+            deltaY = Mathf.Clamp(deltaY, -movementRange, movementRange);
+            newPos.y = deltaY;
 
-            transform.position = new Vector3(m_StartPos.x + newPos.x, m_StartPos.y + newPos.y, m_StartPos.z + newPos.z);
+            ////FIXME: this is setting up a square movement space, not a radial one; relies on normalization on the control to work
+
+            newPos.x /= movementRange;
+            newPos.y /= movementRange;
+
+            SendValueToControl(newPos);
+
+            transform.position = new Vector3(m_StartPos.x + newPos.x, m_StartPos.y + newPos.y, m_StartPos.z);
         }
 
         public void OnPointerUp(PointerEventData data)
         {
             transform.position = m_StartPos;
-            StickPosition = Vector2.zero;
-            SendValueToControl(StickPosition);
+            SendValueToControl(Vector2.zero);
         }
+
+        public int movementRange = 50;
+
+        private Vector3 m_StartPos;
     }
 }
