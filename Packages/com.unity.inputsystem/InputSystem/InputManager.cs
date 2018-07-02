@@ -1342,12 +1342,15 @@ namespace UnityEngine.Experimental.Input
                     return;
 
                 ////REVIEW: would be better to clean these up implicitly during the next traversal
-                for (var i = 0; i < listeners.Length; ++i)
+                for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        ArrayHelpers.EraseAt(ref listeners, i);
-                        ArrayHelpers.EraseAt(ref memoryRegions, i);
+                        var listenerCount = signalled.length;
+                        var memoryRegionCount = signalled.length;
+                        ArrayHelpers.EraseAtByMovingTail(listeners, ref listenerCount, i);
+                        ArrayHelpers.EraseAtByMovingTail(memoryRegions, ref memoryRegionCount, i);
                         signalled.SetLength(signalled.length - 1);
+                        break;
                     }
             }
 
