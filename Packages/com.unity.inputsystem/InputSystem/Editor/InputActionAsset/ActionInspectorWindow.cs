@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using UnityEditor.IMGUI.Controls;
 namespace UnityEngine.Experimental.Input.Editor
 {
     public class ActionInspectorWindow : EditorWindow
-    {       
+    {
         static class Styles
         {
             public static GUIStyle darkGreyBackgroundWithBorder = new GUIStyle("Label");
@@ -21,10 +21,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 Initialize();
                 EditorApplication.playModeStateChanged += s =>
-                {
-                    if (s == PlayModeStateChange.ExitingPlayMode) 
-                        Initialize();
-                };
+                    {
+                        if (s == PlayModeStateChange.ExitingPlayMode)
+                            Initialize();
+                    };
             }
 
             static void Initialize()
@@ -42,14 +42,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 columnHeaderLabel.padding.left = 10;
             }
         }
-        
+
         [MenuItem("Input System/Show Input Manager")]
         public static void ShowActionInspectorWindow()
         {
             var w = GetWindow<ActionInspectorWindow>("Input Manager");
             w.Show();
         }
-        
+
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceID, int line)
         {
@@ -138,7 +138,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 LoadPropertiesForSelection();
             }
         }
-        
+
         void ParseGroups(InputActionAsset actionMapAsset)
         {
             HashSet<string> allGroups = new HashSet<string>();
@@ -148,10 +148,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var binding in actionMap.bindings)
                 {
-                    if(binding.groups == null)
+                    if (binding.groups == null)
                         continue;
-                    
-                    foreach (var group in binding.groups.Split(new[]{';'}, StringSplitOptions.RemoveEmptyEntries))
+
+                    foreach (var group in binding.groups.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries))
                     {
                         if (!string.IsNullOrEmpty(@group))
                             allGroups.Add(@group);
@@ -199,7 +199,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     m_SerializedObject = null;
                     return;
                 }
-                if(m_TreeView == null)
+                if (m_TreeView == null)
                 {
                     InitiateTrees();
                 }
@@ -209,7 +209,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.LabelField("Group filter", GUILayout.MaxWidth(70));
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var filter = m_GroupIndex > 0 ? m_GroupPopupList[m_GroupIndex] : null;
                 m_TreeView.SetGroupFilter(filter);
             }
-            
+
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
@@ -228,9 +228,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_TreeView.SetNameFilter(m_SearchText);
             }
             EditorGUILayout.EndHorizontal();
-            
+
             EditorGUILayout.Space();
-            
+
             EditorGUILayout.BeginHorizontal();
             DrawMainTree();
             DrawProperties();
@@ -278,38 +278,38 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
             }
         }
-        
+
         void DeleteSelectedRows()
         {
             var rows = m_TreeView.GetSelectedRows().ToArray();
-            foreach (var compositeGroup in rows.Where(r=>r.GetType() == typeof(CompositeGroupTreeItem)).OrderByDescending(r=>r.index).Cast<CompositeGroupTreeItem>())
+            foreach (var compositeGroup in rows.Where(r => r.GetType() == typeof(CompositeGroupTreeItem)).OrderByDescending(r => r.index).Cast<CompositeGroupTreeItem>())
             {
                 var actionMapProperty = (compositeGroup.parent.parent as InputTreeViewLine).elementProperty;
                 var actionProperty = (compositeGroup.parent as ActionTreeItem).elementProperty;
                 for (var i = compositeGroup.children.Count - 1; i >= 0; i--)
                 {
-                    var composite = (CompositeTreeItem) compositeGroup.children[i];
+                    var composite = (CompositeTreeItem)compositeGroup.children[i];
                     InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index, actionMapProperty);
                 }
                 InputActionSerializationHelpers.RemoveBinding(actionProperty, compositeGroup.index, actionMapProperty);
             }
-            foreach (var bindingRow in rows.Where(r=>r.GetType() == typeof(BindingTreeItem)).OrderByDescending(r=>r.index).Cast<BindingTreeItem>())
+            foreach (var bindingRow in rows.Where(r => r.GetType() == typeof(BindingTreeItem)).OrderByDescending(r => r.index).Cast<BindingTreeItem>())
             {
                 var actionMapProperty = (bindingRow.parent.parent as InputTreeViewLine).elementProperty;
                 var actionProperty = (bindingRow.parent as InputTreeViewLine).elementProperty;
                 InputActionSerializationHelpers.RemoveBinding(actionProperty, bindingRow.index, actionMapProperty);
             }
-            foreach (var actionRow in rows.Where(r=>r.GetType() == typeof(ActionTreeItem)).OrderByDescending(r=>r.index).Cast<ActionTreeItem>())
+            foreach (var actionRow in rows.Where(r => r.GetType() == typeof(ActionTreeItem)).OrderByDescending(r => r.index).Cast<ActionTreeItem>())
             {
                 var actionProperty = (actionRow).elementProperty;
                 var actionMapProperty = (actionRow.parent as InputTreeViewLine).elementProperty;
 
-                for (var i = actionRow.bindingsCount - 1; i >= 0; i--) 
+                for (var i = actionRow.bindingsCount - 1; i >= 0; i--)
                     InputActionSerializationHelpers.RemoveBinding(actionProperty, i, actionMapProperty);
-                
+
                 InputActionSerializationHelpers.DeleteAction(actionMapProperty, actionRow.index);
             }
-            foreach (var mapRow in rows.Where(r=>r.GetType() == typeof(ActionMapTreeItem)).OrderByDescending(r=>r.index).Cast<ActionMapTreeItem>())
+            foreach (var mapRow in rows.Where(r => r.GetType() == typeof(ActionMapTreeItem)).OrderByDescending(r => r.index).Cast<ActionMapTreeItem>())
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
@@ -322,7 +322,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder);
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
-            
+
             var treeViewRect = GUILayoutUtility.GetLastRect();
             var labelRect = new Rect(treeViewRect);
             labelRect.height = 20;
@@ -334,7 +334,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var header = "Action maps";
             if (!string.IsNullOrEmpty(m_SearchText))
                 header += " (Searching)";
-            
+
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
             EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
@@ -346,7 +346,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 ShowAddMenu();
             }
-            
+
             m_TreeView.OnGUI(treeViewRect);
         }
 
@@ -393,7 +393,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 menu.AddItem(new GUIContent(bindingString), false, OnAddBinding);
                 menu.AddItem(new GUIContent(compositeString + "/2 dimensions"), false, OnAddCompositeBinding, 2);
-                menu.AddItem(new GUIContent(compositeString+ "/4 dimensions"), false, OnAddCompositeBinding, 4);
+                menu.AddItem(new GUIContent(compositeString + "/4 dimensions"), false, OnAddCompositeBinding, 4);
             }
             else
             {
@@ -418,11 +418,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 menu.AddDisabledItem(new GUIContent("Cut"), false);
                 menu.AddDisabledItem(new GUIContent("Copy"), false);
             }
-            menu.AddItem(new GUIContent("Paste"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Paste"));
-            menu.AddItem(new GUIContent("Delete"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Delete"));
+            menu.AddItem(new GUIContent("Paste"), false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
+            menu.AddItem(new GUIContent("Delete"), false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
             if (canCopySelection)
             {
-                menu.AddItem(new GUIContent("Duplicate"), false, ()=>EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+                menu.AddItem(new GUIContent("Duplicate"), false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
             }
             else
             {
@@ -466,9 +466,10 @@ namespace UnityEngine.Experimental.Input.Editor
             do
             {
                 if (selectedRow is ActionTreeItem)
-                    return (ActionTreeItem) selectedRow;
+                    return (ActionTreeItem)selectedRow;
                 selectedRow = selectedRow.parent;
-            } while (selectedRow.parent != null);
+            }
+            while (selectedRow.parent != null);
 
             return null;
         }
@@ -479,29 +480,30 @@ namespace UnityEngine.Experimental.Input.Editor
             do
             {
                 if (selectedRow is ActionMapTreeItem)
-                    return (ActionMapTreeItem) selectedRow;
+                    return (ActionMapTreeItem)selectedRow;
                 selectedRow = selectedRow.parent;
-            } while (selectedRow.parent != null);
+            }
+            while (selectedRow.parent != null);
 
             return null;
         }
 
         void DrawProperties()
         {
-            EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder,GUILayout.Width(position.width/2));
+            EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder, GUILayout.Width(position.width / 2));
 
             var rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
             rect.x -= 2;
             rect.y -= 1;
             rect.width += 4;
-            
+
             EditorGUI.LabelField(rect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
             var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
             EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
-            
+
             if (m_PropertyView != null)
                 m_PropertyView.OnGUI();
-            
+
             EditorGUILayout.EndVertical();
         }
     }

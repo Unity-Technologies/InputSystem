@@ -74,9 +74,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public PenState WithButton(Button button, bool state = true)
         {
             if (state)
-                buttons |= (ushort) (1 << (int) button);
+                buttons |= (ushort)(1 << (int)button);
             else
-                buttons &= (ushort) ~(1 << (int) button);
+                buttons &= (ushort)~(1 << (int)button);
             return this;
         }
 

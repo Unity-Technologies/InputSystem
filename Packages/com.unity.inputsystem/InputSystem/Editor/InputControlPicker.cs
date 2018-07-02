@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public Action<SerializedProperty> onPickCallback;
 
         SearchField m_SearchField;
-        
+
         public InputControlPicker(SerializedProperty pathProperty)
         {
             if (pathProperty == null)
@@ -52,7 +52,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public InputControlPicker(SerializedProperty pathProperty, ref TreeViewState treeViewState) : this(pathProperty)
         {
-            if(treeViewState == null)
+            if (treeViewState == null)
                 treeViewState = new TreeViewState();
             m_PathTreeState = treeViewState;
         }
@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_PathTree = new PathTreeView(m_PathTreeState, this);
             }
-            
+
             DrawToolbar();
 
             var toolbarRect = GUILayoutUtility.GetLastRect();
@@ -125,7 +125,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     return false;
                 var item = (Item)treeViewItem;
                 search = search.ToLower();
-                if (item.device !=null && item.device.ToLower().Contains(search))
+                if (item.device != null && item.device.ToLower().Contains(search))
                     return true;
                 if (item.controlPath != null && item.controlPath.ToLower().Contains(search))
                     return true;
@@ -191,14 +191,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (e.type != EventType.KeyDown)
                     return;
-                
+
                 if (e.keyCode == KeyCode.Return && HasSelection())
                 {
                     DoubleClickedItem(GetSelection().First());
                     return;
                 }
-                
-                if (e.keyCode == KeyCode.UpArrow 
+
+                if (e.keyCode == KeyCode.UpArrow
                     || e.keyCode == KeyCode.DownArrow
                     || e.keyCode == KeyCode.LeftArrow
                     || e.keyCode == KeyCode.RightArrow)

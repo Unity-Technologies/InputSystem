@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.Editor
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
             return actionProperty;
         }
-        
+
         public static void MoveBinding(SerializedProperty actionMap, int srcIndex, int dstIndex)
         {
             var actionsArrayProperty = actionMap.FindPropertyRelative("m_Bindings");
@@ -176,9 +176,9 @@ namespace UnityEngine.Experimental.Input.Editor
             newBindingProperty.FindPropertyRelative("name").stringValue = binding.name;
             newBindingProperty.FindPropertyRelative("groups").stringValue = binding.groups;
             newBindingProperty.FindPropertyRelative("interactions").stringValue = binding.interactions;
-            newBindingProperty.FindPropertyRelative("flags").intValue = (int) binding.flags;
+            newBindingProperty.FindPropertyRelative("flags").intValue = (int)binding.flags;
         }
-        
+
         public static void RemoveBinding(SerializedProperty actionProperty, int bindingIndex, SerializedProperty actionMapProperty = null)
         {
             var bindingsArrayProperty = actionMapProperty != null
@@ -274,12 +274,12 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var newProperty = AppendBinding(actionProperty, actionMapProperty);
             newProperty.FindPropertyRelative("name").stringValue = "Composite " + numberOfDimensions + "d";
-            newProperty.FindPropertyRelative("flags").intValue = (int) InputBinding.Flags.Composite;
+            newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.Composite;
 
             for (var i = 0; i < numberOfDimensions; i++)
             {
                 newProperty = AppendBinding(actionProperty, actionMapProperty);
-                newProperty.FindPropertyRelative("flags").intValue = (int) InputBinding.Flags.PartOfComposite;
+                newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.PartOfComposite;
             }
         }
     }
