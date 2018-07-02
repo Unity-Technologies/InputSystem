@@ -24,7 +24,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 treeViewState = new TreeViewState();
 
             var treeView = new InputActionListTreeView(applyAction, asset, serializedObject, treeViewState);
-            treeView.foldoutOverride += OnFoldoutDraw;
+            ////FIXME: this requires 2018.3 to compile
+            //treeView.foldoutOverride += OnFoldoutDraw;
             treeView.ExpandAll();
             return treeView;
         }
