@@ -2569,6 +2569,7 @@ namespace UnityEngine.Experimental.Input
             var deviceCount = state.devices.Length;
             var devices = new InputDevice[deviceCount];
             var setup = new InputDeviceBuilder(m_Layouts);
+            var finalDeviceCount = 0;
             for (var i = 0; i < deviceCount; ++i)
             {
                 var deviceState = state.devices[i];
@@ -2607,7 +2608,7 @@ namespace UnityEngine.Experimental.Input
                 device.NotifyAdded();
                 device.MakeCurrent();
 
-                devices[i] = device;
+                devices[finalDeviceCount++] = device;
                 m_DevicesById[device.m_Id] = device;
 
                 // Re-install update callback, if necessary.
@@ -2622,6 +2623,8 @@ namespace UnityEngine.Experimental.Input
                 m_HaveDevicesWithStateCallbackReceivers |= (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
                     InputDevice.Flags.HasStateCallbacks;
             }
+            if (finalDeviceCount != deviceCount)
+                Array.Resize(ref devices, finalDeviceCount);
             m_Devices = devices;
 
             ////TODO: retry to make sense of available devices that we couldn't make sense of before; maybe we have a layout now
