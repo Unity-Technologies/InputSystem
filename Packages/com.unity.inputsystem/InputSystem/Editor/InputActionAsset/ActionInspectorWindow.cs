@@ -66,7 +66,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     return true;
                 }
                 window = CreateInstance<ActionInspectorWindow>();
-                window.title = "Input Manager - " + obj.name;
+                window.title = obj.name + " (Input Manager)";
                 window.m_ReferencedObject = obj;
                 window.Show();
                 return true;
@@ -90,6 +90,13 @@ namespace UnityEngine.Experimental.Input.Editor
         int m_GroupIndex;
         [SerializeField]
         string m_AssetPath;
+        
+        GUIContent m_AddBindingGUI = new GUIContent("Binding");
+        GUIContent m_AddBindingContextGUI = new GUIContent("Add binding");
+        GUIContent m_AddActionGUI = new GUIContent("Action");
+        GUIContent m_AddActionContextGUI = new GUIContent("Add action");
+        GUIContent m_AddActionMapGUI = new GUIContent("Action map");
+        GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
 
         public void OnEnable()
         {
@@ -357,12 +364,6 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        GUIContent m_AddBindingGUI = new GUIContent("Binding");
-        GUIContent m_AddBindingContextGUI = new GUIContent("Add binding");
-        GUIContent m_AddActionGUI = new GUIContent("Action");
-        GUIContent m_AddActionContextGUI = new GUIContent("Add action");
-        GUIContent m_AddActionMapGUI = new GUIContent("Action map");
-        GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
         void AddAddOptionsToMenu(GenericMenu menu, bool isContextMenu)
         {
             var hasSelection = m_TreeView.HasSelection();
@@ -399,8 +400,11 @@ namespace UnityEngine.Experimental.Input.Editor
             var compositeString = isContextMenu ? "Add composite" : "Composite";
             if (canAddBinding)
             {
-                menu.AddItem(new GUIContent(compositeString + "/2 dimensions"), false, OnAddCompositeBinding, 2);
-                menu.AddItem(new GUIContent(compositeString + "/4 dimensions"), false, OnAddCompositeBinding, 4);
+                foreach (var composite in InputBindingComposite.s_Composites.names)
+                {
+                    menu.AddItem(new GUIContent(compositeString + "/" + composite + " composite"), false, 
+                        () => Debug.Log("Creating " + composite + " not implemented"));
+                }
             }
             else if(!isContextMenu)
             {
