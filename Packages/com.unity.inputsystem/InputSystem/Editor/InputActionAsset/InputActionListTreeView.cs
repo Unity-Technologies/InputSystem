@@ -14,15 +14,15 @@ namespace UnityEngine.Experimental.Input.Editor
         string m_GroupFilter;
         string m_NameFilter;
         Action m_ApplyAction;
-        
+
         public Action OnSelectionChanged;
         public Action OnContextClick;
-        
+
         public static InputActionListTreeView Create(Action applyAction, InputActionAsset asset, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
             if (treeViewState == null)
                 treeViewState = new TreeViewState();
-            
+
             var treeView = new InputActionListTreeView(applyAction, asset, serializedObject, treeViewState);
             treeView.foldoutOverride += OnFoldoutDraw;
             treeView.ExpandAll();
@@ -31,7 +31,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         static bool OnFoldoutDraw(Rect position, bool expandedstate, GUIStyle style)
         {
-            var indent = (int) (position.x / 15);
+            var indent = (int)(position.x / 15);
             position.x = 6 * indent + 8;
             return EditorGUI.Foldout(position, expandedstate, GUIContent.none, style);
         }
@@ -87,13 +87,13 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
-            
+
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
             {
                 var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(i);
 
                 var action = actionMap.actions[i];
-                
+
                 var actionItem = new ActionTreeItem(actionMap.name, action, actionsArrayProperty, i);
 
                 var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
                     var binding = action.bindings[j];
-                    if(!string.IsNullOrEmpty(m_GroupFilter) && !binding.groups.Split(';').Contains(m_GroupFilter))
+                    if (!string.IsNullOrEmpty(m_GroupFilter) && !binding.groups.Split(';').Contains(m_GroupFilter))
                     {
                         continue;
                     }
@@ -119,13 +119,13 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (binding.isPartOfComposite)
                     {
                         var compositeItem = new CompositeTreeItem(actionMap.name, binding, bindingProperty, j);
-                        if(compositeGroupTreeItem != null)
+                        if (compositeGroupTreeItem != null)
                             compositeGroupTreeItem.AddChild(compositeItem);
                         continue;
                     }
                     compositeGroupTreeItem = null;
                     var bindingsItem = new BindingTreeItem(actionMap.name, binding, bindingProperty, j);
-                    if(!actionSearchMatched && IsSearching() && !binding.path.ToLower().Contains(m_NameFilter.ToLower()))
+                    if (!actionSearchMatched && IsSearching() && !binding.path.ToLower().Contains(m_NameFilter.ToLower()))
                     {
                         continue;
                     }
@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     treeViewItem.AddChild(actionItem);
                 }
-                else if(!IsSearching())
+                else if (!IsSearching())
                 {
                     treeViewItem.AddChild(actionItem);
                 }
@@ -152,7 +152,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (!HasSelection())
                 return;
-            
+
             OnSelectionChanged();
         }
 
@@ -160,10 +160,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (!HasSelection())
                 return null;
-            
-            return (InputTreeViewLine) FindItem(GetSelection().First(), rootItem);
-        }
 
+            return (InputTreeViewLine)FindItem(GetSelection().First(), rootItem);
+        }
 
         public IEnumerable<InputTreeViewLine> GetSelectedRows()
         {
@@ -206,13 +205,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 return null;
 
             var item = FindItem(GetSelection().First(), rootItem);
-            
+
             if (item == null)
                 return null;
-            
+
             return (item as InputTreeViewLine).elementProperty;
         }
-        
+
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
         {
             return 18;
@@ -222,13 +221,13 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return item is CompositeGroupTreeItem || item is InputTreeViewLine && !(item is BindingTreeItem);
         }
-        
+
         protected override void DoubleClickedItem(int id)
         {
             var item = FindItem(id, rootItem);
             if (item == null)
                 return;
-            if(item is BindingTreeItem && !(item is CompositeGroupTreeItem))
+            if (item is BindingTreeItem && !(item is CompositeGroupTreeItem))
                 return;
             BeginRename(item);
             (item as InputTreeViewLine).renaming = true;
@@ -254,11 +253,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 var map = GetSelectedActionMap();
                 InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, map.elementProperty, args.newName);
             }
-            else if(actionItem is ActionMapTreeItem)
+            else if (actionItem is ActionMapTreeItem)
             {
                 InputActionSerializationHelpers.RenameActionMap(actionItem.elementProperty, args.newName);
             }
-            else if(actionItem is CompositeGroupTreeItem)
+            else if (actionItem is CompositeGroupTreeItem)
             {
                 InputActionSerializationHelpers.RenameComposite(actionItem.elementProperty, args.newName);
             }
@@ -268,11 +267,11 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             m_ApplyAction();
-            
+
             item.displayName = args.newName;
             Reload();
         }
-        
+
         protected override void RowGUI(RowGUIArgs args)
         {
             // We try to predict the indentation
@@ -295,7 +294,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var row = FindItem(args.draggedItemIDs.First(), rootItem);
             DragAndDrop.PrepareStartDrag();
-            DragAndDrop.paths = args.draggedItemIDs.Select(i=>""+i).ToArray();
+            DragAndDrop.paths = args.draggedItemIDs.Select(i => "" + i).ToArray();
             DragAndDrop.StartDrag(row.displayName);
         }
 
@@ -312,7 +311,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 return DragAndDropVisualMode.None;
             }
-            
+
             if (args.performDrop)
             {
                 var compositeChildrenCount = 0;
@@ -325,18 +324,18 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                 }
                 args.insertAtIndex += compositeChildrenCount;
-                
-                var action = (ActionTreeItem) args.parentItem;
-                var map = (ActionMapTreeItem) args.parentItem.parent;
+
+                var action = (ActionTreeItem)args.parentItem;
+                var map = (ActionMapTreeItem)args.parentItem.parent;
                 var dstIndex = action.bindingsStartIndex + args.insertAtIndex;
                 var srcIndex = action.bindingsStartIndex + row.index;
                 if (dstIndex > srcIndex)
                 {
                     dstIndex--;
                 }
-                
+
                 InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
-                
+
                 if (row.hasChildren)
                 {
                     for (var i = 0; i < row.children.Count; i++)
@@ -347,12 +346,12 @@ namespace UnityEngine.Experimental.Input.Editor
                             InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
                             continue;
                         }
-                        
+
                         // when moving composite up
                         dstIndex++;
                         srcIndex = action.bindingsStartIndex + (row.children[i] as CompositeTreeItem).index;
                         InputActionSerializationHelpers.MoveBinding(map.elementProperty, srcIndex, dstIndex);
-                    } 
+                    }
                 }
 
                 m_ApplyAction();

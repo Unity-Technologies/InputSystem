@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Linq;
 using System.Text;
@@ -17,6 +17,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Window = window;
             m_TreeView = window.m_TreeView;
         }
+
         public void HandleCopyEvent()
         {
             if (!CanCopySelection())
@@ -25,10 +26,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorApplication.Beep();
                 return;
             }
-            
+
             var selectedRows = m_TreeView.GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
-            
+
             // Don't allow to copy different type. It will hard to handle pasting
             if (rowTypes.Count() > 1)
             {
@@ -36,7 +37,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorApplication.Beep();
                 return;
             }
-            
+
             var copyList = new StringBuilder(kInputAssetMarker);
             foreach (var selectedRow in selectedRows)
             {
@@ -47,10 +48,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (selectedRow is ActionTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
                 {
                     var action = selectedRow as ActionTreeItem;
-                    
+
                     foreach (var child in action.children)
                     {
-                        if(!(child is BindingTreeItem))
+                        if (!(child is BindingTreeItem))
                             continue;
                         copyList.Append(child.GetType().Name);
                         copyList.Append((child as BindingTreeItem).SerializeToString());
@@ -60,17 +61,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (selectedRow is CompositeGroupTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
                 {
                     var composite = selectedRow as CompositeGroupTreeItem;
-                    
+
                     foreach (var child in composite.children)
                     {
-                        if(!(child is CompositeTreeItem))
+                        if (!(child is CompositeTreeItem))
                             continue;
                         copyList.Append(child.GetType().Name);
                         copyList.Append((child as CompositeTreeItem).SerializeToString());
                         copyList.Append(kInputAssetMarker);
                     }
                 }
-                
             }
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
         }
@@ -91,8 +91,8 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < elements.Length; i++)
             {
                 var row = elements[i];
-                
-                if(IsRowOfType<ActionMapTreeItem>(ref row))
+
+                if (IsRowOfType<ActionMapTreeItem>(ref row))
                 {
                     var map = JsonUtility.FromJson<InputActionMap>(row);
                     InputActionSerializationHelpers.AddActionMapFromObject(m_Window.m_SerializedObject, map);

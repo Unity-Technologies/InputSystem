@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Linq;
 
@@ -10,13 +10,14 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return CreateTextureWithBorder(color, color);
         }
+
         public static Texture2D CreateTextureWithBorder(Color innerColor, Color borderColor)
         {
             var txtId = "ISX " + innerColor + " " + borderColor;
-            var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t=>t.name == txtId);
+            var objs = Resources.FindObjectsOfTypeAll<Texture2D>().Where(t => t.name == txtId);
             if (objs.Any())
                 return objs.First();
-                
+
             var texture = new Texture2D(5, 5);
             for (int i = 0; i < 5; i++)
             {

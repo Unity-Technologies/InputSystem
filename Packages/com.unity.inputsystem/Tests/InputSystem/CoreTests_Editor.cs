@@ -168,21 +168,21 @@ partial class CoreTests
         binding.path = "some path";
         var action = map.AddAction("action");
         action.AppendBinding(binding);
-        
+
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
-        
+
         Assert.That(asset.actionMaps, Has.Count.EqualTo(0));
-        
+
         InputActionSerializationHelpers.AddActionMapFromObject(obj, map);
         obj.ApplyModifiedPropertiesWithoutUndo();
-        
+
         Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
         Assert.That(asset.actionMaps[0].name, Is.EqualTo("set"));
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action"));
         Assert.That(asset.actionMaps[0].actions[0].bindings[0].path, Is.EqualTo("some path"));
     }
-    
+
     [Test]
     [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveActionThroughSerialization()
@@ -273,7 +273,6 @@ partial class CoreTests
             path = pathName,
             action = sourceActionName,
             groups = groupName
-            
         };
         InputActionSerializationHelpers.AppendBindingFromObject(inputBinding, action1Property, mapProperty);
         obj.ApplyModifiedPropertiesWithoutUndo();
@@ -310,7 +309,7 @@ partial class CoreTests
         Assert.That(action1.bindings[2].isComposite, Is.False);
         Assert.That(action1.bindings[2].isPartOfComposite, Is.True);
     }
-    
+
     [Test]
     [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
@@ -364,19 +363,19 @@ partial class CoreTests
         set1.AddAction(name: "action", binding: "/gamepad/leftStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(set1);
-        
+
         var obj = new SerializedObject(asset);
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
-            
+
         InputActionSerializationHelpers.RenameAction(action1Property, mapProperty, "newAction");
         obj.ApplyModifiedPropertiesWithoutUndo();
-        
+
         Assert.That(set1.actions[0].name, Is.EqualTo("newAction"));
         Assert.That(set1.actions[0].bindings, Has.Count.EqualTo(1));
         Assert.That(set1.actions[0].bindings[0].action, Is.EqualTo("newAction"));
     }
-    
+
     private class TestEditorWindow : EditorWindow
     {
         public Vector2 mousePosition;
