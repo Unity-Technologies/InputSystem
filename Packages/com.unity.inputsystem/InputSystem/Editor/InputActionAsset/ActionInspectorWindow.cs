@@ -357,7 +357,13 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        void AddAddOptionsToMenu(GenericMenu menu, bool includeAddPrefix)
+        GUIContent m_AddBindingGUI = new GUIContent("Binding");
+        GUIContent m_AddBindingContextGUI = new GUIContent("Add binding");
+        GUIContent m_AddActionGUI = new GUIContent("Action");
+        GUIContent m_AddActionContextGUI = new GUIContent("Add action");
+        GUIContent m_AddActionMapGUI = new GUIContent("Action map");
+        GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
+        void AddAddOptionsToMenu(GenericMenu menu, bool isContextMenu)
         {
             var hasSelection = m_TreeView.HasSelection();
             var canAddBinding = false;
@@ -366,38 +372,38 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 canAddBinding = true;
             }
-
             var canAddAction = false;
             var action = m_TreeView.GetSelectedActionMap();
             if (action != null && hasSelection)
             {
                 canAddAction = true;
             }
-
-            var actionString = includeAddPrefix ? "Add action" : "Action";
-            if (canAddAction)
-            {
-                menu.AddItem(new GUIContent(actionString), false, OnAddAction);
-            }
-            else
-            {
-                menu.AddDisabledItem(new GUIContent(actionString), false);
-            }
-
-            var actionMapString = includeAddPrefix ? "Add action map" : "Action map";
-            menu.AddItem(new GUIContent(actionMapString), false, OnAddActionMap);
-            menu.AddSeparator("");
-            var bindingString = includeAddPrefix ? "Add binding" : "Binding";
-            var compositeString = includeAddPrefix ? "Add composite binding" : "Composite binding";
             if (canAddBinding)
             {
-                menu.AddItem(new GUIContent(bindingString), false, OnAddBinding);
+                menu.AddItem(isContextMenu ? m_AddBindingContextGUI : m_AddBindingGUI, false, OnAddBinding);
+            }
+            else if(!isContextMenu)
+            {
+                menu.AddDisabledItem(new GUIContent(m_AddBindingGUI));
+            }
+            if (canAddAction)
+            {
+                menu.AddItem(isContextMenu ? m_AddActionContextGUI : m_AddActionGUI, false, OnAddAction);
+            }
+            else if(!isContextMenu)
+            {
+                menu.AddDisabledItem(new GUIContent(m_AddActionGUI), false);
+            }
+            menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
+            
+            var compositeString = isContextMenu ? "Add composite" : "Composite";
+            if (canAddBinding)
+            {
                 menu.AddItem(new GUIContent(compositeString + "/2 dimensions"), false, OnAddCompositeBinding, 2);
                 menu.AddItem(new GUIContent(compositeString + "/4 dimensions"), false, OnAddCompositeBinding, 4);
             }
-            else
+            else if(!isContextMenu)
             {
-                menu.AddDisabledItem(new GUIContent(bindingString), false);
                 menu.AddDisabledItem(new GUIContent(compositeString), false);
             }
         }
