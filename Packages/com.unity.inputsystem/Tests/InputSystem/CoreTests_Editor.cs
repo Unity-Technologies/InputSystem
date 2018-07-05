@@ -59,7 +59,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice("Gamepad");
         InputSystem.SetUsage(device, CommonUsages.LeftHand);
-        ////TODO: set variant
+        ////TODO: set variants
 
         InputSystem.Save();
         InputSystem.Reset();

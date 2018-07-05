@@ -195,6 +195,9 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public override unsafe object ReadValueAsObject()
         {
+            if (m_DeviceIndex == kInvalidDeviceIndex)
+                return null;
+
             var numBytes = stateBlock.alignedSizeInBytes;
             var array = new byte[numBytes];
             fixed(byte* arrayPtr = array)

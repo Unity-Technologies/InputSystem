@@ -61,6 +61,7 @@ namespace UnityEngine.Experimental.Input
 
                 m_EventCount = 0;
                 m_EventWritePosition = 0;
+                ++frameCount;
             }
         }
 
@@ -157,9 +158,11 @@ namespace UnityEngine.Experimental.Input
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
+        public Action onShutdown { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public InputUpdateType updateMask { get; set; }
+        public int frameCount { get; set; }
 
         public ScreenOrientation screenOrientation
         {
@@ -202,5 +205,24 @@ namespace UnityEngine.Experimental.Input
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
+        public Action<string, object> onSendAnalyticsEvent { get; set; }
+
+        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        {
+            if (onRegisterAnalyticsEvent != null)
+                onRegisterAnalyticsEvent(name, maxPerHour, maxPropertiesPerEvent);
+        }
+
+        public void SendAnalyticsEvent(string name, object data)
+        {
+            if (onSendAnalyticsEvent != null)
+                onSendAnalyticsEvent(name, data);
+        }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

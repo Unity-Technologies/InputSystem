@@ -101,7 +101,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayoutVariant()
     {
-        var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variant: "Lefty");
+        var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variants: "Lefty");
         var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
         var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
         //var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
@@ -117,7 +117,7 @@ partial class CoreTests
         var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
         var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
 
-        Assert.That(leftyGamepad.variant, Is.EqualTo("Lefty"));
+        Assert.That(leftyGamepad.variants, Is.EqualTo("Lefty"));
         Assert.That(leftyGamepadPrimary2DMotion, Is.SameAs(leftyGamepad.rightStick));
         Assert.That(leftyGamepadSecondary2DMotion, Is.SameAs(leftyGamepad.leftStick));
 
@@ -1798,6 +1798,20 @@ partial class CoreTests
         Assert.That(receivedCommand.HasValue, Is.True);
         Assert.That(receivedCommand.Value.warpPositionInPlayerDisplaySpace.x, Is.EqualTo(0.1234).Within(0.000001));
         Assert.That(receivedCommand.Value.warpPositionInPlayerDisplaySpace.y, Is.EqualTo(0.5678).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanDetectIfPenInRange()
+    {
+        var pen = InputSystem.AddDevice<Pen>();
+
+        Assert.That(pen.inRange.ReadValue(), Is.EqualTo(0).Within(0.00001));
+
+        InputSystem.QueueStateEvent(pen, new PenState().WithButton(PenState.Button.InRange));
+        InputSystem.Update();
+
+        Assert.That(pen.inRange.ReadValue(), Is.EqualTo(1).Within(0.00001));
     }
 
     [Test]
