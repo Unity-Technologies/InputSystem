@@ -64,6 +64,9 @@ namespace UnityEngine.Experimental.Input
         // String that is used to separate names from namespaces in layout names.
         public const string kNamespaceQualifier = "::";
 
+        public const char kListSeparator = ';';
+        public const string kListSeparatorString = ";";
+
         private static InternedString s_DefaultVariant = new InternedString("Default");
         public static InternedString DefaultVariant
         {
@@ -169,7 +172,7 @@ namespace UnityEngine.Experimental.Input
             public InternedString name;
 
             public InternedString layout;
-            public InternedString variant;
+            public InternedString variants;
             public string useStateFrom;
 
             /// <summary>
@@ -241,7 +244,7 @@ namespace UnityEngine.Experimental.Input
                 result.isModifyingChildControlByPath = isModifyingChildControlByPath;
 
                 result.layout = layout.IsEmpty() ? other.layout : layout;
-                result.variant = variant.IsEmpty() ? other.variant : variant;
+                result.variants = variants.IsEmpty() ? other.variants : variants;
                 result.useStateFrom = useStateFrom ?? other.useStateFrom;
                 result.arraySize = !isArray ? other.arraySize : arraySize;
 
@@ -265,22 +268,21 @@ namespace UnityEngine.Experimental.Input
                 else
                     result.sizeInBits = other.sizeInBits;
 
-                result.aliases = new ReadOnlyArray<InternedString>(
-                        ArrayHelpers.Merge(aliases.m_Array,
-                            other.aliases.m_Array));
+                if (aliases.Count > 0)
+                    result.aliases = aliases;
+                else
+                    result.aliases = other.aliases;
 
-                result.usages = new ReadOnlyArray<InternedString>(
-                        ArrayHelpers.Merge(usages.m_Array,
-                            other.usages.m_Array));
+                if (usages.Count > 0)
+                    result.usages = usages;
+                else
+                    result.usages = other.usages;
 
-                // We don't merge parameters. If a control sets parameters, it'll overwrite
-                // parameters inherited from the base.
                 if (parameters.Count == 0)
                     result.parameters = other.parameters;
                 else
                     result.parameters = parameters;
 
-                // Same for processors.
                 if (processors.Count == 0)
                     result.processors = other.processors;
                 else
@@ -312,9 +314,9 @@ namespace UnityEngine.Experimental.Input
             get { return m_Type; }
         }
 
-        public InternedString variant
+        public InternedString variants
         {
-            get { return m_Variant; }
+            get { return m_Variants; }
         }
 
         public FourCC stateFormat
@@ -587,10 +589,10 @@ namespace UnityEngine.Experimental.Input
             if (layoutAttribute != null && !string.IsNullOrEmpty(layoutAttribute.stateFormat))
                 stateFormat = new FourCC(layoutAttribute.stateFormat);
 
-            // Determine variant (if any).
-            var variant = new InternedString();
+            // Determine variants (if any).
+            var variants = new InternedString();
             if (layoutAttribute != null)
-                variant = new InternedString(layoutAttribute.variant);
+                variants = new InternedString(layoutAttribute.variants);
 
             ////TODO: make sure all usages are unique (probably want to have a check method that we can run on json layouts as well)
             ////TODO: make sure all paths are unique (only relevant for JSON layouts?)
@@ -599,7 +601,7 @@ namespace UnityEngine.Experimental.Input
             var layout = new InputControlLayout(name, type);
             layout.m_Controls = controlLayouts.ToArray();
             layout.m_StateFormat = stateFormat;
-            layout.m_Variant = variant;
+            layout.m_Variants = variants;
 
             if (layoutAttribute != null && layoutAttribute.commonUsages != null)
                 layout.m_CommonUsages =
@@ -626,7 +628,7 @@ namespace UnityEngine.Experimental.Input
 
         private InternedString m_Name;
         internal Type m_Type; // For extension chains, we can only discover types after loading multiple layouts, so we make this accessible to InputDeviceBuilder.
-        internal InternedString m_Variant;
+        internal InternedString m_Variants;
         internal FourCC m_StateFormat;
         internal int m_StateSizeInBytes; // Note that this is the combined state size for input and output.
         internal bool? m_UpdateBeforeRender;
@@ -769,10 +771,10 @@ namespace UnityEngine.Experimental.Input
                 layout = InferLayoutFromValueType(valueType);
             }
 
-            // Determine variant.
-            string variant = null;
-            if (attribute != null && !string.IsNullOrEmpty(attribute.variant))
-                variant = attribute.variant;
+            // Determine variants.
+            string variants = null;
+            if (attribute != null && !string.IsNullOrEmpty(attribute.variants))
+                variants = attribute.variants;
 
             // Determine offset.
             var offset = InputStateBlock.kInvalidOffset;
@@ -849,7 +851,7 @@ namespace UnityEngine.Experimental.Input
             {
                 name = new InternedString(name),
                 layout = new InternedString(layout),
-                variant = new InternedString(variant),
+                variants = new InternedString(variants),
                 useStateFrom = useStateFrom,
                 format = format,
                 offset = offset,
@@ -1053,12 +1055,12 @@ namespace UnityEngine.Experimental.Input
             m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
-            if (m_Variant.IsEmpty())
-                m_Variant = other.m_Variant;
+            if (m_Variants.IsEmpty())
+                m_Variants = other.m_Variants;
 
-            // If the layout has a variant set on it, we want to merge away information coming
-            // from 'other' than isn't relevant to that variant.
-            var layoutIsTargetingSpecificVariant = !m_Variant.IsEmpty();
+            // If the layout has variants set on it, we want to merge away information coming
+            // from 'other' than isn't relevant to those variants.
+            var layoutIsTargetingSpecificVariants = !m_Variants.IsEmpty();
 
             if (m_StateFormat == new FourCC())
                 m_StateFormat = other.m_StateFormat;
@@ -1085,7 +1087,7 @@ namespace UnityEngine.Experimental.Input
                 var controls = new List<ControlItem>();
                 var baseControlVariants = new List<string>();
 
-                ////REVIEW: should setting a variant directly on a layout force that variant to automatically
+                ////REVIEW: should setting variants directly on a layout force that variant to automatically
                 ////        be set on every control item directly defined in that layout?
 
                 var baseControlTable = CreateLookupTableForControls(baseControls, baseControlVariants);
@@ -1107,30 +1109,33 @@ namespace UnityEngine.Experimental.Input
                     }
                     ////REVIEW: is this really the most useful behavior?
                     // We may be looking at a control that is using variants on the base layout but
-                    // isn't targeting a specific variant on the derived layout. In that case, we
+                    // isn't targeting specific variants on the derived layout. In that case, we
                     // want to take each of the variants from the base layout and merge them with
                     // the control layout in the derived layout.
-                    else if (pair.Value.variant.IsEmpty() || pair.Value.variant == DefaultVariant)
+                    else if (pair.Value.variants.IsEmpty() || pair.Value.variants == DefaultVariant)
                     {
                         var isTargetingVariants = false;
-                        if (layoutIsTargetingSpecificVariant)
+                        if (layoutIsTargetingSpecificVariants)
                         {
-                            // We're only looking for one specific variant so try only that one.
-                            if (baseControlVariants.Contains(m_Variant))
+                            // We're only looking for specific variants so try only that those.
+                            for (var i = 0; i < baseControlVariants.Count; ++i)
                             {
-                                var key = string.Format("{0}@{1}", pair.Key, m_Variant.ToLower());
-                                if (baseControlTable.TryGetValue(key, out baseControlItem))
+                                if (VariantsMatch(m_Variants.ToLower(), baseControlVariants[i]))
                                 {
-                                    var mergedLayout = pair.Value.Merge(baseControlItem);
-                                    controls.Add(mergedLayout);
-                                    baseControlTable.Remove(key);
-                                    isTargetingVariants = true;
+                                    var key = string.Format("{0}@{1}", pair.Key, baseControlVariants[i]);
+                                    if (baseControlTable.TryGetValue(key, out baseControlItem))
+                                    {
+                                        var mergedLayout = pair.Value.Merge(baseControlItem);
+                                        controls.Add(mergedLayout);
+                                        baseControlTable.Remove(key);
+                                        isTargetingVariants = true;
+                                    }
                                 }
                             }
                         }
                         else
                         {
-                            // Try each variant present in the base layout.
+                            // Try each variants present in the base layout.
                             foreach (var variant in baseControlVariants)
                             {
                                 var key = string.Format("{0}@{1}", pair.Key, variant);
@@ -1159,10 +1164,10 @@ namespace UnityEngine.Experimental.Input
                         baseControlTable.Remove(pair.Value.name.ToLower());
                     }
                     // Seems like we can't match it to a control in the base layout. We already know it
-                    // must have a variant setting (because we checked above) so if the variant setting
+                    // must have a variants setting (because we checked above) so if the variants setting
                     // doesn't prevent us, just include the control. It's most likely a path-modifying
                     // control (e.g. "rightStick/x").
-                    else if (pair.Value.variant == m_Variant)
+                    else if (VariantsMatch(m_Variants, pair.Value.variants))
                     {
                         controls.Add(pair.Value);
                     }
@@ -1171,7 +1176,7 @@ namespace UnityEngine.Experimental.Input
                 // And then go through all the controls in the base and take the
                 // ones we're missing. We've already removed all the ones that intersect
                 // and had to be merged so the rest we can just slurp into the list as is.
-                if (!layoutIsTargetingSpecificVariant)
+                if (!layoutIsTargetingSpecificVariants)
                 {
                     controls.AddRange(baseControlTable.Values);
                 }
@@ -1180,7 +1185,7 @@ namespace UnityEngine.Experimental.Input
                     // Filter out controls coming from the base layout which are targeting variants
                     // that we're not interested in.
                     controls.AddRange(
-                        baseControlTable.Values.Where(x => x.variant.IsEmpty() || x.variant == m_Variant || x.variant == DefaultVariant));
+                        baseControlTable.Values.Where(x => VariantsMatch(m_Variants, x.variants)));
                 }
 
                 m_Controls = controls.ToArray();
@@ -1194,18 +1199,59 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < controlItems.Length; ++i)
             {
                 var key = controlItems[i].name.ToLower();
-                // Need to take variant into account as well. Otherwise two variants for
+                // Need to take variants into account as well. Otherwise two variants for
                 // "leftStick", for example, will overwrite each other.
-                var variant = controlItems[i].variant;
-                if (!variant.IsEmpty() && variant != DefaultVariant)
+                var itemVariants = controlItems[i].variants;
+                if (!itemVariants.IsEmpty() && itemVariants != DefaultVariant)
                 {
-                    key = string.Format("{0}@{1}", key, variant.ToLower());
+                    // If there's multiple variants on the control, we add it to the table multiple times.
+                    if (itemVariants.ToString().IndexOf(kListSeparator) != -1)
+                    {
+                        var itemVariantArray = itemVariants.ToLower().Split(kListSeparator);
+                        foreach (var name in itemVariantArray)
+                        {
+                            if (variants != null)
+                                variants.Add(name);
+                            key = string.Format("{0}@{1}", key, name);
+                            table[key] = controlItems[i];
+                        }
+
+                        continue;
+                    }
+
+                    key = string.Format("{0}@{1}", key, itemVariants.ToLower());
                     if (variants != null)
-                        variants.Add(variant.ToLower());
+                        variants.Add(itemVariants.ToLower());
                 }
                 table[key] = controlItems[i];
             }
             return table;
+        }
+
+        internal static bool VariantsMatch(InternedString expected, InternedString actual)
+        {
+            return VariantsMatch(expected.ToLower(), actual.ToLower());
+        }
+
+        internal static bool VariantsMatch(string expected, string actual)
+        {
+            ////REVIEW: does this make sense?
+            // Default variant works with any other expected variant.
+            if (actual != null &&
+                StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(DefaultVariant, actual, kListSeparator))
+                return true;
+
+            // If we don't expect a specific variant, we accept any variant.
+            if (expected == null)
+                return true;
+
+            // If we there's no variant set on what we actual got, then it matches even if we
+            // expect specific variants.
+            if (actual == null)
+                return true;
+
+            // Match if the two variant sets intersect on at least one element.
+            return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, kListSeparator);
         }
 
         private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
@@ -1214,7 +1260,7 @@ namespace UnityEngine.Experimental.Input
             var name = controlItem.name;
             foreach (var existing in controlLayouts)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
-                    existing.variant == controlItem.variant)
+                    existing.variants == controlItem.variants)
                     throw new Exception(string.Format("Duplicate control '{0}' in layout '{1}'", name, layoutName));
         }
 
@@ -1291,7 +1337,7 @@ namespace UnityEngine.Experimental.Input
                 layout.m_DeviceMatcher = device.ToMatcher();
                 layout.m_DisplayName = displayName;
                 layout.m_ResourceName = resourceName;
-                layout.m_Variant = new InternedString(variant);
+                layout.m_Variants = new InternedString(variant);
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
 
@@ -1347,7 +1393,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = layout.m_Name,
                     type = layout.type.AssemblyQualifiedName,
-                    variant = layout.m_Variant,
+                    variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
                     resourceName = layout.m_ResourceName,
                     extend = layout.m_ExtendsLayout,
@@ -1372,7 +1418,7 @@ namespace UnityEngine.Experimental.Input
 
             public string name;
             public string layout;
-            public string variant;
+            public string variants;
             public string usage; // Convenince to not have to create array for single usage.
             public string alias; // Same.
             public string useStateFrom;
@@ -1404,7 +1450,7 @@ namespace UnityEngine.Experimental.Input
                 {
                     name = new InternedString(name),
                     layout = new InternedString(this.layout),
-                    variant = new InternedString(variant),
+                    variants = new InternedString(variants),
                     displayName = displayName,
                     resourceName = resourceName,
                     offset = offset,
@@ -1463,7 +1509,7 @@ namespace UnityEngine.Experimental.Input
                     {
                         name = item.name,
                         layout = item.layout,
-                        variant = item.variant,
+                        variants = item.variants,
                         displayName = item.displayName,
                         resourceName = item.resourceName,
                         bit = item.bit,

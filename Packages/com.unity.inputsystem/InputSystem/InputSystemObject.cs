@@ -7,15 +7,19 @@ using UnityEditor.Networking.PlayerConnection;
 
 namespace UnityEngine.Experimental.Input
 {
-    // A hidden object we put in the editor to bundle input system state
-    // and help us survive domain relods.
-    // Player doesn't need this stuff because there's no domain reloads to
-    // survive.
+    /// <summary>
+    /// A hidden object we put in the editor to bundle input system state
+    /// and help us survive domain relods.
+    /// </summary>
+    /// <remarks>
+    /// Player doesn't need this stuff because there's no domain reloads to survive.
+    /// </remarks>
     internal class InputSystemObject : ScriptableObject, ISerializationCallbackReceiver
     {
         [SerializeField] public InputManager manager;
         [NonSerialized] public InputRemoting remote;
         [SerializeField] public RemoteInputPlayerConnection playerConnection;
+        [SerializeField] public bool newInputBackendsCheckedAsEnabled;
 
         [SerializeField] private InputRemoting.SerializedState m_RemotingState;
 

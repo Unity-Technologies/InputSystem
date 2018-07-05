@@ -31,18 +31,39 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         public Action<SerializedProperty> onPickCallback;
 
+        SearchField m_SearchField;
+
         public InputControlPicker(SerializedProperty pathProperty)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException("pathProperty");
             m_PathProperty = pathProperty;
-
             m_PathTreeState = new TreeViewState();
-            m_PathTree = new PathTreeView(m_PathTreeState, this);
+
+            m_SearchField = new SearchField();
+            m_SearchField.SetFocus();
+            m_SearchField.downOrUpArrowKeyPressed += OnDownOrUpArrowKeyPressed;
+        }
+
+        void OnDownOrUpArrowKeyPressed()
+        {
+            m_PathTree.SetFocusAndEnsureSelectedItem();
+        }
+
+        public InputControlPicker(SerializedProperty pathProperty, ref TreeViewState treeViewState) : this(pathProperty)
+        {
+            if (treeViewState == null)
+                treeViewState = new TreeViewState();
+            m_PathTreeState = treeViewState;
         }
 
         public override void OnGUI(Rect rect)
         {
+            if (m_PathTree == null)
+            {
+                m_PathTree = new PathTreeView(m_PathTreeState, this);
+            }
+
             DrawToolbar();
 
             var toolbarRect = GUILayoutUtility.GetLastRect();
@@ -56,20 +77,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Controls", GUILayout.MinWidth(75), GUILayout.ExpandWidth(false));
-
             var searchRect = GUILayoutUtility.GetRect(GUIContent.none, Styles.toolbarSearchField, GUILayout.MinWidth(70));
-            GUI.SetNextControlName("SearchField");
-            m_PathTree.searchString = EditorGUI.TextField(searchRect, m_PathTree.searchString, Styles.toolbarSearchField);
-            if (!m_FirstRenderCompleted)
-                EditorGUI.FocusTextInControl("SearchField");
-            if (GUILayout.Button(
-                    GUIContent.none,
-                    m_PathTree.searchString == string.Empty ? Styles.toolbarSearchFieldCancelEmpty : Styles.toolbarSearchFieldCancel))
-            {
-                m_PathTree.searchString = string.Empty;
-                EditorGUIUtility.keyboardControl = 0;
-            }
-
+            m_PathTree.searchString = m_SearchField.OnToolbarGUI(searchRect, m_PathTree.searchString);
             GUILayout.EndHorizontal();
         }
 
@@ -108,6 +117,19 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_Parent = parent;
                 Reload();
+            }
+
+            protected override bool DoesItemMatchSearch(TreeViewItem treeViewItem, string search)
+            {
+                if (treeViewItem.hasChildren)
+                    return false;
+                var item = (Item)treeViewItem;
+                search = search.ToLower();
+                if (item.device != null && item.device.ToLower().Contains(search))
+                    return true;
+                if (item.controlPath != null && item.controlPath.ToLower().Contains(search))
+                    return true;
+                return false;
             }
 
             protected override void RowGUI(RowGUIArgs args)
@@ -161,6 +183,30 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 base.RowGUI(args);
+            }
+
+            protected override void KeyEvent()
+            {
+                var e = Event.current;
+
+                if (e.type != EventType.KeyDown)
+                    return;
+
+                if (e.keyCode == KeyCode.Return && HasSelection())
+                {
+                    DoubleClickedItem(GetSelection().First());
+                    return;
+                }
+
+                if (e.keyCode == KeyCode.UpArrow
+                    || e.keyCode == KeyCode.DownArrow
+                    || e.keyCode == KeyCode.LeftArrow
+                    || e.keyCode == KeyCode.RightArrow)
+                {
+                    return;
+                }
+                m_Parent.m_SearchField.SetFocus();
+                m_Parent.editorWindow.Repaint();
             }
 
             // When an item is double-clicked, form a path from the item and store it
@@ -309,7 +355,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
 
                     // Skip variants.
-                    if (!string.IsNullOrEmpty(control.variant) && control.variant.ToLower() != "default")
+                    if (!string.IsNullOrEmpty(control.variants) && control.variants.ToLower() != "default")
                         continue;
 
                     var controlPath = prefix + control.name;

@@ -77,20 +77,20 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         // GeomagneticRotationVector - no alternative in old system
         // HeartRate - no alternative in old system
 
-        [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "Accelerometer")]
-        [InputControl(name = "magneticField", layout = "Vector3", variant = "MagneticField")]
-        [InputControl(name = "angularVelocity", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "Gyroscope")]
-        [InputControl(name = "lightLevel", layout = "Axis", variant = "Light")]
-        [InputControl(name = "atmosphericPressure", layout = "Axis", variant = "Pressure")]
-        [InputControl(name = "distance", layout = "Axis", variant = "Proximity")]
-        [InputControl(name = "gravity", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "Gravity")]
-        [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variant = "LinearAcceleration")]
-        [InputControl(name = "attitude", layout = "Quaternion", processors = "CompensateRotation", variant = "RotationVector")]
-        [InputControl(name = "relativeHumidity", layout = "Axis", variant = "RelativeHumidity")]
-        [InputControl(name = "ambientTemperature", layout = "Axis", variant = "AmbientTemperature")]
-        [InputControl(name = "stepCounter", layout = "Integer", variant = "StepCounter")]
-        [InputControl(name = "rotation", layout = "Quaternion", processors = "CompensateRotation", variant = "GeomagneticRotationVector")]
-        [InputControl(name = "rate", layout = "Axis", variant = "HeartRate")]
+        [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Accelerometer")]
+        [InputControl(name = "magneticField", layout = "Vector3", variants = "MagneticField")]
+        [InputControl(name = "angularVelocity", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Gyroscope")]
+        [InputControl(name = "lightLevel", layout = "Axis", variants = "Light")]
+        [InputControl(name = "atmosphericPressure", layout = "Axis", variants = "Pressure")]
+        [InputControl(name = "distance", layout = "Axis", variants = "Proximity")]
+        [InputControl(name = "gravity", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "Gravity")]
+        [InputControl(name = "acceleration", layout = "Vector3", processors = "AndroidCompensateDirection", variants = "LinearAcceleration")]
+        [InputControl(name = "attitude", layout = "Quaternion", processors = "CompensateRotation", variants = "RotationVector")]
+        [InputControl(name = "relativeHumidity", layout = "Axis", variants = "RelativeHumidity")]
+        [InputControl(name = "ambientTemperature", layout = "Axis", variants = "AmbientTemperature")]
+        [InputControl(name = "stepCounter", layout = "Integer", variants = "StepCounter")]
+        [InputControl(name = "rotation", layout = "Quaternion", processors = "CompensateRotation", variants = "GeomagneticRotationVector")]
+        [InputControl(name = "rate", layout = "Axis", variants = "HeartRate")]
         public fixed float data[16];
 
         public AndroidSensorState WithData(params float[] data)
@@ -130,12 +130,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.Android
 {
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Accelerometer")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer")]
     public class AndroidAccelerometer : Accelerometer
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "MagneticField")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField")]
     public class AndroidMagneticField : Sensor
     {
         /// <summary>
@@ -150,12 +150,12 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gyroscope")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope")]
     public class AndroidGyroscope : Gyroscope
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Light")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light")]
     public class AndroidLight : Sensor
     {
         /// <summary>
@@ -170,7 +170,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Pressure")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure")]
     public class AndroidPressure : Sensor
     {
         /// <summary>
@@ -185,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Proximity")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity")]
     public class AndroidProximity : Sensor
     {
         /// <summary>
@@ -200,22 +200,22 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "Gravity")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity")]
     public class AndroidGravity : Gravity
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "LinearAcceleration")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration")]
     public class AndroidLinearAcceleration : LinearAcceleration
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "RotationVector")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector")]
     public class AndroidRotationVector : Attitude
     {
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "RelativeHumidity")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity")]
     public class AndroidRelativeHumidity : Sensor
     {
         /// <summary>
@@ -230,7 +230,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "AmbientTemperature")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature")]
     public class AndroidAmbientTemperature : Sensor
     {
         /// <summary>
@@ -245,7 +245,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Android
         }
     }
 
-    [InputControlLayout(stateType = typeof(AndroidSensorState), variant = "StepCounter")]
+    [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter")]
     public class AndroidStepCounter : Sensor
     {
         /// <summary>

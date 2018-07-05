@@ -24,6 +24,6 @@ namespace UnityEngine.Experimental.Input
 
         public string[] commonUsages;
 
-        public string variant;
+        public string variants;
     }
 }

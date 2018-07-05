@@ -1,7 +1,10 @@
+using System;
+using System.Globalization;
 using NUnit.Framework;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
@@ -472,6 +475,39 @@ class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(0).Within(0.004));
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
+    }
+
+    // https://github.com/Unity-Technologies/InputSystem/issues/134
+    [Test]
+    [Category("Devices")]
+    public void Devices_HIDAxisLimits_DoNotUseDecimalFormatOfCurrentCulture()
+    {
+        var oldCulture = Thread.CurrentThread.CurrentCulture;
+        try
+        {
+            // French locale uses comma as decimal separator.
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("fr-FR");
+
+            var hidDescriptor =
+                new HID.HIDDeviceDescriptorBuilder(HID.GenericDesktop.MultiAxisController)
+                .StartReport(HID.HIDReportType.Input)
+                .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535).Finish();
+
+            testRuntime.ReportNewInputDevice(
+                new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+            Assert.That(() => InputSystem.Update(), Throws.Nothing);
+        }
+        finally
+        {
+            Thread.CurrentThread.CurrentCulture = oldCulture;
+        }
     }
 
     // Would be nicer to just call them "HID" but ATM the layout builder mechanism doesn't have

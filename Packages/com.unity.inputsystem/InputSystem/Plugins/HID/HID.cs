@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -616,8 +617,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             if (Mathf.Approximately(0f, minFloat) && Mathf.Approximately(0f, maxFloat))
                                 return null;
                             var zero = min + (max - min) / 2.0f;
-                            return string.Format("normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min,
-                            max, zero);
+                            return string.Format(CultureInfo.InvariantCulture, "normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min, max, zero);
                     }
                 }
 

@@ -28,6 +28,11 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 
+// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
+// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
+//       "-preview" suffixes here.
+[assembly: AssemblyVersion("0.0.3")]
+
 namespace UnityEngine.Experimental.Input
 {
     using NotifyControlValueChangeAction = Action<InputControl, double, long>;
@@ -444,6 +449,7 @@ namespace UnityEngine.Experimental.Input
         /// <param name="name">Name to assign to the device. If null, the layout name is used instead. Note that
         /// device names are made unique automatically by the system by appending numbers to them (e.g. "gamepad",
         /// "gamepad1", "gamepad2", etc.).</param>
+        /// <param name="variants">Semicolon-separated list of layout variants to use for the device.</param>
         /// <returns>The newly created input device.</returns>
         /// <remarks>
         /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
@@ -453,9 +459,9 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.AddDevice("Gamepad");
         /// </code>
         /// </example>
-        public static InputDevice AddDevice(string layout, string name = null)
+        public static InputDevice AddDevice(string layout, string name = null, string variants = null)
         {
-            return s_Manager.AddDevice(layout, name);
+            return s_Manager.AddDevice(layout, name, new InternedString(variants));
         }
 
         public static TDevice AddDevice<TDevice>(string name = null)
@@ -511,6 +517,11 @@ namespace UnityEngine.Experimental.Input
         public static void DisableDevice(InputDevice device)
         {
             s_Manager.EnableOrDisableDevice(device, false);
+        }
+
+        public static void ResetState()
+        {
+            throw new NotImplementedException();
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -970,6 +981,11 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.interactions.names;
         }
 
+        public static IEnumerable<string> ListProcessors()
+        {
+            return s_Manager.processors.names;
+        }
+
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -1061,6 +1077,21 @@ namespace UnityEngine.Experimental.Input
 
         #endregion
 
+        /// <summary>
+        /// The current version of the input system package.
+        /// </summary>
+        public static Version version
+        {
+            get { return Assembly.GetExecutingAssembly().GetName().Version; }
+        }
+
+        ////TODO: put metrics gathering behind #if
+
+        public static InputMetrics GetMetrics()
+        {
+            return s_Manager.metrics;
+        }
+
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
 
@@ -1116,6 +1147,20 @@ namespace UnityEngine.Experimental.Input
             }
 
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+
+            // If native backends for new input system aren't enabled, ask user whether we should
+            // enable them (requires restart). We only ask once per session.
+            if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
+                !EditorPlayerSettings.newSystemBackendsEnabled)
+            {
+                const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
+                    "This means that no input from native devices will come through." +
+                    "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
+
+                if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
+                    EditorPlayerSettings.newSystemBackendsEnabled = true;
+            }
+            s_SystemObject.newInputBackendsCheckedAsEnabled = true;
         }
 
         // We don't want play mode modifications to layouts and controls to seep
