@@ -183,6 +183,18 @@ namespace UnityEngine.Experimental.Input.Editor
             var path = AssetDatabase.GetAssetPath(asset);
             File.WriteAllText(path, asset.ToJson());
         }
+        
+        class AssetChangeWatch : AssetPostprocessor
+        {
+            static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+            {
+                var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
+                foreach (var inputWindow in inputManagers)
+                {
+                    inputWindow.Repaint();
+                }
+            }
+        }
 
         void OnGUI()
         {
@@ -210,6 +222,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     InitiateTrees();
                 }
+                return;
             }
 
             if (m_ReferencedObject == null)
