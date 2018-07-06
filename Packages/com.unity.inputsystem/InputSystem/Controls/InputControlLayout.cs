@@ -120,6 +120,7 @@ namespace UnityEngine.Experimental.Input
                             var intValue = *((int*)ptr);
                             return string.Format("{0}={1}", name, intValue);
                         case ParameterType.Float:
+                            ////FIXME: this needs to be invariant culture
                             var floatValue = *((float*)ptr);
                             return string.Format("{0}={1}", name, floatValue);
                     }
