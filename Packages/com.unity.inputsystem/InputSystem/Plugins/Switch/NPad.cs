@@ -203,10 +203,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public static FourCC Type { get { return new FourCC("NSUI"); } }
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
-        public FourCC GetTypeStatic() { return Type; }
-
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
+
+        public FourCC GetTypeStatic() { return Type; }
+        public static NpadDeviceIOCTLShowUI Create()
+        {
+            return new NpadDeviceIOCTLShowUI
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+            };
+        }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
@@ -215,13 +222,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public static FourCC Type { get { return new FourCC("NSOR"); } }
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
 
-        public FourCC GetTypeStatic() { return Type; }
-
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
         public byte orientation;
+
+        public FourCC GetTypeStatic() { return Type; }
+        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation _orientation)
+        {
+            return new NpadDeviceIOCTLSetOrientation
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+                orientation = (byte)_orientation,
+            };
+        }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
@@ -230,10 +245,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public static FourCC Type { get { return new FourCC("SXST"); } }
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
-        public FourCC GetTypeStatic() { return Type; }
-
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
+
+        public FourCC GetTypeStatic() { return Type; }
+        public static NpadDeviceIOCTLStartSixAxisSensor Create()
+        {
+            return new NpadDeviceIOCTLStartSixAxisSensor
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+            };
+        }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
@@ -242,10 +264,17 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public static FourCC Type { get { return new FourCC("SXSP"); } }
         public const int kSize = InputDeviceCommand.kBaseCommandSize;
 
-        public FourCC GetTypeStatic() { return Type; }
-
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
+
+        public FourCC GetTypeStatic() { return Type; }
+        public static NpadDeviceIOCTLStopSixAxisSensor Create()
+        {
+            return new NpadDeviceIOCTLStopSixAxisSensor
+            {
+                baseCommand = new InputDeviceCommand(Type, kSize),
+            };
+        }
     }
 }
 
@@ -383,23 +412,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         // NOTE: This function should be static
         public long SetOrientationToSingleJoyCon(Orientation _orientation)
         {
-            var supportCommand = new NpadDeviceIOCTLSetOrientation
-            {
-                orientation = (byte)_orientation,
-            };
+            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(_orientation);
+
 			return ExecuteCommand(ref supportCommand);
 		}
 
         public long StartSixAxisSensor()
         {
-            var supportCommand = new NpadDeviceIOCTLStartSixAxisSensor();
+            var supportCommand = NpadDeviceIOCTLStartSixAxisSensor.Create();
 
             return ExecuteCommand(ref supportCommand);
         }
 
         public long StopSixAxisSensor()
         {
-            var supportCommand = new NpadDeviceIOCTLStopSixAxisSensor();
+            var supportCommand = NpadDeviceIOCTLStopSixAxisSensor.Create();
 
             return ExecuteCommand(ref supportCommand);
         }
