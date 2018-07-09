@@ -15,7 +15,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
     /// </summary>
     /// <rem
     /// <seealso href="http://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/~/joy-con-controller-diagram"/>
-    [StructLayout(LayoutKind.Explicit, Size = 68)]
+    [StructLayout(LayoutKind.Explicit, Size = 60)]
     public unsafe struct NPadInputState : IInputStateTypeInfo
     {
         public FourCC GetFormat()
@@ -49,23 +49,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         [FieldOffset(12)]
         public Vector2 rightStick;
 
-        [FieldOffset(20)]
-        public float leftTrigger;
-
-        [FieldOffset(24)]
-        public float rightTrigger;
-
         [InputControl(name = "acceleration")]
-        [FieldOffset(28)]
+        [FieldOffset(20)]
         public Vector3 acceleration;
 
         [InputControl(name = "attitude")]
-        [FieldOffset(40)]
+        [FieldOffset(32)]
         public Quaternion attitude;
 
         [InputControl(name = "angularVelocity")]
-        [FieldOffset(56)]
+        [FieldOffset(48)]
         public Vector3 angularVelocity;
+
+        public float leftTrigger { get { return ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f; } }
+
+        public float rightTrigger { get { return ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f; } }
 
         public enum Button
         {
@@ -124,19 +122,29 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 24;
 
-        [FieldOffset(0)] public InputDeviceCommand baseCommand;
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
 
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]  public byte controllerId;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)]  public byte npadId;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]  public byte orientation;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 3)]  public byte pudding0;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]  public uint styleMask;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]  public int  colorLeftMain;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)] public int  colorLeftSub;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)] public int  colorRightSub;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)] public int  colorRightMain;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
+        public byte controllerId;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)]
+        public byte npadId;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]
+        public byte orientation;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 3)]
+        public byte pudding0;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
+        public uint styleMask;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
+        public int colorLeftMain;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
+        public int colorLeftSub;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
+        public int colorRightSub;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
+        public int colorRightMain;
 
-		public FourCC GetTypeStatic()
+        public FourCC GetTypeStatic()
         {
             return Type;
         }
@@ -144,7 +152,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public static NPadStatusReport Create()
         {
             return new NPadStatusReport
-			{
+            {
                 baseCommand = new InputDeviceCommand(Type, kSize),
             };
         }
@@ -157,20 +165,23 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
 
         public const int kSize = InputDeviceCommand.kBaseCommandSize + 8;
 
-        [FieldOffset(0)] public InputDeviceCommand baseCommand;
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
 
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public int command;
-		[FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public int option;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
+        public int command;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
+        public int option;
 
-		public enum Command : int
-		{
-			kShowUI,
-			kSetHorizontalLayout,
+        public enum Command : int
+        {
+            kShowUI,
+            kSetHorizontalLayout,
             kStartSixAxisSensor,
             kStopSixAxisSensor,
         }
 
-		public FourCC GetTypeStatic()
+        public FourCC GetTypeStatic()
         {
             return Type;
         }
@@ -180,10 +191,61 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
             return new NPadControllerSupportCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-				command = (int)_command,
-				option = _option,
+                command = (int)_command,
+                option = _option,
             };
         }
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC("NSUI"); } }
+        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+
+        public FourCC GetTypeStatic() { return Type; }
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC("NSOR"); } }
+        public const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
+
+        public FourCC GetTypeStatic() { return Type; }
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
+        public byte orientation;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC("SXST"); } }
+        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+
+        public FourCC GetTypeStatic() { return Type; }
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = kSize)]
+    public struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
+    {
+        public static FourCC Type { get { return new FourCC("SXSP"); } }
+        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+
+        public FourCC GetTypeStatic() { return Type; }
+
+        [FieldOffset(0)]
+        public InputDeviceCommand baseCommand;
     }
 }
 
@@ -319,23 +381,25 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         }
 
         // NOTE: This function should be static
-		public long SetHorizontalLayoutToSingleJoyCon(bool isAllowed)
-		{
-			var supportCommand = NPadControllerSupportCommand.Create(NPadControllerSupportCommand.Command.kSetHorizontalLayout, isAllowed ? 1 : 0);
-
+        public long SetOrientationToSingleJoyCon(Orientation _orientation)
+        {
+            var supportCommand = new NpadDeviceIOCTLSetOrientation
+            {
+                orientation = (byte)_orientation,
+            };
 			return ExecuteCommand(ref supportCommand);
 		}
 
         public long StartSixAxisSensor()
         {
-            var supportCommand = NPadControllerSupportCommand.Create(NPadControllerSupportCommand.Command.kStartSixAxisSensor);
+            var supportCommand = new NpadDeviceIOCTLStartSixAxisSensor();
 
             return ExecuteCommand(ref supportCommand);
         }
 
         public long StopSixAxisSensor()
         {
-            var supportCommand = NPadControllerSupportCommand.Create(NPadControllerSupportCommand.Command.kStopSixAxisSensor);
+            var supportCommand = new NpadDeviceIOCTLStopSixAxisSensor();
 
             return ExecuteCommand(ref supportCommand);
         }
