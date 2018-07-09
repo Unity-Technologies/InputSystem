@@ -51,7 +51,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     list.list.RemoveAt(list.index);
                     m_Apply();
                     list.index = -1;
-//                    OnInteractionSelection(m_InteractionsListView);
                 };
             m_InteractionsListView.onReorderCallback = list => { m_Apply(); };
             m_InteractionsListView.onSelectCallback = OnInteractionSelection;

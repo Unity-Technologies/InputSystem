@@ -83,11 +83,9 @@ namespace UnityEngine.Experimental.Input.Editor
         internal InputActionListTreeView m_TreeView;
         internal SerializedObject m_SerializedObject;
         PropertiesView m_PropertyView;
-        List<string> m_GroupPopupList;
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
-        int m_GroupIndex;
         [SerializeField]
         string m_AssetPath;
         
@@ -136,7 +134,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_SerializedObject != null)
             {
-                ParseGroups(m_ReferencedObject as InputActionAsset);
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
@@ -144,28 +141,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_SearchField = new SearchField();
                 LoadPropertiesForSelection();
             }
-        }
-
-        void ParseGroups(InputActionAsset actionMapAsset)
-        {
-            HashSet<string> allGroups = new HashSet<string>();
-            allGroups.Clear();
-            m_GroupPopupList = new List<string>() { "<no group>" };
-            foreach (var actionMap in actionMapAsset.actionMaps)
-            {
-                foreach (var binding in actionMap.bindings)
-                {
-                    if (binding.groups == null)
-                        continue;
-
-                    foreach (var group in binding.groups.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        if (!string.IsNullOrEmpty(@group))
-                            allGroups.Add(@group);
-                    }
-                }
-            }
-            m_GroupPopupList.AddRange(allGroups);
         }
 
         internal void Apply()
@@ -231,14 +206,6 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.LabelField("Group filter", GUILayout.MaxWidth(70));
-            m_GroupIndex = EditorGUILayout.Popup(m_GroupIndex, m_GroupPopupList.ToArray(), GUILayout.MaxWidth(200));
-            if (EditorGUI.EndChangeCheck())
-            {
-                var filter = m_GroupIndex > 0 ? m_GroupPopupList[m_GroupIndex] : null;
-                m_TreeView.SetGroupFilter(filter);
-            }
 
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
