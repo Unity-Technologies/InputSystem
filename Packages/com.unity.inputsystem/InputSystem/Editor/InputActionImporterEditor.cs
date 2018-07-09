@@ -135,8 +135,6 @@ namespace UnityEngine.Experimental.Input.Editor
             // initialization here.
             if (!m_Initialized)
             {
-                GetAssetEditor().m_ApplyAction = OnAssetModified;
-
                 // Read current asset as backup.
                 if (m_Backup == null)
                     m_Backup = GetAsset().ToJson();
