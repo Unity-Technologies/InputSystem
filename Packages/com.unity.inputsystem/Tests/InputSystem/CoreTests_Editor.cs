@@ -7,8 +7,10 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
 
 partial class CoreTests
@@ -297,7 +299,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, 2);
+        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");

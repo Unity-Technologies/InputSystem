@@ -348,14 +348,14 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var hasSelection = m_TreeView.HasSelection();
             var canAddBinding = false;
-            var row = m_TreeView.GetSelectedAction();
-            if (row != null && hasSelection)
+            var action = m_TreeView.GetSelectedAction();
+            if (action != null && hasSelection)
             {
                 canAddBinding = true;
             }
             var canAddAction = false;
-            var action = m_TreeView.GetSelectedActionMap();
-            if (action != null && hasSelection)
+            var actionMap = m_TreeView.GetSelectedActionMap();
+            if (actionMap != null && hasSelection)
             {
                 canAddAction = true;
             }
@@ -382,8 +382,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
                 {
-                    menu.AddItem(new GUIContent(compositeString + "/" + composite + " composite"), false, 
-                        () => Debug.Log("Creating " + composite + " not implemented"));
+                    menu.AddItem(new GUIContent(compositeString + "/" + composite + " composite"), false, OnAddCompositeBinding, composite);
                 }
             }
             else if(!isContextMenu)
@@ -421,11 +420,12 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        void OnAddCompositeBinding(object dimensionNumber)
+        void OnAddCompositeBinding(object compositeName)
         {
             var actionMapLine = GetSelectedActionMapLine();
             var actionLine = GetSelectedActionLine();
-            InputActionSerializationHelpers.AppendCompositeBinding(actionLine.elementProperty, actionMapLine.elementProperty, (int)dimensionNumber);
+            var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration((string) compositeName);
+            InputActionSerializationHelpers.AppendCompositeBinding(actionLine.elementProperty, actionMapLine.elementProperty, compositeType);
             Apply();
         }
 

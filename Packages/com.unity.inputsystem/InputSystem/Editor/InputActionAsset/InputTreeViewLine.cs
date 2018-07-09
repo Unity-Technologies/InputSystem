@@ -219,6 +219,8 @@ namespace UnityEngine.Experimental.Input.Editor
         public CompositeTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index)
             : base(actionMapName, binding, bindingProperty, index)
         {
+            var path = elementProperty.FindPropertyRelative("path").stringValue;
+            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + ParseName(path);;
             depth++;
         }
 
@@ -279,6 +281,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal static string ParseName(string path)
         {
+            if (string.IsNullOrEmpty(path))
+                return "<empty>";
             string text = "";
             var usageMatch = s_UsageRegex.Match(path);
             if (usageMatch.Success)
