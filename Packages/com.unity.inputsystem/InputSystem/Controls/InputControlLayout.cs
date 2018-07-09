@@ -106,6 +106,59 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            public void SetValue(string value)
+            {
+                fixed(byte* ptr = this.value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            bool result;
+                            if (bool.TryParse(value, out result))
+                            {
+                                (*(bool*)ptr) = result;
+                            }
+                            break;
+                        case ParameterType.Integer:
+                            int intResult;
+                            if (int.TryParse(value, out intResult))
+                            {
+                                (*(int*)ptr) = intResult;
+                            }
+                            break;
+                        case ParameterType.Float:
+                            float floatResult;
+                            if (float.TryParse(value, out floatResult))
+                            {
+                                (*(float*)ptr) = floatResult;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            public string GetValueAsString()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            if (*((bool*)ptr))
+                                return "true";
+                            return "false";
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return "" + intValue;
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return "" + floatValue;
+                    }
+                }
+
+                return string.Empty;
+            }
+
             public override string ToString()
             {
                 fixed(byte* ptr = value)
@@ -139,7 +192,7 @@ namespace UnityEngine.Experimental.Input
                 if (parameters.Count == 0)
                     return name;
                 var parameterString = string.Join(",", parameters.Select(x => x.ToString()).ToArray());
-                return string.Format("name({0})", parameterString);
+                return string.Format("{0}({1})", name, parameterString);
             }
         }
 
