@@ -220,7 +220,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var fieldWithValuesList = param.parameters.Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
                     if (m_SelectedRow == m_NamesAndParams[idx].name)
                     {
-                        fieldWithValuesList = m_SelectedParameterList.Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
+                        fieldWithValuesList = m_SelectedParameterList.Where(a=>!a.IsDefaultValue()).Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
                     }
                     var fieldWithValues = string.Join(",", fieldWithValuesList.ToArray());
                     resultList.Add(string.Format("{0}({1})", param.name, fieldWithValues));

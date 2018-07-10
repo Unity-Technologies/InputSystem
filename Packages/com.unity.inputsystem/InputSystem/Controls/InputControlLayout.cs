@@ -180,6 +180,25 @@ namespace UnityEngine.Experimental.Input
 
                 return string.Empty;
             }
+
+            public bool IsDefaultValue()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            return *((bool*)ptr) == default(bool);
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return intValue == default(int);
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return floatValue == default(float);
+                    }
+                }
+                return false;
+            }
         }
 
         public struct NameAndParameters
