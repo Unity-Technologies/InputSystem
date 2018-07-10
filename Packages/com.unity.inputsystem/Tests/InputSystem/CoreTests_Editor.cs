@@ -10,7 +10,6 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.TestTools;
 
 partial class CoreTests

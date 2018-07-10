@@ -1,10 +1,7 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEditorInternal;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -37,9 +34,8 @@ namespace UnityEngine.Experimental.Input.Editor
         SerializedProperty m_InteractionsProperty;
         InteractionsList m_InteractionsList;
         
-        ReorderableList m_ProcessorsListView;
+        ProcessorsList m_ProcessorsListView;
         SerializedProperty m_ProcessorsProperty;
-        GUIContent[] m_ProcessorsChoices;
         
         SerializedProperty m_BindingProperty;
         Action m_ReloadTree;
@@ -57,53 +53,17 @@ namespace UnityEngine.Experimental.Input.Editor
             m_TreeViewState = treeViewState;
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
-            m_ProcessorsChoices = InputSystem.ListProcessors().OrderBy(a => a).Select(x => new GUIContent(x)).ToArray();
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
-
-            m_InteractionsList = new InteractionsList(bindingProperty, ApplyModifiers);
-
-            m_ProcessorsListView = new ReorderableList(new List<string>{}, typeof(string));
-            m_ProcessorsListView.headerHeight = 3;
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("processors");
-            foreach (var s in m_ProcessorsProperty.stringValue.Split(new[] {InputBinding.kSeparatorString}, StringSplitOptions.RemoveEmptyEntries))
-            {
-                m_ProcessorsListView.list.Add(s);
-            }
-            m_ProcessorsListView.onAddDropdownCallback =
-                (rect, list) =>
-                {
-                    var menu = new GenericMenu();
-                    for (var i = 0; i < m_ProcessorsChoices.Length; ++i)
-                        menu.AddItem(m_ProcessorsChoices[i], false, AddProcessor, m_ProcessorsChoices[i].text);
-                    menu.ShowAsContext();
-                };
-
-            m_ProcessorsListView.onRemoveCallback =
-                (list) =>
-                {
-                    list.list.RemoveAt(list.index);
-                    ApplyModifiers();
-                };
-            m_ProcessorsListView.onReorderCallback = list => { ApplyModifiers(); };
-        }
-
-        void AddProcessor(object processorNameString)
-        {
-            if (m_ProcessorsListView.list.Count == 1 && m_ProcessorsListView.list[0] == "")
-            {
-                m_ProcessorsListView.list.Clear();
-            }
-
-            m_ProcessorsListView.list.Add((string)processorNameString);
-            ApplyModifiers();
+            m_InteractionsList = new InteractionsList(bindingProperty.FindPropertyRelative("interactions"), ApplyModifiers);
+            m_ProcessorsListView = new ProcessorsList(bindingProperty.FindPropertyRelative("processors"), ApplyModifiers);
         }
 
         void ApplyModifiers()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
-            var processors = string.Join(InputBinding.kSeparatorString, m_ProcessorsListView.list.Cast<string>().Where(s => !string.IsNullOrEmpty(s)).Select(x => x).ToArray());
-            m_ProcessorsProperty.stringValue = processors;
+            m_ProcessorsProperty.stringValue = m_ProcessorsListView.ToSerializableString();
             m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_ReloadTree();
         }
@@ -148,11 +108,9 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ProcessorsFoldout = DrawFoldout(m_ProcessorsContent, m_ProcessorsFoldout);
 
             if (m_ProcessorsFoldout)
-            {
+            {   
                 EditorGUI.indentLevel++;
-                var listRect = GUILayoutUtility.GetRect(200, m_ProcessorsListView.GetHeight());
-                listRect = EditorGUI.IndentedRect(listRect);
-                m_ProcessorsListView.DoList(listRect);
+                m_ProcessorsListView.OnGUI();
                 EditorGUI.indentLevel--;
             }
 
