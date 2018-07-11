@@ -38,8 +38,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     public class WMRSpatialController : XRControllerWithRumble
     {
         public AxisControl combinedTrigger { get; private set; }
+        [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control joystick { get; private set; }
         public AxisControl trigger { get; private set; }
+        [InputControl(aliases = new[] { "Secondary2DAxis" })]
         public Vector2Control touchpad { get; private set; }
         public AxisControl grip { get; private set; }
         public ButtonControl gripPressed { get; private set; }
