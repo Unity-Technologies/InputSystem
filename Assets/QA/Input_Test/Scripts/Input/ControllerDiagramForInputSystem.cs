@@ -36,18 +36,18 @@ public class ControllerDiagramForInputSystem : StandardGamepadForInputSystem
     protected override Transform GetInputTransform(string inputName, bool isStick = false, string dpadName = null)
     {
         bool isDpad = (dpadName == null) ? false : true;
-        Transform input = isDpad ? buttons_container.Find(dpadName) : buttons_container.Find(inputName);
+        Transform input = isDpad ? m_buttonContainer.Find(dpadName) : m_buttonContainer.Find(inputName);
         // First time use
         if (input == null)
         {
-            if (isStick)     input = buttons_container.Find("Gamepad_Stick");
-            else if (isDpad) input = buttons_container.Find("Gamepad_Dpad");
-            else             input = buttons_container.Find("Gamepad_Button");
+            if (isStick)     input = m_buttonContainer.Find("Gamepad_Stick");
+            else if (isDpad) input = m_buttonContainer.Find("Gamepad_Dpad");
+            else             input = m_buttonContainer.Find("Gamepad_Button");
 
             // if unassigned Gameobject ran out. highly unlikely, but in case
             if (input == null)
             {
-                AddUnmappedButton(inputName);
+                ShowMessage(inputName);
                 return null;
             }
             else

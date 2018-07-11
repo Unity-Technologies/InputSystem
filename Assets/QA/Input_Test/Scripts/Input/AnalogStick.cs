@@ -9,7 +9,7 @@ public class AnalogStick
     // Each Analog Stck has 2 different axis associated with it
     // One is control by the stick's movement in X direction; the other is controled by Y.
     // For Input System:
-    // This is only needed for position adjustment
+    // This is only needed for position update
     //-------------------------------------------------------------------------------------------
 
     private Transform stick;            // The moving part of the analog stick. It is the child object named "Stick";

@@ -95,6 +95,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public double time
         {
             get { return valid ? m_EventPtr->time : 0.0; }
+            set
+            {
+                if (!valid)
+                    throw new NullReferenceException();
+                m_EventPtr->time = value;
+            }
         }
 
         public IntPtr data
