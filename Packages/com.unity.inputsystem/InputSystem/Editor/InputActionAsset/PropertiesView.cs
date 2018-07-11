@@ -47,6 +47,8 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_ProcessorsContent = new GUIContent("Processors");
         GUIContent m_InteractionsContent = new GUIContent("Interactions");
         GUIContent m_GeneralContent = new GUIContent("General");
+        GUIContent m_BindingGUI = new GUIContent("Binding");
+        bool m_ManualEditMode;
 
         public PropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
         {
@@ -81,16 +83,26 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 EditorGUI.indentLevel++;
 
-                var pathProperty = m_BindingProperty.FindPropertyRelative("path");
-                var path = BindingTreeItem.ParseName(pathProperty.stringValue);
+                EditorGUILayout.BeginHorizontal();
 
-                var btnRect = GUILayoutUtility.GetRect(0, EditorStyles.miniButton.lineHeight);
-                btnRect = EditorGUI.IndentedRect(btnRect);
-                if (EditorGUI.DropdownButton(btnRect, new GUIContent(path), FocusType.Keyboard))
-                {
-                    PopupWindow.Show(btnRect,
-                        new InputControlPicker(pathProperty, ref m_TreeViewState) { onPickCallback = OnBindingModified });
-                }
+                var lineRect = GUILayoutUtility.GetRect(0, 16);
+                var labelRect = lineRect;
+                labelRect.width = 60;
+                EditorGUI.LabelField(labelRect, m_BindingGUI);
+                lineRect.x += 65;
+                lineRect.width -= 65;
+
+                var btnRect = lineRect;
+                var editBtn = lineRect;
+                btnRect.width -= 20;
+                editBtn.x += btnRect.width;
+                editBtn.width = 20;
+                editBtn.height = 15;
+                
+                var pathProperty = m_BindingProperty.FindPropertyRelative("path");
+                DrawBindingField(btnRect, editBtn, pathProperty);
+
+                EditorGUILayout.EndHorizontal();
                 EditorGUI.indentLevel--;
             }
 
@@ -117,6 +129,53 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.FlexibleSpace();
 
             EditorGUILayout.EndVertical();
+        }
+
+        void DrawBindingField(Rect rect, Rect editBtn, SerializedProperty pathProperty)
+        {
+            var path = pathProperty.stringValue;
+            
+            if (m_ManualEditMode || string.IsNullOrEmpty(BindingTreeItem.ParseName(path)))
+            {
+                EditorGUI.BeginChangeCheck();
+                path = EditorGUI.DelayedTextField(rect, path);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    pathProperty.stringValue = path;
+                    OnBindingModified(pathProperty);
+                }
+                if (GUI.Button(editBtn, "˅"))
+                {
+                    rect.x += editBtn.width;
+                    ShowInputControlPicker(rect, pathProperty);
+                }
+            }
+            else
+            {
+                var parsedPath = BindingTreeItem.ParseName(path);
+                if (EditorGUI.DropdownButton(rect, new GUIContent(parsedPath), FocusType.Keyboard))
+                {
+                    ShowInputControlPicker(rect, pathProperty);
+                }
+                if (GUI.Button(editBtn, "..."))
+                {
+                    m_ManualEditMode = true;
+                }
+            }
+        }
+
+        void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty)
+        {
+            var w = new InputControlPicker(pathProperty, ref m_TreeViewState) 
+            { 
+                onPickCallback = s =>
+                {
+                    m_ManualEditMode = false;
+                    OnBindingModified(s);
+                }
+            };
+            w.width = rect.width;
+            PopupWindow.Show(rect, w);
         }
 
         bool DrawFoldout(GUIContent content, bool folded)
