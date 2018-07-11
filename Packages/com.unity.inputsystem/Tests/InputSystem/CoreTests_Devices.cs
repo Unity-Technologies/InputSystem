@@ -2034,7 +2034,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_TouchesWithSameIdDontGetStuck()
+    public void FIXME_Devices_TouchesWithSameIdDontGetStuck()
     {
         ////FIXME: Fails - touches stuck in Stationary phase
         /// While it's not recommended for two different touches to share an id, it shoudn't get stuck in Stationary phase
@@ -2077,7 +2077,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_TouchesWithWrongTimestampCorrectlyRecognized()
+    public void FIXME_Devices_TouchesWithWrongTimestampCorrectlyRecognized()
     {
         ////FIXME: fails - events which have timestamp which is less than previous event are ignored implictly
         /// Can we add checks for Development build ?
