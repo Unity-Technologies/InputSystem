@@ -357,6 +357,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 m_ApplyAction();
                 DragAndDrop.AcceptDrag();
+                //since there is no easy way to know the id of the element after reordering
+                //instead of updating the selected item, we leave the UI without selection
+                if(OnSelectionChanged!=null)
+                    OnSelectionChanged();
             }
             return DragAndDropVisualMode.Move;
         }

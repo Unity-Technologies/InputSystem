@@ -199,7 +199,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override int GetId(string actionMapName, int index, string action, string path, string name)
         {
-            return (actionMapName + " " + action + " " + name).GetHashCode();
+            return (actionMapName + " " + action + " " + name + " " + index).GetHashCode();
         }
 
         protected override GUIStyle rectStyle
@@ -263,11 +263,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)
         {
-            if (path == "")
-            {
-                return (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
-            }
-            return (actionMapName + " " + action + " " + path).GetHashCode();
+            return (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
         }
 
         static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
