@@ -1,5 +1,7 @@
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: rename to "IInputCompoundBinding"
+
 ////REVIEW: should composites be able to nest?
 
 namespace UnityEngine.Experimental.Input

@@ -1,47 +1,52 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshRenderer))]
+[RequireComponent(typeof(SpriteRenderer))]
 public class ArrowHighlight : MonoBehaviour
 {
-    private byte moveSpeed = 2;
+    private byte moveSpeed = 16;
     private byte fadeSpeed = 10;
+    private float move_offset = 4f;
 
-    private Material mat;
+    private SpriteRenderer sp_render;
+    private Vector3 origin_pos;
+
     private bool isMouseMove = false;
     private bool isPlaying = false;
 
     // Use this for initialization
     void Start()
     {
-        mat = GetComponent<MeshRenderer>().material;
+        sp_render = GetComponent<SpriteRenderer>();
+        origin_pos = transform.localPosition;
         SetAlpha(0f);
     }
 
     // The loop for effect
     private IEnumerator HighlightMovement()
     {
-        float alpha = 0f;
-        float offset = 0f;
         isPlaying = true;
 
         while (isMouseMove)
         {
+            // Reset
+            float offset = 0f;
+            float alpha = 0f;
+            transform.localPosition = origin_pos;
+
             // Fade in
             while (alpha < 0.8f)
             {
-                alpha = Mathf.Min(alpha + fadeSpeed * Time.deltaTime, 0.8f);
+                alpha = Mathf.Min(alpha + fadeSpeed * Time.deltaTime, 0.9f);
                 SetAlpha(alpha);
                 yield return new WaitForEndOfFrame();
             }
-            //yield return new WaitForSeconds(0.1f);
 
             // Offset
-            while (offset > -0.5f)
+            while (offset < move_offset)
             {
-                offset = Mathf.Max(offset - moveSpeed * Time.deltaTime, -0.5f);
-                mat.SetTextureOffset("_MainTex", new Vector2(offset, 0));
+                offset = Mathf.Min(offset + moveSpeed * Time.deltaTime, move_offset);
+                transform.localPosition = origin_pos + new Vector3(offset, 0f, 0f);
                 yield return new WaitForEndOfFrame();
             }
 
@@ -52,11 +57,6 @@ public class ArrowHighlight : MonoBehaviour
                 SetAlpha(alpha);
                 yield return new WaitForEndOfFrame();
             }
-
-            // Reset
-            offset = 0f;
-            mat.SetTextureOffset("_MainTex", new Vector2(offset, 0));
-            //yield return new WaitForSeconds(0.1f);
         }
 
         isPlaying = false;
@@ -78,8 +78,8 @@ public class ArrowHighlight : MonoBehaviour
     // Change the alpha channel for the material
     private void SetAlpha(float alpha)
     {
-        Color matColor = mat.color;
+        Color matColor = sp_render.color;
         matColor.a = alpha;
-        mat.color = matColor;
+        sp_render.color = matColor;
     }
 }

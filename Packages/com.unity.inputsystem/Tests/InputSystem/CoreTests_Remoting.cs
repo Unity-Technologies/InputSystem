@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
@@ -13,152 +12,144 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: have to decide what to do if a layout is removed
+
 partial class CoreTests
 {
     [Test]
     [Category("Remote")]
-    public void Remote_CanConnectTwoInputSystemsOverNetwork()
+    public void Remote_ExistingDevicesAreSentToRemotes_WhenStartingToSend()
     {
-        // Add some data to the local input system.
-        InputSystem.AddDevice("Gamepad");
-        InputSystem.RegisterControlLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
-        var localGamepad = (Gamepad)InputSystem.AddDevice("MyGamepad");
+        InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
 
-        // Now create another input system instance and connect it
-        // to our "local" instance.
-        // NOTE: This relies on internal APIs. We want remoting as such to be available
-        //       entirely from user land but having multiple input systems in the same
-        //       application isn't something that we necessarily want to expose (we do
-        //       have global state so it can easily lead to surprising results).
-        var secondInputRuntime = new InputTestRuntime();
-        var secondInputManager = new InputManager();
-        secondInputManager.InstallRuntime(secondInputRuntime);
-        secondInputManager.InitializeData();
+        using (var remote = new FakeRemote())
+        {
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(2));
+            Assert.That(remote.manager.devices, Has.Exactly(1).TypeOf<Gamepad>().With.Property("layout").EqualTo("Gamepad"));
+            Assert.That(remote.manager.devices, Has.Exactly(1).TypeOf<Keyboard>().With.Property("layout").EqualTo("Keyboard"));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+        }
+    }
 
+    [Test]
+    [Category("Remote")]
+    public void Remote_EventsAreSentToRemotes()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var remote = new FakeRemote())
+        {
+            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f}, 0.1234);
+            InputSystem.Update();
+
+            // Make second input manager process the events it got.
+            // NOTE: This will also switch the system to the state buffers from the second input manager.
+            remote.manager.Update();
+
+            var remoteGamepad = (Gamepad)remote.manager.devices[0];
+
+            Assert.That(remoteGamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
+            Assert.That(remoteGamepad.lastUpdateTime, Is.EqualTo(0.1234).Within(0.000001));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_AddingNewControlLayout_WillSendLayoutToRemotes()
+    {
+        using (var remote = new FakeRemote())
+        {
+            InputSystem.RegisterControlLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
+            InputSystem.AddDevice("MyGamepad");
+
+            var layouts = new List<string>();
+            remote.manager.ListControlLayouts(layouts);
+
+            Assert.That(layouts, Has.Exactly(1).EqualTo("MyGamepad"));
+            Assert.That(remote.manager.devices, Has.Exactly(1).With.Property("layout").EqualTo("MyGamepad").And.TypeOf<Gamepad>());
+            Assert.That(remote.manager.TryLoadControlLayout(new InternedString("MyGamepad")),
+                Is.Not.Null.And.With.Property("extendsLayout").EqualTo("Gamepad"));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_RemovingDevice_WillRemoveItFromRemotes()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var remote = new FakeRemote())
+        {
+            Assert.That(remote.manager.devices.Count, Is.EqualTo(1));
+
+            InputSystem.RemoveDevice(gamepad);
+
+            Assert.That(remote.manager.devices.Count, Is.Zero);
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_SettingUsageOnDevice_WillSendChangeToRemotes()
+    {
+        var gamepad = InputSystem.AddDevice("Gamepad");
+        using (var remote = new FakeRemote())
+        {
+            var remoteGamepad = (Gamepad)remote.manager.devices[0];
+            Assert.That(remoteGamepad.usages, Has.Count.Zero);
+
+            InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
+
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
+    {
+        var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+        var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+
+        connectionToEditor.name = "ConnectionToEditor";
+        connectionToPlayer.name = "ConnectionToPlayer";
+
+        var fakeEditorConnection = new FakePlayerConnection {playerId = 0};
+        var fakePlayerConnection = new FakePlayerConnection {playerId = 1};
+
+        fakeEditorConnection.otherEnd = fakePlayerConnection;
+        fakePlayerConnection.otherEnd = fakeEditorConnection;
+
+        var observer = new RemoteTestObserver();
+
+        // In the Unity API, "PlayerConnection" is the connection to the editor
+        // and "EditorConnection" is the connection to the player. Seems counter-intuitive.
+        connectionToEditor.Bind(fakePlayerConnection, true);
+        connectionToPlayer.Bind(fakeEditorConnection, true);
+
+        // Bind a local remote on the player side.
         var local = new InputRemoting(InputSystem.s_Manager);
-        var remote = new InputRemoting(secondInputManager);
-
-        // We wire the two directly into each other effectively making function calls
-        // our "network transport layer". In a real networking situation, we'd effectively
-        // have an RPC-like mechanism sitting in-between.
-        local.Subscribe(remote);
-        remote.Subscribe(local);
-
+        local.Subscribe(connectionToEditor);
         local.StartSending();
 
-        var remoteGamepadLayout =
-            string.Format("{0}0::{1}", InputRemoting.kRemoteLayoutNamespacePrefix, localGamepad.layout);
+        connectionToPlayer.Subscribe(observer);
 
-        // Make sure that our "remote" system now has the data we initially
-        // set up on the local system.
-        Assert.That(secondInputManager.devices,
-            Has.Exactly(1).With.Property("layout").EqualTo(remoteGamepadLayout));
-        Assert.That(secondInputManager.devices, Has.Exactly(2).TypeOf<Gamepad>());
-        Assert.That(secondInputManager.devices, Has.All.With.Property("remote").True);
-
-        // Send state event to local gamepad.
-        InputSystem.QueueStateEvent(localGamepad, new GamepadState {leftTrigger = 0.5f});
+        var device = InputSystem.AddDevice("Gamepad");
+        InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
+        InputSystem.RemoveDevice(device);
 
-        // Make second input manager process the events it got.
-        // NOTE: This will also switch the system to the state buffers from the second input manager.
-        secondInputManager.Update();
+        ////TODO: make sure that we also get the connection sequence right and send our initial layouts and devices
+        Assert.That(observer.messages, Has.Count.EqualTo(4));
+        Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
+        Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
+        Assert.That(observer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
+        Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
 
-        var remoteGamepad = (Gamepad)secondInputManager.devices.First(x => x.layout == remoteGamepadLayout);
+        ////TODO: test disconnection
 
-        Assert.That(remoteGamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-
-        secondInputRuntime.Dispose();
-    }
-
-    [Test]
-    [Category("Remote")]
-    public void Remote_ChangingDevicesWhileRemoting_WillSendChangesToRemote()
-    {
-        var secondInputRuntime = new InputTestRuntime();
-        var secondInputManager = new InputManager();
-        secondInputManager.InstallRuntime(secondInputRuntime);
-        secondInputManager.InitializeData();
-
-        var local = new InputRemoting(InputSystem.s_Manager);
-        var remote = new InputRemoting(secondInputManager);
-
-        local.Subscribe(remote);
-        remote.Subscribe(local);
-
-        local.StartSending();
-
-        // Add device.
-        var localGamepad = InputSystem.AddDevice("Gamepad");
-        secondInputManager.Update();
-
-        Assert.That(secondInputManager.devices, Has.Count.EqualTo(1));
-        var remoteGamepad = secondInputManager.devices[0];
-        Assert.That(remoteGamepad, Is.TypeOf<Gamepad>());
-        Assert.That(remoteGamepad.remote, Is.True);
-        Assert.That(remoteGamepad.layout, Contains.Substring("Gamepad"));
-
-        // Change usage.
-        InputSystem.SetUsage(localGamepad, CommonUsages.LeftHand);
-        secondInputManager.Update();
-        Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-
-        // Bind and disconnect are events so no need to test those.
-
-        // Remove device.
-        InputSystem.RemoveDevice(localGamepad);
-        secondInputManager.Update();
-        Assert.That(secondInputManager.devices, Has.Count.Zero);
-
-        secondInputRuntime.Dispose();
-    }
-
-    [Test]
-    [Category("Remote")]
-    public void Remote_ChangingLayoutsWhileRemoting_WillSendChangesToRemote()
-    {
-        var secondInputSystem = new InputManager();
-        secondInputSystem.InitializeData();
-
-        var local = new InputRemoting(InputSystem.s_Manager);
-        var remote = new InputRemoting(secondInputSystem);
-
-        local.Subscribe(remote);
-        remote.Subscribe(local);
-
-        local.StartSending();
-
-        const string jsonV1 = @"
-            {
-                ""name"" : ""MyLayout"",
-                ""extend"" : ""Gamepad""
-            }
-        ";
-
-        // Add layout.
-        InputSystem.RegisterControlLayout(jsonV1);
-
-        var layout = secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout"));
-        Assert.That(layout, Is.Not.Null);
-        Assert.That(layout.extendsLayout, Is.EqualTo("remote0::Gamepad"));
-
-        const string jsonV2 = @"
-            {
-                ""name"" : ""MyLayout"",
-                ""extend"" : ""Keyboard""
-            }
-        ";
-
-        // Change layout.
-        InputSystem.RegisterControlLayout(jsonV2);
-
-        layout = secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout"));
-        Assert.That(layout.extendsLayout, Is.EqualTo("remote0::Keyboard"));
-
-        // Remove layout.
-        InputSystem.RemoveControlLayout("MyLayout");
-
-        Assert.That(secondInputSystem.TryLoadControlLayout(new InternedString("remote0::MyLayout")), Is.Null);
+        ScriptableObject.Destroy(connectionToEditor);
+        ScriptableObject.Destroy(connectionToPlayer);
     }
 
     // If we have more than two players connected, for example, and we add a layout from player A
@@ -241,7 +232,7 @@ partial class CoreTests
         }
     }
 
-    public class RemoteTestObserver : IObserver<InputRemoting.Message>
+    private class RemoteTestObserver : IObserver<InputRemoting.Message>
     {
         public List<InputRemoting.Message> messages = new List<InputRemoting.Message>();
 
@@ -259,51 +250,42 @@ partial class CoreTests
         }
     }
 
-    [Test]
-    [Category("Remote")]
-    public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
+    private class FakeRemote : IDisposable
     {
-        var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
-        var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+        public InputTestRuntime runtime;
+        public InputManager manager;
 
-        connectionToEditor.name = "ConnectionToEditor";
-        connectionToPlayer.name = "ConnectionToPlayer";
+        public InputRemoting local;
+        public InputRemoting remote;
 
-        var fakeEditorConnection = new FakePlayerConnection {playerId = 0};
-        var fakePlayerConnection = new FakePlayerConnection {playerId = 1};
+        public FakeRemote()
+        {
+            runtime = new InputTestRuntime();
+            manager = new InputManager();
+            manager.InstallRuntime(runtime);
+            manager.InitializeData();
 
-        fakeEditorConnection.otherEnd = fakePlayerConnection;
-        fakePlayerConnection.otherEnd = fakeEditorConnection;
+            local = new InputRemoting(InputSystem.s_Manager);
+            remote = new InputRemoting(manager);
 
-        var observer = new RemoteTestObserver();
+            local.Subscribe(remote);
+            remote.Subscribe(local);
 
-        // In the Unity API, "PlayerConnection" is the connection to the editor
-        // and "EditorConnection" is the connection to the player. Seems counter-intuitive.
-        connectionToEditor.Bind(fakePlayerConnection, true);
-        connectionToPlayer.Bind(fakeEditorConnection, true);
+            local.StartSending();
+        }
 
-        // Bind a local remote on the player side.
-        var local = new InputRemoting(InputSystem.s_Manager);
-        local.Subscribe(connectionToEditor);
-        local.StartSending();
+        ~FakeRemote()
+        {
+            Dispose();
+        }
 
-        connectionToPlayer.Subscribe(observer);
-
-        var device = InputSystem.AddDevice("Gamepad");
-        InputSystem.QueueStateEvent(device, new GamepadState());
-        InputSystem.Update();
-        InputSystem.RemoveDevice(device);
-
-        ////TODO: make sure that we also get the connection sequence right and send our initial layouts and devices
-        Assert.That(observer.messages, Has.Count.EqualTo(4));
-        Assert.That(observer.messages[0].type, Is.EqualTo(InputRemoting.MessageType.Connect));
-        Assert.That(observer.messages[1].type, Is.EqualTo(InputRemoting.MessageType.NewDevice));
-        Assert.That(observer.messages[2].type, Is.EqualTo(InputRemoting.MessageType.NewEvents));
-        Assert.That(observer.messages[3].type, Is.EqualTo(InputRemoting.MessageType.RemoveDevice));
-
-        ////TODO: test disconnection
-
-        ScriptableObject.Destroy(connectionToEditor);
-        ScriptableObject.Destroy(connectionToPlayer);
+        public void Dispose()
+        {
+            if (runtime != null)
+            {
+                runtime.Dispose();
+                runtime = null;
+            }
+        }
     }
 }

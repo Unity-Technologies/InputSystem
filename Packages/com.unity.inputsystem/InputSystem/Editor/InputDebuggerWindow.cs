@@ -438,16 +438,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
             private void AddControlItem(InputControlLayout.ControlItem control, TreeViewItem parent, ref int id)
             {
-                var item = AddChild(parent, control.variant.IsEmpty() ? control.name : string.Format("{0} ({1})",
-                            control.name, control.variant), ref id);
+                var item = AddChild(parent, control.variants.IsEmpty() ? control.name : string.Format("{0} ({1})",
+                            control.name, control.variants), ref id);
 
                 ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
 
                 ////TODO: allow clicking this field to jump to the layout
                 if (!control.layout.IsEmpty())
                     AddChild(item, string.Format("Layout: {0}", control.layout), ref id);
-                if (!control.variant.IsEmpty())
-                    AddChild(item, string.Format("Variant: {0}", control.variant), ref id);
+                if (!control.variants.IsEmpty())
+                    AddChild(item, string.Format("Variant: {0}", control.variants), ref id);
                 if (control.format != 0)
                     AddChild(item, string.Format("Format: {0}", control.format), ref id);
                 if (control.offset != InputStateBlock.kInvalidOffset)

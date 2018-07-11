@@ -93,6 +93,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         Action<int, string> onDeviceDiscovered { set; }
 
         /// <summary>
+        /// Set delegate to invoke when system is shutting down.
+        /// </summary>
+        Action onShutdown { set; }
+
+        /// <summary>
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
         float pollingFrequency { set; }
@@ -113,6 +118,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }
+        int frameCount { get; }
+
+        // If analytics are enabled, the runtime receives analytics events from the input manager.
+        // See InputAnalytics.
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+        void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
+        void SendAnalyticsEvent(string name, object data);
+        #endif
     }
 
     internal static class InputRuntime

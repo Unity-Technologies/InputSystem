@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -15,6 +16,40 @@ namespace UnityEngine.Experimental.Input.Utilities
         public int length;
         public TValue firstValue;
         public TValue[] additionalValues;
+
+        public InlinedArray(TValue value)
+        {
+            length = 1;
+            firstValue = value;
+            additionalValues = null;
+        }
+
+        public InlinedArray(TValue firstValue, params TValue[] additionalValues)
+        {
+            length = 1 + additionalValues.Length;
+            this.firstValue = firstValue;
+            this.additionalValues = additionalValues;
+        }
+
+        public InlinedArray(IEnumerable<TValue> values)
+            : this()
+        {
+            length = values.Count();
+            if (length > 1)
+                additionalValues = new TValue[length - 1];
+            else
+                additionalValues = null;
+
+            var index = 0;
+            foreach (var value in values)
+            {
+                if (index == 0)
+                    firstValue = value;
+                else
+                    additionalValues[index - 1] = value;
+                ++index;
+            }
+        }
 
         public TValue this[int index]
         {
@@ -95,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return -1;
         }
 
-        public void Append(TValue value)
+        public int Append(TValue value)
         {
             if (length == 0)
             {
@@ -112,7 +147,9 @@ namespace UnityEngine.Experimental.Input.Utilities
                 additionalValues[length - 1] = value;
             }
 
+            var index = length;
             ++length;
+            return index;
         }
 
         public void AppendWithCapacity(TValue value)
