@@ -95,6 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionContextGUI = new GUIContent("Add action");
         GUIContent m_AddActionMapGUI = new GUIContent("Action map");
         GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
+        int m_IsAssetDirtyCounter;
 
         public void OnEnable()
         {
@@ -106,8 +107,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
                 return;
+            m_IsAssetDirtyCounter--;
             m_TreeView.Reload();
-            m_TreeView.Repaint();
             OnSelectionChanged();
         }
 
@@ -134,22 +135,24 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_SerializedObject != null)
             {
+                m_CopyPasteUtility = new CopyPasteUtility(this);
+                m_SearchField = new SearchField();
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
-                m_CopyPasteUtility = new CopyPasteUtility(this);
-                m_SearchField = new SearchField();
                 LoadPropertiesForSelection();
             }
         }
 
         internal void Apply()
         {
+            if (m_IsAssetDirtyCounter < 0)
+            {
+                m_IsAssetDirtyCounter = 0;
+            }
+            m_IsAssetDirtyCounter++;
             m_SerializedObject.ApplyModifiedProperties();
-            SaveChangesToAsset();
-            m_SerializedObject.Update();
             m_TreeView.Reload();
-            Repaint();
         }
 
         void SaveChangesToAsset()
@@ -206,7 +209,16 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-
+            
+            EditorGUI.BeginDisabledGroup(m_IsAssetDirtyCounter == 0);
+            if (GUILayout.Button("save"))
+            {
+                m_IsAssetDirtyCounter = 0;
+                SaveChangesToAsset();
+                Debug.Log("saving");    
+            }
+            EditorGUI.EndDisabledGroup();
+            
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
@@ -214,6 +226,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_TreeView.SetNameFilter(m_SearchText);
             }
+            GUILayout.Space(5);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space();
@@ -222,7 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
             DrawMainTree();
             DrawProperties();
             EditorGUILayout.EndHorizontal();
-
+            GUILayout.Space(3);
             EditorGUILayout.EndVertical();
 
             if (Event.current.type == EventType.ValidateCommand)
@@ -492,7 +505,13 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
 
             if (m_PropertyView != null)
+            {
                 m_PropertyView.OnGUI();
+            }
+            else
+            {
+                GUILayout.FlexibleSpace();
+            }
 
             EditorGUILayout.EndVertical();
         }
