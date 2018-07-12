@@ -97,11 +97,6 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionContextGUI = new GUIContent("Add action");
         GUIContent m_AddActionMapGUI = new GUIContent("Action map");
         GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
-        GUIContent m_CutGUI = new GUIContent("Cut");
-        GUIContent m_CopyGUI = new GUIContent("Copy");
-        GUIContent m_PasteGUI = new GUIContent("Paste");
-        GUIContent m_DeleteGUI = new GUIContent("Delete");
-        GUIContent m_Duplicate = new GUIContent("Duplicate");
 
         public void OnEnable()
         {
@@ -118,7 +113,7 @@ namespace UnityEngine.Experimental.Input.Editor
             OnSelectionChanged();
         }
 
-        void OnSelectionChanged()
+        internal void OnSelectionChanged()
         {
             LoadPropertiesForSelection();
         }
@@ -217,11 +212,10 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.BeginHorizontal();
             
             EditorGUI.BeginDisabledGroup(m_IsAssetDirtyCounter == 0);
-            if (GUILayout.Button("save"))
+            if (GUILayout.Button("Save"))
             {
                 m_IsAssetDirtyCounter = 0;
                 SaveChangesToAsset();
-                Debug.Log("saving");    
             }
             EditorGUI.EndDisabledGroup();
             
@@ -246,81 +240,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (Event.current.type == EventType.ValidateCommand)
             {
-                if (Event.current.commandName == "Copy"
-                    || Event.current.commandName == "Paste"
-                    || Event.current.commandName == "Cut"
-                    || Event.current.commandName == "Duplicate"
-                    || Event.current.commandName == "Delete")
+                if (m_CopyPasteUtility.IsValidCommand(Event.current.commandName))
                 {
                     Event.current.Use();
                 }
             }
             if (Event.current.type == EventType.ExecuteCommand)
             {
-                switch (Event.current.commandName)
-                {
-                    case "Copy":
-                        m_CopyPasteUtility.HandleCopyEvent();
-                        Event.current.Use();
-                        break;
-                    case "Paste":
-                        m_CopyPasteUtility.HandlePasteEvent();
-                        Event.current.Use();
-                        break;
-                    case "Cut":
-                        m_CopyPasteUtility.HandleCopyEvent();
-                        DeleteSelectedRows();
-                        Event.current.Use();
-                        break;
-                    case "Duplicate":
-                        m_CopyPasteUtility.HandleCopyEvent();
-                        m_CopyPasteUtility.HandlePasteEvent();
-                        Event.current.Use();
-                        break;
-                    case "Delete":
-                        DeleteSelectedRows();
-                        Event.current.Use();
-                        break;
-                }
+                m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
             }
-        }
-
-        void DeleteSelectedRows()
-        {
-            var rows = m_TreeView.GetSelectedRows().ToArray();
-            foreach (var compositeGroup in rows.Where(r => r.GetType() == typeof(CompositeGroupTreeItem)).OrderByDescending(r => r.index).Cast<CompositeGroupTreeItem>())
-            {
-                var actionMapProperty = (compositeGroup.parent.parent as InputTreeViewLine).elementProperty;
-                var actionProperty = (compositeGroup.parent as ActionTreeItem).elementProperty;
-                for (var i = compositeGroup.children.Count - 1; i >= 0; i--)
-                {
-                    var composite = (CompositeTreeItem)compositeGroup.children[i];
-                    InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index, actionMapProperty);
-                }
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, compositeGroup.index, actionMapProperty);
-            }
-            foreach (var bindingRow in rows.Where(r => r.GetType() == typeof(BindingTreeItem)).OrderByDescending(r => r.index).Cast<BindingTreeItem>())
-            {
-                var actionMapProperty = (bindingRow.parent.parent as InputTreeViewLine).elementProperty;
-                var actionProperty = (bindingRow.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, bindingRow.index, actionMapProperty);
-            }
-            foreach (var actionRow in rows.Where(r => r.GetType() == typeof(ActionTreeItem)).OrderByDescending(r => r.index).Cast<ActionTreeItem>())
-            {
-                var actionProperty = (actionRow).elementProperty;
-                var actionMapProperty = (actionRow.parent as InputTreeViewLine).elementProperty;
-
-                for (var i = actionRow.bindingsCount - 1; i >= 0; i--)
-                    InputActionSerializationHelpers.RemoveBinding(actionProperty, i, actionMapProperty);
-
-                InputActionSerializationHelpers.DeleteAction(actionMapProperty, actionRow.index);
-            }
-            foreach (var mapRow in rows.Where(r => r.GetType() == typeof(ActionMapTreeItem)).OrderByDescending(r => r.index).Cast<ActionMapTreeItem>())
-            {
-                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
-            }
-            Apply();
-            OnSelectionChanged();
         }
 
         void DrawMainTree()
@@ -412,30 +340,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void OnContextClick()
         {
-            var canCopySelection = m_CopyPasteUtility.CanCopySelection();
             var menu = new GenericMenu();
             AddAddOptionsToMenu(menu, true);
-            menu.AddSeparator("");
-            if (canCopySelection)
-            {
-                menu.AddItem(m_CutGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
-                menu.AddItem(m_CopyGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
-            }
-            else
-            {
-                menu.AddDisabledItem(m_CutGUI, false);
-                menu.AddDisabledItem(m_CopyGUI, false);
-            }
-            menu.AddItem(m_PasteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
-            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
-            if (canCopySelection)
-            {
-                menu.AddItem(m_Duplicate, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
-            }
-            else
-            {
-                menu.AddDisabledItem(m_Duplicate, false);
-            }
+            m_CopyPasteUtility.AddOptionsToMenu(menu);
             menu.ShowAsContext();
         }
 
