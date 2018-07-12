@@ -11,11 +11,13 @@ namespace UnityEngine.Experimental.Input.Editor
         const string kInputAssetMarker = "INPUTASSET\n";
         InputActionListTreeView m_TreeView;
         ActionInspectorWindow m_Window;
+        SerializedObject m_SerializedObject;
 
-        public CopyPasteUtility(ActionInspectorWindow window)
+        public CopyPasteUtility(ActionInspectorWindow window, InputActionListTreeView tree, SerializedObject serializedObject)
         {
             m_Window = window;
-            m_TreeView = window.m_TreeView;
+            m_TreeView = tree;
+            m_SerializedObject = serializedObject;
         }
 
         public void HandleCopyEvent()
@@ -95,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (IsRowOfType<ActionMapTreeItem>(ref row))
                 {
                     var map = JsonUtility.FromJson<InputActionMap>(row);
-                    InputActionSerializationHelpers.AddActionMapFromObject(m_Window.m_SerializedObject, map);
+                    InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
                     m_Window.Apply();
                     continue;
                 }

@@ -80,14 +80,16 @@ namespace UnityEngine.Experimental.Input.Editor
         TreeViewState m_TreeViewState;
         [SerializeField]
         TreeViewState m_PickerTreeViewState;
-        internal InputActionListTreeView m_TreeView;
-        internal SerializedObject m_SerializedObject;
+        [SerializeField]
+        string m_AssetPath;
+        
+        InputActionListTreeView m_TreeView;
+        SerializedObject m_SerializedObject;
         PropertiesView m_PropertyView;
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
-        [SerializeField]
-        string m_AssetPath;
+        int m_IsAssetDirtyCounter;
         
         GUIContent m_AddBindingGUI = new GUIContent("Binding");
         GUIContent m_AddBindingContextGUI = new GUIContent("Add binding");
@@ -95,7 +97,11 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionContextGUI = new GUIContent("Add action");
         GUIContent m_AddActionMapGUI = new GUIContent("Action map");
         GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
-        int m_IsAssetDirtyCounter;
+        GUIContent m_CutGUI = new GUIContent("Cut");
+        GUIContent m_CopyGUI = new GUIContent("Copy");
+        GUIContent m_PasteGUI = new GUIContent("Paste");
+        GUIContent m_DeleteGUI = new GUIContent("Delete");
+        GUIContent m_Duplicate = new GUIContent("Duplicate");
 
         public void OnEnable()
         {
@@ -135,7 +141,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_SerializedObject != null)
             {
-                m_CopyPasteUtility = new CopyPasteUtility(this);
+                m_CopyPasteUtility = new CopyPasteUtility(this, m_TreeView, m_SerializedObject);
                 m_SearchField = new SearchField();
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
@@ -378,7 +384,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             else if(!isContextMenu)
             {
-                menu.AddDisabledItem(new GUIContent(m_AddBindingGUI));
+                menu.AddDisabledItem(m_AddBindingGUI);
             }
             if (canAddAction)
             {
@@ -386,7 +392,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             else if(!isContextMenu)
             {
-                menu.AddDisabledItem(new GUIContent(m_AddActionGUI), false);
+                menu.AddDisabledItem(m_AddActionGUI, false);
             }
             menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
             
@@ -412,23 +418,23 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.AddSeparator("");
             if (canCopySelection)
             {
-                menu.AddItem(new GUIContent("Cut"), false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
-                menu.AddItem(new GUIContent("Copy"), false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
+                menu.AddItem(m_CutGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
+                menu.AddItem(m_CopyGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
             }
             else
             {
-                menu.AddDisabledItem(new GUIContent("Cut"), false);
-                menu.AddDisabledItem(new GUIContent("Copy"), false);
+                menu.AddDisabledItem(m_CutGUI, false);
+                menu.AddDisabledItem(m_CopyGUI, false);
             }
-            menu.AddItem(new GUIContent("Paste"), false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
-            menu.AddItem(new GUIContent("Delete"), false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
+            menu.AddItem(m_PasteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
+            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
             if (canCopySelection)
             {
-                menu.AddItem(new GUIContent("Duplicate"), false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+                menu.AddItem(m_Duplicate, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
             }
             else
             {
-                menu.AddDisabledItem(new GUIContent("Duplicate"), false);
+                menu.AddDisabledItem(m_Duplicate, false);
             }
             menu.ShowAsContext();
         }
