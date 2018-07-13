@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         InputActionMap m_ActionMap;
 
-        public ActionMapTreeItem(InputActionMap actionMap, SerializedProperty setProperty, int index) : base(setProperty, index)
+        public ActionMapTreeItem(InputActionMap actionMap, SerializedProperty actionMapProperty, int index) : base(actionMapProperty, index)
         {
             m_ActionMap = actionMap;
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
@@ -148,15 +148,52 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return Styles.yellowRect; }
         }
 
+        public SerializedProperty bindingsProperty 
+        { 
+            get
+            {
+                return elementProperty.FindPropertyRelative("m_Bindings");
+            } 
+        }
+
+        public SerializedProperty actionsProperty 
+        { 
+            get
+            {
+                return elementProperty.FindPropertyRelative("m_Actions");
+            } 
+        }
+
         public override string SerializeToString()
         {
             return JsonUtility.ToJson(m_ActionMap);
+        }
+
+        public void AddAction()
+        {
+            InputActionSerializationHelpers.AddAction(elementProperty);
+        }
+
+        public SerializedProperty AddActionFromObject(InputAction action)
+        {
+            return InputActionSerializationHelpers.AddActionFromObject(action, elementProperty);
+        }
+        
+        public void DeleteAction(int actionRowIndex)
+        {
+            InputActionSerializationHelpers.DeleteAction(elementProperty, actionRowIndex);
+        }
+
+        public void Rename(string newName)
+        {
+            InputActionSerializationHelpers.RenameActionMap(elementProperty, newName);
         }
     }
 
     class ActionTreeItem : InputTreeViewLine
     {
         InputAction m_Action;
+        SerializedProperty m_ActionMapProperty;
 
         public int bindingsStartIndex
         {
@@ -168,10 +205,12 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return m_Action.m_BindingsCount; }
         }
 
-        public ActionTreeItem(string actionMapName, InputAction action, SerializedProperty setProperty, int index)
+        public ActionTreeItem(SerializedProperty actionMapProperty, InputAction action, SerializedProperty setProperty, int index)
             : base(setProperty, index)
         {
             m_Action = action;
+            m_ActionMapProperty = actionMapProperty;
+            var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
             id = (actionMapName + "/" + displayName).GetHashCode();
             depth = 1;
@@ -185,6 +224,32 @@ namespace UnityEngine.Experimental.Input.Editor
         public override string SerializeToString()
         {
             return JsonUtility.ToJson(m_Action);
+        }
+
+        public void AppendCompositeBinding(string compositeName)
+        {
+            var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
+            InputActionSerializationHelpers.AppendCompositeBinding(elementProperty, m_ActionMapProperty, compositeType);
+        }
+
+        public void AppendBinding()
+        {
+            InputActionSerializationHelpers.AppendBinding(elementProperty, m_ActionMapProperty);
+        }
+
+        public void AppendBindingFromObject(InputBinding binding)
+        {
+            InputActionSerializationHelpers.AppendBindingFromObject(binding, elementProperty, m_ActionMapProperty);
+        }
+
+        public void RemoveBinding(int compositeIndex)
+        {
+            InputActionSerializationHelpers.RemoveBinding(elementProperty, compositeIndex, m_ActionMapProperty);
+        }
+
+        public void Rename(string newName)
+        {
+            InputActionSerializationHelpers.RenameAction(elementProperty, m_ActionMapProperty, newName);
         }
     }
 
@@ -210,6 +275,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public override bool hasProperties
         {
             get { return false; }
+        }
+
+        public void Rename(string newName)
+        {
+            InputActionSerializationHelpers.RenameComposite(elementProperty, newName);
         }
     }
 

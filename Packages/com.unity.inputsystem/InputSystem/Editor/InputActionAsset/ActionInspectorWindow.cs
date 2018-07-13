@@ -348,25 +348,22 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void OnAddCompositeBinding(object compositeName)
         {
-            var actionMapLine = GetSelectedActionMapLine();
             var actionLine = GetSelectedActionLine();
-            var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration((string) compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(actionLine.elementProperty, actionMapLine.elementProperty, compositeType);
+            actionLine.AppendCompositeBinding((string) compositeName);
             Apply();
         }
 
         void OnAddBinding()
         {
-            var actionMapLine = GetSelectedActionMapLine();
             var actionLine = GetSelectedActionLine();
-            InputActionSerializationHelpers.AppendBinding(actionLine.elementProperty, actionMapLine.elementProperty);
+            actionLine.AppendBinding();
             Apply();
         }
 
         void OnAddAction()
         {
-            var actionLine = GetSelectedActionMapLine();
-            InputActionSerializationHelpers.AddAction(actionLine.elementProperty);
+            var actionMapLine = GetSelectedActionMapLine();
+            actionMapLine.AddAction();
             Apply();
         }
 

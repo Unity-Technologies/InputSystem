@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
@@ -116,8 +117,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var action = JsonUtility.FromJson<InputAction>(row);
                     var actionMap = m_TreeView.GetSelectedActionMap();
-                    var newActionProperty = InputActionSerializationHelpers.AddActionFromObject(action, actionMap.elementProperty);
-                    m_Window.Apply();
+                    var newActionProperty = actionMap.AddActionFromObject(action);
 
                     while (i + 1 < elements.Length)
                     {
@@ -131,7 +131,6 @@ namespace UnityEngine.Experimental.Input.Editor
                             nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
                             var binding = JsonUtility.FromJson<InputBinding>(nextRow);
                             InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
-                            m_Window.Apply();
                             i++;
                         }
                         catch (ArgumentException e)
@@ -140,6 +139,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             break;
                         }
                     }
+                    m_Window.Apply();
+                    
                     continue;
                 }
 
@@ -155,8 +156,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
                     }
 
-                    var actionMap = m_TreeView.GetSelectedActionMap();
-                    InputActionSerializationHelpers.AppendBindingFromObject(binding, selectedRow.elementProperty, actionMap.elementProperty);
+                    selectedRow.AppendBindingFromObject(binding);
                     m_Window.Apply();
                     continue;
                 }
@@ -214,39 +214,59 @@ namespace UnityEngine.Experimental.Input.Editor
         void DeleteSelectedRows()
         {
             var rows = m_TreeView.GetSelectedRows().ToArray();
-            foreach (var compositeGroup in rows.Where(r => r.GetType() == typeof(CompositeGroupTreeItem)).OrderByDescending(r => r.index).Cast<CompositeGroupTreeItem>())
+            var rowTypes = rows.Select(r => r.GetType()).Distinct().ToList();
+            // Don't allow to delete different types at once because it's hard to handle.
+            if (rowTypes.Count() > 1)
             {
-                var actionMapProperty = (compositeGroup.parent.parent as InputTreeViewLine).elementProperty;
-                var actionProperty = (compositeGroup.parent as ActionTreeItem).elementProperty;
+                EditorApplication.Beep();
+                return;
+            }
+            
+            // Remove composite bindings
+            foreach (var compositeGroup in FindRowsToDeleteOfType<CompositeGroupTreeItem>(rows))
+            {
+                var action = (compositeGroup.parent as ActionTreeItem);
                 for (var i = compositeGroup.children.Count - 1; i >= 0; i--)
                 {
                     var composite = (CompositeTreeItem)compositeGroup.children[i];
-                    InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index, actionMapProperty);
+                    action.RemoveBinding(composite.index);
                 }
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, compositeGroup.index, actionMapProperty);
+                action.RemoveBinding(compositeGroup.index);
             }
-            foreach (var bindingRow in rows.Where(r => r.GetType() == typeof(BindingTreeItem)).OrderByDescending(r => r.index).Cast<BindingTreeItem>())
+            
+            // Remove bindings
+            foreach (var bindingRow in FindRowsToDeleteOfType<BindingTreeItem>(rows))
             {
-                var actionMapProperty = (bindingRow.parent.parent as InputTreeViewLine).elementProperty;
-                var actionProperty = (bindingRow.parent as InputTreeViewLine).elementProperty;
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, bindingRow.index, actionMapProperty);
+                var action = bindingRow.parent as ActionTreeItem;
+                action.RemoveBinding(bindingRow.index);
             }
-            foreach (var actionRow in rows.Where(r => r.GetType() == typeof(ActionTreeItem)).OrderByDescending(r => r.index).Cast<ActionTreeItem>())
+            
+            
+            // Remove actions
+            foreach (var actionRow in FindRowsToDeleteOfType<ActionTreeItem>(rows))
             {
-                var actionProperty = (actionRow).elementProperty;
-                var actionMapProperty = (actionRow.parent as InputTreeViewLine).elementProperty;
-
+                var action = actionRow;
+                var actionMap = actionRow.parent as ActionMapTreeItem;
                 for (var i = actionRow.bindingsCount - 1; i >= 0; i--)
-                    InputActionSerializationHelpers.RemoveBinding(actionProperty, i, actionMapProperty);
-
-                InputActionSerializationHelpers.DeleteAction(actionMapProperty, actionRow.index);
+                {
+                    action.RemoveBinding(i);
+                }
+                actionMap.DeleteAction(actionRow.index);
             }
-            foreach (var mapRow in rows.Where(r => r.GetType() == typeof(ActionMapTreeItem)).OrderByDescending(r => r.index).Cast<ActionMapTreeItem>())
+            
+            //Remove action maps
+            foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
+            
             m_Window.Apply();
             m_Window.OnSelectionChanged();
+        }
+
+        IEnumerable<T> FindRowsToDeleteOfType<T>(InputTreeViewLine[] rows)
+        {
+            return rows.Where(r => r.GetType() == typeof(T)).OrderByDescending(r => r.index).Cast<T>();
         }
 
         public void AddOptionsToMenu(GenericMenu menu)
