@@ -70,6 +70,20 @@ class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_SupportsDualShockAsHID_WithAlternateManufacturerName()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            manufacturer = "Sony Computer Entertainment",
+            interfaceName = "HID"
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanSetLightBarColorAndMotorSpeedsOnDualShockHID()
     {
         var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();

@@ -17,7 +17,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             InputSystem.RegisterControlLayout<DualShockGamepadHID>(
                 matches: new InputDeviceMatcher()
                 .WithInterface("HID")
-                .WithManufacturer("Sony Interactive Entertainment")
+                .WithManufacturer("Sony.+Entertainment")
                 .WithProduct("Wireless Controller"));
             #endif
 
