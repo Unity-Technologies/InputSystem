@@ -82,6 +82,8 @@ namespace UnityEngine.Experimental.Input.Editor
         TreeViewState m_PickerTreeViewState;
         [SerializeField]
         string m_AssetPath;
+        [SerializeField]
+        int m_IsAssetDirtyCounter;
         
         InputActionListTreeView m_TreeView;
         SerializedObject m_SerializedObject;
@@ -89,7 +91,6 @@ namespace UnityEngine.Experimental.Input.Editor
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
-        int m_IsAssetDirtyCounter;
         
         GUIContent m_AddBindingGUI = new GUIContent("Binding");
         GUIContent m_AddBindingContextGUI = new GUIContent("Add binding");

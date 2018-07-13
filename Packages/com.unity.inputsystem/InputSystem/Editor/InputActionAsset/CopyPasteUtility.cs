@@ -53,18 +53,26 @@ namespace UnityEngine.Experimental.Input.Editor
                 copyList.Append(selectedRow.GetType().Name);
                 copyList.Append(selectedRow.SerializeToString());
                 copyList.Append(kInputAssetMarker);
-
+                
                 if (selectedRow is ActionTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
                 {
                     var action = selectedRow as ActionTreeItem;
 
                     foreach (var child in action.children)
                     {
-                        if (!(child is BindingTreeItem))
-                            continue;
                         copyList.Append(child.GetType().Name);
                         copyList.Append((child as BindingTreeItem).SerializeToString());
                         copyList.Append(kInputAssetMarker);
+                        // Copy composites
+                        if (child.hasChildren)
+                        {
+                            foreach (var innerChild in child.children)
+                            {
+                                copyList.Append(innerChild.GetType().Name);
+                                copyList.Append((innerChild as BindingTreeItem).SerializeToString());
+                                copyList.Append(kInputAssetMarker);
+                            }
+                        }
                     }
                 }
                 if (selectedRow is CompositeGroupTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
@@ -124,11 +132,22 @@ namespace UnityEngine.Experimental.Input.Editor
                         try
                         {
                             var nextRow = elements[i + 1];
-                            if (!nextRow.StartsWith(typeof(BindingTreeItem).Name))
+                            if (nextRow.StartsWith(typeof(BindingTreeItem).Name))
+                            {
+                                nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
+                            }
+                            else if (nextRow.StartsWith(typeof(CompositeGroupTreeItem).Name))
+                            {
+                                nextRow = nextRow.Substring(typeof(CompositeGroupTreeItem).Name.Length);
+                            }
+                            else if(nextRow.StartsWith(typeof(CompositeTreeItem).Name))
+                            {                                
+                                nextRow = nextRow.Substring(typeof(CompositeTreeItem).Name.Length);
+                            }
+                            else
                             {
                                 break;
                             }
-                            nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
                             var binding = JsonUtility.FromJson<InputBinding>(nextRow);
                             InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
                             i++;
