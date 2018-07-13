@@ -136,11 +136,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_SerializedObject != null)
             {
-                m_CopyPasteUtility = new CopyPasteUtility(this, m_TreeView, m_SerializedObject);
                 m_SearchField = new SearchField();
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
+                m_CopyPasteUtility = new CopyPasteUtility(this, m_TreeView, m_SerializedObject);
                 LoadPropertiesForSelection();
             }
         }

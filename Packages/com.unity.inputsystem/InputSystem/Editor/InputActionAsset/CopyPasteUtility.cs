@@ -87,7 +87,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var selectedRows = m_TreeView.GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
-            return rowTypes.Count == 1;
+            if (rowTypes.Count != 1)
+                return false;
+            if (rowTypes.Single() == typeof(CompositeTreeItem))
+                return false;
+            return true;
         }
 
         void HandlePasteEvent()
