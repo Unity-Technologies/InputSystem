@@ -14,7 +14,6 @@ namespace UnityEngine.Experimental.Input.Editor
         static class Styles
         {
             public static GUIStyle darkGreyBackgroundWithBorder = new GUIStyle("Label");
-            public static GUIStyle whiteBackgroundWithBorder = new GUIStyle("Label");
             public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
 
             static Styles()
@@ -32,11 +31,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var darkGreyBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(181, 181, 181, 255), Color.grey);
                 darkGreyBackgroundWithBorder.normal.background = darkGreyBackgroundWithBorderTexture;
                 darkGreyBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
-
-                var whiteBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(Color.white, Color.grey);
-                whiteBackgroundWithBorder.normal.background = whiteBackgroundWithBorderTexture;
-                whiteBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
-
+                
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
@@ -67,7 +62,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 window = CreateInstance<ActionInspectorWindow>();
                 window.title = obj.name + " (Input Manager)";
-                window.m_ReferencedObject = obj;
+                window.SetReferencedObject(obj);
                 window.Show();
                 return true;
             }
@@ -81,8 +76,6 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField]
         TreeViewState m_PickerTreeViewState;
         [SerializeField]
-        string m_AssetPath;
-        [SerializeField]
         int m_IsAssetDirtyCounter;
         
         InputActionListTreeView m_TreeView;
@@ -92,17 +85,27 @@ namespace UnityEngine.Experimental.Input.Editor
         SearchField m_SearchField;
         string m_SearchText;
         
-        GUIContent m_AddBindingGUI = new GUIContent("Binding");
-        GUIContent m_AddBindingContextGUI = new GUIContent("Add binding");
-        GUIContent m_AddActionGUI = new GUIContent("Action");
-        GUIContent m_AddActionContextGUI = new GUIContent("Add action");
-        GUIContent m_AddActionMapGUI = new GUIContent("Action map");
-        GUIContent m_AddActionMapContextGUI = new GUIContent("Add Action map");
+        GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
+        GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
+        GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
+        GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
+        GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
 
         public void OnEnable()
         {
-            InitiateTrees();
             Undo.undoRedoPerformed += OnUndoCallback;
+            if (m_ReferencedObject == null)
+                return;
+            m_SerializedObject = new SerializedObject(m_ReferencedObject);
+            InitiateTrees();
+        }
+
+        void SetReferencedObject(Object referencedObject)
+        {
+            m_ReferencedObject = referencedObject;
+            m_SerializedObject = new SerializedObject(referencedObject);
+            InitiateTrees();
         }
 
         void OnUndoCallback()
@@ -178,42 +181,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void OnGUI()
         {
+            if (m_SerializedObject == null)
+                return;
+
             EditorGUILayout.BeginVertical();
-            if (m_ReferencedObject == null && !string.IsNullOrEmpty(m_AssetPath))
-            {
-                m_ReferencedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
-                m_SerializedObject = null;
-                m_TreeView = null;
-                return;
-            }
-
-            if (m_SerializedObject == null && m_ReferencedObject != null)
-            {
-                m_AssetPath = AssetDatabase.GetAssetPath(m_ReferencedObject);
-                m_SerializedObject = new SerializedObject(m_ReferencedObject);
-                var pr = m_SerializedObject.FindProperty("m_ActionMaps");
-                if (pr == null)
-                {
-                    m_ReferencedObject = null;
-                    m_SerializedObject = null;
-                    return;
-                }
-                if (m_TreeView == null)
-                {
-                    InitiateTrees();
-                }
-                return;
-            }
-
-            if (m_ReferencedObject == null)
-                return;
-
             EditorGUILayout.Space();
-
             EditorGUILayout.BeginHorizontal();
-            
             EditorGUI.BeginDisabledGroup(m_IsAssetDirtyCounter == 0);
-            if (GUILayout.Button("Save"))
+            if (GUILayout.Button(EditorGUIUtility.TrTextContent("Save")))
             {
                 m_IsAssetDirtyCounter = 0;
                 SaveChangesToAsset();
@@ -260,22 +235,24 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var treeViewRect = GUILayoutUtility.GetLastRect();
             var labelRect = new Rect(treeViewRect);
-            labelRect.height = 20;
-            treeViewRect.y += 20;
-            treeViewRect.height -= 20;
+            labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing*2;
+            treeViewRect.y += labelRect.height;
+            treeViewRect.height -= labelRect.height;
             treeViewRect.x += 1;
             treeViewRect.width -= 2;
 
-            var header = "Action maps";
-            if (!string.IsNullOrEmpty(m_SearchText))
-                header += " (Searching)";
+            GUIContent header;
+            if (string.IsNullOrEmpty(m_SearchText))
+                header = EditorGUIUtility.TrTextContent("Action maps");
+            else
+                header = EditorGUIUtility.TrTextContent("Action maps (Searching)");
 
             EditorGUI.LabelField(labelRect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
             EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
 
-            labelRect.x = labelRect.width - 18;
-            labelRect.width = 18;
+            labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+            labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             var plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
             if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
             {
@@ -325,7 +302,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
             
-            var compositeString = isContextMenu ? "Add composite" : "Composite";
+            var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Add composite") : EditorGUIUtility.TrTextContent("Composite");
             if (canAddBinding)
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
@@ -406,7 +383,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder, GUILayout.Width(position.width / 2));
 
-            var rect = GUILayoutUtility.GetRect(0, 20, GUILayout.ExpandWidth(true));
+            var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing*2, GUILayout.ExpandWidth(true));
             rect.x -= 2;
             rect.y -= 1;
             rect.width += 4;

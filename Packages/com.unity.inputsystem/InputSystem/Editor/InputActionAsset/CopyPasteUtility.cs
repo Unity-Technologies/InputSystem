@@ -14,11 +14,11 @@ namespace UnityEngine.Experimental.Input.Editor
         ActionInspectorWindow m_Window;
         SerializedObject m_SerializedObject;
         
-        GUIContent m_CutGUI = new GUIContent("Cut");
-        GUIContent m_CopyGUI = new GUIContent("Copy");
-        GUIContent m_PasteGUI = new GUIContent("Paste");
-        GUIContent m_DeleteGUI = new GUIContent("Delete");
-        GUIContent m_Duplicate = new GUIContent("Duplicate");
+        GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
+        GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
+        GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
+        GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
+        GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
 
         public CopyPasteUtility(ActionInspectorWindow window, InputActionListTreeView tree, SerializedObject serializedObject)
         {

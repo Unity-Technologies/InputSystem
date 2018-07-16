@@ -44,10 +44,10 @@ namespace UnityEngine.Experimental.Input.Editor
         bool m_InteractionsFoldout = true;
         bool m_ProcessorsFoldout = true;
         
-        GUIContent m_ProcessorsContent = new GUIContent("Processors");
-        GUIContent m_InteractionsContent = new GUIContent("Interactions");
-        GUIContent m_GeneralContent = new GUIContent("General");
-        GUIContent m_BindingGUI = new GUIContent("Binding");
+        GUIContent m_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
+        GUIContent m_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
+        GUIContent m_GeneralContent = EditorGUIUtility.TrTextContent("General");
+        GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         bool m_ManualEditMode;
 
         public PropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 EditorGUILayout.BeginHorizontal();
 
-                var lineRect = GUILayoutUtility.GetRect(0, 16);
+                var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
                 var labelRect = lineRect;
                 labelRect.width = 60;
                 EditorGUI.LabelField(labelRect, m_BindingGUI);
