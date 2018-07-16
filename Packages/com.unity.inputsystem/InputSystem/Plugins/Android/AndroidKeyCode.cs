@@ -230,7 +230,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         Kana = 218,
         Assist = 219,
     }
-
 }
 
 #endif // UNITY_EDITOR || UNITY_ANDROID

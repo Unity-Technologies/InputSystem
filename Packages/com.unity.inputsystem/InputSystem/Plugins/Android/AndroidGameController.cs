@@ -10,11 +10,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
     {
-        private const int kMaxAndroidAxes = 48;
-        private const int kMaxAndroidButtons = 220;
+        public const int kMaxAndroidAxes = 48;
+        public const int kMaxAndroidButtons = 220;
 
         public const string kVariantGamepad = "Gamepad";
         public const string kVariantJoystick = "Joystick";
+
+        public const uint kAxisOffset = sizeof(uint) * (uint)((kMaxAndroidButtons + 31) / 32);
 
         public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
 
@@ -30,7 +32,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         [InputControl(name = "select", bit = (uint)AndroidKeyCode.ButtonSelect, variant = kVariantGamepad)]
         public fixed uint buttons[(kMaxAndroidButtons + 31) / 32];
 
-        private const uint kAxisOffset = sizeof(uint) * (uint)((kMaxAndroidButtons + 31) / 32);
 
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Ltrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Rtrigger * sizeof(float) + kAxisOffset, variant = kVariantGamepad)]

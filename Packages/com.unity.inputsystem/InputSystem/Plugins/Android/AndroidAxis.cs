@@ -52,6 +52,5 @@ namespace UnityEngine.Experimental.Input.Plugins.Android.LowLevel
         Generic15 = 46,
         Generic16 = 47,
     }
-
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

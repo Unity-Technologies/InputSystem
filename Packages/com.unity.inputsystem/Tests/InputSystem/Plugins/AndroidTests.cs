@@ -56,12 +56,12 @@ class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(controller,
             new AndroidGameControllerState()
-            .WithAxis(AndroidAxis.Ltrigger, 0.123f)
-            .WithAxis(AndroidAxis.Rtrigger, 0.456f)
-            .WithAxis(AndroidAxis.X, 0.789f)
-            .WithAxis(AndroidAxis.Y, 0.987f)
-            .WithAxis(AndroidAxis.Z, 0.654f)
-            .WithAxis(AndroidAxis.Rz, 0.321f));
+                .WithAxis(AndroidAxis.Ltrigger, 0.123f)
+                .WithAxis(AndroidAxis.Rtrigger, 0.456f)
+                .WithAxis(AndroidAxis.X, 0.789f)
+                .WithAxis(AndroidAxis.Y, 0.987f)
+                .WithAxis(AndroidAxis.Z, 0.654f)
+                .WithAxis(AndroidAxis.Rz, 0.321f));
 
         InputSystem.Update();
 
@@ -110,8 +110,8 @@ class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-            .WithAxis(AndroidAxis.HatX, 1)
-            .WithAxis(AndroidAxis.HatY, 1));
+                .WithAxis(AndroidAxis.HatX, 1)
+                .WithAxis(AndroidAxis.HatY, 1));
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.False);
@@ -121,8 +121,8 @@ class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-            .WithAxis(AndroidAxis.HatX, -1)
-            .WithAxis(AndroidAxis.HatY, -1));
+                .WithAxis(AndroidAxis.HatX, -1)
+                .WithAxis(AndroidAxis.HatY, -1));
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.True);
@@ -132,8 +132,8 @@ class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-            .WithAxis(AndroidAxis.HatX, 0)
-            .WithAxis(AndroidAxis.HatY, 0));
+                .WithAxis(AndroidAxis.HatX, 0)
+                .WithAxis(AndroidAxis.HatY, 0));
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.False);
@@ -153,7 +153,8 @@ class AndroidTests : InputTestFixture
             capabilities = new AndroidDeviceCapabilities
             {
                 inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
-                motionAxes = new[] {
+                motionAxes = new[]
+                {
                     AndroidAxis.Generic1, // Noise
                     AndroidAxis.Generic2, // Noise
                 }
@@ -164,6 +165,58 @@ class AndroidTests : InputTestFixture
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadUp), gamepad.dpad.up);
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadLeft), gamepad.dpad.left);
         AssertButtonPress(gamepad, new AndroidGameControllerState().WithButton(AndroidKeyCode.DpadRight), gamepad.dpad.right);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsAndroidGamepad_WithXboxMapping()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                motionAxes = new[]
+                {
+                    AndroidAxis.Rx,
+                    AndroidAxis.Ry,
+                    AndroidAxis.Z,
+                    AndroidAxis.Rz,
+                    AndroidAxis.HatX,
+                    AndroidAxis.HatY
+                }
+            }.ToJson()
+        });
+
+        Assert.That(gamepad.name, Is.EqualTo("AndroidGamepadXbox"));
+
+        // Check if normalization works correctly
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.Z, -1)
+                .WithAxis(AndroidAxis.Rz, -1));
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.Z, 1)
+                .WithAxis(AndroidAxis.Rz, 1)
+                .WithAxis(AndroidAxis.Rx, 0.123f)
+                .WithAxis(AndroidAxis.Ry, -0.456f));
+
+
+        InputSystem.Update();
+
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(1.0f).Within(0.000001));
+        Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(0.123f).Within(0.000001));
+        Assert.That(gamepad.rightStick.y.ReadValue(), Is.EqualTo(0.456f).Within(0.000001));
     }
 
     [Test]
