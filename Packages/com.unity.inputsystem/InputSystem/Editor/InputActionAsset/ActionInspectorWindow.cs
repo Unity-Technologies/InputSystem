@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionGUI = new GUIContent("Action");
         GUIContent m_AddActionContextGUI = new GUIContent("Add action");
         GUIContent m_AddActionMapGUI = new GUIContent("Action map");
-        GUIContent m_AddActionMapContextGUI = new GUIContent("Add action map");
+        GUIContent m_AddActionMapContextGUI = new GUIContent("Add Action map");
 
         public void OnEnable()
         {
