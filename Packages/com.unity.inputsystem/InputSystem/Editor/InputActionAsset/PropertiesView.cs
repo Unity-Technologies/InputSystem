@@ -11,20 +11,21 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
             public static GUIStyle foldoutStyle = new GUIStyle("foldout");
-
+            
+            static string ResourcesPath
+            {
+                get
+                {
+                    var path = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
+                    if (EditorGUIUtility.isProSkin)
+                        return path + "pro/";
+                    return path + "personal/";
+                }
+            }
+            
             static Styles()
             {
-                Initialize();
-                EditorApplication.playModeStateChanged += s =>
-                    {
-                        if (s == PlayModeStateChange.ExitingPlayMode)
-                            Initialize();
-                    };
-            }
-
-            static void Initialize()
-            {
-                var darkGreyBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(221, 223, 221, 255));
+                var darkGreyBackgroundWithBorderTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "foldoutBackground.png");
                 foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
                 foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
                 foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);

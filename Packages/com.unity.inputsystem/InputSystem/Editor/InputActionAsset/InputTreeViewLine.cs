@@ -13,56 +13,43 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle actionItemRowStyle = new GUIStyle("Label");
             public static GUIStyle actionSetItemStyle = new GUIStyle("Label");
             public static GUIStyle actionItemLabelStyle = new GUIStyle("Label");
-
             public static GUIStyle backgroundStyle = new GUIStyle("Label");
-
             public static GUIStyle yellowRect = new GUIStyle("Label");
             public static GUIStyle orangeRect = new GUIStyle("Label");
             public static GUIStyle greenRect = new GUIStyle("Label");
             public static GUIStyle blueRect = new GUIStyle("Label");
             public static GUIStyle pinkRect = new GUIStyle("Label");
 
-            static Styles()
+            static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
+            static string ResourcesPath
             {
-                Initialize();
-                EditorApplication.playModeStateChanged += s =>
-                    {
-                        if (s == PlayModeStateChange.ExitingPlayMode)
-                            Initialize();
-                    };
+                get
+                {
+                    if (EditorGUIUtility.isProSkin)
+                        return SharedResourcesPath + "pro/";
+                    return SharedResourcesPath + "personal/";
+                }
             }
 
-            static void Initialize()
+            static Styles()
             {
-                var backgroundTexture = StyleHelpers.CreateTextureWithBorder(new Color32(181, 181, 181, 255));
-                backgroundStyle.normal.background = backgroundTexture;
-                backgroundStyle.border = new RectOffset(3, 3, 3, 3);
+                backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
 
-                var borderColor = new Color32(181, 181, 181, 255);
-                var whiteBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(210, 210, 210, 255), borderColor);
-                var blueBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(62, 125, 231, 255), borderColor);
-
-                actionItemRowStyle.normal.background = whiteBackgroundWithBorderTexture;
+                actionItemRowStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "row.png");
+                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
+                actionItemRowStyle.onFocused.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "rowSelected.png");
+                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
+                actionItemRowStyle.onNormal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "rowSelected.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
 
-                actionItemRowStyle.onFocused.background = blueBackgroundWithBorderTexture;
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onNormal.background = blueBackgroundWithBorderTexture;
-                actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
                 actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
-
                 actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
 
-                yellowRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(256f / 256f, 230f / 256f, 148f / 256f));
-                yellowRect.border = new RectOffset(2, 2, 2, 2);
-                orangeRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(246f / 256f, 192f / 256f, 129f / 256f));
-                orangeRect.border = new RectOffset(2, 2, 2, 2);
-                greenRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(168 / 256f, 208 / 256f, 152 / 256f));
-                greenRect.border = new RectOffset(2, 2, 2, 2);
-                blueRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(147 / 256f, 184 / 256f, 187 / 256f));
-                blueRect.border = new RectOffset(2, 2, 2, 2);
-                pinkRect.normal.background = StyleHelpers.CreateTextureWithBorder(new Color(200 / 256f, 149 / 256f, 175 / 256f));
-                pinkRect.border = new RectOffset(2, 2, 2, 2);
+                yellowRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "yellow.png");
+                orangeRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "orange.png");
+                greenRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "green.png");
+                blueRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "blue.png");
+                pinkRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "pink.png");
             }
         }
 

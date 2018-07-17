@@ -13,24 +13,28 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         static class Styles
         {
-            public static GUIStyle darkGreyBackgroundWithBorder = new GUIStyle("Label");
+            public static GUIStyle actionTreeBackground = new GUIStyle("Label");
+            public static GUIStyle propertiesBackground = new GUIStyle("Label");
             public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
 
+            static string ResourcesPath
+            {
+                get
+                {
+                    var path = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
+                    if (EditorGUIUtility.isProSkin)
+                        return path + "pro/";
+                    return path + "personal/";
+                }
+            }
+            
             static Styles()
             {
-                Initialize();
-                EditorApplication.playModeStateChanged += s =>
-                    {
-                        if (s == PlayModeStateChange.ExitingPlayMode)
-                            Initialize();
-                    };
-            }
-
-            static void Initialize()
-            {
-                var darkGreyBackgroundWithBorderTexture = StyleHelpers.CreateTextureWithBorder(new Color32(181, 181, 181, 255), Color.grey);
-                darkGreyBackgroundWithBorder.normal.background = darkGreyBackgroundWithBorderTexture;
-                darkGreyBackgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
+                actionTreeBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
+                actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
+                
+                propertiesBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "propertiesBackground.png");
+                propertiesBackground.border = new RectOffset(3, 3, 3, 3);
                 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
@@ -229,7 +233,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void DrawMainTree()
         {
-            EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder);
+            EditorGUILayout.BeginVertical(Styles.actionTreeBackground);
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndVertical();
 
@@ -247,7 +251,7 @@ namespace UnityEngine.Experimental.Input.Editor
             else
                 header = EditorGUIUtility.TrTextContent("Action maps (Searching)");
 
-            EditorGUI.LabelField(labelRect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
+            EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
             var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
             EditorGUI.LabelField(headerRect, header, Styles.columnHeaderLabel);
 
@@ -381,14 +385,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void DrawProperties()
         {
-            EditorGUILayout.BeginVertical(Styles.darkGreyBackgroundWithBorder, GUILayout.Width(position.width / 2));
+            EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width / 2));
 
             var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing*2, GUILayout.ExpandWidth(true));
             rect.x -= 2;
             rect.y -= 1;
             rect.width += 4;
 
-            EditorGUI.LabelField(rect, GUIContent.none, Styles.darkGreyBackgroundWithBorder);
+            EditorGUI.LabelField(rect, GUIContent.none, Styles.propertiesBackground);
             var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
             EditorGUI.LabelField(headerRect, "Properties", Styles.columnHeaderLabel);
 
