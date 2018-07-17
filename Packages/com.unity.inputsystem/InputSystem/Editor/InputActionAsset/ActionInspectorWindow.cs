@@ -79,8 +79,6 @@ namespace UnityEngine.Experimental.Input.Editor
         TreeViewState m_TreeViewState;
         [SerializeField]
         TreeViewState m_PickerTreeViewState;
-        [SerializeField]
-        int m_IsAssetDirtyCounter;
         
         InputActionListTreeView m_TreeView;
         SerializedObject m_SerializedObject;
@@ -88,6 +86,7 @@ namespace UnityEngine.Experimental.Input.Editor
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
+        bool m_IsAssetDirty;
         
         GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
         GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
@@ -116,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
                 return;
-            m_IsAssetDirtyCounter--;
+            m_IsAssetDirty = true;
             m_TreeView.Reload();
             OnSelectionChanged();
         }
@@ -155,11 +154,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal void Apply()
         {
-            if (m_IsAssetDirtyCounter < 0)
-            {
-                m_IsAssetDirtyCounter = 0;
-            }
-            m_IsAssetDirtyCounter++;
+            m_IsAssetDirty = true;
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }
@@ -191,10 +186,10 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(m_IsAssetDirtyCounter == 0);
+            EditorGUI.BeginDisabledGroup(!m_IsAssetDirty);
             if (GUILayout.Button(EditorGUIUtility.TrTextContent("Save")))
             {
-                m_IsAssetDirtyCounter = 0;
+                m_IsAssetDirty = false;
                 SaveChangesToAsset();
             }
             EditorGUI.EndDisabledGroup();
