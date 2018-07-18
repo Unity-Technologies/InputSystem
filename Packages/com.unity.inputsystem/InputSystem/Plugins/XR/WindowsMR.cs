@@ -45,12 +45,13 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public Vector2Control touchpad { get; private set; }
         public AxisControl grip { get; private set; }
         public ButtonControl gripPressed { get; private set; }
+        [InputControl(aliases = new[] { "Primary" })]
         public ButtonControl menu { get; private set; }
         public ButtonControl joystickClicked { get; private set; }
         public ButtonControl triggerPressed { get; private set; }
-        [InputControl(aliases = new[] { "touchpadClick" })]
+        [InputControl(aliases = new[] { "joystickorpadpressed" })]
         public ButtonControl touchpadClicked { get; private set; }
-        [InputControl(aliases = new[] { "touchpadTouch" })]
+        [InputControl(aliases = new[] { "joystickorpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
         public IntegerControl trackingState { get; private set; }
         public ButtonControl isTracked { get; private set; }
