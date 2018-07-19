@@ -126,15 +126,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public byte controllerId;
+        public NPad.NpadId npadId;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)]
-        public byte npadId;
+        public NPad.Orientation orientation;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]
-        public byte orientation;
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + 3)]
-        public byte pudding0;
+        public short padding0;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
-        public uint styleMask;
+        public NPad.NpadStyle styleMask;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int colorLeftMain;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
@@ -226,7 +224,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
         public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public byte orientation;
+        public NPad.Orientation orientation;
 
         public FourCC GetTypeStatic() { return Type; }
         public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation _orientation)
@@ -234,7 +232,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
             return new NpadDeviceIOCTLSetOrientation
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                orientation = (byte)_orientation,
+                orientation = _orientation,
             };
         }
     }
@@ -280,127 +278,118 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch.LowLevel
 
 namespace UnityEngine.Experimental.Input.Plugins.Switch
 {
-	/// <summary>
-	/// An NPad controller for Switch, which can be a Joy-Con.
-	/// </summary>
-	/// <seealso cref="NPadInputState"/>
-	[InputControlLayout(stateType = typeof(NPadInputState))]
-	public class NPad : Gamepad
-	{
-		public ButtonControl leftSL { get; private set; }
-		public ButtonControl leftSR { get; private set; }
-		public ButtonControl rightSL { get; private set; }
-		public ButtonControl rightSR { get; private set; }
+    /// <summary>
+    /// An NPad controller for Switch, which can be a Joy-Con.
+    /// </summary>
+    /// <seealso cref="NPadInputState"/>
+    [InputControlLayout(stateType = typeof(NPadInputState))]
+    public class NPad : Gamepad
+    {
+        public ButtonControl leftSL { get; private set; }
+        public ButtonControl leftSR { get; private set; }
+        public ButtonControl rightSL { get; private set; }
+        public ButtonControl rightSR { get; private set; }
 
         public Vector3Control acceleration { get; private set; }
         public QuaternionControl attitude { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
-        public enum Orientation
-		{
-			Vertical,
-			Horizontal,
-			Default = Vertical,
-		}
+        public enum Orientation : byte
+        {
+            Vertical,
+            Horizontal,
+            Default = Vertical,
+        }
 
-		public enum NpadId : int
-		{
-			No1 = 0x00,
-			No2 = 0x01,
-			No3 = 0x02,
-			No4 = 0x03,
-			No5 = 0x04,
-			No6 = 0x05,
-			No7 = 0x06,
-			No8 = 0x07,
-			Handheld = 0x20,
-			Debug = 0xFF,
-		}
+        public enum NpadId : byte
+        {
+            No1 = 0x00,
+            No2 = 0x01,
+            No3 = 0x02,
+            No4 = 0x03,
+            No5 = 0x04,
+            No6 = 0x05,
+            No7 = 0x06,
+            No8 = 0x07,
+            Handheld = 0x20,
+            Debug = 0xF0,
+            Invalid = 0xFF,
+        }
 
-		[Flags]
-		public enum NpadStyle
-		{
-			FullKey = (1 << 0),
-			Handheld = (1 << 1),
-			JoyDual = (1 << 2),
-			JoyLeft = (1 << 3),
-			JoyRight = (1 << 4),
-		}
+        [Flags]
+        public enum NpadStyle : int
+        {
+            FullKey = (1 << 0),
+            Handheld = (1 << 1),
+            JoyDual = (1 << 2),
+            JoyLeft = (1 << 3),
+            JoyRight = (1 << 4),
+        }
 
-		public struct JoyConColor
-		{
-			public Color32 Main;
-			public Color32 Sub;
-		}
+        public struct JoyConColor
+        {
+            public Color32 Main;
+            public Color32 Sub;
+        }
 
-		public Orientation orientation
-		{
-			get
-			{
+        public Orientation orientation
+        {
+            get
+            {
                 RefreshConfigurationIfNeeded();
-				return m_Orientation;
-			}
-		}
-		public int controllerID
-		{
-			get
-			{
+                return m_Orientation;
+            }
+        }
+        public NpadId npadID
+        {
+            get
+            {
                 RefreshConfigurationIfNeeded();
-				return m_ControllerID;
-			}
-		}
-		public NpadId npadID
-		{
-			get
-			{
+                return m_NpadId;
+            }
+        }
+        public NpadStyle styleMask
+        {
+            get
+            {
                 RefreshConfigurationIfNeeded();
-				return m_NpadId;
-			}
-		}
-		public NpadStyle styleMask
-		{
-			get
-			{
+                return m_StyleMask;
+            }
+        }
+        public JoyConColor leftControllerColor
+        {
+            get
+            {
                 RefreshConfigurationIfNeeded();
-				return m_StyleMask;
-			}
-		}
-		public JoyConColor leftControllerColor
-		{
-			get
-			{
-                RefreshConfigurationIfNeeded();
-				return m_LeftControllerColor;
-			}
-		}
+                return m_LeftControllerColor;
+            }
+        }
 
-		public JoyConColor rightControllerColor
-		{
-			get
-			{
+        public JoyConColor rightControllerColor
+        {
+            get
+            {
                 RefreshConfigurationIfNeeded();
-				return m_RightControllerColor;
-			}
-		}
+                return m_RightControllerColor;
+            }
+        }
 
         private bool m_IsDirty;
 
-		private Orientation m_Orientation;
-		private int m_ControllerID = -1;
-		private NpadId m_NpadId;
-		private NpadStyle m_StyleMask;
-		private JoyConColor m_LeftControllerColor;
-		private JoyConColor m_RightControllerColor;
+        private Orientation m_Orientation;
+        private NpadId m_NpadId = NpadId.Invalid;
+        private NpadStyle m_StyleMask;
+        private JoyConColor m_LeftControllerColor;
+        private JoyConColor m_RightControllerColor;
 
-		protected override void RefreshConfiguration()
-		{
-			base.RefreshConfiguration();
+        protected override void RefreshConfiguration()
+        {
+            base.RefreshConfiguration();
 
             var command = NPadStatusReport.Create();
 
             if (ExecuteCommand(ref command) > 0)
             {
-                m_ControllerID = command.controllerId;
                 m_NpadId = (NpadId)command.npadId;
                 m_Orientation = (Orientation)command.orientation;
                 m_StyleMask = (NpadStyle)command.styleMask;
@@ -414,8 +403,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         {
             var supportCommand = NpadDeviceIOCTLSetOrientation.Create(_orientation);
 
-			return ExecuteCommand(ref supportCommand);
-		}
+            return ExecuteCommand(ref supportCommand);
+        }
 
         public long StartSixAxisSensor()
         {
@@ -432,29 +421,29 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
-		{
+        {
             base.FinishSetup(builder);
 
             leftSL = builder.GetControl<ButtonControl>(this, "leftSL");
-			leftSR = builder.GetControl<ButtonControl>(this, "leftSR");
-			rightSL = builder.GetControl<ButtonControl>(this, "rightSL");
-			rightSR = builder.GetControl<ButtonControl>(this, "rightSR");
+            leftSR = builder.GetControl<ButtonControl>(this, "leftSR");
+            rightSL = builder.GetControl<ButtonControl>(this, "rightSL");
+            rightSR = builder.GetControl<ButtonControl>(this, "rightSR");
 
             acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
             attitude = builder.GetControl<QuaternionControl>(this, "attitude");
             angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
-		}
+        }
 
-		private static void ReadNNColorIntoJoyConColor(ref JoyConColor controllerColor, int mainColor, int subColor)
-		{
-			controllerColor.Main = ConvertNNColorToColor32(mainColor);
-			controllerColor.Sub = ConvertNNColorToColor32(subColor);
-		}
-		private static Color32 ConvertNNColorToColor32(int color)
-		{
-			return new Color32((byte)(color & 0xFF), (byte)((color >> 8) & 0xFF), (byte)((color >> 16) & 0xFF), (byte)((color >> 24) & 0xFF));
-		}
+        private static void ReadNNColorIntoJoyConColor(ref JoyConColor controllerColor, int mainColor, int subColor)
+        {
+            controllerColor.Main = ConvertNNColorToColor32(mainColor);
+            controllerColor.Sub = ConvertNNColorToColor32(subColor);
+        }
 
-	}
+        private static Color32 ConvertNNColorToColor32(int color)
+        {
+            return new Color32((byte)(color & 0xFF), (byte)((color >> 8) & 0xFF), (byte)((color >> 16) & 0xFF), (byte)((color >> 24) & 0xFF));
+        }
+    }
 }
 #endif // UNITY_EDITOR || UNITY_SWITCH
