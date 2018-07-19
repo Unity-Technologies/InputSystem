@@ -301,6 +301,11 @@ namespace UnityEngine.Experimental.Input
                 else
                     result.resourceName = other.resourceName;
 
+                if (!defaultValue.isEmpty)
+                    result.defaultValue = defaultValue;
+                else
+                    result.defaultValue = other.defaultValue;
+
                 return result;
             }
         }

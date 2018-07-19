@@ -203,9 +203,19 @@ partial class CoreTests
                 ""name"" : ""MyDevice"",
                 ""controls"" : [
                     {
-                        ""name"" : ""myControl"",
+                        ""name"" : ""analog"",
                         ""layout"" : ""Axis"",
                         ""defaultValue"" : ""0.5""
+                    },
+                    {
+                        ""name"" : ""digital"",
+                        ""layout"" : ""Digital"",
+                        ""defaultValue"" : ""1234""
+                    },
+                    {
+                        ""name"" : ""hexDigital"",
+                        ""layout"" : ""Digital"",
+                        ""defaultValue"" : ""0x1234""
                     }
                 ]
             }
@@ -215,8 +225,67 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("MyDevice");
 
-        Assert.That(layout["myControl"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
-        Assert.That(layout["myControl"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(layout["analog"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["analog"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(layout["digital"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Long));
+        Assert.That(layout["digital"].defaultValue.primitiveValue.ToLong(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Long));
+        Assert.That(layout["hexDigital"].defaultValue.primitiveValue.ToLong(), Is.EqualTo(0x1234));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanOverrideDefaultValuesFromBaseLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control1"",
+                        ""layout"" : ""Axis"",
+                        ""defaultValue"" : ""0.2345""
+                    },
+                    {
+                        ""name"" : ""control2"",
+                        ""layout"" : ""Axis"",
+                        ""defaultValue"" : ""0.3456""
+                    },
+                    {
+                        ""name"" : ""control3"",
+                        ""layout"" : ""Axis""
+                    }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control1"",
+                        ""defaultValue"" : ""0.9876""
+                    },
+                    {
+                        ""name"" : ""control3"",
+                        ""defaultValue"" : ""0.1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(baseLayout);
+        InputSystem.RegisterControlLayout(derivedLayout);
+
+        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+
+        Assert.That(layout["control1"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control1"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
+        Assert.That(layout["control2"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control2"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
+        Assert.That(layout["control3"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control3"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]

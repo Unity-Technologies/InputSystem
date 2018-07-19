@@ -279,6 +279,11 @@ namespace UnityEngine.Experimental.Input.Utilities
             get { throw new NotImplementedException(); }
         }
 
+        public bool isEmpty
+        {
+            get { return valueType == PrimitiveValueType.None; }
+        }
+
         public PrimitiveValueOrArray(bool value)
         {
             primitiveValue = new PrimitiveValue(value);
@@ -387,9 +392,21 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             long longResult;
-            if (long.TryParse(value, NumberStyles.Integer | NumberStyles.HexNumber, CultureInfo.InvariantCulture, out longResult))
+            if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out longResult))
             {
                 return new PrimitiveValueOrArray(longResult);
+            }
+            // Try hex format. For whatever reason, HexNumber does not allow a 0x prefix so we manually
+            // get rid of it.
+            if (value.IndexOf("0x", StringComparison.InvariantCultureIgnoreCase) != -1)
+            {
+                var hexDigits = value.TrimStart();
+                if (hexDigits.StartsWith("0x"))
+                    hexDigits = hexDigits.Substring(2);
+                if (long.TryParse(hexDigits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out longResult))
+                {
+                    return new PrimitiveValueOrArray(longResult);
+                }
             }
 
             ////TODO: allow trailing width specifier
