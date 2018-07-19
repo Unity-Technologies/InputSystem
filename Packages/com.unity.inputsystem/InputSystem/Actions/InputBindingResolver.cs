@@ -208,8 +208,8 @@ namespace UnityEngine.Experimental.Input
                     // to bind to.
                     if (string.IsNullOrEmpty(unresolvedBinding.name))
                         throw new Exception(string.Format(
-                                "Binding that is part of composite '{0}' is missing a name",
-                                composites[currentCompositeIndex]));
+                            "Binding that is part of composite '{0}' is missing a name",
+                            composites[currentCompositeIndex]));
 
                     // Install the control on the binding.
                     BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
@@ -279,8 +279,8 @@ namespace UnityEngine.Experimental.Input
                 var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
-                            "No interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
-                            interactionString));
+                        "No interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                        interactionString));
 
                 // Instantiate it.
                 var interaction = Activator.CreateInstance(type) as IInputInteraction;
@@ -294,9 +294,9 @@ namespace UnityEngine.Experimental.Input
                 var interactionStateCount = totalInteractionCount;
                 ArrayHelpers.AppendWithCapacity(ref interactionStates, ref interactionStateCount,
                     new InputActionMapState.InteractionState
-                {
-                    phase = InputActionPhase.Waiting
-                });
+                    {
+                        phase = InputActionPhase.Waiting
+                    });
                 ArrayHelpers.AppendWithCapacity(ref interactions, ref totalInteractionCount, interaction);
                 Debug.Assert(interactionStateCount == totalInteractionCount);
             }
@@ -316,8 +316,8 @@ namespace UnityEngine.Experimental.Input
                 var type = InputControlProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
-                            "No processor with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
-                            processorString));
+                        "No processor with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                        processorString));
 
                 // Instantiate it.
                 var processor = Activator.CreateInstance(type);
@@ -338,7 +338,7 @@ namespace UnityEngine.Experimental.Input
             var type = InputBindingComposite.s_Composites.LookupTypeRegistration(name);
             if (type == null)
                 throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
-                        name));
+                    name));
 
             // Instantiate.
             var instance = Activator.CreateInstance(type);
@@ -354,16 +354,16 @@ namespace UnityEngine.Experimental.Input
 
             // Look up field.
             var field = type.GetField(name,
-                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
                 throw new Exception(string.Format("Cannot find public field '{0}' in binding composite '{1}' of type '{2}'",
-                        name, composite, type));
+                    name, composite, type));
 
             // Typecheck.
             if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
                 throw new Exception(string.Format(
-                        "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
-                        type));
+                    "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
+                    type));
 
             field.SetValue(composite, control);
         }

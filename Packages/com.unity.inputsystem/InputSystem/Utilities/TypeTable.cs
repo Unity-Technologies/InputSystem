@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     table[name] = Type.GetType(entry.typeName, true);
                 else
                     Debug.Log(string.Format("{0} '{1}' has been removed (type '{2}' cannot be found)",
-                            displayName, entry.name, entry.typeName));
+                        displayName, entry.name, entry.typeName));
             }
         }
 

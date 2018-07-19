@@ -18,6 +18,8 @@ using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
+////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
+
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
@@ -248,7 +250,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 if (hidDeviceDescriptor.vendorId == 0)
                     return null;
                 layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
-                        hidDeviceDescriptor.productId);
+                    hidDeviceDescriptor.productId);
             }
 
             // Register layout builder that will turn the HID descriptor into an
@@ -315,10 +317,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     {
                         var control =
                             builder.AddControl(element.DetermineName())
-                            .WithLayout(layout)
-                            .WithOffset((uint)element.reportOffsetInBits / 8)
-                            .WithBit((uint)element.reportOffsetInBits % 8)
-                            .WithFormat(element.DetermineFormat());
+                                .WithLayout(layout)
+                                .WithOffset((uint)element.reportOffsetInBits / 8)
+                                .WithBit((uint)element.reportOffsetInBits % 8)
+                                .WithFormat(element.DetermineFormat());
 
                         var parameters = element.DetermineParameters();
                         if (!string.IsNullOrEmpty(parameters))
@@ -740,8 +742,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
                         if (element.usagePage == usagePage && element.usage == usage)
                             throw new InvalidOperationException(string.Format(
-                                    "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
-                                    usagePage, usage));
+                                "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
+                                usagePage, usage));
                     }
                 }
 

@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             InputConfiguration.LockInputToGame = GUILayout.Toggle(InputConfiguration.LockInputToGame,
-                    Contents.lockInputToGameContent, EditorStyles.toolbarButton);
+                Contents.lockInputToGameContent, EditorStyles.toolbarButton);
 
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
@@ -439,7 +439,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private void AddControlItem(InputControlLayout.ControlItem control, TreeViewItem parent, ref int id)
             {
                 var item = AddChild(parent, control.variants.IsEmpty() ? control.name : string.Format("{0} ({1})",
-                            control.name, control.variants), ref id);
+                    control.name, control.variants), ref id);
 
                 ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
 

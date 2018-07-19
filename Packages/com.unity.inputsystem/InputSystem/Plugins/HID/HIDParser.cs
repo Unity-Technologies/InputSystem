@@ -151,13 +151,13 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         var parentCollection = currentCollection;
                         currentCollection = collections.Count;
                         collections.Add(new HID.HIDCollectionDescriptor
-                    {
-                        type = (HID.HIDCollectionType)ReadData(itemSize, currentPtr, endPtr),
-                        parent = parentCollection,
-                        usagePage = globalItemState.GetUsagePage(0, ref localItemState),
-                        usage = localItemState.GetUsage(0),
-                        firstChild = elements.Count
-                    });
+                        {
+                            type = (HID.HIDCollectionType)ReadData(itemSize, currentPtr, endPtr),
+                            parent = parentCollection,
+                            usagePage = globalItemState.GetUsagePage(0, ref localItemState),
+                            usage = localItemState.GetUsage(0),
+                            firstChild = elements.Count
+                        });
 
                         HIDItemStateLocal.Reset(ref localItemState);
                         break;

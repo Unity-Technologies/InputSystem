@@ -8,7 +8,7 @@ using UnityEngine.Experimental.Input.Controls;
 // Parent Class for All Gamepad/Controller Input from New Input System.
 //---------------------------------------------------------------------------
 
-public class StandardGamepadForInputSystem : MonoBehaviour
+public class GamepadForInputSystem : MonoBehaviour
 {
     [Tooltip("The GameObject that is the parent for all the buttons.")]
     public Transform m_buttonContainer;
@@ -16,30 +16,33 @@ public class StandardGamepadForInputSystem : MonoBehaviour
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
 
-    protected InputAction button_press_action;
-    protected InputAction dpad_press_action;
-    protected InputAction stick_move_action;
+    protected float m_stickMaxMove = 0.5f;    // The range for stick gameobject movement
+
+    protected InputAction m_buttonAction;
+    protected InputAction m_dPadAction;
+    protected InputAction m_stickMoveAction;
 
     // Callback funtion when a button in a dpad is pressed.
     protected virtual void OnDpadPress(DpadControl control)
     {
         string dpadName = FirstLetterToUpper(control.name);
-        OnControllerBUttonPress(control.up, dpadName);
-        OnControllerBUttonPress(control.down, dpadName);
-        OnControllerBUttonPress(control.left, dpadName);
-        OnControllerBUttonPress(control.right, dpadName);
+        OnControllerButtonPress(control.up, dpadName);
+        OnControllerButtonPress(control.down, dpadName);
+        OnControllerButtonPress(control.left, dpadName);
+        OnControllerButtonPress(control.right, dpadName);
     }
 
     // Callback function when a stick is moved.
     protected virtual void StickMove(StickControl control)
     {
+        Vector2 pos = control.ReadValue();
         Transform stick = GetInputTransform(FirstLetterToUpper(control.name), isStick: true);
-        Vector2 pos = control.ReadValue() * 0.5f;
-        stick.localPosition = new Vector3(pos.x, pos.y, -0.01f);
+        if (stick != null)
+            stick.localPosition = new Vector3(pos.x * m_stickMaxMove, pos.y * m_stickMaxMove, stick.localPosition.z);
     }
 
     // If the one of the controller button is pressed
-    protected virtual void OnControllerBUttonPress(ButtonControl control, string dpadName = null, bool isXbox = false, bool isPS = false)
+    protected virtual void OnControllerButtonPress(ButtonControl control, string dpadName = null, bool isXbox = false, bool isPS = false)
     {
         string buttonName = control.name;
         Transform button = null;
@@ -68,12 +71,12 @@ public class StandardGamepadForInputSystem : MonoBehaviour
     }
 
     // Find a transform for a input.
-    // isDpad:
+    // dpadName: to find the transform. Then find child transfomr with the same name from control
     // isStick: Used when stick is moved or pressed. Find the child transform named "stick"
     protected virtual Transform GetInputTransform(string inputName, bool isStick = false, string dpadName = null)
     {
         Transform input;
-        if (isStick)               input = m_buttonContainer.Find(inputName + "/Stick");
+        if (isStick)               input = m_buttonContainer.Find(inputName + "/Stick - Input System");
         else if (dpadName != null) input = m_buttonContainer.Find(dpadName + "/" + inputName);
         else                       input = m_buttonContainer.Find(inputName);
 

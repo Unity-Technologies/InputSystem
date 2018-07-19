@@ -99,7 +99,7 @@ namespace UnityEngine.Experimental.Input
             var set = TryGetActionMap(name);
             if (set == null)
                 throw new KeyNotFoundException(string.Format("Could not find an action map called '{0}' in asset '{1}'",
-                        name, this));
+                    name, this));
             return set;
         }
 

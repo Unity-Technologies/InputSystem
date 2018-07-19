@@ -214,10 +214,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
-            };
+        {
+            ++receivedCalls;
+            Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
         InputSystem.Update();
@@ -234,10 +234,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                gamepad.leftTrigger.WriteValueInto(eventPtr, 0.1234f);
-            };
+        {
+            ++receivedCalls;
+            gamepad.leftTrigger.WriteValueInto(eventPtr, 0.1234f);
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
@@ -274,9 +274,9 @@ partial class CoreTests
         // Up left.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
@@ -291,9 +291,9 @@ partial class CoreTests
         // Down left.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.left).normalized.x).Within(0.00001));
@@ -308,9 +308,9 @@ partial class CoreTests
         // Down right.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x,
@@ -327,9 +327,9 @@ partial class CoreTests
         // Up right.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.right).normalized.x).Within(0.00001));

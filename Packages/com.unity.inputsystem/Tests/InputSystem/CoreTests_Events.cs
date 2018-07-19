@@ -37,12 +37,12 @@ partial class CoreTests
         // those values on buffer flips.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 0xffffffff,
-            rightStick = Vector2.one,
-            leftTrigger = 0.123f,
-            rightTrigger = 0.456f
-        });
+            {
+                buttons = 0xffffffff,
+                rightStick = Vector2.one,
+                leftTrigger = 0.123f,
+                rightTrigger = 0.456f
+            });
         InputSystem.Update();
 
         // Update just left stick.
@@ -148,11 +148,11 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent += inputEvent =>
-            {
-                ++receivedCalls;
-                Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
-                Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
-            };
+        {
+            ++receivedCalls;
+            Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
+            Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
+        };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
@@ -186,15 +186,15 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             inputEvent =>
-            {
-                ++receivedCalls;
-                if (receivedCalls == 1)
-                    receivedFirstTime = inputEvent.time;
-                else if (receivedCalls == 2)
-                    receivedSecondTime = inputEvent.time;
-                else
-                    receivedThirdTime = inputEvent.time;
-            };
+        {
+            ++receivedCalls;
+            if (receivedCalls == 1)
+                receivedFirstTime = inputEvent.time;
+            else if (receivedCalls == 2)
+                receivedSecondTime = inputEvent.time;
+            else
+                receivedThirdTime = inputEvent.time;
+        };
 
         var device = InputSystem.AddDevice("Gamepad");
 
@@ -220,10 +220,10 @@ partial class CoreTests
         var receivedDeviceId = InputDevice.kInvalidDeviceId;
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                receivedDeviceId = eventPtr.deviceId;
-            };
+        {
+            ++receivedCalls;
+            receivedDeviceId = eventPtr.deviceId;
+        };
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
         InputSystem.QueueEvent(ref inputEvent);
@@ -243,10 +243,10 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                wasHandled = eventPtr.handled;
-            };
+        {
+            ++receivedCalls;
+            wasHandled = eventPtr.handled;
+        };
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
 
@@ -303,10 +303,10 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             inputEvent =>
-            {
-                ++receivedCalls;
-                receivedTime = inputEvent.time;
-            };
+        {
+            ++receivedCalls;
+            receivedTime = inputEvent.time;
+        };
         InputSystem.Update();
 
         // On the second update, we should have seen only event2.
@@ -320,11 +320,11 @@ partial class CoreTests
     {
         InputSystem.onEvent +=
             inputEvent =>
-            {
-                // If we mark the event handled, the system should skip it and not
-                // let it go to the device.
-                inputEvent.handled = true;
-            };
+        {
+            // If we mark the event handled, the system should skip it and not
+            // let it go to the device.
+            inputEvent.handled = true;
+        };
 
         var device = InputSystem.AddDevice<Gamepad>();
 
@@ -366,14 +366,14 @@ partial class CoreTests
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
-                    StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
             Assert.That(events[1].deviceId, Is.EqualTo(device.id));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
-                    StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
     }
 
@@ -443,13 +443,13 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                if (receivedCalls == 1)
-                    firstId = eventPtr.id;
-                else if (receivedCalls == 2)
-                    secondId = eventPtr.id;
-            };
+        {
+            ++receivedCalls;
+            if (receivedCalls == 1)
+                firstId = eventPtr.id;
+            else if (receivedCalls == 2)
+                secondId = eventPtr.id;
+        };
 
         InputSystem.Update();
 
@@ -470,10 +470,10 @@ partial class CoreTests
 
         Action<InputUpdateType, int, IntPtr> onUpdate =
             (updateType, eventCount, eventData) =>
-            {
-                ++receivedUpdateCalls;
-                receivedEventCount += eventCount;
-            };
+        {
+            ++receivedUpdateCalls;
+            receivedEventCount += eventCount;
+        };
         testRuntime.onUpdate += onUpdate;
 
         InputSystem.Update();
