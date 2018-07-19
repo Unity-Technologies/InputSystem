@@ -177,15 +177,15 @@ namespace UnityEngine.Experimental.Input.Editor
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
             var flags = new List<string>();
-            if ((m_Device.m_Flags & InputDevice.Flags.Native) == InputDevice.Flags.Native)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Native) == InputDevice.DeviceFlags.Native)
                 flags.Add("Native");
-            if ((m_Device.m_Flags & InputDevice.Flags.Remote) == InputDevice.Flags.Remote)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Remote) == InputDevice.DeviceFlags.Remote)
                 flags.Add("Remote");
-            if ((m_Device.m_Flags & InputDevice.Flags.UpdateBeforeRender) == InputDevice.Flags.UpdateBeforeRender)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.UpdateBeforeRender) == InputDevice.DeviceFlags.UpdateBeforeRender)
                 flags.Add("UpdateBeforeRender");
-            if ((m_Device.m_Flags & InputDevice.Flags.HasStateCallbacks) == InputDevice.Flags.HasStateCallbacks)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
                 flags.Add("HasStateCallbacks");
-            if ((m_Device.m_Flags & InputDevice.Flags.Disabled) == InputDevice.Flags.Disabled)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Disabled) == InputDevice.DeviceFlags.Disabled)
                 flags.Add("Disabled");
             m_DeviceFlagsString = string.Join(", ", flags.ToArray());
 

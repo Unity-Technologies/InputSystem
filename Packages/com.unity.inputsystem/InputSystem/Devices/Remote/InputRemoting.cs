@@ -525,7 +525,7 @@ namespace UnityEngine.Experimental.Input
                     return;
                 }
                 device.m_Description = data.description;
-                device.m_Flags |= InputDevice.Flags.Remote;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
 
                 // Remember it.
                 var record = new RemoteInputDevice

@@ -198,7 +198,14 @@ namespace UnityEngine.Experimental.Input
 
         public bool noisy
         {
-            get { return m_IsNoisy; }
+            get { return (m_ControlFlags & ControlFlags.IsNoisy) == ControlFlags.IsNoisy; }
+            internal set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsNoisy;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsNoisy;
+            }
         }
 
         public InputControl this[string path]
@@ -225,15 +232,11 @@ namespace UnityEngine.Experimental.Input
 
         // Current value as boxed object.
         // NOTE: Calling this will allocate.
-        public virtual object ReadValueAsObject()
-        {
-            return null;
-        }
+        public abstract object ReadValueAsObject();
 
-        public virtual object ReadDefaultValueAsObject()
-        {
-            return null;
-        }
+        public abstract object ReadDefaultValueAsObject();
+
+        public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
 
         // Constructor for devices which are assigned names once plugged
         // into the system.
@@ -254,10 +257,10 @@ namespace UnityEngine.Experimental.Input
 
         protected void RefreshConfigurationIfNeeded()
         {
-            if (!m_ConfigUpToDate)
+            if (!isConfigUpToDate)
             {
                 RefreshConfiguration();
-                m_ConfigUpToDate = true;
+                isConfigUpToDate = true;
             }
         }
 
@@ -275,6 +278,11 @@ namespace UnityEngine.Experimental.Input
         protected internal IntPtr previousStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
+        }
+
+        protected internal IntPtr defaultStatePtr
+        {
+            get { return InputStateBuffers.s_DefaultStateBuffer; }
         }
 
         /// <summary>
@@ -311,8 +319,39 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
-        internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
-        internal bool m_IsNoisy;
+        internal ControlFlags m_ControlFlags;
+
+        [Flags]
+        internal enum ControlFlags
+        {
+            ConfigUpToDate = 1 << 0,
+            IsNoisy = 1 << 1,
+            HasDefaultValue = 1 << 2,
+        }
+
+        internal bool isConfigUpToDate
+        {
+            get { return (m_ControlFlags & ControlFlags.ConfigUpToDate) == ControlFlags.ConfigUpToDate; }
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.ConfigUpToDate;
+                else
+                    m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool hasDefaultValue
+        {
+            get { return (m_ControlFlags & ControlFlags.HasDefaultValue) == ControlFlags.HasDefaultValue; }
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.HasDefaultValue;
+                else
+                    m_ControlFlags &= ~ControlFlags.HasDefaultValue;
+            }
+        }
 
         // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().
@@ -413,6 +452,11 @@ namespace UnityEngine.Experimental.Input
             return ReadValueFrom(previousStatePtr);
         }
 
+        public TValue ReadDefaultValue()
+        {
+            return ReadValueFrom(defaultStatePtr);
+        }
+
         public override object ReadValueAsObject()
         {
             return ReadValue();
@@ -420,7 +464,25 @@ namespace UnityEngine.Experimental.Input
 
         public override object ReadDefaultValueAsObject()
         {
-            throw new NotImplementedException();
+            return ReadDefaultValue();
+        }
+
+        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        {
+            if (buffer == IntPtr.Zero)
+                throw new ArgumentNullException("buffer");
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (bufferSize < (m_StateBlock.byteOffset + m_StateBlock.alignedSizeInBytes))
+                throw new ArgumentException(
+                    string.Format("Buffer size {0} is too small for control at offset {1} with length {2}", bufferSize,
+                        m_StateBlock.byteOffset, m_StateBlock.alignedSizeInBytes), "bufferSize");
+
+            // If value is not of expected type, try to convert.
+            if (!(value is TValue))
+                value = Convert.ChangeType(value, typeof(TValue));
+
+            WriteRawValueInto(buffer, (TValue)value);
         }
 
         // Read a control value directly from a state event.

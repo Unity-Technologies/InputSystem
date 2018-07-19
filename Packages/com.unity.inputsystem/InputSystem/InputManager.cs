@@ -640,7 +640,7 @@ namespace UnityEngine.Experimental.Input
                 device.m_DisplayName = description.product;
 
             if (isNative)
-                device.m_Flags |= InputDevice.Flags.Native;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
 
             AddDevice(device);
 
@@ -696,7 +696,7 @@ namespace UnityEngine.Experimental.Input
             if (stateCallbackReceiver != null)
             {
                 InstallBeforeUpdateHookIfNecessary();
-                device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.HasStateCallbacks;
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
 
@@ -918,9 +918,9 @@ namespace UnityEngine.Experimental.Input
 
             // Set/clear flag.
             if (!enable)
-                device.m_Flags |= InputDevice.Flags.Disabled;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Disabled;
             else
-                device.m_Flags &= ~InputDevice.Flags.Disabled;
+                device.m_DeviceFlags &= ~InputDevice.DeviceFlags.Disabled;
 
             // Send command to tell backend about status change.
             if (enable)
@@ -1544,7 +1544,7 @@ namespace UnityEngine.Experimental.Input
                     for (var i = 0; i < m_Devices.Length; ++i)
                     {
                         var device = m_Devices[i];
-                        if ((device.m_Flags & InputDevice.Flags.HasStateCallbacks) != InputDevice.Flags.HasStateCallbacks)
+                        if ((device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) != InputDevice.DeviceFlags.HasStateCallbacks)
                             continue;
 
                         // Depending on update ordering, we are writing events into *upcoming* updates inside of
@@ -1782,8 +1782,8 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
-                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
-                            InputDevice.Flags.HasStateCallbacks;
+                        var deviceHasStateCallbacks = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
+                            InputDevice.DeviceFlags.HasStateCallbacks;
                         IInputStateCallbackReceiver stateCallbacks = null;
                         var deviceIndex = device.m_DeviceIndex;
                         var stateBlockOfDevice = device.m_StateBlock;
@@ -2275,7 +2275,7 @@ namespace UnityEngine.Experimental.Input
             public string[] usages;
             public int deviceId;
             public uint stateOffset;
-            public InputDevice.Flags flags;
+            public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
             public void RestoreUsagesOnDevice(InputDevice device)
@@ -2414,7 +2414,7 @@ namespace UnityEngine.Experimental.Input
                     usages = device.usages.Select(x => x.ToString()).ToArray(),
                     stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
-                    flags = device.m_Flags
+                    flags = device.m_DeviceFlags
                 };
                 deviceArray[i] = deviceState;
             }
@@ -2603,7 +2603,7 @@ namespace UnityEngine.Experimental.Input
                 device.m_Description = deviceState.description;
                 if (!string.IsNullOrEmpty(device.m_Description.product))
                     device.m_DisplayName = device.m_Description.product;
-                device.m_Flags = deviceState.flags;
+                device.m_DeviceFlags = deviceState.flags;
                 deviceState.RestoreUsagesOnDevice(device);
 
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
@@ -2622,8 +2622,8 @@ namespace UnityEngine.Experimental.Input
                     m_UpdateListeners.Append(beforeUpdateCallbackReceiver.OnUpdate);
                 }
 
-                m_HaveDevicesWithStateCallbackReceivers |= (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
-                    InputDevice.Flags.HasStateCallbacks;
+                m_HaveDevicesWithStateCallbackReceivers |= (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
+                    InputDevice.DeviceFlags.HasStateCallbacks;
             }
             if (finalDeviceCount != deviceCount)
                 Array.Resize(ref devices, finalDeviceCount);

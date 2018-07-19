@@ -276,7 +276,7 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 if (layout.m_UpdateBeforeRender == true)
-                    m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
+                    m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.UpdateBeforeRender;
             }
             else if (parent == null)
             {
@@ -563,7 +563,7 @@ namespace UnityEngine.Experimental.Input
             control.m_DisplayNameFromLayout = controlItem.displayName;
 
             // Set flags.
-            control.m_IsNoisy = controlItem.isNoisy;
+            control.noisy = controlItem.isNoisy;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);

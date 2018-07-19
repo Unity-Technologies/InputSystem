@@ -3,6 +3,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: Can we change this into a setup where the buffering depth isn't fixed to 2 but rather
+////        can be set on a per device basis?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     // The raw memory blocks which are indexed by InputStateBlocks.
@@ -70,6 +73,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public uint sizePerBuffer;
         public uint totalSize;
+
+        /// <summary>
+        /// Buffer that has state for each device initialized with default values.
+        /// </summary>
+        public IntPtr defaultStateBuffer;
 
         // Secretely we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
@@ -157,7 +165,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             throw new Exception("Unrecognized InputUpdateType: " + updateType);
         }
 
-        private static DoubleBuffers s_CurrentBuffers;
+        internal static IntPtr s_DefaultStateBuffer;
+        internal static DoubleBuffers s_CurrentBuffers;
 
         public static IntPtr GetFrontBufferForDevice(int deviceIndex)
         {
@@ -210,6 +219,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             totalSize += mappingTableSizePerBuffer;
 #endif
 
+            // Plus one buffer for default state.
+            totalSize += sizePerBuffer;
+
             // Allocate.
             m_AllBuffers = (IntPtr)UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
             UnsafeUtility.MemClear(m_AllBuffers.ToPointer(), totalSize);
@@ -231,6 +243,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_EditorUpdateBuffers =
                 SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
 #endif
+
+            // Default state buffer goes last.
+            defaultStateBuffer = ptr;
 
             return newDeviceOffsets;
         }
@@ -269,6 +284,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #if UNITY_EDITOR
             m_EditorUpdateBuffers = new DoubleBuffers();
 #endif
+            defaultStateBuffer = IntPtr.Zero;
 
             s_CurrentBuffers = new DoubleBuffers();
         }
@@ -388,6 +404,33 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             offsets = result;
             return sizeInBytes;
+        }
+
+        public static void SetUpDefaultStates(InputDevice[] devices, IntPtr defaultStateBuffer)
+        {
+            if (devices == null)
+                return;
+
+            var deviceCount = devices.Length;
+            for (var i = 0; i < deviceCount; ++i)
+            {
+                var device = devices[i];
+
+                // Skip devices that have a default state of all zeros.
+                if (!device.hasControlsWithDefaultState)
+                    continue;
+
+                // Otherwise go through each control and write its default value.
+                var controls = device.allControls;
+                var controlCount = controls.Count;
+                for (var n = 0; n < controlCount; ++n)
+                {
+                    var control = controls[n];
+                    if (!control.hasDefaultValue)
+                        continue;
+                    //control.WriteValueFromObjectInto(defaultStateBuffer,);
+                }
+            }
         }
     }
 }
