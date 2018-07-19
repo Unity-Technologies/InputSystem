@@ -227,6 +227,13 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void TODO_Controls_ReadingValueFromStateEvent_ReturnsDefaultValueForControlsNotPartOfEvent()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanWriteValueIntoStateEvents()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

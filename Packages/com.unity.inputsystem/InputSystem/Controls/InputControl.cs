@@ -10,8 +10,6 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
-////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
-
 ////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
 ////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of

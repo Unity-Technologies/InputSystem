@@ -196,6 +196,31 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanSetDefaultValueOfControlInJson()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""myControl"",
+                        ""layout"" : ""Axis"",
+                        ""defaultValue"" : ""0.5""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        var layout = InputSystem.TryLoadLayout("MyDevice");
+
+        Assert.That(layout["myControl"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["myControl"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanSetParametersOnControlInJson()
     {
         const string json = @"

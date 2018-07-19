@@ -194,6 +194,8 @@ namespace UnityEngine.Experimental.Input
             public Flags flags;
             public int arraySize;
 
+            public PrimitiveValueOrArray defaultValue;
+
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
             // just the X axis control of the left stick directly from within a gamepad
@@ -1436,6 +1438,12 @@ namespace UnityEngine.Experimental.Input
             public string resourceName;
             public bool noisy;
 
+            // This should be an object type field and allow any JSON primitive value type as well
+            // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
+            // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
+            // for this later but for now, we use a string-based value fallback instead.
+            public string defaultValue;
+
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
 
@@ -1491,6 +1499,9 @@ namespace UnityEngine.Experimental.Input
 
                 if (!string.IsNullOrEmpty(processors))
                     layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
+
+                if (defaultValue != null)
+                    layout.defaultValue = PrimitiveValueOrArray.FromObject(defaultValue);
 
                 return layout;
             }

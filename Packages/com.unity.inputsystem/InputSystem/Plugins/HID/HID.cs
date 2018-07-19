@@ -70,6 +70,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             }
         }
 
+        ////TODO: ideally, we'd display the button on everything that is a HID, not just for HIDs that have no known layout
         #if UNITY_EDITOR
         public void OnToolbarGUI()
         {
