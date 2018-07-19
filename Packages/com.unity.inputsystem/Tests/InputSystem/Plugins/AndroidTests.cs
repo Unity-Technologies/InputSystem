@@ -224,7 +224,7 @@ class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void FIXME_Devices_SupportsAndroidSonyDualShock()
+    public void Devices_SupportsAndroidSonyDualShock()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -250,17 +250,22 @@ class AndroidTests : InputTestFixture
 
         Assert.That(gamepad.name, Is.EqualTo("AndroidGamepadDualShock"));
 
+        float rxValue = 0.123f;
+        float ryValue = 0.456f;
+
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Rx, 0.123f)
-                .WithAxis(AndroidAxis.Ry, 0.456f)
+            // Pretend that tigger values for dualshock come from range [-1.0..1.0]
+            // after normalization they will be transformed to range [0.0..1.0]
+                .WithAxis(AndroidAxis.Rx, rxValue * 2.0f - 1.0f)
+                .WithAxis(AndroidAxis.Ry, ryValue * 2.0f - 1.0f)
                 .WithButton(AndroidKeyCode.ButtonA)
                 .WithButton(AndroidKeyCode.ButtonC));
 
         InputSystem.Update();
 
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123f).Within(0.000001));
-        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.456f).Within(0.000001));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(rxValue).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(ryValue).Within(0.000001));
         Assert.That(gamepad.buttonWest.isPressed, Is.True);
         Assert.That(gamepad.buttonEast.isPressed, Is.True);
         Assert.That(gamepad.buttonNorth.isPressed, Is.False);
