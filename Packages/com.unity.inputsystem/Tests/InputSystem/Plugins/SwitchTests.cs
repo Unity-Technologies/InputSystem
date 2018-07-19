@@ -12,20 +12,20 @@ public class SwitchTests : InputTestFixture
     public void Devices_SupportsSwitchNpad()
     {
         var device = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "NPad",
-            manufacturer = "Nintendo",
-            product = "Wireless Controller",
-        });
+            new InputDeviceDescription
+            {
+                interfaceName = "NPad",
+                manufacturer = "Nintendo",
+                product = "Wireless Controller",
+            });
 
         Assert.That(device, Is.TypeOf<NPad>());
         var controller = (NPad)device;
 
         InputSystem.QueueStateEvent(controller,
             new NPadInputState()
-            .WithLeftStick(new Vector2(0.123f, 0.456f))
-            .WithRightStick(new Vector2(0.789f, 0.987f)));
+                .WithLeftStick(new Vector2(0.123f, 0.456f))
+                .WithRightStick(new Vector2(0.789f, 0.987f)));
         InputSystem.Update();
 
         Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));

@@ -328,9 +328,9 @@ namespace UnityEngine.Experimental.Input.Utilities
         /// <summary>
         /// Erase an element from the array by moving the tail element into its place.
         /// </summary>
-        /// <param name="array"></param>
-        /// <param name="count"></param>
-        /// <param name="index"></param>
+        /// <param name="array">Array to modify. May be not <c>null</c>.</param>
+        /// <param name="count">Current number of elements inside of array. May be less than <c>array.Length</c>.</param>
+        /// <param name="index">Index of element to remove. Tail element will get moved into its place.</param>
         /// <typeparam name="TValue"></typeparam>
         /// <remarks>
         /// This method does not re-allocate the array. Instead <paramref name="count"/> is used
@@ -341,13 +341,15 @@ namespace UnityEngine.Experimental.Input.Utilities
             Debug.Assert(array != null);
             Debug.Assert(index >= 0 && index < array.Length);
             Debug.Assert(count >= 0 && count <= array.Length);
+            Debug.Assert(index < count);
 
             // Move tail, if necessary.
             if (index != count - 1)
                 array[index] = array[count - 1];
 
             // Destroy current tail.
-            array[count - 1] = default(TValue);
+            if (count > 1)
+                array[count - 1] = default(TValue);
             --count;
         }
 

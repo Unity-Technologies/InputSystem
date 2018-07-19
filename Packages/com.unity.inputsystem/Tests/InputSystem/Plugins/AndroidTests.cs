@@ -224,7 +224,7 @@ class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsAndroidSonyDualShock()
+    public void FIXME_Devices_SupportsAndroidSonyDualShock()
     {
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {

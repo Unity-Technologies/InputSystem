@@ -73,14 +73,14 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CannotUseControlLayoutAsToplevelLayout()
+    public void Layouts_CannotUseLayoutForControlToBuildDevice()
     {
         Assert.That(() => new InputDeviceBuilder("Button"), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_UsagesAreMergedWithBaseLayout()
+    public void Layouts_UsagesOverrideThoseFromBaseLayout()
     {
         const string baseLayout = @"
             {
@@ -128,8 +128,7 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
-        Assert.That(layout["stick"].usages.Count, Is.EqualTo(2));
-        Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("BaseUsage")));
+        Assert.That(layout["stick"].usages.Count, Is.EqualTo(1));
         Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
         Assert.That(layout["axis"].usages.Count, Is.EqualTo(1));
         Assert.That(layout["axis"].usages, Has.Exactly(1).EqualTo(new InternedString("BaseUsage")));
@@ -139,7 +138,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanExtendControlInBaseLayoutUsingPath()
+    public void Layouts_CanModifyControlInBaseLayoutUsingPath()
     {
         const string json = @"
             {
@@ -390,7 +389,7 @@ partial class CoreTests
     {
         InputSystem.onFindControlLayoutForDevice +=
             (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
-            "Keyboard";
+                "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
@@ -605,22 +604,22 @@ partial class CoreTests
     {
         InputSystem.RegisterControlLayout<TestLayoutType>(
             matches: new InputDeviceMatcher()
-            .WithInterface("TestInterface")
-            .WithManufacturer("TestManufacturer")
-            .WithProduct("TestProduct"));
+                .WithInterface("TestInterface")
+                .WithManufacturer("TestManufacturer")
+                .WithProduct("TestProduct"));
 
         var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
         Assert.That(layout.deviceMatcher.empty, Is.False);
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     [Test]
@@ -631,22 +630,22 @@ partial class CoreTests
 
         InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "TestLayout",
             matches: new InputDeviceMatcher()
-            .WithInterface("TestInterface")
-            .WithProduct("TestProduct")
-            .WithManufacturer("TestManufacturer"));
+                .WithInterface("TestInterface")
+                .WithProduct("TestProduct")
+                .WithManufacturer("TestManufacturer"));
 
         var layout = InputSystem.TryLoadLayout("TestLayout");
 
         Assert.That(layout.deviceMatcher.empty, Is.False);
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
@@ -832,7 +831,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void TODO_Layouts_CanModifyUsagesOfChildControlUsingPath()
+    public void Layouts_CanModifyUsagesOfChildControlUsingPath()
     {
         const string json = @"
             {
@@ -848,7 +847,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice("MyDevice");
 
-        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo("TestUsage"));
+        Assert.That(device["stick/x"].usages, Has.Exactly(1).EqualTo(new InternedString("TestUsage")));
     }
 
     [Test]
@@ -917,8 +916,8 @@ partial class CoreTests
             .WithFormat("CUST");
 
         builder.AddControl("button")
-        .WithLayout("Button")
-        .WithUsages("Foo", "Bar");
+            .WithLayout("Button")
+            .WithUsages("Foo", "Bar");
 
         var layout = builder.Build();
 
@@ -942,7 +941,7 @@ partial class CoreTests
 
         Assert.That(() => builder.AddControl("TestControl").WithUsages(""),
             Throws.ArgumentException.With.Message.Contains("TestControl")
-            .And.With.Message.Contains("TestLayout"));
+                .And.With.Message.Contains("TestLayout"));
     }
 
     [Test]
@@ -1109,10 +1108,10 @@ partial class CoreTests
 
         InputSystem.onControlLayoutChange +=
             (layout, change) =>
-            {
-                receivedChange = change;
-                receivedLayout = layout;
-            };
+        {
+            receivedChange = change;
+            receivedLayout = layout;
+        };
 
         const string jsonV1 = @"
             {
@@ -1178,10 +1177,10 @@ partial class CoreTests
 
     private struct StateWithTwoLayoutVariants : IInputStateTypeInfo
     {
-        [InputControl(name = "button", layout = "Button", variant = "A")]
+        [InputControl(name = "button", layout = "Button", variants = "A")]
         public int buttons;
 
-        [InputControl(name = "axis", layout = "Axis", variant = "B")]
+        [InputControl(name = "axis", layout = "Axis", variants = "B")]
         public float axis;
 
         public FourCC GetFormat()
@@ -1190,12 +1189,12 @@ partial class CoreTests
         }
     }
 
-    [InputControlLayout(variant = "A", stateType = typeof(StateWithTwoLayoutVariants))]
+    [InputControlLayout(variants = "A", stateType = typeof(StateWithTwoLayoutVariants))]
     private class DeviceWithLayoutVariantA : InputDevice
     {
     }
 
-    [InputControlLayout(variant = "B", stateType = typeof(StateWithTwoLayoutVariants))]
+    [InputControlLayout(variants = "B", stateType = typeof(StateWithTwoLayoutVariants))]
     private class DeviceWithLayoutVariantB : InputDevice
     {
     }
@@ -1221,8 +1220,8 @@ partial class CoreTests
         Assert.That(deviceA["button"], Is.TypeOf<ButtonControl>());
         Assert.That(deviceB["axis"], Is.TypeOf<AxisControl>());
 
-        Assert.That(deviceA["button"].variant, Is.EqualTo("A"));
-        Assert.That(deviceB["axis"].variant, Is.EqualTo("B"));
+        Assert.That(deviceA["button"].variants, Is.EqualTo("A"));
+        Assert.That(deviceB["axis"].variants, Is.EqualTo("B"));
     }
 
     [Test]
@@ -1236,9 +1235,9 @@ partial class CoreTests
                 ""controls"" : [
                     { ""name"" : ""ControlFromBase"", ""layout"" : ""Button"" },
                     { ""name"" : ""OtherControlFromBase"", ""layout"" : ""Axis"" },
-                    { ""name"" : ""ControlWithExplicitDefaultVariant"", ""layout"" : ""Axis"", ""variant"" : ""default"" },
+                    { ""name"" : ""ControlWithExplicitDefaultVariant"", ""layout"" : ""Axis"", ""variants"" : ""default"" },
                     { ""name"" : ""StickControl"", ""layout"" : ""Stick"" },
-                    { ""name"" : ""StickControl/x"", ""offset"" : 14, ""variant"" : ""A"" }
+                    { ""name"" : ""StickControl/x"", ""offset"" : 14, ""variants"" : ""A"" }
                 ]
             }
         ";
@@ -1247,7 +1246,7 @@ partial class CoreTests
                 ""name"" : ""DerivedLayout"",
                 ""extend"" : ""BaseLayout"",
                 ""controls"" : [
-                    { ""name"" : ""ControlFromBase"", ""variant"" : ""A"", ""offset"" : 20 }
+                    { ""name"" : ""ControlFromBase"", ""variants"" : ""A"", ""offset"" : 20 }
                 ]
             }
         ";
@@ -1258,24 +1257,24 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("DerivedLayout");
 
-        // The variant setting here is coming all the way from the base layout so itself already has
+        // The variants setting here is coming all the way from the base layout so itself already has
         // to come through properly in the merge.
-        Assert.That(layout.variant, Is.EqualTo(new InternedString("A")));
+        Assert.That(layout.variants, Is.EqualTo(new InternedString("A")));
 
-        // Not just the variant setting itself should come through but it also should affect the
+        // Not just the variants setting itself should come through but it also should affect the
         // merging of control items. `ControlFromBase` has a layout set on it which should get picked
-        // up by the variant defined for it in `DerivedLayout`. Also, controls that don't have the right
-        // variant should have been removed.
+        // up by the variants defined for it in `DerivedLayout`. Also, controls that don't have the right
+        // variants should have been removed.
         Assert.That(layout.controls.Count, Is.EqualTo(6));
         Assert.That(layout.controls, Has.None.Matches<InputControlLayout.ControlItem>(
-                x => x.name == new InternedString("axis"))); // Axis control should have disappeared.
+            x => x.name == new InternedString("axis")));     // Axis control should have disappeared.
         Assert.That(layout.controls, Has.Exactly(1).Matches<InputControlLayout.ControlItem>(
-                x => x.name == new InternedString(
-                    "OtherControlFromBase")));  // But this one targeting no specific variant should be included.
+            x => x.name == new InternedString(
+                "OtherControlFromBase")));      // But this one targeting no specific variants should be included.
         Assert.That(layout.controls, Has.Exactly(1)
             .Matches<InputControlLayout.ControlItem>(x =>
                 x.name == new InternedString("ControlFromBase") && x.layout == new InternedString("Button") &&
-                x.offset == 20 && x.variant == new InternedString("A")));
+                x.offset == 20 && x.variants == new InternedString("A")));
         Assert.That(layout.controls, Has.Exactly(1)
             .Matches<InputControlLayout.ControlItem>(x =>
                 x.name == new InternedString("ControlWithExplicitDefaultVariant")));
@@ -1286,6 +1285,57 @@ partial class CoreTests
         Assert.That(layout.controls, Has.Exactly(1)
             .Matches<InputControlLayout.ControlItem>(x =>
                 x.name == new InternedString("StickControl/x")));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanMixMultipleLayoutVariants()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""ButtonA"", ""layout"" : ""Button"", ""variants"" : ""A"" },
+                    { ""name"" : ""ButtonB"", ""layout"" : ""Button"", ""variants"" : ""B"" },
+                    { ""name"" : ""ButtonC"", ""layout"" : ""Button"", ""variants"" : ""C"" },
+                    { ""name"" : ""ButtonAB"", ""layout"" : ""Button"", ""variants"" : ""A;B"" },
+                    { ""name"" : ""ButtonNoVariant"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
+
+        Assert.That(device.variants, Is.EqualTo("A;B"));
+        Assert.That(device.allControls, Has.Count.EqualTo(4));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonA"));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonB"));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonAB"));
+        Assert.That(device.allControls, Has.Exactly(1).With.Property("name").EqualTo("ButtonNoVariant"));
+        Assert.That(device.allControls, Has.None.With.Property("name").EqualTo("ButtonC"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void TODO_Layouts_CurrentPlatformIsImplicitLayoutVariant()
+    {
+        var json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""Button"", ""layout"" : ""Button"", ""variants"" : ""__PLATFORM__"" }
+                ]
+            }
+        ".Replace("__PLATFORM__", Application.platform.ToString());
+
+        InputSystem.RegisterControlLayout(json);
+
+        var device = InputSystem.AddDevice("TestLayout");
+
+        Assert.That(device.allControls, Has.Count.EqualTo(1));
+        Assert.That(device.allControls[0].name, Is.EqualTo("Button"));
     }
 
     [Test]
@@ -1409,6 +1459,13 @@ partial class CoreTests
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void TODO_Layouts_RegisteringLayout_RecreatesDevicesForWhichItIsABetterLayout()
+    {
         Assert.Fail();
     }
 }

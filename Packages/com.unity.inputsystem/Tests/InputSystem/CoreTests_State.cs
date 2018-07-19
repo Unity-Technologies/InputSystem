@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 partial class CoreTests
 {
@@ -492,11 +493,11 @@ partial class CoreTests
         InputUpdateType? receivedUpdateType = null;
         InputSystem.onUpdate +=
             type =>
-            {
-                Assert.That(receivedUpdate, Is.False);
-                receivedUpdate = true;
-                receivedUpdateType = type;
-            };
+        {
+            Assert.That(receivedUpdate, Is.False);
+            receivedUpdate = true;
+            receivedUpdateType = type;
+        };
 
         // Dynamic.
         InputSystem.Update(InputUpdateType.Dynamic);
@@ -546,7 +547,7 @@ partial class CoreTests
         double? receivedTime = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-                (control, time, monitorIndex) =>
+            (control, time, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -626,7 +627,7 @@ partial class CoreTests
         var monitorFired = false;
         long? receivedMonitorIndex = null;
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-                (control, time, monitorIndex) =>
+            (control, time, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
@@ -685,12 +686,12 @@ partial class CoreTests
         InputControl receivedControl = null;
 
         var monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
-                (control, time, monitorIndex) =>
+            (control, time, monitorIndex) =>
             {
                 Assert.That(!monitorFired);
                 monitorFired = true;
             }, timerExpiredCallback:
-                (control, time, monitorIndex, timerIndex) =>
+            (control, time, monitorIndex, timerIndex) =>
             {
                 Assert.That(!timeoutFired);
                 timeoutFired = true;
@@ -739,6 +740,51 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(!timeoutFired);
+    }
+
+    [Test]
+    [Category("State")]
+    public unsafe void State_CanGetMetrics()
+    {
+        var device1 = InputSystem.AddDevice<Gamepad>();
+        var device2 = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(device1, new GamepadState());
+        InputSystem.QueueStateEvent(device1, new GamepadState());
+        InputSystem.QueueStateEvent(device2, new KeyboardState());
+        InputSystem.Update();
+
+        var device3 = InputSystem.AddDevice<Mouse>();
+        InputSystem.RemoveDevice(device3);
+
+        var metrics = InputSystem.GetMetrics();
+
+        // Manually compute the size of the combined state buffer so that we
+        // have a check that catches if the size changes (for good or no good reason).
+        var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
+        var combinedDeviceStateSize = NumberHelpers.AlignToMultiple(
+            device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
+            device3.stateBlock.alignedSizeInBytes, 4);
+        var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
+
+        const int kBufferCount =
+            #if UNITY_EDITOR
+            3     // Dynamic + fixed + editor
+            #else
+            2     // Dynamic + fixed
+            #endif
+        ;
+
+        var eventByteCount =
+            StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
+            StateEvent.GetEventSizeWithPayload<KeyboardState>();
+
+        Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kBufferCount * sizePerBuffer));
+        Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
+        Assert.That(metrics.totalEventCount, Is.EqualTo(3));
+        Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
+        Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.000001));
     }
 
     // InputStateHistory helps creating traces of input over time. This is useful, for example, to track

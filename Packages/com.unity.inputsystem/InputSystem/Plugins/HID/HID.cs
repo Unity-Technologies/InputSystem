@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
@@ -16,6 +17,8 @@ using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 ////REVIEW: move the enums and structs out of here and into UnityEngine.Experimental.Input.HID? Or remove the "HID" name prefixes from them?
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
+
+////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
@@ -247,7 +250,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 if (hidDeviceDescriptor.vendorId == 0)
                     return null;
                 layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
-                        hidDeviceDescriptor.productId);
+                    hidDeviceDescriptor.productId);
             }
 
             // Register layout builder that will turn the HID descriptor into an
@@ -314,10 +317,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     {
                         var control =
                             builder.AddControl(element.DetermineName())
-                            .WithLayout(layout)
-                            .WithOffset((uint)element.reportOffsetInBits / 8)
-                            .WithBit((uint)element.reportOffsetInBits % 8)
-                            .WithFormat(element.DetermineFormat());
+                                .WithLayout(layout)
+                                .WithOffset((uint)element.reportOffsetInBits / 8)
+                                .WithBit((uint)element.reportOffsetInBits % 8)
+                                .WithFormat(element.DetermineFormat());
 
                         var parameters = element.DetermineParameters();
                         if (!string.IsNullOrEmpty(parameters))
@@ -616,8 +619,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             if (Mathf.Approximately(0f, minFloat) && Mathf.Approximately(0f, maxFloat))
                                 return null;
                             var zero = min + (max - min) / 2.0f;
-                            return string.Format("normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min,
-                            max, zero);
+                            return string.Format(CultureInfo.InvariantCulture, "normalize,normalizeMin={0},normalizeMax={1},normalizeZero={2}", min, max, zero);
                     }
                 }
 
@@ -740,8 +742,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
                         if (element.usagePage == usagePage && element.usage == usage)
                             throw new InvalidOperationException(string.Format(
-                                    "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
-                                    usagePage, usage));
+                                "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
+                                usagePage, usage));
                     }
                 }
 

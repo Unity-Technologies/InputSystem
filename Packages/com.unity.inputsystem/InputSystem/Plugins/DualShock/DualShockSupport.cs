@@ -16,17 +16,17 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR
             InputSystem.RegisterControlLayout<DualShockGamepadHID>(
                 matches: new InputDeviceMatcher()
-                .WithInterface("HID")
-                .WithManufacturer("Sony Interactive Entertainment")
-                .WithProduct("Wireless Controller"));
+                    .WithInterface("HID")
+                    .WithManufacturer("Sony.+Entertainment")
+                    .WithProduct("Wireless Controller"));
             #endif
 
             #if UNITY_EDITOR || UNITY_PS4
             InputSystem.RegisterControlLayout<PS4TouchControl>("PS4Touch");
             InputSystem.RegisterControlLayout<DualShockGamepadPS4>("PS4DualShockGamepad",
                 matches: new InputDeviceMatcher()
-                .WithInterface("PS4")
-                .WithDeviceClass("PS4DualShockGamepad"));
+                    .WithInterface("PS4")
+                    .WithDeviceClass("PS4DualShockGamepad"));
             #endif
         }
     }
