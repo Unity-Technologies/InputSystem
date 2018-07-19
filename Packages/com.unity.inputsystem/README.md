@@ -5,4 +5,3 @@ A new new input system.
 More info in the [wiki](https://github.com/Unity-Technologies/InputSystem/wiki).
 
 [Preview builds of the Unity editor](http://beta.unity3d.com/download/4f520c3a3153/public_download.html) that work with the project.
-

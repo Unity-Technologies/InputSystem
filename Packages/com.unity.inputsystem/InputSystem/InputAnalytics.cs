@@ -56,7 +56,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
 
                 deviceList.Add(StartupEventData.DeviceInfo.FromDescription(availableDevices[i].description,
-                        availableDevices[i].isNative));
+                    availableDevices[i].isNative));
             }
 
             data.unrecognized_devices = deviceList.ToArray();

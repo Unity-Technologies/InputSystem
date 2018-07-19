@@ -80,7 +80,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
             m_TreeView.SetExpanded(1, true);
 
             m_Label = new GUIContent(string.Format("HID Descriptor for '{0} {1}'", m_Device.description.manufacturer,
-                        m_Device.description.product));
+                m_Device.description.product));
         }
 
         [NonSerialized] private HID m_Device;

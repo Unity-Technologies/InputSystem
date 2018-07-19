@@ -370,7 +370,7 @@ namespace UnityEngine.Experimental.Input
             var deviceIndex = m_Device.m_DeviceIndex;
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(string.Format(
-                        "Cannot query value of control '{0}' before '{1}' has been added to system!", path, device.name));
+                    "Cannot query value of control '{0}' before '{1}' has been added to system!", path, device.name));
             return deviceIndex;
         }
 
@@ -577,7 +577,7 @@ namespace UnityEngine.Experimental.Input
             var processorOfType = processor as IInputControlProcessor<TValue>;
             if (processorOfType == null)
                 throw new Exception(string.Format("Cannot add processor of type '{0}' to control of type '{1}'",
-                        processor.GetType().Name, GetType().Name));
+                    processor.GetType().Name, GetType().Name));
             m_ProcessorStack.Append(processorOfType);
         }
 

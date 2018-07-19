@@ -195,10 +195,10 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_EventTrace == null)
                 m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.id};
             m_EventTrace.onEvent += _ =>
-                {
-                    ////FIXME: this is very inefficient
-                    m_EventTree.Reload();
-                };
+            {
+                ////FIXME: this is very inefficient
+                m_EventTree.Reload();
+            };
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
 

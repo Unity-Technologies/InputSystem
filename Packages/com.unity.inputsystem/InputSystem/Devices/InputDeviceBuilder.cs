@@ -120,8 +120,8 @@ namespace UnityEngine.Experimental.Input
             var controlOfType = control as TControl;
             if (controlOfType == null)
                 throw new Exception(string.Format(
-                        "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                        typeof(TControl).Name, control.GetType().Name));
+                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
+                    typeof(TControl).Name, control.GetType().Name));
 
             return controlOfType;
         }
@@ -144,8 +144,8 @@ namespace UnityEngine.Experimental.Input
             var controlOfType = control as TControl;
             if (controlOfType == null)
                 throw new Exception(string.Format(
-                        "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                        typeof(TControl).Name, control.GetType().Name));
+                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
+                    typeof(TControl).Name, control.GetType().Name));
 
             return controlOfType;
         }
@@ -182,8 +182,8 @@ namespace UnityEngine.Experimental.Input
             var controlOfType = control as TControl;
             if (controlOfType == null)
                 throw new Exception(string.Format(
-                        "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
-                        typeof(TControl).Name, control.GetType().Name));
+                    "Expected control '{0}' to be of type '{1}' but is of type '{2}' instead!", path,
+                    typeof(TControl).Name, control.GetType().Name));
 
             return controlOfType;
         }
@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input
                 if (control == null)
                 {
                     throw new Exception(string.Format("Type '{0}' referenced by layout '{1}' is not an InputControl",
-                            layout.type.Name, layout.name));
+                        layout.type.Name, layout.name));
                 }
             }
 
@@ -251,8 +251,8 @@ namespace UnityEngine.Experimental.Input
             {
                 if (parent != null)
                     throw new Exception(string.Format(
-                            "Cannot instantiate device layout '{0}' as child of '{1}'; devices must be added at root",
-                            layout.name, parent.path));
+                        "Cannot instantiate device layout '{0}' as child of '{1}'; devices must be added at root",
+                        layout.name, parent.path));
 
                 m_Device = controlAsDevice;
                 m_Device.m_StateBlock.byteOffset = 0;
@@ -395,8 +395,8 @@ namespace UnityEngine.Experimental.Input
                 {
                     if (controlLayouts[i].isArray)
                         throw new NotSupportedException(string.Format(
-                                "Control '{0}' in layout '{1}' is modifying the child of another control but is marked as an array",
-                                controlLayouts[i].name, layout.name));
+                            "Control '{0}' in layout '{1}' is modifying the child of another control but is marked as an array",
+                            controlLayouts[i].name, layout.name));
 
                     haveControlLayoutWithPath = true;
                     InsertChildControlOverrides(parent, ref controlLayouts[i]);
@@ -445,7 +445,7 @@ namespace UnityEngine.Experimental.Input
                     {
                         var name = controlLayout.name + n;
                         var control = AddChildControl(layout, variants, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
-                                ref controlLayout, ref childIndex, nameOverride: name);
+                            ref controlLayout, ref childIndex, nameOverride: name);
 
                         // Adjust offset, if the control uses explicit offsets.
                         if (control.m_StateBlock.byteOffset != InputStateBlock.kInvalidOffset)
@@ -504,7 +504,7 @@ namespace UnityEngine.Experimental.Input
             ////REVIEW: can we check this in InputControlLayout instead?
             if (string.IsNullOrEmpty(controlItem.layout))
                 throw new Exception(string.Format("Layout has not been set on control '{0}' in '{1}'",
-                        controlItem.name, layout.name));
+                    controlItem.name, layout.name));
 
             // See if there is an override for the control.
             InputControlLayout.ControlItem? controlOverride = null;
@@ -668,7 +668,7 @@ namespace UnityEngine.Experimental.Input
                 ////TODO: this path does not support recovering existing controls? does it matter?
 
                 child = InsertChildControl(layout, variants, parent,
-                        ref haveChildrenUsingStateFromOtherControls, ref controlItem);
+                    ref haveChildrenUsingStateFromOtherControls, ref controlItem);
                 haveChangedLayoutOfParent = true;
             }
             else
@@ -749,7 +749,7 @@ namespace UnityEngine.Experimental.Input
 
             // Insert the child.
             var control = AddChildControl(layout, variant, immediateParent, null,
-                    ref haveChildrenUsingStateFromOtherControls, ref controlItem, ref childIndex, controlName);
+                ref haveChildrenUsingStateFromOtherControls, ref controlItem, ref childIndex, controlName);
 
             // Adjust indices of control's that have been shifted around by our insertion.
             ShiftChildIndicesInHierarchyOneUp(parent, childIndex);
@@ -799,10 +799,10 @@ namespace UnityEngine.Experimental.Input
                 ////REVIEW: what about properties?
 
                 var field = objectType.GetField(parameter.name,
-                        BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (field == null)
                     throw new Exception(string.Format("Cannot find public field {0} in {1} (referenced by parameter)",
-                            parameter.name, objectType.Name));
+                        parameter.name, objectType.Name));
 
                 ////REVIEW: can we do this without boxing?
 

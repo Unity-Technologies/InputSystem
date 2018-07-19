@@ -237,10 +237,10 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (d, c) =>
-            {
-                receivedDevice = d;
-                receivedDeviceChange = c;
-            };
+        {
+            receivedDevice = d;
+            receivedDeviceChange = c;
+        };
 
         InputSystem.SetUsage(device, CommonUsages.LeftHand);
 
@@ -328,11 +328,11 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (device, change) =>
-            {
-                ++receivedCallCount;
-                receivedDevice = device;
-                receiveDeviceChange = change;
-            };
+        {
+            ++receivedCallCount;
+            receivedDevice = device;
+            receiveDeviceChange = change;
+        };
 
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -518,7 +518,7 @@ partial class CoreTests
 
         InputSystem.RegisterControlLayout<TestLayoutType>(
             matches: new InputDeviceMatcher()
-            .WithInterface("TestInterface"));
+                .WithInterface("TestInterface"));
 
         var unsupportedDevices = new List<InputDeviceDescription>();
         var count = InputSystem.GetUnsupportedDevices(unsupportedDevices);
@@ -614,11 +614,11 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (d, c) =>
-            {
-                ++receivedCalls;
-                receivedDevice = d;
-                receivedDeviceChange = c;
-            };
+        {
+            ++receivedCalls;
+            receivedDevice = d;
+            receivedDeviceChange = c;
+        };
 
         InputSystem.QueueConfigChangeEvent(gamepad);
         InputSystem.Update();
@@ -640,11 +640,11 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (d, c) =>
-            {
-                ++receivedCalls;
-                receivedDevice = d;
-                receivedDeviceChange = c;
-            };
+        {
+            ++receivedCalls;
+            receivedDevice = d;
+            receivedDeviceChange = c;
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
         InputSystem.Update();
@@ -694,11 +694,11 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (d, c) =>
-            {
-                ++receivedCalls;
-                receivedDevice = d;
-                receivedDeviceChange = c;
-            };
+        {
+            ++receivedCalls;
+            receivedDevice = d;
+            receivedDeviceChange = c;
+        };
 
         InputSystem.Update();
 
@@ -893,11 +893,11 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (device, change) =>
-            {
-                ++receivedCalls;
-                receivedDevice = device;
-                receivedChange = change;
-            };
+        {
+            ++receivedCalls;
+            receivedDevice = device;
+            receivedChange = change;
+        };
 
         InputSystem.RemoveDevice(gamepad2);
 
@@ -925,10 +925,10 @@ partial class CoreTests
         var gamepad1WasRemoved = false;
         InputSystem.onDeviceChange +=
             (device, change) =>
-            {
-                if (device == gamepad1)
-                    gamepad1WasRemoved = true;
-            };
+        {
+            if (device == gamepad1)
+                gamepad1WasRemoved = true;
+        };
 
         var inputEvent = DeviceRemoveEvent.Create(gamepad1.id, testRuntime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
@@ -1092,10 +1092,10 @@ partial class CoreTests
 
         InputSystem.onDeviceChange +=
             (device, change) =>
-            {
-                receivedDevice = device;
-                receivedChange = change;
-            };
+        {
+            receivedDevice = device;
+            receivedChange = change;
+        };
 
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -1721,7 +1721,7 @@ partial class CoreTests
                     {
                         var layoutCommand = (QueryKeyboardLayoutCommand*)commandPtr;
                         if (StringHelpers.WriteStringToBuffer(currentLayoutName, (IntPtr)layoutCommand->nameBuffer,
-                                QueryKeyboardLayoutCommand.kMaxNameLength))
+                            QueryKeyboardLayoutCommand.kMaxNameLength))
                             return QueryKeyboardLayoutCommand.kMaxNameLength;
                     }
 
@@ -1824,11 +1824,11 @@ partial class CoreTests
 
         InputSystem.QueueDeltaStateEvent(device.primaryTouch,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-            position = new Vector2(0.123f, 0.456f)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(0.123f, 0.456f)
+            });
         InputSystem.Update();
 
         Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
@@ -1848,11 +1848,11 @@ partial class CoreTests
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-            position = new Vector2(0.123f, 0.456f)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(0.123f, 0.456f)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches.Count, Is.EqualTo(1));
@@ -1863,18 +1863,18 @@ partial class CoreTests
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(0.123f, 0.456f)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(0.123f, 0.456f)
+            });
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 5,
-            position = new Vector2(0.789f, 0.123f)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 5,
+                position = new Vector2(0.789f, 0.123f)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches.Count, Is.EqualTo(2));
@@ -1894,16 +1894,16 @@ partial class CoreTests
 
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[0],
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 4,
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 4,
+            });
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
             new TouchState
-        {
-            phase = PointerPhase.Cancelled,
-            touchId = 5,
-        });
+            {
+                phase = PointerPhase.Cancelled,
+                touchId = 5,
+            });
         InputSystem.Update();
 
         // For one frame, the ended and cancelled touches should stick around on the active touches list
@@ -1933,20 +1933,20 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 5,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 5,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
@@ -1962,10 +1962,10 @@ partial class CoreTests
         // Begin touch.
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
@@ -1980,10 +1980,10 @@ partial class CoreTests
         // Move.
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
@@ -1998,10 +1998,10 @@ partial class CoreTests
         // Random unrelated touch.
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 5,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 5,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
@@ -2010,10 +2010,10 @@ partial class CoreTests
         // End.
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 4,
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 4,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].touchId.ReadValue(), Is.EqualTo(4));
@@ -2033,10 +2033,10 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+            });
         InputSystem.Update();
 
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Began));
@@ -2057,31 +2057,31 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 0,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 0,
+            });
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 0,
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 0,
+            });
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 0,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 0,
+            });
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 0,
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 0,
+            });
         InputSystem.Update();
         InputSystem.Update();
 
@@ -2099,17 +2099,17 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 0,
-        }, 1.0);
+            {
+                phase = PointerPhase.Began,
+                touchId = 0,
+            }, 1.0);
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 0,
-        }, 0.9);
+            {
+                phase = PointerPhase.Ended,
+                touchId = 0,
+            }, 0.9);
 
         InputSystem.Update();
         InputSystem.Update();
@@ -2126,11 +2126,11 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-            position = new Vector2(10, 20)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(10, 20)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
@@ -2138,11 +2138,11 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(20, 40)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(20, 40)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(10).Within(0.00001));
@@ -2150,11 +2150,11 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 4,
-            position = new Vector2(20, 40)
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 4,
+                position = new Vector2(20, 40)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
@@ -2169,18 +2169,18 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-            position = new Vector2(10, 20)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(10, 20)
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(20, 40)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(20, 40)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(10).Within(0.00001));
@@ -2200,27 +2200,27 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-            position = new Vector2(10, 20)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(10, 20)
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(20, 40)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(20, 40)
+            });
         InputSystem.Update();
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(20, 40)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(20, 40)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(0).Within(0.00001));
@@ -2235,25 +2235,25 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 4,
-            position = new Vector2(10, 20)
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 4,
+                position = new Vector2(10, 20)
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(20, 40)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(20, 40)
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 4,
-            position = new Vector2(30, 50)
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 4,
+                position = new Vector2(30, 50)
+            });
         InputSystem.Update();
 
         Assert.That(device.activeTouches[0].delta.x.ReadValue(), Is.EqualTo(20).Within(0.00001));
@@ -2268,16 +2268,16 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 92,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 92,
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 92,
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 92,
+            });
 
         InputSystem.Update();
 
@@ -2287,22 +2287,22 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 92,
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 92,
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Began,
-            touchId = 93,
-        });
+            {
+                phase = PointerPhase.Began,
+                touchId = 93,
+            });
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Moved,
-            touchId = 93,
-        });
+            {
+                phase = PointerPhase.Moved,
+                touchId = 93,
+            });
 
         InputSystem.Update();
 
@@ -2321,10 +2321,10 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(device,
             new TouchState
-        {
-            phase = PointerPhase.Ended,
-            touchId = 93,
-        });
+            {
+                phase = PointerPhase.Ended,
+                touchId = 93,
+            });
 
         InputSystem.Update();
 

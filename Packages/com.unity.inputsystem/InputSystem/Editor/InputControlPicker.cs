@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     rect.x = rect.x + rect.width - kUsagePopupWidth - 2;
                     rect.width = kUsagePopupWidth;
                     item.selectedPopupOption = EditorGUI.IntPopup(rect, item.selectedPopupOption, item.popupOptions,
-                            item.popupValues, EditorStyles.miniButton);
+                        item.popupValues, EditorStyles.miniButton);
                 }
 
                 base.RowGUI(args);
@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         if (deviceItem != null && deviceItem.selectedPopupOption != 0)
                         {
                             deviceUsage = string.Format("{{{0}}}",
-                                    deviceItem.layout.commonUsages[deviceItem.selectedPopupOption - 1]);
+                                deviceItem.layout.commonUsages[deviceItem.selectedPopupOption - 1]);
                         }
 
                         if (item.controlPath != null)

@@ -32,7 +32,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 throw new ArgumentNullException("ptr");
             if (!eventPtr.IsA<TextEvent>())
                 throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into TextEvent",
-                        eventPtr.type));
+                    eventPtr.type));
 
             return (TextEvent*)eventPtr.data;
         }

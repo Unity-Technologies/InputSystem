@@ -277,6 +277,8 @@ namespace UnityEngine.Experimental.Input
             // Re-create any devices using the layout.
             RecreateDevicesUsingLayout(name, isKnownToBeDeviceLayout: isKnownToBeDeviceLayout);
 
+            ////TODO: we should also find out whether the layout matches any existing device better
+            ////      than the current layout it uses and re-create those devices
             // If the layout has a device matcher, see if it allows us
             // to make sense of any device we couldn't make sense of so far.
             if (deviceMatcher != null && !deviceMatcher.Value.empty)
@@ -311,8 +313,8 @@ namespace UnityEngine.Experimental.Input
                     catch (Exception exception)
                     {
                         Debug.LogError(string.Format(
-                                "Layout '{0}' matches existing device '{1}' but failed to instantiate: {2}", layout,
-                                m_AvailableDevices[i].description, exception));
+                            "Layout '{0}' matches existing device '{1}' but failed to instantiate: {2}", layout,
+                            m_AvailableDevices[i].description, exception));
                         Debug.LogException(exception);
                         continue;
                     }
@@ -995,13 +997,13 @@ namespace UnityEngine.Experimental.Input
         {
             m_StateChangeMonitorTimeouts.Append(
                 new StateChangeMonitorTimeout
-            {
-                control = control,
-                time = time,
-                monitor = monitor,
-                monitorIndex = monitorIndex,
-                timerIndex = timerIndex,
-            });
+                {
+                    control = control,
+                    time = time,
+                    monitor = monitor,
+                    monitorIndex = monitorIndex,
+                    timerIndex = timerIndex,
+                });
         }
 
         public void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex, int timerIndex)
@@ -1327,11 +1329,11 @@ namespace UnityEngine.Experimental.Input
                 var memoryRegionCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref memoryRegions, ref memoryRegionCount,
                     new StateChangeMonitorMemoryRegion
-                {
-                    offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
-                    sizeInBits = control.stateBlock.sizeInBits,
-                    bitOffset = control.stateBlock.bitOffset
-                });
+                    {
+                        offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
+                        sizeInBits = control.stateBlock.sizeInBits,
+                        bitOffset = control.stateBlock.bitOffset
+                    });
 
                 signalled.SetLength(signalled.length + 1);
             }
@@ -1490,7 +1492,7 @@ namespace UnityEngine.Experimental.Input
             catch (Exception exception)
             {
                 Debug.LogError(string.Format("Could not create a device for '{0}' (exception: {1})", description,
-                        exception));
+                    exception));
             }
             finally
             {
@@ -1597,7 +1599,7 @@ namespace UnityEngine.Experimental.Input
 
                             // Process action state change monitors.
                             if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
-                                    deviceStateSize, 0))
+                                deviceStateSize, 0))
                             {
                                 FireStateChangeNotifications(i, currentTime);
                             }
@@ -2503,7 +2505,7 @@ namespace UnityEngine.Experimental.Input
                     m_Layouts.layoutTypes[name] = type;
                 else
                     Debug.Log(string.Format("Input control layout '{0}' has been removed (type '{1}' cannot be found)",
-                            layout.name, layout.typeNameOrJson));
+                        layout.name, layout.typeNameOrJson));
             }
 
             // Layout strings.
@@ -2526,14 +2528,14 @@ namespace UnityEngine.Experimental.Input
                 if (type == null)
                 {
                     Debug.Log(string.Format("Layout builder '{0}' has been removed (type '{1}' cannot be found)",
-                            name, layout.typeName));
+                        name, layout.typeName));
                     continue;
                 }
 
                 ////TODO: deal with overloaded methods
 
                 var method = type.GetMethod(layout.methodName,
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
 
                 m_Layouts.layoutBuilders[name] = new InputControlLayout.BuilderInfo
                 {
@@ -2588,8 +2590,8 @@ namespace UnityEngine.Experimental.Input
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format(
-                            "Could not re-recreate device '{0}' with layout '{1}' and variants '{2}' after domain reload: {3}",
-                            deviceState.description, deviceState.layout, deviceState.variant, exception));
+                        "Could not re-recreate device '{0}' with layout '{1}' and variants '{2}' after domain reload: {3}",
+                        deviceState.description, deviceState.layout, deviceState.variant, exception));
                     Debug.LogException(exception);
                     continue;
                 }
