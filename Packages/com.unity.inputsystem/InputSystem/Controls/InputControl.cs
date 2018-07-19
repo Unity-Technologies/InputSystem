@@ -230,6 +230,11 @@ namespace UnityEngine.Experimental.Input
             return null;
         }
 
+        public virtual object ReadDefaultValueAsObject()
+        {
+            return null;
+        }
+
         // Constructor for devices which are assigned names once plugged
         // into the system.
         protected InputControl()
@@ -411,6 +416,11 @@ namespace UnityEngine.Experimental.Input
         public override object ReadValueAsObject()
         {
             return ReadValue();
+        }
+
+        public override object ReadDefaultValueAsObject()
+        {
+            throw new NotImplementedException();
         }
 
         // Read a control value directly from a state event.

@@ -233,6 +233,24 @@ partial class CoreTests
         Assert.That(layout["hexDigital"].defaultValue.primitiveValue.ToLong(), Is.EqualTo(0x1234));
     }
 
+    class TestDeviceWithDefaultValue : InputDevice
+    {
+        [InputControl(defaultValue = 0.1234)]
+        public AxisControl control { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSetDefaultValueOfControlOnAttribute()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithDefaultValue>();
+
+        var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultValue");
+
+        Assert.That(layout["control"].defaultValue.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control"].defaultValue.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanOverrideDefaultValuesFromBaseLayout()

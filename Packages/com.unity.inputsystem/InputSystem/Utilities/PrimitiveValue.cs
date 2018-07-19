@@ -422,7 +422,34 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (stringValue != null)
                 return FromString(stringValue);
 
-            throw new NotImplementedException();
+            if (value is bool)
+                return new PrimitiveValueOrArray((bool)value);
+            if (value is char)
+                return new PrimitiveValueOrArray((char)value);
+            if (value is byte)
+                return new PrimitiveValueOrArray((byte)value);
+            if (value is sbyte)
+                return new PrimitiveValueOrArray((sbyte)value);
+            if (value is short)
+                return new PrimitiveValueOrArray((short)value);
+            if (value is ushort)
+                return new PrimitiveValueOrArray((ushort)value);
+            if (value is int)
+                return new PrimitiveValueOrArray((int)value);
+            if (value is uint)
+                return new PrimitiveValueOrArray((uint)value);
+            if (value is long)
+                return new PrimitiveValueOrArray((long)value);
+            if (value is ulong)
+                return new PrimitiveValueOrArray((ulong)value);
+            if (value is float)
+                return new PrimitiveValueOrArray((float)value);
+            if (value is double)
+                return new PrimitiveValueOrArray((double)value);
+
+            ////TODO: arrays
+
+            throw new ArgumentException(string.Format("Cannot convert '{0}' to primitive value or value array", value), "value");
         }
     }
 }

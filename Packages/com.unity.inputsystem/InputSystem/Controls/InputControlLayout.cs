@@ -855,6 +855,11 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 arraySize = attribute.arraySize;
 
+            // Determine default value.
+            var defaultValue = new PrimitiveValueOrArray();
+            if (attribute != null)
+                defaultValue = PrimitiveValueOrArray.FromObject(attribute.defaultValue);
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -872,6 +877,7 @@ namespace UnityEngine.Experimental.Input
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
                 arraySize = arraySize,
+                defaultValue = defaultValue,
             };
         }
 
