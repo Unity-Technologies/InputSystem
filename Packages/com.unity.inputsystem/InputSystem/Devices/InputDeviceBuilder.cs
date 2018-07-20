@@ -559,11 +559,14 @@ namespace UnityEngine.Experimental.Input
             m_Device.m_ChildrenForEachControl[childIndex] = control;
             ++childIndex;
 
-            // Set display name.
+            // Set flags and misc things.
             control.m_DisplayNameFromLayout = controlItem.displayName;
-
-            // Set flags.
             control.noisy = controlItem.isNoisy;
+
+            // Set default value.
+            control.m_DefaultValue = controlItem.defaultValue;
+            if (!control.m_DefaultValue.isEmpty)
+                m_Device.hasControlsWithDefaultState = true;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);

@@ -320,13 +320,13 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
         internal ControlFlags m_ControlFlags;
+        internal PrimitiveValueOrArray m_DefaultValue;
 
         [Flags]
         internal enum ControlFlags
         {
             ConfigUpToDate = 1 << 0,
             IsNoisy = 1 << 1,
-            HasDefaultValue = 1 << 2,
         }
 
         internal bool isConfigUpToDate
@@ -343,14 +343,7 @@ namespace UnityEngine.Experimental.Input
 
         internal bool hasDefaultValue
         {
-            get { return (m_ControlFlags & ControlFlags.HasDefaultValue) == ControlFlags.HasDefaultValue; }
-            set
-            {
-                if (value)
-                    m_ControlFlags |= ControlFlags.HasDefaultValue;
-                else
-                    m_ControlFlags &= ~ControlFlags.HasDefaultValue;
-            }
+            get { return !m_DefaultValue.isEmpty; }
         }
 
         // This method exists only to not slap the internal interaction on all overrides of

@@ -675,8 +675,9 @@ namespace UnityEngine.Experimental.Input
             // Let InputStateBuffers know this device doesn't have any associated state yet.
             device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
 
-            // Let InputStateBuffers allocate state buffers.
+            // Update state buffers.
             ReallocateStateBuffers();
+            InitializeDefaultState(device, m_StateBuffers.defaultStateBuffer);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
@@ -1216,6 +1217,7 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.fixedUpdateCount = 0;
 
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
+            InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
         }
 
         [Serializable]
@@ -1470,8 +1472,45 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers = newBuffers;
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
+            InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
 
             ////TODO: need to update state change monitors
+        }
+
+        /// <summary>
+        /// Initialize default state for given device.
+        /// </summary>
+        /// <param name="device">A newly added input device.</param>
+        /// <param name="defaultStateBuffer">Buffer that contains default states for all devices owned by the manager.</param>
+        /// <remarks>
+        /// For every device, one copy of its state is kept around which is initialized with the default
+        /// values for the device. If the device has no control that has an explicitly specified control
+        /// value, the buffer simply contains all zeroes.
+        ///
+        /// The default state buffer is initialized once when a device is added to the system and then
+        /// migrated by <see cref="InputStateBuffers"/> like other device state and removed when the device
+        /// is removed from the system.
+        /// </remarks>
+        private static void InitializeDefaultState(InputDevice device, IntPtr defaultStateBuffer)
+        {
+            // Nothing to do if device has a default state of all zeroes.
+            if (!device.hasControlsWithDefaultState)
+                return;
+
+            // Otherwise go through each control and write its default value.
+            var controls = device.allControls;
+            var controlCount = controls.Count;
+            for (var n = 0; n < controlCount; ++n)
+            {
+                var control = controls[n];
+                if (!control.hasDefaultValue)
+                    continue;
+
+                if (control.m_DefaultValue.isArray)
+                    throw new NotImplementedException("default value arrays");
+
+                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue.primitiveValue);
+            }
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -2636,6 +2675,12 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers.FreeAll();
 
             ReallocateStateBuffers();
+
+            // Re-initialize default states.
+            // Once we have support for migrating state across domain reloads, this will no
+            // longer be necessary for devices that have not changed format.
+            for (var i = 0; i < m_Devices.Length; ++i)
+                InitializeDefaultState(m_Devices[i], m_StateBuffers.defaultStateBuffer);
         }
 
         [SerializeField] private SerializedState m_SerializedState;

@@ -41,6 +41,14 @@ namespace UnityEngine.Experimental.Input.Utilities
         [FieldOffset(4)] public float floatValue;
         [FieldOffset(4)] public double doubleValue;
 
+        /// <summary>
+        /// If true, the struct contains a primitive value.
+        /// </summary>
+        public bool isEmpty
+        {
+            get { return valueType == PrimitiveValueType.None; }
+        }
+
         public PrimitiveValue(bool value)
             : this()
         {
@@ -158,6 +166,39 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
         }
 
+        public bool ToBool()
+        {
+            switch (valueType)
+            {
+                case PrimitiveValueType.Bool:
+                    return boolValue;
+                case PrimitiveValueType.Char:
+                    return charValue != '\0';
+                case PrimitiveValueType.Byte:
+                    return byteValue != 0;
+                case PrimitiveValueType.SByte:
+                    return sbyteValue != 0;
+                case PrimitiveValueType.Short:
+                    return shortValue != 0;
+                case PrimitiveValueType.UShort:
+                    return ushortValue != 0;
+                case PrimitiveValueType.Int:
+                    return intValue != 0;
+                case PrimitiveValueType.UInt:
+                    return uintValue != 0;
+                case PrimitiveValueType.Long:
+                    return longValue != 0;
+                case PrimitiveValueType.ULong:
+                    return ulongValue != 0;
+                case PrimitiveValueType.Float:
+                    return !Mathf.Approximately(floatValue, 0);
+                case PrimitiveValueType.Double:
+                    return NumberHelpers.Approximately(doubleValue, 0);
+                default:
+                    return default(bool);
+            }
+        }
+
         public long ToLong()
         {
             switch (valueType)
@@ -266,6 +307,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 
     public struct PrimitiveValueOrArray
     {
+        ////REVIEW: use InlinedArray<PrimitiveValue>?
         public PrimitiveValue primitiveValue;
         public object arrayValue;
 
@@ -276,7 +318,7 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public bool isArray
         {
-            get { throw new NotImplementedException(); }
+            get { return arrayValue != null; }
         }
 
         public bool isEmpty

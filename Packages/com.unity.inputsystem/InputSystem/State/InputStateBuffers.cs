@@ -284,9 +284,15 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #if UNITY_EDITOR
             m_EditorUpdateBuffers = new DoubleBuffers();
 #endif
-            defaultStateBuffer = IntPtr.Zero;
 
             s_CurrentBuffers = new DoubleBuffers();
+
+            if (s_DefaultStateBuffer == defaultStateBuffer)
+                s_DefaultStateBuffer = IntPtr.Zero;
+            defaultStateBuffer = IntPtr.Zero;
+
+            totalSize = 0;
+            sizePerBuffer = 0;
         }
 
         // Migrate state data for all devices from a previous set of buffers to the current set of buffers.
@@ -309,6 +315,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 MigrateSingle(m_EditorUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_EditorUpdateBuffers,
                     oldDeviceIndices);
 #endif
+
+                MigrateDefaultStates(defaultStateBuffer, devices, newStateBlockOffsets, oldBuffers.defaultStateBuffer);
             }
 
             // Assign state blocks.
@@ -335,7 +343,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         private unsafe void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
         {
-            // Nothing to migrate if we no longer keep a buffer or the corresponding type.
+            // Nothing to migrate if we no longer keep a buffer of the corresponding type.
             if (!newBuffer.valid)
                 return;
 
@@ -377,6 +385,29 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        private unsafe void MigrateDefaultStates(IntPtr newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, IntPtr oldBuffer)
+        {
+            // Migrate every device that has allocated state blocks.
+            var newDeviceCount = devices.Length;
+            for (var i = 0; i < newDeviceCount; ++i)
+            {
+                var device = devices[i];
+                Debug.Assert(device.m_DeviceIndex == i);
+
+                // Skip device if it's a newly added device.
+                if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                    continue;
+
+                ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
+
+                var numBytes = device.m_StateBlock.alignedSizeInBytes;
+                var oldStatePtr = (byte*)oldBuffer.ToPointer() + (int)device.m_StateBlock.byteOffset;
+                var newStatePtr = (byte*)newBuffer.ToPointer() + (int)newStateBlockOffsets[i];
+
+                UnsafeUtility.MemCpy(newStatePtr, oldStatePtr, numBytes);
+            }
+        }
+
         // Compute the total size of we need for a single state buffer to encompass
         // all devices we have and also linearly assign offsets to all the devices
         // within such a buffer.
@@ -404,33 +435,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             offsets = result;
             return sizeInBytes;
-        }
-
-        public static void SetUpDefaultStates(InputDevice[] devices, IntPtr defaultStateBuffer)
-        {
-            if (devices == null)
-                return;
-
-            var deviceCount = devices.Length;
-            for (var i = 0; i < deviceCount; ++i)
-            {
-                var device = devices[i];
-
-                // Skip devices that have a default state of all zeros.
-                if (!device.hasControlsWithDefaultState)
-                    continue;
-
-                // Otherwise go through each control and write its default value.
-                var controls = device.allControls;
-                var controlCount = controls.Count;
-                for (var n = 0; n < controlCount; ++n)
-                {
-                    var control = controls[n];
-                    if (!control.hasDefaultValue)
-                        continue;
-                    //control.WriteValueFromObjectInto(defaultStateBuffer,);
-                }
-            }
         }
     }
 }

@@ -19,6 +19,8 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputStateHistory)
 
+////TODO: show default states of controls
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Shows status and activity of a single input device in a separate window.

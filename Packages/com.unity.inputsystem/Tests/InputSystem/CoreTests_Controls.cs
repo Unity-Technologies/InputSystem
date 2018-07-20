@@ -220,7 +220,7 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public unsafe void Controls_CanWriteValueIntoBuffer()
+    public unsafe void Controls_CanWriteValueAsObjectIntoMemoryBuffer()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

@@ -250,5 +250,31 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 throw new Exception(string.Format("State format '{0}' is not supported as floating-point format", format));
             }
         }
+
+        public unsafe PrimitiveValue Read(IntPtr statePtr)
+        {
+            throw new NotImplementedException();
+        }
+
+        public unsafe void Write(IntPtr statePtr, PrimitiveValue value)
+        {
+            var valuePtr = new IntPtr(statePtr.ToInt64() + (int)byteOffset);
+
+            if (format == kTypeBit)
+            {
+                if (sizeInBits != 1)
+                    throw new NotImplementedException("Cannot yet convert multi-bit fields to floats");
+
+                MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value.ToBool());
+            }
+            else if (format == kTypeFloat)
+            {
+                *(float*)valuePtr = value.ToFloat();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }
