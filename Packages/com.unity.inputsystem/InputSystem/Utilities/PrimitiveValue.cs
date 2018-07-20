@@ -421,11 +421,16 @@ namespace UnityEngine.Experimental.Input.Utilities
 
         public static PrimitiveValueOrArray FromString(string value)
         {
+            if (string.IsNullOrEmpty(value))
+                return new PrimitiveValueOrArray();
+
+            // Bool.
             if (value.Equals("true", StringComparison.InvariantCultureIgnoreCase))
                 return new PrimitiveValueOrArray(true);
             if (value.Equals("false", StringComparison.InvariantCultureIgnoreCase))
                 return new PrimitiveValueOrArray(false);
 
+            // Double.
             if (value.IndexOf('.') != -1 || value.Contains("e") || value.Contains("E"))
             {
                 double doubleResult;
@@ -433,6 +438,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     return new PrimitiveValueOrArray(doubleResult);
             }
 
+            // Long.
             long longResult;
             if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out longResult))
             {
