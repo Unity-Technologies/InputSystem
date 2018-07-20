@@ -211,9 +211,9 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_CanReadDefaultValue()
     {
-        InputSystem.RegisterControlLayout<TestDeviceWithDefaultValue>();
+        InputSystem.RegisterControlLayout<TestDeviceWithDefaultState>();
 
-        var device = InputSystem.AddDevice<TestDeviceWithDefaultValue>();
+        var device = InputSystem.AddDevice<TestDeviceWithDefaultState>();
 
         Assert.That(device["control"].ReadDefaultValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
     }

@@ -34,6 +34,6 @@ namespace UnityEngine.Experimental.Input
         public string displayName;
         public string imageName;
         public bool noisy;
-        public object defaultValue;
+        public object defaultState;
     }
 }

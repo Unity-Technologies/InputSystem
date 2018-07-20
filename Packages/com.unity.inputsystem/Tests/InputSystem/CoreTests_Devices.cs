@@ -398,15 +398,15 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_AddingDeviceByType_IfTypeIsNotKnownAsLayout_AutomaticallyRegistersControlLayout()
     {
-        Assert.That(() => InputSystem.AddDevice<TestDeviceWithDefaultValue>(), Throws.Nothing);
-        Assert.That(InputSystem.TryLoadLayout("TestDeviceWithDefaultValue"), Is.Not.Null);
+        Assert.That(() => InputSystem.AddDevice<TestDeviceWithDefaultState>(), Throws.Nothing);
+        Assert.That(InputSystem.TryLoadLayout("TestDeviceWithDefaultState"), Is.Not.Null);
     }
 
     [Test]
     [Category("Devices")]
     public void Devices_AddingDevice_SetsItIntoDefaultState()
     {
-        var device = InputSystem.AddDevice<TestDeviceWithDefaultValue>();
+        var device = InputSystem.AddDevice<TestDeviceWithDefaultState>();
 
         Assert.That(device["control"].ReadValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
     }

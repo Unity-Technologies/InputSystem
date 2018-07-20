@@ -564,7 +564,7 @@ namespace UnityEngine.Experimental.Input
             control.noisy = controlItem.isNoisy;
 
             // Set default value.
-            control.m_DefaultValue = controlItem.defaultValue;
+            control.m_DefaultValue = controlItem.defaultState;
             if (!control.m_DefaultValue.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
 

@@ -194,7 +194,10 @@ namespace UnityEngine.Experimental.Input
             public Flags flags;
             public int arraySize;
 
-            public PrimitiveValueOrArray defaultValue;
+            /// <summary>
+            /// Optional default value for the state memory associated with the control.
+            /// </summary>
+            public PrimitiveValueOrArray defaultState;
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -301,10 +304,10 @@ namespace UnityEngine.Experimental.Input
                 else
                     result.resourceName = other.resourceName;
 
-                if (!defaultValue.isEmpty)
-                    result.defaultValue = defaultValue;
+                if (!defaultState.isEmpty)
+                    result.defaultState = defaultState;
                 else
-                    result.defaultValue = other.defaultValue;
+                    result.defaultState = other.defaultState;
 
                 return result;
             }
@@ -855,10 +858,10 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 arraySize = attribute.arraySize;
 
-            // Determine default value.
-            var defaultValue = new PrimitiveValueOrArray();
+            // Determine default state.
+            var defaultState = new PrimitiveValueOrArray();
             if (attribute != null)
-                defaultValue = PrimitiveValueOrArray.FromObject(attribute.defaultValue);
+                defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
 
             return new ControlItem
             {
@@ -877,7 +880,7 @@ namespace UnityEngine.Experimental.Input
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
                 arraySize = arraySize,
-                defaultValue = defaultValue,
+                defaultState = defaultState,
             };
         }
 
@@ -1453,7 +1456,7 @@ namespace UnityEngine.Experimental.Input
             // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
             // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
             // for this later but for now, we use a string-based value fallback instead.
-            public string defaultValue;
+            public string defaultState;
 
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
@@ -1511,8 +1514,8 @@ namespace UnityEngine.Experimental.Input
                 if (!string.IsNullOrEmpty(processors))
                     layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
 
-                if (defaultValue != null)
-                    layout.defaultValue = PrimitiveValueOrArray.FromObject(defaultValue);
+                if (defaultState != null)
+                    layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
 
                 return layout;
             }
