@@ -276,7 +276,7 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 if (layout.m_UpdateBeforeRender == true)
-                    m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
+                    m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.UpdateBeforeRender;
             }
             else if (parent == null)
             {
@@ -559,11 +559,14 @@ namespace UnityEngine.Experimental.Input
             m_Device.m_ChildrenForEachControl[childIndex] = control;
             ++childIndex;
 
-            // Set display name.
+            // Set flags and misc things.
             control.m_DisplayNameFromLayout = controlItem.displayName;
+            control.noisy = controlItem.isNoisy;
 
-            // Set flags.
-            control.m_IsNoisy = controlItem.isNoisy;
+            // Set default value.
+            control.m_DefaultValue = controlItem.defaultState;
+            if (!control.m_DefaultValue.isEmpty)
+                m_Device.hasControlsWithDefaultState = true;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);

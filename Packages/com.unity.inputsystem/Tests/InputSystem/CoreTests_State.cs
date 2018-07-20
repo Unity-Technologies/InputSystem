@@ -766,6 +766,7 @@ partial class CoreTests
             device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
             device3.stateBlock.alignedSizeInBytes, 4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
+        var sizeOfDefaultStateBuffer = combinedDeviceStateSize;
 
         const int kBufferCount =
             #if UNITY_EDITOR
@@ -780,7 +781,7 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kBufferCount * sizePerBuffer));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kBufferCount * sizePerBuffer + sizeOfDefaultStateBuffer));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));

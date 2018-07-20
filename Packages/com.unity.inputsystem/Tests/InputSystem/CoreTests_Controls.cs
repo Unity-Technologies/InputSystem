@@ -1,5 +1,7 @@
 using System;
 using NUnit.Framework;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
@@ -207,6 +209,42 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanReadDefaultValue()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithDefaultState>();
+
+        var device = InputSystem.AddDevice<TestDeviceWithDefaultState>();
+
+        Assert.That(device["control"].ReadDefaultValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public unsafe void Controls_CanWriteValueAsObjectIntoMemoryBuffer()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var tempBufferSize = (int)gamepad.stateBlock.alignedSizeInBytes;
+        using (var tempBuffer = new NativeArray<byte>(tempBufferSize, Allocator.Temp))
+        {
+            var tempBufferPtr = (byte*)NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(tempBuffer);
+
+            // The device is the first in the system so is guaranteed to start of offset 0 which
+            // means we don't need to adjust the pointer here.
+            Debug.Assert(gamepad.stateBlock.byteOffset == 0);
+
+            gamepad.leftStick.WriteValueFromObjectInto(new IntPtr(tempBufferPtr), tempBufferSize, new Vector2(0.1234f, 0.5678f));
+
+            var leftStickXPtr = (float*)(tempBufferPtr + gamepad.leftStick.x.stateBlock.byteOffset);
+            var leftStickYPtr = (float*)(tempBufferPtr + gamepad.leftStick.y.stateBlock.byteOffset);
+
+            Assert.That(*leftStickXPtr, Is.EqualTo(0.1234).Within(0.00001));
+            Assert.That(*leftStickYPtr, Is.EqualTo(0.5678).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanReadValueFromStateEvents()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -223,6 +261,13 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void TODO_Controls_ReadingValueFromStateEvent_ReturnsDefaultValueForControlsNotPartOfEvent()
+    {
+        Assert.Fail();
     }
 
     [Test]
