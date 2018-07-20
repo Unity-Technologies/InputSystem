@@ -592,9 +592,12 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
+                // Still no match. Automatically registers the given type as a layout.
                 if (layoutName.IsEmpty())
-                    throw new ArgumentException(string.Format("Cannot find layout registered for type '{0}'", type.Name),
-                        "type");
+                {
+                    layoutName = new InternedString(type.Name);
+                    RegisterControlLayout(type.Name, type);
+                }
             }
 
             Debug.Assert(!layoutName.IsEmpty(), name);
