@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
@@ -11,14 +12,22 @@ namespace UnityEngine.Experimental.Input.Editor
         const string kInputAssetMarker = "INPUTASSET\n";
         InputActionListTreeView m_TreeView;
         ActionInspectorWindow m_Window;
+        SerializedObject m_SerializedObject;
 
-        public CopyPasteUtility(ActionInspectorWindow window)
+        GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
+        GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
+        GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
+        GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
+        GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
+
+        public CopyPasteUtility(ActionInspectorWindow window, InputActionListTreeView tree, SerializedObject serializedObject)
         {
             m_Window = window;
-            m_TreeView = window.m_TreeView;
+            m_TreeView = tree;
+            m_SerializedObject = serializedObject;
         }
 
-        public void HandleCopyEvent()
+        void HandleCopyEvent()
         {
             if (!CanCopySelection())
             {
@@ -51,11 +60,19 @@ namespace UnityEngine.Experimental.Input.Editor
 
                     foreach (var child in action.children)
                     {
-                        if (!(child is BindingTreeItem))
-                            continue;
                         copyList.Append(child.GetType().Name);
                         copyList.Append((child as BindingTreeItem).SerializeToString());
                         copyList.Append(kInputAssetMarker);
+                        // Copy composites
+                        if (child.hasChildren)
+                        {
+                            foreach (var innerChild in child.children)
+                            {
+                                copyList.Append(innerChild.GetType().Name);
+                                copyList.Append((innerChild as BindingTreeItem).SerializeToString());
+                                copyList.Append(kInputAssetMarker);
+                            }
+                        }
                     }
                 }
                 if (selectedRow is CompositeGroupTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
@@ -75,14 +92,18 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
         }
 
-        public bool CanCopySelection()
+        bool CanCopySelection()
         {
             var selectedRows = m_TreeView.GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
-            return rowTypes.Count == 1;
+            if (rowTypes.Count != 1)
+                return false;
+            if (rowTypes.Single() == typeof(CompositeTreeItem))
+                return false;
+            return true;
         }
 
-        public void HandlePasteEvent()
+        void HandlePasteEvent()
         {
             var json = EditorGUIUtility.systemCopyBuffer;
             var elements = json.Split(new[] { kInputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
@@ -95,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (IsRowOfType<ActionMapTreeItem>(ref row))
                 {
                     var map = JsonUtility.FromJson<InputActionMap>(row);
-                    InputActionSerializationHelpers.AddActionMapFromObject(m_Window.m_SerializedObject, map);
+                    InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
                     m_Window.Apply();
                     continue;
                 }
@@ -104,22 +125,31 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var action = JsonUtility.FromJson<InputAction>(row);
                     var actionMap = m_TreeView.GetSelectedActionMap();
-                    var newActionProperty = InputActionSerializationHelpers.AddActionFromObject(action, actionMap.elementProperty);
-                    m_Window.Apply();
+                    var newActionProperty = actionMap.AddActionFromObject(action);
 
                     while (i + 1 < elements.Length)
                     {
                         try
                         {
                             var nextRow = elements[i + 1];
-                            if (!nextRow.StartsWith(typeof(BindingTreeItem).Name))
+                            if (nextRow.StartsWith(typeof(BindingTreeItem).Name))
+                            {
+                                nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
+                            }
+                            else if (nextRow.StartsWith(typeof(CompositeGroupTreeItem).Name))
+                            {
+                                nextRow = nextRow.Substring(typeof(CompositeGroupTreeItem).Name.Length);
+                            }
+                            else if (nextRow.StartsWith(typeof(CompositeTreeItem).Name))
+                            {
+                                nextRow = nextRow.Substring(typeof(CompositeTreeItem).Name.Length);
+                            }
+                            else
                             {
                                 break;
                             }
-                            nextRow = nextRow.Substring(typeof(BindingTreeItem).Name.Length);
                             var binding = JsonUtility.FromJson<InputBinding>(nextRow);
                             InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
-                            m_Window.Apply();
                             i++;
                         }
                         catch (ArgumentException e)
@@ -128,6 +158,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             break;
                         }
                     }
+                    m_Window.Apply();
+
                     continue;
                 }
 
@@ -143,8 +175,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
                     }
 
-                    var actionMap = m_TreeView.GetSelectedActionMap();
-                    InputActionSerializationHelpers.AppendBindingFromObject(binding, selectedRow.elementProperty, actionMap.elementProperty);
+                    selectedRow.AppendBindingFromObject(binding);
                     m_Window.Apply();
                     continue;
                 }
@@ -159,6 +190,128 @@ namespace UnityEngine.Experimental.Input.Editor
                 return true;
             }
             return false;
+        }
+
+        public bool IsValidCommand(string currentCommandName)
+        {
+            return Event.current.commandName == "Copy"
+                || Event.current.commandName == "Paste"
+                || Event.current.commandName == "Cut"
+                || Event.current.commandName == "Duplicate"
+                || Event.current.commandName == "Delete";
+        }
+
+        public void HandleCommandEvent(string currentCommandName)
+        {
+            switch (Event.current.commandName)
+            {
+                case "Copy":
+                    HandleCopyEvent();
+                    Event.current.Use();
+                    break;
+                case "Paste":
+                    HandlePasteEvent();
+                    Event.current.Use();
+                    break;
+                case "Cut":
+                    HandleCopyEvent();
+                    DeleteSelectedRows();
+                    Event.current.Use();
+                    break;
+                case "Duplicate":
+                    HandleCopyEvent();
+                    HandlePasteEvent();
+                    Event.current.Use();
+                    break;
+                case "Delete":
+                    DeleteSelectedRows();
+                    Event.current.Use();
+                    break;
+            }
+        }
+
+        void DeleteSelectedRows()
+        {
+            var rows = m_TreeView.GetSelectedRows().ToArray();
+            var rowTypes = rows.Select(r => r.GetType()).Distinct().ToList();
+            // Don't allow to delete different types at once because it's hard to handle.
+            if (rowTypes.Count() > 1)
+            {
+                EditorApplication.Beep();
+                return;
+            }
+
+            // Remove composite bindings
+            foreach (var compositeGroup in FindRowsToDeleteOfType<CompositeGroupTreeItem>(rows))
+            {
+                var action = (compositeGroup.parent as ActionTreeItem);
+                for (var i = compositeGroup.children.Count - 1; i >= 0; i--)
+                {
+                    var composite = (CompositeTreeItem)compositeGroup.children[i];
+                    action.RemoveBinding(composite.index);
+                }
+                action.RemoveBinding(compositeGroup.index);
+            }
+
+            // Remove bindings
+            foreach (var bindingRow in FindRowsToDeleteOfType<BindingTreeItem>(rows))
+            {
+                var action = bindingRow.parent as ActionTreeItem;
+                action.RemoveBinding(bindingRow.index);
+            }
+
+
+            // Remove actions
+            foreach (var actionRow in FindRowsToDeleteOfType<ActionTreeItem>(rows))
+            {
+                var action = actionRow;
+                var actionMap = actionRow.parent as ActionMapTreeItem;
+                for (var i = actionRow.bindingsCount - 1; i >= 0; i--)
+                {
+                    action.RemoveBinding(i);
+                }
+                actionMap.DeleteAction(actionRow.index);
+            }
+
+            //Remove action maps
+            foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
+            {
+                InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
+            }
+
+            m_Window.Apply();
+            m_Window.OnSelectionChanged();
+        }
+
+        IEnumerable<T> FindRowsToDeleteOfType<T>(InputTreeViewLine[] rows)
+        {
+            return rows.Where(r => r.GetType() == typeof(T)).OrderByDescending(r => r.index).Cast<T>();
+        }
+
+        public void AddOptionsToMenu(GenericMenu menu)
+        {
+            var canCopySelection = CanCopySelection();
+            menu.AddSeparator("");
+            if (canCopySelection)
+            {
+                menu.AddItem(m_CutGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Cut"));
+                menu.AddItem(m_CopyGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Copy"));
+            }
+            else
+            {
+                menu.AddDisabledItem(m_CutGUI, false);
+                menu.AddDisabledItem(m_CopyGUI, false);
+            }
+            menu.AddItem(m_PasteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Paste"));
+            menu.AddItem(m_DeleteGUI, false, () => EditorApplication.ExecuteMenuItem("Edit/Delete"));
+            if (canCopySelection)
+            {
+                menu.AddItem(m_Duplicate, false, () => EditorApplication.ExecuteMenuItem("Edit/Duplicate"));
+            }
+            else
+            {
+                menu.AddDisabledItem(m_Duplicate, false);
+            }
         }
     }
 }
