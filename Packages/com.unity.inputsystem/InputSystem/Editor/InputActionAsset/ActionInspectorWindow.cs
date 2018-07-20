@@ -21,10 +21,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 Initialize();
                 EditorApplication.playModeStateChanged += s =>
-                    {
-                        if (s == PlayModeStateChange.ExitingPlayMode)
-                            Initialize();
-                    };
+                {
+                    if (s == PlayModeStateChange.ExitingPlayMode)
+                        Initialize();
+                };
             }
 
             static void Initialize()

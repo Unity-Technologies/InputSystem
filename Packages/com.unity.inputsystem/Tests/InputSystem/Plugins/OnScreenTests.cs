@@ -34,7 +34,7 @@ public class OnScreenTests : InputTestFixture
 
         Assert.That(stick.control.ReadValueAsObject(),
             Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2)))
-            .Using(vector2Comparer));
+                .Using(vector2Comparer));
 
         ////REVIEW: check transform?
     }

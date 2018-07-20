@@ -120,6 +120,7 @@ namespace UnityEngine.Experimental.Input
                             var intValue = *((int*)ptr);
                             return string.Format("{0}={1}", name, intValue);
                         case ParameterType.Float:
+                            ////FIXME: this needs to be invariant culture
                             var floatValue = *((float*)ptr);
                             return string.Format("{0}={1}", name, floatValue);
                     }
@@ -487,7 +488,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException(name);
 
                 var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
-                        new ControlItem {name = new InternedString(name)});
+                    new ControlItem {name = new InternedString(name)});
 
                 return new ControlBuilder
                 {
@@ -920,7 +921,7 @@ namespace UnityEngine.Experimental.Input
                     var closeParenIndex = text.IndexOf(')', index);
                     if (closeParenIndex == -1)
                         throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
-                                text));
+                            text));
 
                     var parameterString = text.Substring(index, closeParenIndex - index);
                     parameters = ParseParameters(parameterString);
@@ -1318,14 +1319,14 @@ namespace UnityEngine.Experimental.Input
                     if (type == null)
                     {
                         Debug.Log(string.Format(
-                                "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
-                                this.type, name));
+                            "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
+                            this.type, name));
                         type = typeof(InputDevice);
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
                         throw new Exception(string.Format("'{0}' used by layout '{1}' is not an InputControl",
-                                this.type, name));
+                            this.type, name));
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
@@ -1619,7 +1620,7 @@ namespace UnityEngine.Experimental.Input
                         var baseLayout = TryLoadLayout(baseLayoutName, table);
                         if (baseLayout == null)
                             throw new LayoutNotFoundException(string.Format(
-                                    "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
+                                "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
                         layout.MergeLayout(baseLayout);
                         layout.m_ExtendsLayout = baseLayoutName;
                     }

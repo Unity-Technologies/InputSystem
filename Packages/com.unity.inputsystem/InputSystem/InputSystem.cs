@@ -226,9 +226,9 @@ namespace UnityEngine.Experimental.Input
 
                     default:
                         throw new ArgumentException(
-                        string.Format(
-                            "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
-                            methodCall.Object.NodeType), "builderExpression");
+                            string.Format(
+                                "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
+                                methodCall.Object.NodeType), "builderExpression");
                 }
             }
 
@@ -470,7 +470,7 @@ namespace UnityEngine.Experimental.Input
             var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
             if (device == null)
                 throw new Exception(string.Format("Layout registered for type '{0}' did not produce a device of that type; layout probably has been overridden",
-                        typeof(TDevice).Name));
+                    typeof(TDevice).Name));
             return device;
         }
 

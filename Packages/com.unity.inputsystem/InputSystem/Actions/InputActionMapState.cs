@@ -727,7 +727,7 @@ namespace UnityEngine.Experimental.Input
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format("{0} thrown during execution of '{1}' callback on action '{2}'",
-                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger)));
+                        exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger)));
                     Debug.LogException(exception);
                 }
             }
@@ -743,7 +743,7 @@ namespace UnityEngine.Experimental.Input
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format("{0} thrown during execution of callback for '{1}' phase of '{2}' action in map '{3}'",
-                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger).name, actionMap.name));
+                        exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger).name, actionMap.name));
                     Debug.LogException(exception);
                 }
             }

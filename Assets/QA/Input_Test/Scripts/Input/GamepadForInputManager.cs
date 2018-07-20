@@ -10,7 +10,7 @@ using UnityEngine.UI;
 // Alternatively, ingore the requirement and change the code
 // --------------------------------------------------------------------------------
 
-public class StandardGamepadForInputManager : MonoBehaviour
+public class GamepadForInputManager : MonoBehaviour
 {
     [Tooltip("Highlight Prefab")]
     public ParticleSystem m_buttonHighlight;
@@ -88,7 +88,7 @@ public class StandardGamepadForInputManager : MonoBehaviour
         }
     }
 
-    protected void StartHighlightButton(string buttonName)
+    protected virtual void StartHighlightButton(string buttonName)
     {
         Transform button = m_buttonContainer.Find(buttonName);
         if (button == null)
@@ -103,7 +103,7 @@ public class StandardGamepadForInputManager : MonoBehaviour
         }
     }
 
-    protected void StopHighlightButton(string buttonName)
+    protected virtual void StopHighlightButton(string buttonName)
     {
         Transform button = m_buttonContainer.Find(buttonName);
         if (button != null)
@@ -140,6 +140,71 @@ public class StandardGamepadForInputManager : MonoBehaviour
     protected void ShowMessage(string msg)
     {
         m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
+    }
+}
+
+[Serializable]
+public class AnalogStick
+{
+    //-------------------------------------------------------------------------------------------
+    // For Input Manager:
+    // Each Analog Stck has 2 different axis associated with it
+    // One is control by the stick's movement in X direction; the other is controled by Y.
+    //-------------------------------------------------------------------------------------------
+
+    private Transform stick;            // The moving part of the analog stick. It is the child object named "Stick";
+    private string name;                // The name for the Transform Stick. It should make sense for the controller used, such as "Left_Stick" for Xbox controller.
+    private string x_axis_name;         // The Axis controlled through the stick's movement in X direction. The name is set in Input Manager.
+    private string y_axis_name;         // The Axis controlled through the stick's movement in Y direction. The name is set in Input Manager.
+    private bool is_y_reversed = false; // In case the Y axis is reversed, like for Input Manager.
+    private bool is_x_reversed = false; // In case the X axis is reversed. Probably not useful.
+
+    private float max_move_distance;    // The distance of the transform can move in each direction
+    private Vector3 original_position;  // The stick's initial position in the scene
+
+    private Text m_positionText;        // The UI Text to show the stick's position. It is optional.
+
+    public string Name { get { return name; } }
+    public string X_Axis_Name { get { return x_axis_name; } }
+    public string Y_Axis_Name { get { return y_axis_name; } }
+    public float Max_Move_Distance { get { return max_move_distance; } }
+    public Transform Stick
+    {
+        get { return stick; }
+        set
+        {
+            name = value.parent.name;
+            stick = value;
+            original_position = stick.position;
+        }
+    }
+
+    // For Input Manager Initialization
+    public AnalogStick(Transform stck, string XName, string YName, Text posText = null, float maxDistance = 0.5f, bool isYReversed = false)
+    {
+        x_axis_name = XName;
+        y_axis_name = YName;
+        max_move_distance = maxDistance;
+        Stick = stck;
+        is_y_reversed = isYReversed;
+        m_positionText = posText;
+    }
+
+    // Update the stick position according to the input value
+    public void UpdatePosition(float xValue, float yValue)
+    {
+        if (m_positionText != null)
+            m_positionText.text = "(" + xValue.ToString("F2") + ", " + yValue.ToString("F2") + ")";
+
+        if (is_x_reversed) xValue *= -1;
+        if (is_y_reversed) yValue *= -1;
+        Vector3 adjust = new Vector3(xValue * max_move_distance, yValue * max_move_distance, 0f);
+        stick.position = original_position + adjust;
+    }
+
+    public void UpdatePosition(Vector2 pos)
+    {
+        UpdatePosition(pos.x, pos.y);
     }
 }
 

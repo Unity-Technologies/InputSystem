@@ -1,32 +1,53 @@
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
 
-public class XboxForInputSystem : StandardGamepadForInputSystem
+public class XboxForInputSystem : GamepadForInputSystem
 {
+    [Header("UI Element for Other Information")]
+    public Text m_leftStickText;
+    public Text m_rightStickText;
+
     // Use this for initialization
     void Start()
     {
-        button_press_action = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>");
-        button_press_action.performed += callbackContext => OnControllerBUttonPress(callbackContext.control as ButtonControl, isXbox: true);
-        button_press_action.Enable();
+        //m_stickMaxMove = 0.25f;
 
-        dpad_press_action = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>");
-        dpad_press_action.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
-        dpad_press_action.Enable();
+        m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>");
+        m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
+        m_buttonAction.Enable();
 
-        stick_move_action = new InputAction(name: "StickMoveAction", binding: "XInputController*/<stick>");
-        stick_move_action.performed += callbackContext => StickMove(callbackContext.control as StickControl);
-        stick_move_action.Enable();
+        m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>");
+        m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
+        m_dPadAction.Enable();
+
+        m_stickMoveAction = new InputAction(name: "StickMoveAction", binding: "XInputController*/<stick>");
+        m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
+        m_stickMoveAction.Enable();
+    }
+
+    private void OnEnable()
+    {
+        if (m_buttonAction != null)     m_buttonAction.Enable();
+        if (m_dPadAction != null)       m_dPadAction.Enable();
+        if (m_stickMoveAction != null)  m_stickMoveAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        m_buttonAction.Disable();
+        m_dPadAction.Disable();
+        m_stickMoveAction.Disable();
     }
 
     protected override void StickMove(StickControl control)
     {
         base.StickMove(control);
 
-        Transform stick = GetInputTransform(FirstLetterToUpper(control.name), isStick: true);
-        TextMesh textMesh = stick.Find("Value_Input_System").GetComponent<TextMesh>();
-        if (textMesh != null)
-            textMesh.text = control.ReadValue().ToString();
+        if (control.name == "leftStick")
+            m_leftStickText.text = control.ReadValue().ToString("F2");
+        else if (control.name == "rightStick")
+            m_rightStickText.text = control.ReadValue().ToString("F2");
     }
 }

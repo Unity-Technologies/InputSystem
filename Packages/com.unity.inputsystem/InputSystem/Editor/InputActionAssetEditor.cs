@@ -124,7 +124,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void InitializeActionTreeView()
         {
             m_ActionTreeView = InputActionTreeView.Create(serializedObject.FindProperty("m_ActionMaps"), Apply,
-                    ref m_ActionTreeViewState, ref m_ActionTreeViewHeaderState);
+                ref m_ActionTreeViewState, ref m_ActionTreeViewHeaderState);
         }
 
         private void Apply()

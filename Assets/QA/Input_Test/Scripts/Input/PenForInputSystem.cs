@@ -17,7 +17,7 @@ public class PenForInputSystem : MonoBehaviour
     public TextMesh m_pressureText;
     public Text m_penInfoText;
 
-    private InputAction button_press_action;
+    private InputAction m_penAction;
 
     private const float HORIZONTAL_RANGE = 8f;
     private const float VERTICAL_RANGE = 2.7f;
@@ -41,10 +41,20 @@ public class PenForInputSystem : MonoBehaviour
         original_pos = pen_holder.position;
         rotation_adjust = pen_rotation.GetChild(0).localEulerAngles;
 
-        button_press_action = new InputAction(name: "PenButtonAction", binding: "" +
-                "<pen>/<button>");
-        button_press_action.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
-        button_press_action.Enable();
+        m_penAction = new InputAction(name: "PenButtonAction", binding: "<pen>/<button>");
+        m_penAction.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
+        m_penAction.Enable();
+    }
+
+    void OnEnable()
+    {
+        if (m_penAction != null)
+            m_penAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        m_penAction.Disable();
     }
 
     // Update is called once per frame
@@ -56,7 +66,7 @@ public class PenForInputSystem : MonoBehaviour
         // Update position
         Vector2 pos = pen.position.ReadValue();
         pen_holder.position = original_pos + new Vector3(pos.x * HORIZONTAL_RANGE / Screen.width,
-                pos.y * VERTICAL_RANGE / Screen.height, 0);
+            pos.y * VERTICAL_RANGE / Screen.height, 0);
 
         // Update tilt
         Vector2 tilt = pen.tilt.ReadValue();

@@ -19,10 +19,10 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 Initialize();
                 EditorApplication.playModeStateChanged += s =>
-                    {
-                        if (s == PlayModeStateChange.ExitingPlayMode)
-                            Initialize();
-                    };
+                {
+                    if (s == PlayModeStateChange.ExitingPlayMode)
+                        Initialize();
+                };
             }
 
             static void Initialize()
@@ -77,22 +77,22 @@ namespace UnityEngine.Experimental.Input.Editor
 
             m_InteractionsListView.onAddDropdownCallback =
                 (rect, list) =>
-                {
-                    var menu = new GenericMenu();
-                    for (var i = 0; i < m_InteractionChoices.Length; ++i)
-                        menu.AddItem(m_InteractionChoices[i], false, AddModifier, m_InteractionChoices[i].text);
-                    menu.ShowAsContext();
-                };
+            {
+                var menu = new GenericMenu();
+                for (var i = 0; i < m_InteractionChoices.Length; ++i)
+                    menu.AddItem(m_InteractionChoices[i], false, AddModifier, m_InteractionChoices[i].text);
+                menu.ShowAsContext();
+            };
 
             m_InteractionsListView.onRemoveCallback =
                 (list) =>
-                {
-                    list.list.RemoveAt(list.index);
-                    ApplyModifiers();
-                };
+            {
+                list.list.RemoveAt(list.index);
+                ApplyModifiers();
+            };
             m_InteractionsListView.onReorderCallback = list => { ApplyModifiers(); };
 
-            m_ProcessorsListView = new ReorderableList(new List<string>{}, typeof(string));
+            m_ProcessorsListView = new ReorderableList(new List<string> {}, typeof(string));
             m_ProcessorsListView.headerHeight = 3;
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("processors");
             foreach (var s in m_ProcessorsProperty.stringValue.Split(new[] {InputBinding.kSeparatorString}, StringSplitOptions.RemoveEmptyEntries))
@@ -101,19 +101,19 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             m_ProcessorsListView.onAddDropdownCallback =
                 (rect, list) =>
-                {
-                    var menu = new GenericMenu();
-                    for (var i = 0; i < m_ProcessorsChoices.Length; ++i)
-                        menu.AddItem(m_ProcessorsChoices[i], false, AddProcessor, m_ProcessorsChoices[i].text);
-                    menu.ShowAsContext();
-                };
+            {
+                var menu = new GenericMenu();
+                for (var i = 0; i < m_ProcessorsChoices.Length; ++i)
+                    menu.AddItem(m_ProcessorsChoices[i], false, AddProcessor, m_ProcessorsChoices[i].text);
+                menu.ShowAsContext();
+            };
 
             m_ProcessorsListView.onRemoveCallback =
                 (list) =>
-                {
-                    list.list.RemoveAt(list.index);
-                    ApplyModifiers();
-                };
+            {
+                list.list.RemoveAt(list.index);
+                ApplyModifiers();
+            };
             m_ProcessorsListView.onReorderCallback = list => { ApplyModifiers(); };
         }
 

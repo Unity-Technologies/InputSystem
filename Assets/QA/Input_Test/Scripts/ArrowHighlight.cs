@@ -22,6 +22,21 @@ public class ArrowHighlight : MonoBehaviour
         SetAlpha(0f);
     }
 
+    private void OnEnable()
+    {
+        isMouseMove = false;
+    }
+
+    private void OnDisable()
+    {
+        if (isPlaying)
+        {
+            SetAlpha(0f);
+            StopCoroutine("HighlightMovement");
+            isPlaying = false;
+        }
+    }
+
     // The loop for effect
     private IEnumerator HighlightMovement()
     {

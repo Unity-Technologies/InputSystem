@@ -168,13 +168,13 @@ namespace UnityEngine.Experimental.Input
             var data = m_TriggerDataBuffer[triggerIndex];
             ++data.actionEventCount;
             var actionIndex = ArrayHelpers.AppendWithCapacity(ref m_ActionDataBuffer, ref m_ActionDataCount,
-                    new ActionData
-            {
-                triggerIndex = triggerIndex,
-                bindingIndex = context.m_BindingIndex,
-                interactionIndex = context.m_InteractionIndex,
-                phase = context.phase,
-            });
+                new ActionData
+                {
+                    triggerIndex = triggerIndex,
+                    bindingIndex = context.m_BindingIndex,
+                    interactionIndex = context.m_InteractionIndex,
+                    phase = context.phase,
+                });
             if (data.actionEventCount == 1)
                 data.actionEventIndex = actionIndex;
             m_TriggerDataBuffer[triggerIndex] = data;
@@ -692,8 +692,8 @@ namespace UnityEngine.Experimental.Input
                         throw new InvalidOperationException("TriggerEventArray not initialized properly");
                     if (index < 0 || index >= m_Manager.m_TriggerDataCount)
                         throw new ArgumentOutOfRangeException(string.Format(
-                                "Index {0} is out of range; trigger event array has {1} entries", index,
-                                m_Manager.m_TriggerDataCount), "index");
+                            "Index {0} is out of range; trigger event array has {1} entries", index,
+                            m_Manager.m_TriggerDataCount), "index");
                     return new TriggerEvent(m_Manager, index);
                 }
             }

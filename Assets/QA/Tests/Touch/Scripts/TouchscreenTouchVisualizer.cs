@@ -63,9 +63,9 @@ public class TouchscreenTouchVisualizer : MonoBehaviour
             }
 
             m_Touches[i].transform.position = m_MainCamera.ScreenToWorldPoint(
-                    new Vector3(touchscreen.activeTouches[i].position.ReadValue().x,
-                        touchscreen.activeTouches[i].position.ReadValue().y,
-                        m_MainCamera.nearClipPlane));
+                new Vector3(touchscreen.activeTouches[i].position.ReadValue().x,
+                    touchscreen.activeTouches[i].position.ReadValue().y,
+                    m_MainCamera.nearClipPlane));
 
 
             // Accumulate average position.  Division happens later

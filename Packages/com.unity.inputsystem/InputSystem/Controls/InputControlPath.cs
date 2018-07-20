@@ -394,7 +394,7 @@ namespace UnityEngine.Experimental.Input
                     while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout))
                     {
                         controlIsMatch = MatchPathComponent(baseLayout, path, ref indexInPath,
-                                PathComponentType.Layout);
+                            PathComponentType.Layout);
                         if (controlIsMatch)
                             break;
                     }
@@ -426,7 +426,7 @@ namespace UnityEngine.Experimental.Input
                     for (var i = 0; i < control.aliases.Count && !controlIsMatch; ++i)
                     {
                         controlIsMatch = MatchPathComponent(control.aliases[i], path, ref indexInPath,
-                                PathComponentType.Name);
+                            PathComponentType.Name);
                     }
                 }
             }
@@ -525,7 +525,7 @@ namespace UnityEngine.Experimental.Input
                 if (indexInPath < pathLength && path[indexInPath] == '/')
                 {
                     lastMatch = MatchChildrenRecursive(controlMatchedByUsage, path, indexInPath + 1,
-                            ref matches);
+                        ref matches);
 
                     // We can stop going through usages if we matched something and the
                     // path component covering usage does not contain wildcards.
