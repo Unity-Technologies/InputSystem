@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,6 +6,10 @@ using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.Experimental.Input.Utilities;
+
+////REVIEW: give these better names or move them somewhere inside; for example, there should not be a
+////        toplevel class called just "InteractionsList" anywhere in the input system; any toplevel
+////        class should have a clear name indicating what the class is responsible for
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -233,3 +238,4 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 }
+#endif // UNITY_EDITOR

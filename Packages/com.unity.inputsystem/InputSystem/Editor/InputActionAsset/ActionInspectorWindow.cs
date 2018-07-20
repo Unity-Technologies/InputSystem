@@ -7,7 +7,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    public class ActionInspectorWindow : EditorWindow
+    class ActionInspectorWindow : EditorWindow
     {
         static class Styles
         {
@@ -38,13 +38,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
             }
-        }
-
-        [MenuItem("Input System/Show Input Manager")]
-        public static void ShowActionInspectorWindow()
-        {
-            var w = GetWindow<ActionInspectorWindow>("Input Manager");
-            w.Show();
         }
 
         [OnOpenAsset]
@@ -80,7 +73,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         InputActionListTreeView m_TreeView;
         SerializedObject m_SerializedObject;
-        PropertiesView m_PropertyView;
+        InputBindingPropertiesView m_PropertyView;
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
@@ -133,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var p = m_TreeView.GetSelectedRow();
             if (p.hasProperties)
             {
-                m_PropertyView = new PropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
+                m_PropertyView = new InputBindingPropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
             }
         }
 

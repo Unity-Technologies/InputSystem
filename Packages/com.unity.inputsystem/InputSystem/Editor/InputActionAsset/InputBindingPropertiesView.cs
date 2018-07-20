@@ -5,7 +5,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class PropertiesView
+    class InputBindingPropertiesView
     {
         static class Styles
         {
@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         bool m_ManualEditMode;
 
-        public PropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
         {
             m_TreeViewState = treeViewState;
             m_BindingProperty = bindingProperty;
