@@ -14,12 +14,12 @@ public class SwitchTests : InputTestFixture
     public void Devices_SupportsSwitchNpad()
     {
         var device = InputSystem.AddDevice(
-                new InputDeviceDescription
-                {
-                    interfaceName = "Switch",
-                    manufacturer = "Nintendo",
-                    product = "Wireless Controller",
-                });
+            new InputDeviceDescription
+            {
+                interfaceName = "Switch",
+                manufacturer = "Nintendo",
+                product = "Wireless Controller",
+            });
 
         Assert.That(device, Is.TypeOf<NPad>());
         var controller = (NPad)device;
@@ -94,7 +94,7 @@ public class SwitchTests : InputTestFixture
                         ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyle.Handheld;
                         return 1;
                     }
-                    else if(commandPtr->type == QueryUserIdCommand.Type)
+                    else if (commandPtr->type == QueryUserIdCommand.Type)
                     {
                         // Sending this command happens before refreshing NPad status
                         return 1;
@@ -104,7 +104,7 @@ public class SwitchTests : InputTestFixture
                     return InputDeviceCommand.kGenericFailure;
                 });
         }
-        Assert.That(controller.npadID, Is.EqualTo(NPad.NpadId.Handheld));
+        Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
         Assert.That(controller.orientation, Is.EqualTo(NPad.Orientation.Vertical));
         Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyle.Handheld));
     }

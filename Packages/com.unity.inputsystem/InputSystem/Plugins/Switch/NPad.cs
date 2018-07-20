@@ -340,7 +340,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
                 return m_Orientation;
             }
         }
-        public NpadId npadID
+        public NpadId npadId
         {
             get
             {
