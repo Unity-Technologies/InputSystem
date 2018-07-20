@@ -71,6 +71,7 @@ namespace UnityEngine.Experimental.Input
             manager.Destroy();
             EditorInputControlLayoutCache.Clear();
             DestroyImmediate(playerConnection);
+            InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
         }
 
         public void OnBeforeSerialize()
