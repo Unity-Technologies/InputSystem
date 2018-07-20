@@ -28,28 +28,28 @@ public class SimpleController_UsingActions : MonoBehaviour
 
         fireAction.performed +=
             ctx =>
+        {
+            if (ctx.interaction is SlowTapInteraction)
             {
-                if (ctx.interaction is SlowTapInteraction)
-                {
-                    StartCoroutine(BurstFire((int)(ctx.duration * burstSpeed)));
-                }
-                else
-                {
-                    Fire();
-                }
-                m_Charging = false;
-            };
+                StartCoroutine(BurstFire((int)(ctx.duration * burstSpeed)));
+            }
+            else
+            {
+                Fire();
+            }
+            m_Charging = false;
+        };
         fireAction.started +=
             ctx =>
-            {
-                if (ctx.interaction is SlowTapInteraction)
-                    m_Charging = true;
-            };
+        {
+            if (ctx.interaction is SlowTapInteraction)
+                m_Charging = true;
+        };
         fireAction.cancelled +=
             ctx =>
-            {
-                m_Charging = false;
-            };
+        {
+            m_Charging = false;
+        };
     }
 
     public void OnEnable()

@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using UnityEditor;
 
 // We want an empty editor in the inspector. Editing happens in a dedicated window.

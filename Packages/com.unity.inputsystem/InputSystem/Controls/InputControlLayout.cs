@@ -73,6 +73,8 @@ namespace UnityEngine.Experimental.Input
             get { return s_DefaultVariant; }
         }
 
+        ////TODO: replace ParameterValue with PrimitiveValueOrArray
+
         public enum ParameterType
         {
             Boolean,
@@ -173,6 +175,7 @@ namespace UnityEngine.Experimental.Input
                             var intValue = *((int*)ptr);
                             return string.Format("{0}={1}", name, intValue);
                         case ParameterType.Float:
+                            ////FIXME: this needs to be invariant culture
                             var floatValue = *((float*)ptr);
                             return string.Format("{0}={1}", name, floatValue);
                     }
@@ -264,6 +267,11 @@ namespace UnityEngine.Experimental.Input
             public FourCC format;
             public Flags flags;
             public int arraySize;
+
+            /// <summary>
+            /// Optional default value for the state memory associated with the control.
+            /// </summary>
+            public PrimitiveValueOrArray defaultState;
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -369,6 +377,11 @@ namespace UnityEngine.Experimental.Input
                     result.resourceName = resourceName;
                 else
                     result.resourceName = other.resourceName;
+
+                if (!defaultState.isEmpty)
+                    result.defaultState = defaultState;
+                else
+                    result.defaultState = other.defaultState;
 
                 return result;
             }
@@ -559,7 +572,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException(name);
 
                 var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
-                        new ControlItem {name = new InternedString(name)});
+                    new ControlItem {name = new InternedString(name)});
 
                 return new ControlBuilder
                 {
@@ -919,6 +932,11 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 arraySize = attribute.arraySize;
 
+            // Determine default state.
+            var defaultState = new PrimitiveValueOrArray();
+            if (attribute != null)
+                defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -936,6 +954,7 @@ namespace UnityEngine.Experimental.Input
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
                 arraySize = arraySize,
+                defaultState = defaultState,
             };
         }
 
@@ -992,7 +1011,7 @@ namespace UnityEngine.Experimental.Input
                     var closeParenIndex = text.IndexOf(')', index);
                     if (closeParenIndex == -1)
                         throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
-                                text));
+                            text));
 
                     var parameterString = text.Substring(index, closeParenIndex - index);
                     parameters = ParseParameters(parameterString);
@@ -1390,14 +1409,14 @@ namespace UnityEngine.Experimental.Input
                     if (type == null)
                     {
                         Debug.Log(string.Format(
-                                "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
-                                this.type, name));
+                            "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
+                            this.type, name));
                         type = typeof(InputDevice);
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
                         throw new Exception(string.Format("'{0}' used by layout '{1}' is not an InputControl",
-                                this.type, name));
+                            this.type, name));
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
@@ -1507,6 +1526,12 @@ namespace UnityEngine.Experimental.Input
             public string resourceName;
             public bool noisy;
 
+            // This should be an object type field and allow any JSON primitive value type as well
+            // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
+            // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
+            // for this later but for now, we use a string-based value fallback instead.
+            public string defaultState;
+
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
 
@@ -1562,6 +1587,9 @@ namespace UnityEngine.Experimental.Input
 
                 if (!string.IsNullOrEmpty(processors))
                     layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
+
+                if (defaultState != null)
+                    layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
 
                 return layout;
             }
@@ -1691,7 +1719,7 @@ namespace UnityEngine.Experimental.Input
                         var baseLayout = TryLoadLayout(baseLayoutName, table);
                         if (baseLayout == null)
                             throw new LayoutNotFoundException(string.Format(
-                                    "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
+                                "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
                         layout.MergeLayout(baseLayout);
                         layout.m_ExtendsLayout = baseLayoutName;
                     }

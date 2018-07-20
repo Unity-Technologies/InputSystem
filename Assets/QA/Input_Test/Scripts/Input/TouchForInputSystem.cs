@@ -11,19 +11,25 @@ public class TouchForInputSystem : MonoBehaviour
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
 
-    private InputAction touch_action;
-
-    // This is to store the touch id each highlight gameobject is showing for.
-    // Since there are 10 highlight objects in the highlight_pool
-    // the index number for the array is also the index for the child object in the pool
-    private int[] touch_id_order = new int[10];
+    private InputAction m_touchAction;
 
     // Use this for initialization
     void Start()
     {
-        touch_action = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
-        touch_action.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
-        touch_action.Enable();
+        m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>");
+        m_touchAction.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
+        m_touchAction.Enable();
+    }
+
+    private void OnEnable()
+    {
+        if (m_touchAction != null)
+            m_touchAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        m_touchAction.Disable();
     }
 
     private void TouchInput(TouchControl control)
@@ -32,7 +38,6 @@ public class TouchForInputSystem : MonoBehaviour
         {
             case PointerPhase.Began:
                 NewTouchInput(control);
-                UpdateTouchInput(control);
                 break;
             case PointerPhase.Moved:
                 UpdateTouchInput(control);
@@ -41,21 +46,33 @@ public class TouchForInputSystem : MonoBehaviour
             case PointerPhase.Ended:
                 EndTouchInput(control);
                 break;
+            case PointerPhase.Stationary:
+                break;
             default:
                 break;
         }
     }
 
+    // When a new touch starts, use the first inactive highlight object
     private void NewTouchInput(TouchControl control)
     {
         int id = control.touchId.ReadValue();
-        foreach (Transform highlight in m_HighlightPool)
+
+        // Sometimes the Began phase is detected twice. The redundant one needs to be filtered out
+        if (m_HighlightPool.Find(id.ToString()) != null) return;
+
+        Vector2 pos = Camera.main.ScreenToWorldPoint(control.position.ReadValue());
+
+        for (int i = 0; i < m_HighlightPool.childCount; i++)
         {
-            if (!highlight.gameObject.activeSelf)
+            if (!m_HighlightPool.GetChild(i).gameObject.activeSelf)
             {
-                touch_id_order[highlight.GetSiblingIndex()] = id;
+                Transform highlight = m_HighlightPool.GetChild(i);
+                highlight.name = id.ToString();
+                highlight.position = new Vector3(pos.x, pos.y, 0.5f);
                 highlight.gameObject.SetActive(true);
 
+                // Change ID text
                 Transform idText = highlight.Find("ID");
                 if (idText != null)
                     idText.GetComponent<TextMesh>().text = "ID: " + id;
@@ -71,32 +88,28 @@ public class TouchForInputSystem : MonoBehaviour
         int id = control.touchId.ReadValue();
         Vector2 pos = Camera.main.ScreenToWorldPoint(control.position.ReadValue());
 
-        for (int i = 0; i < 10; i++)
+        Transform highlight = m_HighlightPool.Find(id.ToString());
+        if (highlight != null)
         {
-            if (touch_id_order[i] == id)
-            {
-                Transform highlight = m_HighlightPool.GetChild(i);
-                highlight.position = new Vector3(pos.x, pos.y, 0f);
+            highlight.position = new Vector3(pos.x, pos.y, 0f);
 
-                Transform posText = highlight.Find("Pos");
-                if (posText != null)
-                    posText.GetComponent<TextMesh>().text = control.position.ReadValue().ToString("F0");
-            }
+            // Update position text
+            Transform posText = highlight.Find("Pos");
+            if (posText != null)
+                posText.GetComponent<TextMesh>().text = control.position.ReadValue().ToString("F0");
         }
     }
 
+    // When a touch input ends, set the highlight inactive.
     private void EndTouchInput(TouchControl control)
     {
         int id = control.touchId.ReadValue();
-        for (int i = 0; i < 10; i++)
-        {
-            if (touch_id_order[i] == id)
-            {
-                m_HighlightPool.GetChild(i).gameObject.SetActive(false);
-                return;
-            }
-        }
-        ShowMessage("Touch " + id + " Stopped.");
+        Transform highlight = m_HighlightPool.Find(id.ToString());
+
+        if (highlight != null)
+            highlight.gameObject.SetActive(false);
+        else
+            ShowMessage("Touch " + id + " Stopped.");
     }
 
     private void ShowMessage(string msg)

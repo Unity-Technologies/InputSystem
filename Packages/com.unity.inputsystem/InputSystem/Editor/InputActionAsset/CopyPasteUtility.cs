@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Editor
         InputActionListTreeView m_TreeView;
         ActionInspectorWindow m_Window;
         SerializedObject m_SerializedObject;
-        
+
         GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
         GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
         GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
@@ -53,7 +53,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 copyList.Append(selectedRow.GetType().Name);
                 copyList.Append(selectedRow.SerializeToString());
                 copyList.Append(kInputAssetMarker);
-                
+
                 if (selectedRow is ActionTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
                 {
                     var action = selectedRow as ActionTreeItem;
@@ -140,8 +140,8 @@ namespace UnityEngine.Experimental.Input.Editor
                             {
                                 nextRow = nextRow.Substring(typeof(CompositeGroupTreeItem).Name.Length);
                             }
-                            else if(nextRow.StartsWith(typeof(CompositeTreeItem).Name))
-                            {                                
+                            else if (nextRow.StartsWith(typeof(CompositeTreeItem).Name))
+                            {
                                 nextRow = nextRow.Substring(typeof(CompositeTreeItem).Name.Length);
                             }
                             else
@@ -159,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor
                         }
                     }
                     m_Window.Apply();
-                    
+
                     continue;
                 }
 
@@ -229,7 +229,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     break;
             }
         }
-        
+
         void DeleteSelectedRows()
         {
             var rows = m_TreeView.GetSelectedRows().ToArray();
@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 EditorApplication.Beep();
                 return;
             }
-            
+
             // Remove composite bindings
             foreach (var compositeGroup in FindRowsToDeleteOfType<CompositeGroupTreeItem>(rows))
             {
@@ -252,15 +252,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 action.RemoveBinding(compositeGroup.index);
             }
-            
+
             // Remove bindings
             foreach (var bindingRow in FindRowsToDeleteOfType<BindingTreeItem>(rows))
             {
                 var action = bindingRow.parent as ActionTreeItem;
                 action.RemoveBinding(bindingRow.index);
             }
-            
-            
+
+
             // Remove actions
             foreach (var actionRow in FindRowsToDeleteOfType<ActionTreeItem>(rows))
             {
@@ -272,13 +272,13 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 actionMap.DeleteAction(actionRow.index);
             }
-            
+
             //Remove action maps
             foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
             {
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
-            
+
             m_Window.Apply();
             m_Window.OnSelectionChanged();
         }

@@ -22,6 +22,9 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
+////        (and allow text input events that have no associated target device? this way we don't need a keyboard to get text input)
+
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native alloations when exiting
@@ -226,9 +229,9 @@ namespace UnityEngine.Experimental.Input
 
                     default:
                         throw new ArgumentException(
-                        string.Format(
-                            "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
-                            methodCall.Object.NodeType), "builderExpression");
+                            string.Format(
+                                "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
+                                methodCall.Object.NodeType), "builderExpression");
                 }
             }
 
@@ -470,7 +473,7 @@ namespace UnityEngine.Experimental.Input
             var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
             if (device == null)
                 throw new Exception(string.Format("Layout registered for type '{0}' did not produce a device of that type; layout probably has been overridden",
-                        typeof(TDevice).Name));
+                    typeof(TDevice).Name));
             return device;
         }
 

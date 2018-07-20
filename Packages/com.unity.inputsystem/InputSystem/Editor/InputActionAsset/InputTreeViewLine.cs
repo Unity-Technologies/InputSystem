@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -135,20 +134,20 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return Styles.yellowRect; }
         }
 
-        public SerializedProperty bindingsProperty 
-        { 
+        public SerializedProperty bindingsProperty
+        {
             get
             {
                 return elementProperty.FindPropertyRelative("m_Bindings");
-            } 
+            }
         }
 
-        public SerializedProperty actionsProperty 
-        { 
+        public SerializedProperty actionsProperty
+        {
             get
             {
                 return elementProperty.FindPropertyRelative("m_Actions");
-            } 
+            }
         }
 
         public override string SerializeToString()
@@ -165,7 +164,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return InputActionSerializationHelpers.AddActionFromObject(action, elementProperty);
         }
-        
+
         public void DeleteAction(int actionRowIndex)
         {
             InputActionSerializationHelpers.DeleteAction(elementProperty, actionRowIndex);
@@ -276,7 +275,7 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(actionMapName, binding, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
-            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + ParseName(path);;
+            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + ParseName(path);
             depth++;
         }
 

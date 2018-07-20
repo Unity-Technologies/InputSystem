@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Input
             var action = TryGetAction(name);
             if (action == null)
                 throw new KeyNotFoundException(string.Format("Could not find action '{0}' in set '{1}'", name,
-                        this.name));
+                    this.name));
             return action;
         }
 
@@ -757,7 +757,7 @@ namespace UnityEngine.Experimental.Input
 
                         if (string.IsNullOrEmpty(actionName))
                             throw new Exception(string.Format(
-                                    "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
+                                "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
                     }
 
                     // Try to find existing map.

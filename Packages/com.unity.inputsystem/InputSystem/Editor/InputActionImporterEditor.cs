@@ -132,14 +132,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 m_Initialized = true;
             }
-            
+
             if (GUILayout.Button("Edit asset"))
             {
                 ActionInspectorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
             }
 
             EditorGUILayout.Space();
-            
+
             // Look up properties on importer object.
             var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
 

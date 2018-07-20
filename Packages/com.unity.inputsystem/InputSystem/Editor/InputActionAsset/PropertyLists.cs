@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return ",";
         }
     }
-    
+
     class ProcessorsList : PropertiesListBase
     {
         public ProcessorsList(SerializedProperty property, Action applyAction) : base(property, applyAction)
@@ -80,7 +80,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Apply = applyAction;
             m_ListOptions = GetOptions();
             m_ListView = new ReorderableList(new List<string>(), typeof(string));
-            
+
             m_NamesAndParams = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue);
             if (m_NamesAndParams == null)
             {
@@ -90,23 +90,23 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 m_ListView.list.Add(nameAndParams.name);
             }
-            
+
             m_ListView.headerHeight = 3;
             m_ListView.onAddDropdownCallback =
                 (rect, list) =>
-                {
-                    var menu = new GenericMenu();
-                    for (var i = 0; i < m_ListOptions.names.Count(); ++i)
-                        menu.AddItem(new GUIContent(m_ListOptions.names.ElementAt(i)), false, AddElement, m_ListOptions.names.ElementAt(i));
-                    menu.ShowAsContext();
-                };
+            {
+                var menu = new GenericMenu();
+                for (var i = 0; i < m_ListOptions.names.Count(); ++i)
+                    menu.AddItem(new GUIContent(m_ListOptions.names.ElementAt(i)), false, AddElement, m_ListOptions.names.ElementAt(i));
+                menu.ShowAsContext();
+            };
             m_ListView.onRemoveCallback =
                 (list) =>
-                {
-                    list.list.RemoveAt(list.index);
-                    m_Apply();
-                    list.index = -1;
-                };
+            {
+                list.list.RemoveAt(list.index);
+                m_Apply();
+                list.index = -1;
+            };
             m_ListView.onReorderCallback = list => { m_Apply(); };
             m_ListView.onSelectCallback = OnSelection;
         }
@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_NamesAndParams = InputControlLayout.ParseNameAndParameterList(m_Property.stringValue);
             m_SelectedParameterList = GetFieldsFromClass();
         }
-        
+
         InputControlLayout.ParameterValue[] GetFieldsFromClass()
         {
             var resultParameters = new List<InputControlLayout.ParameterValue>();
@@ -136,8 +136,8 @@ namespace UnityEngine.Experimental.Input.Editor
             if (idx >= 0)
             {
                 serializedParameters.AddRange(m_NamesAndParams[idx].parameters);
-            } 
-            
+            }
+
             var rowType =  m_ListOptions.LookupTypeRegistration(m_SelectedRow);
             var fields = rowType.GetFields(BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in fields)
@@ -154,9 +154,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                     if (field.FieldType == typeof(bool))
                         paramValue.type = InputControlLayout.ParameterType.Boolean;
-                    else if(field.FieldType == typeof(int))
+                    else if (field.FieldType == typeof(int))
                         paramValue.type = InputControlLayout.ParameterType.Integer;
-                    else if(field.FieldType == typeof(float))
+                    else if (field.FieldType == typeof(float))
                         paramValue.type = InputControlLayout.ParameterType.Float;
 
                     resultParameters.Add(paramValue);
@@ -169,11 +169,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             // Use for debugging
             // EditorGUILayout.LabelField(m_Property.stringValue);
-            
+
             var listRect = GUILayoutUtility.GetRect(200, m_ListView.GetHeight());
             listRect = EditorGUI.IndentedRect(listRect);
             m_ListView.DoList(listRect);
-            
+
             if (m_ListView.index >= 0)
             {
                 for (int i = 0; i < m_SelectedParameterList.Length; i++)
@@ -191,14 +191,13 @@ namespace UnityEngine.Experimental.Input.Editor
                     {
                         var floatValue = float.Parse(parameterValue.GetValueAsString());
                         result = EditorGUILayout.FloatField(parameterValue.name, floatValue).ToString();
-                        
                     }
                     else if (parameterValue.type == InputControlLayout.ParameterType.Boolean)
                     {
                         var boolValue = bool.Parse(parameterValue.GetValueAsString());
                         result = EditorGUILayout.Toggle(parameterValue.name, boolValue).ToString();
                     }
-                    
+
                     if (EditorGUI.EndChangeCheck())
                     {
                         m_SelectedParameterList[i].SetValue(result);
@@ -220,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     var fieldWithValuesList = param.parameters.Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
                     if (m_SelectedRow == m_NamesAndParams[idx].name)
                     {
-                        fieldWithValuesList = m_SelectedParameterList.Where(a=>!a.IsDefaultValue()).Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
+                        fieldWithValuesList = m_SelectedParameterList.Where(a => !a.IsDefaultValue()).Select(a => string.Format("{0}={1}", a.name, a.GetValueAsString()));
                     }
                     var fieldWithValues = string.Join(",", fieldWithValuesList.ToArray());
                     resultList.Add(string.Format("{0}({1})", param.name, fieldWithValues));
@@ -229,7 +228,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     resultList.Add(listElement + "()");
                 }
-
             }
             return string.Join(GetSeparator(), resultList.ToArray());
         }

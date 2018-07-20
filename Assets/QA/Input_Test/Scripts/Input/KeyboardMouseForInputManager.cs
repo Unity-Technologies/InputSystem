@@ -91,7 +91,7 @@ public class KeyboardMouseForInputManager : MonoBehaviour
             m_keyboardInfoText.text = Input.inputString;
         m_mouseInfoText.text = Input.mousePosition.ToString("F0") + "\n"
             + Input.mouseScrollDelta.ToString("F0") + "\n"
-            + "(" + moveX + " ," + moveY + ")";
+            + "(" + moveX.ToString("F2") + " ," + moveY.ToString("F2") + ")";
     }
 
     // Generate the blue ring Particle System over the key or mouse button

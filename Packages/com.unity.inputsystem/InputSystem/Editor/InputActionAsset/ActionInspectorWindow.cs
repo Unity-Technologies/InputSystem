@@ -1,6 +1,4 @@
 #if UNITY_EDITOR
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -27,15 +25,15 @@ namespace UnityEngine.Experimental.Input.Editor
                     return path + "personal/";
                 }
             }
-            
+
             static Styles()
             {
                 actionTreeBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
                 actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
-                
+
                 propertiesBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "propertiesBackground.png");
                 propertiesBackground.border = new RectOffset(3, 3, 3, 3);
-                
+
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
                 columnHeaderLabel.fontStyle = FontStyle.Bold;
                 columnHeaderLabel.padding.left = 10;
@@ -79,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
         TreeViewState m_TreeViewState;
         [SerializeField]
         TreeViewState m_PickerTreeViewState;
-        
+
         InputActionListTreeView m_TreeView;
         SerializedObject m_SerializedObject;
         PropertiesView m_PropertyView;
@@ -87,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
         SearchField m_SearchField;
         string m_SearchText;
         bool m_IsAssetDirty;
-        
+
         GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
         GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
         GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
@@ -165,7 +163,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var path = AssetDatabase.GetAssetPath(asset);
             File.WriteAllText(path, asset.ToJson());
         }
-        
+
         class AssetChangeWatch : AssetPostprocessor
         {
             static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
@@ -193,7 +191,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 SaveChangesToAsset();
             }
             EditorGUI.EndDisabledGroup();
-            
+
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));
@@ -234,7 +232,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var treeViewRect = GUILayoutUtility.GetLastRect();
             var labelRect = new Rect(treeViewRect);
-            labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing*2;
+            labelRect.height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
             treeViewRect.y += labelRect.height;
             treeViewRect.height -= labelRect.height;
             treeViewRect.x += 1;
@@ -287,7 +285,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 menu.AddItem(isContextMenu ? m_AddBindingContextGUI : m_AddBindingGUI, false, OnAddBinding);
             }
-            else if(!isContextMenu)
+            else if (!isContextMenu)
             {
                 menu.AddDisabledItem(m_AddBindingGUI);
             }
@@ -295,12 +293,12 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 menu.AddItem(isContextMenu ? m_AddActionContextGUI : m_AddActionGUI, false, OnAddAction);
             }
-            else if(!isContextMenu)
+            else if (!isContextMenu)
             {
                 menu.AddDisabledItem(m_AddActionGUI, false);
             }
             menu.AddItem(isContextMenu ?  m_AddActionMapContextGUI : m_AddActionMapGUI, false, OnAddActionMap);
-            
+
             var compositeString = isContextMenu ? EditorGUIUtility.TrTextContent("Add composite") : EditorGUIUtility.TrTextContent("Composite");
             if (canAddBinding)
             {
@@ -309,7 +307,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     menu.AddItem(new GUIContent(compositeString + "/" + composite + " composite"), false, OnAddCompositeBinding, composite);
                 }
             }
-            else if(!isContextMenu)
+            else if (!isContextMenu)
             {
                 menu.AddDisabledItem(new GUIContent(compositeString), false);
             }
@@ -326,7 +324,7 @@ namespace UnityEngine.Experimental.Input.Editor
         void OnAddCompositeBinding(object compositeName)
         {
             var actionLine = GetSelectedActionLine();
-            actionLine.AppendCompositeBinding((string) compositeName);
+            actionLine.AppendCompositeBinding((string)compositeName);
             Apply();
         }
 
@@ -382,7 +380,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width / 2));
 
-            var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing*2, GUILayout.ExpandWidth(true));
+            var rect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2, GUILayout.ExpandWidth(true));
             rect.x -= 2;
             rect.y -= 1;
             rect.width += 4;

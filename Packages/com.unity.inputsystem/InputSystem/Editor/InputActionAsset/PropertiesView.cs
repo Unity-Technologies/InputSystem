@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
             public static GUIStyle foldoutStyle = new GUIStyle("foldout");
-            
+
             static string ResourcesPath
             {
                 get
@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     return path + "personal/";
                 }
             }
-            
+
             static Styles()
             {
                 var darkGreyBackgroundWithBorderTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "foldoutBackground.png");
@@ -34,17 +34,17 @@ namespace UnityEngine.Experimental.Input.Editor
 
         SerializedProperty m_InteractionsProperty;
         InteractionsList m_InteractionsList;
-        
+
         ProcessorsList m_ProcessorsListView;
         SerializedProperty m_ProcessorsProperty;
-        
+
         SerializedProperty m_BindingProperty;
         Action m_ReloadTree;
         TreeViewState m_TreeViewState;
         bool m_GeneralFoldout = true;
         bool m_InteractionsFoldout = true;
         bool m_ProcessorsFoldout = true;
-        
+
         GUIContent m_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
         GUIContent m_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
         GUIContent m_GeneralContent = EditorGUIUtility.TrTextContent("General");
@@ -99,7 +99,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 editBtn.x += btnRect.width;
                 editBtn.width = 20;
                 editBtn.height = 15;
-                
+
                 var pathProperty = m_BindingProperty.FindPropertyRelative("path");
                 DrawBindingField(btnRect, editBtn, pathProperty);
 
@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ProcessorsFoldout = DrawFoldout(m_ProcessorsContent, m_ProcessorsFoldout);
 
             if (m_ProcessorsFoldout)
-            {   
+            {
                 EditorGUI.indentLevel++;
                 m_ProcessorsListView.OnGUI();
                 EditorGUI.indentLevel--;
@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Input.Editor
         void DrawBindingField(Rect rect, Rect editBtn, SerializedProperty pathProperty)
         {
             var path = pathProperty.stringValue;
-            
+
             if (m_ManualEditMode || string.IsNullOrEmpty(BindingTreeItem.ParseName(path)))
             {
                 EditorGUI.BeginChangeCheck();
@@ -167,8 +167,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty)
         {
-            var w = new InputControlPicker(pathProperty, ref m_TreeViewState) 
-            { 
+            var w = new InputControlPicker(pathProperty, ref m_TreeViewState)
+            {
                 onPickCallback = s =>
                 {
                     m_ManualEditMode = false;
