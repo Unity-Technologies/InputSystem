@@ -371,6 +371,8 @@ namespace UnityEngine.Experimental.Input
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
+        ////TODO: this needs to become a check for whether the state corresponds to the default state
+        ////      (for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state; e.g. from HID input reports)
         ////TODO: pass state ptr *NOT* value ptr (it's confusing)
         // We don't allow custom default values for state so all zeros indicates
         // default states for us.

@@ -73,6 +73,8 @@ namespace UnityEngine.Experimental.Input
             get { return s_DefaultVariant; }
         }
 
+        ////TODO: replace ParameterValue with PrimitiveValueOrArray
+
         public enum ParameterType
         {
             Boolean,

@@ -403,22 +403,6 @@ namespace UnityEngine.Experimental.Input.Utilities
             throw new NotImplementedException();
         }
 
-        public TValue GetPrimitiveValue<TValue>()
-        {
-            if (arrayValue != null)
-                throw new NotImplementedException();
-
-            if (typeof(TValue) == typeof(double))
-                throw new NotImplementedException();
-
-            throw new NotImplementedException();
-        }
-
-        public TValue[] GetArrayValue<TValue>()
-        {
-            throw new NotImplementedException();
-        }
-
         public static PrimitiveValueOrArray FromString(string value)
         {
             if (string.IsNullOrEmpty(value))
