@@ -265,9 +265,41 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void TODO_Controls_ReadingValueFromStateEvent_ReturnsDefaultValueForControlsNotPartOfEvent()
+    public void Controls_ReadingValueFromStateEvent_ReturnsDefaultValueForControlsNotPartOfEvent()
     {
-        Assert.Fail();
+        // Add one extra control with default state to Gamepad but
+        // don't change its state format (so we can send it GamepadState
+        // events without the extra control).
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""extraControl"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        float? value = null;
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            Assert.That(value, Is.Null);
+            value = ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr);
+        };
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]

@@ -253,7 +253,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void Layouts_CanOverrideDefaultValuesFromBaseLayout()
+    public void Layouts_CanOverrideDefaultStateValuesFromBaseLayout()
     {
         const string baseLayout = @"
             {

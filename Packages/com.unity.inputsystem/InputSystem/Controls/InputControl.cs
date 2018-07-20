@@ -488,8 +488,10 @@ namespace UnityEngine.Experimental.Input
         public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
-            var value = ReadRawValueFrom(statePtr);
+            if (statePtr == IntPtr.Zero)
+                return ReadDefaultValue();
 
+            var value = ReadRawValueFrom(statePtr);
             if (process)
                 value = Process(value);
 
@@ -523,6 +525,9 @@ namespace UnityEngine.Experimental.Input
         public void WriteValueInto(InputEventPtr eventPtr, TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            if (statePtr == IntPtr.Zero)
+                return;
+
             WriteValueInto(statePtr, value);
         }
 
@@ -589,10 +594,7 @@ namespace UnityEngine.Experimental.Input
 
             var stateSizeInBytes = stateEvent->stateSizeInBytes;
             if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                throw new Exception(
-                    string.Format(
-                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
-                        stateFormat, stateSizeInBytes, path));
+                return IntPtr.Zero;
 
             return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }
