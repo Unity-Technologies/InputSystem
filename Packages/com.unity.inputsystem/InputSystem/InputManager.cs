@@ -680,7 +680,7 @@ namespace UnityEngine.Experimental.Input
 
             // Update state buffers.
             ReallocateStateBuffers();
-            InitializeDefaultState(device, m_StateBuffers.defaultStateBuffer);
+            InitializeDefaultState(device);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
@@ -1484,7 +1484,6 @@ namespace UnityEngine.Experimental.Input
         /// Initialize default state for given device.
         /// </summary>
         /// <param name="device">A newly added input device.</param>
-        /// <param name="defaultStateBuffer">Buffer that contains default states for all devices owned by the manager.</param>
         /// <remarks>
         /// For every device, one copy of its state is kept around which is initialized with the default
         /// values for the device. If the device has no control that has an explicitly specified control
@@ -1494,7 +1493,7 @@ namespace UnityEngine.Experimental.Input
         /// migrated by <see cref="InputStateBuffers"/> like other device state and removed when the device
         /// is removed from the system.
         /// </remarks>
-        private static void InitializeDefaultState(InputDevice device, IntPtr defaultStateBuffer)
+        private void InitializeDefaultState(InputDevice device)
         {
             // Nothing to do if device has a default state of all zeroes.
             if (!device.hasControlsWithDefaultState)
@@ -1503,6 +1502,7 @@ namespace UnityEngine.Experimental.Input
             // Otherwise go through each control and write its default value.
             var controls = device.allControls;
             var controlCount = controls.Count;
+            var defaultStateBuffer = m_StateBuffers.defaultStateBuffer;
             for (var n = 0; n < controlCount; ++n)
             {
                 var control = controls[n];
@@ -1514,6 +1514,28 @@ namespace UnityEngine.Experimental.Input
 
                 control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue.primitiveValue);
             }
+
+            // Copy default state to all front and back buffers.
+            var stateBlock = device.m_StateBlock;
+            var deviceIndex = device.m_DeviceIndex;
+            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+            {
+                stateBlock.CopyToFrom(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+            }
+            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
+            {
+                stateBlock.CopyToFrom(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+            }
+
+            #if UNITY_EDITOR
+            if (m_StateBuffers.m_EditorUpdateBuffers.valid)
+            {
+                stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+            }
+            #endif
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -2683,7 +2705,7 @@ namespace UnityEngine.Experimental.Input
             // Once we have support for migrating state across domain reloads, this will no
             // longer be necessary for devices that have not changed format.
             for (var i = 0; i < m_Devices.Length; ++i)
-                InitializeDefaultState(m_Devices[i], m_StateBuffers.defaultStateBuffer);
+                InitializeDefaultState(m_Devices[i]);
         }
 
         [SerializeField] private SerializedState m_SerializedState;

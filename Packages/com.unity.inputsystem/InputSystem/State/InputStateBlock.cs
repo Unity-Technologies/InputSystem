@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel
@@ -275,6 +276,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             {
                 throw new NotImplementedException();
             }
+        }
+
+        public unsafe void CopyToFrom(IntPtr toStatePtr, IntPtr fromStatePtr)
+        {
+            if (bitOffset != 0)
+                throw new NotImplementedException("Copying bitfields");
+
+            var from = (byte*)fromStatePtr.ToPointer() + byteOffset;
+            var to = (byte*)toStatePtr.ToPointer() + byteOffset;
+
+            UnsafeUtility.MemCpy(to, from, alignedSizeInBytes);
         }
     }
 }
