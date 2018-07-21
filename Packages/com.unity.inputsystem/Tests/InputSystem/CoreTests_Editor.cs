@@ -7,6 +7,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.TestTools;
@@ -297,7 +298,7 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, 2);
+        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");
@@ -325,7 +326,7 @@ partial class CoreTests
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
+            new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
         // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
         // is just perform some textual verification. Once we have the newest Mono, this should
@@ -348,7 +349,7 @@ partial class CoreTests
         asset.name = "New Controls (4)";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
+            new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
         Assert.That(code, Contains.Substring("class NewControls_4_"));
         Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @action__"));

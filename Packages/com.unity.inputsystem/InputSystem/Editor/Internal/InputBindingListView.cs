@@ -34,25 +34,25 @@ namespace UnityEngine.Experimental.Input.Editor
 
             drawElementCallback =
                 (rect, index, isActive, isFocused) =>
-                {
-                    var binding = serializedProperty != null
-                        ? serializedProperty.GetArrayElementAtIndex(index)
-                        : (SerializedProperty)list[index];
-                    EditorGUI.PropertyField(rect, binding);
-                };
+            {
+                var binding = serializedProperty != null
+                    ? serializedProperty.GetArrayElementAtIndex(index)
+                    : (SerializedProperty)list[index];
+                EditorGUI.PropertyField(rect, binding);
+            };
 
             drawHeaderCallback =
                 (rect) =>
-                {
-                    if (displayHeader)
-                        EditorGUI.LabelField(rect, "Bindings");
-                };
+            {
+                if (displayHeader)
+                    EditorGUI.LabelField(rect, "Bindings");
+            };
 
             drawNoneElementCallback =
                 (rect) =>
-                {
-                    EditorGUI.LabelField(rect, s_NoBindingsText, EditorStyles.centeredGreyMiniLabel);
-                };
+            {
+                EditorGUI.LabelField(rect, s_NoBindingsText, EditorStyles.centeredGreyMiniLabel);
+            };
 
             onAddCallback =
                 (list) => InputActionSerializationHelpers.AppendBinding(actionProperty, actionMapProperty);

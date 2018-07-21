@@ -38,12 +38,12 @@ class HIDTests : InputTestFixture
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            manufacturer = "TestVendor",
-            product = "TestHID",
-            capabilities = hidDescriptor.ToJson()
-        }.ToJson());
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
@@ -153,16 +153,16 @@ class HIDTests : InputTestFixture
         // Report device.
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            manufacturer = "TestVendor",
-            product = "TestHID",
-            capabilities = new HID.HIDDeviceDescriptor
             {
-                vendorId = 0x54C,     // Sony
-                productId = 0x9CC     // PS4 Wireless Controller
-            }.ToJson()
-        }.ToJson(), deviceId);
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = new HID.HIDDeviceDescriptor
+                {
+                    vendorId = 0x54C, // Sony
+                    productId = 0x9CC // PS4 Wireless Controller
+                }.ToJson()
+            }.ToJson(), deviceId);
         InputSystem.Update();
 
         // Grab device.
@@ -258,11 +258,11 @@ class HIDTests : InputTestFixture
         }
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            manufacturer = "TestVendor",
-            product = "TestHID",
-        }.ToJson(), deviceId);
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+            }.ToJson(), deviceId);
 
         InputSystem.Update();
 
@@ -335,12 +335,12 @@ class HIDTests : InputTestFixture
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            manufacturer = "TestVendor",
-            product = "TestHID",
-            capabilities = hidDescriptor.ToJson()
-        }.ToJson());
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
         InputSystem.Update();
 
         var device = (HID)InputSystem.devices.First(x => x is HID);
@@ -388,29 +388,29 @@ class HIDTests : InputTestFixture
         // Make up a HID that has both 16bit and 8bit axes in both signed and unsigned form.
         var hidDescriptor =
             new HID.HIDDeviceDescriptorBuilder(HID.GenericDesktop.MultiAxisController)
-            .StartReport(HID.HIDReportType.Input)
-            // 16bit [0..65535]
-            .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535)
-            // 16bit [-32768..32767]
-            .AddElement(HID.GenericDesktop.Y, 16).WithLogicalMinMax(-32768, 32767)
-            // 8bit [0..255]
-            .AddElement(HID.GenericDesktop.Rx, 8).WithLogicalMinMax(0, 255)
-            // 8bit [-128..127]
-            .AddElement(HID.GenericDesktop.Ry, 8).WithLogicalMinMax(-128, 127)
-            // 16bit [0..10000]
-            .AddElement(HID.GenericDesktop.Vx, 16).WithLogicalMinMax(0, 10000)
-            // 16bit [-10000..10000]
-            .AddElement(HID.GenericDesktop.Vy, 16).WithLogicalMinMax(-10000, 10000)
-            .Finish();
+                .StartReport(HID.HIDReportType.Input)
+                // 16bit [0..65535]
+                .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535)
+                // 16bit [-32768..32767]
+                .AddElement(HID.GenericDesktop.Y, 16).WithLogicalMinMax(-32768, 32767)
+                // 8bit [0..255]
+                .AddElement(HID.GenericDesktop.Rx, 8).WithLogicalMinMax(0, 255)
+                // 8bit [-128..127]
+                .AddElement(HID.GenericDesktop.Ry, 8).WithLogicalMinMax(-128, 127)
+                // 16bit [0..10000]
+                .AddElement(HID.GenericDesktop.Vx, 16).WithLogicalMinMax(0, 10000)
+                // 16bit [-10000..10000]
+                .AddElement(HID.GenericDesktop.Vy, 16).WithLogicalMinMax(-10000, 10000)
+                .Finish();
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            manufacturer = "TestVendor",
-            product = "TestHID",
-            capabilities = hidDescriptor.ToJson()
-        }.ToJson());
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestHID",
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
         InputSystem.Update();
 
         var device = InputSystem.devices[0];
@@ -490,17 +490,17 @@ class HIDTests : InputTestFixture
 
             var hidDescriptor =
                 new HID.HIDDeviceDescriptorBuilder(HID.GenericDesktop.MultiAxisController)
-                .StartReport(HID.HIDReportType.Input)
-                .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535).Finish();
+                    .StartReport(HID.HIDReportType.Input)
+                    .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535).Finish();
 
             testRuntime.ReportNewInputDevice(
                 new InputDeviceDescription
-            {
-                interfaceName = HID.kHIDInterface,
-                manufacturer = "TestVendor",
-                product = "TestHID",
-                capabilities = hidDescriptor.ToJson()
-            }.ToJson());
+                {
+                    interfaceName = HID.kHIDInterface,
+                    manufacturer = "TestVendor",
+                    product = "TestHID",
+                    capabilities = hidDescriptor.ToJson()
+                }.ToJson());
 
             Assert.That(() => InputSystem.Update(), Throws.Nothing);
         }
@@ -531,14 +531,63 @@ class HIDTests : InputTestFixture
 
         testRuntime.ReportNewInputDevice(
             new InputDeviceDescription
-        {
-            interfaceName = HID.kHIDInterface,
-            capabilities = hidDescriptor.ToJson()
-        }.ToJson());
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
         InputSystem.Update();
 
         var device = (HID)InputSystem.devices.First(x => x is HID);
         Assert.That(device.name, Is.EqualTo("1234-5678"));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_HIDDescriptorSurvivesReload()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+            }
+        };
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+        InputSystem.Update();
+
+        InputSystem.Save();
+        InputSystem.Reset();
+        InputSystem.Restore();
+
+        var hid = (HID)InputSystem.devices.First(x => x is HID);
+
+        Assert.That(hid.hidDescriptor.vendorId, Is.EqualTo(0x1234));
+        Assert.That(hid.hidDescriptor.productId, Is.EqualTo(0x5678));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_SupportsEnumHatSwitchesOnHIDs()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_SupportsBitfieldHatSwitchesOnHIDs()
+    {
+        Assert.Fail();
     }
 
     [Test]

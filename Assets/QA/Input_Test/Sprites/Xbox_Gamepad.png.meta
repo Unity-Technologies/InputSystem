@@ -10,6 +10,7 @@ TextureImporter:
     21300010: Xbox_Gamepad_Dpad
     21300012: Xbox_Gamepad
     21300014: Xbox_Gamepad_Button3
+    21300016: Xbox_Gamepad_Half_Button
   externalObjects: {}
   serializedVersion: 6
   mipmaps:
@@ -71,7 +72,7 @@ TextureImporter:
     maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -82,7 +83,7 @@ TextureImporter:
     maxTextureSize: 4096
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -110,6 +111,17 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
+  - serializedVersion: 2
+    buildTarget: Windows Store Apps
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -117,13 +129,13 @@ TextureImporter:
       name: Xbox_Gamepad_Bar1
       rect:
         serializedVersion: 2
-        x: 991
-        y: 596
+        x: 992
+        y: 597
         width: 215
-        height: 78
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
+        height: 79
+      alignment: 9
+      pivot: {x: 0.5, y: 0.7}
+      border: {x: 0, y: 1, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -137,12 +149,12 @@ TextureImporter:
       name: Xbox_Gamepad_Bar2
       rect:
         serializedVersion: 2
-        x: 991
-        y: 517
-        width: 77
+        x: 992
+        y: 518
+        width: 76
         height: 71
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.6}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -157,10 +169,10 @@ TextureImporter:
       name: Xbox_Gamepad_Button2
       rect:
         serializedVersion: 2
-        x: 1081
-        y: 556
+        x: 1082
+        y: 557
         width: 40
-        height: 39
+        height: 40
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -177,8 +189,8 @@ TextureImporter:
       name: Xbox_Gamepad_Button1
       rect:
         serializedVersion: 2
-        x: 1081
-        y: 513
+        x: 1082
+        y: 514
         width: 40
         height: 40
       alignment: 0
@@ -197,8 +209,8 @@ TextureImporter:
       name: Xbox_Gamepad_Button0
       rect:
         serializedVersion: 2
-        x: 1135
-        y: 519
+        x: 1136
+        y: 520
         width: 67
         height: 67
       alignment: 0
@@ -217,12 +229,12 @@ TextureImporter:
       name: Xbox_Gamepad_Dpad
       rect:
         serializedVersion: 2
-        x: 996
-        y: 301
+        x: 997
+        y: 302
         width: 74
         height: 56
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 9
+      pivot: {x: 0.3, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -238,7 +250,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 1
         width: 990
         height: 687
       alignment: 0
@@ -257,8 +269,8 @@ TextureImporter:
       name: Xbox_Gamepad_Button3
       rect:
         serializedVersion: 2
-        x: 1090
-        y: 273
+        x: 1091
+        y: 274
         width: 90
         height: 91
       alignment: 0
@@ -269,6 +281,26 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: dd627081f6aff47388babb3dc0c127d3
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Xbox_Gamepad_Half_Button
+      rect:
+        serializedVersion: 2
+        x: 991
+        y: 436
+        width: 34
+        height: 67
+      alignment: 5
+      pivot: {x: 1, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0140f677320cc1a4ba54d15900f4170b
       vertices: []
       indices: 
       edges: []

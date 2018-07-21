@@ -402,16 +402,16 @@ namespace UnityEngine.Experimental.Input
                     if (layout == null)
                     {
                         Debug.Log(string.Format(
-                                "Could not find layout '{0}' meant to be sent through remote connection; this should not happen",
-                                layoutName));
+                            "Could not find layout '{0}' meant to be sent through remote connection; this should not happen",
+                            layoutName));
                         return null;
                     }
                 }
                 catch (Exception exception)
                 {
                     Debug.Log(string.Format(
-                            "Could not load layout '{0}'; not sending to remote listeners (exception: {1})", layoutName,
-                            exception));
+                        "Could not load layout '{0}'; not sending to remote listeners (exception: {1})", layoutName,
+                        exception));
                     return null;
                 }
 
@@ -502,9 +502,9 @@ namespace UnityEngine.Experimental.Input
                         if (entry.remoteId == data.deviceId)
                         {
                             Debug.LogError(string.Format(
-                                    "Already received device with id {0} (layout '{1}', description '{3}) from remote {2}",
-                                    data.deviceId,
-                                    data.layout, msg.participantId, data.description));
+                                "Already received device with id {0} (layout '{1}', description '{3}) from remote {2}",
+                                data.deviceId,
+                                data.layout, msg.participantId, data.description));
                             return;
                         }
                 }
@@ -514,7 +514,7 @@ namespace UnityEngine.Experimental.Input
                 try
                 {
                     device = receiver.m_LocalManager.AddDevice(data.layout,
-                            string.Format("Remote{0}::{1}", msg.participantId, data.name));
+                        string.Format("Remote{0}::{1}", msg.participantId, data.name));
                 }
                 catch (Exception exception)
                 {
@@ -525,7 +525,7 @@ namespace UnityEngine.Experimental.Input
                     return;
                 }
                 device.m_Description = data.description;
-                device.m_Flags |= InputDevice.Flags.Remote;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
 
                 // Remember it.
                 var record = new RemoteInputDevice

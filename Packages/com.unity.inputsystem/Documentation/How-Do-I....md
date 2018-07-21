@@ -477,7 +477,7 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 
     var trace = new InputEventTrace(); // Can also give device ID to only
                                        // trace events for a specific device.
-    
+
     trace.Enable();
 
     //... run stuff

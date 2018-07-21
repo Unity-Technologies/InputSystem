@@ -1,29 +1,62 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Experimental.Input;
 
 public class DebugInfo : MonoBehaviour
 {
-    public static bool IsOn = false;
+    private bool m_isShowing = false;
     private bool m_isPlaying = false;       // if the menu is in the process of sliding in/out
+    private bool m_isDragging = false;
 
     public Transform m_arrowUI;
-    public RectTransform m_infoContainer;
+    public RectTransform m_info;
 
     private int m_moveTime = 500;     // millinsecond
 
-    void Start()
+    private float m_startMouseY;
+    private float m_startY;
+
+    void Update()
     {
-        ToggleDebugInfo();
+        Keyboard currentKeyboard = Keyboard.current;
+        if (currentKeyboard.leftCtrlKey.isPressed || currentKeyboard.rightCtrlKey.isPressed)
+        {
+            if (currentKeyboard.iKey.isPressed)
+                OnToggleDebugInfo();
+        }
     }
 
-    public void ToggleDebugInfo()
+    public void OnToggleDebugInfo()
+    {
+        if (m_isPlaying || m_isDragging) return;
+
+        m_isShowing = !m_isShowing;
+        StartCoroutine("SlideToPositionX");
+    }
+
+    public void OnDragStart()
     {
         if (m_isPlaying) return;
 
-        IsOn = !IsOn;
-        StartCoroutine("SlideToPositionX");
+        m_isDragging = true;
+        m_startMouseY = Input.mousePosition.y;
+        m_startY = transform.position.y;
+    }
+
+    public void OnDrag()
+    {
+        if (m_isPlaying) return;
+
+        float delta = Input.mousePosition.y - m_startMouseY;
+        Vector3 pos = transform.position;
+        pos.y = Mathf.Min(Mathf.Max(m_startY + delta, m_info.rect.height * GetComponentInParent<Canvas>().scaleFactor), Screen.height);
+        transform.position = pos;
+    }
+
+    public void OnDragEnd()
+    {
+        m_isDragging = false;
     }
 
     // Slide the debug info menu window in/out from view
@@ -32,12 +65,11 @@ public class DebugInfo : MonoBehaviour
     {
         m_isPlaying = true;
 
-        float posDifference = IsOn ? -1f * CalculateInfoContainerWidth() : CalculateInfoContainerWidth();
+        float posDifference = m_isShowing ? -1f * CalculateInfoContainerWidth() : CalculateInfoContainerWidth();
         float currentX = transform.position.x;
         float targetX = currentX + posDifference;
 
         Quaternion targetAngle = m_arrowUI.rotation * Quaternion.Euler(0f, 0f, 180f);
-
 
         while (Mathf.Abs(currentX - targetX) > 10f)
         {
@@ -58,7 +90,10 @@ public class DebugInfo : MonoBehaviour
 
     private float CalculateInfoContainerWidth()
     {
-        return m_infoContainer.rect.width * GetComponentInParent<Canvas>().scaleFactor;
+        if (m_info != null)
+            return m_info.rect.width * GetComponentInParent<Canvas>().scaleFactor;
+        else
+            throw new Exception("Need assign \"info\" Transform Rect.");
     }
 
     private void SetPositionByX(float posX)

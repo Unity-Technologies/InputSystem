@@ -196,6 +196,118 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanSetDefaultStateOfControlInJson()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""analog"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.5""
+                    },
+                    {
+                        ""name"" : ""digital"",
+                        ""layout"" : ""Digital"",
+                        ""defaultState"" : ""1234""
+                    },
+                    {
+                        ""name"" : ""hexDigital"",
+                        ""layout"" : ""Digital"",
+                        ""defaultState"" : ""0x1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        var layout = InputSystem.TryLoadLayout("MyDevice");
+
+        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
+        Assert.That(layout["digital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
+        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(0x1234));
+    }
+
+    class TestDeviceWithDefaultState : InputDevice
+    {
+        [InputControl(defaultState = 0.1234)]
+        public AxisControl control { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSetDefaultStateOfControlOnAttribute()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithDefaultState>();
+
+        var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultState");
+
+        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanOverrideDefaultStateValuesFromBaseLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control1"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.2345""
+                    },
+                    {
+                        ""name"" : ""control2"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.3456""
+                    },
+                    {
+                        ""name"" : ""control3"",
+                        ""layout"" : ""Axis""
+                    }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control1"",
+                        ""defaultState"" : ""0.9876""
+                    },
+                    {
+                        ""name"" : ""control3"",
+                        ""defaultState"" : ""0.1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(baseLayout);
+        InputSystem.RegisterControlLayout(derivedLayout);
+
+        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+
+        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
+        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control2"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
+        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control3"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanSetParametersOnControlInJson()
     {
         const string json = @"
@@ -389,7 +501,7 @@ partial class CoreTests
     {
         InputSystem.onFindControlLayoutForDevice +=
             (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
-            "Keyboard";
+                "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
@@ -604,22 +716,22 @@ partial class CoreTests
     {
         InputSystem.RegisterControlLayout<TestLayoutType>(
             matches: new InputDeviceMatcher()
-            .WithInterface("TestInterface")
-            .WithManufacturer("TestManufacturer")
-            .WithProduct("TestProduct"));
+                .WithInterface("TestInterface")
+                .WithManufacturer("TestManufacturer")
+                .WithProduct("TestProduct"));
 
         var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
         Assert.That(layout.deviceMatcher.empty, Is.False);
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     [Test]
@@ -630,22 +742,22 @@ partial class CoreTests
 
         InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "TestLayout",
             matches: new InputDeviceMatcher()
-            .WithInterface("TestInterface")
-            .WithProduct("TestProduct")
-            .WithManufacturer("TestManufacturer"));
+                .WithInterface("TestInterface")
+                .WithProduct("TestProduct")
+                .WithManufacturer("TestManufacturer"));
 
         var layout = InputSystem.TryLoadLayout("TestLayout");
 
         Assert.That(layout.deviceMatcher.empty, Is.False);
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "product" && x.Value.Equals("TestProduct")));
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
-            .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+                .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
@@ -916,8 +1028,8 @@ partial class CoreTests
             .WithFormat("CUST");
 
         builder.AddControl("button")
-        .WithLayout("Button")
-        .WithUsages("Foo", "Bar");
+            .WithLayout("Button")
+            .WithUsages("Foo", "Bar");
 
         var layout = builder.Build();
 
@@ -941,7 +1053,7 @@ partial class CoreTests
 
         Assert.That(() => builder.AddControl("TestControl").WithUsages(""),
             Throws.ArgumentException.With.Message.Contains("TestControl")
-            .And.With.Message.Contains("TestLayout"));
+                .And.With.Message.Contains("TestLayout"));
     }
 
     [Test]
@@ -1108,10 +1220,10 @@ partial class CoreTests
 
         InputSystem.onControlLayoutChange +=
             (layout, change) =>
-            {
-                receivedChange = change;
-                receivedLayout = layout;
-            };
+        {
+            receivedChange = change;
+            receivedLayout = layout;
+        };
 
         const string jsonV1 = @"
             {
@@ -1267,10 +1379,10 @@ partial class CoreTests
         // variants should have been removed.
         Assert.That(layout.controls.Count, Is.EqualTo(6));
         Assert.That(layout.controls, Has.None.Matches<InputControlLayout.ControlItem>(
-                x => x.name == new InternedString("axis"))); // Axis control should have disappeared.
+            x => x.name == new InternedString("axis")));     // Axis control should have disappeared.
         Assert.That(layout.controls, Has.Exactly(1).Matches<InputControlLayout.ControlItem>(
-                x => x.name == new InternedString(
-                    "OtherControlFromBase")));  // But this one targeting no specific variants should be included.
+            x => x.name == new InternedString(
+                "OtherControlFromBase")));      // But this one targeting no specific variants should be included.
         Assert.That(layout.controls, Has.Exactly(1)
             .Matches<InputControlLayout.ControlItem>(x =>
                 x.name == new InternedString("ControlFromBase") && x.layout == new InternedString("Button") &&
@@ -1459,6 +1571,13 @@ partial class CoreTests
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void TODO_Layouts_RegisteringLayout_RecreatesDevicesForWhichItIsABetterLayout()
+    {
         Assert.Fail();
     }
 }

@@ -11,23 +11,23 @@ class iOSTests : InputTestFixture
     public void Devices_SupportsiOSGamePad()
     {
         var device = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "iOS",
-            deviceClass = "iOSGameController"
-        });
+            new InputDeviceDescription
+            {
+                interfaceName = "iOS",
+                deviceClass = "iOSGameController"
+            });
 
         Assert.That(device, Is.TypeOf<iOSGameController>());
         var controller = (iOSGameController)device;
 
         InputSystem.QueueStateEvent(controller,
             new iOSGameControllerState()
-            .WithButton(iOSButton.LeftTrigger, true, 0.123f)
-            .WithButton(iOSButton.RightTrigger, true, 0.456f)
-            .WithAxis(iOSAxis.LeftStickX, 0.789f)
-            .WithAxis(iOSAxis.LeftStickY, 0.987f)
-            .WithAxis(iOSAxis.RightStickX, 0.654f)
-            .WithAxis(iOSAxis.RightStickY, 0.321f));
+                .WithButton(iOSButton.LeftTrigger, true, 0.123f)
+                .WithButton(iOSButton.RightTrigger, true, 0.456f)
+                .WithAxis(iOSAxis.LeftStickX, 0.789f)
+                .WithAxis(iOSAxis.LeftStickY, 0.987f)
+                .WithAxis(iOSAxis.RightStickX, 0.654f)
+                .WithAxis(iOSAxis.RightStickY, 0.321f));
 
         InputSystem.Update();
 
