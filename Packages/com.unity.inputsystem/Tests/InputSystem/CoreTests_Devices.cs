@@ -320,7 +320,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_AddingDeviceTriggersNotification()
+    public void Devices_AddingDevice_TriggersNotification()
     {
         var receivedCallCount = 0;
         InputDevice receivedDevice = null;
@@ -343,7 +343,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_AddingDeviceMakesItCurrent()
+    public void Devices_AddingDevice_MakesItCurrent()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
 
@@ -352,7 +352,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_AddingDeviceDoesNotCauseExistingDevicesToForgetTheirState()
+    public void Devices_AddingDevice_DoesNotCauseExistingDevicesToForgetTheirState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -366,7 +366,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_AddingDeviceAffectsControlPaths()
+    public void Devices_AddingDevice_AffectsControlPaths()
     {
         InputSystem.AddDevice(
             "Gamepad"); // Add a gamepad so that when we add another, its name will have to get adjusted.
@@ -383,7 +383,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_AddingDeviceMarksItAdded()
+    public void Devices_AddingDevice_MarksItAdded()
     {
         var device = new InputDeviceBuilder("Gamepad").Finish();
 
@@ -392,6 +392,23 @@ partial class CoreTests
         InputSystem.AddDevice(device);
 
         Assert.That(device.added, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingDeviceByType_IfTypeIsNotKnownAsLayout_AutomaticallyRegistersControlLayout()
+    {
+        Assert.That(() => InputSystem.AddDevice<TestDeviceWithDefaultState>(), Throws.Nothing);
+        Assert.That(InputSystem.TryLoadLayout("TestDeviceWithDefaultState"), Is.Not.Null);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_AddingDevice_SetsItIntoDefaultState()
+    {
+        var device = InputSystem.AddDevice<TestDeviceWithDefaultState>();
+
+        Assert.That(device["control"].ReadValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]

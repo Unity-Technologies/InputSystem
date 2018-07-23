@@ -592,9 +592,12 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
+                // Still no match. Automatically registers the given type as a layout.
                 if (layoutName.IsEmpty())
-                    throw new ArgumentException(string.Format("Cannot find layout registered for type '{0}'", type.Name),
-                        "type");
+                {
+                    layoutName = new InternedString(type.Name);
+                    RegisterControlLayout(type.Name, type);
+                }
             }
 
             Debug.Assert(!layoutName.IsEmpty(), name);
@@ -640,7 +643,7 @@ namespace UnityEngine.Experimental.Input
                 device.m_DisplayName = description.product;
 
             if (isNative)
-                device.m_Flags |= InputDevice.Flags.Native;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
 
             AddDevice(device);
 
@@ -675,8 +678,9 @@ namespace UnityEngine.Experimental.Input
             // Let InputStateBuffers know this device doesn't have any associated state yet.
             device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
 
-            // Let InputStateBuffers allocate state buffers.
+            // Update state buffers.
             ReallocateStateBuffers();
+            InitializeDefaultState(device);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
@@ -696,7 +700,7 @@ namespace UnityEngine.Experimental.Input
             if (stateCallbackReceiver != null)
             {
                 InstallBeforeUpdateHookIfNecessary();
-                device.m_Flags |= InputDevice.Flags.HasStateCallbacks;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.HasStateCallbacks;
                 m_HaveDevicesWithStateCallbackReceivers = true;
             }
 
@@ -918,9 +922,9 @@ namespace UnityEngine.Experimental.Input
 
             // Set/clear flag.
             if (!enable)
-                device.m_Flags |= InputDevice.Flags.Disabled;
+                device.m_DeviceFlags |= InputDevice.DeviceFlags.Disabled;
             else
-                device.m_Flags &= ~InputDevice.Flags.Disabled;
+                device.m_DeviceFlags &= ~InputDevice.DeviceFlags.Disabled;
 
             // Send command to tell backend about status change.
             if (enable)
@@ -1216,6 +1220,7 @@ namespace UnityEngine.Experimental.Input
             InputUpdate.fixedUpdateCount = 0;
 
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
+            InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
         }
 
         [Serializable]
@@ -1470,8 +1475,67 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers = newBuffers;
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
+            InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
 
             ////TODO: need to update state change monitors
+        }
+
+        /// <summary>
+        /// Initialize default state for given device.
+        /// </summary>
+        /// <param name="device">A newly added input device.</param>
+        /// <remarks>
+        /// For every device, one copy of its state is kept around which is initialized with the default
+        /// values for the device. If the device has no control that has an explicitly specified control
+        /// value, the buffer simply contains all zeroes.
+        ///
+        /// The default state buffer is initialized once when a device is added to the system and then
+        /// migrated by <see cref="InputStateBuffers"/> like other device state and removed when the device
+        /// is removed from the system.
+        /// </remarks>
+        private void InitializeDefaultState(InputDevice device)
+        {
+            // Nothing to do if device has a default state of all zeroes.
+            if (!device.hasControlsWithDefaultState)
+                return;
+
+            // Otherwise go through each control and write its default value.
+            var controls = device.allControls;
+            var controlCount = controls.Count;
+            var defaultStateBuffer = m_StateBuffers.defaultStateBuffer;
+            for (var n = 0; n < controlCount; ++n)
+            {
+                var control = controls[n];
+                if (!control.hasDefaultValue)
+                    continue;
+
+                if (control.m_DefaultValue.isArray)
+                    throw new NotImplementedException("default value arrays");
+
+                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue.primitiveValue);
+            }
+
+            // Copy default state to all front and back buffers.
+            var stateBlock = device.m_StateBlock;
+            var deviceIndex = device.m_DeviceIndex;
+            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+            {
+                stateBlock.CopyToFrom(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+            }
+            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
+            {
+                stateBlock.CopyToFrom(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+            }
+
+            #if UNITY_EDITOR
+            if (m_StateBuffers.m_EditorUpdateBuffers.valid)
+            {
+                stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+            }
+            #endif
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -1544,7 +1608,7 @@ namespace UnityEngine.Experimental.Input
                     for (var i = 0; i < m_Devices.Length; ++i)
                     {
                         var device = m_Devices[i];
-                        if ((device.m_Flags & InputDevice.Flags.HasStateCallbacks) != InputDevice.Flags.HasStateCallbacks)
+                        if ((device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) != InputDevice.DeviceFlags.HasStateCallbacks)
                             continue;
 
                         // Depending on update ordering, we are writing events into *upcoming* updates inside of
@@ -1782,8 +1846,8 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
-                        var deviceHasStateCallbacks = (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
-                            InputDevice.Flags.HasStateCallbacks;
+                        var deviceHasStateCallbacks = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
+                            InputDevice.DeviceFlags.HasStateCallbacks;
                         IInputStateCallbackReceiver stateCallbacks = null;
                         var deviceIndex = device.m_DeviceIndex;
                         var stateBlockOfDevice = device.m_StateBlock;
@@ -2275,7 +2339,7 @@ namespace UnityEngine.Experimental.Input
             public string[] usages;
             public int deviceId;
             public uint stateOffset;
-            public InputDevice.Flags flags;
+            public InputDevice.DeviceFlags flags;
             public InputDeviceDescription description;
 
             public void RestoreUsagesOnDevice(InputDevice device)
@@ -2414,7 +2478,7 @@ namespace UnityEngine.Experimental.Input
                     usages = device.usages.Select(x => x.ToString()).ToArray(),
                     stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
-                    flags = device.m_Flags
+                    flags = device.m_DeviceFlags
                 };
                 deviceArray[i] = deviceState;
             }
@@ -2603,7 +2667,7 @@ namespace UnityEngine.Experimental.Input
                 device.m_Description = deviceState.description;
                 if (!string.IsNullOrEmpty(device.m_Description.product))
                     device.m_DisplayName = device.m_Description.product;
-                device.m_Flags = deviceState.flags;
+                device.m_DeviceFlags = deviceState.flags;
                 deviceState.RestoreUsagesOnDevice(device);
 
                 device.BakeOffsetIntoStateBlockRecursive(deviceState.stateOffset);
@@ -2622,8 +2686,8 @@ namespace UnityEngine.Experimental.Input
                     m_UpdateListeners.Append(beforeUpdateCallbackReceiver.OnUpdate);
                 }
 
-                m_HaveDevicesWithStateCallbackReceivers |= (device.m_Flags & InputDevice.Flags.HasStateCallbacks) ==
-                    InputDevice.Flags.HasStateCallbacks;
+                m_HaveDevicesWithStateCallbackReceivers |= (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
+                    InputDevice.DeviceFlags.HasStateCallbacks;
             }
             if (finalDeviceCount != deviceCount)
                 Array.Resize(ref devices, finalDeviceCount);
@@ -2636,6 +2700,12 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers.FreeAll();
 
             ReallocateStateBuffers();
+
+            // Re-initialize default states.
+            // Once we have support for migrating state across domain reloads, this will no
+            // longer be necessary for devices that have not changed format.
+            for (var i = 0; i < m_Devices.Length; ++i)
+                InitializeDefaultState(m_Devices[i]);
         }
 
         [SerializeField] private SerializedState m_SerializedState;

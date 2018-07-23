@@ -68,27 +68,27 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 // Fetch state from runtime, if necessary.
-                if ((m_Flags & Flags.DisabledStateHasBeenQueried) != Flags.DisabledStateHasBeenQueried)
+                if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueried) != DeviceFlags.DisabledStateHasBeenQueried)
                 {
                     var command = QueryEnabledStateCommand.Create();
                     if (ExecuteCommand(ref command) >= 0)
                     {
                         if (command.isEnabled)
-                            m_Flags &= ~Flags.Disabled;
+                            m_DeviceFlags &= ~DeviceFlags.Disabled;
                         else
-                            m_Flags |= Flags.Disabled;
+                            m_DeviceFlags |= DeviceFlags.Disabled;
                     }
                     else
                     {
                         // We got no response on the enable/disable state. Assume device is enabled.
-                        m_Flags &= ~Flags.Disabled;
+                        m_DeviceFlags &= ~DeviceFlags.Disabled;
                     }
 
                     // Only fetch enable/disable state again if we get a configuration change event.
-                    m_Flags |= Flags.DisabledStateHasBeenQueried;
+                    m_DeviceFlags |= DeviceFlags.DisabledStateHasBeenQueried;
                 }
 
-                return (m_Flags & Flags.Disabled) != Flags.Disabled;
+                return (m_DeviceFlags & DeviceFlags.Disabled) != DeviceFlags.Disabled;
             }
         }
 
@@ -106,7 +106,7 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public bool remote
         {
-            get { return (m_Flags & Flags.Remote) == Flags.Remote; }
+            get { return (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote; }
         }
 
         /// <summary>
@@ -114,12 +114,12 @@ namespace UnityEngine.Experimental.Input
         /// </summary>
         public bool native
         {
-            get { return (m_Flags & Flags.Native) == Flags.Native; }
+            get { return (m_DeviceFlags & DeviceFlags.Native) == DeviceFlags.Native; }
         }
 
         public bool updateBeforeRender
         {
-            get { return (m_Flags & Flags.UpdateBeforeRender) == Flags.UpdateBeforeRender; }
+            get { return (m_DeviceFlags & DeviceFlags.UpdateBeforeRender) == DeviceFlags.UpdateBeforeRender; }
         }
 
         /// <summary>
@@ -184,10 +184,7 @@ namespace UnityEngine.Experimental.Input
 
         public override Type valueType
         {
-            get
-            {
-                return null;
-            }
+            get { return typeof(byte[]); }
         }
 
         /// <summary>
@@ -206,6 +203,16 @@ namespace UnityEngine.Experimental.Input
             }
 
             return array;
+        }
+
+        public override object ReadDefaultValueAsObject()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        {
+            throw new NotImplementedException();
         }
 
         // This has to be public for Activator.CreateInstance() to be happy.
@@ -250,12 +257,12 @@ namespace UnityEngine.Experimental.Input
             // Mark all controls in the hierarchy as having their config out of date.
             // We don't want to update configuration right away but rather wait until
             // someone actually depends on it.
-            m_ConfigUpToDate = false;
+            isConfigUpToDate = false;
             for (var i = 0; i < m_ChildrenForEachControl.Length; ++i)
-                m_ChildrenForEachControl[i].m_ConfigUpToDate = false;
+                m_ChildrenForEachControl[i].isConfigUpToDate = false;
 
             // Make sure we fetch the enabled/disabled state again.
-            m_Flags &= ~Flags.DisabledStateHasBeenQueried;
+            m_DeviceFlags &= ~DeviceFlags.DisabledStateHasBeenQueried;
         }
 
         protected virtual void OnAdded()
@@ -296,18 +303,19 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Flags]
-        internal enum Flags
+        internal enum DeviceFlags
         {
             UpdateBeforeRender = 1 << 0,
             HasStateCallbacks = 1 << 1,
             HasNoisyControls = 1 << 2,
-            Remote = 1 << 3, // It's a local mirror of a device from a remote player connection.
-            Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
-            Disabled = 1 << 5,
-            DisabledStateHasBeenQueried = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
+            HasControlsWithDefaultState = 1 << 3,
+            Remote = 1 << 4, // It's a local mirror of a device from a remote player connection.
+            Native = 1 << 5, // It's a device created from data surfaced by NativeInputRuntime.
+            Disabled = 1 << 6,
+            DisabledStateHasBeenQueried = 1 << 7, // Whether we have fetched the current enable/disable state from the runtime.
         }
 
-        internal Flags m_Flags;
+        internal DeviceFlags m_DeviceFlags;
         internal int m_Id;
         internal string m_UserId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
@@ -341,6 +349,21 @@ namespace UnityEngine.Experimental.Input
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.
+
+        /// <summary>
+        /// If true, the device has at least one control that has an explicit default state.
+        /// </summary>
+        internal bool hasControlsWithDefaultState
+        {
+            get { return (m_DeviceFlags & DeviceFlags.HasControlsWithDefaultState) == DeviceFlags.HasControlsWithDefaultState; }
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasControlsWithDefaultState;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasControlsWithDefaultState;
+            }
+        }
 
         internal void SetUsage(InternedString usage)
         {

@@ -22,6 +22,9 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
+////        (and allow text input events that have no associated target device? this way we don't need a keyboard to get text input)
+
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
 ////TODO: release native alloations when exiting

@@ -32,9 +32,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
     public class HID : InputDevice
-#if UNITY_EDITOR
-        , IInputDeviceDebugUI
-#endif
     {
         public const string kHIDInterface = "HID";
         public const string kHIDNamespace = "HID";
@@ -70,18 +67,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             }
         }
 
-        #if UNITY_EDITOR
-        public void OnToolbarGUI()
-        {
-            if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
-            {
-                HIDDescriptorWindow.CreateOrShowExisting(this);
-            }
-        }
-
-        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
-        #endif
-
         private bool m_HaveParsedHIDDescriptor;
         private HIDDeviceDescriptor m_HIDDescriptor;
 
@@ -99,104 +84,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             if (description.interfaceName != kHIDInterface)
                 return null;
 
-            // See if we have to request a HID descriptor from the device.
-            // We support having the descriptor directly as a JSON string in the `capabilities`
-            // field of the device description.
-            var needToRequestDescriptor = true;
-            var hidDeviceDescriptor = new HIDDeviceDescriptor();
-            if (!string.IsNullOrEmpty(description.capabilities))
-            {
-                try
-                {
-                    hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(description.capabilities);
-
-                    // If there's elements in the descriptor, we're good with the descriptor. If there aren't,
-                    // we go and ask the device for a full descriptor.
-                    if (hidDeviceDescriptor.elements != null && hidDeviceDescriptor.elements.Length > 0)
-                        needToRequestDescriptor = false;
-                }
-                catch (Exception exception)
-                {
-                    Debug.Log(string.Format("Could not parse HID descriptor (exception: {0})", exception));
-                }
-            }
-
-            ////REVIEW: we *could* switch to a single path here that supports *only* parsed descriptors but it'd
-            ////        mean having to switch *every* platform supporting HID to the hack we currently have to do
-            ////        on Windows
-
-            // Request descriptor, if necessary.
-            if (needToRequestDescriptor)
-            {
-                // If the device has no assigned ID yet, we can't perform IOCTLs on the
-                // device so no way to get a report descriptor.
-                if (deviceId == kInvalidDeviceId)
-                    return null;
-
-                // Try to get the size of the HID descriptor from the device.
-                var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
-                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
-                if (sizeOfDescriptorInBytes > 0)
-                {
-                    // Now try to fetch the HID descriptor.
-                    using (var buffer =
-                               InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
-                    {
-                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
-                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
-                            return null;
-
-                        // Try to parse the HID report descriptor.
-                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
-                            return null;
-                    }
-
-                    // Update the descriptor on the device with the information we got.
-                    description.capabilities = hidDeviceDescriptor.ToJson();
-                }
-                else
-                {
-                    // The device may not support binary descriptors but may support parsed descriptors so
-                    // try the IOCTL for parsed descriptors next.
-                    //
-                    // This path exists pretty much only for the sake of Windows where it is not possible to get
-                    // unparsed/binary descriptors from the device (and where getting element offsets is only possible
-                    // with some dirty hacks we're performing in the native runtime).
-
-                    const int kMaxDescriptorBufferSize = 2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
-                    using (var buffer =
-                               InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
-                    {
-                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
-                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
-                        if (utf8Length < 0)
-                            return null;
-
-                        // Turn UTF-8 buffer into string.
-                        ////TODO: is there a way to not have to copy here?
-                        var utf8 = new byte[utf8Length];
-                        fixed(byte* utf8Ptr = utf8)
-                        {
-                            UnsafeUtility.MemCpy(utf8Ptr, commandPtr->payloadPtr, utf8Length);
-                        }
-                        var descriptorJson = Encoding.UTF8.GetString(utf8, 0, (int)utf8Length);
-
-                        // Try to parse the HID report descriptor.
-                        try
-                        {
-                            hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(descriptorJson);
-                        }
-                        catch (Exception exception)
-                        {
-                            Debug.Log(string.Format("Could not parse HID descriptor JSON returned from runtime (exception: {0})", exception));
-                            return null;
-                        }
-
-                        // Update the descriptor on the device with the information we got.
-                        description.capabilities = descriptorJson;
-                    }
-                }
-            }
+            // Read HID descriptor.
+            var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
 
             // Determine if there's any usable elements on the device.
             var hasUsableElements = false;
@@ -260,6 +149,130 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 layoutName, baseLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
+        }
+
+        public static HIDDeviceDescriptor ReadHIDDeviceDescriptor(InputDevice device, IInputRuntime runtime)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            InputDeviceDescription deviceDescription = device.description;
+            if (deviceDescription.interfaceName != kHIDInterface)
+                throw new ArgumentException(
+                    string.Format("Device '{0}' is not a HID (interface is '{1}')", device,
+                        deviceDescription.interfaceName), "device");
+
+            return ReadHIDDeviceDescriptor(device.id, ref deviceDescription, runtime);
+        }
+
+        public static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(int deviceId, ref InputDeviceDescription deviceDescription, IInputRuntime runtime)
+        {
+            if (deviceDescription.interfaceName != kHIDInterface)
+                throw new ArgumentException(
+                    string.Format("Device '{0}' is not a HID", deviceDescription));
+
+            // See if we have to request a HID descriptor from the device.
+            // We support having the descriptor directly as a JSON string in the `capabilities`
+            // field of the device description.
+            var needToRequestDescriptor = true;
+            var hidDeviceDescriptor = new HIDDeviceDescriptor();
+            if (!string.IsNullOrEmpty(deviceDescription.capabilities))
+            {
+                try
+                {
+                    hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(deviceDescription.capabilities);
+
+                    // If there's elements in the descriptor, we're good with the descriptor. If there aren't,
+                    // we go and ask the device for a full descriptor.
+                    if (hidDeviceDescriptor.elements != null && hidDeviceDescriptor.elements.Length > 0)
+                        needToRequestDescriptor = false;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("Could not parse HID descriptor of device '{0}'", deviceDescription));
+                    Debug.LogException(exception);
+                }
+            }
+
+            ////REVIEW: we *could* switch to a single path here that supports *only* parsed descriptors but it'd
+            ////        mean having to switch *every* platform supporting HID to the hack we currently have to do
+            ////        on Windows
+
+            // Request descriptor, if necessary.
+            if (needToRequestDescriptor)
+            {
+                // If the device has no assigned ID yet, we can't perform IOCTLs on the
+                // device so no way to get a report descriptor.
+                if (deviceId == kInvalidDeviceId)
+                    return new HIDDeviceDescriptor();
+
+                // Try to get the size of the HID descriptor from the device.
+                var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
+                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
+                if (sizeOfDescriptorInBytes > 0)
+                {
+                    // Now try to fetch the HID descriptor.
+                    using (var buffer =
+                               InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
+                    {
+                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
+                            return new HIDDeviceDescriptor();
+
+                        // Try to parse the HID report descriptor.
+                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
+                            return new HIDDeviceDescriptor();
+                    }
+
+                    // Update the descriptor on the device with the information we got.
+                    deviceDescription.capabilities = hidDeviceDescriptor.ToJson();
+                }
+                else
+                {
+                    // The device may not support binary descriptors but may support parsed descriptors so
+                    // try the IOCTL for parsed descriptors next.
+                    //
+                    // This path exists pretty much only for the sake of Windows where it is not possible to get
+                    // unparsed/binary descriptors from the device (and where getting element offsets is only possible
+                    // with some dirty hacks we're performing in the native runtime).
+
+                    const int kMaxDescriptorBufferSize = 2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
+                    using (var buffer =
+                               InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
+                    {
+                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
+                        if (utf8Length < 0)
+                            return new HIDDeviceDescriptor();
+
+                        // Turn UTF-8 buffer into string.
+                        ////TODO: is there a way to not have to copy here?
+                        var utf8 = new byte[utf8Length];
+                        fixed(byte* utf8Ptr = utf8)
+                        {
+                            UnsafeUtility.MemCpy(utf8Ptr, commandPtr->payloadPtr, utf8Length);
+                        }
+                        var descriptorJson = Encoding.UTF8.GetString(utf8, 0, (int)utf8Length);
+
+                        // Try to parse the HID report descriptor.
+                        try
+                        {
+                            hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(descriptorJson);
+                        }
+                        catch (Exception exception)
+                        {
+                            Debug.LogError(string.Format("Could not parse HID descriptor of device '{0}'", deviceDescription));
+                            Debug.LogException(exception);
+                            return new HIDDeviceDescriptor();
+                        }
+
+                        // Update the descriptor on the device with the information we got.
+                        deviceDescription.capabilities = descriptorJson;
+                    }
+                }
+            }
+
+            return hidDeviceDescriptor;
         }
 
         public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)

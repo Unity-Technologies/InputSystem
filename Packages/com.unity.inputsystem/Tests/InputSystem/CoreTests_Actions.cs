@@ -2238,4 +2238,15 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
         InputSystem.Update();
     }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_HaveStableIDs()
+    {
+        //var map = new InputActionMap();
+        //var action1 = map.AddAction("action1");
+        //var action2 = map.AddAction("action2");
+
+        Assert.Fail();
+    }
 }

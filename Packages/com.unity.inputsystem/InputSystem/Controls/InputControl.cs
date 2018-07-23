@@ -10,8 +10,6 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
-////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
-
 ////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
 ////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
@@ -200,7 +198,14 @@ namespace UnityEngine.Experimental.Input
 
         public bool noisy
         {
-            get { return m_IsNoisy; }
+            get { return (m_ControlFlags & ControlFlags.IsNoisy) == ControlFlags.IsNoisy; }
+            internal set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsNoisy;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsNoisy;
+            }
         }
 
         public InputControl this[string path]
@@ -227,10 +232,11 @@ namespace UnityEngine.Experimental.Input
 
         // Current value as boxed object.
         // NOTE: Calling this will allocate.
-        public virtual object ReadValueAsObject()
-        {
-            return null;
-        }
+        public abstract object ReadValueAsObject();
+
+        public abstract object ReadDefaultValueAsObject();
+
+        public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
 
         // Constructor for devices which are assigned names once plugged
         // into the system.
@@ -251,10 +257,10 @@ namespace UnityEngine.Experimental.Input
 
         protected void RefreshConfigurationIfNeeded()
         {
-            if (!m_ConfigUpToDate)
+            if (!isConfigUpToDate)
             {
                 RefreshConfiguration();
-                m_ConfigUpToDate = true;
+                isConfigUpToDate = true;
             }
         }
 
@@ -272,6 +278,11 @@ namespace UnityEngine.Experimental.Input
         protected internal IntPtr previousStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
+        }
+
+        protected internal IntPtr defaultStatePtr
+        {
+            get { return InputStateBuffers.s_DefaultStateBuffer; }
         }
 
         /// <summary>
@@ -308,8 +319,32 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
-        internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
-        internal bool m_IsNoisy;
+        internal ControlFlags m_ControlFlags;
+        internal PrimitiveValueOrArray m_DefaultValue;
+
+        [Flags]
+        internal enum ControlFlags
+        {
+            ConfigUpToDate = 1 << 0,
+            IsNoisy = 1 << 1,
+        }
+
+        internal bool isConfigUpToDate
+        {
+            get { return (m_ControlFlags & ControlFlags.ConfigUpToDate) == ControlFlags.ConfigUpToDate; }
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.ConfigUpToDate;
+                else
+                    m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool hasDefaultValue
+        {
+            get { return !m_DefaultValue.isEmpty; }
+        }
 
         // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().
@@ -336,6 +371,8 @@ namespace UnityEngine.Experimental.Input
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
+        ////TODO: this needs to become a check for whether the state corresponds to the default state
+        ////      (for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state; e.g. from HID input reports)
         ////TODO: pass state ptr *NOT* value ptr (it's confusing)
         // We don't allow custom default values for state so all zeros indicates
         // default states for us.
@@ -410,9 +447,37 @@ namespace UnityEngine.Experimental.Input
             return ReadValueFrom(previousStatePtr);
         }
 
+        public TValue ReadDefaultValue()
+        {
+            return ReadValueFrom(defaultStatePtr);
+        }
+
         public override object ReadValueAsObject()
         {
             return ReadValue();
+        }
+
+        public override object ReadDefaultValueAsObject()
+        {
+            return ReadDefaultValue();
+        }
+
+        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        {
+            if (buffer == IntPtr.Zero)
+                throw new ArgumentNullException("buffer");
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (bufferSize < (m_StateBlock.byteOffset + m_StateBlock.alignedSizeInBytes))
+                throw new ArgumentException(
+                    string.Format("Buffer size {0} is too small for control at offset {1} with length {2}", bufferSize,
+                        m_StateBlock.byteOffset, m_StateBlock.alignedSizeInBytes), "bufferSize");
+
+            // If value is not of expected type, try to convert.
+            if (!(value is TValue))
+                value = Convert.ChangeType(value, typeof(TValue));
+
+            WriteRawValueInto(buffer, (TValue)value);
         }
 
         // Read a control value directly from a state event.
@@ -423,8 +488,10 @@ namespace UnityEngine.Experimental.Input
         public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
-            var value = ReadRawValueFrom(statePtr);
+            if (statePtr == IntPtr.Zero)
+                return ReadDefaultValue();
 
+            var value = ReadRawValueFrom(statePtr);
             if (process)
                 value = Process(value);
 
@@ -458,6 +525,9 @@ namespace UnityEngine.Experimental.Input
         public void WriteValueInto(InputEventPtr eventPtr, TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            if (statePtr == IntPtr.Zero)
+                return;
+
             WriteValueInto(statePtr, value);
         }
 
@@ -524,10 +594,7 @@ namespace UnityEngine.Experimental.Input
 
             var stateSizeInBytes = stateEvent->stateSizeInBytes;
             if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                throw new Exception(
-                    string.Format(
-                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
-                        stateFormat, stateSizeInBytes, path));
+                return IntPtr.Zero;
 
             return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }

@@ -196,6 +196,118 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanSetDefaultStateOfControlInJson()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""analog"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.5""
+                    },
+                    {
+                        ""name"" : ""digital"",
+                        ""layout"" : ""Digital"",
+                        ""defaultState"" : ""1234""
+                    },
+                    {
+                        ""name"" : ""hexDigital"",
+                        ""layout"" : ""Digital"",
+                        ""defaultState"" : ""0x1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        var layout = InputSystem.TryLoadLayout("MyDevice");
+
+        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
+        Assert.That(layout["digital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Long));
+        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToLong(), Is.EqualTo(0x1234));
+    }
+
+    class TestDeviceWithDefaultState : InputDevice
+    {
+        [InputControl(defaultState = 0.1234)]
+        public AxisControl control { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanSetDefaultStateOfControlOnAttribute()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithDefaultState>();
+
+        var layout = InputSystem.TryLoadLayout("TestDeviceWithDefaultState");
+
+        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanOverrideDefaultStateValuesFromBaseLayout()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control1"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.2345""
+                    },
+                    {
+                        ""name"" : ""control2"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.3456""
+                    },
+                    {
+                        ""name"" : ""control3"",
+                        ""layout"" : ""Axis""
+                    }
+                ]
+            }
+        ";
+        const string derivedLayout = @"
+            {
+                ""name"" : ""DerivedLayout"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""control1"",
+                        ""defaultState"" : ""0.9876""
+                    },
+                    {
+                        ""name"" : ""control3"",
+                        ""defaultState"" : ""0.1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(baseLayout);
+        InputSystem.RegisterControlLayout(derivedLayout);
+
+        var layout = InputSystem.TryLoadLayout("DerivedLayout");
+
+        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
+        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control2"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
+        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(PrimitiveValueType.Double));
+        Assert.That(layout["control3"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanSetParametersOnControlInJson()
     {
         const string json = @"

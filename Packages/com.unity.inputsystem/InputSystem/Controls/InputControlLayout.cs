@@ -73,6 +73,8 @@ namespace UnityEngine.Experimental.Input
             get { return s_DefaultVariant; }
         }
 
+        ////TODO: replace ParameterValue with PrimitiveValueOrArray
+
         public enum ParameterType
         {
             Boolean,
@@ -106,6 +108,59 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            public void SetValue(string value)
+            {
+                fixed(byte* ptr = this.value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            bool result;
+                            if (bool.TryParse(value, out result))
+                            {
+                                (*(bool*)ptr) = result;
+                            }
+                            break;
+                        case ParameterType.Integer:
+                            int intResult;
+                            if (int.TryParse(value, out intResult))
+                            {
+                                (*(int*)ptr) = intResult;
+                            }
+                            break;
+                        case ParameterType.Float:
+                            float floatResult;
+                            if (float.TryParse(value, out floatResult))
+                            {
+                                (*(float*)ptr) = floatResult;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            public string GetValueAsString()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            if (*((bool*)ptr))
+                                return "true";
+                            return "false";
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return "" + intValue;
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return "" + floatValue;
+                    }
+                }
+
+                return string.Empty;
+            }
+
             public override string ToString()
             {
                 fixed(byte* ptr = value)
@@ -128,6 +183,25 @@ namespace UnityEngine.Experimental.Input
 
                 return string.Empty;
             }
+
+            public bool IsDefaultValue()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            return *((bool*)ptr) == default(bool);
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return intValue == default(int);
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return floatValue == default(float);
+                    }
+                }
+                return false;
+            }
         }
 
         public struct NameAndParameters
@@ -140,7 +214,7 @@ namespace UnityEngine.Experimental.Input
                 if (parameters.Count == 0)
                     return name;
                 var parameterString = string.Join(",", parameters.Select(x => x.ToString()).ToArray());
-                return string.Format("name({0})", parameterString);
+                return string.Format("{0}({1})", name, parameterString);
             }
         }
 
@@ -193,6 +267,11 @@ namespace UnityEngine.Experimental.Input
             public FourCC format;
             public Flags flags;
             public int arraySize;
+
+            /// <summary>
+            /// Optional default value for the state memory associated with the control.
+            /// </summary>
+            public PrimitiveValueOrArray defaultState;
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -298,6 +377,11 @@ namespace UnityEngine.Experimental.Input
                     result.resourceName = resourceName;
                 else
                     result.resourceName = other.resourceName;
+
+                if (!defaultState.isEmpty)
+                    result.defaultState = defaultState;
+                else
+                    result.defaultState = other.defaultState;
 
                 return result;
             }
@@ -848,6 +932,11 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 arraySize = attribute.arraySize;
 
+            // Determine default state.
+            var defaultState = new PrimitiveValueOrArray();
+            if (attribute != null)
+                defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -865,6 +954,7 @@ namespace UnityEngine.Experimental.Input
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
                 arraySize = arraySize,
+                defaultState = defaultState,
             };
         }
 
@@ -1436,6 +1526,12 @@ namespace UnityEngine.Experimental.Input
             public string resourceName;
             public bool noisy;
 
+            // This should be an object type field and allow any JSON primitive value type as well
+            // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
+            // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
+            // for this later but for now, we use a string-based value fallback instead.
+            public string defaultState;
+
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
 
@@ -1491,6 +1587,9 @@ namespace UnityEngine.Experimental.Input
 
                 if (!string.IsNullOrEmpty(processors))
                     layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
+
+                if (defaultState != null)
+                    layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
 
                 return layout;
             }

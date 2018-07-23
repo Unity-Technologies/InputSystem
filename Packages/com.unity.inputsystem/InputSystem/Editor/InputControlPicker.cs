@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input.Editor
     public class InputControlPicker : PopupWindowContent
     {
         public Action<SerializedProperty> onPickCallback;
-
+        public float width;
         SearchField m_SearchField;
 
         public InputControlPicker(SerializedProperty pathProperty)
@@ -48,6 +48,14 @@ namespace UnityEngine.Experimental.Input.Editor
         void OnDownOrUpArrowKeyPressed()
         {
             m_PathTree.SetFocusAndEnsureSelectedItem();
+        }
+
+        public override Vector2 GetWindowSize()
+        {
+            var s = base.GetWindowSize();
+            if (width > s.x)
+                s.x = width;
+            return s;
         }
 
         public InputControlPicker(SerializedProperty pathProperty, ref TreeViewState treeViewState) : this(pathProperty)
@@ -77,6 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Controls", GUILayout.MinWidth(75), GUILayout.ExpandWidth(false));
+            GUILayout.FlexibleSpace();
             var searchRect = GUILayoutUtility.GetRect(GUIContent.none, Styles.toolbarSearchField, GUILayout.MinWidth(70));
             m_PathTree.searchString = m_SearchField.OnToolbarGUI(searchRect, m_PathTree.searchString);
             GUILayout.EndHorizontal();
