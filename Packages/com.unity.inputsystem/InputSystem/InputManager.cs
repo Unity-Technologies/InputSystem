@@ -2132,16 +2132,24 @@ namespace UnityEngine.Experimental.Input
                 {
                     // Not-so-simple path: compare bits.
 
-                    if (sizeInBits > 1)
-                        throw new NotImplementedException("state change detection on multi-bit fields");
-
                     // Check if bit offset is out of range of state we have.
                     if (MemoryHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
                         continue;
 
-                    if (MemoryHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
-                        MemoryHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
-                        continue;
+                    if (sizeInBits > 1)
+                    {
+                        // Multi-bit value.
+                        if (MemoryHelpers.MemCmpBitRegion((byte*)newState.ToPointer() + offset,
+                            (byte*)oldState.ToPointer() + offset, bitOffset, sizeInBits))
+                            continue;
+                    }
+                    else
+                    {
+                        // Single-bit value.
+                        if (MemoryHelpers.ReadSingleBit(new IntPtr(newState.ToInt64() + offset), bitOffset) ==
+                            MemoryHelpers.ReadSingleBit(new IntPtr(oldState.ToInt64() + offset), bitOffset))
+                            continue;
+                    }
                 }
                 else
                 {

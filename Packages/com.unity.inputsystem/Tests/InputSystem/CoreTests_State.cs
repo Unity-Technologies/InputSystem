@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
@@ -613,6 +614,80 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(monitorFired, Is.False);
+    }
+
+    struct StateWithMultiBitControl : IInputStateTypeInfo
+    {
+        // Dpad layout that is identical to how the PS4 DualShock controller sets up its Dpad.
+        // Offset the whole dpad by 3 bits to make sure we're not only supporting the case where
+        // the multi-bit value is byte-aligned.
+        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4, bit = 3)]
+        [InputControl(name = "dpad/up", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 3, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 3, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 3, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 3, sizeInBits = 4)]
+        public int buttons;
+
+        // Add a whacky 23bit button that isn't byte aligned.
+        [InputControl(name = "data", layout = "DiscreteButton", bit = 4, sizeInBits = 23)]
+        public long data;
+
+        public StateWithMultiBitControl WithDpad(int value)
+        {
+            buttons |= value << 3;
+            return this;
+        }
+
+        public StateWithMultiBitControl WithData(int value)
+        {
+            data = value << 4 & (0x7fff << 4);
+            return this;
+        }
+
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
+    class TestDeviceWithMultiBitControl : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanSetUpMonitorsForStateChanges_OnMultiBitFields()
+    {
+        var device = InputSystem.AddDevice<TestDeviceWithMultiBitControl>();
+
+        var monitorFired = false;
+        InputControl receivedControl = null;
+        Action<InputControl, double, long> action =
+            (control, time, monitorIndex) =>
+        {
+            Assert.That(!monitorFired);
+            monitorFired = true;
+            receivedControl = control;
+        };
+
+        InputSystem.AddStateChangeMonitor(device["dpad"], action);
+        InputSystem.AddStateChangeMonitor(device["data"], action);
+
+        InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3));
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedControl, Is.SameAs(device["dpad"]));
+
+        monitorFired = false;
+        receivedControl = null;
+
+        InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3).WithData(1234));
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+        Assert.That(receivedControl, Is.SameAs(device["data"]));
     }
 
     [Test]

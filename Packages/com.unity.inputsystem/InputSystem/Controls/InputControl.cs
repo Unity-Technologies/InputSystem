@@ -238,6 +238,16 @@ namespace UnityEngine.Experimental.Input
 
         public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
 
+        public void WriteValueFromObjectInto(InputEventPtr eventPtr, object value)
+        {
+            var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            if (statePtr == IntPtr.Zero)
+                return;
+
+            var bufferSize = m_StateBlock.byteOffset + eventPtr.sizeInBytes;
+            WriteValueFromObjectInto(statePtr, bufferSize, value);
+        }
+
         // Constructor for devices which are assigned names once plugged
         // into the system.
         protected InputControl()
@@ -402,6 +412,41 @@ namespace UnityEngine.Experimental.Input
             return true;
         }
 
+        internal unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
+        {
+            if (!eventPtr.valid)
+                throw new ArgumentNullException("eventPtr");
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+
+            ////TODO: support delta events
+            if (eventPtr.IsA<DeltaStateEvent>())
+                throw new NotImplementedException("Read control value from delta state events");
+
+            var stateEvent = StateEvent.From(eventPtr);
+
+            // Make sure we have a state event compatible with our device. The event doesn't
+            // have to be specifically for our device (we don't require device IDs to match) but
+            // the formats have to match and the size must be within range of what we're trying
+            // to read.
+            var stateFormat = stateEvent->stateFormat;
+            if (stateEvent->stateFormat != device.m_StateBlock.format)
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
+                        path, stateFormat, device, device.m_StateBlock.format));
+
+            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
+            // We need to unsubtract those offsets here.
+            var deviceStateOffset = device.m_StateBlock.byteOffset;
+
+            var stateSizeInBytes = stateEvent->stateSizeInBytes;
+            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+                return IntPtr.Zero;
+
+            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+        }
+
         internal int ResolveDeviceIndex()
         {
             var deviceIndex = m_Device.m_DeviceIndex;
@@ -562,41 +607,6 @@ namespace UnityEngine.Experimental.Input
             var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
             var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
             WriteValueInto(new IntPtr(adjustedStatePtr), value);
-        }
-
-        private unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
-        {
-            if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
-
-            ////TODO: support delta events
-            if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
-
-            var stateEvent = StateEvent.From(eventPtr);
-
-            // Make sure we have a state event compatible with our device. The event doesn't
-            // have to be specifically for our device (we don't require device IDs to match) but
-            // the formats have to match and the size must be within range of what we're trying
-            // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
-                throw new InvalidOperationException(
-                    string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
-
-            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
-            // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                return IntPtr.Zero;
-
-            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }
 
         public TValue Process(TValue value)

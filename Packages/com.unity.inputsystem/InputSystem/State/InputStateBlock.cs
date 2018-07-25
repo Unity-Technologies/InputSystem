@@ -146,7 +146,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 if (sizeInBits == 0)
                     value = MemoryHelpers.ReadSingleBit(new IntPtr(valuePtr), bitOffset) ? 1 : 0;
                 else
-                    value = MemoryHelpers.ReadMultipleBits(new IntPtr(valuePtr), bitOffset, sizeInBits);
+                    value = MemoryHelpers.ReadIntFromMultipleBits(new IntPtr(valuePtr), bitOffset, sizeInBits);
             }
             else if (format == kTypeByte)
             {
