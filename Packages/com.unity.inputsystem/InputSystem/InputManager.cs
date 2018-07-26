@@ -1393,35 +1393,16 @@ namespace UnityEngine.Experimental.Input
             if (m_Devices == null)
                 return;
 
-            var name = device.name;
-            var nameLowerCase = device.m_Name.ToLower();
-            var nameIsUnique = false;
-            var namesTried = 1;
-
-            // Find unique name.
-            while (!nameIsUnique)
+            var deviceName = StringHelpers.MakeUniqueName(device.name, m_Devices, x => x.name);
+            if (deviceName != device.name)
             {
-                nameIsUnique = true;
-                for (var i = 0; i < m_Devices.Length; ++i)
-                {
-                    if (m_Devices[i].name.ToLower() == nameLowerCase)
-                    {
-                        name = string.Format("{0}{1}", device.name, namesTried);
-                        nameLowerCase = name.ToLower();
-                        nameIsUnique = false;
-                        ++namesTried;
-                        break;
-                    }
-                }
-            }
-
-            // If we have changed the name of the device, nuke all path strings in the control
-            // hiearchy so that they will get re-recreated when queried.
-            if (namesTried >= 1)
+                // If we have changed the name of the device, nuke all path strings in the control
+                // hiearchy so that they will get re-recreated when queried.
                 ResetControlPathsRecursive(device);
 
-            // Assign name.
-            device.m_Name = new InternedString(name);
+                // Assign name.
+                device.m_Name = new InternedString(deviceName);
+            }
         }
 
         private void ResetControlPathsRecursive(InputControl control)

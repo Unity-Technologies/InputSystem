@@ -52,13 +52,13 @@ class HIDTests : InputTestFixture
         Assert.That(device, Is.TypeOf<HID>());
         Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
         Assert.That(device.children, Has.Count.EqualTo(4));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("X").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Y").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
 
-        var x = device["X"];
-        var y = device["Y"];
+        var x = device["x"];
+        var y = device["y"];
         var button1 = device["button1"];
         var button2 = device["button2"];
 
@@ -277,8 +277,8 @@ class HIDTests : InputTestFixture
         Assert.That(hid.hidDescriptor.elements.Length, Is.EqualTo(4));
 
         Assert.That(device.children, Has.Count.EqualTo(4));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("X").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Y").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
     }
@@ -702,6 +702,69 @@ class HIDTests : InputTestFixture
 
             Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(vector2Comparer));
         }
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsMultipleHIDHatSwitches()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.HatSwitch,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 1,
+                    reportSizeInBits = 4,
+                    reportOffsetInBits = 0,
+                    logicalMin = 0,
+                    logicalMax = 7,
+                    physicalMin = 0,
+                    physicalMax = 315,
+                    flags = HID.HIDElementFlags.NullState
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.HatSwitch,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 1,
+                    reportSizeInBits = 4,
+                    reportOffsetInBits = 4,
+                    logicalMin = 0,
+                    logicalMax = 7,
+                    physicalMin = 0,
+                    physicalMax = 315,
+                    flags = HID.HIDElementFlags.NullState
+                }
+            }
+        };
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+        var hid = (HID)InputSystem.devices.First(x => x is HID);
+
+        Assert.That(hid["dpad"], Is.TypeOf<DpadControl>());
+        Assert.That(hid["dpad1"], Is.TypeOf<DpadControl>());
+
+        Assert.That(hid["dpad"].stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(hid["dpad"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(hid["dpad1"].stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(hid["dpad1"].stateBlock.bitOffset, Is.EqualTo(4));
     }
 
     [Test]

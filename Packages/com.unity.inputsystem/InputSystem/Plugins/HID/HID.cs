@@ -328,8 +328,14 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     var layout = element.DetermineLayout();
                     if (layout != null)
                     {
+                        // Assign unique name.
+                        var name = element.DetermineName();
+                        Debug.Assert(!string.IsNullOrEmpty(name));
+                        name = StringHelpers.MakeUniqueName(name, builder.controls, x => x.name);
+
+                        // Add control.
                         var control =
-                            builder.AddControl(element.DetermineName())
+                            builder.AddControl(name)
                                 .WithLayout(layout)
                                 .WithByteOffset((uint)element.reportOffsetInBits / 8)
                                 .WithBitOffset((uint)element.reportOffsetInBits % 8)
@@ -345,7 +351,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         if (usages != null)
                             control.WithUsages(usages);
 
-                        element.AddChildControls(ref builder);
+                        element.AddChildControls(name, ref builder);
                     }
                 }
 
@@ -522,7 +528,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         return string.Format("button{0}", usage);
                     case UsagePage.GenericDesktop:
                         if (usage == (int)GenericDesktop.HatSwitch)
-                            return "dpad"; ////TODO: support multiple hatswitches
+                            return "dpad";
                         var text = ((GenericDesktop)usage).ToString();
                         // Lower-case first letter.
                         text = char.ToLowerInvariant(text[0]) + text.Substring(1);
@@ -681,7 +687,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 return new PrimitiveValue();
             }
 
-            internal void AddChildControls(ref InputControlLayout.Builder builder)
+            internal void AddChildControls(string controlName, ref InputControlLayout.Builder builder)
             {
                 if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
                 {
@@ -701,11 +707,9 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     if (nullValue.isEmpty)
                         return;
 
-                    var hatswitchName = DetermineName();
-
                     ////REVIEW: this probably only works with hatswitches that have their null value at logicalMax+1
 
-                    builder.AddControl(hatswitchName + "/up")
+                    builder.AddControl(controlName + "/up")
                         .WithFormat(InputStateBlock.kTypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
@@ -714,7 +718,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)reportSizeInBits);
 
-                    builder.AddControl(hatswitchName + "/right")
+                    builder.AddControl(controlName + "/right")
                         .WithFormat(InputStateBlock.kTypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
@@ -723,7 +727,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)reportSizeInBits);
 
-                    builder.AddControl(hatswitchName + "/down")
+                    builder.AddControl(controlName + "/down")
                         .WithFormat(InputStateBlock.kTypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
@@ -732,7 +736,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         .WithBitOffset(0)
                         .WithSizeInBits((uint)reportSizeInBits);
 
-                    builder.AddControl(hatswitchName + "/left")
+                    builder.AddControl(controlName + "/left")
                         .WithFormat(InputStateBlock.kTypeBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,

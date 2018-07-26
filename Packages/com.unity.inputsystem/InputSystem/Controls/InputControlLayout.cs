@@ -476,6 +476,11 @@ namespace UnityEngine.Experimental.Input
             private int m_ControlCount;
             private ControlItem[] m_Controls;
 
+            public ReadOnlyArray<ControlItem> controls
+            {
+                get { return new ReadOnlyArray<ControlItem>(m_Controls, 0, m_ControlCount);}
+            }
+
             public struct ControlBuilder
             {
                 internal Builder builder;
