@@ -418,7 +418,8 @@ partial class CoreTests
                     {
                         ""name"" : ""buttonSouth"",
                         ""format"" : ""FLT"",
-                        ""offset"" : 4
+                        ""offset"" : 4,
+                        ""bit"" : 0
                     }
                 ]
             }

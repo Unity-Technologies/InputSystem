@@ -2133,7 +2133,7 @@ namespace UnityEngine.Experimental.Input
                     // Not-so-simple path: compare bits.
 
                     // Check if bit offset is out of range of state we have.
-                    if (MemoryHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset) > newStateSize)
+                    if (MemoryHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset + sizeInBits) > newStateSize)
                         continue;
 
                     if (sizeInBits > 1)

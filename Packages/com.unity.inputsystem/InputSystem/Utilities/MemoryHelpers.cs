@@ -205,5 +205,45 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             throw new NotImplementedException("Reading int straddling int boundary");
         }
+
+        public static void WriteIntFromMultipleBits(IntPtr ptr, uint bitOffset, uint bitCount, int value)
+        {
+            if (ptr == IntPtr.Zero)
+                throw new ArgumentNullException("ptr");
+            if (bitCount >= sizeof(int) * 8)
+                throw new ArgumentException("Trying to write more than 32 bits as int", "bitCount");
+
+            // Bits out of byte.
+            if (bitOffset + bitCount <= 8)
+            {
+                var byteValue = (byte)value;
+                byteValue >>= (int)bitOffset;
+                var mask = 0xFF >> (8 - (int)bitCount);
+                *((byte*)ptr) |= (byte)(byteValue & mask);
+                return;
+            }
+
+            // Bits out of short.
+            if (bitOffset + bitCount <= 16)
+            {
+                var shortValue = (ushort)value;
+                shortValue >>= (int)bitOffset;
+                var mask = 0xFFFF >> (16 - (int)bitCount);
+                *((ushort*)ptr) |= (ushort)(shortValue & mask);
+                return;
+            }
+
+            // Bits out of int.
+            if (bitOffset + bitCount <= 32)
+            {
+                var intValue = (uint)value;
+                intValue >>= (int)bitOffset;
+                var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
+                *((uint*)ptr) |= (uint)(intValue & mask);
+                return;
+            }
+
+            throw new NotImplementedException("Writing int straddling int boundary");
+        }
     }
 }

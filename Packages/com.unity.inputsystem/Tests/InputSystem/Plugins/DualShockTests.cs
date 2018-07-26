@@ -84,6 +84,21 @@ class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_DualShockHID_HasDpadInNullStateByDefault()
+    {
+        // The DualShock's dpad has a default state of 8 (indicating dpad isn't pressed in any direction),
+        // not of 0 (which actually means "up" is pressed). Make sure this is set up correctly.
+
+        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
+
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanSetLightBarColorAndMotorSpeedsOnDualShockHID()
     {
         var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();

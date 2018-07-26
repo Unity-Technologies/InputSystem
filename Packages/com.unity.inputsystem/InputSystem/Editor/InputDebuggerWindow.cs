@@ -460,6 +460,8 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, string.Format("Array Size: {0}", control.arraySize), ref id);
                 if (!string.IsNullOrEmpty(control.useStateFrom))
                     AddChild(item, string.Format("Use State From: {0}", control.useStateFrom), ref id);
+                if (!control.defaultState.isEmpty)
+                    AddChild(item, string.Format("Default State: {0}", control.defaultState.ToString()), ref id);
 
                 if (control.usages.Count > 0)
                     AddChild(item, "Usages: " + string.Join(", ", control.usages.Select(x => x.ToString()).ToArray()), ref id);
