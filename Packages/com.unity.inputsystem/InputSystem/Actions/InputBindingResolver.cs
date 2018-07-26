@@ -332,17 +332,22 @@ namespace UnityEngine.Experimental.Input
             return firstProcessorIndex;
         }
 
-        private static object InstantiateBindingComposite(string name)
+        private static object InstantiateBindingComposite(string nameAndParameters)
         {
+            var nameAndParametersParsed = InputControlLayout.ParseNameAndParameters(nameAndParameters);
+
             // Look up.
-            var type = InputBindingComposite.s_Composites.LookupTypeRegistration(name);
+            var type = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParametersParsed.name);
             if (type == null)
                 throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
-                    name));
+                    nameAndParametersParsed.name));
 
             // Instantiate.
             var instance = Activator.CreateInstance(type);
             ////REVIEW: typecheck for IInputBindingComposite? (at least in dev builds)
+
+            // Set parameters.
+            InputDeviceBuilder.SetParameters(instance, nameAndParametersParsed.parameters);
 
             return instance;
         }

@@ -981,50 +981,61 @@ namespace UnityEngine.Experimental.Input
             var textLength = text.Length;
 
             while (index < textLength)
-            {
-                // Skip whitespace.
-                while (index < textLength && char.IsWhiteSpace(text[index]))
-                    ++index;
-
-                // Parse name.
-                var nameStart = index;
-                while (index < textLength)
-                {
-                    var nextChar = text[index];
-                    if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
-                        break;
-                    ++index;
-                }
-                if (index - nameStart == 0)
-                    throw new Exception(string.Format("Expecting name at position {0} in '{1}'", nameStart, text));
-                var name = text.Substring(nameStart, index - nameStart);
-
-                // Skip whitespace.
-                while (index < textLength && char.IsWhiteSpace(text[index]))
-                    ++index;
-
-                // Parse parameters.
-                ParameterValue[] parameters = null;
-                if (index < textLength && text[index] == '(')
-                {
-                    ++index;
-                    var closeParenIndex = text.IndexOf(')', index);
-                    if (closeParenIndex == -1)
-                        throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
-                            text));
-
-                    var parameterString = text.Substring(index, closeParenIndex - index);
-                    parameters = ParseParameters(parameterString);
-                    index = closeParenIndex + 1;
-                }
-
-                if (index < textLength && text[index] == ',')
-                    ++index;
-
-                list.Add(new NameAndParameters { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
-            }
+                list.Add(ParseNameAndParameters(text, ref index));
 
             return true;
+        }
+
+        internal static NameAndParameters ParseNameAndParameters(string text)
+        {
+            var index = 0;
+            return ParseNameAndParameters(text, ref index);
+        }
+
+        private static NameAndParameters ParseNameAndParameters(string text, ref int index)
+        {
+            var textLength = text.Length;
+
+            // Skip whitespace.
+            while (index < textLength && char.IsWhiteSpace(text[index]))
+                ++index;
+
+            // Parse name.
+            var nameStart = index;
+            while (index < textLength)
+            {
+                var nextChar = text[index];
+                if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
+                    break;
+                ++index;
+            }
+            if (index - nameStart == 0)
+                throw new Exception(string.Format("Expecting name at position {0} in '{1}'", nameStart, text));
+            var name = text.Substring(nameStart, index - nameStart);
+
+            // Skip whitespace.
+            while (index < textLength && char.IsWhiteSpace(text[index]))
+                ++index;
+
+            // Parse parameters.
+            ParameterValue[] parameters = null;
+            if (index < textLength && text[index] == '(')
+            {
+                ++index;
+                var closeParenIndex = text.IndexOf(')', index);
+                if (closeParenIndex == -1)
+                    throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
+                        text));
+
+                var parameterString = text.Substring(index, closeParenIndex - index);
+                parameters = ParseParameters(parameterString);
+                index = closeParenIndex + 1;
+            }
+
+            if (index < textLength && text[index] == ',')
+                ++index;
+
+            return new NameAndParameters {name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters)};
         }
 
         private static ParameterValue[] ParseParameters(string parameterString)

@@ -183,6 +183,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 
             var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(0f, 0f);
+            ////REVIEW: when pausing&resuming haptics, you probably don't want the lightbar color to change
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
 

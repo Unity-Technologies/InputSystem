@@ -1634,6 +1634,38 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanDisableNormalizationOfDpadComposites()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AppendCompositeBinding("Dpad(normalize=false)")
+            .With("Up", "/<Keyboard>/w")
+            .With("Down", "/<Keyboard>/s")
+            .With("Left", "/<Keyboard>/a")
+            .With("Right", "/<Keyboard>/d");
+        action.Enable();
+
+        Vector2? value = null;
+        action.performed += ctx => { value = ctx.ReadValue<Vector2>(); };
+
+        value = null;
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(vector2Comparer));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanSetGravityOnDpadComposites()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
     public void TODO_Actions_WhenPartOfCompositeResolvesToMultipleControls_WhatHappensXXX()
     {
         Assert.Fail();
