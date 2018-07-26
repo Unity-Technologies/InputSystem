@@ -1088,7 +1088,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new MouseState {buttons = 0xffff});
         InputSystem.Update();
 
-        Assert.That(device.CheckStateIsAllZeros(), Is.True);
+        Assert.That(device.CheckStateIsAtDefault(), Is.True);
 
         // Re-enable device.
 

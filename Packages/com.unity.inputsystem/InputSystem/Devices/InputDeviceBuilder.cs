@@ -707,6 +707,11 @@ namespace UnityEngine.Experimental.Input
                     SetParameters(child, controlItem.parameters);
                 if (!string.IsNullOrEmpty(controlItem.displayName))
                     child.m_DisplayNameFromLayout = controlItem.displayName;
+                if (!controlItem.defaultState.isEmpty)
+                {
+                    child.m_DefaultValue = controlItem.defaultState;
+                    m_Device.hasControlsWithDefaultState = true;
+                }
 
                 ////TODO: other modifications
             }

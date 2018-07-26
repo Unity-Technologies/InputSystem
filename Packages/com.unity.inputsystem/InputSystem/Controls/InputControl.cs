@@ -381,35 +381,26 @@ namespace UnityEngine.Experimental.Input
                 m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
-        ////TODO: this needs to become a check for whether the state corresponds to the default state
-        ////      (for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state; e.g. from HID input reports)
         ////TODO: pass state ptr *NOT* value ptr (it's confusing)
-        // We don't allow custom default values for state so all zeros indicates
-        // default states for us.
         // NOTE: The given argument should point directly to the value *not* to the
         //       base state to which the state block offset has to be added.
-        internal unsafe bool CheckStateIsAllZeros(IntPtr valuePtr = new IntPtr())
+        internal unsafe bool CheckStateIsAtDefault(IntPtr valuePtr = new IntPtr())
         {
+            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
+            ////        e.g. from HID input reports
+
+            var defaultPtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
             if (valuePtr == IntPtr.Zero)
                 valuePtr = new IntPtr(currentStatePtr.ToInt64() + (int)m_StateBlock.byteOffset);
 
-            // Bitfield value.
-            if (m_StateBlock.sizeInBits % 8 != 0 || m_StateBlock.bitOffset != 0)
+            if (m_StateBlock.sizeInBits == 1)
             {
-                if (m_StateBlock.sizeInBits > 1)
-                    throw new NotImplementedException("multi-bit zero check");
-
-                return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) == false;
+                return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ==
+                    MemoryHelpers.ReadSingleBit(defaultPtr, m_StateBlock.bitOffset);
             }
 
-            // Multi-byte value.
-            var ptr = (byte*)valuePtr;
-            var numBytes = m_StateBlock.alignedSizeInBytes;
-            for (var i = 0; i < numBytes; ++i, ++ptr)
-                if (*ptr != 0)
-                    return false;
-
-            return true;
+            return MemoryHelpers.MemCmpBitRegion(defaultPtr.ToPointer(), valuePtr.ToPointer(),
+                m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
         }
 
         internal unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)

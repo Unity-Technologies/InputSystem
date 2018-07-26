@@ -2271,6 +2271,53 @@ partial class CoreTests
         InputSystem.Update();
     }
 
+    class TestInteractionCheckingDefaultState : IInputInteraction
+    {
+        public void Process(ref InputInteractionContext context)
+        {
+            Debug.Log("TestInteractionCheckingDefaultState.Process");
+            Assert.That(context.controlHasDefaultValue);
+            Assert.That(context.control.ReadValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    // Interactions can ask whether a trigger control is in its default state. This should respect
+    // custom default state values that may be specified on controls.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractionContextRespectsCustomDefaultStates()
+    {
+        InputSystem.RegisterInteraction<TestInteractionCheckingDefaultState>();
+
+        const string json = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""leftStick/x"", ""defaultState"" : ""0.1234"" }
+                ]
+            }
+        ";
+
+        // Create gamepad and put leftStick/x in non-default state.
+        InputSystem.RegisterControlLayout(json);
+        var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        var action = new InputAction(binding: "/<Gamepad>/leftStick/x", interactions: "testInteractionCheckingDefaultState");
+        action.Enable();
+
+        LogAssert.Expect(LogType.Log, "TestInteractionCheckingDefaultState.Process");
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.1234f, 0f)});
+        InputSystem.Update();
+    }
+
     [Test]
     [Category("Actions")]
     public void TODO_Actions_HaveStableIDs()
