@@ -502,15 +502,21 @@ namespace UnityEngine.Experimental.Input
                     return WithFormat(new FourCC(format));
                 }
 
-                public ControlBuilder WithOffset(uint offset)
+                public ControlBuilder WithByteOffset(uint offset)
                 {
                     controls[index].offset = offset;
                     return this;
                 }
 
-                public ControlBuilder WithBit(uint bit)
+                public ControlBuilder WithBitOffset(uint bit)
                 {
                     controls[index].bit = bit;
+                    return this;
+                }
+
+                public ControlBuilder WithSizeInBits(uint sizeInBits)
+                {
+                    controls[index].sizeInBits = sizeInBits;
                     return this;
                 }
 
@@ -547,6 +553,18 @@ namespace UnityEngine.Experimental.Input
                     return this;
                 }
 
+                public ControlBuilder WithDefaultState(PrimitiveValue value)
+                {
+                    controls[index].defaultState = new PrimitiveValueOrArray(value);
+                    return this;
+                }
+
+                public ControlBuilder WithDefaultState(PrimitiveValueOrArray value)
+                {
+                    controls[index].defaultState = value;
+                    return this;
+                }
+
                 public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
                 {
                     controls[index].arraySize = arraySize;
@@ -572,7 +590,11 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException(name);
 
                 var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
-                    new ControlItem {name = new InternedString(name)});
+                    new ControlItem
+                    {
+                        name = new InternedString(name),
+                        isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                    });
 
                 return new ControlBuilder
                 {

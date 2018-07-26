@@ -361,6 +361,12 @@ namespace UnityEngine.Experimental.Input.Utilities
             get { return valueType == PrimitiveValueType.None; }
         }
 
+        public PrimitiveValueOrArray(PrimitiveValue value)
+        {
+            primitiveValue = value;
+            arrayValue = null;
+        }
+
         public PrimitiveValueOrArray(bool value)
         {
             primitiveValue = new PrimitiveValue(value);

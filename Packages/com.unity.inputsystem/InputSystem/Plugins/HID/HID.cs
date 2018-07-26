@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         // If the system cannot find a more specific layout for a given HID, this method will try
         // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
-        internal static unsafe string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the system found a matching layout, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedLayout))
@@ -331,9 +331,11 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         var control =
                             builder.AddControl(element.DetermineName())
                                 .WithLayout(layout)
-                                .WithOffset((uint)element.reportOffsetInBits / 8)
-                                .WithBit((uint)element.reportOffsetInBits % 8)
-                                .WithFormat(element.DetermineFormat());
+                                .WithByteOffset((uint)element.reportOffsetInBits / 8)
+                                .WithBitOffset((uint)element.reportOffsetInBits % 8)
+                                .WithSizeInBits((uint)element.reportSizeInBits)
+                                .WithFormat(element.DetermineFormat())
+                                .WithDefaultState(element.DetermineDefaultState());
 
                         var parameters = element.DetermineParameters();
                         if (!string.IsNullOrEmpty(parameters))
@@ -342,6 +344,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         var usages = element.DetermineUsages();
                         if (usages != null)
                             control.WithUsages(usages);
+
+                        element.AddChildControls(ref builder);
                     }
                 }
 
@@ -517,15 +521,20 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     case UsagePage.Button:
                         return string.Format("button{0}", usage);
                     case UsagePage.GenericDesktop:
-                        return ((GenericDesktop)usage).ToString();
+                        if (usage == (int)GenericDesktop.HatSwitch)
+                            return "dpad"; ////TODO: support multiple hatswitches
+                        var text = ((GenericDesktop)usage).ToString();
+                        // Lower-case first letter.
+                        text = char.ToLowerInvariant(text[0]) + text.Substring(1);
+                        return text;
                 }
 
+                // Fallback that generates a somewhat useless but at least very informative name.
                 return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
             }
 
             internal string DetermineLayout()
             {
-                ////TODO: support output elements
                 if (reportType != HIDReportType.Input)
                     return null;
 
@@ -562,6 +571,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             case (int)GenericDesktop.DpadLeft:
                             case (int)GenericDesktop.DpadRight:
                                 return "Button";
+
+                            case (int)GenericDesktop.HatSwitch:
+                                // Only support hat switches with 8 directions.
+                                if (logicalMax - logicalMin + 1 == 8)
+                                    return "Dpad";
+                                break;
                         }
                         break;
                 }
@@ -573,7 +588,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 switch (reportSizeInBits)
                 {
-                    case 1: return InputStateBlock.kTypeBit;
                     case 8:
                         if (isSigned)
                             return InputStateBlock.kTypeSByte;
@@ -586,9 +600,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         if (isSigned)
                             return InputStateBlock.kTypeInt;
                         return InputStateBlock.kTypeUInt;
+                    default:
+                        // Generic bitfield value.
+                        return InputStateBlock.kTypeBit;
                 }
-
-                return new FourCC();
             }
 
             internal InternedString[] DetermineUsages()
@@ -597,6 +612,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
                 if (usagePage == UsagePage.Button && usage == 1)
                     return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                ////TODO: assign hatswitch usage to first and only to first hatswitch element
                 return null;
             }
 
@@ -637,6 +653,94 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 }
 
                 return null;
+            }
+
+            internal PrimitiveValue DetermineDefaultState()
+            {
+                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
+                {
+                    // Figure out null state for hat switches.
+                    if (hasNullState)
+                    {
+                        // We're looking for a value that is out-of-range with respect to the
+                        // logical min and max but in range with respect to what we can store
+                        // in the bits we have.
+
+                        // Test lower bound.
+                        var minMinusOne = logicalMin - 1;
+                        if (minMinusOne >= 0)
+                            return new PrimitiveValue(minMinusOne);
+
+                        // Test upper bound.
+                        var maxPlusOne = logicalMax + 1;
+                        if (maxPlusOne <= ((1 << reportSizeInBits) - 1))
+                            return new PrimitiveValue(maxPlusOne);
+                    }
+                }
+
+                return new PrimitiveValue();
+            }
+
+            internal void AddChildControls(ref InputControlLayout.Builder builder)
+            {
+                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
+                {
+                    // There doesn't seem to be enough specificity in the HID spec to reliably figure this case out.
+                    // Albeit detail is scarce, we could probably make some inferences based on the unit setting
+                    // of the hat switch but even then it seems there's much left to the whims of a hardware manufacturer.
+                    // Even if we know values go clockwise (HID spec doesn't really say; probably can be inferred from unit),
+                    // which direction do we start with? Is 0 degrees up or right?
+                    //
+                    // What we do here is simply make the assumption that we're dealing with degrees here, that we go clockwise,
+                    // and that 0 degrees is up (which is actually the opposite of the coordinate system suggested in 5.9 of
+                    // of the HID spec but seems to be what manufacturers are actually using in practice). Of course, if the
+                    // device we're looking at actually sets things up differently, then we end up with either an incorrectly
+                    // oriented or (worse) a non-functional hat switch.
+
+                    var nullValue = DetermineDefaultState();
+                    if (nullValue.isEmpty)
+                        return;
+
+                    var hatswitchName = DetermineName();
+
+                    ////REVIEW: this probably only works with hatswitches that have their null value at logicalMax+1
+
+                    builder.AddControl(hatswitchName + "/up")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1},nullValue={2},wrapAtValue={3}",
+                            logicalMax, logicalMin + 1, nullValue.ToString(), logicalMax))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+
+                    builder.AddControl(hatswitchName + "/right")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1}",
+                            logicalMin + 1, logicalMin + 3))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+
+                    builder.AddControl(hatswitchName + "/down")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1}",
+                            logicalMin + 3, logicalMin + 5))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+
+                    builder.AddControl(hatswitchName + "/left")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1}",
+                            logicalMin + 5, logicalMin + 7))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+                }
             }
         }
 
