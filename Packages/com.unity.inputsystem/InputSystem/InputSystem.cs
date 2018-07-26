@@ -1226,11 +1226,11 @@ namespace UnityEngine.Experimental.Input
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
         {
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE || UNITY_WSA
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA
             DualShockSupport.Initialize();
             #endif
 

@@ -8,7 +8,7 @@ using UnityEngine;
 
 class DualShockTests : InputTestFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX //|| UNITY_WSA - Uncomment once HID back-end on UWP is fully enabled
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID()
