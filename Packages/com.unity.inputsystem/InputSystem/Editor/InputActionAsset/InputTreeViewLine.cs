@@ -215,7 +215,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public void AppendCompositeBinding(string compositeName)
         {
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(elementProperty, m_ActionMapProperty, compositeType);
+            InputActionSerializationHelpers.AppendCompositeBinding(elementProperty, m_ActionMapProperty, compositeName, compositeType);
         }
 
         public void AppendBinding()

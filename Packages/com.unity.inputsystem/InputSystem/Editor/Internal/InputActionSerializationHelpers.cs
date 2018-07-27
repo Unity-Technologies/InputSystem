@@ -271,10 +271,11 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = newName;
         }
 
-        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, Type type)
+        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type)
         {
             var newProperty = AppendBinding(actionProperty, actionMapProperty);
-            newProperty.FindPropertyRelative("name").stringValue = type.Name;
+            newProperty.FindPropertyRelative("name").stringValue = compositeName;
+            newProperty.FindPropertyRelative("path").stringValue = compositeName;
             newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.Composite;
 
             var fields = type.GetFields(BindingFlags.GetField | BindingFlags.Public | BindingFlags.Instance);

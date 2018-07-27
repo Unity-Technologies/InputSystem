@@ -298,11 +298,14 @@ partial class CoreTests
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
-        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, typeof(AxisComposite));
+        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(3));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "positive"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "negative"));
         Assert.That(action1.bindings[0].isComposite, Is.True);
         Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
         Assert.That(action1.bindings[1].isComposite, Is.False);
