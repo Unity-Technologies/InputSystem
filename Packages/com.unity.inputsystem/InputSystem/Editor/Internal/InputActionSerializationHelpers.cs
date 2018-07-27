@@ -280,6 +280,10 @@ namespace UnityEngine.Experimental.Input.Editor
             var fields = type.GetFields(BindingFlags.GetField | BindingFlags.Public | BindingFlags.Instance);
             foreach (var field in fields)
             {
+                // Skip fields that aren't InputControls.
+                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
+                    continue;
+
                 newProperty = AppendBinding(actionProperty, actionMapProperty);
                 newProperty.FindPropertyRelative("name").stringValue = field.Name;
                 newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.PartOfComposite;
