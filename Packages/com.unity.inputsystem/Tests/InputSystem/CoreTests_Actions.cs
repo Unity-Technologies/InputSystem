@@ -508,6 +508,70 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPerformStickInteraction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var performedReceivedCalls = 0;
+        var startedReceivedCalls = 0;
+        var cancelledReceivedCalls = 0;
+
+        var action = new InputAction(binding: "/<Gamepad>/leftStick", interactions: "stick");
+        action.performed +=
+            ctx => ++ performedReceivedCalls;
+        action.started +=
+            ctx => ++ startedReceivedCalls;
+        action.cancelled +=
+            ctx => ++ cancelledReceivedCalls;
+        action.Enable();
+
+        // Go out of deadzone.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.345f, 0.456f)});
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(1));
+        Assert.That(performedReceivedCalls, Is.Zero);
+        Assert.That(cancelledReceivedCalls, Is.Zero);
+
+        startedReceivedCalls = 0;
+        performedReceivedCalls = 0;
+        cancelledReceivedCalls = 0;
+
+        // Move around.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.456f, 0.567f)});
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(cancelledReceivedCalls, Is.EqualTo(0));
+
+        startedReceivedCalls = 0;
+        performedReceivedCalls = 0;
+        cancelledReceivedCalls = 0;
+
+        // Go back into deadzone.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.011f, 0.011f)});
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(0));
+        Assert.That(cancelledReceivedCalls, Is.EqualTo(1));
+
+        startedReceivedCalls = 0;
+        performedReceivedCalls = 0;
+        cancelledReceivedCalls = 0;
+
+        // Make sure nothing happens if we move around in deadzone.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.012f, 0.012f)});
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(0));
+        Assert.That(cancelledReceivedCalls, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanAddActionsToMap()
     {
         var map = new InputActionMap();

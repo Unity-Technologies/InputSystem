@@ -1164,8 +1164,9 @@ namespace UnityEngine.Experimental.Input
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
             interactions.AddTypeRegistration("Tap", typeof(TapInteraction));
             interactions.AddTypeRegistration("SlowTap", typeof(SlowTapInteraction));
+            interactions.AddTypeRegistration("Stick", typeof(StickInteraction));
             //interactions.AddTypeRegistration("DoubleTap", typeof(DoubleTapInteraction));
-            interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
+            //interactions.AddTypeRegistration("Swipe", typeof(SwipeInteraction));
 
             // Register composites.
             composites.AddTypeRegistration("Axis", typeof(AxisComposite));

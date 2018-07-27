@@ -92,6 +92,11 @@ namespace UnityEngine.Experimental.Input
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
 
+        public void PerformedAndStayStarted()
+        {
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState, remainStartedAfterPerformed: true);
+        }
+
         public void Cancelled()
         {
             m_State.ChangePhaseOfInteraction(InputActionPhase.Cancelled, ref m_TriggerState);
