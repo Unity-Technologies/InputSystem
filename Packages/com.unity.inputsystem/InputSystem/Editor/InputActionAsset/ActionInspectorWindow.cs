@@ -84,7 +84,7 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
         GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
         GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add Action map");
+        GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
 
         public void OnEnable()
         {
@@ -297,7 +297,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 foreach (var composite in InputBindingComposite.s_Composites.names)
                 {
-                    menu.AddItem(new GUIContent(compositeString + "/" + composite + " composite"), false, OnAddCompositeBinding, composite);
+                    menu.AddItem(new GUIContent(compositeString.text + "/" + composite), false, OnAddCompositeBinding, composite);
                 }
             }
             else if (!isContextMenu)
