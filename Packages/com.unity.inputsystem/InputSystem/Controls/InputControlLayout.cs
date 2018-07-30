@@ -73,6 +73,8 @@ namespace UnityEngine.Experimental.Input
             get { return s_DefaultVariant; }
         }
 
+        ////TODO: replace ParameterValue with PrimitiveValueOrArray
+
         public enum ParameterType
         {
             Boolean,
@@ -106,6 +108,59 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            public void SetValue(string value)
+            {
+                fixed(byte* ptr = this.value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            bool result;
+                            if (bool.TryParse(value, out result))
+                            {
+                                (*(bool*)ptr) = result;
+                            }
+                            break;
+                        case ParameterType.Integer:
+                            int intResult;
+                            if (int.TryParse(value, out intResult))
+                            {
+                                (*(int*)ptr) = intResult;
+                            }
+                            break;
+                        case ParameterType.Float:
+                            float floatResult;
+                            if (float.TryParse(value, out floatResult))
+                            {
+                                (*(float*)ptr) = floatResult;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            public string GetValueAsString()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            if (*((bool*)ptr))
+                                return "true";
+                            return "false";
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return "" + intValue;
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return "" + floatValue;
+                    }
+                }
+
+                return string.Empty;
+            }
+
             public override string ToString()
             {
                 fixed(byte* ptr = value)
@@ -128,6 +183,25 @@ namespace UnityEngine.Experimental.Input
 
                 return string.Empty;
             }
+
+            public bool IsDefaultValue()
+            {
+                fixed(byte* ptr = value)
+                {
+                    switch (type)
+                    {
+                        case ParameterType.Boolean:
+                            return *((bool*)ptr) == default(bool);
+                        case ParameterType.Integer:
+                            var intValue = *((int*)ptr);
+                            return intValue == default(int);
+                        case ParameterType.Float:
+                            var floatValue = *((float*)ptr);
+                            return floatValue == default(float);
+                    }
+                }
+                return false;
+            }
         }
 
         public struct NameAndParameters
@@ -140,7 +214,7 @@ namespace UnityEngine.Experimental.Input
                 if (parameters.Count == 0)
                     return name;
                 var parameterString = string.Join(",", parameters.Select(x => x.ToString()).ToArray());
-                return string.Format("name({0})", parameterString);
+                return string.Format("{0}({1})", name, parameterString);
             }
         }
 
@@ -193,6 +267,11 @@ namespace UnityEngine.Experimental.Input
             public FourCC format;
             public Flags flags;
             public int arraySize;
+
+            /// <summary>
+            /// Optional default value for the state memory associated with the control.
+            /// </summary>
+            public PrimitiveValueOrArray defaultState;
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -299,6 +378,11 @@ namespace UnityEngine.Experimental.Input
                 else
                     result.resourceName = other.resourceName;
 
+                if (!defaultState.isEmpty)
+                    result.defaultState = defaultState;
+                else
+                    result.defaultState = other.defaultState;
+
                 return result;
             }
         }
@@ -392,6 +476,11 @@ namespace UnityEngine.Experimental.Input
             private int m_ControlCount;
             private ControlItem[] m_Controls;
 
+            public ReadOnlyArray<ControlItem> controls
+            {
+                get { return new ReadOnlyArray<ControlItem>(m_Controls, 0, m_ControlCount);}
+            }
+
             public struct ControlBuilder
             {
                 internal Builder builder;
@@ -418,15 +507,21 @@ namespace UnityEngine.Experimental.Input
                     return WithFormat(new FourCC(format));
                 }
 
-                public ControlBuilder WithOffset(uint offset)
+                public ControlBuilder WithByteOffset(uint offset)
                 {
                     controls[index].offset = offset;
                     return this;
                 }
 
-                public ControlBuilder WithBit(uint bit)
+                public ControlBuilder WithBitOffset(uint bit)
                 {
                     controls[index].bit = bit;
+                    return this;
+                }
+
+                public ControlBuilder WithSizeInBits(uint sizeInBits)
+                {
+                    controls[index].sizeInBits = sizeInBits;
                     return this;
                 }
 
@@ -463,6 +558,18 @@ namespace UnityEngine.Experimental.Input
                     return this;
                 }
 
+                public ControlBuilder WithDefaultState(PrimitiveValue value)
+                {
+                    controls[index].defaultState = new PrimitiveValueOrArray(value);
+                    return this;
+                }
+
+                public ControlBuilder WithDefaultState(PrimitiveValueOrArray value)
+                {
+                    controls[index].defaultState = value;
+                    return this;
+                }
+
                 public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
                 {
                     controls[index].arraySize = arraySize;
@@ -488,7 +595,11 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException(name);
 
                 var index = ArrayHelpers.AppendWithCapacity(ref m_Controls, ref m_ControlCount,
-                        new ControlItem {name = new InternedString(name)});
+                    new ControlItem
+                    {
+                        name = new InternedString(name),
+                        isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                    });
 
                 return new ControlBuilder
                 {
@@ -848,6 +959,11 @@ namespace UnityEngine.Experimental.Input
             if (attribute != null)
                 arraySize = attribute.arraySize;
 
+            // Determine default state.
+            var defaultState = new PrimitiveValueOrArray();
+            if (attribute != null)
+                defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
+
             return new ControlItem
             {
                 name = new InternedString(name),
@@ -865,6 +981,7 @@ namespace UnityEngine.Experimental.Input
                 isModifyingChildControlByPath = isModifyingChildControlByPath,
                 isNoisy = isNoisy,
                 arraySize = arraySize,
+                defaultState = defaultState,
             };
         }
 
@@ -891,50 +1008,61 @@ namespace UnityEngine.Experimental.Input
             var textLength = text.Length;
 
             while (index < textLength)
-            {
-                // Skip whitespace.
-                while (index < textLength && char.IsWhiteSpace(text[index]))
-                    ++index;
-
-                // Parse name.
-                var nameStart = index;
-                while (index < textLength)
-                {
-                    var nextChar = text[index];
-                    if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
-                        break;
-                    ++index;
-                }
-                if (index - nameStart == 0)
-                    throw new Exception(string.Format("Expecting name at position {0} in '{1}'", nameStart, text));
-                var name = text.Substring(nameStart, index - nameStart);
-
-                // Skip whitespace.
-                while (index < textLength && char.IsWhiteSpace(text[index]))
-                    ++index;
-
-                // Parse parameters.
-                ParameterValue[] parameters = null;
-                if (index < textLength && text[index] == '(')
-                {
-                    ++index;
-                    var closeParenIndex = text.IndexOf(')', index);
-                    if (closeParenIndex == -1)
-                        throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
-                                text));
-
-                    var parameterString = text.Substring(index, closeParenIndex - index);
-                    parameters = ParseParameters(parameterString);
-                    index = closeParenIndex + 1;
-                }
-
-                if (index < textLength && text[index] == ',')
-                    ++index;
-
-                list.Add(new NameAndParameters { name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters) });
-            }
+                list.Add(ParseNameAndParameters(text, ref index));
 
             return true;
+        }
+
+        internal static NameAndParameters ParseNameAndParameters(string text)
+        {
+            var index = 0;
+            return ParseNameAndParameters(text, ref index);
+        }
+
+        private static NameAndParameters ParseNameAndParameters(string text, ref int index)
+        {
+            var textLength = text.Length;
+
+            // Skip whitespace.
+            while (index < textLength && char.IsWhiteSpace(text[index]))
+                ++index;
+
+            // Parse name.
+            var nameStart = index;
+            while (index < textLength)
+            {
+                var nextChar = text[index];
+                if (nextChar == '(' || nextChar == ',' || char.IsWhiteSpace(nextChar))
+                    break;
+                ++index;
+            }
+            if (index - nameStart == 0)
+                throw new Exception(string.Format("Expecting name at position {0} in '{1}'", nameStart, text));
+            var name = text.Substring(nameStart, index - nameStart);
+
+            // Skip whitespace.
+            while (index < textLength && char.IsWhiteSpace(text[index]))
+                ++index;
+
+            // Parse parameters.
+            ParameterValue[] parameters = null;
+            if (index < textLength && text[index] == '(')
+            {
+                ++index;
+                var closeParenIndex = text.IndexOf(')', index);
+                if (closeParenIndex == -1)
+                    throw new Exception(string.Format("Expecting ')' after '(' at position {0} in '{1}'", index,
+                        text));
+
+                var parameterString = text.Substring(index, closeParenIndex - index);
+                parameters = ParseParameters(parameterString);
+                index = closeParenIndex + 1;
+            }
+
+            if (index < textLength && text[index] == ',')
+                ++index;
+
+            return new NameAndParameters {name = name, parameters = new ReadOnlyArray<ParameterValue>(parameters)};
         }
 
         private static ParameterValue[] ParseParameters(string parameterString)
@@ -1319,14 +1447,14 @@ namespace UnityEngine.Experimental.Input
                     if (type == null)
                     {
                         Debug.Log(string.Format(
-                                "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
-                                this.type, name));
+                            "Cannot find type '{0}' used by layout '{1}'; falling back to using InputDevice",
+                            this.type, name));
                         type = typeof(InputDevice);
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
                         throw new Exception(string.Format("'{0}' used by layout '{1}' is not an InputControl",
-                                this.type, name));
+                            this.type, name));
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
@@ -1436,6 +1564,12 @@ namespace UnityEngine.Experimental.Input
             public string resourceName;
             public bool noisy;
 
+            // This should be an object type field and allow any JSON primitive value type as well
+            // as arrays of those. Unfortunately, the Unity JSON serializer, given it uses Unity serialization
+            // and thus doesn't support polymorphism, can do no such thing. Hopefully we do get support
+            // for this later but for now, we use a string-based value fallback instead.
+            public string defaultState;
+
             // ReSharper restore MemberCanBePrivate.Local
             #pragma warning restore 0649
 
@@ -1491,6 +1625,9 @@ namespace UnityEngine.Experimental.Input
 
                 if (!string.IsNullOrEmpty(processors))
                     layout.processors = new ReadOnlyArray<NameAndParameters>(ParseNameAndParameterList(processors));
+
+                if (defaultState != null)
+                    layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
 
                 return layout;
             }
@@ -1620,7 +1757,7 @@ namespace UnityEngine.Experimental.Input
                         var baseLayout = TryLoadLayout(baseLayoutName, table);
                         if (baseLayout == null)
                             throw new LayoutNotFoundException(string.Format(
-                                    "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
+                                "Cannot find base layout '{0}' of layout '{1}'", baseLayoutName, name));
                         layout.MergeLayout(baseLayout);
                         layout.m_ExtendsLayout = baseLayoutName;
                     }

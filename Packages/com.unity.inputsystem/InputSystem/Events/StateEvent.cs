@@ -67,7 +67,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 throw new ArgumentNullException("ptr");
             if (!ptr.IsA<StateEvent>())
                 throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into StateEvent",
-                        ptr.type));
+                    ptr.type));
 
             return (StateEvent*)ptr.data;
         }

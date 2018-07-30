@@ -169,12 +169,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawMemory, EditorStyles.toolbarButton,
-                    GUILayout.Width(150));
+                GUILayout.Width(150));
 
             if (m_CompareStateBuffers)
             {
                 var showDifferentOnly = GUILayout.Toggle(m_ShowDifferentOnly, Contents.showDifferentOnly,
-                        EditorStyles.toolbarButton, GUILayout.Width(150));
+                    EditorStyles.toolbarButton, GUILayout.Width(150));
                 if (showDifferentOnly != m_ShowDifferentOnly && m_ControlTree != null)
                 {
                     m_ControlTree.showDifferentOnly = showDifferentOnly;
@@ -189,7 +189,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_StateBuffers.Length > 1 && !m_CompareStateBuffers)
             {
                 var selectedBuffer = EditorGUILayout.IntPopup(m_SelectedStateBuffer, m_BufferChoices,
-                        m_BufferChoiceValues, EditorStyles.toolbarPopup);
+                    m_BufferChoiceValues, EditorStyles.toolbarPopup);
                 if (selectedBuffer != m_SelectedStateBuffer)
                 {
                     m_SelectedStateBuffer = selectedBuffer;

@@ -256,32 +256,32 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 m_InteractionListView.drawElementCallback =
                     (rect, index, isActive, isFocused) =>
-                    {
-                        ////TODO: parameters
-                        EditorGUI.LabelField(rect, m_Interactions[index].name);
-                    };
+                {
+                    ////TODO: parameters
+                    EditorGUI.LabelField(rect, m_Interactions[index].name);
+                };
 
                 m_InteractionListView.onAddDropdownCallback =
                     (rect, list) =>
-                    {
-                        var menu = new GenericMenu();
-                        for (var i = 0; i < m_InteractionChoices.Length; ++i)
-                            menu.AddItem(m_InteractionChoices[i], false, AddInteraction, m_InteractionChoices[i].text);
-                        menu.ShowAsContext();
-                    };
+                {
+                    var menu = new GenericMenu();
+                    for (var i = 0; i < m_InteractionChoices.Length; ++i)
+                        menu.AddItem(m_InteractionChoices[i], false, AddInteraction, m_InteractionChoices[i].text);
+                    menu.ShowAsContext();
+                };
 
                 m_InteractionListView.onRemoveCallback =
                     (list) =>
-                    {
-                        var indexToRemove = list.index;
-                        if (indexToRemove == m_Interactions.Length - 1)
-                            --list.index;
-                        ArrayHelpers.EraseAt(ref m_Interactions, indexToRemove);
-                        if (m_Interactions == null)
-                            m_Interactions = new InputControlLayout.NameAndParameters[0];
-                        list.list = m_Interactions;
-                        ApplyInteractions();
-                    };
+                {
+                    var indexToRemove = list.index;
+                    if (indexToRemove == m_Interactions.Length - 1)
+                        --list.index;
+                    ArrayHelpers.EraseAt(ref m_Interactions, indexToRemove);
+                    if (m_Interactions == null)
+                        m_Interactions = new InputControlLayout.NameAndParameters[0];
+                    list.list = m_Interactions;
+                    ApplyInteractions();
+                };
             }
         }
     }

@@ -43,7 +43,7 @@ namespace UnityEngine.Experimental.Input
             get { return m_TriggerState.startTime; }
         }
 
-        //how should this be handled for timer expired calls
+        ////REVIEW: how should this be handled for timer expired calls
         public bool controlHasDefaultValue
         {
             get
@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input
                 if ((m_Flags & Flags.ControlHasDefaultValueInitialized) != Flags.ControlHasDefaultValueInitialized)
                 {
                     var triggerControl = control;
-                    if (triggerControl.CheckStateIsAllZeros())
+                    if (triggerControl.CheckStateIsAtDefault())
                         m_Flags |= Flags.ControlHasDefaultValue;
                     m_Flags |= Flags.ControlHasDefaultValueInitialized;
                 }
@@ -90,6 +90,11 @@ namespace UnityEngine.Experimental.Input
         public void Performed()
         {
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
+        }
+
+        public void PerformedAndStayStarted()
+        {
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState, remainStartedAfterPerformed: true);
         }
 
         public void Cancelled()

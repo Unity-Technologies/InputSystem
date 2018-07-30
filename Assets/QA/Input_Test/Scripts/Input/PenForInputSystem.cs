@@ -66,7 +66,7 @@ public class PenForInputSystem : MonoBehaviour
         // Update position
         Vector2 pos = pen.position.ReadValue();
         pen_holder.position = original_pos + new Vector3(pos.x * HORIZONTAL_RANGE / Screen.width,
-                pos.y * VERTICAL_RANGE / Screen.height, 0);
+            pos.y * VERTICAL_RANGE / Screen.height, 0);
 
         // Update tilt
         Vector2 tilt = pen.tilt.ReadValue();

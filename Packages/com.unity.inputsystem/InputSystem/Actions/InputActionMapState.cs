@@ -558,8 +558,14 @@ namespace UnityEngine.Experimental.Input
         /// Perform a phase change on the given interaction. Only visible to observers
         /// if it happens to change the phase of the action, too.
         /// </summary>
-        /// <param name="newPhase"></param>
-        /// <param name="trigger"></param>
+        /// <param name="newPhase">New phase to transition the interaction to.</param>
+        /// <param name="trigger">Information about the binding and control that triggered the phase change.</param>
+        /// <param name="remainStartedAfterPerformed">If true, then instead of going back to <see cref="InputActionPhase.Waiting"/>
+        /// after transitioning to <see cref="InputActionPhase.Performed"/>, the interaction (and thus potentially the action)
+        /// will remain in <see cref="InputActionPhase.Started"/> phase. This is useful for interactions that use
+        /// <see cref="InputActionPhase.Started"/> to signal the start of a continuous interaction, then use <see
+        /// cref="InputActionPhase.Performed"/> during the interaction and then <see cref="InputActionPhase.Cancelled"/> when
+        /// the interaction stops.</param>
         /// <remarks>
         /// Multiple interactions on the same binding can be started concurrently but the
         /// first interaction that starts will get to drive an action until it either cancels
@@ -574,7 +580,7 @@ namespace UnityEngine.Experimental.Input
         /// it comes first; then the TapInteraction cancels because the button is held for too
         /// long and the SlowTapInteraction will get to drive the action next).
         /// </remarks>
-        internal void ChangePhaseOfInteraction(InputActionPhase newPhase, ref TriggerState trigger)
+        internal void ChangePhaseOfInteraction(InputActionPhase newPhase, ref TriggerState trigger, bool remainStartedAfterPerformed = false)
         {
             var interactionIndex = trigger.interactionIndex;
             var bindingIndex = trigger.bindingIndex;
@@ -632,9 +638,13 @@ namespace UnityEngine.Experimental.Input
                 }
                 else if (actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
+                    var phaseAfterPerformedOrCancelled = InputActionPhase.Waiting;
+                    if (newPhase == InputActionPhase.Performed && remainStartedAfterPerformed)
+                        phaseAfterPerformedOrCancelled = InputActionPhase.Started;
+
                     // Any other phase change goes to action if we're the interaction driving
                     // the current phase.
-                    ChangePhaseOfAction(newPhase, ref trigger);
+                    ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCancelled);
 
                     // We're the interaction driving the action and we performed the action,
                     // so reset any other interaction to waiting state.
@@ -653,13 +663,23 @@ namespace UnityEngine.Experimental.Input
             }
 
             // If the interaction performed or cancelled, go back to waiting.
-            if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
+            // Exception: if it was performed and we're to remain in started state, set the interaction
+            //            to started. Note that for that phase transition, there are no callbacks being
+            //            triggered (i.e. we don't call 'started' every time after 'performed').
+            if (newPhase == InputActionPhase.Performed && remainStartedAfterPerformed)
+            {
+                interactionStates[interactionIndex].phase = InputActionPhase.Started;
+            }
+            else if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Cancelled)
+            {
                 ResetInteraction(trigger.mapIndex, trigger.bindingIndex, trigger.interactionIndex);
+            }
             ////TODO: reset entire chain
         }
 
         // Perform a phase change on the action. Visible to observers.
-        internal void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger)
+        internal void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
+            InputActionPhase phaseAfterPerformedOrCancelled = InputActionPhase.Waiting)
         {
             Debug.Assert(trigger.mapIndex >= 0 && trigger.mapIndex < totalMapCount);
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount);
@@ -688,12 +708,12 @@ namespace UnityEngine.Experimental.Input
 
                 case InputActionPhase.Performed:
                     CallActionListeners(map, ref action.m_OnPerformed, ref trigger);
-                    actionStates[actionIndex].phase = InputActionPhase.Waiting; // Go back to waiting after performing action.
+                    actionStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
                     break;
 
                 case InputActionPhase.Cancelled:
                     CallActionListeners(map, ref action.m_OnCancelled, ref trigger);
-                    actionStates[actionIndex].phase = InputActionPhase.Waiting; // Go back to waiting after cancelling action.
+                    actionStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
                     break;
             }
         }
@@ -727,7 +747,7 @@ namespace UnityEngine.Experimental.Input
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format("{0} thrown during execution of '{1}' callback on action '{2}'",
-                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger)));
+                        exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger)));
                     Debug.LogException(exception);
                 }
             }
@@ -743,7 +763,7 @@ namespace UnityEngine.Experimental.Input
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format("{0} thrown during execution of callback for '{1}' phase of '{2}' action in map '{3}'",
-                            exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger).name, actionMap.name));
+                        exception.GetType().Name, trigger.phase, GetActionOrNull(ref trigger).name, actionMap.name));
                     Debug.LogException(exception);
                 }
             }
@@ -751,6 +771,7 @@ namespace UnityEngine.Experimental.Input
             Profiler.EndSample();
         }
 
+        ////REVIEW: does this really add value? should we just allow whatever transitions?
         private void ThrowIfPhaseTransitionIsInvalid(InputActionPhase currentPhase, InputActionPhase newPhase, ref TriggerState trigger)
         {
             // Can only go to Started from Waiting.

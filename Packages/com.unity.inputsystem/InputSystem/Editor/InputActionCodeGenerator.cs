@@ -82,7 +82,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.WriteLine(string.Format("m_{0} = asset.GetActionMap(\"{1}\");", setName, set.name));
                 foreach (var action in set.actions)
                     writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", setName, CSharpCodeHelpers.MakeIdentifier(action.name),
-                            setName, action.name));
+                        setName, action.name));
             }
             writer.WriteLine("m_Initialized = true;");
             writer.EndBlock();
@@ -109,20 +109,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 // Constructor.
                 writer.WriteLine(string.Format("private {0} m_Wrapper;", options.className));
                 writer.WriteLine(string.Format("public {0}({1} wrapper) {{ m_Wrapper = wrapper; }}", setStructName,
-                        options.className));
+                    options.className));
 
                 // Getter for each action.
                 foreach (var action in set.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(string.Format(
-                            "public UnityEngine.Experimental.Input.InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", actionName,
-                            setName, actionName));
+                        "public UnityEngine.Experimental.Input.InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", actionName,
+                        setName, actionName));
                 }
 
                 // Action set getter.
                 writer.WriteLine(string.Format("public UnityEngine.Experimental.Input.InputActionMap Get() {{ return m_Wrapper.m_{0}; }}",
-                        setName));
+                    setName));
 
                 // Enable/disable methods.
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
@@ -133,8 +133,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 // Implicit conversion operator.
                 writer.WriteLine(string.Format(
-                        "public static implicit operator UnityEngine.Experimental.Input.InputActionMap({0} set) {{ return set.Get(); }}",
-                        setStructName));
+                    "public static implicit operator UnityEngine.Experimental.Input.InputActionMap({0} set) {{ return set.Get(); }}",
+                    setStructName));
 
                 writer.EndBlock();
 

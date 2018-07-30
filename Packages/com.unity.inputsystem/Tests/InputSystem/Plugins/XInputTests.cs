@@ -77,12 +77,12 @@ class XInputTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new XboxOneGamepadState
-        {
-            leftStick = new Vector2(0.123f, 0.456f),
-            rightStick = new Vector2(0.789f, 0.234f),
-            leftTrigger = 0.567f,
-            rightTrigger = 0.891f,
-        });
+            {
+                leftStick = new Vector2(0.123f, 0.456f),
+                rightStick = new Vector2(0.789f, 0.234f),
+                leftTrigger = 0.567f,
+                rightTrigger = 0.891f,
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));

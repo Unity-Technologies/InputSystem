@@ -97,7 +97,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                 catch (Exception exception)
                 {
                     Debug.LogError(string.Format("Could not create device with layout '{0}' used in '{1}' component", layoutName,
-                            GetType().Name));
+                        GetType().Name));
                     Debug.LogException(exception);
                     return;
                 }
@@ -154,8 +154,8 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
             if (control == null)
             {
                 throw new Exception(string.Format(
-                        "The control path {0} yields a control of type {1} which is not an InputControl with value type {2}",
-                        controlPath, m_Control.GetType().Name, typeof(TValue).Name));
+                    "The control path {0} yields a control of type {1} which is not an InputControl with value type {2}",
+                    controlPath, m_Control.GetType().Name, typeof(TValue).Name));
             }
 
             m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;

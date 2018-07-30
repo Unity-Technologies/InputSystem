@@ -18,6 +18,12 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// An existing device was removed from the system.
         /// </summary>
+        /// <remarks>
+        /// Other than when a device is removed programmatically, this happens when a device
+        /// is unplugged from the system. Subsequent to the notification, the system will remove
+        /// the <see cref="InputDevice"/> instance from its list and remove the device's
+        /// recorded input state.
+        /// </remarks>
         /// <seealso cref="InputSystem.RemoveDevice"/>
         Removed,
 

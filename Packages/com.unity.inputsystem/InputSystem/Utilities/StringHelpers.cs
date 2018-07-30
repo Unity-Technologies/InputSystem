@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace UnityEngine.Experimental.Input.Utilities
@@ -25,6 +26,35 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return count;
+        }
+
+        public static string MakeUniqueName<TExisting>(string baseName, IEnumerable<TExisting> existingSet,
+            Func<TExisting, string> getNameFunc)
+        {
+            var name = baseName;
+            var nameLowerCase = name.ToLower();
+            var nameIsUnique = false;
+            var namesTried = 1;
+
+            // Find unique name.
+            while (!nameIsUnique)
+            {
+                nameIsUnique = true;
+                foreach (var existing in existingSet)
+                {
+                    var existingName = getNameFunc(existing);
+                    if (existingName.ToLower() == nameLowerCase)
+                    {
+                        name = string.Format("{0}{1}", baseName, namesTried);
+                        nameLowerCase = name.ToLower();
+                        nameIsUnique = false;
+                        ++namesTried;
+                        break;
+                    }
+                }
+            }
+
+            return name;
         }
 
         ////REVIEW: should we allow whitespace and skip automatically?

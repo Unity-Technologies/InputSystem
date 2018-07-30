@@ -1,10 +1,8 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine.Experimental.Input.Editor;
 #if UNITY_EDITOR
-using UnityEditor;
+using UnityEngine.Experimental.Input.Editor;
 #endif
 
 namespace UnityEngine.Experimental.Input
@@ -58,7 +56,7 @@ namespace UnityEngine.Experimental.Input
                     continue;
 
                 deviceList.Add(StartupEventData.DeviceInfo.FromDescription(availableDevices[i].description,
-                        availableDevices[i].isNative));
+                    availableDevices[i].isNative));
             }
 
             data.unrecognized_devices = deviceList.ToArray();

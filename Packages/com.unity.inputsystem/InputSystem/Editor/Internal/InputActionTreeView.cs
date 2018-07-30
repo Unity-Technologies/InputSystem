@@ -188,10 +188,10 @@ namespace UnityEngine.Experimental.Input.Editor
             ////FIXME: need to also trigger m_ApplyAction when bindings are changed (paths and interactions)
             item.bindingListView.onChangedCallback =
                 (list) =>
-                {
-                    RefreshCustomRowHeights();
-                    m_ApplyAction();
-                };
+            {
+                RefreshCustomRowHeights();
+                m_ApplyAction();
+            };
         }
 
         protected override void RowGUI(RowGUIArgs args)
@@ -247,10 +247,10 @@ namespace UnityEngine.Experimental.Input.Editor
             var selection = GetSelection();
 
             if (!selection.Any(x =>
-                {
-                    var item = FindItem(x, rootItem);
-                    return item is ActionItem || item is ActionSetItem;
-                }))
+            {
+                var item = FindItem(x, rootItem);
+                return item is ActionItem || item is ActionSetItem;
+            }))
                 return;
 
             var menu = new GenericMenu();
@@ -266,20 +266,20 @@ namespace UnityEngine.Experimental.Input.Editor
             // low indices. This way indices won't shift as we delete actions.
             var array = list.Select(x => FindItem(x, rootItem)).ToArray();
             Array.Sort(array, (a, b) =>
+            {
+                var aActionItem = a as ActionItem;
+                var bActionItem = b as ActionItem;
+
+                if (aActionItem != null && bActionItem != null)
                 {
-                    var aActionItem = a as ActionItem;
-                    var bActionItem = b as ActionItem;
+                    if (aActionItem.actionIndex < bActionItem.actionIndex)
+                        return 1;
+                    if (aActionItem.actionIndex > bActionItem.actionIndex)
+                        return -1;
+                }
 
-                    if (aActionItem != null && bActionItem != null)
-                    {
-                        if (aActionItem.actionIndex < bActionItem.actionIndex)
-                            return 1;
-                        if (aActionItem.actionIndex > bActionItem.actionIndex)
-                            return -1;
-                    }
-
-                    return 0;
-                });
+                return 0;
+            });
 
             // First delete actions, then sets.
             foreach (var item in array)
