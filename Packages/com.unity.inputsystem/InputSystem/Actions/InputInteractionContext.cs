@@ -107,6 +107,11 @@ namespace UnityEngine.Experimental.Input
             m_State.StartTimeout(seconds, ref m_TriggerState);
         }
 
+        public TValue ReadValue<TValue>()
+        {
+            return m_State.ReadValue<TValue>(m_TriggerState.bindingIndex, m_TriggerState.controlIndex);
+        }
+
         internal InputActionMapState m_State;
         internal Flags m_Flags;
         internal InputActionMapState.TriggerState m_TriggerState;

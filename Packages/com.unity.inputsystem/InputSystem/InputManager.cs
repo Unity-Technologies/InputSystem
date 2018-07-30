@@ -1148,7 +1148,7 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("Clamp", typeof(ClampProcessor));
             processors.AddTypeRegistration("Normalize", typeof(NormalizeProcessor));
             processors.AddTypeRegistration("Deadzone", typeof(DeadzoneProcessor));
-            processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
+            //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("Sensitivity", typeof(SensitivityProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));

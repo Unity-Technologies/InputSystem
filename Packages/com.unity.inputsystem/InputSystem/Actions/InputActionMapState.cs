@@ -24,6 +24,8 @@ using UnityEngine.Profiling;
 
 ////REVIEW: can we move this from being per-actionmap to being per-action asset? I.e. work for a list of maps?
 
+////REVIEW: rename to just InputActionState?
+
 //allow setup where state monitor is enabled but action is disabled?
 
 namespace UnityEngine.Experimental.Input
@@ -428,38 +430,31 @@ namespace UnityEngine.Experimental.Input
 
             ////TODO: this is where we should filter out state changes that do not result in value changes
 
+            // If the binding is part of a composite, check for interactions on the composite
+            // itself and give them a first shot at processing the value change.
+            var haveInteractionsOnComposite = false;
+            if (bindingStates[bindingIndex].isPartOfComposite)
+            {
+                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                var interactionCountOnComposite = bindingStates[compositeBindingIndex].interactionCount;
+                if (interactionCountOnComposite > 0)
+                {
+                    haveInteractionsOnComposite = true;
+                    ProcessInteractions(mapIndex, controlIndex, bindingIndex, time,
+                        bindingStates[compositeBindingIndex].interactionStartIndex,
+                        interactionCountOnComposite);
+                }
+            }
+
             // If we have interactions, let them do all the processing. The precense of an interaction
             // essentially bypasses the default phase progression logic of an action.
             var interactionCount = bindingStates[bindingIndex].interactionCount;
             if (interactionCount > 0)
             {
-                var context = new InputInteractionContext
-                {
-                    m_State = this,
-                    m_TriggerState = new TriggerState
-                    {
-                        time = time,
-                        mapIndex = mapIndex,
-                        bindingIndex = bindingIndex,
-                        controlIndex = controlIndex,
-                    }
-                };
-
-                var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
-                for (var i = 0; i < interactionCount; ++i)
-                {
-                    var index = interactionStartIndex + i;
-                    var state = interactionStates[index];
-                    var interaction = interactions[index];
-
-                    context.m_TriggerState.phase = state.phase;
-                    context.m_TriggerState.startTime = state.startTime;
-                    context.m_TriggerState.interactionIndex = index;
-
-                    interaction.Process(ref context);
-                }
+                ProcessInteractions(mapIndex, controlIndex, bindingIndex, time,
+                    bindingStates[bindingIndex].interactionStartIndex, interactionCount);
             }
-            else
+            else if (!haveInteractionsOnComposite)
             {
                 // Default logic has no support for cancellations and won't ever go into started
                 // phase. Will go from waiting straight to performed and then straight to waiting
@@ -480,6 +475,34 @@ namespace UnityEngine.Experimental.Input
                     startTime = time
                 };
                 ChangePhaseOfAction(InputActionPhase.Performed, ref trigger);
+            }
+        }
+
+        private void ProcessInteractions(int mapIndex, int controlIndex, int bindingIndex, double time, int interactionStartIndex, int interactionCount)
+        {
+            var context = new InputInteractionContext
+            {
+                m_State = this,
+                m_TriggerState = new TriggerState
+                {
+                    time = time,
+                    mapIndex = mapIndex,
+                    bindingIndex = bindingIndex,
+                    controlIndex = controlIndex,
+                }
+            };
+
+            for (var i = 0; i < interactionCount; ++i)
+            {
+                var index = interactionStartIndex + i;
+                var state = interactionStates[index];
+                var interaction = interactions[index];
+
+                context.m_TriggerState.phase = state.phase;
+                context.m_TriggerState.startTime = state.startTime;
+                context.m_TriggerState.interactionIndex = index;
+
+                interaction.Process(ref context);
             }
         }
 
@@ -878,6 +901,46 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
+        internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex)
+        {
+            ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
+            ////TODO: this needs to be shared with InputActionManager
+
+            var value = default(TValue);
+
+            // In the case of a composite, this will be null.
+            InputControl<TValue> controlOfType = null;
+
+            // If the binding that triggered the action is part of a composite, let
+            // the composite determine the value we return.
+            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            {
+                var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                var compositeObject = composites[compositeIndex];
+                var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
+                var context = new InputBindingCompositeContext();
+                value = compositeOfType.ReadValue(ref context);
+            }
+            else
+            {
+                var control = controls[controlIndex];
+                controlOfType = (InputControl<TValue>)control;
+                value = controlOfType.ReadValue();
+            }
+
+            // Run value through processors, if any.
+            var processorCount = bindingStates[bindingIndex].processorCount;
+            if (processorCount > 0)
+            {
+                var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
+                for (var i = 0; i < processorCount; ++i)
+                    value = ((IInputControlProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
+            }
+
+            return value;
+        }
+
         /// <summary>
         /// Records the current state of a single interaction attached to a binding.
         /// Each interaction keeps track of its own trigger control and phase progression.
@@ -933,7 +996,7 @@ namespace UnityEngine.Experimental.Input
             [FieldOffset(4)] private byte m_Flags;
             // One unused byte.
             [FieldOffset(6)] private ushort m_ActionIndex;
-            [FieldOffset(8)] private ushort m_CompositeIndex;
+            [FieldOffset(8)] private ushort m_CompositeOrCompositeBindingIndex;
             [FieldOffset(10)] private ushort m_ProcessorStartIndex;
             [FieldOffset(12)] private ushort m_InteractionStartIndex;
             [FieldOffset(14)] private ushort m_ControlStartIndex;
@@ -1085,25 +1148,27 @@ namespace UnityEngine.Experimental.Input
             }
 
             /// <summary>
-            /// The composite that the binding is part of (if any).
+            /// If this is a composite binding, this is the index of the composite in <see cref="composites"/>.
+            /// If the binding is part of a composite, this is the index of the binding that is the composite.
+            /// If the binding is neither a composite nor part of a composite, this is <see cref="kInvalidIndex"/>.
             /// </summary>
-            public int compositeIndex
+            public int compositeOrCompositeBindingIndex
             {
                 get
                 {
-                    if (m_CompositeIndex == ushort.MaxValue)
+                    if (m_CompositeOrCompositeBindingIndex == ushort.MaxValue)
                         return kInvalidIndex;
-                    return m_CompositeIndex;
+                    return m_CompositeOrCompositeBindingIndex;
                 }
                 set
                 {
                     if (value == kInvalidIndex)
-                        m_CompositeIndex = ushort.MaxValue;
+                        m_CompositeOrCompositeBindingIndex = ushort.MaxValue;
                     else
                     {
                         if (value >= ushort.MaxValue)
                             throw new NotSupportedException("Composite count cannot exceed ushort.MaxValue=" + ushort.MaxValue);
-                        m_CompositeIndex = (ushort)value;
+                        m_CompositeOrCompositeBindingIndex = (ushort)value;
                     }
                 }
             }

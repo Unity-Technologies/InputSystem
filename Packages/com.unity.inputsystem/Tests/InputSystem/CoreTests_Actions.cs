@@ -549,6 +549,18 @@ partial class CoreTests
         performedReceivedCalls = 0;
         cancelledReceivedCalls = 0;
 
+        // Move around some more.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.789f, 0.765f)});
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(cancelledReceivedCalls, Is.EqualTo(0));
+
+        startedReceivedCalls = 0;
+        performedReceivedCalls = 0;
+        cancelledReceivedCalls = 0;
+
         // Go back into deadzone.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.011f, 0.011f)});
         InputSystem.Update();
@@ -568,6 +580,30 @@ partial class CoreTests
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(0));
         Assert.That(cancelledReceivedCalls, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformStickInteraction_OnDpadComposite()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AppendCompositeBinding("dpad", interactions: "stick")
+            .With("up", "<Keyboard>/w")
+            .With("down", "<Keyboard>/s")
+            .With("left", "<Keyboard>/a")
+            .With("right", "<Keyboard>/d");
+
+        var startedReceivedCalls = 0;
+        action.started +=
+            ctx => ++ startedReceivedCalls;
+        action.Enable();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(1));
     }
 
     [Test]
