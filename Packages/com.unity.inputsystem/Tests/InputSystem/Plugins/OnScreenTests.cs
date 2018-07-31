@@ -14,6 +14,8 @@ public class OnScreenTests : InputTestFixture
     {
         var gameObject = new GameObject();
         var eventSystem = gameObject.AddComponent<EventSystem>();
+        var camera = gameObject.AddComponent<Camera>();
+        var canvas = gameObject.AddComponent<Canvas>();
 
         var stick = gameObject.AddComponent<OnScreenStick>();
         stick.controlPath = "/<Gamepad>/leftStick";
@@ -22,8 +24,6 @@ public class OnScreenTests : InputTestFixture
         Assert.That(stick.control, Is.SameAs(stick.control.device["leftStick"]));
         Assert.That(stick.control, Is.TypeOf<StickControl>());
         var stickControl = (StickControl)stick.control;
-
-        ////FIXME: OnScreenStick mixes up transform.position and 2D position space
 
         stick.OnDrag(new PointerEventData(eventSystem)
         {
