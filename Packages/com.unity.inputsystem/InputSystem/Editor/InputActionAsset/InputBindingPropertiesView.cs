@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
         GUIContent m_GeneralContent = EditorGUIUtility.TrTextContent("General");
         GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        bool m_ManualEditMode;
+        bool m_ManualPathEditMode;
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
         {
@@ -135,8 +135,10 @@ namespace UnityEngine.Experimental.Input.Editor
         void DrawBindingField(Rect rect, Rect editBtn, SerializedProperty pathProperty)
         {
             var path = pathProperty.stringValue;
+            ////TODO: this should be cached; generates needless GC churn
+            var displayName = InputControlPath.ToHumanReadableString(path);
 
-            if (m_ManualEditMode || string.IsNullOrEmpty(BindingTreeItem.ParseName(path)))
+            if (m_ManualPathEditMode || string.IsNullOrEmpty(displayName))
             {
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(rect, path);
@@ -153,14 +155,13 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             else
             {
-                var parsedPath = BindingTreeItem.ParseName(path);
-                if (EditorGUI.DropdownButton(rect, new GUIContent(parsedPath), FocusType.Keyboard))
+                if (EditorGUI.DropdownButton(rect, new GUIContent(displayName), FocusType.Keyboard))
                 {
                     ShowInputControlPicker(rect, pathProperty);
                 }
                 if (GUI.Button(editBtn, "..."))
                 {
-                    m_ManualEditMode = true;
+                    m_ManualPathEditMode = true;
                 }
             }
         }
@@ -171,7 +172,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 onPickCallback = s =>
                 {
-                    m_ManualEditMode = false;
+                    m_ManualPathEditMode = false;
                     OnBindingModified(s);
                 }
             };

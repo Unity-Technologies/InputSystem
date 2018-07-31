@@ -275,7 +275,7 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(actionMapName, binding, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
-            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + ParseName(path);
+            displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
             depth++;
         }
 
@@ -302,7 +302,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
             var name = elementProperty.FindPropertyRelative("name").stringValue;
-            displayName = ParseName(path);
+            displayName = InputControlPath.ToHumanReadableString(path);
             id = GetId(actionMapName, index, action, path, name);
             depth = 2;
         }
@@ -320,43 +320,6 @@ namespace UnityEngine.Experimental.Input.Editor
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)
         {
             return (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
-        }
-
-        static Regex s_UsageRegex = new Regex("\\*/{([A-Za-z0-9]+)}");
-        static Regex s_ControlRegex = new Regex("<([A-Za-z0-9:\\-]+)>({([A-Za-z0-9]+)})?/([A-Za-z0-9]+(/[A-Za-z0-9]+)*)");
-
-        const int kUsageNameGroup = 1;
-        const int kDeviceNameGroup = 1;
-        const int kDeviceUsageGroup = 3;
-        const int kControlPathGroup = 4;
-
-        internal static string ParseName(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return "<empty>";
-            string text = "";
-            var usageMatch = s_UsageRegex.Match(path);
-            if (usageMatch.Success)
-            {
-                text = usageMatch.Groups[kUsageNameGroup].Value;
-            }
-            else
-            {
-                var controlMatch = s_ControlRegex.Match(path);
-                if (controlMatch.Success)
-                {
-                    var device = controlMatch.Groups[kDeviceNameGroup].Value;
-                    var deviceUsage = controlMatch.Groups[kDeviceUsageGroup].Value;
-                    var control = controlMatch.Groups[kControlPathGroup].Value;
-
-                    if (!string.IsNullOrEmpty(deviceUsage))
-                        text = string.Format("{0} {1} {2}", deviceUsage, device, control);
-                    else
-                        text = string.Format("{0} {1}", device, control);
-                }
-            }
-
-            return text;
         }
 
         protected override GUIStyle rectStyle
