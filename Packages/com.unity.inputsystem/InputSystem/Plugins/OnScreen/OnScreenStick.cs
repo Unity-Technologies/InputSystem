@@ -1,11 +1,14 @@
 using UnityEngine.EventSystems;
 
+////TODO: custom icon for OnScreenStick component
+
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
     /// <summary>
     /// A stick control displayed on screen and moved around by touch or other pointer
     /// input.
     /// </summary>
+    [AddComponentMenu("Input/On-Screen Stick")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
         private void Start()

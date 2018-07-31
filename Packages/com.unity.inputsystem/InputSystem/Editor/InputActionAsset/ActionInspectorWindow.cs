@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var p = m_TreeView.GetSelectedRow();
             if (p.hasProperties)
             {
-                m_PropertyView = new InputBindingPropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
+                m_PropertyView = new InputBindingPropertiesView(p.elementProperty, Apply, m_PickerTreeViewState);
             }
         }
 
@@ -139,6 +139,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
                 m_CopyPasteUtility = new CopyPasteUtility(this, m_TreeView, m_SerializedObject);
+                if (m_PickerTreeViewState == null)
+                    m_PickerTreeViewState = new TreeViewState();
                 LoadPropertiesForSelection();
             }
         }

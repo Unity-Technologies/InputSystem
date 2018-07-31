@@ -33,12 +33,12 @@ namespace UnityEngine.Experimental.Input.Editor
         public float width;
         SearchField m_SearchField;
 
-        public InputControlPicker(SerializedProperty pathProperty)
+        public InputControlPicker(SerializedProperty pathProperty, TreeViewState treeViewState = null)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException("pathProperty");
             m_PathProperty = pathProperty;
-            m_PathTreeState = new TreeViewState();
+            m_PathTreeState = treeViewState ?? new TreeViewState();
 
             m_SearchField = new SearchField();
             m_SearchField.SetFocus();
@@ -56,13 +56,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (width > s.x)
                 s.x = width;
             return s;
-        }
-
-        public InputControlPicker(SerializedProperty pathProperty, ref TreeViewState treeViewState) : this(pathProperty)
-        {
-            if (treeViewState == null)
-                treeViewState = new TreeViewState();
-            m_PathTreeState = treeViewState;
         }
 
         public override void OnGUI(Rect rect)
