@@ -54,7 +54,7 @@ namespace UnityEngine.Experimental.Input
         /// Create a human readable string from the given control path.
         /// </summary>
         /// <param name="path">A control path such as "&lt;XRController>{LeftHand}/position".</param>
-        /// <returns></returns>
+        /// <returns>A string such as "Gamepad leftStick/x".</returns>
         public static string ToHumanReadableString(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -62,6 +62,8 @@ namespace UnityEngine.Experimental.Input
 
             var result = string.Empty;
             var parser = new PathParser(path);
+
+            ////REVIEW: ideally, we'd use display names of controls rather than the control paths directly from the path
 
             // First level is taken to be device.
             if (parser.MoveToNextComponent())
@@ -73,7 +75,9 @@ namespace UnityEngine.Experimental.Input
                     if (parser.MoveToNextComponent() && !parser.current.usage.isEmpty && parser.current.name.isEmpty &&
                         parser.current.layout.isEmpty)
                     {
-                        return parser.current.usage.ToString();
+                        var usage = parser.current.usage.ToString();
+                        if (!parser.MoveToNextComponent())
+                            return usage;
                     }
 
                     // Reset.
@@ -91,6 +95,7 @@ namespace UnityEngine.Experimental.Input
                     else
                         result += ' ';
                     result += parser.current.ToHumanReadableString();
+                    isFirstControlLevel = false;
                 }
             }
 
