@@ -2,23 +2,36 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
 
 class DualShockTests : InputTestFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX //|| UNITY_WSA - Uncomment once HID back-end on UWP is fully enabled
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID()
     {
+#if !UNITY_WSA
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             product = "Wireless Controller",
             manufacturer = "Sony Interactive Entertainment",
-            interfaceName = "HID"
+            interfaceName = "HID",
         });
+#else // UWP requires different query logic (manufacture not available)
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            interfaceName = "HID",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+#endif
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
         var gamepad = (DualShockGamepad)device;
@@ -81,6 +94,24 @@ class DualShockTests : InputTestFixture
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
     }
+
+#if UNITY_WSA
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHID_WithVenderId()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+#endif
 
     [Test]
     [Category("Devices")]
