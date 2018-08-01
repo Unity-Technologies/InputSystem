@@ -279,7 +279,7 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public static string TryFindMatchingControlLayout(InputDeviceDescription deviceDescription)
         {
-            return s_Manager.TryFindMatchingControlLayout(deviceDescription);
+            return s_Manager.TryFindMatchingControlLayout(ref deviceDescription);
         }
 
         /// <summary>

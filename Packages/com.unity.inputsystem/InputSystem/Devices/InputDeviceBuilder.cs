@@ -222,7 +222,9 @@ namespace UnityEngine.Experimental.Input
             InputControl control;
 
             // If we have an existing control, see whether it's usable.
-            if (existingControl != null && existingControl.layout == layout.name && existingControl.GetType() == layout.type)
+            // NOTE: We allow the layout to change to a different layout as long as the new layout uses
+            //       the same type.
+            if (existingControl != null && existingControl.GetType() == layout.type)
             {
                 control = existingControl;
 

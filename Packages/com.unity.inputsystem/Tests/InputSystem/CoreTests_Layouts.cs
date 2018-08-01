@@ -695,6 +695,57 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayout_WithMatcher_RecreatesDevicesForWhichItIsABetterMatch()
+    {
+        const string oldLayout = @"
+            {
+                ""name"" : ""OldLayout"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""manufacturer"" : ""TestManufacturer""
+                }
+            }
+        ";
+
+        const string newLayout = @"
+            {
+                ""name"" : ""NewLayout"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""product"" : ""TestProduct"",
+                    ""manufacturer"" : ""TestManufacturer""
+                }
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(oldLayout);
+
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "TestProduct",
+            manufacturer = "TestManufacturer",
+        });
+
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        Assert.That(device.layout, Is.EqualTo("OldLayout"));
+
+        InputSystem.RegisterControlLayout(newLayout);
+
+        Assert.That(device.layout, Is.EqualTo("NewLayout"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void TODO_Layouts_RegisteringLayoutBuilder_MarksResultingLayoutAsGenerated()
+    {
+        Assert.Fail();
+    }
+
     private class TestLayoutType : Pointer
     {
     }
