@@ -92,14 +92,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ReferencedObject == null)
                 return;
             m_SerializedObject = new SerializedObject(m_ReferencedObject);
-            InitiateTrees();
+            InitializeTrees();
         }
 
         void SetReferencedObject(Object referencedObject)
         {
             m_ReferencedObject = referencedObject;
             m_SerializedObject = new SerializedObject(referencedObject);
-            InitiateTrees();
+            InitializeTrees();
         }
 
         void OnUndoCallback()
@@ -130,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void InitiateTrees()
+        void InitializeTrees()
         {
             if (m_SerializedObject != null)
             {

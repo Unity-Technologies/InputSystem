@@ -5,7 +5,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class InputBindingPropertiesView
+    internal class InputBindingPropertiesView
     {
         static class Styles
         {
@@ -123,7 +123,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
         }
 
-        ////REVIEW: refactor this out of here
+        ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
         internal static void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
         {
             EditorGUILayout.BeginHorizontal();
@@ -176,7 +176,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
             var w = new InputControlPicker(pathProperty, pickerTreeViewState)
@@ -187,14 +187,14 @@ namespace UnityEngine.Experimental.Input.Editor
             PopupWindow.Show(rect, w);
         }
 
-        bool DrawFoldout(GUIContent content, bool folded)
+        private static bool DrawFoldout(GUIContent content, bool folded)
         {
             var bgRect = GUILayoutUtility.GetRect(s_ProcessorsContent, Styles.foldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
             return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
         }
 
-        void OnBindingModified(SerializedProperty obj)
+        private void OnBindingModified(SerializedProperty obj)
         {
             var importerEditor = InputActionImporterEditor.FindFor(m_BindingProperty.serializedObject);
             if (importerEditor != null)

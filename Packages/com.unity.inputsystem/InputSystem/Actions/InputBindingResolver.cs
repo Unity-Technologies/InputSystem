@@ -95,6 +95,7 @@ namespace UnityEngine.Experimental.Input
             ////TODO: handle case where we have bindings resolving to the same control
             ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
             var currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
+            var currentCompositeIndex = InputActionMapState.kInvalidIndex;
             var actionsInThisMap = map.m_Actions;
             var actionCountInThisMap = actionsInThisMap != null ? actionsInThisMap.Length : 0;
             for (var n = 0; n < bindingCountInThisMap; ++n)
@@ -150,13 +151,13 @@ namespace UnityEngine.Experimental.Input
 
                     // Instantiate. For composites, the path is the name of the composite.
                     var composite = InstantiateBindingComposite(unresolvedBinding.path);
-                    var compositeIndex =
+                    currentCompositeIndex =
                         ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
                     currentCompositeBindingIndex = bindingIndex;
                     bindingStates[bindingIndex] = new InputActionMapState.BindingState
                     {
                         actionIndex = actionIndex,
-                        compositeOrCompositeBindingIndex = compositeIndex,
+                        compositeOrCompositeBindingIndex = currentCompositeIndex,
                         processorStartIndex = firstProcessorIndex,
                         processorCount = numProcessors,
                         interactionCount = numInteractions,
@@ -172,8 +173,12 @@ namespace UnityEngine.Experimental.Input
 
                 // If we've reached the end of a composite chain, finish
                 // off the current composite.
-                if (!unresolvedBinding.isPartOfComposite && currentCompositeBindingIndex != InputActionMapState.kInvalidIndex)
+                if (!unresolvedBinding.isPartOfComposite &&
+                    currentCompositeBindingIndex != InputActionMapState.kInvalidIndex)
+                {
                     currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
+                    currentCompositeIndex = InputActionMapState.kInvalidIndex;
+                }
 
                 // Look up controls.
                 var firstControlIndex = totalControlCount;
@@ -213,10 +218,10 @@ namespace UnityEngine.Experimental.Input
                     if (string.IsNullOrEmpty(unresolvedBinding.name))
                         throw new Exception(string.Format(
                             "Binding that is part of composite '{0}' is missing a name",
-                            composites[currentCompositeBindingIndex]));
+                            composites[currentCompositeIndex]));
 
                     // Install the control on the binding.
-                    BindControlInComposite(composites[currentCompositeBindingIndex], unresolvedBinding.name,
+                    BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
                         controls[firstControlIndex]);
                 }
             }
