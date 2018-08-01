@@ -80,7 +80,41 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             EditorGUILayout.BeginVertical();
+            DrawPathPicker();
+            EditorGUILayout.Space();
+            DrawInteractionsPicker();
+            EditorGUILayout.Space();
+            DrawProcessorsPicker();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+        }
 
+        protected virtual void DrawProcessorsPicker()
+        {
+            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
+
+            if (m_ProcessorsFoldout)
+            {
+                EditorGUI.indentLevel++;
+                m_ProcessorsListView.OnGUI();
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        protected virtual void DrawInteractionsPicker()
+        {
+            m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
+
+            if (m_InteractionsFoldout)
+            {
+                EditorGUI.indentLevel++;
+                m_InteractionsList.OnGUI();
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        protected virtual void DrawPathPicker()
+        {
             m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
             if (m_GeneralFoldout)
@@ -97,30 +131,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 EditorGUI.indentLevel--;
             }
-
-            EditorGUILayout.Space();
-            m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
-
-            if (m_InteractionsFoldout)
-            {
-                EditorGUI.indentLevel++;
-                m_InteractionsList.OnGUI();
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.Space();
-            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
-
-            if (m_ProcessorsFoldout)
-            {
-                EditorGUI.indentLevel++;
-                m_ProcessorsListView.OnGUI();
-                EditorGUI.indentLevel--;
-            }
-
-            GUILayout.FlexibleSpace();
-
-            EditorGUILayout.EndVertical();
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
@@ -200,6 +210,18 @@ namespace UnityEngine.Experimental.Input.Editor
             if (importerEditor != null)
                 importerEditor.OnAssetModified();
             m_ReloadTree();
+        }
+    }
+    
+    internal class CompositeGroupPropertiesView : InputBindingPropertiesView
+    {
+        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state) 
+            : base(property, apply, state)
+        {
+        }
+
+        protected override void DrawPathPicker()
+        {
         }
     }
 }

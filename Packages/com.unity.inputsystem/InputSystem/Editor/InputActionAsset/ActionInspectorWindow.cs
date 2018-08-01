@@ -127,7 +127,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var p = m_TreeView.GetSelectedRow();
             if (p.hasProperties)
             {
-                m_PropertyView = new InputBindingPropertiesView(p.elementProperty, Apply, m_PickerTreeViewState);
+                m_PropertyView = p.GetPropertiesView(Apply, m_PickerTreeViewState);
             }
         }
 

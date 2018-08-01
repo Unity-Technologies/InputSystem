@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -115,6 +116,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public abstract string SerializeToString();
+
+        public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
+        {
+            return new InputBindingPropertiesView(elementProperty, apply, state);
+        }
     }
 
     class ActionMapTreeItem : InputTreeViewLine
@@ -257,14 +263,14 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return Styles.blueRect; }
         }
 
-        public override bool hasProperties
-        {
-            get { return false; }
-        }
-
         public void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameComposite(elementProperty, newName);
+        }
+
+        public override InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
+        {
+            return new CompositeGroupPropertiesView(elementProperty, apply, state);
         }
     }
 
