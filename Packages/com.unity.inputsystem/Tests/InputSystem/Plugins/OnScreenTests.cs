@@ -13,6 +13,8 @@ public class OnScreenTests : InputTestFixture
     public void Devices_CanCreateOnScreenStick()
     {
         var gameObject = new GameObject();
+        gameObject.AddComponent<Camera>();
+        gameObject.AddComponent<Canvas>();
         var eventSystem = gameObject.AddComponent<EventSystem>();
 
         var stick = gameObject.AddComponent<OnScreenStick>();
@@ -23,8 +25,6 @@ public class OnScreenTests : InputTestFixture
         Assert.That(stick.control, Is.TypeOf<StickControl>());
         var stickControl = (StickControl)stick.control;
 
-        ////FIXME: OnScreenStick mixes up transform.position and 2D position space
-
         stick.OnDrag(new PointerEventData(eventSystem)
         {
             position = new Vector2(stick.movementRange, stick.movementRange)
@@ -33,10 +33,11 @@ public class OnScreenTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(stick.control.ReadValueAsObject(),
-            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2)))
+            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
                 .Using(vector2Comparer));
 
-        ////REVIEW: check transform?
+        Assert.That(gameObject.transform.position.x, Is.GreaterThan(0.0f));
+        Assert.That(gameObject.transform.position.y, Is.GreaterThan(0.0f));
     }
 
     [Test]
