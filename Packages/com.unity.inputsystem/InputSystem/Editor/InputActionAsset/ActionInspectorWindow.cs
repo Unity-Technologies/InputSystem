@@ -44,7 +44,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public static bool OnOpenAsset(int instanceID, int line)
         {
             var path = AssetDatabase.GetAssetPath(instanceID);
-            if (path.EndsWith(".inputactions"))
+            if (path.EndsWith(m_FileExtension))
             {
                 var obj = EditorUtility.InstanceIDToObject(instanceID);
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
@@ -85,9 +85,11 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
         GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
 
+        private const string m_FileExtension = ".inputactions";
+
         public void OnEnable()
         {
-            Undo.undoRedoPerformed += OnUndoCallback;
+            Undo.undoRedoPerformed += OnUndoRedoCallback;
             if (m_ReferencedObject == null)
                 return;
             m_SerializedObject = new SerializedObject(m_ReferencedObject);
@@ -101,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Editor
             InitializeTrees();
         }
 
-        void OnUndoCallback()
+        void OnUndoRedoCallback()
         {
             if (m_TreeView == null)
                 return;
@@ -162,6 +164,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
             {
+                if(!importedAssets.Any(s=>s.EndsWith(m_FileExtension)))
+                    return;
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
                 foreach (var inputWindow in inputManagers)
                 {
