@@ -77,7 +77,6 @@ namespace UnityEngine.Experimental.Input.Editor
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
-        bool m_IsAssetDirty;
 
         GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
         GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
@@ -106,9 +105,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
                 return;
-            m_IsAssetDirty = true;
             m_TreeView.Reload();
             OnSelectionChanged();
+            SaveChangesToAsset();
         }
 
         internal void OnSelectionChanged()
@@ -147,9 +146,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         internal void Apply()
         {
-            m_IsAssetDirty = true;
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
+            SaveChangesToAsset();
         }
 
         void SaveChangesToAsset()
@@ -179,13 +178,6 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            EditorGUI.BeginDisabledGroup(!m_IsAssetDirty);
-            if (GUILayout.Button(EditorGUIUtility.TrTextContent("Save")))
-            {
-                m_IsAssetDirty = false;
-                SaveChangesToAsset();
-            }
-            EditorGUI.EndDisabledGroup();
 
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
