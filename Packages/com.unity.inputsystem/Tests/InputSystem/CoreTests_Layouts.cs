@@ -811,6 +811,47 @@ partial class CoreTests
                 .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
     }
 
+    // We consider layouts built by layout builders as being auto-generated. We want them to
+    // be overridable by layouts built specifically for a device so we boost the score of
+    // of type and JSON layouts such that they will override auto-generated layouts even if
+    // they match less perfectly according to their InputDeviceMatcher.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutBuilder_WithMatcher_StillGivesPrecedenceToTypeAndJSONLayouts()
+    {
+        var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
+
+        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "GeneratedLayout",
+            matches: new InputDeviceMatcher()
+                .WithInterface("TestInterface")
+                .WithProduct("TestProduct")
+                .WithManufacturer("TestManufacturer"));
+
+        const string json = @"
+            {
+                ""name"" : ""ManualLayout"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""product"" : ""TestProduct"",
+                    ""manufacturer"" : ""TestManufacturer""
+                }
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        // This should pick ManualLayout and not GeneratedLayout.
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer",
+        });
+
+        Assert.That(device, Is.TypeOf<Gamepad>());
+        Assert.That(device.layout, Is.EqualTo("ManualLayout"));
+    }
+
     // Want to ensure that if a state struct declares an "int" field, for example, and then
     // assigns it then Axis layout (which has a default format of float), the AxisControl
     // comes out with an "INT" format and not a "FLT" format.
@@ -1622,13 +1663,6 @@ partial class CoreTests
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void TODO_Layouts_RegisteringLayout_RecreatesDevicesForWhichItIsABetterLayout()
-    {
         Assert.Fail();
     }
 }

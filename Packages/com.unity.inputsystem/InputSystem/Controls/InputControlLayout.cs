@@ -1670,6 +1670,8 @@ namespace UnityEngine.Experimental.Input
 
         internal struct Collection
         {
+            public const float kBaseScoreForNonGeneratedLayouts = 1.0f;
+
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
             public Dictionary<InternedString, BuilderInfo> layoutBuilders;
@@ -1693,6 +1695,13 @@ namespace UnityEngine.Experimental.Input
                 foreach (var entry in layoutDeviceMatchers)
                 {
                     var score = entry.Value.MatchPercentage(deviceDescription);
+
+                    // We want auto-generated layouts to take a backseat compared to manually created
+                    // layouts. We do this by boosting the score of every layout that isn't coming from
+                    // a layout builder.
+                    if (score > 0 && !layoutBuilders.ContainsKey(entry.Key))
+                        score += kBaseScoreForNonGeneratedLayouts;
+
                     if (score > highestScore)
                     {
                         highestScore = score;
