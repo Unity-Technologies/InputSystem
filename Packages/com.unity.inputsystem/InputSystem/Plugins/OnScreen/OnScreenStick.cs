@@ -13,25 +13,22 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     {
         private void Start()
         {
-            m_StartPos = (transform as RectTransform).anchoredPosition;
-            Canvas canvas = GetComponentInParent<Canvas>();
-            if (canvas)
-                m_Camera = canvas.worldCamera;
+            m_StartPos = ((RectTransform)transform).anchoredPosition;
         }
 
         public void OnPointerDown(PointerEventData data)
         {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(GetComponentInParent<RectTransform>(), data.position, m_Camera, out m_PointerDownPos);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out m_PointerDownPos);
         }
 
         public void OnDrag(PointerEventData data)
         {
             Vector2 position;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(GetComponentInParent<RectTransform>(), data.position, m_Camera, out position);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(GetComponentInParent<RectTransform>(), data.position, data.pressEventCamera, out position);
             Vector2 delta = position - m_PointerDownPos;
 
             delta = Vector2.ClampMagnitude(delta, movementRange);
-            (transform as RectTransform).anchoredPosition = m_StartPos + (Vector3)delta;
+            ((RectTransform)transform).anchoredPosition = m_StartPos + (Vector3)delta;
 
             var newPos = new Vector2(delta.x / movementRange, delta.y / movementRange);
             SendValueToControl(newPos);
@@ -39,7 +36,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         public void OnPointerUp(PointerEventData data)
         {
-            (transform as RectTransform).anchoredPosition = m_StartPos;
+            ((RectTransform)transform).anchoredPosition = m_StartPos;
             SendValueToControl(Vector2.zero);
         }
 
@@ -47,6 +44,5 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 
         private Vector3 m_StartPos;
         private Vector2 m_PointerDownPos;
-        private Camera m_Camera;
     }
 }

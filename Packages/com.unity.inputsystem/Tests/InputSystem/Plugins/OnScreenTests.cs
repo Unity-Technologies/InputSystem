@@ -13,9 +13,9 @@ public class OnScreenTests : InputTestFixture
     public void Devices_CanCreateOnScreenStick()
     {
         var gameObject = new GameObject();
+        gameObject.AddComponent<Camera>();
+        gameObject.AddComponent<Canvas>();
         var eventSystem = gameObject.AddComponent<EventSystem>();
-        var camera = gameObject.AddComponent<Camera>();
-        var canvas = gameObject.AddComponent<Canvas>();
 
         var stick = gameObject.AddComponent<OnScreenStick>();
         stick.controlPath = "/<Gamepad>/leftStick";
@@ -33,10 +33,11 @@ public class OnScreenTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(stick.control.ReadValueAsObject(),
-            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2)))
+            Is.EqualTo(stickControl.Process(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
                 .Using(vector2Comparer));
 
-        ////REVIEW: check transform?
+        Assert.That(gameObject.transform.position.x, Is.GreaterThan(0.0f));
+        Assert.That(gameObject.transform.position.y, Is.GreaterThan(0.0f));
     }
 
     [Test]
