@@ -95,4 +95,25 @@ public class OnScreenTests : InputTestFixture
         Assert.That(aKey.control.device, Is.Not.SameAs(leftTrigger.control.device));
         Assert.That(bKey.control.device, Is.Not.SameAs(leftTrigger.control.device));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DisablingLastOnScreenControlRemovesCreatedDevice()
+    {
+        var gameObject = new GameObject();
+        var buttonA = gameObject.AddComponent<OnScreenButton>();
+        var buttonB = gameObject.AddComponent<OnScreenButton>();
+        buttonA.controlPath = "/<Keyboard>/a";
+        buttonB.controlPath = "/<Keyboard>/b";
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+
+        buttonA.enabled = false;
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+
+        buttonB.enabled = false;
+
+        Assert.That(InputSystem.devices, Has.None.TypeOf<Keyboard>());
+    }
 }
