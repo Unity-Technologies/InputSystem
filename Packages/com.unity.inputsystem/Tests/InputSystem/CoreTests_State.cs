@@ -818,6 +818,48 @@ partial class CoreTests
         Assert.That(!timeoutFired);
     }
 
+    // Actions will process interations inside of monitor callbacks. Since interactions can add
+    // timeouts, make sure that they make it through properly.
+    [Test]
+    [Category("State")]
+    public void State_StateChangeMonitorTimeout_CanBeAddedFromMonitorCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitorFired = false;
+        var timeoutFired = false;
+        double? receivedTime = null;
+        int? receivedTimerIndex = null;
+        InputControl receivedControl = null;
+
+        IInputStateChangeMonitor monitor = null;
+        monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,
+            (control, time, monitorIndex) =>
+            {
+                Assert.That(!monitorFired);
+                monitorFired = true;
+                InputSystem.AddStateChangeMonitorTimeout(gamepad.leftStick, monitor,
+                    testRuntime.currentTime + 1);
+            }, timerExpiredCallback:
+            (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.That(!timeoutFired);
+                timeoutFired = true;
+            });
+
+        // Trigger monitor callback.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
+        InputSystem.Update();
+
+        Assert.That(monitorFired);
+
+        // Expire timer.
+        testRuntime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutFired);
+    }
+
     [Test]
     [Category("State")]
     public unsafe void State_CanGetMetrics()

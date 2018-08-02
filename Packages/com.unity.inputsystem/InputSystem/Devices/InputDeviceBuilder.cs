@@ -191,7 +191,7 @@ namespace UnityEngine.Experimental.Input
         private InputDevice m_Device;
 
         // We construct layouts lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construt the same Button layout
+        // set up hierarchies so that we don't re-construct the same Button layout
         // 256 times for a keyboard.
         private InputControlLayout.Cache m_LayoutCache;
 
