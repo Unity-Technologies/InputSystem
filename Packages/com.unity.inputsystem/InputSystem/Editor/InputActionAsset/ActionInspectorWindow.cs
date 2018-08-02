@@ -41,12 +41,12 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         [OnOpenAsset]
-        public static bool OnOpenAsset(int instanceID, int line)
+        public static bool OnOpenAsset(int instanceId, int line)
         {
-            var path = AssetDatabase.GetAssetPath(instanceID);
-            if (path.EndsWith(m_FileExtension))
+            var path = AssetDatabase.GetAssetPath(instanceId);
+            if (path.EndsWith(k_FileExtension))
             {
-                var obj = EditorUtility.InstanceIDToObject(instanceID);
+                var obj = EditorUtility.InstanceIDToObject(instanceId);
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
                 var window = inputManagers.FirstOrDefault(w => w.m_ReferencedObject.Equals(obj));
                 if (window != null)
@@ -56,7 +56,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     return true;
                 }
                 window = CreateInstance<ActionInspectorWindow>();
-                window.title = obj.name + " (Input Manager)";
+                window.titleContent = new GUIContent(obj.name + " (Input Manager)");
                 window.SetReferencedObject(obj);
                 window.Show();
                 return true;
@@ -77,6 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
         CopyPasteUtility m_CopyPasteUtility;
         SearchField m_SearchField;
         string m_SearchText;
+        const string k_FileExtension = ".inputactions";
 
         GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
         GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
@@ -85,7 +86,6 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
         GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
 
-        private const string m_FileExtension = ".inputactions";
 
         public void OnEnable()
         {
@@ -164,7 +164,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
             {
-                if(!importedAssets.Any(s=>s.EndsWith(m_FileExtension)))
+                if(!importedAssets.Any(s=>s.EndsWith(k_FileExtension)))
                     return;
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
                 foreach (var inputWindow in inputManagers)

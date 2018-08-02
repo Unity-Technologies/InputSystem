@@ -7,9 +7,9 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class CopyPasteUtility
+    class CopyPasteUtility
     {
-        const string kInputAssetMarker = "INPUTASSET\n";
+        const string k_InputAssetMarker = "INPUTASSET\n";
         InputActionListTreeView m_TreeView;
         ActionInspectorWindow m_Window;
         SerializedObject m_SerializedObject;
@@ -47,12 +47,12 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
-            var copyList = new StringBuilder(kInputAssetMarker);
+            var copyList = new StringBuilder(k_InputAssetMarker);
             foreach (var selectedRow in selectedRows)
             {
                 copyList.Append(selectedRow.GetType().Name);
                 copyList.Append(selectedRow.SerializeToString());
-                copyList.Append(kInputAssetMarker);
+                copyList.Append(k_InputAssetMarker);
 
                 if (selectedRow is ActionTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
                 {
@@ -62,7 +62,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     {
                         copyList.Append(child.GetType().Name);
                         copyList.Append((child as BindingTreeItem).SerializeToString());
-                        copyList.Append(kInputAssetMarker);
+                        copyList.Append(k_InputAssetMarker);
                         // Copy composites
                         if (child.hasChildren)
                         {
@@ -70,7 +70,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             {
                                 copyList.Append(innerChild.GetType().Name);
                                 copyList.Append((innerChild as BindingTreeItem).SerializeToString());
-                                copyList.Append(kInputAssetMarker);
+                                copyList.Append(k_InputAssetMarker);
                             }
                         }
                     }
@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             continue;
                         copyList.Append(child.GetType().Name);
                         copyList.Append((child as CompositeTreeItem).SerializeToString());
-                        copyList.Append(kInputAssetMarker);
+                        copyList.Append(k_InputAssetMarker);
                     }
                 }
             }
@@ -106,8 +106,8 @@ namespace UnityEngine.Experimental.Input.Editor
         void HandlePasteEvent()
         {
             var json = EditorGUIUtility.systemCopyBuffer;
-            var elements = json.Split(new[] { kInputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
-            if (!json.StartsWith(kInputAssetMarker))
+            var elements = json.Split(new[] { k_InputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
+            if (!json.StartsWith(k_InputAssetMarker))
                 return;
             for (var i = 0; i < elements.Length; i++)
             {
@@ -182,7 +182,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        bool IsRowOfType<T>(ref string row)
+        static bool IsRowOfType<T>(ref string row)
         {
             if (row.StartsWith(typeof(T).Name))
             {
