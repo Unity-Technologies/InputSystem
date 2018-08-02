@@ -55,6 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         public bool renaming;
         protected SerializedProperty m_SetProperty;
         protected int m_Index;
+        object m_ObjectToSerialize;
 
         public virtual bool isDraggable
         {
@@ -69,6 +70,16 @@ namespace UnityEngine.Experimental.Input.Editor
         public int index
         {
             get { return m_Index; }
+        }
+
+        protected abstract GUIStyle rectStyle
+        {
+            get;
+        }
+
+        public virtual bool hasProperties
+        {
+            get { return false; }
         }
 
         public InputTreeViewLine(SerializedProperty setProperty, int index)
@@ -98,12 +109,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        protected abstract GUIStyle rectStyle { get; }
-        public virtual bool hasProperties
-        {
-            get { return false; }
-        }
-
         public virtual void DrawCustomRect(Rect rowRect)
         {
             var boxRect = rowRect;
@@ -115,7 +120,17 @@ namespace UnityEngine.Experimental.Input.Editor
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
         }
 
-        public abstract string SerializeToString();
+        public void SetObjectToSerialize(object obj)
+        {
+            m_ObjectToSerialize = obj;
+        }
+
+        public string SerializeToString()
+        {
+            if(m_ObjectToSerialize == null)
+                throw new Exception("Object to serialize is not set");
+            return JsonUtility.ToJson(m_ObjectToSerialize);
+        }
 
         public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
         {
@@ -125,11 +140,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class ActionMapTreeItem : InputTreeViewLine
     {
-        InputActionMap m_ActionMap;
-
-        public ActionMapTreeItem(InputActionMap actionMap, SerializedProperty actionMapProperty, int index) : base(actionMapProperty, index)
+        public ActionMapTreeItem(SerializedProperty actionMapProperty, int index) : base(actionMapProperty, index)
         {
-            m_ActionMap = actionMap;
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
             id = displayName.GetHashCode();
         }
@@ -155,11 +167,6 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public override string SerializeToString()
-        {
-            return JsonUtility.ToJson(m_ActionMap);
-        }
-
         public void AddAction()
         {
             InputActionSerializationHelpers.AddAction(elementProperty);
@@ -183,26 +190,21 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class ActionTreeItem : InputTreeViewLine
     {
-        InputAction m_Action;
         SerializedProperty m_ActionMapProperty;
 
-        public int bindingsStartIndex
-        {
-            get { return m_Action.m_BindingsStartIndex; }
-        }
+        public int bindingsStartIndex { get; private set; }
+        public int bindingsCount { get; private set; }
+        public string actionName { get; private set; }
 
-        public int bindingsCount
-        {
-            get { return m_Action.m_BindingsCount; }
-        }
-
-        public ActionTreeItem(SerializedProperty actionMapProperty, InputAction action, SerializedProperty setProperty, int index)
+        public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty setProperty, int index)
             : base(setProperty, index)
         {
-            m_Action = action;
             m_ActionMapProperty = actionMapProperty;
+            actionName = elementProperty.FindPropertyRelative("m_Name").stringValue;
+            bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+            bindingsCount = InputActionSerializationHelpers.GetBindingCount(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+            displayName = actionName;
             var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
-            displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
             id = (actionMapName + "/" + displayName).GetHashCode();
             depth = 1;
         }
@@ -210,11 +212,6 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override GUIStyle rectStyle
         {
             get { return Styles.greenRect; }
-        }
-
-        public override string SerializeToString()
-        {
-            return JsonUtility.ToJson(m_Action);
         }
 
         public void AppendCompositeBinding(string compositeName)
@@ -246,8 +243,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class CompositeGroupTreeItem : BindingTreeItem
     {
-        public CompositeGroupTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index)
-            : base(actionMapName, binding, bindingProperty, index)
+        public CompositeGroupTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
+            : base(actionMapName, bindingProperty, index)
         {
             var name = elementProperty.FindPropertyRelative("name").stringValue;
             displayName = name;
@@ -276,8 +273,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class CompositeTreeItem : BindingTreeItem
     {
-        public CompositeTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index)
-            : base(actionMapName, binding, bindingProperty, index)
+        public CompositeTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
+            : base(actionMapName, bindingProperty, index)
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
@@ -297,12 +294,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class BindingTreeItem : InputTreeViewLine
     {
-        InputBinding m_InputBinding;
         SerializedProperty m_BindingProperty;
 
-        public BindingTreeItem(string actionMapName, InputBinding binding, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+        public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
         {
-            m_InputBinding = binding;
             m_BindingProperty = bindingProperty;
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
@@ -339,11 +334,6 @@ namespace UnityEngine.Experimental.Input.Editor
             rectStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-        }
-
-        public override string SerializeToString()
-        {
-            return JsonUtility.ToJson(m_InputBinding);
         }
 
         public override bool hasProperties

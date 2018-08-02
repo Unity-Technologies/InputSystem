@@ -25,6 +25,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return bindingCountForAction;
         }
+        
+        public static int GetBindingsStartIndex(SerializedProperty bindingArrayProperty, string actionName)
+        {
+            Debug.Assert(bindingArrayProperty != null);
+            Debug.Assert(bindingArrayProperty.isArray);
+
+            var bindingCount = bindingArrayProperty.arraySize;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingActionName = bindingArrayProperty.GetArrayElementAtIndex(i).FindPropertyRelative("action")
+                    .stringValue;
+                if (string.Compare(actionName, bindingActionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return i;
+            }
+
+            return -1;
+        }
 
         public static SerializedProperty GetBinding(SerializedProperty bindingArrayProperty, string actionName, int index)
         {

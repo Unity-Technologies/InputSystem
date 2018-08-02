@@ -266,7 +266,9 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var action = actionRow;
                 var actionMap = actionRow.parent as ActionMapTreeItem;
-                for (var i = actionRow.bindingsCount - 1; i >= 0; i--)
+
+                var bindingsCount = InputActionSerializationHelpers.GetBindingCount(actionMap.bindingsProperty, action.actionName);
+                for (var i = bindingsCount - 1; i >= 0; i--)
                 {
                     action.RemoveBinding(i);
                 }
