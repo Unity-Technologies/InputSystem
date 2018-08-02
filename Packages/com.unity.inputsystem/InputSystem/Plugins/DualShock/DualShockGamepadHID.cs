@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
@@ -544,4 +544,4 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 //     Feature (Data,Var,Abs,NWrp,Lin,Pref,NNul,NVol,Bit) B1 02
 // End Collection C0
 
-#endif // UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#endif // UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA

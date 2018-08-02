@@ -21,6 +21,16 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                     .WithProduct("Wireless Controller"));
             #endif
 
+            // The "Manufacturer" field is not available in UWP (for some reason)
+            // Identify PS4 controller by Sony's VendorID (VID)
+            #if UNITY_WSA
+            InputSystem.RegisterControlLayout<DualShockGamepadHID>(
+                matches: new InputDeviceMatcher()
+                .WithInterface("HID")
+                .WithCapability("vendorId", 0x054c)
+                .WithProduct("Wireless Controller"));
+            #endif
+
             #if UNITY_EDITOR || UNITY_PS4
             InputSystem.RegisterControlLayout<PS4TouchControl>("PS4Touch");
             InputSystem.RegisterControlLayout<DualShockGamepadPS4>("PS4DualShockGamepad",
