@@ -2,10 +2,13 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
+
+#if UNITY_WSA
+using UnityEngine.Experimental.Input.Plugins.HID;
+#endif
 
 class DualShockTests : InputTestFixture
 {
@@ -98,7 +101,7 @@ class DualShockTests : InputTestFixture
 #if UNITY_WSA
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsDualShockAsHID_WithVenderId()
+    public void Devices_SupportsDualShockAsHIDOnUWP()
     {
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
@@ -111,6 +114,7 @@ class DualShockTests : InputTestFixture
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
     }
+
 #endif
 
     [Test]

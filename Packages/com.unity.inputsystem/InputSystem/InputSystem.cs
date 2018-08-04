@@ -97,40 +97,65 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout(typeof(T), name, matches);
         }
 
-        ///  <summary>
-        ///  Register a layout in JSON format.
-        ///  </summary>
-        ///  <param name="json">Layout in JSON format.</param>
-        ///  <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
-        ///  property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
-        ///  is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        /// <summary>
+        /// Register a layout in JSON format.
+        /// </summary>
+        /// <param name="json">Layout in JSON format.</param>
+        /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
+        /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
+        /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
         /// <param name="matches"></param>
         /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
-        ///  or the "name" JSON property.</exception>
-        ///  <remarks>
-        ///  Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
-        ///  being created from a layout). The JSON data will, however, be parsed once on registration to check for a
-        ///  device description in the layout. JSON format errors will thus be detected during registration.
-        ///  </remarks>
-        ///  <example>
-        ///  <code>
-        ///  InputSystem.RegisterControlLayout(@"
-        ///     {
-        ///         ""name"" : ""MyDevice"",
-        ///         ""controls"" : [
-        ///             {
-        ///                 ""name"" : ""myThing"",
-        ///                 ""layout"" : ""MyControl"",
-        ///                 ""usage"" : ""LeftStick""
-        ///             }
-        ///         ]
-        ///     }
-        /// ");
-        ///  </code>
-        ///  </example>
+        /// or the "name" JSON property.</exception>
+        /// <remarks>
+        /// Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
+        /// being created from a layout). The JSON data will, however, be parsed once on registration to check for a
+        /// device description in the layout. JSON format errors will thus be detected during registration.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterControlLayout(@"
+        ///    {
+        ///        ""name"" : ""MyDevice"",
+        ///        ""controls"" : [
+        ///            {
+        ///                ""name"" : ""myThing"",
+        ///                ""layout"" : ""MyControl"",
+        ///                ""usage"" : ""LeftStick""
+        ///            }
+        ///        ]
+        ///    }
+        /// );
+        /// </code>
+        /// </example>
         public static void RegisterControlLayout(string json, string name = null, InputDeviceMatcher? matches = null)
         {
             s_Manager.RegisterControlLayout(json, name, matcher: matches);
+        }
+
+        /// <summary>
+        /// Register a layout that applies overrides to one or more other layouts.
+        /// </summary>
+        /// <param name="json">Layout in JSON format.</param>
+        /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
+        /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
+        /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        /// <remarks>
+        /// Layout overrides are layout pieces that are applied on top of existing layouts.
+        /// This can be used to modify any layout in the system non-destructively. The process work the same
+        /// as extending an existing layout except that instead of creating a new layout
+        /// by merging the derived layout and the base layout, the overrides are merged
+        /// directly into the base layout.
+        ///
+        /// Layouts used as overrides look the same as normal layouts and have the same format.
+        /// The only difference is that they are explicitly registered as overrides.
+        ///
+        /// Note that unlike "normal" layouts, layout overrides have the ability to extend
+        /// multiple base layouts.
+        /// </remarks>
+        public static void RegisterControlLayoutOverride(string json, string name = null)
+        {
+            s_Manager.RegisterControlLayout(json, name, isOverride: true);
         }
 
         /// <summary>

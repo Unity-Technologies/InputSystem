@@ -22,7 +22,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(4)] private ushort m_SizeInBytes;
         [FieldOffset(6)] private ushort m_DeviceId;
         [FieldOffset(8)] internal uint m_EventId;
-        ////REVIEW: does this really need to be a double? float would save us a 4 bytes
         [FieldOffset(12)] private double m_Time;
 
         /// <summary>

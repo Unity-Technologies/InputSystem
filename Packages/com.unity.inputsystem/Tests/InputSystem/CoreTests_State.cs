@@ -818,7 +818,7 @@ partial class CoreTests
         Assert.That(!timeoutFired);
     }
 
-    // Actions will process interations inside of monitor callbacks. Since interactions can add
+    // Actions will process interactions inside of monitor callbacks. Since interactions can add
     // timeouts, make sure that they make it through properly.
     [Test]
     [Category("State")]
@@ -828,9 +828,6 @@ partial class CoreTests
 
         var monitorFired = false;
         var timeoutFired = false;
-        double? receivedTime = null;
-        int? receivedTimerIndex = null;
-        InputControl receivedControl = null;
 
         IInputStateChangeMonitor monitor = null;
         monitor = InputSystem.AddStateChangeMonitor(gamepad.leftStick,

@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         public IntPtr defaultStateBuffer;
 
-        // Secretely we perform only a single allocation.
+        // Secretly we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
 #if UNITY_EDITOR
         [SerializeField]

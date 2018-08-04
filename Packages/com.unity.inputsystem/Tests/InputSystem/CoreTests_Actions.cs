@@ -2172,6 +2172,28 @@ partial class CoreTests
         Assert.That(set.enabled, Is.False);
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_DisablingAllActions_RemovesAllTheirStateMonitors()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        var action1 = new InputAction(binding: "/<Gamepad>/leftStick");
+        var action2 = new InputAction(binding: "/<Gamepad>/rightStick");
+        var action3 = new InputAction(binding: "/<Gamepad>/buttonSouth");
+
+        action1.Enable();
+        action2.Enable();
+        action3.Enable();
+
+        InputSystem.DisableAllEnabledActions();
+
+        // Not the most elegant test as we reach into internals here but with the
+        // current API, it's not possible to enumerate monitors from outside.
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors,
+            Has.All.Matches((InputManager.StateChangeMonitorsForDevice x) => x.count == 0));
+    }
+
     // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.
     [Test]
     [Category("Actions")]

@@ -69,7 +69,7 @@ partial class CoreTests
             Assert.That(layouts, Has.Exactly(1).EqualTo("MyGamepad"));
             Assert.That(remote.manager.devices, Has.Exactly(1).With.Property("layout").EqualTo("MyGamepad").And.TypeOf<Gamepad>());
             Assert.That(remote.manager.TryLoadControlLayout(new InternedString("MyGamepad")),
-                Is.Not.Null.And.With.Property("extendsLayout").EqualTo("Gamepad"));
+                Is.Not.Null.And.With.Property("baseLayouts").EquivalentTo(new[] {new InternedString("Gamepad")}));
         }
     }
 

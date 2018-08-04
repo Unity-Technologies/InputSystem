@@ -6,6 +6,9 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
+using UnityEngine.Experimental.Input.Utilities;
+
+////TODO: append " (Disabled) to disabled devices and grey them out
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
@@ -19,6 +22,11 @@ using UnityEditor.Networking.PlayerConnection;
 ////TODO: make configuration update when changed
 
 ////TODO: refresh when unrecognized device pops up
+
+////TODO: context menu
+////      devices: open debugger window, remove device, disable device
+////      layouts: copy as json, remove layout
+////      actions: disable action
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -401,8 +409,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 // Header.
                 AddChild(item, "Type: " + layout.type.Name, ref id);
-                if (!string.IsNullOrEmpty(layout.extendsLayout))
-                    AddChild(item, "Extends: " + layout.extendsLayout, ref id);
+                var baseLayouts = StringHelpers.Join(layout.baseLayouts, ", ");
+                if (!string.IsNullOrEmpty(baseLayouts))
+                    AddChild(item, "Extends: " + baseLayouts, ref id);
                 if (layout.stateFormat != 0)
                     AddChild(item, "Format: " + layout.stateFormat, ref id);
                 if (layout.m_UpdateBeforeRender != null)
