@@ -142,8 +142,8 @@ namespace UnityEngine.Experimental.Input
         /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
         /// <remarks>
         /// Layout overrides are layout pieces that are applied on top of existing layouts.
-        /// This can be used to modify any layout in the system non-destructively. The process work the same
-        /// as extending an existing layout except that instead of creating a new layout
+        /// This can be used to modify any layout in the system non-destructively. The process works the
+        /// same as extending an existing layout except that instead of creating a new layout
         /// by merging the derived layout and the base layout, the overrides are merged
         /// directly into the base layout.
         ///
@@ -467,6 +467,42 @@ namespace UnityEngine.Experimental.Input
         {
             add { s_Manager.onFindControlLayoutForDevice += value; }
             remove { s_Manager.onFindControlLayoutForDevice -= value; }
+        }
+
+        /// <summary>
+        /// Frequency at which devices that need polling are being queried in the background.
+        /// </summary>
+        /// <remarks>
+        /// Input data is gathered from platform APIs either as events or polled periodically.
+        ///
+        /// In the former case, where we get input as events, the platform is responsible for monitoring
+        /// input devices and accumulating their state changes which the input runtime then periodically
+        /// queries and sends off as <see cref="InputEvent">input events</see>.
+        ///
+        /// In the latter case, where input has to be explicitly polled from the system, the input runtime
+        /// will periodically sample the state of input devices and send it off a input events. Wherever
+        /// possible, this happens in the background at a fixed frequency. The <see cref="pollingFrequency"/>
+        /// property controls the rate at which the sampling happens.
+        ///
+        /// The unit is in Hertz. A value of 120, for example, means that devices are sampled 120 times
+        /// per second.
+        ///
+        /// The default polling frequency is 60 Hz.
+        ///
+        /// For devices that are polled, the frequency setting will directly translate to changes in the
+        /// <see cref="InputEvent.time">timestamp</see> patterns. At 60 Hz, for example, timestamps will
+        /// be spaced at roughly 1/60th of a second apart.
+        ///
+        /// Note that it depends on the platform which devices are polled (if any). On Win32, for example,
+        /// only XInput gamepads are polled.
+        ///
+        /// Also note that the polling frequency applies to all devices that are polled. It is not possible
+        /// to set polling frequency on a per-device basis.
+        /// </remarks>
+        public static float pollingFrequency
+        {
+            get { return s_Manager.pollingFrequency; }
+            set { s_Manager.pollingFrequency = value; }
         }
 
         /// <summary>

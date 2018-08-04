@@ -99,6 +99,21 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public float pollingFrequency
+        {
+            get { return m_PollingFrequency; }
+            set
+            {
+                ////REVIEW: allow setting to zero to turn off polling altogether?
+                if (value <= 0)
+                    throw new ArgumentException("Polling frequency must be greater than zero", "value");
+
+                m_PollingFrequency = value;
+                if (m_Runtime != null)
+                    m_Runtime.pollingFrequency = value;
+            }
+        }
+
         public event DeviceChangeListener onDeviceChange
         {
             add { m_DeviceChangeListeners.Append(value); }
@@ -1191,6 +1206,9 @@ namespace UnityEngine.Experimental.Input
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
 
+            // Default polling frequency is 60 Hz.
+            m_PollingFrequency = 60;
+
             // Register layouts.
             RegisterControlLayout("Button", typeof(ButtonControl)); // Controls.
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
@@ -1270,6 +1288,7 @@ namespace UnityEngine.Experimental.Input
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnDeviceDiscovered;
             m_Runtime.updateMask = updateMask;
+            m_Runtime.pollingFrequency = pollingFrequency;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_UpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1279,11 +1298,8 @@ namespace UnityEngine.Experimental.Input
             }
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
-            if (m_Runtime != null)
-            {
-                InputAnalytics.Initialize(this);
-                m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
-            }
+            InputAnalytics.Initialize(this);
+            m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
             #endif
         }
 
@@ -1318,6 +1334,7 @@ namespace UnityEngine.Experimental.Input
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         [NonSerialized] internal int m_LayoutRegistrationVersion;
+        [NonSerialized] private float m_PollingFrequency;
 
         [NonSerialized] internal InputControlLayout.Collection m_Layouts;
         [NonSerialized] private TypeTable m_Processors;
@@ -2474,6 +2491,7 @@ namespace UnityEngine.Experimental.Input
         internal struct SerializedState
         {
             public int layoutRegistrationVersion;
+            public float pollingFrequency;
             public LayoutState[] layoutTypes;
             public LayoutState[] layoutStrings;
             public LayoutBuilderState[] layoutFactories;
@@ -2586,6 +2604,7 @@ namespace UnityEngine.Experimental.Input
             return new SerializedState
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
+                pollingFrequency = m_PollingFrequency,
                 layoutTypes = layoutTypeArray,
                 layoutStrings = layoutStringArray,
                 layoutFactories = layoutBuilderArray,
@@ -2642,6 +2661,7 @@ namespace UnityEngine.Experimental.Input
             m_EventListeners = state.eventListeners;
             m_UpdateMask = state.updateMask;
             m_Metrics = state.metrics;
+            m_PollingFrequency = state.pollingFrequency;
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
