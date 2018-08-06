@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -26,6 +27,41 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return count;
+        }
+
+        public static string Join<TValue>(IEnumerable<TValue> values, string separator)
+        {
+            // Optimize for there not being any values or only a single one
+            // that needs no concatenation.
+            var firstValue = default(TValue);
+            var valueCount = 0;
+            StringBuilder result = null;
+
+            foreach (var value in values)
+            {
+                ++valueCount;
+                if (valueCount == 1)
+                {
+                    firstValue = value;
+                    continue;
+                }
+
+                if (valueCount == 2)
+                {
+                    result = new StringBuilder();
+                    result.Append(firstValue.ToString());
+                }
+
+                result.Append(separator);
+                result.Append(value.ToString());
+            }
+
+            if (valueCount == 0)
+                return null;
+            if (valueCount == 1)
+                return firstValue.ToString();
+
+            return result.ToString();
         }
 
         public static string MakeUniqueName<TExisting>(string baseName, IEnumerable<TExisting> existingSet,

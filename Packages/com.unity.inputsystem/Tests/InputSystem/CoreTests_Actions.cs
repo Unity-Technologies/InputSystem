@@ -549,6 +549,18 @@ partial class CoreTests
         performedReceivedCalls = 0;
         cancelledReceivedCalls = 0;
 
+        // Move around some more.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.789f, 0.765f)});
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(0));
+        Assert.That(performedReceivedCalls, Is.EqualTo(1));
+        Assert.That(cancelledReceivedCalls, Is.EqualTo(0));
+
+        startedReceivedCalls = 0;
+        performedReceivedCalls = 0;
+        cancelledReceivedCalls = 0;
+
         // Go back into deadzone.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.011f, 0.011f)});
         InputSystem.Update();
@@ -568,6 +580,30 @@ partial class CoreTests
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(0));
         Assert.That(cancelledReceivedCalls, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformStickInteraction_OnDpadComposite()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AppendCompositeBinding("dpad", interactions: "stick")
+            .With("up", "<Keyboard>/w")
+            .With("down", "<Keyboard>/s")
+            .With("left", "<Keyboard>/a")
+            .With("right", "<Keyboard>/d");
+
+        var startedReceivedCalls = 0;
+        action.started +=
+            ctx => ++ startedReceivedCalls;
+        action.Enable();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(startedReceivedCalls, Is.EqualTo(1));
     }
 
     [Test]
@@ -2134,6 +2170,28 @@ partial class CoreTests
         Assert.That(action2.enabled, Is.False);
         Assert.That(action3.enabled, Is.False);
         Assert.That(set.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_DisablingAllActions_RemovesAllTheirStateMonitors()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        var action1 = new InputAction(binding: "/<Gamepad>/leftStick");
+        var action2 = new InputAction(binding: "/<Gamepad>/rightStick");
+        var action3 = new InputAction(binding: "/<Gamepad>/buttonSouth");
+
+        action1.Enable();
+        action2.Enable();
+        action3.Enable();
+
+        InputSystem.DisableAllEnabledActions();
+
+        // Not the most elegant test as we reach into internals here but with the
+        // current API, it's not possible to enumerate monitors from outside.
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors,
+            Has.All.Matches((InputManager.StateChangeMonitorsForDevice x) => x.count == 0));
     }
 
     // This test requires that pointer deltas correctly snap back to 0 when the pointer isn't moved.

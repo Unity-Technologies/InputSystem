@@ -92,14 +92,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_ReferencedObject == null)
                 return;
             m_SerializedObject = new SerializedObject(m_ReferencedObject);
-            InitiateTrees();
+            InitializeTrees();
         }
 
         void SetReferencedObject(Object referencedObject)
         {
             m_ReferencedObject = referencedObject;
             m_SerializedObject = new SerializedObject(referencedObject);
-            InitiateTrees();
+            InitializeTrees();
         }
 
         void OnUndoCallback()
@@ -126,11 +126,11 @@ namespace UnityEngine.Experimental.Input.Editor
             var p = m_TreeView.GetSelectedRow();
             if (p.hasProperties)
             {
-                m_PropertyView = new InputBindingPropertiesView(p.elementProperty, Apply, ref m_PickerTreeViewState);
+                m_PropertyView = new InputBindingPropertiesView(p.elementProperty, Apply, m_PickerTreeViewState);
             }
         }
 
-        void InitiateTrees()
+        void InitializeTrees()
         {
             if (m_SerializedObject != null)
             {
@@ -139,6 +139,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
                 m_CopyPasteUtility = new CopyPasteUtility(this, m_TreeView, m_SerializedObject);
+                if (m_PickerTreeViewState == null)
+                    m_PickerTreeViewState = new TreeViewState();
                 LoadPropertiesForSelection();
             }
         }

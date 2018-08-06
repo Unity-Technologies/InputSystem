@@ -496,7 +496,7 @@ partial class CoreTests
     }
 
     [Test]
-    [Category("Layout")]
+    [Category("Layouts")]
     public void Layouts_CanOverrideLayoutMatchesForDiscoveredDevices()
     {
         InputSystem.onFindControlLayoutForDevice +=
@@ -506,6 +506,112 @@ partial class CoreTests
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
         Assert.That(device, Is.TypeOf<Keyboard>());
+    }
+
+    // At some point we may actually want to allow this. Could lead to some interesting capabilities.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CannotBeBasedOnMultipleLayouts()
+    {
+        const string json = @"
+            {
+                ""name"" : ""Test"",
+                ""extendMultiple"" : [ ""Mouse"", ""Keyboard"" ],
+                ""controls"" : [
+                    { ""name"" : ""button"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        Assert.That(() => InputSystem.RegisterControlLayout(json),
+            Throws.Exception.TypeOf<NotSupportedException>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanApplyOverridesToExistingLayouts()
+    {
+        // Add a control to mice.
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayoutOverride(json);
+
+        var device = InputSystem.AddDevice<Mouse>();
+
+        Assert.That(device["extraControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanApplyOverridesToMultipleLayouts()
+    {
+        // Add a control to mice.
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extendMultiple"" : [ ""Mouse"", ""Keyboard"" ],
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayoutOverride(json);
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(mouse["extraControl"], Is.TypeOf<ButtonControl>());
+        Assert.That(keyboard["extraControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanApplyOverridesToControlLayouts()
+    {
+        // Add a button to the Stick layout.
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Stick"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.RegisterControlLayoutOverride(json);
+
+        Assert.That(gamepad.leftStick["extraControl"], Is.TypeOf<ButtonControl>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_ApplyingOverrideToExistingLayout_UpdatesAllDevicesUsingTheLayout()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        InputSystem.RegisterControlLayoutOverride(json);
+
+        Assert.That(mouse["extraControl"], Is.TypeOf<ButtonControl>());
     }
 
     // If a layout only specifies an interface in its descriptor, it is considered
@@ -695,6 +801,57 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayout_WithMatcher_RecreatesDevicesForWhichItIsABetterMatch()
+    {
+        const string oldLayout = @"
+            {
+                ""name"" : ""OldLayout"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""manufacturer"" : ""TestManufacturer""
+                }
+            }
+        ";
+
+        const string newLayout = @"
+            {
+                ""name"" : ""NewLayout"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""product"" : ""TestProduct"",
+                    ""manufacturer"" : ""TestManufacturer""
+                }
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(oldLayout);
+
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "TestProduct",
+            manufacturer = "TestManufacturer",
+        });
+
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        Assert.That(device.layout, Is.EqualTo("OldLayout"));
+
+        InputSystem.RegisterControlLayout(newLayout);
+
+        Assert.That(device.layout, Is.EqualTo("NewLayout"));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void TODO_Layouts_RegisteringLayoutBuilder_MarksResultingLayoutAsGenerated()
+    {
+        Assert.Fail();
+    }
+
     private class TestLayoutType : Pointer
     {
     }
@@ -707,7 +864,7 @@ partial class CoreTests
 
         var layout = InputSystem.TryLoadLayout("TestLayoutType");
 
-        Assert.That(layout.extendsLayout, Is.EqualTo("Pointer"));
+        Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
     }
 
     [Test]
@@ -758,6 +915,47 @@ partial class CoreTests
         Assert.That(layout.deviceMatcher.patterns,
             Has.Exactly(1)
                 .Matches<KeyValuePair<string, object>>(x => x.Key == "interface" && x.Value.Equals("TestInterface")));
+    }
+
+    // We consider layouts built by layout builders as being auto-generated. We want them to
+    // be overridable by layouts built specifically for a device so we boost the score of
+    // of type and JSON layouts such that they will override auto-generated layouts even if
+    // they match less perfectly according to their InputDeviceMatcher.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutBuilder_WithMatcher_StillGivesPrecedenceToTypeAndJSONLayouts()
+    {
+        var builder = new TestLayoutBuilder {layoutToLoad = "Mouse"};
+
+        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), name: "GeneratedLayout",
+            matches: new InputDeviceMatcher()
+                .WithInterface("TestInterface")
+                .WithProduct("TestProduct")
+                .WithManufacturer("TestManufacturer"));
+
+        const string json = @"
+            {
+                ""name"" : ""ManualLayout"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""product"" : ""TestProduct"",
+                    ""manufacturer"" : ""TestManufacturer""
+                }
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        // This should pick ManualLayout and not GeneratedLayout.
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct",
+            manufacturer = "TestManufacturer",
+        });
+
+        Assert.That(device, Is.TypeOf<Gamepad>());
+        Assert.That(device.layout, Is.EqualTo("ManualLayout"));
     }
 
     // Want to ensure that if a state struct declares an "int" field, for example, and then
@@ -1036,7 +1234,7 @@ partial class CoreTests
         Assert.That(layout.name.ToString(), Is.EqualTo("MyLayout"));
         Assert.That(layout.type, Is.SameAs(typeof(Gamepad)));
         Assert.That(layout.stateFormat, Is.EqualTo(new FourCC("CUST")));
-        Assert.That(layout.extendsLayout, Is.EqualTo("Pointer"));
+        Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
         Assert.That(layout.controls, Has.Count.EqualTo(1));
         Assert.That(layout.controls[0].name.ToString(), Is.EqualTo("button"));
         Assert.That(layout.controls[0].layout.ToString(), Is.EqualTo("Button"));
@@ -1571,13 +1769,6 @@ partial class CoreTests
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Layouts")]
-    public void TODO_Layouts_RegisteringLayout_RecreatesDevicesForWhichItIsABetterLayout()
-    {
         Assert.Fail();
     }
 }

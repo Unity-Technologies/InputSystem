@@ -19,7 +19,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
                     .WithInterface("Xbox"));
 #endif
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             // XInput controllers on Windows.
             // State layout is XINPUT_GAMEPAD.
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx

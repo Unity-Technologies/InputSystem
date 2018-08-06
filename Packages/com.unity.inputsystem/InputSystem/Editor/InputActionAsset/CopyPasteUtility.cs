@@ -7,7 +7,7 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class CopyPasteUtility
+    internal class CopyPasteUtility
     {
         const string kInputAssetMarker = "INPUTASSET\n";
         InputActionListTreeView m_TreeView;

@@ -191,7 +191,7 @@ namespace UnityEngine.Experimental.Input
         private InputDevice m_Device;
 
         // We construct layouts lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construt the same Button layout
+        // set up hierarchies so that we don't re-construct the same Button layout
         // 256 times for a keyboard.
         private InputControlLayout.Cache m_LayoutCache;
 
@@ -222,7 +222,9 @@ namespace UnityEngine.Experimental.Input
             InputControl control;
 
             // If we have an existing control, see whether it's usable.
-            if (existingControl != null && existingControl.layout == layout.name && existingControl.GetType() == layout.type)
+            // NOTE: We allow the layout to change to a different layout as long as the new layout uses
+            //       the same type.
+            if (existingControl != null && existingControl.GetType() == layout.type)
             {
                 control = existingControl;
 

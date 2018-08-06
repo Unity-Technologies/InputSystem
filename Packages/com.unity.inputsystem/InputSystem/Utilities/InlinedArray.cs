@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Utilities
     /// array.
     /// </summary>
     /// <typeparam name="TValue">Element type for the array.</typeparam>
-    internal struct InlinedArray<TValue>
+    internal struct InlinedArray<TValue> : IEnumerable<TValue>
     {
         // We inline the first value so if there's only one, there's
         // no additional allocation. If more are added, we allocate an array.
@@ -110,6 +111,18 @@ namespace UnityEngine.Experimental.Input.Utilities
         public TValue[] ToArray()
         {
             return ArrayHelpers.Join(firstValue, additionalValues);
+        }
+
+        public TOther[] ToArray<TOther>(Func<TValue, TOther> mapFunction)
+        {
+            if (length == 0)
+                return null;
+
+            var result = new TOther[length];
+            for (var i = 0; i < length; ++i)
+                result[i] = mapFunction(this[i]);
+
+            return result;
         }
 
         public int IndexOf(TValue value)
@@ -284,6 +297,49 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             RemoveAtByMovingTailWithCapacity(index);
             return true;
+        }
+
+        public IEnumerator<TValue> GetEnumerator()
+        {
+            return new Enumerator { array = this, index = -1 };
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        private struct Enumerator : IEnumerator<TValue>
+        {
+            public InlinedArray<TValue> array;
+            public int index;
+
+            public bool MoveNext()
+            {
+                if (index >= array.length)
+                    return false;
+                ++index;
+                return index < array.length;
+            }
+
+            public void Reset()
+            {
+                index = -1;
+            }
+
+            public TValue Current
+            {
+                get { return array[index]; }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return Current; }
+            }
+
+            public void Dispose()
+            {
+            }
         }
     }
 }

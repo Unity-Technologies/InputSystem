@@ -2749,4 +2749,14 @@ partial class CoreTests
 
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanSetPollingFrequency()
+    {
+        InputSystem.pollingFrequency = 120;
+
+        Assert.That(testRuntime.pollingFrequency, Is.EqualTo(120).Within(0.000001));
+        Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
+    }
 }

@@ -5,7 +5,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class InputBindingPropertiesView
+    internal class InputBindingPropertiesView
     {
         static class Styles
         {
@@ -40,20 +40,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
         SerializedProperty m_BindingProperty;
         Action m_ReloadTree;
-        TreeViewState m_TreeViewState;
+        ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
+        ////        selected by the path property
+        TreeViewState m_ControlPickerTreeViewState;
         bool m_GeneralFoldout = true;
         bool m_InteractionsFoldout = true;
         bool m_ProcessorsFoldout = true;
 
-        GUIContent m_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
-        GUIContent m_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
-        GUIContent m_GeneralContent = EditorGUIUtility.TrTextContent("General");
-        GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        bool m_ManualEditMode;
+        static GUIContent s_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
+        static GUIContent s_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
+        static GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
+        static GUIContent s_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
 
-        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, ref TreeViewState treeViewState)
+        bool m_ManualPathEditMode;
+
+        public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, TreeViewState controlPickerTreeViewState)
         {
-            m_TreeViewState = treeViewState;
+            m_ControlPickerTreeViewState = controlPickerTreeViewState;
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
@@ -78,37 +81,25 @@ namespace UnityEngine.Experimental.Input.Editor
 
             EditorGUILayout.BeginVertical();
 
-            m_GeneralFoldout = DrawFoldout(m_GeneralContent, m_GeneralFoldout);
+            m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
             if (m_GeneralFoldout)
             {
                 EditorGUI.indentLevel++;
 
-                EditorGUILayout.BeginHorizontal();
-
-                var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
-                var labelRect = lineRect;
-                labelRect.width = 60;
-                EditorGUI.LabelField(labelRect, m_BindingGUI);
-                lineRect.x += 65;
-                lineRect.width -= 65;
-
-                var btnRect = lineRect;
-                var editBtn = lineRect;
-                btnRect.width -= 20;
-                editBtn.x += btnRect.width;
-                editBtn.width = 20;
-                editBtn.height = 15;
-
                 var pathProperty = m_BindingProperty.FindPropertyRelative("path");
-                DrawBindingField(btnRect, editBtn, pathProperty);
+                DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
+                    s =>
+                    {
+                        m_ManualPathEditMode = false;
+                        OnBindingModified(s);
+                    });
 
-                EditorGUILayout.EndHorizontal();
                 EditorGUI.indentLevel--;
             }
 
             EditorGUILayout.Space();
-            m_InteractionsFoldout = DrawFoldout(m_InteractionsContent, m_InteractionsFoldout);
+            m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
 
             if (m_InteractionsFoldout)
             {
@@ -118,7 +109,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             EditorGUILayout.Space();
-            m_ProcessorsFoldout = DrawFoldout(m_ProcessorsContent, m_ProcessorsFoldout);
+            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
 
             if (m_ProcessorsFoldout)
             {
@@ -132,61 +123,78 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndVertical();
         }
 
-        void DrawBindingField(Rect rect, Rect editBtn, SerializedProperty pathProperty)
+        ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
+        internal static void DrawBindingGUI(SerializedProperty pathProperty, ref bool manualPathEditMode, TreeViewState pickerTreeViewState, Action<SerializedProperty> onModified)
         {
-            var path = pathProperty.stringValue;
+            EditorGUILayout.BeginHorizontal();
 
-            if (m_ManualEditMode || string.IsNullOrEmpty(BindingTreeItem.ParseName(path)))
+            var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
+            var labelRect = lineRect;
+            labelRect.width = 60;
+            EditorGUI.LabelField(labelRect, s_BindingGUI);
+            lineRect.x += 65;
+            lineRect.width -= 65;
+
+            var btnRect = lineRect;
+            var editBtn = lineRect;
+            btnRect.width -= 20;
+            editBtn.x += btnRect.width;
+            editBtn.width = 20;
+            editBtn.height = 15;
+
+            var path = pathProperty.stringValue;
+            ////TODO: this should be cached; generates needless GC churn
+            var displayName = InputControlPath.ToHumanReadableString(path);
+
+            if (manualPathEditMode || string.IsNullOrEmpty(displayName))
             {
                 EditorGUI.BeginChangeCheck();
-                path = EditorGUI.DelayedTextField(rect, path);
+                path = EditorGUI.DelayedTextField(btnRect, path);
                 if (EditorGUI.EndChangeCheck())
                 {
                     pathProperty.stringValue = path;
-                    OnBindingModified(pathProperty);
+                    onModified(pathProperty);
                 }
                 if (GUI.Button(editBtn, "˅"))
                 {
-                    rect.x += editBtn.width;
-                    ShowInputControlPicker(rect, pathProperty);
+                    btnRect.x += editBtn.width;
+                    ShowInputControlPicker(btnRect, pathProperty, pickerTreeViewState, onModified);
                 }
             }
             else
             {
-                var parsedPath = BindingTreeItem.ParseName(path);
-                if (EditorGUI.DropdownButton(rect, new GUIContent(parsedPath), FocusType.Keyboard))
+                if (EditorGUI.DropdownButton(btnRect, new GUIContent(displayName), FocusType.Keyboard))
                 {
-                    ShowInputControlPicker(rect, pathProperty);
+                    ShowInputControlPicker(btnRect, pathProperty, pickerTreeViewState, onModified);
                 }
                 if (GUI.Button(editBtn, "..."))
                 {
-                    m_ManualEditMode = true;
+                    manualPathEditMode = true;
                 }
             }
+
+            EditorGUILayout.EndHorizontal();
         }
 
-        void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty)
+        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+            Action<SerializedProperty> onPickCallback)
         {
-            var w = new InputControlPicker(pathProperty, ref m_TreeViewState)
+            var w = new InputControlPicker(pathProperty, pickerTreeViewState)
             {
-                onPickCallback = s =>
-                {
-                    m_ManualEditMode = false;
-                    OnBindingModified(s);
-                }
+                onPickCallback = onPickCallback
             };
             w.width = rect.width;
             PopupWindow.Show(rect, w);
         }
 
-        bool DrawFoldout(GUIContent content, bool folded)
+        private static bool DrawFoldout(GUIContent content, bool folded)
         {
-            var bgRect = GUILayoutUtility.GetRect(m_ProcessorsContent, Styles.foldoutBackgroundStyle);
+            var bgRect = GUILayoutUtility.GetRect(s_ProcessorsContent, Styles.foldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
             return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
         }
 
-        void OnBindingModified(SerializedProperty obj)
+        private void OnBindingModified(SerializedProperty obj)
         {
             var importerEditor = InputActionImporterEditor.FindFor(m_BindingProperty.serializedObject);
             if (importerEditor != null)

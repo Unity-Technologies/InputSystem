@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </summary>
     /// <remarks>
     /// The runtime owns the input event queue, reports device discoveries, and runs
-    /// periodic updates that out events from the queue. Updates can also be manually
+    /// periodic updates that flushes out events from the queue. Updates can also be manually
     /// triggered by calling <see cref="Update"/>.
     /// </remarks>
     public unsafe interface IInputRuntime
@@ -100,6 +100,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
+        /// <remarks>
+        /// The frequency is in Hz. A value of 60 means that polled devices get sampled
+        /// 60 times a second.
+        /// </remarks>
         float pollingFrequency { set; }
 
         /// <summary>

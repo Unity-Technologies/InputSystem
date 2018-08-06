@@ -1,6 +1,7 @@
-////REVIEW: this should not have to cast to InputControl<Vector2>; interactions should have the same
-////        ReadValue<TValue>() API available to them that action callbacks do; this way this interaction
-////        here, for example, will also work with composites
+////TODO: add ability to filter out "bounce"; when user lets go of stick, on some gamepads the stick
+////      will bounce beyond the deadzone in the opposite direction; in many games this is noticeable with
+////      problems of the characters ending up facing the wrong way and such; we should be able to filter
+////      bounces out automatically by tracing value histories
 
 namespace UnityEngine.Experimental.Input.Interactions
 {
@@ -12,12 +13,8 @@ namespace UnityEngine.Experimental.Input.Interactions
     {
         public void Process(ref InputInteractionContext context)
         {
-            var stick = context.control as InputControl<Vector2>;
-            if (stick == null)
-                return;
-
-            var value = stick.ReadValue();
-            if (value.x > 0 && value.y > 0)
+            var value = context.ReadValue<Vector2>();
+            if (value.sqrMagnitude > 0)
             {
                 if (!context.isStarted)
                     context.Started();
