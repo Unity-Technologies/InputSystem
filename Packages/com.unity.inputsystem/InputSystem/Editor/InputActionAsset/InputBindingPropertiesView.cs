@@ -157,7 +157,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ////TODO: this should be cached; generates needless GC churn
             var displayName = InputControlPath.ToHumanReadableString(path);
 
-            if (manualPathEditMode || string.IsNullOrEmpty(displayName))
+            if (manualPathEditMode || (!string.IsNullOrEmpty(path) && string.IsNullOrEmpty(displayName)))
             {
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(btnRect, path);

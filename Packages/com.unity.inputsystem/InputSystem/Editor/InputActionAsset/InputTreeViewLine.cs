@@ -302,10 +302,20 @@ namespace UnityEngine.Experimental.Input.Editor
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             var action = elementProperty.FindPropertyRelative("action").stringValue;
             var name = elementProperty.FindPropertyRelative("name").stringValue;
+            
+            var flags = (InputBinding.Flags) elementProperty.FindPropertyRelative("flags").intValue;
+            isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
+            isPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) == InputBinding.Flags.PartOfComposite;
+                        
             displayName = InputControlPath.ToHumanReadableString(path);
             id = GetId(actionMapName, index, action, path, name);
             depth = 2;
+            
         }
+
+        public bool isComposite { get; private set; }
+        
+        public bool isPartOfComposite { get; private set; }
 
         public override bool isDraggable
         {
