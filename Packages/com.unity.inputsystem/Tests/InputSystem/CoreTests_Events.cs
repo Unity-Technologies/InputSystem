@@ -57,6 +57,69 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_UseCurrentTimeByDefault()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        testRuntime.currentTime = 1234;
+
+        double? receivedTime = null;
+        InputSystem.onEvent +=
+            eventPtr => { receivedTime = eventPtr.time; };
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedTime.HasValue);
+        Assert.That(receivedTime.Value, Is.EqualTo(1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanQueryCurrentEventTime()
+    {
+        testRuntime.currentTime = 1234;
+        Assert.That(InputSystem.currentTime, Is.EqualTo(1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanRelateEventTimeToRealtimeSinceStartup()
+    {
+        testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1000;
+        Assert.That(InputSystem.ConvertInputTimeToRealtimeSinceStartup(1234), Is.EqualTo(234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2);
+        InputSystem.Update();
+
+        Assert.That(gamepad.lastUpdateTime, Is.Not.EqualTo(2).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_AreTimeslicedAcrossFixedUpdates()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 2);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3);
+
+        //testRuntime.
+        //InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Events")]
     public unsafe void Events_CanInitializeStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();

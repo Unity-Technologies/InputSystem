@@ -161,6 +161,7 @@ namespace UnityEngine.Experimental.Input
         public Action onShutdown { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
+        public double currentTimeOffsetToRealtimeSinceStartup { get; set; }
         public InputUpdateType updateMask { get; set; }
         public int frameCount { get; set; }
 

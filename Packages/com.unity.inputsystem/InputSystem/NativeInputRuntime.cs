@@ -114,8 +114,30 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double currentTime
         {
-            ////FIXME: this isn't correct; need a dedicate API entry point in NativeInputSystem
-            get { return Time.realtimeSinceStartup; }
+            get
+            {
+                #if UNITY_2018_3_OR_NEWER
+                return NativeInputSystem.currentTime;
+                #elif UNITY_EDITOR
+                return EditorApplication.timeSinceStartup;
+                #else
+                // This is wrong but we probably won't fix it on 2018.2.
+                return Time.realtimeSinceStartup;
+                #endif
+            }
+        }
+
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get
+            {
+                #if UNITY_2018_3_OR_NEWER
+                return NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
+                #else
+                // This is wrong but we probably won't fix it on 2018.2.
+                return 0;
+                #endif
+            }
         }
 
         public InputUpdateType updateMask
