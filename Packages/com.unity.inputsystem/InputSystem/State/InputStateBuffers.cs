@@ -90,6 +90,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [Serializable]
         internal unsafe struct DoubleBuffers
         {
+            ////REVIEW: store timestamps along with each device-to-buffer mapping?
             // An array of pointers that maps devices to their respective
             // front and back buffer. Mapping is [deviceIndex*2] is front
             // buffer and [deviceIndex*2+1] is back buffer. Each device

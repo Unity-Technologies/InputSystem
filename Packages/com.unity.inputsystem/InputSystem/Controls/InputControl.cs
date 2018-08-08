@@ -280,16 +280,15 @@ namespace UnityEngine.Experimental.Input
 
         protected internal InputStateBlock m_StateBlock;
 
+        ////REVIEW: shouldn't these sit on the device?
         protected internal IntPtr currentStatePtr
         {
             get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
         }
-
         protected internal IntPtr previousStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
         }
-
         protected internal IntPtr defaultStatePtr
         {
             get { return InputStateBuffers.s_DefaultStateBuffer; }

@@ -681,8 +681,10 @@ partial class CoreTests
     {
         var map = new InputActionMap("test");
 
-        map.AddAction(name: "action1", binding: "/gamepad/leftStick").AppendBinding("/gamepad/rightStick")
-            .WithGroup("group");
+        map.AddAction(name: "action1", binding: "/gamepad/leftStick")
+            .AppendBinding("/gamepad/rightStick")
+            .WithGroup("group")
+            .WithProcessor("deadzone");
         map.AddAction(name: "action2", binding: "/gamepad/buttonSouth", interactions: "tap,slowTap(duration=0.1)");
 
         var json = map.ToJson();
@@ -697,9 +699,12 @@ partial class CoreTests
         Assert.That(maps[0].actions[1].bindings, Has.Count.EqualTo(1));
         Assert.That(maps[0].actions[0].bindings[0].groups, Is.Null);
         Assert.That(maps[0].actions[0].bindings[1].groups, Is.EqualTo("group"));
+        Assert.That(maps[0].actions[0].bindings[0].processors, Is.Null);
+        Assert.That(maps[0].actions[0].bindings[1].processors, Is.EqualTo("deadzone"));
         Assert.That(maps[0].actions[0].bindings[0].interactions, Is.Null);
         Assert.That(maps[0].actions[0].bindings[1].interactions, Is.Null);
         Assert.That(maps[0].actions[1].bindings[0].groups, Is.Null);
+        Assert.That(maps[0].actions[1].bindings[0].processors, Is.Null);
         Assert.That(maps[0].actions[1].bindings[0].interactions, Is.EqualTo("tap,slowTap(duration=0.1)"));
         Assert.That(maps[0].actions[0].actionMap, Is.SameAs(maps[0]));
         Assert.That(maps[0].actions[1].actionMap, Is.SameAs(maps[0]));

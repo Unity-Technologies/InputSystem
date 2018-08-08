@@ -22,12 +22,14 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
+
 ////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
 ////        (and allow text input events that have no associated target device? this way we don't need a keyboard to get text input)
 
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
-////TODO: release native alloations when exiting
+////TODO: release native allocations when exiting
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
 
@@ -480,18 +482,18 @@ namespace UnityEngine.Experimental.Input
         /// queries and sends off as <see cref="InputEvent">input events</see>.
         ///
         /// In the latter case, where input has to be explicitly polled from the system, the input runtime
-        /// will periodically sample the state of input devices and send it off a input events. Wherever
+        /// will periodically sample the state of input devices and send it off as input events. Wherever
         /// possible, this happens in the background at a fixed frequency. The <see cref="pollingFrequency"/>
         /// property controls the rate at which the sampling happens.
         ///
-        /// The unit is in Hertz. A value of 120, for example, means that devices are sampled 120 times
+        /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
         /// per second.
         ///
         /// The default polling frequency is 60 Hz.
         ///
         /// For devices that are polled, the frequency setting will directly translate to changes in the
-        /// <see cref="InputEvent.time">timestamp</see> patterns. At 60 Hz, for example, timestamps will
-        /// be spaced at roughly 1/60th of a second apart.
+        /// <see cref="InputEvent.time">timestamp</see> patterns. At 60 Hz, for example, timestamps for
+        /// a specific, polled device will be spaced at roughly 1/60th of a second apart.
         ///
         /// Note that it depends on the platform which devices are polled (if any). On Win32, for example,
         /// only XInput gamepads are polled.
@@ -583,7 +585,9 @@ namespace UnityEngine.Experimental.Input
             s_Manager.EnableOrDisableDevice(device, false);
         }
 
-        public static void ResetState()
+        ////REVIEW: should this be a device-level reset along with sending the reset IOCTL
+        ////        or a control-level reset on just the memory state?
+        public static void ResetDevice(InputDevice device)
         {
             throw new NotImplementedException();
         }

@@ -13,6 +13,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
 
+////TODO: test that device re-creation doesn't lose flags and such
+
 partial class CoreTests
 {
     [Test]
@@ -2758,5 +2760,29 @@ partial class CoreTests
 
         Assert.That(testRuntime.pollingFrequency, Is.EqualTo(120).Within(0.000001));
         Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_PollingFrequencyIs60HzByDefault()
+    {
+        Assert.That(InputSystem.pollingFrequency, Is.EqualTo(60).Within(0.000001));
+        // Make sure InputManager passed the frequency on to the runtime.
+        Assert.That(testRuntime.pollingFrequency, Is.EqualTo(60).Within(0.000001));
+    }
+
+    //This could be the first step towards being able to simulate input well.
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanCreateVirtualDevices()
+    {
+        //layout has one or more binding paths on controls instead of associated memory
+        //sets up state monitors
+        //virtual device is of a device type determined by base template (e.g. Gamepad)
+        //can associate additional processing logic with controls
+        //state changes for virtual devices are accumulated as separate buffer of events that is flushed out in a post-step
+        //performed as a loop so virtual devices can feed into other virtual devices
+        //virtual devices are marked with flag
+        Assert.Fail();
     }
 }
