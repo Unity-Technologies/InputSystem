@@ -75,7 +75,7 @@ partial class CoreTests
             deviceClass = "Keyboard",
             interfaceName = "TestB"
         }.ToJson());
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription // Unrecognized; won't result in device.
         {
             product = "TestProductC",
             manufacturer = "TestManufacturerC",

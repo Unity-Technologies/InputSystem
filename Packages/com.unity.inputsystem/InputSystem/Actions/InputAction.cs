@@ -497,59 +497,11 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            public object composite
-            {
-                get
-                {
-                    if (m_State == null)
-                        return null;
-                    var bindingStates = m_State.bindingStates;
-                    if (!bindingStates[m_BindingIndex].isPartOfComposite)
-                        return null;
-                    var compositeIndex = bindingStates[m_BindingIndex].compositeIndex;
-                    Debug.Assert(compositeIndex != InputActionMapState.kInvalidIndex);
-                    return m_State.composites[compositeIndex];
-                }
-            }
-
             public TValue ReadValue<TValue>()
             {
-                ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
-                ////TODO: this needs to be shared with InputActionManager
-
                 var value = default(TValue);
-                if (m_State == null)
-                    return value;
-
-                // In the case of a composite, this will be null.
-                InputControl<TValue> controlOfType = null;
-
-                // If the binding that triggered the action is part of a composite, let
-                // the composite determine the value we return.
-                var compositeObject = composite;
-                if (compositeObject != null)
-                {
-                    var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
-                    var context = new InputBindingCompositeContext();
-                    value = compositeOfType.ReadValue(ref context);
-                }
-                else
-                {
-                    controlOfType = (InputControl<TValue>)control;
-                    value = controlOfType.ReadValue();
-                }
-
-                // Run value through processors, if any.
-                var bindingStates = m_State.bindingStates;
-                var processorCount = bindingStates[m_BindingIndex].processorCount;
-                if (processorCount > 0)
-                {
-                    var processorStartIndex = bindingStates[m_BindingIndex].processorStartIndex;
-                    var processors = m_State.processors;
-                    for (var i = 0; i < processorCount; ++i)
-                        value = ((IInputControlProcessor<TValue>)processors[processorStartIndex + i]).Process(value, controlOfType);
-                }
-
+                if (m_State != null)
+                    value = m_State.ReadValue<TValue>(m_BindingIndex, m_ControlIndex);
                 return value;
             }
 

@@ -114,6 +114,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public double currentTime
         {
+            ////FIXME: this isn't correct; need a dedicate API entry point in NativeInputSystem
             get { return Time.realtimeSinceStartup; }
         }
 

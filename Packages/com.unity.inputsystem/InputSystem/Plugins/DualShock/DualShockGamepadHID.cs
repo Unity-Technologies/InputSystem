@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
@@ -36,11 +36,11 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel
         [FieldOffset(3)] public byte rightStickX;
         [FieldOffset(4)] public byte rightStickY;
 
-        [InputControl(name = "dpad", layout = "Dpad", sizeInBits = 4)]
-        [InputControl(name = "dpad/up", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/right", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/down", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
-        [InputControl(name = "dpad/left", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4, defaultState = 8)]
+        [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 0, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 0, sizeInBits = 4)]
         [InputControl(name = "buttonWest", displayName = "Square", bit = 4)]
         [InputControl(name = "buttonSouth", displayName = "Cross", bit = 5)]
         [InputControl(name = "buttonEast", displayName = "Circle", bit = 6)]
@@ -183,6 +183,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 
             var command = DualShockHIDOutputReport.Create();
             command.SetMotorSpeeds(0f, 0f);
+            ////REVIEW: when pausing&resuming haptics, you probably don't want the lightbar color to change
             if (m_LightBarColor.HasValue)
                 command.SetColor(Color.black);
 
@@ -543,4 +544,4 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
 //     Feature (Data,Var,Abs,NWrp,Lin,Pref,NNul,NVol,Bit) B1 02
 // End Collection C0
 
-#endif // UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
+#endif // UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA

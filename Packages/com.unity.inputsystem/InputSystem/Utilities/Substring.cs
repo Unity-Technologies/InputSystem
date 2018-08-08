@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 
 namespace UnityEngine.Experimental.Input.Utilities
 {
@@ -9,6 +8,11 @@ namespace UnityEngine.Experimental.Input.Utilities
         internal string m_String;
         internal int m_Index;
         internal int m_Length;
+
+        public bool isEmpty
+        {
+            get { return m_Length == 0; }
+        }
 
         public Substring(string str)
         {

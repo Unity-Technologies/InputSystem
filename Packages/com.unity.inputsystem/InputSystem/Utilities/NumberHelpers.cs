@@ -1,3 +1,5 @@
+using System;
+
 namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class NumberHelpers
@@ -18,6 +20,11 @@ namespace UnityEngine.Experimental.Input.Utilities
                 return number;
 
             return number + alignment - remainder;
+        }
+
+        public static bool Approximately(double a, double b)
+        {
+            return Math.Abs(b - a) <  Math.Max(1E-06 * Math.Max(Math.Abs(a), Math.Abs(b)), double.Epsilon * 8);
         }
     }
 }

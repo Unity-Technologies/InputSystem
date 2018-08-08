@@ -30,15 +30,15 @@ namespace UnityEngine.Experimental.Input.Editor
     public class InputControlPicker : PopupWindowContent
     {
         public Action<SerializedProperty> onPickCallback;
-
+        public float width;
         SearchField m_SearchField;
 
-        public InputControlPicker(SerializedProperty pathProperty)
+        public InputControlPicker(SerializedProperty pathProperty, TreeViewState treeViewState = null)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException("pathProperty");
             m_PathProperty = pathProperty;
-            m_PathTreeState = new TreeViewState();
+            m_PathTreeState = treeViewState ?? new TreeViewState();
 
             m_SearchField = new SearchField();
             m_SearchField.SetFocus();
@@ -50,11 +50,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_PathTree.SetFocusAndEnsureSelectedItem();
         }
 
-        public InputControlPicker(SerializedProperty pathProperty, ref TreeViewState treeViewState) : this(pathProperty)
+        public override Vector2 GetWindowSize()
         {
-            if (treeViewState == null)
-                treeViewState = new TreeViewState();
-            m_PathTreeState = treeViewState;
+            var s = base.GetWindowSize();
+            if (width > s.x)
+                s.x = width;
+            return s;
         }
 
         public override void OnGUI(Rect rect)
@@ -77,6 +78,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Controls", GUILayout.MinWidth(75), GUILayout.ExpandWidth(false));
+            GUILayout.FlexibleSpace();
             var searchRect = GUILayoutUtility.GetRect(GUIContent.none, Styles.toolbarSearchField, GUILayout.MinWidth(70));
             m_PathTree.searchString = m_SearchField.OnToolbarGUI(searchRect, m_PathTree.searchString);
             GUILayout.EndHorizontal();

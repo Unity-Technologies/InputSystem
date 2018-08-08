@@ -191,7 +191,7 @@ namespace UnityEngine.Experimental.Input
         private InputDevice m_Device;
 
         // We construct layouts lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construt the same Button layout
+        // set up hierarchies so that we don't re-construct the same Button layout
         // 256 times for a keyboard.
         private InputControlLayout.Cache m_LayoutCache;
 
@@ -222,7 +222,9 @@ namespace UnityEngine.Experimental.Input
             InputControl control;
 
             // If we have an existing control, see whether it's usable.
-            if (existingControl != null && existingControl.layout == layout.name && existingControl.GetType() == layout.type)
+            // NOTE: We allow the layout to change to a different layout as long as the new layout uses
+            //       the same type.
+            if (existingControl != null && existingControl.GetType() == layout.type)
             {
                 control = existingControl;
 
@@ -276,7 +278,7 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 if (layout.m_UpdateBeforeRender == true)
-                    m_Device.m_Flags |= InputDevice.Flags.UpdateBeforeRender;
+                    m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.UpdateBeforeRender;
             }
             else if (parent == null)
             {
@@ -559,11 +561,14 @@ namespace UnityEngine.Experimental.Input
             m_Device.m_ChildrenForEachControl[childIndex] = control;
             ++childIndex;
 
-            // Set display name.
+            // Set flags and misc things.
             control.m_DisplayNameFromLayout = controlItem.displayName;
+            control.noisy = controlItem.isNoisy;
 
-            // Set flags.
-            control.m_IsNoisy = controlItem.isNoisy;
+            // Set default value.
+            control.m_DefaultValue = controlItem.defaultState;
+            if (!control.m_DefaultValue.isEmpty)
+                m_Device.hasControlsWithDefaultState = true;
 
             // Pass state block config on to control.
             var usesStateFromOtherControl = !string.IsNullOrEmpty(controlItem.useStateFrom);
@@ -704,6 +709,11 @@ namespace UnityEngine.Experimental.Input
                     SetParameters(child, controlItem.parameters);
                 if (!string.IsNullOrEmpty(controlItem.displayName))
                     child.m_DisplayNameFromLayout = controlItem.displayName;
+                if (!controlItem.defaultState.isEmpty)
+                {
+                    child.m_DefaultValue = controlItem.defaultState;
+                    m_Device.hasControlsWithDefaultState = true;
+                }
 
                 ////TODO: other modifications
             }
