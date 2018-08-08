@@ -89,7 +89,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
-
+            
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
             {
                 var action = actionMap.actions[i];

@@ -12,6 +12,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
         InputActionComponentListTreeView m_TreeView;
 
+        public InputActionDrawer()
+        {
+            Undo.undoRedoPerformed += OnUndoRedoCallback;
+        }
+
+        void OnUndoRedoCallback()
+        {
+            if (m_TreeView == null)
+            {
+                //TODO how to unregister it in a better way?
+                Undo.undoRedoPerformed -= OnUndoRedoCallback;
+                return;
+            }
+            // Force tree rebuild
+            m_TreeView = null;
+        }
+
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             var height = (float)kFoldoutHeight;
@@ -61,8 +78,51 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 m_TreeView.OnGUI(position);
+                
+                if (Event.current.type == EventType.ValidateCommand)
+                {
+                    if (Event.current.commandName == "Delete")
+                    {
+                        Event.current.Use();
+                    }
+                }
+                if (Event.current.type == EventType.ExecuteCommand)
+                {
+                    if (Event.current.commandName == "Delete")
+                    {
+                        DeleteSelectedRows(property);
+                        Event.current.Use();
+                    }
+                }
             }
             EditorGUI.EndProperty();
+        }
+        
+        void DeleteSelectedRows(SerializedProperty actionProperty)
+        {
+            var row = m_TreeView.GetSelectedRow();
+            var rowType = row.GetType();
+
+            // Remove composite bindings
+            if(rowType == typeof(CompositeGroupInspectorTreeItem))
+            {
+                for (var i = row.children.Count - 1; i >= 0; i--)
+                {
+                    var composite = (CompositeInspectorTreeItem)row.children[i];
+                    
+                    InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index);
+                }
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
+            }
+
+            // Remove bindings
+            if(rowType == typeof(BindingInspectorTreeItem))
+            {
+                InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
+            }
+
+            m_TreeView.SetSelection(new List<int>());
+            m_TreeView.Reload();
         }
 
         void OpenAddMenu(SerializedProperty property)

@@ -95,6 +95,11 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SerializedObject = new SerializedObject(m_ReferencedObject);
             InitializeTrees();
         }
+        
+        public void OnDisable()
+        {
+            Undo.undoRedoPerformed -= OnUndoRedoCallback;
+        }
 
         void SetReferencedObject(Object referencedObject)
         {
@@ -139,7 +144,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
-                m_CopyPasteUtility = new CopyPasteUtility(this, m_TreeView, m_SerializedObject);
+                m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
                 if (m_PickerTreeViewState == null)
                     m_PickerTreeViewState = new TreeViewState();
                 LoadPropertiesForSelection();
@@ -150,6 +155,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
+            OnSelectionChanged();
             SaveChangesToAsset();
         }
 

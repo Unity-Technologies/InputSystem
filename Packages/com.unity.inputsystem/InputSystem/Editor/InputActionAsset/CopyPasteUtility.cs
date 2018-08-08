@@ -11,8 +11,8 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         const string k_InputAssetMarker = "INPUTASSET\n";
         InputActionListTreeView m_TreeView;
-        ActionInspectorWindow m_Window;
         SerializedObject m_SerializedObject;
+        Action m_Apply;
 
         GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
         GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
@@ -20,9 +20,9 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
         GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
 
-        public CopyPasteUtility(ActionInspectorWindow window, InputActionListTreeView tree, SerializedObject serializedObject)
+        public CopyPasteUtility(Action apply, InputActionListTreeView tree, SerializedObject serializedObject)
         {
-            m_Window = window;
+            m_Apply = apply;
             m_TreeView = tree;
             m_SerializedObject = serializedObject;
         }
@@ -115,9 +115,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (IsRowOfType<ActionMapTreeItem>(ref row))
                 {
+                    if(m_SerializedObject == null)
+                        throw new InvalidOperationException("Pasting action map is not a valid operation");
                     var map = JsonUtility.FromJson<InputActionMap>(row);
                     InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
-                    m_Window.Apply();
+                    m_Apply();
                     continue;
                 }
 
@@ -158,7 +160,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             break;
                         }
                     }
-                    m_Window.Apply();
+                    m_Apply();
 
                     continue;
                 }
@@ -176,7 +178,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
 
                     selectedRow.AppendBindingFromObject(binding);
-                    m_Window.Apply();
+                    m_Apply();
                     continue;
                 }
             }
@@ -260,7 +262,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 action.RemoveBinding(bindingRow.index);
             }
 
-
             // Remove actions
             foreach (var actionRow in FindRowsToDeleteOfType<ActionTreeItem>(rows))
             {
@@ -278,11 +279,13 @@ namespace UnityEngine.Experimental.Input.Editor
             //Remove action maps
             foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
             {
+                if(m_SerializedObject == null)
+                    throw new InvalidOperationException("Deleting action map is not a valid operation");
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
 
-            m_Window.Apply();
-            m_Window.OnSelectionChanged();
+            m_TreeView.SetSelection(new List<int>());
+            m_Apply();
         }
 
         IEnumerable<T> FindRowsToDeleteOfType<T>(InputTreeViewLine[] rows)

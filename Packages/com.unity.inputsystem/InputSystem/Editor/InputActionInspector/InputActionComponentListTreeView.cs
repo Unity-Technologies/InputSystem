@@ -11,7 +11,7 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         SerializedProperty m_ActionProperty;
         public Action<SerializedProperty> OnContextClick;
-
+        
         public static InputActionComponentListTreeView Create(SerializedProperty actionProperty)
         {
             var treeView = new InputActionComponentListTreeView(actionProperty);
@@ -20,6 +20,11 @@ namespace UnityEngine.Experimental.Input.Editor
             //treeView.foldoutOverride += OnFoldoutDraw;
             treeView.ExpandAll();
             return treeView;
+        }
+
+        protected override bool CanMultiSelect(TreeViewItem item)
+        {
+            return false;
         }
 
         static bool OnFoldoutDraw(Rect position, bool expandedstate, GUIStyle style)
@@ -110,6 +115,14 @@ namespace UnityEngine.Experimental.Input.Editor
         protected override void ContextClicked()
         {
             OnContextClick(m_ActionProperty);
+        }
+
+        public InputTreeViewLine GetSelectedRow()
+        {
+            if (!HasSelection())
+                return null;
+
+            return (InputTreeViewLine)FindItem(GetSelection().First(), rootItem);
         }
     }
 }
