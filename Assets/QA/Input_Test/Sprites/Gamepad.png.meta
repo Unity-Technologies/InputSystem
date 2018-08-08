@@ -5,6 +5,7 @@ TextureImporter:
     21300000: Gamepad_Dpad
     21300002: Gamepad_Stick
     21300004: Gamepad_Button
+    21300006: Square
   externalObjects: {}
   serializedVersion: 6
   mipmaps:
@@ -45,7 +46,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -141,10 +142,10 @@ TextureImporter:
       name: Gamepad_Button
       rect:
         serializedVersion: 2
-        x: 226
-        y: 80
+        x: 231
+        y: 37
         width: 72
-        height: 42
+        height: 43
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -153,6 +154,26 @@ TextureImporter:
       tessellationDetail: 0
       bones: []
       spriteID: 62a62d2b9afd99e4b9b9914769f350b0
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Square
+      rect:
+        serializedVersion: 2
+        x: 241
+        y: 116
+        width: 42
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05a6db8ae08df90458497f544ecb5992
       vertices: []
       indices: 
       edges: []

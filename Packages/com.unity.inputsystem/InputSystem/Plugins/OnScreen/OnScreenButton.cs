@@ -1,6 +1,7 @@
 using UnityEngine.EventSystems;
 
 ////TODO: pressure support
+////TODO: custom icon for OnScreenButton component
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen
 {
@@ -8,6 +9,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
     /// A button that is visually represented on-screen and triggered by touch or other pointer
     /// input.
     /// </summary>
+    [AddComponentMenu("Input/On-Screen Button")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
         /// <summary>

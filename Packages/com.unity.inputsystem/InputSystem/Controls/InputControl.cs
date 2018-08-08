@@ -10,8 +10,6 @@ using Unity.Collections.LowLevel.Unsafe;
 
 ////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
 
-////REVIEW: ReadValue() fits nicely into the API but the removal of the .value property makes debugging harder
-
 ////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
 ////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
 ////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
@@ -200,7 +198,14 @@ namespace UnityEngine.Experimental.Input
 
         public bool noisy
         {
-            get { return m_IsNoisy; }
+            get { return (m_ControlFlags & ControlFlags.IsNoisy) == ControlFlags.IsNoisy; }
+            internal set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsNoisy;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsNoisy;
+            }
         }
 
         public InputControl this[string path]
@@ -227,9 +232,20 @@ namespace UnityEngine.Experimental.Input
 
         // Current value as boxed object.
         // NOTE: Calling this will allocate.
-        public virtual object ReadValueAsObject()
+        public abstract object ReadValueAsObject();
+
+        public abstract object ReadDefaultValueAsObject();
+
+        public abstract void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value);
+
+        public void WriteValueFromObjectInto(InputEventPtr eventPtr, object value)
         {
-            return null;
+            var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            if (statePtr == IntPtr.Zero)
+                return;
+
+            var bufferSize = m_StateBlock.byteOffset + eventPtr.sizeInBytes;
+            WriteValueFromObjectInto(statePtr, bufferSize, value);
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -251,10 +267,10 @@ namespace UnityEngine.Experimental.Input
 
         protected void RefreshConfigurationIfNeeded()
         {
-            if (!m_ConfigUpToDate)
+            if (!isConfigUpToDate)
             {
                 RefreshConfiguration();
-                m_ConfigUpToDate = true;
+                isConfigUpToDate = true;
             }
         }
 
@@ -272,6 +288,11 @@ namespace UnityEngine.Experimental.Input
         protected internal IntPtr previousStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
+        }
+
+        protected internal IntPtr defaultStatePtr
+        {
+            get { return InputStateBuffers.s_DefaultStateBuffer; }
         }
 
         /// <summary>
@@ -308,8 +329,32 @@ namespace UnityEngine.Experimental.Input
         internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
         internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
         internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
-        internal bool m_ConfigUpToDate; // The device resets this when its configuration changes.
-        internal bool m_IsNoisy;
+        internal ControlFlags m_ControlFlags;
+        internal PrimitiveValueOrArray m_DefaultValue;
+
+        [Flags]
+        internal enum ControlFlags
+        {
+            ConfigUpToDate = 1 << 0,
+            IsNoisy = 1 << 1,
+        }
+
+        internal bool isConfigUpToDate
+        {
+            get { return (m_ControlFlags & ControlFlags.ConfigUpToDate) == ControlFlags.ConfigUpToDate; }
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.ConfigUpToDate;
+                else
+                    m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool hasDefaultValue
+        {
+            get { return !m_DefaultValue.isEmpty; }
+        }
 
         // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().
@@ -337,32 +382,60 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////TODO: pass state ptr *NOT* value ptr (it's confusing)
-        // We don't allow custom default values for state so all zeros indicates
-        // default states for us.
         // NOTE: The given argument should point directly to the value *not* to the
         //       base state to which the state block offset has to be added.
-        internal unsafe bool CheckStateIsAllZeros(IntPtr valuePtr = new IntPtr())
+        internal unsafe bool CheckStateIsAtDefault(IntPtr valuePtr = new IntPtr())
         {
+            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
+            ////        e.g. from HID input reports
+
+            var defaultPtr = new IntPtr((byte*)defaultStatePtr.ToPointer() + (int)m_StateBlock.byteOffset);
             if (valuePtr == IntPtr.Zero)
                 valuePtr = new IntPtr(currentStatePtr.ToInt64() + (int)m_StateBlock.byteOffset);
 
-            // Bitfield value.
-            if (m_StateBlock.sizeInBits % 8 != 0 || m_StateBlock.bitOffset != 0)
+            if (m_StateBlock.sizeInBits == 1)
             {
-                if (m_StateBlock.sizeInBits > 1)
-                    throw new NotImplementedException("multi-bit zero check");
-
-                return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) == false;
+                return MemoryHelpers.ReadSingleBit(valuePtr, m_StateBlock.bitOffset) ==
+                    MemoryHelpers.ReadSingleBit(defaultPtr, m_StateBlock.bitOffset);
             }
 
-            // Multi-byte value.
-            var ptr = (byte*)valuePtr;
-            var numBytes = m_StateBlock.alignedSizeInBytes;
-            for (var i = 0; i < numBytes; ++i, ++ptr)
-                if (*ptr != 0)
-                    return false;
+            return MemoryHelpers.MemCmpBitRegion(defaultPtr.ToPointer(), valuePtr.ToPointer(),
+                m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+        }
 
-            return true;
+        internal unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
+        {
+            if (!eventPtr.valid)
+                throw new ArgumentNullException("eventPtr");
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+
+            ////TODO: support delta events
+            if (eventPtr.IsA<DeltaStateEvent>())
+                throw new NotImplementedException("Read control value from delta state events");
+
+            var stateEvent = StateEvent.From(eventPtr);
+
+            // Make sure we have a state event compatible with our device. The event doesn't
+            // have to be specifically for our device (we don't require device IDs to match) but
+            // the formats have to match and the size must be within range of what we're trying
+            // to read.
+            var stateFormat = stateEvent->stateFormat;
+            if (stateEvent->stateFormat != device.m_StateBlock.format)
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
+                        path, stateFormat, device, device.m_StateBlock.format));
+
+            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
+            // We need to unsubtract those offsets here.
+            var deviceStateOffset = device.m_StateBlock.byteOffset;
+
+            var stateSizeInBytes = stateEvent->stateSizeInBytes;
+            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+                return IntPtr.Zero;
+
+            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }
 
         internal int ResolveDeviceIndex()
@@ -370,7 +443,7 @@ namespace UnityEngine.Experimental.Input
             var deviceIndex = m_Device.m_DeviceIndex;
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(string.Format(
-                        "Cannot query value of control '{0}' before '{1}' has been added to system!", path, device.name));
+                    "Cannot query value of control '{0}' before '{1}' has been added to system!", path, device.name));
             return deviceIndex;
         }
 
@@ -410,9 +483,37 @@ namespace UnityEngine.Experimental.Input
             return ReadValueFrom(previousStatePtr);
         }
 
+        public TValue ReadDefaultValue()
+        {
+            return ReadValueFrom(defaultStatePtr);
+        }
+
         public override object ReadValueAsObject()
         {
             return ReadValue();
+        }
+
+        public override object ReadDefaultValueAsObject()
+        {
+            return ReadDefaultValue();
+        }
+
+        public override void WriteValueFromObjectInto(IntPtr buffer, long bufferSize, object value)
+        {
+            if (buffer == IntPtr.Zero)
+                throw new ArgumentNullException("buffer");
+            if (value == null)
+                throw new ArgumentNullException("value");
+            if (bufferSize < (m_StateBlock.byteOffset + m_StateBlock.alignedSizeInBytes))
+                throw new ArgumentException(
+                    string.Format("Buffer size {0} is too small for control at offset {1} with length {2}", bufferSize,
+                        m_StateBlock.byteOffset, m_StateBlock.alignedSizeInBytes), "bufferSize");
+
+            // If value is not of expected type, try to convert.
+            if (!(value is TValue))
+                value = Convert.ChangeType(value, typeof(TValue));
+
+            WriteRawValueInto(buffer, (TValue)value);
         }
 
         // Read a control value directly from a state event.
@@ -423,8 +524,10 @@ namespace UnityEngine.Experimental.Input
         public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
-            var value = ReadRawValueFrom(statePtr);
+            if (statePtr == IntPtr.Zero)
+                return ReadDefaultValue();
 
+            var value = ReadRawValueFrom(statePtr);
             if (process)
                 value = Process(value);
 
@@ -458,6 +561,9 @@ namespace UnityEngine.Experimental.Input
         public void WriteValueInto(InputEventPtr eventPtr, TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(eventPtr);
+            if (statePtr == IntPtr.Zero)
+                return;
+
             WriteValueInto(statePtr, value);
         }
 
@@ -492,44 +598,6 @@ namespace UnityEngine.Experimental.Input
             var addressOfState = (byte*)UnsafeUtility.AddressOf(ref state);
             var adjustedStatePtr = addressOfState - device.m_StateBlock.byteOffset;
             WriteValueInto(new IntPtr(adjustedStatePtr), value);
-        }
-
-        private unsafe IntPtr GetStatePtrFromStateEvent(InputEventPtr eventPtr)
-        {
-            if (!eventPtr.valid)
-                throw new ArgumentNullException("eventPtr");
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
-
-            ////TODO: support delta events
-            if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
-
-            var stateEvent = StateEvent.From(eventPtr);
-
-            // Make sure we have a state event compatible with our device. The event doesn't
-            // have to be specifically for our device (we don't require device IDs to match) but
-            // the formats have to match and the size must be within range of what we're trying
-            // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
-                throw new InvalidOperationException(
-                    string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
-
-            // Once a device has been added, global state buffer offsets are baked into control hierarchies.
-            // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
-
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
-                throw new Exception(
-                    string.Format(
-                        "StateEvent with format {0} and size {1} bytes provides less data than expected by control {2}",
-                        stateFormat, stateSizeInBytes, path));
-
-            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
         }
 
         public TValue Process(TValue value)
@@ -577,7 +645,7 @@ namespace UnityEngine.Experimental.Input
             var processorOfType = processor as IInputControlProcessor<TValue>;
             if (processorOfType == null)
                 throw new Exception(string.Format("Cannot add processor of type '{0}' to control of type '{1}'",
-                        processor.GetType().Name, GetType().Name));
+                    processor.GetType().Name, GetType().Name));
             m_ProcessorStack.Append(processorOfType);
         }
 

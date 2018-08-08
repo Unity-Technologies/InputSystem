@@ -16,23 +16,37 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
     public Text m_keyboardInfoText;
     public Text m_mouseInfoText;
 
-    private InputAction keyboard_press_action;
-    private InputAction mouse_press_action;
+    private InputAction m_keyboardAction;
+    private InputAction m_mouseAction;
 
-    private const int MOUSE_MOVE_DEADZONE = 30;
+    private const int MOUSE_MOVE_DEADZONE = 0;
 
     // Use this for initialization
     void Start()
     {
-        keyboard_press_action = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>");
-        keyboard_press_action.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
-        keyboard_press_action.Enable();
+        m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>");
+        m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
+        m_keyboardAction.Enable();
 
-        mouse_press_action = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>");
-        mouse_press_action.performed += callbackContext => MouseKeyPress();
-        mouse_press_action.Enable();
+        m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>");
+        m_mouseAction.performed += callbackContext => MouseKeyPress();
+        m_mouseAction.Enable();
+    }
+
+    private void OnEnable()
+    {
+        if (m_keyboardAction != null) m_keyboardAction.Enable();
+        if (m_mouseAction != null)    m_mouseAction.Enable();
 
         Keyboard.current.onTextInput += new Action<char>(RecordKey);
+    }
+
+    private void OnDisable()
+    {
+        m_keyboardAction.Disable();
+        m_mouseAction.Disable();
+
+        Keyboard.current.onTextInput -= new Action<char>(RecordKey);
     }
 
     void Update()
@@ -41,16 +55,13 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
         Mouse mouse = Mouse.current;
         if (mouse != null)
         {
-            float moveX = mouse.delta.x.ReadValue();
-            float moveY = mouse.delta.y.ReadValue();
-
-            float scrollX = mouse.scroll.x.ReadValue();
-            float scrollY = mouse.scroll.y.ReadValue();
+            Vector2 move = mouse.delta.ReadValue();
+            Vector2 scroll = mouse.scroll.ReadValue();
 
             // Mouse move horizontally
-            if (Mathf.Abs(moveX) > MOUSE_MOVE_DEADZONE)
+            if (Mathf.Abs(move.x) > MOUSE_MOVE_DEADZONE)
             {
-                if (moveX > 0)
+                if (move.x > 0)
                 {
                     StartMouseHighlight("Move Right");
                     StopMouseHighlight("Move Left");
@@ -68,9 +79,9 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
             }
 
             // Mouse move vertically
-            if (Mathf.Abs(moveY) > MOUSE_MOVE_DEADZONE)
+            if (Mathf.Abs(move.y) > MOUSE_MOVE_DEADZONE)
             {
-                if (moveY > 0)
+                if (move.y > 0)
                 {
                     StartMouseHighlight("Move Up");
                     StopMouseHighlight("Move Down");
@@ -89,15 +100,15 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
 
             // Mouse Wheel scroll
             // Only horizontal scroll has UI. Vertical scroll is shown in text box.
-            if (scrollY > 0)
-            {
-                StartMouseHighlight("Wheel Down");
-                StopMouseHighlight("Wheel Up");
-            }
-            else if (scrollY < 0)
+            if (scroll.y > 0)
             {
                 StartMouseHighlight("Wheel Up");
                 StopMouseHighlight("Wheel Down");
+            }
+            else if (scroll.y < 0)
+            {
+                StartMouseHighlight("Wheel Down");
+                StopMouseHighlight("Wheel Up");
             }
             else
             {
@@ -107,14 +118,9 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
 
             // Update mouse position
             m_mouseInfoText.text = mouse.position.ReadValue().ToString("F0") + "\n"
-                + mouse.scroll.ReadValue().ToString("F0") + "\n"
-                + mouse.delta.ReadValue().ToString("F1");
+                + scroll.ToString() + "\n"
+                + move.ToString("F3");
         }
-    }
-
-    private void OnDisable()
-    {
-        Keyboard.current.onTextInput -= new Action<char>(RecordKey);
     }
 
     private void RecordKey(char c)
@@ -130,7 +136,7 @@ public class KeyboardMouseForInputSystem : MonoBehaviour
     {
         string keyName = control.keyCode.ToString();
 
-        if (control.ReadValue() > 0)
+        if (control.isPressed)
             StartKeyHightlight(keyName);
         else
             StopKeyHighlight(keyName);

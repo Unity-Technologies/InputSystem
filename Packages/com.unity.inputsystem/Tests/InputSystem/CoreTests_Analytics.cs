@@ -25,11 +25,11 @@ partial class CoreTests
 
         testRuntime.onRegisterAnalyticsEvent =
             (name, maxPerHour, maxPropertiesPerEvent) =>
-            {
-                receivedNames.Add(name);
-                receivedMaxPerHours.Add(maxPerHour);
-                receivedMaxPropertiesPerEvents.Add(maxPropertiesPerEvent);
-            };
+        {
+            receivedNames.Add(name);
+            receivedMaxPerHours.Add(maxPerHour);
+            receivedMaxPropertiesPerEvents.Add(maxPropertiesPerEvent);
+        };
 
         // The test fixture has already initialized the input system.
         // Create a new manager to test registration.
@@ -38,9 +38,9 @@ partial class CoreTests
 
         Assert.That(receivedNames,
             Is.EquivalentTo(new[]
-        {
-            InputAnalytics.kEventStartup, InputAnalytics.kEventFirstUserInteraction, InputAnalytics.kEventShutdown
-        }));
+            {
+                InputAnalytics.kEventStartup, InputAnalytics.kEventFirstUserInteraction, InputAnalytics.kEventShutdown
+            }));
         Assert.That(receivedMaxPerHours.Count, Is.EqualTo(3));
         Assert.That(receivedMaxPropertiesPerEvents.Count, Is.EqualTo(3));
     }
@@ -54,11 +54,11 @@ partial class CoreTests
 
         testRuntime.onSendAnalyticsEvent =
             (name, data) =>
-            {
-                Assert.That(receivedName, Is.Null);
-                receivedName = name;
-                receivedData = data;
-            };
+        {
+            Assert.That(receivedName, Is.Null);
+            receivedName = name;
+            receivedData = data;
+        };
 
         // Add some data to the system.
         testRuntime.ReportNewInputDevice(new InputDeviceDescription
@@ -75,7 +75,7 @@ partial class CoreTests
             deviceClass = "Keyboard",
             interfaceName = "TestB"
         }.ToJson());
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription // Unrecognized; won't result in device.
         {
             product = "TestProductC",
             manufacturer = "TestManufacturerC",
@@ -148,10 +148,10 @@ partial class CoreTests
             object receivedData = null;
             testRuntime.onSendAnalyticsEvent =
                 (name, data) =>
-                {
-                    Assert.That(receivedData, Is.Null);
-                    receivedData = data;
-                };
+            {
+                Assert.That(receivedData, Is.Null);
+                receivedData = data;
+            };
 
             InputSystem.Update();
             var startupData = (InputAnalytics.StartupEventData)receivedData;
@@ -187,11 +187,11 @@ partial class CoreTests
         object receivedData = null;
         testRuntime.onSendAnalyticsEvent =
             (name, data) =>
-            {
-                Assert.That(receivedData, Is.Null);
-                receivedName = name;
-                receivedData = data;
-            };
+        {
+            Assert.That(receivedData, Is.Null);
+            receivedName = name;
+            receivedData = data;
+        };
 
         // Simulate shutdown.
         testRuntime.onShutdown();

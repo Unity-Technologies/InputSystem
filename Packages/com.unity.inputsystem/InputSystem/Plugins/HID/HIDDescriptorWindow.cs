@@ -3,15 +3,22 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: use two columns for treeview and separate name and value
 
 namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
 {
-    // A window that dumps a raw HID descriptor in a tree view.
+    /// <summary>
+    /// A window that dumps a raw HID descriptor in a tree view.
+    /// </summary>
+    /// <remarks>
+    /// Not specific to InputDevices of type <see cref="HID"/> so that it can work with
+    /// any <see cref="InputDevice"/> created for a device using the "HID" interface.
+    /// </remarks>
     internal class HIDDescriptorWindow : EditorWindow, ISerializationCallbackReceiver
     {
-        public static void CreateOrShowExisting(HID device)
+        public static void CreateOrShowExisting(int deviceId, InputDeviceDescription deviceDescription)
         {
             // See if we have an existing window for the device and if so pop it
             // in front.
@@ -20,7 +27,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
                 for (var i = 0; i < s_OpenWindows.Count; ++i)
                 {
                     var existingWindow = s_OpenWindows[i];
-                    if (existingWindow.m_DeviceId == device.id)
+                    if (existingWindow.m_DeviceId == deviceId)
                     {
                         existingWindow.Show();
                         existingWindow.Focus();
@@ -31,7 +38,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
 
             // No, so create a new one.
             var window = CreateInstance<HIDDescriptorWindow>();
-            window.InitializeWith(device);
+            window.InitializeWith(deviceId, deviceDescription);
             window.minSize = new Vector2(270, 200);
             window.Show();
             window.titleContent = new GUIContent("HID Descriptor");
@@ -49,17 +56,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
 
         public void OnGUI()
         {
-            if (m_Device == null)
-            {
-                m_Device = InputSystem.TryGetDeviceById(m_DeviceId) as HID;
-                if (m_Device == null)
-                {
-                    Close();
-                    return;
-                }
-
-                InitializeWith(m_Device);
-            }
+            if (!m_Initialized)
+                InitializeWith(m_DeviceId, m_DeviceDescription);
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label(m_Label, GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
@@ -69,25 +67,29 @@ namespace UnityEngine.Experimental.Input.Plugins.HID.Editor
             m_TreeView.OnGUI(rect);
         }
 
-        private void InitializeWith(HID device)
+        private void InitializeWith(int deviceId, InputDeviceDescription deviceDescription)
         {
-            m_Device = device;
-            m_DeviceId = device.id;
+            m_DeviceId = deviceId;
+            m_DeviceDescription = deviceDescription;
+            m_Initialized = true;
 
+            // Set up tree view for HID desctiptor.
+            var hidDescriptor = HID.ReadHIDDeviceDescriptor(deviceId, ref m_DeviceDescription, InputRuntime.s_Instance);
             if (m_TreeViewState == null)
                 m_TreeViewState = new TreeViewState();
-            m_TreeView = new HIDDescriptorTreeView(m_TreeViewState, m_Device.hidDescriptor);
+            m_TreeView = new HIDDescriptorTreeView(m_TreeViewState, hidDescriptor);
             m_TreeView.SetExpanded(1, true);
 
-            m_Label = new GUIContent(string.Format("HID Descriptor for '{0} {1}'", m_Device.description.manufacturer,
-                        m_Device.description.product));
+            m_Label = new GUIContent(string.Format("HID Descriptor for '{0} {1}'", deviceDescription.manufacturer,
+                deviceDescription.product));
         }
 
-        [NonSerialized] private HID m_Device;
+        [NonSerialized] private bool m_Initialized;
         [NonSerialized] private HIDDescriptorTreeView m_TreeView;
         [NonSerialized] private GUIContent m_Label;
 
         [SerializeField] private int m_DeviceId;
+        [SerializeField] private InputDeviceDescription m_DeviceDescription;
         [SerializeField] private TreeViewState m_TreeViewState;
 
         private void AddToList()

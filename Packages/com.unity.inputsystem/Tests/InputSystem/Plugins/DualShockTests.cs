@@ -6,36 +6,52 @@ using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
 
+#if UNITY_WSA
+using UnityEngine.Experimental.Input.Plugins.HID;
+#endif
+
 class DualShockTests : InputTestFixture
 {
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [Test]
     [Category("Devices")]
     public void Devices_SupportsDualShockAsHID()
     {
+#if !UNITY_WSA
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             product = "Wireless Controller",
             manufacturer = "Sony Interactive Entertainment",
-            interfaceName = "HID"
+            interfaceName = "HID",
         });
+#else // UWP requires different query logic (manufacture not available)
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            interfaceName = "HID",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+#endif
 
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
         var gamepad = (DualShockGamepad)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockHIDInputReport
-        {
-            leftStickX = 32,
-            leftStickY = 64,
-            rightStickX = 128,
-            rightStickY = 255,
-            leftTrigger = 20,
-            rightTrigger = 40,
-            buttons1 = 0xf7,     // Low order 4 bits is Dpad but effectively uses only 3 bits.
-            buttons2 = 0xff,
-            buttons3 = 0xff
-        });
+            {
+                leftStickX = 32,
+                leftStickY = 64,
+                rightStickX = 128,
+                rightStickY = 255,
+                leftTrigger = 20,
+                rightTrigger = 40,
+                buttons1 = 0xf7, // Low order 4 bits is Dpad but effectively uses only 3 bits.
+                buttons2 = 0xff,
+                buttons3 = 0xff
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(NormalizeProcessor.Normalize(32 / 255.0f, 0f, 1f, 0.5f)).Within(0.00001));
@@ -66,6 +82,54 @@ class DualShockTests : InputTestFixture
         Assert.That(gamepad.touchpadButton.isPressed);
 
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHID_WithAlternateManufacturerName()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            manufacturer = "Sony Computer Entertainment",
+            interfaceName = "HID"
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+#if UNITY_WSA
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsDualShockAsHIDOnUWP()
+    {
+        var device = InputSystem.AddDevice(new InputDeviceDescription
+        {
+            product = "Wireless Controller",
+            capabilities = new HID.HIDDeviceDescriptor
+            {
+                vendorId = 0x054C, // Sony
+            }.ToJson()
+        });
+
+        Assert.That(device, Is.AssignableTo<DualShockGamepad>());
+    }
+
+#endif
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_DualShockHID_HasDpadInNullStateByDefault()
+    {
+        // The DualShock's dpad has a default state of 8 (indicating dpad isn't pressed in any direction),
+        // not of 0 (which actually means "up" is pressed). Make sure this is set up correctly.
+
+        var gamepad = InputSystem.AddDevice<DualShockGamepadHID>();
+
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
     }
 
     [Test]
@@ -128,26 +192,26 @@ class DualShockTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new DualShockGamepadStatePS4
-        {
-            buttons = 0xffffffff,
-            leftStick = new Vector2(0.123f, 0.456f),
-            rightStick = new Vector2(0.789f, 0.234f),
-            leftTrigger = 0.567f,
-            rightTrigger = 0.891f,
-            acceleration = new Vector3(0.987f, 0.654f, 0.321f),
-            orientation = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
-            angularVelocity = new Vector3(0.444f, 0.555f, 0.666f),
-            touch0 = new PS4Touch
             {
-                touchId = 123,
-                position = new Vector2(0.231f, 0.342f)
-            },
-            touch1 = new PS4Touch
-            {
-                touchId = 456,
-                position = new Vector2(0.453f, 0.564f)
-            },
-        });
+                buttons = 0xffffffff,
+                leftStick = new Vector2(0.123f, 0.456f),
+                rightStick = new Vector2(0.789f, 0.234f),
+                leftTrigger = 0.567f,
+                rightTrigger = 0.891f,
+                acceleration = new Vector3(0.987f, 0.654f, 0.321f),
+                orientation = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
+                angularVelocity = new Vector3(0.444f, 0.555f, 0.666f),
+                touch0 = new PS4Touch
+                {
+                    touchId = 123,
+                    position = new Vector2(0.231f, 0.342f)
+                },
+                touch1 = new PS4Touch
+                {
+                    touchId = 456,
+                    position = new Vector2(0.453f, 0.564f)
+                },
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.squareButton.isPressed);

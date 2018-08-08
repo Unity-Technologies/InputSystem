@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////FIXME: doesn't survive domain reload correctly
 
@@ -19,13 +20,23 @@ using UnityEngine.Experimental.Input.LowLevel;
 
 ////TODO: allow adding visualizers (or automatically add them in cases) to control that show value over time (using InputStateHistory)
 
+////TODO: show default states of controls
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
-    internal class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
+    public class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
     {
-        public const int kMaxNumEventsInTrace = 64;
+        internal const int kMaxNumEventsInTrace = 64;
+
+        internal static InlinedArray<Action<InputDevice>> s_OnToolbarGUIActions;
+
+        public static event Action<InputDevice> onToolbarGUI
+        {
+            add { s_OnToolbarGUIActions.Append(value); }
+            remove { s_OnToolbarGUIActions.Remove(value); }
+        }
 
         public static void CreateOrShowExisting(InputDevice device)
         {
@@ -53,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Editor
             window.titleContent = new GUIContent(device.name);
         }
 
-        public void OnDestroy()
+        internal void OnDestroy()
         {
             if (m_Device != null)
             {
@@ -66,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public void OnGUI()
+        internal void OnGUI()
         {
             // Find device again if we've gone through a domain reload.
             if (m_Device == null)
@@ -106,8 +117,9 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.Label("Controls", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
-            if (m_DeviceDebugUI != null)
-                m_DeviceDebugUI.OnToolbarGUI();
+            // Allow plugins to add toolbar buttons.
+            for (var i = 0; i < s_OnToolbarGUIActions.length; ++i)
+                s_OnToolbarGUIActions[i](m_Device);
 
             if (GUILayout.Button(Contents.stateContent, EditorStyles.toolbarButton))
             {
@@ -171,21 +183,20 @@ namespace UnityEngine.Experimental.Input.Editor
         private void InitializeWith(InputDevice device)
         {
             m_Device = device;
-            m_DeviceDebugUI = device as IInputDeviceDebugUI;
             m_DeviceId = device.id;
             m_DeviceIdString = device.id.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
             var flags = new List<string>();
-            if ((m_Device.m_Flags & InputDevice.Flags.Native) == InputDevice.Flags.Native)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Native) == InputDevice.DeviceFlags.Native)
                 flags.Add("Native");
-            if ((m_Device.m_Flags & InputDevice.Flags.Remote) == InputDevice.Flags.Remote)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Remote) == InputDevice.DeviceFlags.Remote)
                 flags.Add("Remote");
-            if ((m_Device.m_Flags & InputDevice.Flags.UpdateBeforeRender) == InputDevice.Flags.UpdateBeforeRender)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.UpdateBeforeRender) == InputDevice.DeviceFlags.UpdateBeforeRender)
                 flags.Add("UpdateBeforeRender");
-            if ((m_Device.m_Flags & InputDevice.Flags.HasStateCallbacks) == InputDevice.Flags.HasStateCallbacks)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == InputDevice.DeviceFlags.HasStateCallbacks)
                 flags.Add("HasStateCallbacks");
-            if ((m_Device.m_Flags & InputDevice.Flags.Disabled) == InputDevice.Flags.Disabled)
+            if ((m_Device.m_DeviceFlags & InputDevice.DeviceFlags.Disabled) == InputDevice.DeviceFlags.Disabled)
                 flags.Add("Disabled");
             m_DeviceFlagsString = string.Join(", ", flags.ToArray());
 
@@ -195,10 +206,10 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_EventTrace == null)
                 m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.id};
             m_EventTrace.onEvent += _ =>
-                {
-                    ////FIXME: this is very inefficient
-                    m_EventTree.Reload();
-                };
+            {
+                ////FIXME: this is very inefficient
+                m_EventTree.Reload();
+            };
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
 
@@ -218,7 +229,6 @@ namespace UnityEngine.Experimental.Input.Editor
         // time we hit a repaint after a reload. By that time, the input system should have
         // fully come back to life as well.
         [NonSerialized] private InputDevice m_Device;
-        [NonSerialized] private IInputDeviceDebugUI m_DeviceDebugUI;
         [NonSerialized] private string m_DeviceIdString;
         [NonSerialized] private string m_DeviceUsagesString;
         [NonSerialized] private string m_DeviceFlagsString;
@@ -281,11 +291,11 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIContent stateContent = new GUIContent("State");
         }
 
-        public void OnBeforeSerialize()
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
         }
 
-        public void OnAfterDeserialize()
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             AddToList();
         }

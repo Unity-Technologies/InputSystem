@@ -17,20 +17,20 @@ public class SimpleController_UsingEvents : MonoBehaviour
     {
         InputSystem.onEvent +=
             eventPtr =>
+        {
+            var gamepad = InputSystem.TryGetDeviceById(eventPtr.deviceId) as Gamepad;
+            if (gamepad == null)
+                return;
+
+            if (eventPtr.IsA<StateEvent>())
             {
-                var gamepad = InputSystem.TryGetDeviceById(eventPtr.deviceId) as Gamepad;
-                if (gamepad == null)
-                    return;
+                var leftStick = gamepad.leftStick.ReadValueFrom(eventPtr);
+                var rightStick = gamepad.rightStick.ReadValueFrom(eventPtr);
 
-                if (eventPtr.IsA<StateEvent>())
-                {
-                    var leftStick = gamepad.leftStick.ReadValueFrom(eventPtr);
-                    var rightStick = gamepad.rightStick.ReadValueFrom(eventPtr);
-
-                    m_Move = leftStick;
-                    m_Look = rightStick;
-                }
-            };
+                m_Move = leftStick;
+                m_Look = rightStick;
+            }
+        };
     }
 
     public void Update()

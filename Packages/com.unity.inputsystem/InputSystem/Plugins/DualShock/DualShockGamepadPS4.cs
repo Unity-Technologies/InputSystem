@@ -248,7 +248,7 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         /// </remarks>
         [InputControl(alias = "touchId", offset = 0)]
         public IntegerControl touchId { get; private set; }
-        [InputControl(usage = "position", offset = 4)]
+        [InputControl(usage = "Position", offset = 4)]
         public Vector2Control position { get; private set; }
 
         public PS4TouchControl()

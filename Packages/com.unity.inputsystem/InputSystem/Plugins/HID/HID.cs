@@ -18,6 +18,8 @@ using UnityEngine.Experimental.Input.Plugins.HID.Editor;
 
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
+////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
+
 namespace UnityEngine.Experimental.Input.Plugins.HID
 {
     /// <summary>
@@ -30,9 +32,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
     public class HID : InputDevice
-#if UNITY_EDITOR
-        , IInputDeviceDebugUI
-#endif
     {
         public const string kHIDInterface = "HID";
         public const string kHIDNamespace = "HID";
@@ -68,18 +67,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             }
         }
 
-        #if UNITY_EDITOR
-        public void OnToolbarGUI()
-        {
-            if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
-            {
-                HIDDescriptorWindow.CreateOrShowExisting(this);
-            }
-        }
-
-        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
-        #endif
-
         private bool m_HaveParsedHIDDescriptor;
         private HIDDeviceDescriptor m_HIDDescriptor;
 
@@ -87,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         // If the system cannot find a more specific layout for a given HID, this method will try
         // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
-        internal static unsafe string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the system found a matching layout, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedLayout))
@@ -97,104 +84,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             if (description.interfaceName != kHIDInterface)
                 return null;
 
-            // See if we have to request a HID descriptor from the device.
-            // We support having the descriptor directly as a JSON string in the `capabilities`
-            // field of the device description.
-            var needToRequestDescriptor = true;
-            var hidDeviceDescriptor = new HIDDeviceDescriptor();
-            if (!string.IsNullOrEmpty(description.capabilities))
-            {
-                try
-                {
-                    hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(description.capabilities);
-
-                    // If there's elements in the descriptor, we're good with the descriptor. If there aren't,
-                    // we go and ask the device for a full descriptor.
-                    if (hidDeviceDescriptor.elements != null && hidDeviceDescriptor.elements.Length > 0)
-                        needToRequestDescriptor = false;
-                }
-                catch (Exception exception)
-                {
-                    Debug.Log(string.Format("Could not parse HID descriptor (exception: {0})", exception));
-                }
-            }
-
-            ////REVIEW: we *could* switch to a single path here that supports *only* parsed descriptors but it'd
-            ////        mean having to switch *every* platform supporting HID to the hack we currently have to do
-            ////        on Windows
-
-            // Request descriptor, if necessary.
-            if (needToRequestDescriptor)
-            {
-                // If the device has no assigned ID yet, we can't perform IOCTLs on the
-                // device so no way to get a report descriptor.
-                if (deviceId == kInvalidDeviceId)
-                    return null;
-
-                // Try to get the size of the HID descriptor from the device.
-                var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
-                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
-                if (sizeOfDescriptorInBytes > 0)
-                {
-                    // Now try to fetch the HID descriptor.
-                    using (var buffer =
-                               InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
-                    {
-                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
-                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
-                            return null;
-
-                        // Try to parse the HID report descriptor.
-                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
-                            return null;
-                    }
-
-                    // Update the descriptor on the device with the information we got.
-                    description.capabilities = hidDeviceDescriptor.ToJson();
-                }
-                else
-                {
-                    // The device may not support binary descriptors but may support parsed descriptors so
-                    // try the IOCTL for parsed descriptors next.
-                    //
-                    // This path exists pretty much only for the sake of Windows where it is not possible to get
-                    // unparsed/binary descriptors from the device (and where getting element offsets is only possible
-                    // with some dirty hacks we're performing in the native runtime).
-
-                    const int kMaxDescriptorBufferSize = 2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
-                    using (var buffer =
-                               InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
-                    {
-                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
-                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
-                        if (utf8Length < 0)
-                            return null;
-
-                        // Turn UTF-8 buffer into string.
-                        ////TODO: is there a way to not have to copy here?
-                        var utf8 = new byte[utf8Length];
-                        fixed(byte* utf8Ptr = utf8)
-                        {
-                            UnsafeUtility.MemCpy(utf8Ptr, commandPtr->payloadPtr, utf8Length);
-                        }
-                        var descriptorJson = Encoding.UTF8.GetString(utf8, 0, (int)utf8Length);
-
-                        // Try to parse the HID report descriptor.
-                        try
-                        {
-                            hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(descriptorJson);
-                        }
-                        catch (Exception exception)
-                        {
-                            Debug.Log(string.Format("Could not parse HID descriptor JSON returned from runtime (exception: {0})", exception));
-                            return null;
-                        }
-
-                        // Update the descriptor on the device with the information we got.
-                        description.capabilities = descriptorJson;
-                    }
-                }
-            }
+            // Read HID descriptor.
+            var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
 
             // Determine if there's any usable elements on the device.
             var hasUsableElements = false;
@@ -248,7 +139,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 if (hidDeviceDescriptor.vendorId == 0)
                     return null;
                 layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
-                        hidDeviceDescriptor.productId);
+                    hidDeviceDescriptor.productId);
             }
 
             // Register layout builder that will turn the HID descriptor into an
@@ -258,6 +149,130 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 layoutName, baseLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;
+        }
+
+        public static HIDDeviceDescriptor ReadHIDDeviceDescriptor(InputDevice device, IInputRuntime runtime)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            InputDeviceDescription deviceDescription = device.description;
+            if (deviceDescription.interfaceName != kHIDInterface)
+                throw new ArgumentException(
+                    string.Format("Device '{0}' is not a HID (interface is '{1}')", device,
+                        deviceDescription.interfaceName), "device");
+
+            return ReadHIDDeviceDescriptor(device.id, ref deviceDescription, runtime);
+        }
+
+        public static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(int deviceId, ref InputDeviceDescription deviceDescription, IInputRuntime runtime)
+        {
+            if (deviceDescription.interfaceName != kHIDInterface)
+                throw new ArgumentException(
+                    string.Format("Device '{0}' is not a HID", deviceDescription));
+
+            // See if we have to request a HID descriptor from the device.
+            // We support having the descriptor directly as a JSON string in the `capabilities`
+            // field of the device description.
+            var needToRequestDescriptor = true;
+            var hidDeviceDescriptor = new HIDDeviceDescriptor();
+            if (!string.IsNullOrEmpty(deviceDescription.capabilities))
+            {
+                try
+                {
+                    hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(deviceDescription.capabilities);
+
+                    // If there's elements in the descriptor, we're good with the descriptor. If there aren't,
+                    // we go and ask the device for a full descriptor.
+                    if (hidDeviceDescriptor.elements != null && hidDeviceDescriptor.elements.Length > 0)
+                        needToRequestDescriptor = false;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(string.Format("Could not parse HID descriptor of device '{0}'", deviceDescription));
+                    Debug.LogException(exception);
+                }
+            }
+
+            ////REVIEW: we *could* switch to a single path here that supports *only* parsed descriptors but it'd
+            ////        mean having to switch *every* platform supporting HID to the hack we currently have to do
+            ////        on Windows
+
+            // Request descriptor, if necessary.
+            if (needToRequestDescriptor)
+            {
+                // If the device has no assigned ID yet, we can't perform IOCTLs on the
+                // device so no way to get a report descriptor.
+                if (deviceId == kInvalidDeviceId)
+                    return new HIDDeviceDescriptor();
+
+                // Try to get the size of the HID descriptor from the device.
+                var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
+                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
+                if (sizeOfDescriptorInBytes > 0)
+                {
+                    // Now try to fetch the HID descriptor.
+                    using (var buffer =
+                               InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
+                    {
+                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
+                            return new HIDDeviceDescriptor();
+
+                        // Try to parse the HID report descriptor.
+                        if (!HIDParser.ParseReportDescriptor((byte*)commandPtr->payloadPtr, (int)sizeOfDescriptorInBytes, ref hidDeviceDescriptor))
+                            return new HIDDeviceDescriptor();
+                    }
+
+                    // Update the descriptor on the device with the information we got.
+                    deviceDescription.capabilities = hidDeviceDescriptor.ToJson();
+                }
+                else
+                {
+                    // The device may not support binary descriptors but may support parsed descriptors so
+                    // try the IOCTL for parsed descriptors next.
+                    //
+                    // This path exists pretty much only for the sake of Windows where it is not possible to get
+                    // unparsed/binary descriptors from the device (and where getting element offsets is only possible
+                    // with some dirty hacks we're performing in the native runtime).
+
+                    const int kMaxDescriptorBufferSize = 2 * 1024 * 1024; ////TODO: switch to larger buffer based on return code if request fails
+                    using (var buffer =
+                               InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
+                    {
+                        var commandPtr = (InputDeviceCommand*)NativeArrayUnsafeUtility.GetUnsafePtr(buffer);
+                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
+                        if (utf8Length < 0)
+                            return new HIDDeviceDescriptor();
+
+                        // Turn UTF-8 buffer into string.
+                        ////TODO: is there a way to not have to copy here?
+                        var utf8 = new byte[utf8Length];
+                        fixed(byte* utf8Ptr = utf8)
+                        {
+                            UnsafeUtility.MemCpy(utf8Ptr, commandPtr->payloadPtr, utf8Length);
+                        }
+                        var descriptorJson = Encoding.UTF8.GetString(utf8, 0, (int)utf8Length);
+
+                        // Try to parse the HID report descriptor.
+                        try
+                        {
+                            hidDeviceDescriptor = HIDDeviceDescriptor.FromJson(descriptorJson);
+                        }
+                        catch (Exception exception)
+                        {
+                            Debug.LogError(string.Format("Could not parse HID descriptor of device '{0}'", deviceDescription));
+                            Debug.LogException(exception);
+                            return new HIDDeviceDescriptor();
+                        }
+
+                        // Update the descriptor on the device with the information we got.
+                        deviceDescription.capabilities = descriptorJson;
+                    }
+                }
+            }
+
+            return hidDeviceDescriptor;
         }
 
         public static bool UsageToString(UsagePage usagePage, int usage, out string usagePageString, out string usageString)
@@ -313,12 +328,20 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     var layout = element.DetermineLayout();
                     if (layout != null)
                     {
+                        // Assign unique name.
+                        var name = element.DetermineName();
+                        Debug.Assert(!string.IsNullOrEmpty(name));
+                        name = StringHelpers.MakeUniqueName(name, builder.controls, x => x.name);
+
+                        // Add control.
                         var control =
-                            builder.AddControl(element.DetermineName())
-                            .WithLayout(layout)
-                            .WithOffset((uint)element.reportOffsetInBits / 8)
-                            .WithBit((uint)element.reportOffsetInBits % 8)
-                            .WithFormat(element.DetermineFormat());
+                            builder.AddControl(name)
+                                .WithLayout(layout)
+                                .WithByteOffset((uint)element.reportOffsetInBits / 8)
+                                .WithBitOffset((uint)element.reportOffsetInBits % 8)
+                                .WithSizeInBits((uint)element.reportSizeInBits)
+                                .WithFormat(element.DetermineFormat())
+                                .WithDefaultState(element.DetermineDefaultState());
 
                         var parameters = element.DetermineParameters();
                         if (!string.IsNullOrEmpty(parameters))
@@ -327,6 +350,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         var usages = element.DetermineUsages();
                         if (usages != null)
                             control.WithUsages(usages);
+
+                        element.AddChildControls(name, ref builder);
                     }
                 }
 
@@ -502,15 +527,20 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     case UsagePage.Button:
                         return string.Format("button{0}", usage);
                     case UsagePage.GenericDesktop:
-                        return ((GenericDesktop)usage).ToString();
+                        if (usage == (int)GenericDesktop.HatSwitch)
+                            return "dpad";
+                        var text = ((GenericDesktop)usage).ToString();
+                        // Lower-case first letter.
+                        text = char.ToLowerInvariant(text[0]) + text.Substring(1);
+                        return text;
                 }
 
+                // Fallback that generates a somewhat useless but at least very informative name.
                 return string.Format("UsagePage({0:X}) Usage({1:X})", usagePage, usage);
             }
 
             internal string DetermineLayout()
             {
-                ////TODO: support output elements
                 if (reportType != HIDReportType.Input)
                     return null;
 
@@ -547,6 +577,12 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                             case (int)GenericDesktop.DpadLeft:
                             case (int)GenericDesktop.DpadRight:
                                 return "Button";
+
+                            case (int)GenericDesktop.HatSwitch:
+                                // Only support hat switches with 8 directions.
+                                if (logicalMax - logicalMin + 1 == 8)
+                                    return "Dpad";
+                                break;
                         }
                         break;
                 }
@@ -558,7 +594,6 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             {
                 switch (reportSizeInBits)
                 {
-                    case 1: return InputStateBlock.kTypeBit;
                     case 8:
                         if (isSigned)
                             return InputStateBlock.kTypeSByte;
@@ -571,9 +606,10 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                         if (isSigned)
                             return InputStateBlock.kTypeInt;
                         return InputStateBlock.kTypeUInt;
+                    default:
+                        // Generic bitfield value.
+                        return InputStateBlock.kTypeBit;
                 }
-
-                return new FourCC();
             }
 
             internal InternedString[] DetermineUsages()
@@ -582,6 +618,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
                 if (usagePage == UsagePage.Button && usage == 1)
                     return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                ////TODO: assign hatswitch usage to first and only to first hatswitch element
                 return null;
             }
 
@@ -622,6 +659,92 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                 }
 
                 return null;
+            }
+
+            internal PrimitiveValue DetermineDefaultState()
+            {
+                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
+                {
+                    // Figure out null state for hat switches.
+                    if (hasNullState)
+                    {
+                        // We're looking for a value that is out-of-range with respect to the
+                        // logical min and max but in range with respect to what we can store
+                        // in the bits we have.
+
+                        // Test lower bound.
+                        var minMinusOne = logicalMin - 1;
+                        if (minMinusOne >= 0)
+                            return new PrimitiveValue(minMinusOne);
+
+                        // Test upper bound.
+                        var maxPlusOne = logicalMax + 1;
+                        if (maxPlusOne <= ((1 << reportSizeInBits) - 1))
+                            return new PrimitiveValue(maxPlusOne);
+                    }
+                }
+
+                return new PrimitiveValue();
+            }
+
+            internal void AddChildControls(string controlName, ref InputControlLayout.Builder builder)
+            {
+                if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.HatSwitch)
+                {
+                    // There doesn't seem to be enough specificity in the HID spec to reliably figure this case out.
+                    // Albeit detail is scarce, we could probably make some inferences based on the unit setting
+                    // of the hat switch but even then it seems there's much left to the whims of a hardware manufacturer.
+                    // Even if we know values go clockwise (HID spec doesn't really say; probably can be inferred from unit),
+                    // which direction do we start with? Is 0 degrees up or right?
+                    //
+                    // What we do here is simply make the assumption that we're dealing with degrees here, that we go clockwise,
+                    // and that 0 degrees is up (which is actually the opposite of the coordinate system suggested in 5.9 of
+                    // of the HID spec but seems to be what manufacturers are actually using in practice). Of course, if the
+                    // device we're looking at actually sets things up differently, then we end up with either an incorrectly
+                    // oriented or (worse) a non-functional hat switch.
+
+                    var nullValue = DetermineDefaultState();
+                    if (nullValue.isEmpty)
+                        return;
+
+                    ////REVIEW: this probably only works with hatswitches that have their null value at logicalMax+1
+
+                    builder.AddControl(controlName + "/up")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1},nullValue={2},wrapAtValue={3}",
+                            logicalMax, logicalMin + 1, nullValue.ToString(), logicalMax))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+
+                    builder.AddControl(controlName + "/right")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1}",
+                            logicalMin + 1, logicalMin + 3))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+
+                    builder.AddControl(controlName + "/down")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1}",
+                            logicalMin + 3, logicalMin + 5))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+
+                    builder.AddControl(controlName + "/left")
+                        .WithFormat(InputStateBlock.kTypeBit)
+                        .WithLayout("DiscreteButton")
+                        .WithParameters(string.Format(CultureInfo.InvariantCulture,
+                            "minValue={0},maxValue={1}",
+                            logicalMin + 5, logicalMin + 7))
+                        .WithBitOffset(0)
+                        .WithSizeInBits((uint)reportSizeInBits);
+                }
             }
         }
 
@@ -740,8 +863,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
                         if (element.usagePage == usagePage && element.usage == usage)
                             throw new InvalidOperationException(string.Format(
-                                    "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
-                                    usagePage, usage));
+                                "Cannot add two elements with the same usage page '{0}' and usage '0x{1:X} the to same device",
+                                usagePage, usage));
                     }
                 }
 

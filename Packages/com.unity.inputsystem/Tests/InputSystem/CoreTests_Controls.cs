@@ -1,5 +1,7 @@
 using System;
 using NUnit.Framework;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
@@ -207,6 +209,42 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_CanReadDefaultValue()
+    {
+        InputSystem.RegisterControlLayout<TestDeviceWithDefaultState>();
+
+        var device = InputSystem.AddDevice<TestDeviceWithDefaultState>();
+
+        Assert.That(device["control"].ReadDefaultValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public unsafe void Controls_CanWriteValueAsObjectIntoMemoryBuffer()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var tempBufferSize = (int)gamepad.stateBlock.alignedSizeInBytes;
+        using (var tempBuffer = new NativeArray<byte>(tempBufferSize, Allocator.Temp))
+        {
+            var tempBufferPtr = (byte*)NativeArrayUnsafeUtility.GetUnsafeReadOnlyPtr(tempBuffer);
+
+            // The device is the first in the system so is guaranteed to start of offset 0 which
+            // means we don't need to adjust the pointer here.
+            Debug.Assert(gamepad.stateBlock.byteOffset == 0);
+
+            gamepad.leftStick.WriteValueFromObjectInto(new IntPtr(tempBufferPtr), tempBufferSize, new Vector2(0.1234f, 0.5678f));
+
+            var leftStickXPtr = (float*)(tempBufferPtr + gamepad.leftStick.x.stateBlock.byteOffset);
+            var leftStickYPtr = (float*)(tempBufferPtr + gamepad.leftStick.y.stateBlock.byteOffset);
+
+            Assert.That(*leftStickXPtr, Is.EqualTo(0.1234).Within(0.00001));
+            Assert.That(*leftStickYPtr, Is.EqualTo(0.5678).Within(0.00001));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanReadValueFromStateEvents()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -214,15 +252,54 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
-            };
+        {
+            ++receivedCalls;
+            Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_ReadingValueFromStateEvent_ReturnsDefaultValueForControlsNotPartOfEvent()
+    {
+        // Add one extra control with default state to Gamepad but
+        // don't change its state format (so we can send it GamepadState
+        // events without the extra control).
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""extraControl"",
+                        ""layout"" : ""Axis"",
+                        ""defaultState"" : ""0.1234""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        float? value = null;
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            Assert.That(value, Is.Null);
+            value = ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr);
+        };
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(value, Is.Not.Null);
+        Assert.That(value.Value, Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]
@@ -234,10 +311,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                gamepad.leftTrigger.WriteValueInto(eventPtr, 0.1234f);
-            };
+        {
+            ++receivedCalls;
+            gamepad.leftTrigger.WriteValueInto(eventPtr, 0.1234f);
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
@@ -274,9 +351,9 @@ partial class CoreTests
         // Up left.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadLeft
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
@@ -291,9 +368,9 @@ partial class CoreTests
         // Down left.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadLeft
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.left).normalized.x).Within(0.00001));
@@ -308,9 +385,9 @@ partial class CoreTests
         // Down right.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadDown | 1 << (int)GamepadState.Button.DpadRight
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x,
@@ -327,9 +404,9 @@ partial class CoreTests
         // Up right.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight
-        });
+            {
+                buttons = 1 << (int)GamepadState.Button.DpadUp | 1 << (int)GamepadState.Button.DpadRight
+            });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.right).normalized.x).Within(0.00001));
@@ -592,5 +669,18 @@ partial class CoreTests
         var control = setup.GetControl("control");
 
         Assert.That(control.displayName, Is.EqualTo("control"));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanTurnControlPathIntoHumanReadableText()
+    {
+        Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Gamepad leftStick"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Gamepad leftStick/x"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Gamepad leftStick/x"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("LeftHand XRController position"));
+        Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("Any leftStick"));
+        Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("Any PrimaryMotion/x"));
     }
 }

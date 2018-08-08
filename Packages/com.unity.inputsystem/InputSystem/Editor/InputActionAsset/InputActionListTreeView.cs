@@ -84,20 +84,16 @@ namespace UnityEngine.Experimental.Input.Editor
             return root;
         }
 
-        void ParseActionMap(TreeViewItem treeViewItem, InputActionMap actionMap, SerializedProperty actionMapProperty)
+        void ParseActionMap(ActionMapTreeItem actionMapItem, InputActionMap actionMap, SerializedProperty actionMapProperty)
         {
-            var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
-            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
+            var bindingsArrayProperty = actionMapItem.bindingsProperty;
+            var actionsArrayProperty = actionMapItem.actionsProperty;
 
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
             {
-                var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(i);
-
                 var action = actionMap.actions[i];
-
-                var actionItem = new ActionTreeItem(actionMap.name, action, actionsArrayProperty, i);
-
-                var actionName = actionProperty.FindPropertyRelative("m_Name").stringValue;
+                var actionItem = new ActionTreeItem(actionMapProperty, action, actionsArrayProperty, i);
+                var actionName = action.name;
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
 
                 bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
@@ -135,11 +131,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (actionSearchMatched || IsSearching() && actionItem.children != null && actionItem.children.Any())
                 {
-                    treeViewItem.AddChild(actionItem);
+                    actionMapItem.AddChild(actionItem);
                 }
                 else if (!IsSearching())
                 {
-                    treeViewItem.AddChild(actionItem);
+                    actionMapItem.AddChild(actionItem);
                 }
             }
         }
@@ -251,16 +247,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (actionItem is ActionTreeItem)
             {
-                var map = GetSelectedActionMap();
-                InputActionSerializationHelpers.RenameAction(actionItem.elementProperty, map.elementProperty, args.newName);
+                (actionItem as ActionTreeItem).Rename(args.newName);
             }
             else if (actionItem is ActionMapTreeItem)
             {
-                InputActionSerializationHelpers.RenameActionMap(actionItem.elementProperty, args.newName);
+                (actionItem as ActionMapTreeItem).Rename(args.newName);
             }
             else if (actionItem is CompositeGroupTreeItem)
             {
-                InputActionSerializationHelpers.RenameComposite(actionItem.elementProperty, args.newName);
+                (actionItem as CompositeGroupTreeItem).Rename(args.newName);
             }
             else
             {
@@ -357,6 +352,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 m_ApplyAction();
                 DragAndDrop.AcceptDrag();
+                //since there is no easy way to know the id of the element after reordering
+                //instead of updating the selected item, we leave the UI without selection
+                if (OnSelectionChanged != null)
+                    OnSelectionChanged();
             }
             return DragAndDropVisualMode.Move;
         }

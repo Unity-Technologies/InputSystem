@@ -10,9 +10,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Switch
         {
             InputSystem.RegisterControlLayout<NPad>(
                 matches: new InputDeviceMatcher()
-                .WithInterface("NPad")     ////TODO: this should be 'Switch'
-                .WithManufacturer("Nintendo")
-                .WithProduct("Wireless Controller"));
+                    .WithInterface("Switch")
+                    .WithManufacturer("Nintendo")
+                    .WithProduct("Wireless Controller"));
         }
     }
 }
