@@ -3,6 +3,8 @@ using Unity.Collections;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: should we make this ExecuteInEditMode?
+
 ////TODO: make this survive domain reloads
 
 namespace UnityEngine.Experimental.Input.Plugins.OnScreen

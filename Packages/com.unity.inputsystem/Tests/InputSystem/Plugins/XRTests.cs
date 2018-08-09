@@ -35,7 +35,7 @@ class XRTests : InputTestFixture
         var generatedLayout = InputSystem.TryLoadLayout(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
             deviceDescription.manufacturer, deviceDescription.product));
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo(baseLayoutName));
+        Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
 
     [Test]

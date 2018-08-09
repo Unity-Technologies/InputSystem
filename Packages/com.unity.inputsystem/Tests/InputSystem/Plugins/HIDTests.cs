@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using NUnit.Framework;
 using System.Linq;
@@ -10,6 +9,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
@@ -52,13 +52,13 @@ class HIDTests : InputTestFixture
         Assert.That(device, Is.TypeOf<HID>());
         Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
         Assert.That(device.children, Has.Count.EqualTo(4));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("X").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Y").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
 
-        var x = device["X"];
-        var y = device["Y"];
+        var x = device["x"];
+        var y = device["y"];
         var button1 = device["button1"];
         var button2 = device["button2"];
 
@@ -277,8 +277,8 @@ class HIDTests : InputTestFixture
         Assert.That(hid.hidDescriptor.elements.Length, Is.EqualTo(4));
 
         Assert.That(device.children, Has.Count.EqualTo(4));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("X").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Y").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
     }
@@ -578,14 +578,198 @@ class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_SupportsEnumHatSwitchesOnHIDs()
+    public unsafe void Devices_SupportsHIDHatSwitches()
     {
-        Assert.Fail();
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.HatSwitch,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 1,
+                    reportSizeInBits = 4,
+                    reportOffsetInBits = 0,
+                    logicalMin = 0,
+                    logicalMax = 7, // This combination of min/max means that 8 (given we have 4 bits) is out of range and thus the null state.
+                    physicalMin = 0,
+                    physicalMax = 315,
+                    flags = HID.HIDElementFlags.NullState
+                }
+            }
+        };
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+        var hid = (HID)InputSystem.devices.First(x => x is HID);
+
+        Assert.That(hid["dpad"], Is.TypeOf<DpadControl>());
+
+        // Assert that default state is set correctly.
+        Assert.That(hid["dpad/up"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["dpad/down"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["dpad/left"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["dpad/right"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+
+        InputEventPtr eventPtr;
+        using (StateEvent.From(hid, out eventPtr))
+        {
+            var stateData = (byte*)StateEvent.From(eventPtr)->state;
+
+            const int kNull = 8;
+            const int kUp = 0;
+            const int kUpRight = 1;
+            const int kRight = 2;
+            const int kRightDown = 3;
+            const int kDown = 4;
+            const int kDownLeft = 5;
+            const int kLeft = 6;
+            const int kLeftUp = 7;
+
+            stateData[0] = kNull;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(vector2Comparer));
+
+            stateData[0] = kUp;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(vector2Comparer));
+
+            stateData[0] = kUpRight;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(vector2Comparer));
+
+            stateData[0] = kRight;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(vector2Comparer));
+
+            stateData[0] = kRightDown;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(vector2Comparer));
+
+            stateData[0] = kDown;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(vector2Comparer));
+
+            stateData[0] = kDownLeft;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(vector2Comparer));
+
+            stateData[0] = kLeft;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(vector2Comparer));
+
+            stateData[0] = kLeftUp;
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(vector2Comparer));
+        }
     }
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_SupportsBitfieldHatSwitchesOnHIDs()
+    public void Devices_SupportsMultipleHIDHatSwitches()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.HatSwitch,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 1,
+                    reportSizeInBits = 4,
+                    reportOffsetInBits = 0,
+                    logicalMin = 0,
+                    logicalMax = 7,
+                    physicalMin = 0,
+                    physicalMax = 315,
+                    flags = HID.HIDElementFlags.NullState
+                },
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.HatSwitch,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 1,
+                    reportSizeInBits = 4,
+                    reportOffsetInBits = 4,
+                    logicalMin = 0,
+                    logicalMax = 7,
+                    physicalMin = 0,
+                    physicalMax = 315,
+                    flags = HID.HIDElementFlags.NullState
+                }
+            }
+        };
+
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+
+        InputSystem.Update();
+        var hid = (HID)InputSystem.devices.First(x => x is HID);
+
+        Assert.That(hid["dpad"], Is.TypeOf<DpadControl>());
+        Assert.That(hid["dpad1"], Is.TypeOf<DpadControl>());
+
+        Assert.That(hid["dpad"].stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(hid["dpad"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(hid["dpad1"].stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(hid["dpad1"].stateBlock.bitOffset, Is.EqualTo(4));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_SupportsHIDDpads()
     {
         Assert.Fail();
     }

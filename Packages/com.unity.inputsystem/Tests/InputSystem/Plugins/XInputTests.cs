@@ -16,7 +16,7 @@ class XInputTests : InputTestFixture
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
     [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XInputControllerOSX")]
 #endif
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
 #endif
     public void Devices_SupportsXInputDevicesOnPlatform(string product, string manufacturer, string interfaceName, string layoutName)
@@ -38,7 +38,7 @@ class XInputTests : InputTestFixture
         Assert.That(device.description.product, Is.EqualTo(product));
     }
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [Test]
     [Category("Devices")]
     public void Devices_CanGetSubTypeOfXInputDevice()

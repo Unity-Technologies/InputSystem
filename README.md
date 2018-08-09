@@ -1,7 +1,7 @@
 
 A new input system.
 
->NOTE: This system is still under active development and not yet stable. To run the project, you will need a [beta of Unity 2018.2](https://unity3d.com/unity/beta-download).
+>NOTE: This system is still under active development and not yet stable. To run the project, you will need Unity 2018.2+.
 
 Some [videos](https://www.youtube.com/playlist?list=PLXbAKDQVwztY0hyyeEy9gifk-ffkgoy_Y).
 

@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Reflection;
 using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -270,15 +271,22 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = newName;
         }
 
-        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, int numberOfDimensions)
+        public static void AppendCompositeBinding(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string compositeName, Type type)
         {
             var newProperty = AppendBinding(actionProperty, actionMapProperty);
-            newProperty.FindPropertyRelative("name").stringValue = "Composite " + numberOfDimensions + "d";
+            newProperty.FindPropertyRelative("name").stringValue = compositeName;
+            newProperty.FindPropertyRelative("path").stringValue = compositeName;
             newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.Composite;
 
-            for (var i = 0; i < numberOfDimensions; i++)
+            var fields = type.GetFields(BindingFlags.GetField | BindingFlags.Public | BindingFlags.Instance);
+            foreach (var field in fields)
             {
+                // Skip fields that aren't InputControls.
+                if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
+                    continue;
+
                 newProperty = AppendBinding(actionProperty, actionMapProperty);
+                newProperty.FindPropertyRelative("name").stringValue = field.Name;
                 newProperty.FindPropertyRelative("flags").intValue = (int)InputBinding.Flags.PartOfComposite;
             }
         }
