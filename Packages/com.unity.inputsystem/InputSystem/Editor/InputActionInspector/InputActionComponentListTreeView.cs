@@ -51,22 +51,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
             root.children = new List<TreeViewItem>();
             var bindingsArrayProperty = m_ActionProperty.FindPropertyRelative("m_SingletonActionBindings");
-            CompositeGroupInspectorTreeItem compositeGroupTreeItem = null;
+            CompositeGroupTreeItem compositeGroupTreeItem = null;
             
             for (var i = 0; i < bindingsArrayProperty.arraySize; i++)
             {
                 var bindingProperty = bindingsArrayProperty.GetArrayElementAtIndex(i);
-                var bindingItem = new BindingInspectorTreeItem("", bindingProperty, i);
+                var bindingItem = new BindingTreeItem("", bindingProperty, i);
 
                 if (bindingItem.isComposite)
                 {
-                    compositeGroupTreeItem = new CompositeGroupInspectorTreeItem(bindingProperty, i);
+                    compositeGroupTreeItem = new CompositeGroupTreeItem("", bindingProperty, i);
                     root.AddChild(compositeGroupTreeItem);
                     continue;
                 }
                 if (bindingItem.isPartOfComposite)
                 {
-                    var compositeItem = new CompositeInspectorTreeItem(bindingProperty, i);
+                    var compositeItem = new CompositeTreeItem("", bindingProperty, i);
+                    compositeItem.depth = 1;
                     if (compositeGroupTreeItem != null)
                         compositeGroupTreeItem.AddChild(compositeItem);
                     continue;

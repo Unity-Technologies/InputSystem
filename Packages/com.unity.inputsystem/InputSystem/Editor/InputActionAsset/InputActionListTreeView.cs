@@ -94,6 +94,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var action = actionMap.actions[i];
                 var actionItem = new ActionTreeItem(actionMapProperty, actionsArrayProperty, i);
+                actionItem.depth = 1;
                 actionItem.SetObjectToSerialize(action);
                 var actionName = action.name;
                 var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
@@ -113,12 +114,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     {
                         compositeGroupTreeItem = new CompositeGroupTreeItem(actionMapName, bindingProperty, j);
                         compositeGroupTreeItem.SetObjectToSerialize(binding);
+                        compositeGroupTreeItem.depth = 2;
                         actionItem.AddChild(compositeGroupTreeItem);
                         continue;
                     }
                     if (binding.isPartOfComposite)
                     {
                         var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j);
+                        compositeItem.depth = 3;
                         compositeItem.SetObjectToSerialize(binding);
                         if (compositeGroupTreeItem != null)
                             compositeGroupTreeItem.AddChild(compositeItem);
@@ -126,6 +129,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     }
                     compositeGroupTreeItem = null;
                     var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j);
+                    bindingsItem.depth = 2;
                     bindingsItem.SetObjectToSerialize(binding);
                     if (!actionSearchMatched && IsSearching() && !binding.path.ToLower().Contains(m_NameFilter.ToLower()))
                     {

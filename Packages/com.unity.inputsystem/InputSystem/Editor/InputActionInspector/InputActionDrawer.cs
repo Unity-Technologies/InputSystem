@@ -104,11 +104,11 @@ namespace UnityEngine.Experimental.Input.Editor
             var rowType = row.GetType();
 
             // Remove composite bindings
-            if(rowType == typeof(CompositeGroupInspectorTreeItem))
+            if(rowType == typeof(CompositeTreeItem))
             {
                 for (var i = row.children.Count - 1; i >= 0; i--)
                 {
-                    var composite = (CompositeInspectorTreeItem)row.children[i];
+                    var composite = (CompositeTreeItem)row.children[i];
                     
                     InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index);
                 }
@@ -116,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Remove bindings
-            if(rowType == typeof(BindingInspectorTreeItem))
+            if(rowType == typeof(BindingTreeItem))
             {
                 InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
             }

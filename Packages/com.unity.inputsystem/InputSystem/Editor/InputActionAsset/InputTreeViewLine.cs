@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -125,12 +127,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ObjectToSerialize = obj;
         }
 
-        public string SerializeToString()
-        {
-            if(m_ObjectToSerialize == null)
-                throw new Exception("Object to serialize is not set");
-            return JsonUtility.ToJson(m_ObjectToSerialize);
-        }
+        public abstract string SerializeToString();
 
         public virtual InputBindingPropertiesView GetPropertiesView(Action apply, TreeViewState state)
         {
@@ -172,9 +169,9 @@ namespace UnityEngine.Experimental.Input.Editor
             InputActionSerializationHelpers.AddAction(elementProperty);
         }
 
-        public SerializedProperty AddActionFromObject(InputAction action)
+        public SerializedProperty AddActionFromObject(Dictionary<string, string> parameters)
         {
-            return InputActionSerializationHelpers.AddActionFromObject(action, elementProperty);
+            return InputActionSerializationHelpers.AddActionFromObject(parameters, elementProperty);
         }
 
         public void DeleteAction(int actionRowIndex)
@@ -185,6 +182,13 @@ namespace UnityEngine.Experimental.Input.Editor
         public void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameActionMap(elementProperty, newName);
+        }
+        
+        public override string SerializeToString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
+            return builder.ToString();
         }
     }
 
@@ -206,7 +210,6 @@ namespace UnityEngine.Experimental.Input.Editor
             displayName = actionName;
             var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
             id = (actionMapName + "/" + displayName).GetHashCode();
-            depth = 1;
         }
 
         protected override GUIStyle rectStyle
@@ -225,9 +228,9 @@ namespace UnityEngine.Experimental.Input.Editor
             InputActionSerializationHelpers.AppendBinding(elementProperty, m_ActionMapProperty);
         }
 
-        public void AppendBindingFromObject(InputBinding binding)
+        public void AppendBindingFromObject(Dictionary<string, string> values)
         {
-            InputActionSerializationHelpers.AppendBindingFromObject(binding, elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AppendBindingFromObject(values, elementProperty, m_ActionMapProperty);
         }
 
         public void RemoveBinding(int compositeIndex)
@@ -238,6 +241,13 @@ namespace UnityEngine.Experimental.Input.Editor
         public void Rename(string newName)
         {
             InputActionSerializationHelpers.RenameAction(elementProperty, m_ActionMapProperty, newName);
+        }
+        
+        public override string SerializeToString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
+            return builder.ToString();
         }
     }
 
@@ -278,7 +288,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var path = elementProperty.FindPropertyRelative("path").stringValue;
             displayName = elementProperty.FindPropertyRelative("name").stringValue + ": " + InputControlPath.ToHumanReadableString(path);
-            depth++;
         }
 
         protected override GUIStyle rectStyle
@@ -308,9 +317,11 @@ namespace UnityEngine.Experimental.Input.Editor
             isPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) == InputBinding.Flags.PartOfComposite;
                         
             displayName = InputControlPath.ToHumanReadableString(path);
+            if (string.IsNullOrEmpty(displayName))
+            {
+                displayName = "<empty>";
+            }
             id = GetId(actionMapName, index, action, path, name);
-            depth = 2;
-            
         }
 
         public bool isComposite { get; private set; }
@@ -349,6 +360,18 @@ namespace UnityEngine.Experimental.Input.Editor
         public override bool hasProperties
         {
             get { return true; }
+        }
+        
+        public override string SerializeToString()
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendFormat("{0}={1}\n", "name", elementProperty.FindPropertyRelative("name").stringValue);
+            builder.AppendFormat("{0}={1}\n", "path", elementProperty.FindPropertyRelative("path").stringValue);
+            builder.AppendFormat("{0}={1}\n", "groups", elementProperty.FindPropertyRelative("groups").stringValue);
+            builder.AppendFormat("{0}={1}\n", "interactions", elementProperty.FindPropertyRelative("interactions").stringValue);
+            builder.AppendFormat("{0}={1}\n", "flags", elementProperty.FindPropertyRelative("flags").intValue);
+            builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("action").stringValue);
+            return builder.ToString();
         }
     }
 }
