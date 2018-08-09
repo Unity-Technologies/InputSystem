@@ -22,6 +22,15 @@ namespace UnityEngine.Experimental.Input.Editor
             treeView.ExpandAll();
             return treeView;
         }
+        
+        public static InputActionListTreeView CreateFromActionMapProperty(Action applyAction, SerializedProperty actionMapProperty)
+        {
+            var treeView = new InputActionComponentListTreeView(applyAction, new TreeViewState());
+            treeView.m_ActionMapSerializedProperty = actionMapProperty;
+            treeView.Reload();
+            treeView.ExpandAll();
+            return treeView;
+        }
 
         protected override TreeViewItem BuildRoot()
         {
@@ -59,7 +68,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void BuildFromActionMapSerializedProperty(TreeViewItem root)
         {
-            ParseActionMap(root, m_ActionMapSerializedProperty);
+            ParseActionMap(root, m_ActionMapSerializedProperty, 0);
         }
 
         protected override bool CanMultiSelect(TreeViewItem item)

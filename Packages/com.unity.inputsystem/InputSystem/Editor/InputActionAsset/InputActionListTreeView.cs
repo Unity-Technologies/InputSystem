@@ -76,8 +76,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return root;
         }
-
-
+        
         void BuildFromSerializedObject(TreeViewItem root)
         {
             m_SerializedObject.Update();
@@ -85,30 +84,30 @@ namespace UnityEngine.Experimental.Input.Editor
             for (var i = 0; i < actionMapsProperty.arraySize; i++)
             {
                 var actionMapItem = new ActionMapTreeItem(actionMapsProperty, i);
-                ParseActionMap(actionMapItem, actionMapsProperty.GetArrayElementAtIndex(i));
+                ParseActionMap(actionMapItem, actionMapsProperty.GetArrayElementAtIndex(i), 1);
                 root.AddChild(actionMapItem);
             }
         }
 
-        protected void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty)
+        protected void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, int depth)
         {
             var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
             for (var i = 0; i < actionsArrayProperty.arraySize; i++)
             {
-                ParseAction(parentTreeItem, actionMapProperty, actionsArrayProperty, i);
+                ParseAction(parentTreeItem, actionMapProperty, actionsArrayProperty, i, depth);
             }
         }
 
-        void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index)
+        void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index, int depth)
         {
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
             
             var actionItem = new ActionTreeItem(actionMapProperty, actionsArrayProperty, index);
-            actionItem.depth = 1;
+            actionItem.depth = depth;
             var actionName = actionItem.actionName;
 
-            ParseBindings(actionItem, actionMapName, actionName, bindingsArrayProperty, 2);
+            ParseBindings(actionItem, actionMapName, actionName, bindingsArrayProperty, depth + 1);
 
             bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
             if (actionSearchMatched || IsSearching() && actionItem.children != null && actionItem.children.Any())
