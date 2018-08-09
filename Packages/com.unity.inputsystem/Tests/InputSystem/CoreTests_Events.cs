@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -332,6 +333,55 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 2)]
+    struct StateWith2Bytes : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Axis")]
+        [FieldOffset(0)] public ushort value;
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(StateWith2Bytes))]
+    class DeviceWith2ByteState : InputDevice
+    {
+    }
+
+    // This test pertains mostly to how the input runtime handles events so it's of limited
+    // use in our current test setup with InputTestRuntime. There's an equivalent native test
+    // in the Unity runtime to ensure the constraint.
+    //
+    // Previously we used to actually modify event size to always be 4 byte aligned and thus potentially
+    // added padding to events. This is a bad idea. The C# system can't tell between padding added to an
+    // event and valid input data that's part of the state. This can cause the padding to actually overwrite
+    // state of controls that happen to start at the end of an event. On top, we didn't clear out the
+    // memory we added to an event and thus ended up with random garbage being written to unrelated controls.
+    //
+    // What we do now is to simply align event pointers to 4 byte boundaries as we read and write events.
+    [Test]
+    [Category("Events")]
+    public void Events_CanHandleStateNotAlignedTo4ByteBoundary()
+    {
+        Debug.Assert(UnsafeUtility.SizeOf<StateWith2Bytes>() == 2);
+
+        var device = InputSystem.AddDevice<DeviceWith2ByteState>();
+
+        InputSystem.QueueStateEvent(device, new StateWith2Bytes());
+        InputSystem.QueueStateEvent(device, new StateWith2Bytes());
+
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
+            Assert.That(eventPtr.data.ToInt64() % 4, Is.EqualTo(0));
+            Assert.That(eventPtr.sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<StateWith2Bytes>()));
+        };
+
+        InputSystem.Update();
     }
 
     [Test]

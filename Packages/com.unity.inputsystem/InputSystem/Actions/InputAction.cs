@@ -2,6 +2,8 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: might have to revisit when we fire actions in relation to Update/FixedUpdate
+
 ////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
 
 ////REVIEW: the entire 'lastXXX' API section is shit and needs a pass

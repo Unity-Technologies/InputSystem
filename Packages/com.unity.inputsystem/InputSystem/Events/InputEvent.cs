@@ -124,7 +124,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
         {
-            return (InputEvent*)((byte*)current + current->sizeInBytes);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, 4);
+            return (InputEvent*)((byte*)current + alignedSizeInBytes);
         }
     }
 }
