@@ -9,23 +9,22 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     class InputActionListTreeView : TreeView
     {
-        InputActionAsset m_Asset;
         SerializedObject m_SerializedObject;
         string m_GroupFilter;
         string m_NameFilter;
         Action m_ApplyAction;
 
         public Action OnSelectionChanged;
-        public Action OnContextClick;
+        public Action<SerializedProperty> OnContextClick;
 
-        public static InputActionListTreeView Create(Action applyAction, InputActionAsset asset, SerializedObject serializedObject, ref TreeViewState treeViewState)
+        public static InputActionListTreeView CreateFromSerializedObject(Action applyAction, SerializedObject serializedObject, ref TreeViewState treeViewState)
         {
             if (treeViewState == null)
                 treeViewState = new TreeViewState();
 
-            var treeView = new InputActionListTreeView(applyAction, asset, serializedObject, treeViewState);
-            ////FIXME: this requires 2018.3 to compile
-            //treeView.foldoutOverride += OnFoldoutDraw;
+            var treeView = new InputActionListTreeView(applyAction, treeViewState);
+            treeView.m_SerializedObject = serializedObject;
+            treeView.Reload();
             treeView.ExpandAll();
             return treeView;
         }
@@ -37,12 +36,12 @@ namespace UnityEngine.Experimental.Input.Editor
             return EditorGUI.Foldout(position, expandedstate, GUIContent.none, style);
         }
 
-        protected InputActionListTreeView(Action applyAction,  InputActionAsset asset, SerializedObject serializedObject, TreeViewState state)
+        protected InputActionListTreeView(Action applyAction, TreeViewState state)
             : base(state)
         {
             m_ApplyAction = applyAction;
-            m_Asset = asset;
-            m_SerializedObject = serializedObject;
+            //FIXME: this requires 2018.3 to compile
+            //foldoutOverride += OnFoldoutDraw;
             Reload();
         }
 
@@ -70,96 +69,109 @@ namespace UnityEngine.Experimental.Input.Editor
                 id = 0,
                 depth = -1
             };
-
             root.children = new List<TreeViewItem>();
-            m_SerializedObject.Update();
-            var actionMapsProperty = m_SerializedObject.FindProperty("m_ActionMaps");
-            for (var i = 0; i < m_Asset.actionMaps.Count; i++)
+            if (m_SerializedObject != null)
             {
-                var actionMap = m_Asset.actionMaps[i];
-                var actionMapItem = new ActionMapTreeItem(actionMapsProperty, i);
-                ParseActionMap(actionMapItem, actionMapsProperty.GetArrayElementAtIndex(i), actionMap);
-                root.AddChild(actionMapItem);
+                BuildFromSerializedObject(root);
             }
             return root;
         }
 
-        void ParseActionMap(ActionMapTreeItem parentTreeItem, SerializedProperty actionMapProperty, InputActionMap actionMap)
+
+        void BuildFromSerializedObject(TreeViewItem root)
         {
-            var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
-            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
-            var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
-            
-            for (var i = 0; i < actionsArrayProperty.arraySize; i++)
+            m_SerializedObject.Update();
+            var actionMapsProperty = m_SerializedObject.FindProperty("m_ActionMaps");
+            for (var i = 0; i < actionMapsProperty.arraySize; i++)
             {
-                var action = actionMap.actions[i];
-                var actionItem = new ActionTreeItem(actionMapProperty, actionsArrayProperty, i);
-                actionItem.depth = 1;
-                actionItem.SetObjectToSerialize(action);
-                var actionName = action.name;
-                var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
-
-                bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
-
-                CompositeGroupTreeItem compositeGroupTreeItem = null;
-                for (var j = 0; j < bindingsCount; j++)
-                {
-                    var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
-                    var binding = action.bindings[j];
-                    if (!string.IsNullOrEmpty(m_GroupFilter) && !binding.groups.Split(';').Contains(m_GroupFilter))
-                    {
-                        continue;
-                    }
-                    if (binding.isComposite)
-                    {
-                        compositeGroupTreeItem = new CompositeGroupTreeItem(actionMapName, bindingProperty, j);
-                        compositeGroupTreeItem.SetObjectToSerialize(binding);
-                        compositeGroupTreeItem.depth = 2;
-                        actionItem.AddChild(compositeGroupTreeItem);
-                        continue;
-                    }
-                    if (binding.isPartOfComposite)
-                    {
-                        var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j);
-                        compositeItem.depth = 3;
-                        compositeItem.SetObjectToSerialize(binding);
-                        if (compositeGroupTreeItem != null)
-                            compositeGroupTreeItem.AddChild(compositeItem);
-                        continue;
-                    }
-                    compositeGroupTreeItem = null;
-                    var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j);
-                    bindingsItem.depth = 2;
-                    bindingsItem.SetObjectToSerialize(binding);
-                    if (!actionSearchMatched && IsSearching() && !binding.path.ToLower().Contains(m_NameFilter.ToLower()))
-                    {
-                        continue;
-                    }
-                    actionItem.AddChild(bindingsItem);
-                }
-
-                if (actionSearchMatched || IsSearching() && actionItem.children != null && actionItem.children.Any())
-                {
-                    parentTreeItem.AddChild(actionItem);
-                }
-                else if (!IsSearching())
-                {
-                    parentTreeItem.AddChild(actionItem);
-                }
+                var actionMapItem = new ActionMapTreeItem(actionMapsProperty, i);
+                ParseActionMap(actionMapItem, actionMapsProperty.GetArrayElementAtIndex(i));
+                root.AddChild(actionMapItem);
             }
         }
 
+        protected void ParseActionMap(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty)
+        {
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
+            for (var i = 0; i < actionsArrayProperty.arraySize; i++)
+            {
+                ParseAction(parentTreeItem, actionMapProperty, actionsArrayProperty, i);
+            }
+        }
+
+        void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index)
+        {
+            var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
+            var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
+            
+            var actionItem = new ActionTreeItem(actionMapProperty, actionsArrayProperty, index);
+            actionItem.depth = 1;
+            var actionName = actionItem.actionName;
+
+            ParseBindings(actionItem, actionMapName, actionName, bindingsArrayProperty, 2);
+
+            bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
+            if (actionSearchMatched || IsSearching() && actionItem.children != null && actionItem.children.Any())
+            {
+                parentTreeItem.AddChild(actionItem);
+            }
+            else if (!IsSearching())
+            {
+                parentTreeItem.AddChild(actionItem);
+            }
+        }
+
+        protected void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
+        {
+            bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
+            var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
+            CompositeGroupTreeItem compositeGroupTreeItem = null;
+            for (var j = 0; j < bindingsCount; j++)
+            {
+                var bindingProperty = InputActionSerializationHelpers.GetBinding(bindingsArrayProperty, actionName, j);
+                var bindingsItem = new BindingTreeItem(actionMapName, bindingProperty, j);
+                bindingsItem.depth = depth;
+                if (!string.IsNullOrEmpty(m_GroupFilter) && !bindingsItem.groups.Split(';').Contains(m_GroupFilter))
+                {
+                    continue;
+                }
+                if (bindingsItem.isComposite)
+                {
+                    compositeGroupTreeItem = new CompositeGroupTreeItem(actionMapName, bindingProperty, j);
+                    compositeGroupTreeItem.depth = depth;
+                    parent.AddChild(compositeGroupTreeItem);
+                    continue;
+                }
+                if (bindingsItem.isPartOfComposite)
+                {
+                    var compositeItem = new CompositeTreeItem(actionMapName, bindingProperty, j);
+                    compositeItem.depth = depth + 1;
+                    if (compositeGroupTreeItem != null)
+                        compositeGroupTreeItem.AddChild(compositeItem);
+                    continue;
+                }
+                compositeGroupTreeItem = null;
+                if (!actionSearchMatched && IsSearching() && !bindingsItem.path.ToLower().Contains(m_NameFilter.ToLower()))
+                {
+                    continue;
+                }
+                parent.AddChild(bindingsItem);
+            }
+        }
+        
         protected override void ContextClicked()
         {
-            OnContextClick();
+            OnContextClick(null);
         }
 
         protected override void SelectionChanged(IList<int> selectedIds)
         {
             if (!HasSelection())
                 return;
-
-            OnSelectionChanged();
+            if (OnSelectionChanged != null)
+            {
+                OnSelectionChanged();
+            }
         }
 
         public InputTreeViewLine GetSelectedRow()

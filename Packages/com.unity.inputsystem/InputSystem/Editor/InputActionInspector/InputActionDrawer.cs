@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.Editor
         const int kFoldoutHeight = 15;
         const int kBindingIndent = 5;
 
-        InputActionComponentListTreeView m_TreeView;
+        InputActionListTreeView m_TreeView;
 
         public InputActionDrawer()
         {
@@ -161,7 +161,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
             {
-                m_TreeView = InputActionComponentListTreeView.Create(property);
+                m_TreeView = InputActionComponentListTreeView.CreateFromActionProperty(() => { }, property);
                 m_TreeView.OnContextClick = OnContextClick;
             }
         }

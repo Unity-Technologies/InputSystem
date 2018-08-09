@@ -141,7 +141,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_SerializedObject != null)
             {
                 m_SearchField = new SearchField();
-                m_TreeView = InputActionListTreeView.Create(Apply, m_ReferencedObject as InputActionAsset, m_SerializedObject, ref m_TreeViewState);
+                m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
                 m_TreeView.OnSelectionChanged = OnSelectionChanged;
                 m_TreeView.OnContextClick = OnContextClick;
                 m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
@@ -309,7 +309,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void OnContextClick()
+        void OnContextClick(SerializedProperty property)
         {
             var menu = new GenericMenu();
             AddAddOptionsToMenu(menu, true);

@@ -1,44 +1,26 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class InputActionComponentListTreeView : TreeView
+    class InputActionComponentListTreeView : InputActionListTreeView
     {
-        SerializedProperty m_ActionProperty;
-        public Action<SerializedProperty> OnContextClick;
+        SerializedProperty m_ActionMapSerializedProperty;
+        SerializedProperty m_ActionSerializedProperty;
         
-        public static InputActionComponentListTreeView Create(SerializedProperty actionProperty)
+        protected InputActionComponentListTreeView(Action applyAction, TreeViewState state)
+            : base(applyAction, state) { }
+        
+        public static InputActionListTreeView CreateFromActionProperty(Action applyAction, SerializedProperty actionProperty)
         {
-            var treeView = new InputActionComponentListTreeView(actionProperty);
-            
-            ////FIXME: this requires 2018.3 to compile
-            //treeView.foldoutOverride += OnFoldoutDraw;
+            var treeView = new InputActionComponentListTreeView(applyAction, new TreeViewState());
+            treeView.m_ActionSerializedProperty = actionProperty;
+            treeView.Reload();
             treeView.ExpandAll();
             return treeView;
-        }
-
-        protected override bool CanMultiSelect(TreeViewItem item)
-        {
-            return false;
-        }
-
-        static bool OnFoldoutDraw(Rect position, bool expandedstate, GUIStyle style)
-        {
-            var indent = (int)(position.x / 15);
-            position.x = 6 * indent + 8;
-            return EditorGUI.Foldout(position, expandedstate, GUIContent.none, style);
-        }
-
-        InputActionComponentListTreeView(SerializedProperty actionProperty) : base(new TreeViewState())
-        {
-            useScrollView = false;
-            m_ActionProperty = actionProperty;
-            Reload();
         }
 
         protected override TreeViewItem BuildRoot()
@@ -48,35 +30,41 @@ namespace UnityEngine.Experimental.Input.Editor
                 id = 0,
                 depth = -1
             };
-
             root.children = new List<TreeViewItem>();
-            var bindingsArrayProperty = m_ActionProperty.FindPropertyRelative("m_SingletonActionBindings");
-            CompositeGroupTreeItem compositeGroupTreeItem = null;
-            
-            for (var i = 0; i < bindingsArrayProperty.arraySize; i++)
+            if (m_ActionMapSerializedProperty != null)
             {
-                var bindingProperty = bindingsArrayProperty.GetArrayElementAtIndex(i);
-                var bindingItem = new BindingTreeItem("", bindingProperty, i);
-
-                if (bindingItem.isComposite)
-                {
-                    compositeGroupTreeItem = new CompositeGroupTreeItem("", bindingProperty, i);
-                    root.AddChild(compositeGroupTreeItem);
-                    continue;
-                }
-                if (bindingItem.isPartOfComposite)
-                {
-                    var compositeItem = new CompositeTreeItem("", bindingProperty, i);
-                    compositeItem.depth = 1;
-                    if (compositeGroupTreeItem != null)
-                        compositeGroupTreeItem.AddChild(compositeItem);
-                    continue;
-                }
-                
-                root.AddChild(bindingItem);
+                BuildFromActionMapSerializedProperty(root);
             }
-            
+            else if (m_ActionSerializedProperty != null)
+            {
+                BuildFromActionSerializedProperty(root);
+            }
             return root;
+        }
+
+        protected override void ContextClicked()
+        {
+            if (m_ActionSerializedProperty != null)
+            {
+                OnContextClick(m_ActionSerializedProperty);
+            }
+        }
+
+        void BuildFromActionSerializedProperty(TreeViewItem root)
+        {
+            var bindingsArrayProperty = m_ActionSerializedProperty.FindPropertyRelative("m_SingletonActionBindings");
+            var actionName = m_ActionSerializedProperty.FindPropertyRelative("m_Name").stringValue;
+            ParseBindings(root, "", actionName, bindingsArrayProperty, 0);
+        }
+
+        void BuildFromActionMapSerializedProperty(TreeViewItem root)
+        {
+            ParseActionMap(root, m_ActionMapSerializedProperty);
+        }
+
+        protected override bool CanMultiSelect(TreeViewItem item)
+        {
+            return false;
         }
 
         protected override void RowGUI(RowGUIArgs args)
@@ -111,19 +99,6 @@ namespace UnityEngine.Experimental.Input.Editor
             var element = (InputTreeViewLine)FindItem(id, rootItem);
             var rect = new Rect(GUIUtility.GUIToScreenPoint(Event.current.mousePosition), Vector2.zero);
             BindingPropertiesPopup.Show(rect, element, Reload);
-        }
-
-        protected override void ContextClicked()
-        {
-            OnContextClick(m_ActionProperty);
-        }
-
-        public InputTreeViewLine GetSelectedRow()
-        {
-            if (!HasSelection())
-                return null;
-
-            return (InputTreeViewLine)FindItem(GetSelection().First(), rootItem);
         }
     }
 }

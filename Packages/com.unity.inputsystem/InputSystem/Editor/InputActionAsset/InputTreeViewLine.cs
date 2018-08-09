@@ -57,7 +57,6 @@ namespace UnityEngine.Experimental.Input.Editor
         public bool renaming;
         protected SerializedProperty m_SetProperty;
         protected int m_Index;
-        object m_ObjectToSerialize;
 
         public virtual bool isDraggable
         {
@@ -120,11 +119,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             boxRect.width = 6 * depth;
             Styles.backgroundStyle.Draw(boxRect, GUIContent.none, false, false, false, false);
-        }
-
-        public void SetObjectToSerialize(object obj)
-        {
-            m_ObjectToSerialize = obj;
         }
 
         public abstract string SerializeToString();
@@ -308,9 +302,10 @@ namespace UnityEngine.Experimental.Input.Editor
         public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
         {
             m_BindingProperty = bindingProperty;
-            var path = elementProperty.FindPropertyRelative("path").stringValue;
-            var action = elementProperty.FindPropertyRelative("action").stringValue;
-            var name = elementProperty.FindPropertyRelative("name").stringValue;
+            path = elementProperty.FindPropertyRelative("path").stringValue;
+            groups = elementProperty.FindPropertyRelative("groups").stringValue;
+            action = elementProperty.FindPropertyRelative("action").stringValue;
+            name = elementProperty.FindPropertyRelative("name").stringValue;
             
             var flags = (InputBinding.Flags) elementProperty.FindPropertyRelative("flags").intValue;
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
@@ -325,8 +320,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public bool isComposite { get; private set; }
-        
         public bool isPartOfComposite { get; private set; }
+        public string path { get; private set; }
+        public string groups { get; private set; }
+        public string action { get; private set; }
+        public string name { get; private set; }
 
         public override bool isDraggable
         {
@@ -361,7 +359,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             get { return true; }
         }
-        
+
         public override string SerializeToString()
         {
             StringBuilder builder = new StringBuilder();
