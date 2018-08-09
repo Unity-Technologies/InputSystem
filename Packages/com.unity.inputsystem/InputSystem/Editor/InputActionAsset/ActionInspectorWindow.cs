@@ -155,7 +155,6 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
-            OnSelectionChanged();
             SaveChangesToAsset();
         }
 

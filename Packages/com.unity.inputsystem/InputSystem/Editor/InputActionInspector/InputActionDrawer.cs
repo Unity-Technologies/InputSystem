@@ -169,7 +169,11 @@ namespace UnityEngine.Experimental.Input.Editor
         void OnContextClick(SerializedProperty serializedProperty)
         {
             var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Delete (not implemented)"), false, () => { });
+            menu.AddItem(new GUIContent("Delete"), false, 
+                () => 
+                { 
+                    DeleteSelectedRows(serializedProperty); 
+                });
             menu.ShowAsContext();
         }
         
