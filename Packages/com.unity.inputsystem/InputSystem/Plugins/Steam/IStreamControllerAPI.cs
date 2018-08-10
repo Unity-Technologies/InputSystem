@@ -2,13 +2,8 @@
 
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
-    public static class SteamSupport
+    public interface IStreamControllerAPI
     {
-        public static void Initialize()
-        {
-            // We use this as a base layout.
-            InputSystem.RegisterControlLayout<SteamController>();
-        }
     }
 }
 

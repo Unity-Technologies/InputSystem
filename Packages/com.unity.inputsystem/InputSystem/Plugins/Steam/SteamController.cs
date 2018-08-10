@@ -1,3 +1,5 @@
+#if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     /// <summary>
@@ -19,3 +21,5 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
 
     //add support for constructing InputControlLayouts from Steam VDF files
 }
+
+#endif // (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
