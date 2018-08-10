@@ -177,7 +177,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             InputActionSerializationHelpers.RenameActionMap(elementProperty, newName);
         }
-        
+
         public override string SerializeToString()
         {
             StringBuilder builder = new StringBuilder();
@@ -236,7 +236,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             InputActionSerializationHelpers.RenameAction(elementProperty, m_ActionMapProperty, newName);
         }
-        
+
         public override string SerializeToString()
         {
             StringBuilder builder = new StringBuilder();
@@ -306,11 +306,11 @@ namespace UnityEngine.Experimental.Input.Editor
             groups = elementProperty.FindPropertyRelative("groups").stringValue;
             action = elementProperty.FindPropertyRelative("action").stringValue;
             name = elementProperty.FindPropertyRelative("name").stringValue;
-            
-            var flags = (InputBinding.Flags) elementProperty.FindPropertyRelative("flags").intValue;
+
+            var flags = (InputBinding.Flags)elementProperty.FindPropertyRelative("flags").intValue;
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
             isPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) == InputBinding.Flags.PartOfComposite;
-                        
+
             displayName = InputControlPath.ToHumanReadableString(path);
             if (string.IsNullOrEmpty(displayName))
             {

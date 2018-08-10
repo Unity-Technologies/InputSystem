@@ -100,9 +100,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (IsRowOfType<ActionMapTreeItem>(ref row))
                 {
-                    if(m_SerializedObject == null)
+                    if (m_SerializedObject == null)
                         throw new InvalidOperationException("Pasting action map is not a valid operation");
-                    
+
                     currentActionMapProperty = InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, GetParameterDictionary(row));
                     m_Apply();
                     continue;
@@ -167,7 +167,7 @@ namespace UnityEngine.Experimental.Input.Editor
         Dictionary<string, string> GetParameterDictionary(string data)
         {
             var result = new Dictionary<string, string>();
-            foreach (var row in data.Split(new []{'\n'}, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var row in data.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries))
             {
                 var idx = row.IndexOf('=');
                 var key = row.Substring(0, idx).Trim();
@@ -272,7 +272,7 @@ namespace UnityEngine.Experimental.Input.Editor
             //Remove action maps
             foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
             {
-                if(m_SerializedObject == null)
+                if (m_SerializedObject == null)
                     throw new InvalidOperationException("Deleting action map is not a valid operation");
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }

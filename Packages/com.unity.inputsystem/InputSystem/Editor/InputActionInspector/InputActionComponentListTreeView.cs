@@ -10,10 +10,10 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         SerializedProperty m_ActionMapSerializedProperty;
         SerializedProperty m_ActionSerializedProperty;
-        
+
         protected InputActionComponentListTreeView(Action applyAction, TreeViewState state)
-            : base(applyAction, state) { }
-        
+            : base(applyAction, state) {}
+
         public static InputActionListTreeView CreateFromActionProperty(Action applyAction, SerializedProperty actionProperty)
         {
             var treeView = new InputActionComponentListTreeView(applyAction, new TreeViewState());
@@ -22,7 +22,7 @@ namespace UnityEngine.Experimental.Input.Editor
             treeView.ExpandAll();
             return treeView;
         }
-        
+
         public static InputActionListTreeView CreateFromActionMapProperty(Action applyAction, SerializedProperty actionMapProperty)
         {
             var treeView = new InputActionComponentListTreeView(applyAction, new TreeViewState());
@@ -81,18 +81,18 @@ namespace UnityEngine.Experimental.Input.Editor
             if (args.item is InputTreeViewLine)
             {
                 var bindingItem = (args.item as InputTreeViewLine);
-                
+
                 // We try to predict the indentation
                 var indent = (args.item.depth + 2) * 6 + 10;
                 bindingItem.OnGUI(args.rowRect, args.selected, args.focused, indent);
-                
+
                 var btnRect = args.rowRect;
                 btnRect.x = btnRect.width - 20;
                 btnRect.width = 20;
 
                 if (!bindingItem.hasProperties)
                     return;
-                
+
                 if (GUI.Button(btnRect, "..."))
                 {
                     var screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(btnRect.x, btnRect.y));

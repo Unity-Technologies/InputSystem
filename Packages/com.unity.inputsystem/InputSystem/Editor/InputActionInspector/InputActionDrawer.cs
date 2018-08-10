@@ -49,17 +49,17 @@ namespace UnityEngine.Experimental.Input.Editor
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
-   
+
             // If the action has no name, infer it from the name of the action property.
             SetActionNameIfNotSet(property);
-            
+
             var foldoutRect = position;
             foldoutRect.height = kFoldoutHeight;
-            
+
             var btnRect = foldoutRect;
             btnRect.x = btnRect.width - 20;
             btnRect.width = 20;
-            
+
             foldoutRect.width -= 20;
 
             property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
@@ -78,7 +78,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
 
                 m_TreeView.OnGUI(position);
-                
+
                 if (Event.current.type == EventType.ValidateCommand)
                 {
                     if (Event.current.commandName == "Delete")
@@ -97,26 +97,26 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             EditorGUI.EndProperty();
         }
-        
+
         void DeleteSelectedRows(SerializedProperty actionProperty)
         {
             var row = m_TreeView.GetSelectedRow();
             var rowType = row.GetType();
 
             // Remove composite bindings
-            if(rowType == typeof(CompositeTreeItem))
+            if (rowType == typeof(CompositeTreeItem))
             {
                 for (var i = row.children.Count - 1; i >= 0; i--)
                 {
                     var composite = (CompositeTreeItem)row.children[i];
-                    
+
                     InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index);
                 }
                 InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
             }
 
             // Remove bindings
-            if(rowType == typeof(BindingTreeItem))
+            if (rowType == typeof(BindingTreeItem))
             {
                 InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
             }
@@ -129,13 +129,13 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var menu = new GenericMenu();
             menu.AddItem(EditorGUIUtility.TrTextContent("Binding"), false, AddBinding, property);
-           
+
             var compositeString = EditorGUIUtility.TrTextContent("Composite");
             foreach (var composite in InputBindingComposite.s_Composites.names)
             {
                 menu.AddItem(new GUIContent(compositeString.text + "/" + composite), false, OnAddCompositeBinding, new List<object>(){composite, property});
             }
-            
+
             menu.ShowAsContext();
         }
 
@@ -161,7 +161,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
             {
-                m_TreeView = InputActionComponentListTreeView.CreateFromActionProperty(() => { }, property);
+                m_TreeView = InputActionComponentListTreeView.CreateFromActionProperty(() => {}, property);
                 m_TreeView.OnContextClick = OnContextClick;
             }
         }
@@ -169,14 +169,14 @@ namespace UnityEngine.Experimental.Input.Editor
         void OnContextClick(SerializedProperty serializedProperty)
         {
             var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Delete"), false, 
-                () => 
-                { 
-                    DeleteSelectedRows(serializedProperty); 
+            menu.AddItem(new GUIContent("Delete"), false,
+                () =>
+                {
+                    DeleteSelectedRows(serializedProperty);
                 });
             menu.ShowAsContext();
         }
-        
+
         void SetActionNameIfNotSet(SerializedProperty actionProperty)
         {
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");

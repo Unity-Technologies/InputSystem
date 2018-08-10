@@ -213,10 +213,10 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ReloadTree();
         }
     }
-    
+
     class CompositeGroupPropertiesView : InputBindingPropertiesView
     {
-        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state) 
+        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state)
             : base(property, apply, state)
         {
         }

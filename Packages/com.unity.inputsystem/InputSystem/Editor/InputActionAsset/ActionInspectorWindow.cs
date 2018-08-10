@@ -95,7 +95,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SerializedObject = new SerializedObject(m_ReferencedObject);
             InitializeTrees();
         }
-        
+
         public void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
@@ -169,7 +169,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
             {
-                if(!importedAssets.Any(s=>s.EndsWith(k_FileExtension)))
+                if (!importedAssets.Any(s => s.EndsWith(k_FileExtension)))
                     return;
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
                 foreach (var inputWindow in inputManagers)

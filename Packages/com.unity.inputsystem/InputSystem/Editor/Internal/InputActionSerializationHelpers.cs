@@ -26,7 +26,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             return bindingCountForAction;
         }
-        
+
         public static int GetBindingsStartIndex(SerializedProperty bindingArrayProperty, string actionName)
         {
             Debug.Assert(bindingArrayProperty != null);

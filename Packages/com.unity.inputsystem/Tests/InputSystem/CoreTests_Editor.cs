@@ -173,10 +173,10 @@ partial class CoreTests
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
-        
+
         var parameters = new Dictionary<string, string>();
         parameters.Add("m_Name", "set");
-        
+
         Assert.That(asset.actionMaps, Has.Count.EqualTo(0));
 
         InputActionSerializationHelpers.AddActionMapFromObject(obj, parameters);
@@ -273,7 +273,7 @@ partial class CoreTests
         var sourceActionName = "some action";
         var groupName = "group";
         var flags = 10;
-        
+
         var parameters = new Dictionary<string, string>();
         parameters.Add("path", pathName);
         parameters.Add("name", name);
@@ -281,9 +281,9 @@ partial class CoreTests
         parameters.Add("interactions", interactionsName);
         parameters.Add("flags", "" + flags);
         parameters.Add("action", sourceActionName);
-        
+
         InputActionSerializationHelpers.AppendBindingFromObject(parameters, action1Property, mapProperty);
-        
+
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");

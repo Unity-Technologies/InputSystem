@@ -76,7 +76,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
             return root;
         }
-        
+
         void BuildFromSerializedObject(TreeViewItem root)
         {
             m_SerializedObject.Update();
@@ -102,7 +102,7 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
-            
+
             var actionItem = new ActionTreeItem(actionMapProperty, actionsArrayProperty, index);
             actionItem.depth = depth;
             var actionName = actionItem.actionName;
@@ -157,7 +157,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 parent.AddChild(bindingsItem);
             }
         }
-        
+
         protected override void ContextClicked()
         {
             OnContextClick(null);

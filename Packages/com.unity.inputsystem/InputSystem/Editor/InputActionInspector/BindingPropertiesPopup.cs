@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -15,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
             w.OnChange = reload;
             w.SetProperty(treeViewLine);
             w.ShowPopup();
-            w.ShowAsDropDown(btnRect, new Vector2(250,350));
+            w.ShowAsDropDown(btnRect, new Vector2(250, 350));
         }
 
         void SetProperty(InputTreeViewLine treeViewLine)
@@ -25,7 +26,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void OnGUI()
         {
-            m_BindingPropertyView.OnGUI();            
+            m_BindingPropertyView.OnGUI();
         }
     }
 }
+#endif // UNITY_EDITOR
