@@ -99,6 +99,22 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// Name of control layout expected for controls bound to this action.
+        /// </summary>
+        /// <remarks>
+        /// This is optional and is null by default.
+        ///
+        /// Constraining an action to a particular control layout allows determine the value
+        /// type and expected input behavior of an action without being reliant on any particular
+        /// binding.
+        /// </remarks>
+        public string expectedControlLayout
+        {
+            get { return m_ExpectedControlLayout; }
+            set { m_ExpectedControlLayout = value; }
+        }
+
+        /// <summary>
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
@@ -345,8 +361,9 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        ////REVIEW: for binding resolution, it would be best if this was an InternedString; however, for serialization, it has to be a string
+        ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
         [SerializeField] internal string m_Name;
+        [SerializeField] internal string m_ExpectedControlLayout;
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
