@@ -638,6 +638,7 @@ namespace UnityEngine.Experimental.Input
         private struct ActionJson
         {
             public string name;
+            public string expectedControlLayout;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -646,7 +647,11 @@ namespace UnityEngine.Experimental.Input
             public static ActionJson FromAction(InputAction action)
             {
                 // Bindings don't go on the actions when we write them.
-                return new ActionJson {name = action.m_Name};
+                return new ActionJson
+                {
+                    name = action.m_Name,
+                    expectedControlLayout = action.m_ExpectedControlLayout,
+                };
             }
         }
 
@@ -787,6 +792,9 @@ namespace UnityEngine.Experimental.Input
 
                     // Create action.
                     var action = new InputAction(actionName);
+                    action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                        ? jsonAction.expectedControlLayout
+                        : null;
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -846,6 +854,9 @@ namespace UnityEngine.Experimental.Input
 
                         // Create action.
                         var action = new InputAction(jsonAction.name);
+                        action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                            ? jsonAction.expectedControlLayout
+                            : null;
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.
