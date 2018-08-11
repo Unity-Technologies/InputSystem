@@ -11,7 +11,41 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
-    public void Editor_CanConvertInputActionsToSteamVDFFormat()
+    public void Editor_CanGenerateInputDeviceBasedOnSteamIGAFile()
+    {
+        // Create an InputActions setup and convert it to Steam IGA.
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var actionMap1 = new InputActionMap("map1");
+        var actionMap2 = new InputActionMap("map2");
+        actionMap1.AddAction("buttonAction", expectedControlLayout: "Button");
+        actionMap1.AddAction("axisAction", expectedControlLayout: "Axis");
+        actionMap1.AddAction("stickAction", expectedControlLayout: "Stick");
+        actionMap2.AddAction("vector2Action", expectedControlLayout: "Vector2");
+
+        asset.AddActionMap(actionMap1);
+        asset.AddActionMap(actionMap2);
+
+        var vdf = SteamIGAConverter.ConvertInputActionsToSteamIGA(asset);
+
+        // Generate a C# input device from the Steam IGA file.
+        var generatedCode = SteamIGAConverter.GenerateInputDeviceFromSteamIGA(vdf, "My.Namespace.MySteamController");
+
+        Assert.That(generatedCode, Contains.Substring("#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT"));
+        Assert.That(generatedCode, Contains.Substring("namespace My.Namespace\n"));
+        Assert.That(generatedCode, Contains.Substring("public class MySteamController : SteamController, IInputUpdateCallbackReceiver\n"));
+        Assert.That(generatedCode, Contains.Substring("public unsafe struct MySteamControllerState : IInputStateTypeInfo\n"));
+        Assert.That(generatedCode, Contains.Substring("[InitializeOnLoad]"));
+        Assert.That(generatedCode, Contains.Substring("[RuntimeInitializeOnLoadMethod"));
+        Assert.That(generatedCode, Contains.Substring("new FourCC('M', 'y', 'S', 't')"));
+        Assert.That(generatedCode, Contains.Substring("protected override void FinishSetup(InputDeviceBuilder builder)"));
+        Assert.That(generatedCode, Contains.Substring("base.FinishSetup(builder);"));
+        Assert.That(generatedCode, Contains.Substring("new InputDeviceMatcher"));
+        Assert.That(generatedCode, Contains.Substring("WithInterface(\"Steam\")"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanConvertInputActionsToSteamIGAFormat()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var actionMap1 = new InputActionMap("map1");
@@ -24,8 +58,8 @@ public class SteamTests : InputTestFixture
         asset.AddActionMap(actionMap1);
         asset.AddActionMap(actionMap2);
 
-        var vdf = SteamVDFConverter.ConvertInputActionsToVDF(asset);
-        var dictionary = SteamVDFConverter.ParseVDF(vdf);
+        var vdf = SteamIGAConverter.ConvertInputActionsToSteamIGA(asset);
+        var dictionary = SteamIGAConverter.ParseVDF(vdf);
 
         // Top-level key "In Game Actions".
         Assert.That(dictionary.Count, Is.EqualTo(1));

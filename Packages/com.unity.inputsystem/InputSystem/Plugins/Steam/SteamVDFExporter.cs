@@ -16,10 +16,14 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow having actions that are ignored by Steam VDF export
 
+////TODO: support for getting displayNames/glyphs from Steam
+
+////TODO: polling in background
+
 namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
 {
     /// <summary>
-    /// Converts input actions to and from Steam .VDF format.
+    /// Converts input actions to and from Steam IGA file format.
     /// </summary>
     /// <remarks>
     /// The idea behind this converter is to enable users to use Unity's action editor to set up actions
@@ -29,8 +33,248 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
     /// The generated VDF file is meant to allow editing by hand in order to add localization strings or
     /// apply Steam-specific settings that cannot be inferred from Unity input actions.
     /// </remarks>
-    public static class SteamVDFConverter
+    public static class SteamIGAConverter
     {
+        /// <summary>
+        /// Generate C# code for an <see cref="InputDevice"/> derived class that exposes the controls
+        /// for the actions found in the given Steam IGA description.
+        /// </summary>
+        /// <param name="vdf"></param>
+        /// <param name="namespaceAndClassName"></param>
+        /// <returns></returns>
+        public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName)
+        {
+            if (string.IsNullOrEmpty(vdf))
+                throw new ArgumentNullException("vdf");
+            if (string.IsNullOrEmpty(namespaceAndClassName))
+                throw new ArgumentNullException("namespaceAndClassName");
+
+            // Parse VDF.
+            var parsedVdf = ParseVDF(vdf);
+            var actions = (Dictionary<string, object>)((Dictionary<string, object>)parsedVdf["In Game Actions"])["actions"];
+
+            // Determine class and namespace name.
+            var namespaceName = "";
+            var className = "";
+            var indexOfLastDot = namespaceAndClassName.LastIndexOf('.');
+            if (indexOfLastDot != -1)
+            {
+                namespaceName = namespaceAndClassName.Substring(0, indexOfLastDot);
+                className = namespaceAndClassName.Substring(indexOfLastDot + 1);
+            }
+            else
+            {
+                className = namespaceAndClassName;
+            }
+            var stateStructName = className + "State";
+
+            var builder = new StringBuilder();
+
+            builder.Append("#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT\n");
+            builder.Append("using UnityEngine;\n");
+            builder.Append("using UnityEngine.Experimental.Input;\n");
+            builder.Append("using UnityEngine.Experimental.Input.Controls;\n");
+            builder.Append("using UnityEngine.Experimental.Input.Utilities;\n");
+            builder.Append("using UnityEngine.Experimental.Input.Plugins.Steam;\n");
+            builder.Append("#if UNITY_EDITOR\n");
+            builder.Append("using UnityEditor;\n");
+            builder.Append("#endif\n");
+            builder.Append("\n");
+            if (!string.IsNullOrEmpty(namespaceName))
+            {
+                builder.Append("namespace ");
+                builder.Append(namespaceName);
+                builder.Append("\n{\n");
+            }
+
+            // InitializeOnLoad attribute.
+            builder.Append("#if UNITY_EDITOR\n");
+            builder.Append("[InitializeOnLoad]\n");
+            builder.Append("#endif\n");
+
+            // Control layout attribute.
+            builder.Append("[InputControlLayout(stateType = typeof(");
+            builder.Append(stateStructName);
+            builder.Append("))]\n");
+
+            // Class declaration.
+            builder.Append("public class ");
+            builder.Append(className);
+            builder.Append(" : SteamController, IInputUpdateCallbackReceiver\n{\n");
+
+            // Device matcher.
+            builder.Append("    private static InputDeviceMatcher deviceMatcher\n");
+            builder.Append("    {\n");
+            builder.Append("        get { return new InputDeviceMatcher().WithInterface(\"Steam\").WithProduct(\"");
+            builder.Append(className);
+            builder.Append("\"); }\n");
+            builder.Append("    }\n");
+
+            // Static constructor.
+            builder.Append("#if UNITY_EDITOR\n");
+            builder.Append("    static ");
+            builder.Append(className);
+            builder.Append("()\n");
+            builder.Append("    {\n");
+            builder.Append("        InputSystem.RegisterControlLayout<");
+            builder.Append(className);
+            builder.Append(">(matches: deviceMatcher);\n");
+            builder.Append("    }\n");
+            builder.Append("#endif\n");
+
+            // Update method.
+            builder.Append("    public void OnUpdate(InputUpdateType updateType)\n");
+            builder.Append("    {\n");
+            builder.Append("        ////TODO\n");
+            builder.Append("    }\n");
+
+            // RuntimeInitializeOnLoadMethod.
+            // NOTE: Not relying on static ctor here. See il2cpp bug 1014293.
+            builder.Append("    [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]\n");
+            builder.Append("    private static void RuntimeInitializeOnLoad()\n");
+            builder.Append("    {\n");
+            builder.Append("        InputSystem.RegisterControlLayout<");
+            builder.Append(className);
+            builder.Append(">(matches: deviceMatcher);\n");
+            builder.Append("    }\n");
+
+            // Control properties.
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // StickPadGyros.
+                var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
+                foreach (var entry in stickPadGyros)
+                {
+                    var entryProperties = (Dictionary<string, object>)entry.Value;
+                    var isStick = entryProperties.ContainsKey("input_mode") && entryProperties["input_mode"] == "joystick_move";
+                    builder.Append(string.Format("    public {0} {1} {{ get; protected set; }}\n", isStick ? "StickControl" : "Vector2Control",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                foreach (var entry in buttons)
+                {
+                    builder.Append(string.Format("    public ButtonControl {0} {{ get; protected set; }}\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+
+                // AnalogTriggers.
+                var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
+                foreach (var entry in analogTriggers)
+                {
+                    builder.Append(string.Format("    public AxisControl {0} {{ get; protected set; }}\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+            }
+
+            // FinishSetup method.
+            builder.Append("    protected override void FinishSetup(InputDeviceBuilder builder)\n");
+            builder.Append("    {\n");
+            builder.Append("        base.FinishSetup(builder);\n");
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // StickPadGyros.
+                var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
+                foreach (var entry in stickPadGyros)
+                {
+                    var entryProperties = (Dictionary<string, object>)entry.Value;
+                    var isStick = entryProperties.ContainsKey("input_mode") && entryProperties["input_mode"] == "joystick_move";
+                    builder.Append(string.Format("        {0} = builder.GetControl<{1}>(\"{2}\");\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
+                        isStick ? "StickControl" : "Vector2Control",
+                        entry.Key));
+                }
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                foreach (var entry in buttons)
+                {
+                    builder.Append(string.Format("        {0} = builder.GetControl<ButtonControl>(\"{1}\");\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
+                        entry.Key));
+                }
+
+                // AnalogTriggers.
+                var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
+                foreach (var entry in analogTriggers)
+                {
+                    builder.Append(string.Format("        {0} = builder.GetControl<AxisControl>(\"{1}\");\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
+                        entry.Key));
+                }
+            }
+            builder.Append("    }\n");
+
+            builder.Append("}\n");
+
+            if (!string.IsNullOrEmpty(namespaceName))
+                builder.Append("}\n");
+
+            // State struct.
+            builder.Append("public unsafe struct ");
+            builder.Append(stateStructName);
+            builder.Append(" : IInputStateTypeInfo\n");
+            builder.Append("{\n");
+            builder.Append("    public FourCC GetFormat()\n");
+            builder.Append("    {\n");
+            ////TODO: handle class names that are shorter than 4 characters
+            builder.Append(string.Format("        return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
+            builder.Append("    }\n");
+            builder.Append("\n");
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // StickPadGyros.
+                var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
+                foreach (var entry in stickPadGyros)
+                {
+                    var entryProperties = (Dictionary<string, object>)entry.Value;
+                    var isStick = entryProperties.ContainsKey("input_mode") && entryProperties["input_mode"] == "joystick_move";
+
+                    builder.Append(string.Format("    [InputControl(name = \"{0}\", layout = \"{1}\")]\n", entry.Key, isStick ? "Stick" : "Vector2"));
+                    builder.Append(string.Format("    public Vector2 {0};\n", CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                var buttonCount = buttons.Count;
+                if (buttonCount > 0)
+                {
+                    var bit = 0;
+                    foreach (var entry in buttons)
+                    {
+                        builder.Append(string.Format(
+                            "    [InputControl(name = \"{0}\", layout = \"Button\", bit = {1})]\n", entry.Key, bit));
+                        ++bit;
+                    }
+
+                    var byteCount = (buttonCount + 7) / 8;
+                    builder.Append("    public fixed byte buttons[");
+                    builder.Append(byteCount.ToString());
+                    builder.Append("];\n");
+                }
+
+                // AnalogTriggers.
+                var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
+                foreach (var entry in analogTriggers)
+                {
+                    builder.Append(string.Format("    [InputControl(name = \"{0}\", layout = \"Axis\")]\n", entry.Key));
+                    builder.Append(string.Format("    public float {0};\n", CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+            }
+            builder.Append("}\n");
+
+            builder.Append("#endif\n");
+
+            return builder.ToString();
+        }
+
         /// <summary>
         /// Convert an .inputactions asset to Steam VDF format.
         /// </summary>
@@ -39,14 +283,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
         /// <returns>A string in Steam VDF format describing "In Game Actions" corresponding to the actions in
         /// <paramref name="asset"/>.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> is null.</exception>
-        public static string ConvertInputActionsToVDF(InputActionAsset asset, string locale = "english")
+        public static string ConvertInputActionsToSteamIGA(InputActionAsset asset, string locale = "english")
         {
             if (asset == null)
                 throw new ArgumentNullException("asset");
-            return ConvertInputActionsToVDF(asset.actionMaps, locale: locale);
+            return ConvertInputActionsToSteamIGA(asset.actionMaps, locale: locale);
         }
 
-        public static string ConvertInputActionsToVDF(IEnumerable<InputActionMap> actionMaps, string locale = "english")
+        public static string ConvertInputActionsToSteamIGA(IEnumerable<InputActionMap> actionMaps, string locale = "english")
         {
             if (actionMaps == null)
                 throw new ArgumentNullException("actionMaps");
@@ -317,13 +561,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
         }
 
         [MenuItem("Assets/Export to Steam In-Game Actions File...", true)]
-        private static bool IsAssetContextMenuItemEnabled()
+        private static bool IsExportContextMenuItemEnabled()
         {
             return Selection.activeObject is InputActionAsset;
         }
 
         [MenuItem("Assets/Export to Steam In-Game Actions File...")]
-        private static void AssetContextMenuItem()
+        private static void ExportContextMenuItem()
         {
             var selectedAsset = (InputActionAsset)Selection.activeObject;
 
@@ -341,10 +585,55 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             var fileName = EditorUtility.SaveFilePanel("Export Steam In-Game Actions File", directory, defaultVDFName, "vdf");
             if (!string.IsNullOrEmpty(fileName))
             {
-                var text = ConvertInputActionsToVDF(selectedAsset);
+                var text = ConvertInputActionsToSteamIGA(selectedAsset);
                 File.WriteAllText(fileName, text);
                 AssetDatabase.Refresh();
             }
+        }
+
+        [MenuItem("Assets/Generate C# Input Device Class...", true)]
+        private static bool IsGenerateContextMenuItemEnabled()
+        {
+            // VDF files have no associated importer and so come in as DefaultAssets.
+            if (!(Selection.activeObject is DefaultAsset))
+                return false;
+
+            var assetPath = AssetDatabase.GetAssetPath(Selection.activeObject);
+            if (!string.IsNullOrEmpty(assetPath) && Path.GetExtension(assetPath) == ".vdf")
+                return true;
+
+            return false;
+        }
+
+        ////TODO: support setting class and namespace name
+        [MenuItem("Assets/Generate C# Input Device Class...")]
+        private static void GenerateContextMenuItem()
+        {
+            var selectedAsset = Selection.activeObject;
+            var assetPath = AssetDatabase.GetAssetPath(selectedAsset);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                Debug.LogError("Cannot determine source asset path");
+                return;
+            }
+
+            var defaultClassName = Path.GetFileNameWithoutExtension(assetPath);
+            var defaultFileName = defaultClassName + ".cs";
+            var defaultDirectory = Path.GetDirectoryName(assetPath);
+
+            // Ask for save location.
+            var fileName = EditorUtility.SaveFilePanel("Generate C# Input Device Class", defaultDirectory, defaultFileName, "cs");
+            if (string.IsNullOrEmpty(fileName))
+                return;
+
+            // Load VDF file text.
+            var vdf = File.ReadAllText(assetPath);
+
+            // Generate and write output.
+            var className = Path.GetFileNameWithoutExtension(fileName);
+            var text = GenerateInputDeviceFromSteamIGA(vdf, className);
+            File.WriteAllText(fileName, text);
+            AssetDatabase.Refresh();
         }
     }
 }

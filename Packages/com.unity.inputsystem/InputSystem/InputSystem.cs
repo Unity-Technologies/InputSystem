@@ -1282,7 +1282,7 @@ namespace UnityEngine.Experimental.Input
             #endif
 
             // Send an initial Update so that user methods such as Start and Awake
-            // can access the input devices prior to thier Upate methods.
+            // can access the input devices prior to their Update methods.
             Update();
         }
 
@@ -1321,6 +1321,10 @@ namespace UnityEngine.Experimental.Input
 
             #if UNITY_EDITOR || UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_WSA
             Plugins.OnScreen.OnScreenSupport.Initialize();
+            #endif
+
+            #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+            Plugins.Steam.SteamSupport.Initialize();
             #endif
         }
 
