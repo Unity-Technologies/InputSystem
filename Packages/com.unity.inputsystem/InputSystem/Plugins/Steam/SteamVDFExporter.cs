@@ -343,6 +343,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             {
                 var text = ConvertInputActionsToVDF(selectedAsset);
                 File.WriteAllText(fileName, text);
+                AssetDatabase.Refresh();
             }
         }
     }

@@ -40,8 +40,10 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(state)
         {
             m_ApplyAction = applyAction;
-            //FIXME: this requires 2018.3 to compile
-            //foldoutOverride += OnFoldoutDraw;
+            ////REVIEW: good enough like this for 2018.2?
+            #if UNITY_2018_3_OR_NEWER
+            foldoutOverride += OnFoldoutDraw;
+            #endif
             Reload();
         }
 

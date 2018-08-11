@@ -7,6 +7,8 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: "properties" seems wrong; these seems to revert to "parameters" specifically
+
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
     class InteractionsReorderableReorderableList : PropertiesReorderableList
