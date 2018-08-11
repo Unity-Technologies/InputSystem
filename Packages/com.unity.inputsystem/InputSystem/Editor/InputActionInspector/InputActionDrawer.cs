@@ -4,6 +4,7 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
+    [CustomPropertyDrawer(typeof(InputActionMap))]
     [CustomPropertyDrawer(typeof(InputAction))]
     public class InputActionDrawer : PropertyDrawer
     {
@@ -11,6 +12,11 @@ namespace UnityEngine.Experimental.Input.Editor
         const int kBindingIndent = 5;
 
         InputActionListTreeView m_TreeView;
+        CopyPasteUtility m_CopyPasteUtility;
+        
+        GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
+        GUIContent m_CompositeGUI = EditorGUIUtility.TrTextContent("Composite");
 
         public InputActionDrawer()
         {
@@ -74,86 +80,110 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 if (GUI.Button(btnRect, "+"))
                 {
-                    OpenAddMenu(property);
+                    if (property.type == "InputAction")
+                    {
+                        OpenAddMenuForAction(property);
+                    }
+                    else
+                    {
+                        OpenAddMenuForActionMap(property);
+                    }
                 }
 
                 m_TreeView.OnGUI(position);
                 
-                if (Event.current.type == EventType.ValidateCommand)
+                if (m_TreeView.HasFocus())
                 {
-                    if (Event.current.commandName == "Delete")
+                    if (Event.current.type == EventType.ValidateCommand)
                     {
-                        Event.current.Use();
+                        if (m_CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                        {
+                            Event.current.Use();
+                        }
                     }
-                }
-                if (Event.current.type == EventType.ExecuteCommand)
-                {
-                    if (Event.current.commandName == "Delete")
+
+                    if (Event.current.type == EventType.ExecuteCommand)
                     {
-                        DeleteSelectedRows(property);
-                        Event.current.Use();
+                        m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
                     }
                 }
             }
             EditorGUI.EndProperty();
         }
         
-        void DeleteSelectedRows(SerializedProperty actionProperty)
-        {
-            var row = m_TreeView.GetSelectedRow();
-            var rowType = row.GetType();
-
-            // Remove composite bindings
-            if(rowType == typeof(CompositeTreeItem))
-            {
-                for (var i = row.children.Count - 1; i >= 0; i--)
-                {
-                    var composite = (CompositeTreeItem)row.children[i];
-                    
-                    InputActionSerializationHelpers.RemoveBinding(actionProperty, composite.index);
-                }
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
-            }
-
-            // Remove bindings
-            if(rowType == typeof(BindingTreeItem))
-            {
-                InputActionSerializationHelpers.RemoveBinding(actionProperty, row.index);
-            }
-
-            m_TreeView.SetSelection(new List<int>());
-            m_TreeView.Reload();
-        }
-
-        void OpenAddMenu(SerializedProperty property)
+        void OpenAddMenuForAction(SerializedProperty property)
         {
             var menu = new GenericMenu();
-            menu.AddItem(EditorGUIUtility.TrTextContent("Binding"), false, AddBinding, property);
+            menu.AddItem(m_BindingGUI, false, AddBinding, property);
            
-            var compositeString = EditorGUIUtility.TrTextContent("Composite");
             foreach (var composite in InputBindingComposite.s_Composites.names)
             {
-                menu.AddItem(new GUIContent(compositeString.text + "/" + composite), false, OnAddCompositeBinding, new List<object>(){composite, property});
+                menu.AddItem(new GUIContent(m_CompositeGUI.text + "/" + composite), false, OnAddCompositeBinding, new List<object>(){composite, property});
             }
             
             menu.ShowAsContext();
         }
+        
+        void OpenAddMenuForActionMap(SerializedProperty property)
+        {
+            var menu = new GenericMenu();
+            if (CanAddBinding())
+            {
+                menu.AddItem(m_BindingGUI, false, AddBinding, property);
+            }
+            else
+            {
+                menu.AddDisabledItem(m_BindingGUI, false);
+            }
+            menu.AddItem(m_ActionGUI, false, AddAction, property);
+            if (CanAddBinding())
+            {
+                foreach (var composite in InputBindingComposite.s_Composites.names)
+                {
+                    menu.AddItem(new GUIContent(m_CompositeGUI.text + "/" + composite), false, OnAddCompositeBinding, new List<object>() { composite, property });
+                }
+            }
+            else
+            {
+                menu.AddDisabledItem(new GUIContent(m_CompositeGUI));
+            }
+            menu.ShowAsContext();
+        }
 
-        void AddBinding(object propertyObj)
+        void AddAction(object propertyObj)
         {
             var property = (SerializedProperty)propertyObj;
-            InputActionSerializationHelpers.AppendBinding(property);
+            InputActionSerializationHelpers.AddAction(property);
             property.serializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }
 
+        void AddBinding(object propertyObj)
+        {
+            if (!CanAddBinding())
+                return;
+            var actionMapProperty = (SerializedProperty)propertyObj;
+            var action = m_TreeView.GetSelectedAction();
+            InputActionSerializationHelpers.AppendBinding(action.elementProperty, actionMapProperty);
+            action.elementProperty.serializedObject.ApplyModifiedProperties();
+            m_TreeView.Reload();
+        }
+
+        bool CanAddBinding()
+        {
+            return m_TreeView.GetSelectedAction() != null;
+        }
+
         void OnAddCompositeBinding(object paramList)
         {
+            if (!CanAddBinding())
+                return;
             var compositeName = (string)((List<object>)paramList)[0];
-            var property = (SerializedProperty)((List<object>)paramList)[1];
+            var mapProperty = (SerializedProperty)((List<object>)paramList)[1];
+            var action = m_TreeView.GetSelectedAction();
             var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
-            InputActionSerializationHelpers.AppendCompositeBinding(property, null, compositeName, compositeType);
-            property.serializedObject.ApplyModifiedProperties();
+            InputActionSerializationHelpers.AppendCompositeBinding(action.elementProperty, mapProperty, compositeName, compositeType);
+            mapProperty.serializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
         }
 
@@ -161,19 +191,24 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
             {
-                m_TreeView = InputActionComponentListTreeView.CreateFromActionProperty(() => { }, property);
+                if (property.type == "InputAction")
+                {
+                    m_TreeView = InputActionComponentListTreeView.CreateFromActionProperty(() => { }, property);
+                }
+                else
+                {
+                    m_TreeView = InputActionComponentListTreeView.CreateFromActionMapProperty(() => { }, property);
+                    
+                }
                 m_TreeView.OnContextClick = OnContextClick;
+                m_CopyPasteUtility = new CopyPasteUtility(m_TreeView);
             }
         }
 
         void OnContextClick(SerializedProperty serializedProperty)
         {
             var menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Delete"), false, 
-                () => 
-                { 
-                    DeleteSelectedRows(serializedProperty); 
-                });
+            m_CopyPasteUtility.AddOptionsToMenu(menu);
             menu.ShowAsContext();
         }
         
@@ -183,11 +218,14 @@ namespace UnityEngine.Experimental.Input.Editor
             if (!string.IsNullOrEmpty(nameProperty.stringValue))
                 return;
 
+            var suffix = actionProperty.type == "InputAction" ? "Action" : " Action Map";
             var name = actionProperty.displayName;
-            if (name.EndsWith(" Action"))
-                name = name.Substring(0, name.Length - " Action".Length);
-
+            if (name.EndsWith(suffix))
+            {
+                name = name.Substring(0, name.Length - suffix.Length);
+            }
             nameProperty.stringValue = name;
+
             // Don't apply. Let's apply it as a side-effect whenever something about
             // the action in the UI is changed.
         }

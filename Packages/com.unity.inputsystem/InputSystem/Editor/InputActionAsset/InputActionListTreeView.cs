@@ -80,11 +80,12 @@ namespace UnityEngine.Experimental.Input.Editor
         void BuildFromSerializedObject(TreeViewItem root)
         {
             m_SerializedObject.Update();
-            var actionMapsProperty = m_SerializedObject.FindProperty("m_ActionMaps");
-            for (var i = 0; i < actionMapsProperty.arraySize; i++)
+            var actionMapArrauProperty = m_SerializedObject.FindProperty("m_ActionMaps");
+            for (var i = 0; i < actionMapArrauProperty.arraySize; i++)
             {
-                var actionMapItem = new ActionMapTreeItem(actionMapsProperty, i);
-                ParseActionMap(actionMapItem, actionMapsProperty.GetArrayElementAtIndex(i), 1);
+                var actionMapProperty = actionMapArrauProperty.GetArrayElementAtIndex(i);
+                var actionMapItem = new ActionMapTreeItem(actionMapProperty, i);
+                ParseActionMap(actionMapItem, actionMapProperty, 1);
                 root.AddChild(actionMapItem);
             }
         }
@@ -102,8 +103,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
+            var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
             
-            var actionItem = new ActionTreeItem(actionMapProperty, actionsArrayProperty, index);
+            var actionItem = new ActionTreeItem(actionMapProperty, actionProperty, index);
             actionItem.depth = depth;
             var actionName = actionItem.actionName;
 

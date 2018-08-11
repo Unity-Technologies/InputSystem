@@ -27,6 +27,12 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SerializedObject = serializedObject;
         }
 
+        public CopyPasteUtility(InputActionListTreeView treeView)
+        {
+            m_TreeView = treeView;
+            m_Apply = () => { m_TreeView.Reload();};
+        }
+
         void HandleCopyEvent()
         {
             if (!CanCopySelection())
@@ -93,7 +99,10 @@ namespace UnityEngine.Experimental.Input.Editor
             var elements = copyBufferString.Split(new[] { k_InputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
             if (!copyBufferString.StartsWith(k_InputAssetMarker))
                 return;
-            var currentActionMapProperty = m_TreeView.GetSelectedActionMap().elementProperty;
+            SerializedProperty currentActionMapProperty = null;
+            var selectedActionMap = m_TreeView.GetSelectedActionMap();
+            if (selectedActionMap != null)
+                currentActionMapProperty = selectedActionMap.elementProperty;
             for (var i = 0; i < elements.Length; i++)
             {
                 var row = elements[i];
