@@ -50,6 +50,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "eraser", layout = "Button", bit = (int)Button.Eraser)]
         [InputControl(name = "barrelFirst", layout = "Button", bit = (int)Button.BarrelFirst, alias = "button", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
         [InputControl(name = "barrelSecond", layout = "Button", bit = (int)Button.BarrelSecond, usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
+        [InputControl(name = "inRange", layout = "Button", bit = (int)Button.InRange)]
         // "Park" unused controls.
         [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "pointerId", layout = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
@@ -66,7 +67,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Tip,
             Eraser,
             BarrelFirst,
-            BarrelSecond
+            BarrelSecond,
+            InRange,
+        }
+
+        public PenState WithButton(Button button, bool state = true)
+        {
+            if (state)
+                buttons |= (ushort)(1 << (int)button);
+            else
+                buttons &= (ushort)~(1 << (int)button);
+            return this;
         }
 
         public FourCC GetFormat()
@@ -84,6 +95,9 @@ namespace UnityEngine.Experimental.Input
     /// <remarks>
     /// Unlike mice but like touch, pens are absolute pointing devices moving across a fixed
     /// surface area.
+    ///
+    /// The <see cref="tip"/> acts as a button that is considered pressed as long as the pen is in contact with the
+    /// tablet surface.
     /// </remarks>
     [InputControlLayout(stateType = typeof(PenState))]
     public class Pen : Pointer
@@ -121,10 +135,10 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public ButtonControl secondBarrelButton { get; private set; }
 
-        public bool isInRange
-        {
-            get { throw new NotImplementedException(); }
-        }
+        /// <summary>
+        /// Button control that indicates whether the pen is in range of the tablet surface or not.
+        /// </summary>
+        public ButtonControl inRange { get; private set; }
 
         public bool isTouching
         {
@@ -155,6 +169,7 @@ namespace UnityEngine.Experimental.Input
             eraser = builder.GetControl<ButtonControl>("eraser");
             firstBarrelButton = builder.GetControl<ButtonControl>("barrelFirst");
             secondBarrelButton = builder.GetControl<ButtonControl>("barrelSecond");
+            inRange = builder.GetControl<ButtonControl>("inRange");
             base.FinishSetup(builder);
         }
     }

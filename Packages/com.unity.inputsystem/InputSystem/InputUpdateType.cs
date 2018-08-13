@@ -6,9 +6,51 @@ namespace UnityEngine.Experimental.Input
     public enum InputUpdateType
     {
         None = 0,
+
+        /// <summary>
+        /// Update corresponding to <see cref="MonoBehaviour.OnUpdate"/>.
+        /// </summary>
+        /// <remarks>
+        /// Every frame has exactly one dynamic update. If not reconfigured using <see cref="PlayerLoop"/>,
+        /// the dynamic update happens after all the fixed updates for the frame have run (which can be
+        /// zero or more).
+        ///
+        /// Input updates run before script callbacks on MonoBehaviours are fired.
+        /// </remarks>
         Dynamic = 1 << 0,
+
+        /// <summary>
+        /// Update corresponding to <see cref="MonoBehaviour.OnFixedUpdate"/>.
+        /// </summary>
+        /// <remarks>
+        /// Every frame has zero or more fixed updates. These are run before the dynamic update for the
+        /// frame.
+        ///
+        /// Input updates run before script callbacks on MonoBehaviours are fired.
+        /// </remarks>
         Fixed = 1 << 1,
+
+        /// <summary>
+        /// Input update that happens right before rendering.
+        /// </summary>
+        /// <remarks>
+        /// The BeforeRender update affects only devices that have before-render updates enabled. This
+        /// has to be done through a device's layout (<see cref="InputControlLayout.updateBeforeRender"/>
+        /// and is visible through <see cref="InputDevice.updateBeforeRender"/>.
+        ///
+        /// BeforeRender updates are useful to minimize lag of transform data that is used in rendering
+        /// but is coming from external tracking devices. An example are HMDs. If the head transform used
+        /// for the render camera is not synchronized right before rendering, it can result in a noticeable
+        /// lag between head and camera movement.
+        /// </remarks>
         BeforeRender = 1 << 2,
+
+        /// <summary>
+        /// Input update that happens right before <see cref="EditorWindow">EditorWindows</see> are updated.
+        /// </summary>
+        /// <remarks>
+        /// This update only occurs in the editor.
+        /// </remarks>
         Editor = 1 << 3
     }
 

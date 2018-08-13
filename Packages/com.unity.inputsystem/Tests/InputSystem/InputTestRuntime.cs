@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -61,6 +62,7 @@ namespace UnityEngine.Experimental.Input
 
                 m_EventCount = 0;
                 m_EventWritePosition = 0;
+                ++frameCount;
             }
         }
 
@@ -68,6 +70,7 @@ namespace UnityEngine.Experimental.Input
         {
             var eventPtr = (InputEvent*)ptr;
             var eventSize = eventPtr->sizeInBytes;
+            var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
 
             lock (m_Lock)
             {
@@ -75,18 +78,18 @@ namespace UnityEngine.Experimental.Input
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
-                if ((m_EventWritePosition + eventSize) > m_EventBuffer.Length)
+                if ((m_EventWritePosition + alignedEventSize) > m_EventBuffer.Length)
                 {
-                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)eventSize, 1024);
+                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)alignedEventSize, 1024);
                     var newBuffer = new NativeArray<byte>(newBufferSize, Allocator.Persistent);
-                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventBuffer.Length);
+                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventWritePosition);
                     m_EventBuffer.Dispose();
                     m_EventBuffer = newBuffer;
                 }
 
                 // Copy event.
                 UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
-                m_EventWritePosition += (int)eventSize;
+                m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
         }
@@ -157,9 +160,11 @@ namespace UnityEngine.Experimental.Input
         public Action<InputUpdateType, int, IntPtr> onUpdate { get; set; }
         public Action<InputUpdateType> onBeforeUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
+        public Action onShutdown { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public InputUpdateType updateMask { get; set; }
+        public int frameCount { get; set; }
 
         public ScreenOrientation screenOrientation
         {
@@ -202,5 +207,24 @@ namespace UnityEngine.Experimental.Input
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+
+        public Action<string, int, int> onRegisterAnalyticsEvent { get; set; }
+        public Action<string, object> onSendAnalyticsEvent { get; set; }
+
+        public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
+        {
+            if (onRegisterAnalyticsEvent != null)
+                onRegisterAnalyticsEvent(name, maxPerHour, maxPropertiesPerEvent);
+        }
+
+        public void SendAnalyticsEvent(string name, object data)
+        {
+            if (onSendAnalyticsEvent != null)
+                onSendAnalyticsEvent(name, data);
+        }
+
+        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

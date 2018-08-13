@@ -96,7 +96,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             if (string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = string.Format("{0}::{1}", SanitizeName(description.interfaceName),
-                        SanitizeName(description.product));
+                    SanitizeName(description.product));
             }
             else
             {
@@ -189,55 +189,55 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                     case FeatureType.Binary:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Button")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeBit)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Button")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeBit)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.DiscreteStates:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Integer")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeInt)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Integer")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Axis1D:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Analog")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeFloat)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Analog")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeFloat)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Axis2D:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Vector2")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeVector2)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Vector2")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeVector2)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Axis3D:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Vector3")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeVector3)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Vector3")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeVector3)
+                            .WithUsages(currentUsages);
                         break;
                     }
                     case FeatureType.Rotation:
                     {
                         builder.AddControl(featureName)
-                        .WithLayout("Quaternion")
-                        .WithOffset(currentOffset)
-                        .WithFormat(InputStateBlock.kTypeQuaternion)
-                        .WithUsages(currentUsages);
+                            .WithLayout("Quaternion")
+                            .WithByteOffset(currentOffset)
+                            .WithFormat(InputStateBlock.kTypeQuaternion)
+                            .WithUsages(currentUsages);
                         break;
                     }
                 }

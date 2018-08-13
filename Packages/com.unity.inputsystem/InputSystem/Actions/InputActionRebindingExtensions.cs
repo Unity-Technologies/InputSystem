@@ -221,7 +221,7 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
-        ////REVIEW: are the IEnumerable variants worth having?
+        ////REVIEW: are the IEnumerable variations worth having?
 
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -16,7 +17,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdateStateOfDeviceWithEvent()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
 
         InputSystem.QueueStateEvent(gamepad, newState);
@@ -30,19 +31,19 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdatePartialStateOfDeviceWithEvent()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Full state update to make sure we won't be overwriting other
         // controls with state. Also, make sure we actually carry over
         // those values on buffer flips.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState
-        {
-            buttons = 0xffffffff,
-            rightStick = Vector2.one,
-            leftTrigger = 0.123f,
-            rightTrigger = 0.456f
-        });
+            {
+                buttons = 0xffffffff,
+                rightStick = Vector2.one,
+                leftTrigger = 0.123f,
+                rightTrigger = 0.456f
+            });
         InputSystem.Update();
 
         // Update just left stick.
@@ -108,7 +109,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
         var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
 
         InputSystem.QueueStateEvent(gamepad, newState);
@@ -148,11 +149,11 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent += inputEvent =>
-            {
-                ++receivedCalls;
-                Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
-                Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
-            };
+        {
+            ++receivedCalls;
+            Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
+            Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
+        };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
@@ -186,15 +187,15 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             inputEvent =>
-            {
-                ++receivedCalls;
-                if (receivedCalls == 1)
-                    receivedFirstTime = inputEvent.time;
-                else if (receivedCalls == 2)
-                    receivedSecondTime = inputEvent.time;
-                else
-                    receivedThirdTime = inputEvent.time;
-            };
+        {
+            ++receivedCalls;
+            if (receivedCalls == 1)
+                receivedFirstTime = inputEvent.time;
+            else if (receivedCalls == 2)
+                receivedSecondTime = inputEvent.time;
+            else
+                receivedThirdTime = inputEvent.time;
+        };
 
         var device = InputSystem.AddDevice("Gamepad");
 
@@ -220,10 +221,10 @@ partial class CoreTests
         var receivedDeviceId = InputDevice.kInvalidDeviceId;
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                receivedDeviceId = eventPtr.deviceId;
-            };
+        {
+            ++receivedCalls;
+            receivedDeviceId = eventPtr.deviceId;
+        };
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
         InputSystem.QueueEvent(ref inputEvent);
@@ -243,10 +244,10 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                wasHandled = eventPtr.handled;
-            };
+        {
+            ++receivedCalls;
+            wasHandled = eventPtr.handled;
+        };
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
 
@@ -303,10 +304,10 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             inputEvent =>
-            {
-                ++receivedCalls;
-                receivedTime = inputEvent.time;
-            };
+        {
+            ++receivedCalls;
+            receivedTime = inputEvent.time;
+        };
         InputSystem.Update();
 
         // On the second update, we should have seen only event2.
@@ -320,18 +321,67 @@ partial class CoreTests
     {
         InputSystem.onEvent +=
             inputEvent =>
-            {
-                // If we mark the event handled, the system should skip it and not
-                // let it go to the device.
-                inputEvent.handled = true;
-            };
+        {
+            // If we mark the event handled, the system should skip it and not
+            // let it go to the device.
+            inputEvent.handled = true;
+        };
 
-        var device = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var device = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(device, new GamepadState {rightTrigger = 0.45f});
         InputSystem.Update();
 
         Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 2)]
+    struct StateWith2Bytes : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Axis")]
+        [FieldOffset(0)] public ushort value;
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(StateWith2Bytes))]
+    class DeviceWith2ByteState : InputDevice
+    {
+    }
+
+    // This test pertains mostly to how the input runtime handles events so it's of limited
+    // use in our current test setup with InputTestRuntime. There's an equivalent native test
+    // in the Unity runtime to ensure the constraint.
+    //
+    // Previously we used to actually modify event size to always be 4 byte aligned and thus potentially
+    // added padding to events. This is a bad idea. The C# system can't tell between padding added to an
+    // event and valid input data that's part of the state. This can cause the padding to actually overwrite
+    // state of controls that happen to start at the end of an event. On top, we didn't clear out the
+    // memory we added to an event and thus ended up with random garbage being written to unrelated controls.
+    //
+    // What we do now is to simply align event pointers to 4 byte boundaries as we read and write events.
+    [Test]
+    [Category("Events")]
+    public void Events_CanHandleStateNotAlignedTo4ByteBoundary()
+    {
+        Debug.Assert(UnsafeUtility.SizeOf<StateWith2Bytes>() == 2);
+
+        var device = InputSystem.AddDevice<DeviceWith2ByteState>();
+
+        InputSystem.QueueStateEvent(device, new StateWith2Bytes());
+        InputSystem.QueueStateEvent(device, new StateWith2Bytes());
+
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
+            Assert.That(eventPtr.data.ToInt64() % 4, Is.EqualTo(0));
+            Assert.That(eventPtr.sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<StateWith2Bytes>()));
+        };
+
+        InputSystem.Update();
     }
 
     [Test]
@@ -366,14 +416,14 @@ partial class CoreTests
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
-                    StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[0])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
             Assert.That(events[1].deviceId, Is.EqualTo(device.id));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
-                    StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
+                StateEvent.From(events[1])->state.ToPointer(), UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
         }
     }
 
@@ -443,13 +493,13 @@ partial class CoreTests
 
         InputSystem.onEvent +=
             eventPtr =>
-            {
-                ++receivedCalls;
-                if (receivedCalls == 1)
-                    firstId = eventPtr.id;
-                else if (receivedCalls == 2)
-                    secondId = eventPtr.id;
-            };
+        {
+            ++receivedCalls;
+            if (receivedCalls == 1)
+                firstId = eventPtr.id;
+            else if (receivedCalls == 2)
+                secondId = eventPtr.id;
+        };
 
         InputSystem.Update();
 
@@ -470,10 +520,10 @@ partial class CoreTests
 
         Action<InputUpdateType, int, IntPtr> onUpdate =
             (updateType, eventCount, eventData) =>
-            {
-                ++receivedUpdateCalls;
-                receivedEventCount += eventCount;
-            };
+        {
+            ++receivedUpdateCalls;
+            receivedEventCount += eventCount;
+        };
         testRuntime.onUpdate += onUpdate;
 
         InputSystem.Update();
@@ -494,7 +544,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_IfOldStateEventIsSentToDevice_IsIgnored()
     {
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.5f}, 2.0);
         InputSystem.Update();

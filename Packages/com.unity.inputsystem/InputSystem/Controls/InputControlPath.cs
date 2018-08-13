@@ -50,9 +50,61 @@ namespace UnityEngine.Experimental.Input
             return string.Format("{0}/{1}", parent.path, path);
         }
 
-        public static string TryGetDisplayName(string path)
+        /// <summary>
+        /// Create a human readable string from the given control path.
+        /// </summary>
+        /// <param name="path">A control path such as "&lt;XRController>{LeftHand}/position".</param>
+        /// <returns>A string such as "Gamepad leftStick/x".</returns>
+        public static string ToHumanReadableString(string path)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+
+            var result = string.Empty;
+            var parser = new PathParser(path);
+
+            ////REVIEW: ideally, we'd use display names of controls rather than the control paths directly from the path
+
+            // First level is taken to be device.
+            if (parser.MoveToNextComponent())
+            {
+                // If all we have is a usage, create a simple string with just that.
+                if (parser.current.isWildcard && parser.current.layout.isEmpty && parser.current.usage.isEmpty)
+                {
+                    var savedParser = parser;
+                    if (parser.MoveToNextComponent() && !parser.current.usage.isEmpty && parser.current.name.isEmpty &&
+                        parser.current.layout.isEmpty)
+                    {
+                        var usage = parser.current.usage.ToString();
+                        if (!parser.MoveToNextComponent())
+                            return usage;
+                    }
+
+                    // Reset.
+                    parser = savedParser;
+                }
+
+                result += parser.current.ToHumanReadableString();
+
+                // Any additional levels (if present) are taken to form a control path on the device.
+                var isFirstControlLevel = true;
+                while (parser.MoveToNextComponent())
+                {
+                    if (!isFirstControlLevel)
+                        result += '/';
+                    else
+                        result += ' ';
+                    result += parser.current.ToHumanReadableString();
+                    isFirstControlLevel = false;
+                }
+            }
+
+            // If we didn't manage to figure out a display name, default to displaying
+            // the path as is.
+            if (string.IsNullOrEmpty(result))
+                return path;
+
+            return result;
         }
 
         public static string TryGetImageName(string path)
@@ -394,7 +446,7 @@ namespace UnityEngine.Experimental.Input
                     while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout))
                     {
                         controlIsMatch = MatchPathComponent(baseLayout, path, ref indexInPath,
-                                PathComponentType.Layout);
+                            PathComponentType.Layout);
                         if (controlIsMatch)
                             break;
                     }
@@ -426,7 +478,7 @@ namespace UnityEngine.Experimental.Input
                     for (var i = 0; i < control.aliases.Count && !controlIsMatch; ++i)
                     {
                         controlIsMatch = MatchPathComponent(control.aliases[i], path, ref indexInPath,
-                                PathComponentType.Name);
+                            PathComponentType.Name);
                     }
                 }
             }
@@ -525,7 +577,7 @@ namespace UnityEngine.Experimental.Input
                 if (indexInPath < pathLength && path[indexInPath] == '/')
                 {
                     lastMatch = MatchChildrenRecursive(controlMatchedByUsage, path, indexInPath + 1,
-                            ref matches);
+                        ref matches);
 
                     // We can stop going through usages if we matched something and the
                     // path component covering usage does not contain wildcards.
@@ -697,6 +749,37 @@ namespace UnityEngine.Experimental.Input
             public bool isDoubleWildcard
             {
                 get { return name == kDoubleWildcard; }
+            }
+
+            public string ToHumanReadableString()
+            {
+                var result = string.Empty;
+                if (isWildcard)
+                    result += "Any";
+                if (!usage.isEmpty)
+                {
+                    if (result != string.Empty)
+                        result += ' ' + usage.ToString();
+                    else
+                        result += usage.ToString();
+                }
+
+                if (!layout.isEmpty)
+                {
+                    if (result != string.Empty)
+                        result += ' ' + layout.ToString();
+                    else
+                        result += layout.ToString();
+                }
+
+                if (!name.isEmpty && !isWildcard)
+                {
+                    if (result != string.Empty)
+                        result += ' ' + name.ToString();
+                    else
+                        result += name.ToString();
+                }
+                return result;
             }
         }
 

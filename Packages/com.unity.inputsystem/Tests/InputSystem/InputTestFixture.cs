@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
+using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
@@ -89,6 +90,17 @@ namespace UnityEngine.Experimental.Input
         [TearDown]
         public virtual void TearDown()
         {
+            // Destroy any GameObject in the current scene that isn't hidden and isn't the
+            // test runner object. Do this first so that any cleanup finds the system in the
+            // state it expects.
+            var scene = SceneManager.GetActiveScene();
+            foreach (var go in scene.GetRootGameObjects())
+            {
+                if (go.hideFlags != 0 || go.name.Contains("tests runner"))
+                    continue;
+                Object.DestroyImmediate(go);
+            }
+
             ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
             ////        actions and readding devices we refresh all enabled actions. That means that when
             ////        we restore, the action above will get refreshed and not find a 'test' interaction

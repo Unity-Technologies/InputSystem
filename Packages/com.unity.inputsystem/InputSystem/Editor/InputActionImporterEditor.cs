@@ -72,11 +72,6 @@ namespace UnityEngine.Experimental.Input.Editor
             return asset;
         }
 
-        protected InputActionAssetEditor GetAssetEditor()
-        {
-            return InputActionAssetEditor.FindFor(GetAsset());
-        }
-
         protected string GetAssetPath()
         {
             return AssetDatabase.GetAssetPath(GetAsset());
@@ -122,10 +117,6 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (m_Backup != null)
                     assetObject.LoadFromJson(m_Backup);
-
-                var editor = InputActionAssetEditor.FindFor(assetObject);
-                if (editor != null)
-                    editor.Reload();
             }
         }
 
@@ -135,14 +126,19 @@ namespace UnityEngine.Experimental.Input.Editor
             // initialization here.
             if (!m_Initialized)
             {
-                GetAssetEditor().m_ApplyAction = OnAssetModified;
-
                 // Read current asset as backup.
                 if (m_Backup == null)
                     m_Backup = GetAsset().ToJson();
 
                 m_Initialized = true;
             }
+
+            if (GUILayout.Button("Edit asset"))
+            {
+                ActionInspectorWindow.OnOpenAsset(GetAsset().GetInstanceID(), 0);
+            }
+
+            EditorGUILayout.Space();
 
             // Look up properties on importer object.
             var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");

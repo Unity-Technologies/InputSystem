@@ -3,6 +3,9 @@ using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: Can we change this into a setup where the buffering depth isn't fixed to 2 but rather
+////        can be set on a per device basis?
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     // The raw memory blocks which are indexed by InputStateBlocks.
@@ -71,7 +74,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         public uint sizePerBuffer;
         public uint totalSize;
 
-        // Secretely we perform only a single allocation.
+        /// <summary>
+        /// Buffer that has state for each device initialized with default values.
+        /// </summary>
+        public IntPtr defaultStateBuffer;
+
+        // Secretly we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
 #if UNITY_EDITOR
         [SerializeField]
@@ -82,6 +90,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [Serializable]
         internal unsafe struct DoubleBuffers
         {
+            ////REVIEW: store timestamps along with each device-to-buffer mapping?
             // An array of pointers that maps devices to their respective
             // front and back buffer. Mapping is [deviceIndex*2] is front
             // buffer and [deviceIndex*2+1] is back buffer. Each device
@@ -157,7 +166,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             throw new Exception("Unrecognized InputUpdateType: " + updateType);
         }
 
-        private static DoubleBuffers s_CurrentBuffers;
+        internal static IntPtr s_DefaultStateBuffer;
+        internal static DoubleBuffers s_CurrentBuffers;
 
         public static IntPtr GetFrontBufferForDevice(int deviceIndex)
         {
@@ -210,6 +220,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             totalSize += mappingTableSizePerBuffer;
 #endif
 
+            // Plus one buffer for default state.
+            totalSize += sizePerBuffer;
+
             // Allocate.
             m_AllBuffers = (IntPtr)UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
             UnsafeUtility.MemClear(m_AllBuffers.ToPointer(), totalSize);
@@ -231,6 +244,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_EditorUpdateBuffers =
                 SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
 #endif
+
+            // Default state buffer goes last.
+            defaultStateBuffer = ptr;
 
             return newDeviceOffsets;
         }
@@ -271,6 +287,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #endif
 
             s_CurrentBuffers = new DoubleBuffers();
+
+            if (s_DefaultStateBuffer == defaultStateBuffer)
+                s_DefaultStateBuffer = IntPtr.Zero;
+            defaultStateBuffer = IntPtr.Zero;
+
+            totalSize = 0;
+            sizePerBuffer = 0;
         }
 
         // Migrate state data for all devices from a previous set of buffers to the current set of buffers.
@@ -293,6 +316,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 MigrateSingle(m_EditorUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_EditorUpdateBuffers,
                     oldDeviceIndices);
 #endif
+
+                MigrateDefaultStates(defaultStateBuffer, devices, newStateBlockOffsets, oldBuffers.defaultStateBuffer);
             }
 
             // Assign state blocks.
@@ -319,7 +344,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         private unsafe void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
         {
-            // Nothing to migrate if we no longer keep a buffer or the corresponding type.
+            // Nothing to migrate if we no longer keep a buffer of the corresponding type.
             if (!newBuffer.valid)
                 return;
 
@@ -358,6 +383,29 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 // Copy state.
                 UnsafeUtility.MemCpy(newFrontPtr, oldFrontPtr, numBytes);
                 UnsafeUtility.MemCpy(newBackPtr, oldBackPtr, numBytes);
+            }
+        }
+
+        private unsafe void MigrateDefaultStates(IntPtr newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, IntPtr oldBuffer)
+        {
+            // Migrate every device that has allocated state blocks.
+            var newDeviceCount = devices.Length;
+            for (var i = 0; i < newDeviceCount; ++i)
+            {
+                var device = devices[i];
+                Debug.Assert(device.m_DeviceIndex == i);
+
+                // Skip device if it's a newly added device.
+                if (device.m_StateBlock.byteOffset == InputStateBlock.kInvalidOffset)
+                    continue;
+
+                ////FIXME: this is not protecting against devices that have changed their formats between domain reloads
+
+                var numBytes = device.m_StateBlock.alignedSizeInBytes;
+                var oldStatePtr = (byte*)oldBuffer.ToPointer() + (int)device.m_StateBlock.byteOffset;
+                var newStatePtr = (byte*)newBuffer.ToPointer() + (int)newStateBlockOffsets[i];
+
+                UnsafeUtility.MemCpy(newStatePtr, oldStatePtr, numBytes);
             }
         }
 

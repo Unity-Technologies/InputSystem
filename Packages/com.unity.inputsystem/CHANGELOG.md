@@ -7,4 +7,3 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.1] - 2018-01-01
 
 ### This is the first release of *Unity Package Input System*.
-

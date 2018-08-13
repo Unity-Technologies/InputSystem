@@ -94,12 +94,14 @@ namespace UnityEngine.Experimental.Input
             ////TODO: make sure composite objects get all the bindings they need
             ////TODO: handle case where we have bindings resolving to the same control
             ////      (not so clear cut what to do there; each binding may have a different interaction setup, for example)
+            var currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
             var currentCompositeIndex = InputActionMapState.kInvalidIndex;
             var actionsInThisMap = map.m_Actions;
             var actionCountInThisMap = actionsInThisMap != null ? actionsInThisMap.Length : 0;
             for (var n = 0; n < bindingCountInThisMap; ++n)
             {
                 var unresolvedBinding = bindingsInThisMap[n];
+                var bindingIndex = bindingStartIndex + n;
 
                 // Skip binding if it is disabled (path is empty string).
                 var path = unresolvedBinding.effectivePath;
@@ -130,45 +132,6 @@ namespace UnityEngine.Experimental.Input
                         numProcessors = totalProcessorCount - firstProcessorIndex;
                 }
 
-                ////TODO: allow specifying parameters for composite on its path (same way as parameters work for interactions)
-                // If it's the start of a composite chain, create the composite.
-                if (unresolvedBinding.isComposite)
-                {
-                    ////REVIEW: what to do about interactions on composites?
-
-                    // Instantiate. For composites, the path is the name of the composite.
-                    var composite = InstantiateBindingComposite(unresolvedBinding.path);
-                    currentCompositeIndex =
-                        ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
-                    bindingStates[bindingStartIndex + n] = new InputActionMapState.BindingState
-                    {
-                        actionIndex = actionIndex,
-                        compositeIndex = currentCompositeIndex,
-                        processorStartIndex = firstProcessorIndex,
-                        processorCount = numProcessors,
-                        mapIndex = totalMapCount,
-                    };
-
-                    // The composite binding entry itself does not resolve to any controls.
-                    // It creates a composite binding object which is then populated from
-                    // subsequent bindings.
-                    continue;
-                }
-
-                // If we've reached the end of a composite chain, finish
-                // off the current composite.
-                if (!unresolvedBinding.isPartOfComposite && currentCompositeIndex != InputActionMapState.kInvalidIndex)
-                    currentCompositeIndex = InputActionMapState.kInvalidIndex;
-
-                // Look up controls.
-                var firstControlIndex = totalControlCount;
-                if (controls == null)
-                    controls = new InputControl[10];
-                var resolvedControls = new ArrayOrListWrapper<InputControl>(controls, totalControlCount);
-                var numControls = InputSystem.GetControls(path, ref resolvedControls);
-                controls = resolvedControls.array;
-                totalControlCount = resolvedControls.count;
-
                 // Instantiate interactions.
                 var firstInteractionIndex = 0;
                 var numInteractions = 0;
@@ -180,8 +143,54 @@ namespace UnityEngine.Experimental.Input
                         numInteractions = totalInteractionCount - firstInteractionIndex;
                 }
 
+                ////TODO: allow specifying parameters for composite on its path (same way as parameters work for interactions)
+                // If it's the start of a composite chain, create the composite.
+                if (unresolvedBinding.isComposite)
+                {
+                    ////REVIEW: what to do about interactions on composites?
+
+                    // Instantiate. For composites, the path is the name of the composite.
+                    var composite = InstantiateBindingComposite(unresolvedBinding.path);
+                    currentCompositeIndex =
+                        ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
+                    currentCompositeBindingIndex = bindingIndex;
+                    bindingStates[bindingIndex] = new InputActionMapState.BindingState
+                    {
+                        actionIndex = actionIndex,
+                        compositeOrCompositeBindingIndex = currentCompositeIndex,
+                        processorStartIndex = firstProcessorIndex,
+                        processorCount = numProcessors,
+                        interactionCount = numInteractions,
+                        interactionStartIndex = firstInteractionIndex,
+                        mapIndex = totalMapCount,
+                    };
+
+                    // The composite binding entry itself does not resolve to any controls.
+                    // It creates a composite binding object which is then populated from
+                    // subsequent bindings.
+                    continue;
+                }
+
+                // If we've reached the end of a composite chain, finish
+                // off the current composite.
+                if (!unresolvedBinding.isPartOfComposite &&
+                    currentCompositeBindingIndex != InputActionMapState.kInvalidIndex)
+                {
+                    currentCompositeBindingIndex = InputActionMapState.kInvalidIndex;
+                    currentCompositeIndex = InputActionMapState.kInvalidIndex;
+                }
+
+                // Look up controls.
+                var firstControlIndex = totalControlCount;
+                if (controls == null)
+                    controls = new InputControl[10];
+                var resolvedControls = new ArrayOrListWrapper<InputControl>(controls, totalControlCount);
+                var numControls = InputSystem.GetControls(path, ref resolvedControls);
+                controls = resolvedControls.array;
+                totalControlCount = resolvedControls.count;
+
                 // Add entry for resolved binding.
-                bindingStates[bindingStartIndex + n] = new InputActionMapState.BindingState
+                bindingStates[bindingIndex] = new InputActionMapState.BindingState
                 {
                     controlStartIndex = firstControlIndex,
                     controlCount = numControls,
@@ -191,13 +200,13 @@ namespace UnityEngine.Experimental.Input
                     processorCount = numProcessors,
                     isPartOfComposite = unresolvedBinding.isPartOfComposite,
                     actionIndex = actionIndex,
-                    compositeIndex = currentCompositeIndex,
+                    compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                     mapIndex = totalMapCount,
                 };
 
                 // If the binding is part of a composite, pass the resolve controls
                 // on to the composite.
-                if (unresolvedBinding.isPartOfComposite && currentCompositeIndex != InputActionMapState.kInvalidIndex && numControls != 0)
+                if (unresolvedBinding.isPartOfComposite && currentCompositeBindingIndex != InputActionMapState.kInvalidIndex && numControls != 0)
                 {
                     ////REVIEW: what should we do when a single binding in a composite resolves to multiple controls?
                     ////        if the composite has more than one bindable control, it's not readily apparent how we would group them
@@ -208,8 +217,8 @@ namespace UnityEngine.Experimental.Input
                     // to bind to.
                     if (string.IsNullOrEmpty(unresolvedBinding.name))
                         throw new Exception(string.Format(
-                                "Binding that is part of composite '{0}' is missing a name",
-                                composites[currentCompositeIndex]));
+                            "Binding that is part of composite '{0}' is missing a name",
+                            composites[currentCompositeIndex]));
 
                     // Install the control on the binding.
                     BindControlInComposite(composites[currentCompositeIndex], unresolvedBinding.name,
@@ -279,8 +288,8 @@ namespace UnityEngine.Experimental.Input
                 var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
-                            "No interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
-                            interactionString));
+                        "No interaction with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                        interactionString));
 
                 // Instantiate it.
                 var interaction = Activator.CreateInstance(type) as IInputInteraction;
@@ -294,9 +303,9 @@ namespace UnityEngine.Experimental.Input
                 var interactionStateCount = totalInteractionCount;
                 ArrayHelpers.AppendWithCapacity(ref interactionStates, ref interactionStateCount,
                     new InputActionMapState.InteractionState
-                {
-                    phase = InputActionPhase.Waiting
-                });
+                    {
+                        phase = InputActionPhase.Waiting
+                    });
                 ArrayHelpers.AppendWithCapacity(ref interactions, ref totalInteractionCount, interaction);
                 Debug.Assert(interactionStateCount == totalInteractionCount);
             }
@@ -316,8 +325,8 @@ namespace UnityEngine.Experimental.Input
                 var type = InputControlProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
                     throw new Exception(string.Format(
-                            "No processor with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
-                            processorString));
+                        "No processor with name '{0}' (mentioned in '{1}') has been registered", m_Parameters[i].name,
+                        processorString));
 
                 // Instantiate it.
                 var processor = Activator.CreateInstance(type);
@@ -332,17 +341,22 @@ namespace UnityEngine.Experimental.Input
             return firstProcessorIndex;
         }
 
-        private static object InstantiateBindingComposite(string name)
+        private static object InstantiateBindingComposite(string nameAndParameters)
         {
+            var nameAndParametersParsed = InputControlLayout.ParseNameAndParameters(nameAndParameters);
+
             // Look up.
-            var type = InputBindingComposite.s_Composites.LookupTypeRegistration(name);
+            var type = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParametersParsed.name);
             if (type == null)
                 throw new Exception(string.Format("No binding composite with name '{0}' has been registered",
-                        name));
+                    nameAndParametersParsed.name));
 
             // Instantiate.
             var instance = Activator.CreateInstance(type);
             ////REVIEW: typecheck for IInputBindingComposite? (at least in dev builds)
+
+            // Set parameters.
+            InputDeviceBuilder.SetParameters(instance, nameAndParametersParsed.parameters);
 
             return instance;
         }
@@ -354,16 +368,16 @@ namespace UnityEngine.Experimental.Input
 
             // Look up field.
             var field = type.GetField(name,
-                    BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
                 throw new Exception(string.Format("Cannot find public field '{0}' in binding composite '{1}' of type '{2}'",
-                        name, composite, type));
+                    name, composite, type));
 
             // Typecheck.
             if (!typeof(InputControl).IsAssignableFrom(field.FieldType))
                 throw new Exception(string.Format(
-                        "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
-                        type));
+                    "Field '{0}' in binding composite '{1}' of type '{2}' is not an InputControl", name, composite,
+                    type));
 
             field.SetValue(composite, control);
         }
