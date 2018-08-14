@@ -163,7 +163,6 @@ namespace UnityEngine.Experimental.Input
         public Action onShutdown { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
-        public double currentTimeOffsetToRealtimeSinceStartup { get; set; }
         public InputUpdateType updateMask { get; set; }
         public int frameCount { get; set; }
 
@@ -198,6 +197,16 @@ namespace UnityEngine.Experimental.Input
             GC.SuppressFinalize(this);
         }
 
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            set
+            {
+                m_CurrentTimeOffsetToRealtimeSinceStartup = value;
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
+            }
+        }
+
         private int m_NextDeviceId = 1;
         private uint m_NextEventId = 1;
         private int m_EventCount;
@@ -208,6 +217,7 @@ namespace UnityEngine.Experimental.Input
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+        private double m_CurrentTimeOffsetToRealtimeSinceStartup;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

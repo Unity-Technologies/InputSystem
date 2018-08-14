@@ -1314,6 +1314,9 @@ namespace UnityEngine.Experimental.Input
             // During domain reload, when called from RestoreState(), we will get here with m_Runtime being null.
             // InputSystemObject will invoke InstallGlobals() a second time after it has called InstallRuntime().
             InputRuntime.s_Instance = m_Runtime;
+            if (m_Runtime != null)
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup =
+                    m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
             // Reset update state.
             InputUpdate.lastUpdateType = 0;
@@ -1686,7 +1689,7 @@ namespace UnityEngine.Experimental.Input
                 using (var tempBuffer = new NativeArray<byte>((int)m_StateBuffers.sizePerBuffer, Allocator.Temp))
                 {
                     var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
-                    var currentTime = m_Runtime.currentTime;
+                    var currentTimeExternal = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
                     for (var i = 0; i < m_Devices.Length; ++i)
                     {
@@ -1738,7 +1741,7 @@ namespace UnityEngine.Experimental.Input
                         // Show to device.
                         if (((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer))
                         {
-                            ////REVIEW: should this make the device current? (and update m_LastUpdateTime)
+                            ////REVIEW: should this make the device current? (and update m_LastUpdateTimeInternal)
 
                             // Let listeners know the device's state has changed.
                             for (var n = 0; n < m_DeviceChangeListeners.length; ++n)
@@ -1748,7 +1751,7 @@ namespace UnityEngine.Experimental.Input
                             if (ProcessStateChangeMonitors(i, new IntPtr(statePtr), new IntPtr(tempStatePtr),
                                 deviceStateSize, 0))
                             {
-                                FireStateChangeNotifications(i, currentTime);
+                                FireStateChangeNotifications(i, currentTimeExternal);
                             }
                         }
                     }
@@ -1804,6 +1807,9 @@ namespace UnityEngine.Experimental.Input
 
             if (updateType != InputUpdateType.BeforeRender) // Events in before-render we see twice (buffer is not flushed).
                 m_Metrics.totalEventCount += eventCount;
+
+            // Store current time offset.
+            InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
             ////REVIEW: which set of buffers should we have active when processing timeouts?
             if (gameIsPlayingAndHasFocus) ////REVIEW: for now, making actions exclusive to play mode
@@ -1902,7 +1908,7 @@ namespace UnityEngine.Experimental.Input
 
                 // Process.
                 var currentEventType = currentEventPtr->type;
-                var currentEventTime = currentEventPtr->time;
+                var currentEventTimeInternal = currentEventPtr->internalTime;
                 switch (currentEventType)
                 {
                     case StateEvent.Type:
@@ -1921,7 +1927,7 @@ namespace UnityEngine.Experimental.Input
 
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is.
-                        if (currentEventTime < device.m_LastUpdateTime)
+                        if (currentEventTimeInternal < device.m_LastUpdateTimeInternal)
                         {
                             #if UNITY_EDITOR
                             if (m_Diagnostics != null)
@@ -2111,7 +2117,7 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTime = currentEventTime;
+                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
 
                         // Notify listeners.
                         for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2121,7 +2127,7 @@ namespace UnityEngine.Experimental.Input
                         // monitors fired, let the associated actions know.
                         ////FIXME: this needs to happen with player buffers active
                         if (haveSignalledMonitors)
-                            FireStateChangeNotifications(deviceIndex, currentEventTime);
+                            FireStateChangeNotifications(deviceIndex, currentEventTimeInternal);
 
                         break;
 
@@ -2258,13 +2264,14 @@ namespace UnityEngine.Experimental.Input
             return signalled;
         }
 
-        private void FireStateChangeNotifications(int deviceIndex, double time)
+        private void FireStateChangeNotifications(int deviceIndex, double internalTime)
         {
             Debug.Assert(m_StateChangeMonitors != null);
             Debug.Assert(m_StateChangeMonitors.Length > deviceIndex);
 
             var signals = m_StateChangeMonitors[deviceIndex].signalled;
             var listeners = m_StateChangeMonitors[deviceIndex].listeners;
+            var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
             for (var i = 0; i < signals.length; ++i)
             {

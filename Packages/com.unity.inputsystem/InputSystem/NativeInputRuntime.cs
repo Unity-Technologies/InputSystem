@@ -121,7 +121,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 #elif UNITY_EDITOR
                 return EditorApplication.timeSinceStartup;
                 #else
-                // This is wrong but we probably won't fix it on 2018.2.
+                // This is wrong; NativeInputSystem.currentTime is in the process of getting backported to 2018.2.
                 return Time.realtimeSinceStartup;
                 #endif
             }
@@ -134,7 +134,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 #if UNITY_2018_3_OR_NEWER
                 return NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
                 #else
-                // This is wrong but we probably won't fix it on 2018.2.
+                // This is wrong; NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup is in the process of getting
+                // backported to 2018.2.
                 return 0;
                 #endif
             }

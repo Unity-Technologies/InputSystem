@@ -63,32 +63,23 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
 
         testRuntime.currentTime = 1234;
+        testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1123;
 
         double? receivedTime = null;
+        double? receivedInternalTime = null;
         InputSystem.onEvent +=
-            eventPtr => { receivedTime = eventPtr.time; };
+            eventPtr =>
+        {
+            receivedTime = eventPtr.time;
+            receivedInternalTime = eventPtr.internalTime;
+        };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
 
         Assert.That(receivedTime.HasValue);
-        Assert.That(receivedTime.Value, Is.EqualTo(1234).Within(0.00001));
-    }
-
-    [Test]
-    [Category("Events")]
-    public void Events_CanQueryCurrentEventTime()
-    {
-        testRuntime.currentTime = 1234;
-        Assert.That(InputSystem.currentTime, Is.EqualTo(1234).Within(0.00001));
-    }
-
-    [Test]
-    [Category("Events")]
-    public void Events_CanRelateEventTimeToRealtimeSinceStartup()
-    {
-        testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1000;
-        Assert.That(InputSystem.ConvertInputTimeToRealtimeSinceStartup(1234), Is.EqualTo(234).Within(0.00001));
+        Assert.That(receivedTime.Value, Is.EqualTo(111).Within(0.00001));
+        Assert.That(receivedInternalTime.Value, Is.EqualTo(1234).Within(0.00001));
     }
 
     [Test]
