@@ -213,7 +213,8 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static InputAction AddAction(this InputActionMap map, string name, string binding = null, string interactions = null, string groups = null)
+        public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
+            string interactions = null, string groups = null, string expectedControlLayout = null)
         {
             if (map == null)
                 throw new ArgumentNullException("map");
@@ -228,6 +229,7 @@ namespace UnityEngine.Experimental.Input
 
             // Append action to array.
             var action = new InputAction(name);
+            action.expectedControlLayout = expectedControlLayout;
             ArrayHelpers.Append(ref map.m_Actions, action);
             action.m_ActionMap = map;
 
