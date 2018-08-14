@@ -112,6 +112,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
         double currentTime { get; }
 
         /// <summary>
+        /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        double currentTimeOffsetToRealtimeSinceStartup { get; }
+
+        /// <summary>
         /// Mask that determines which input updates are executed by the runtime.
         /// </summary>
         /// <remarks>

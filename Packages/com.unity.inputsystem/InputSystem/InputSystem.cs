@@ -813,10 +813,54 @@ namespace UnityEngine.Experimental.Input
 
         #region Events
 
+        /// <summary>
+        /// Current time in seconds according to the input system.
+        /// </summary>
+        /// <remarks>
+        /// This is used to timestamp events that are not explicitly supplied with timestamps.
+        ///
+        /// Time in the input system progresses linearly and in real-time and relates to when Unity was started.
+        /// In the editor, this always corresponds to <see cref="EditorApplication.timeSinceStartup"/>.
+        ///
+        /// Input time, however, is offset in relation to <see cref="Time.realtimeSinceStartup"/>. This is because
+        /// in the player, <see cref="Time.realtimeSinceStartup"/> is reset to 0 upon loading the first scene and
+        /// in the editor, <see cref="Time.realtimeSinceStartup"/> is reset to 0 whenever the editor enters play
+        /// mode. As the resetting runs counter to the need of linearly progressing time for input, the input
+        /// system will not reset time along with <see cref="Time.realtimeSinceStartup"/>.
+        ///
+        /// Instead, you can use <see cref="ConvertInputTimeToRealtimeSinceStartup"/> to convert input timestamps
+        /// to a value relative to the current state of <see cref="Time.realtimeSinceStartup"/>. This will simply
+        /// apply an offset based on when Unity reset <see cref="Time.realtimeSinceStartup"/> last.
+        /// </remarks>
+        /// <seealso cref="InputEvent.time"/>
+        /// <seealso cref="InputEventPtr.time"/>
+        /// <seealso cref="InputDevice.lastUpdateTime"/>
+        public static double currentTime
+        {
+            get { return s_Manager.m_Runtime.currentTime; }
+        }
+
         public static event Action<InputEventPtr> onEvent
         {
             add { s_Manager.onEvent += value; }
             remove { s_Manager.onEvent -= value; }
+        }
+
+        /// <summary>
+        /// Convert an input timestamp (e.g. from <see cref="InputEvent.time"/> or <see cref="InputDevice.lastUpdateTime"/>)
+        /// to a time relative to <see cref="Time.realtimeSinceStartup"/>.
+        /// </summary>
+        /// <remarks>
+        /// See <see cref="currentTime"/> for a more detailed explanation.
+        /// </remarks>
+        /// <param name="time">Timestamp to convert.</param>
+        /// <returns>A timestamp relative to <see cref="Time.realtimeSinceStartup"/>.</returns>
+        /// <seealso cref="InputEvent.time"/>
+        /// <seealso cref="InputEventPtr.time"/>
+        /// <seealso cref="InputDevice.lastUpdateTime"/>
+        public static double ConvertInputTimeToRealtimeSinceStartup(double time)
+        {
+            return time - s_Manager.m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
         }
 
         public static void QueueEvent(InputEventPtr eventPtr)
