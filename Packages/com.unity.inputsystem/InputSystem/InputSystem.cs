@@ -846,6 +846,9 @@ namespace UnityEngine.Experimental.Input
             remove { s_Manager.onEvent -= value; }
         }
 
+        ////REVERT: instead of requiring everyone to be aware of this difference, wouldn't it be better
+        ////        to just automatically convert on the various properties (InputEventPtr.time, InputDevice.lastUpdateTime, etc)
+        ////        we have?
         /// <summary>
         /// Convert an input timestamp (e.g. from <see cref="InputEvent.time"/> or <see cref="InputDevice.lastUpdateTime"/>)
         /// to a time relative to <see cref="Time.realtimeSinceStartup"/>.

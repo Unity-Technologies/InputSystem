@@ -30,6 +30,7 @@ public class SteamTests : InputTestFixture
         // Generate a C# input device from the Steam IGA file.
         var generatedCode = SteamIGAConverter.GenerateInputDeviceFromSteamIGA(vdf, "My.Namespace.MySteamController");
 
+        Assert.That(generatedCode, Does.StartWith("// THIS FILE HAS BEEN AUTO-GENERATED"));
         Assert.That(generatedCode, Contains.Substring("#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT"));
         Assert.That(generatedCode, Contains.Substring("namespace My.Namespace\n"));
         Assert.That(generatedCode, Contains.Substring("public class MySteamController : SteamController, IInputUpdateCallbackReceiver\n"));

@@ -70,6 +70,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
 
             var builder = new StringBuilder();
 
+            builder.Append("// THIS FILE HAS BEEN AUTO-GENERATED\n");
             builder.Append("#if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT\n");
             builder.Append("using UnityEngine;\n");
             builder.Append("using UnityEngine.Experimental.Input;\n");
@@ -223,6 +224,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("    public FourCC GetFormat()\n");
             builder.Append("    {\n");
             ////TODO: handle class names that are shorter than 4 characters
+            ////TODO: uppercase characters
             builder.Append(string.Format("        return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
             builder.Append("    }\n");
             builder.Append("\n");

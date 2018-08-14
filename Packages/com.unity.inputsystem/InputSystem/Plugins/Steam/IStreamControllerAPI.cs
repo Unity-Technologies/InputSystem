@@ -2,7 +2,7 @@
 
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
-    public interface IStreamControllerAPI
+    public interface ISteamControllerAPI
     {
     }
 }

@@ -1,3 +1,4 @@
+// THIS FILE HAS BEEN AUTO-GENERATED
 #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using UnityEngine;
 using UnityEngine.Experimental.Input;
@@ -11,17 +12,17 @@ using UnityEditor;
 #if UNITY_EDITOR
 [InitializeOnLoad]
 #endif
-[InputControlLayout(stateType = typeof(DemoControllerState))]
-public class DemoController : SteamController, IInputUpdateCallbackReceiver
+[InputControlLayout(stateType = typeof(SteamDemoControllerState))]
+public class SteamDemoController : SteamController, IInputUpdateCallbackReceiver
 {
     private static InputDeviceMatcher deviceMatcher
     {
-        get { return new InputDeviceMatcher().WithInterface("Steam").WithProduct("DemoController"); }
+        get { return new InputDeviceMatcher().WithInterface("Steam").WithProduct("SteamDemoController"); }
     }
 #if UNITY_EDITOR
-    static DemoController()
+    static SteamDemoController()
     {
-        InputSystem.RegisterControlLayout<DemoController>(matches: deviceMatcher);
+        InputSystem.RegisterControlLayout<SteamDemoController>(matches: deviceMatcher);
     }
 
 #endif
@@ -33,7 +34,7 @@ public class DemoController : SteamController, IInputUpdateCallbackReceiver
     [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RuntimeInitializeOnLoad()
     {
-        InputSystem.RegisterControlLayout<DemoController>(matches: deviceMatcher);
+        InputSystem.RegisterControlLayout<SteamDemoController>(matches: deviceMatcher);
     }
 
     public Vector2Control move { get; protected set; }
@@ -47,11 +48,11 @@ public class DemoController : SteamController, IInputUpdateCallbackReceiver
         fire = builder.GetControl<ButtonControl>("fire");
     }
 }
-public unsafe struct DemoControllerState : IInputStateTypeInfo
+public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
 {
     public FourCC GetFormat()
     {
-        return new FourCC('D', 'e', 'm', 'o');
+        return new FourCC('S', 't', 'e', 'a');
     }
 
     [InputControl(name = "move", layout = "Vector2")]
