@@ -3,8 +3,8 @@ InitTestScene*
 *.orig
 *.orig.meta
 .vs/
-Assets/Plugins/
-Assets/Plugins.meta
+Assets/Plugins/Editor/JetBrains
+Assets/Plugins/Editor/JetBrains.meta
 Builds/
 Library/
 Temp/
