@@ -647,7 +647,7 @@ PlayerSettings:
   webGLLinkerTarget: 0
   webGLThreadsSupport: 0
   scriptingDefineSymbols:
-    1: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT;UNITY_ENABLE_STEAMWORKSNET_STEAM_CONTROLLER_SUPPORT
+    1: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
   platformArchitecture:
     iOS: 0
   scriptingBackend:
@@ -658,7 +658,7 @@ PlayerSettings:
     Android: 0
   managedStrippingLevel: {}
   incrementalIl2cppBuild: {}
-  allowUnsafeCode: 0
+  allowUnsafeCode: 1
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 0
   apiCompatibilityLevelPerPlatform: {}
