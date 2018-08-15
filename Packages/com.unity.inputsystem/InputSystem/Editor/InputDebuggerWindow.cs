@@ -117,16 +117,16 @@ namespace UnityEngine.Experimental.Input.Editor
         private void InstallHooks()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
-            InputSystem.onControlLayoutChange += OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice += OnFindLayout;
+            InputSystem.onLayoutChange += OnLayoutChange;
+            InputSystem.onFindLayoutForDevice += OnFindLayout;
             InputActionMapState.s_OnEnabledActionsChanged.AppendWithCapacity(OnEnabledActionsChanged);
         }
 
         private void UninstallHooks()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
-            InputSystem.onControlLayoutChange -= OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
+            InputSystem.onLayoutChange -= OnLayoutChange;
+            InputSystem.onFindLayoutForDevice -= OnFindLayout;
             InputActionMapState.s_OnEnabledActionsChanged.RemoveAtByMovingTailWithCapacity(OnEnabledActionsChanged);
         }
 

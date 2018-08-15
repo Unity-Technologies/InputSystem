@@ -26,7 +26,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         InputSystem.AddDevice("MyDevice");
         testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
@@ -102,7 +102,7 @@ partial class CoreTests
     public void Editor_RestoringStateWillRestoreObjectsOfLayoutBuilder()
     {
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
-        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), "TestLayout");
+        InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
         InputSystem.Save();
         InputSystem.Reset();

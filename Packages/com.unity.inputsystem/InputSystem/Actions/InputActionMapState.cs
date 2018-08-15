@@ -1244,6 +1244,9 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             public double time;
 
+            /// <summary>
+            /// The time when the binding moved into <see cref="InputActionPhase.Started"/>.
+            /// </summary>
             public double startTime;
 
             public int mapIndex

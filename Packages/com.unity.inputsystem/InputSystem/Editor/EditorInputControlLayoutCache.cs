@@ -92,6 +92,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static InputControlLayout TryGetLayout(string name)
         {
+            Refresh();
             return s_Cache.FindOrLoadLayout(name);
         }
 

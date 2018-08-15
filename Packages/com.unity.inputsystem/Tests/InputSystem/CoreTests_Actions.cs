@@ -681,7 +681,7 @@ partial class CoreTests
     {
         var map = new InputActionMap("test");
 
-        map.AddAction(name: "action1", binding: "/gamepad/leftStick")
+        map.AddAction(name: "action1", expectedControlLayout: "Button", binding: "/gamepad/leftStick")
             .AppendBinding("/gamepad/rightStick")
             .WithGroup("group")
             .WithProcessor("deadzone");
@@ -695,6 +695,8 @@ partial class CoreTests
         Assert.That(maps[0].actions, Has.Count.EqualTo(2));
         Assert.That(maps[0].actions[0].name, Is.EqualTo("action1"));
         Assert.That(maps[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(maps[0].actions[0].expectedControlLayout, Is.EqualTo("Button"));
+        Assert.That(maps[0].actions[1].expectedControlLayout, Is.Null);
         Assert.That(maps[0].actions[0].bindings, Has.Count.EqualTo(2));
         Assert.That(maps[0].actions[1].bindings, Has.Count.EqualTo(1));
         Assert.That(maps[0].actions[0].bindings[0].groups, Is.Null);
@@ -2431,7 +2433,7 @@ partial class CoreTests
         ";
 
         // Create gamepad and put leftStick/x in non-default state.
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
@@ -2443,6 +2445,22 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.1234f, 0f)});
         InputSystem.Update();
+    }
+
+    // It's possible to associate a control layout name with an action. This is useful both for
+    // characterizing the expected input behavior as well as to make control picking (both at
+    // edit time and in the game) easier.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanHaveExpectedControlLayout()
+    {
+        var action = new InputAction();
+
+        Assert.That(action.expectedControlLayout, Is.Null);
+
+        action.expectedControlLayout = "Button";
+
+        Assert.That(action.expectedControlLayout, Is.EqualTo("Button"));
     }
 
     [Test]

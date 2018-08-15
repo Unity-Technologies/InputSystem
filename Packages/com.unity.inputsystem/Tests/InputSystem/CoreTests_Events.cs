@@ -58,6 +58,60 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_UseCurrentTimeByDefault()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        testRuntime.currentTime = 1234;
+        testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1123;
+
+        double? receivedTime = null;
+        double? receivedInternalTime = null;
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            receivedTime = eventPtr.time;
+            receivedInternalTime = eventPtr.internalTime;
+        };
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedTime.HasValue);
+        Assert.That(receivedTime.Value, Is.EqualTo(111).Within(0.00001));
+        Assert.That(receivedInternalTime.Value, Is.EqualTo(1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2);
+        InputSystem.Update();
+
+        Assert.That(gamepad.lastUpdateTime, Is.Not.EqualTo(2).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_AreTimeslicedAcrossFixedUpdates()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 2);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3);
+
+        //testRuntime.
+        //InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Events")]
     public unsafe void Events_CanInitializeStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -130,7 +184,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(deviceJson);
+        InputSystem.RegisterLayout(deviceJson);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var newState = new GamepadState {leftTrigger = 0.123f};
@@ -281,7 +335,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = InputSystem.AddDevice("CustomGamepad");
 
         InputSystem.onEvent +=
@@ -621,8 +675,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<CustomDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<CustomDevice>();
+        InputSystem.RegisterLayout(json);
         var device = (CustomDevice)InputSystem.AddDevice("TestLayout");
 
         InputSystem.QueueStateEvent(device, new CustomDeviceState {axis = 0.5f});
@@ -649,7 +703,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CandSendLargerStateToDeviceWithSmallerState()
     {
-        InputSystem.RegisterControlLayout<CustomDevice>();
+        InputSystem.RegisterLayout<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
 
         var state = new ExtendedCustomDeviceState();
@@ -664,7 +718,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdateDeviceWithEventsFromUpdateCallback()
     {
-        InputSystem.RegisterControlLayout<CustomDeviceWithUpdate>();
+        InputSystem.RegisterLayout<CustomDeviceWithUpdate>();
         var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
 
         InputSystem.Update();

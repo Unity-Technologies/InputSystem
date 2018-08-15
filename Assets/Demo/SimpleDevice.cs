@@ -54,7 +54,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     public static void Initialize()
     {
-        InputSystem.RegisterControlLayout<MyDevice>();
+        InputSystem.RegisterLayout<MyDevice>();
 
         if (!InputSystem.devices.Any(x => x is MyDevice))
             InputSystem.AddDevice<MyDevice>();
