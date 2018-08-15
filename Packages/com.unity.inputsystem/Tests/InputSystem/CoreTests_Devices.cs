@@ -358,7 +358,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
         InputSystem.Update();
 
         InputSystem.AddDevice("Keyboard");
@@ -665,7 +665,7 @@ partial class CoreTests
             receivedDeviceChange = c;
         };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
@@ -734,7 +734,7 @@ partial class CoreTests
 
         Assert.That(device.wasUpdatedThisFrame, Is.False);
 
-        InputSystem.QueueStateEvent(device, new GamepadState {rightTrigger = 0.5f});
+        InputSystem.QueueStateEvent(device, new GamepadState { rightTrigger = 0.5f });
         InputSystem.Update();
 
         Assert.That(device.wasUpdatedThisFrame, Is.True);
@@ -803,12 +803,12 @@ partial class CoreTests
         InputSystem.RegisterControlLayout<TestDeviceDecidingWhereToIntegrateState>();
         var device = InputSystem.AddDevice<TestDeviceDecidingWhereToIntegrateState>();
 
-        InputSystem.QueueStateEvent(device, new TestDevicePartialState {axis = 0.123f});
+        InputSystem.QueueStateEvent(device, new TestDevicePartialState { axis = 0.123f });
         InputSystem.Update();
 
         Assert.That(device["axis0"].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
 
-        InputSystem.QueueStateEvent(device, new TestDevicePartialState {axis = 0.234f});
+        InputSystem.QueueStateEvent(device, new TestDevicePartialState { axis = 0.234f });
         InputSystem.Update();
 
         Assert.That(device["axis0"].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
@@ -821,7 +821,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.QueueStateEvent(device, new GamepadState {leftStick = new Vector2(0.123f, 0.456f)});
+        InputSystem.QueueStateEvent(device, new GamepadState { leftStick = new Vector2(0.123f, 0.456f) });
         InputSystem.Update();
 
         var state = device.ReadValueAsObject();
@@ -833,7 +833,7 @@ partial class CoreTests
 
         unsafe
         {
-            fixed(byte* bufferPtr = buffer)
+            fixed (byte* bufferPtr = buffer)
             {
                 var statePtr = (GamepadState*)bufferPtr;
                 Assert.That(statePtr->leftStick.x, Is.EqualTo(0.123).Within(0.00001));
@@ -846,7 +846,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanAddLayoutForDeviceThatsAlreadyBeenReported()
     {
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {product = "MyController"}.ToJson());
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription { product = "MyController" }.ToJson());
         InputSystem.Update();
 
         var json = @"
@@ -869,13 +869,13 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanMatchLayoutByDeviceClass()
     {
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Touchscreen"}.ToJson());
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "Touchscreen" }.ToJson());
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
 
         // Should not try to use a control layout.
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Touch"}.ToJson());
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "Touch" }.ToJson());
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
@@ -996,7 +996,7 @@ partial class CoreTests
         InputSystem.RemoveDevice(gamepad);
         InputSystem.AddDevice(gamepad);
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
         InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).SameAs(gamepad));
@@ -1087,7 +1087,7 @@ partial class CoreTests
         Assert.That(disabled.Value, Is.True);
 
         // Make sure that state sent against the device is ignored.
-        InputSystem.QueueStateEvent(device, new MouseState {buttons = 0xffff});
+        InputSystem.QueueStateEvent(device, new MouseState { buttons = 0xffff });
         InputSystem.Update();
 
         Assert.That(device.CheckStateIsAtDefault(), Is.True);
@@ -1151,7 +1151,7 @@ partial class CoreTests
     public void Devices_ThatHaveNoKnownLayout_AreDisabled()
     {
         var deviceId = testRuntime.AllocateDeviceId();
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "TestThing" }.ToJson(), deviceId);
 
         bool? wasDisabled = null;
         unsafe
@@ -1182,7 +1182,7 @@ partial class CoreTests
     public void Devices_ThatHadNoKnownLayout_AreReEnabled_WhenLayoutBecomesKnown()
     {
         var deviceId = testRuntime.AllocateDeviceId();
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "TestThing"}.ToJson(), deviceId);
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "TestThing" }.ToJson(), deviceId);
         InputSystem.Update();
 
         bool? wasEnabled = null;
@@ -1235,7 +1235,7 @@ partial class CoreTests
                 });
         }
 
-        testRuntime.ReportNewInputDevice(new InputDeviceDescription {deviceClass = "Mouse"}.ToJson(), deviceId);
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "Mouse" }.ToJson(), deviceId);
         InputSystem.Update();
         var device = InputSystem.devices.First(x => x.id == deviceId);
 
@@ -1273,7 +1273,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
-        var description = new InputDeviceDescription {deviceClass = "Gamepad"};
+        var description = new InputDeviceDescription { deviceClass = "Gamepad" };
         var deviceId = testRuntime.ReportNewInputDevice(description.ToJson());
 
         InputSystem.Update();
@@ -1502,7 +1502,7 @@ partial class CoreTests
     {
         var pointer = InputSystem.AddDevice<Pointer>();
 
-        InputSystem.QueueStateEvent(pointer, new PointerState {delta = new Vector2(0.5f, 0.5f)});
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update(InputUpdateType.Fixed);
 
         Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
@@ -1520,14 +1520,14 @@ partial class CoreTests
     {
         var pointer = InputSystem.AddDevice<Pointer>();
 
-        InputSystem.QueueStateEvent(pointer, new PointerState {delta = new Vector2(0.5f, 0.5f)});
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update(InputUpdateType.Fixed);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
         Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
-        InputSystem.QueueStateEvent(pointer, new PointerState {delta = new Vector2(0.5f, 0.5f)});
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
         InputSystem.Update(InputUpdateType.Fixed);
         InputSystem.Update(InputUpdateType.Dynamic);
 
@@ -1615,7 +1615,7 @@ partial class CoreTests
                 });
         }
 
-        InputSystem.QueueStateEvent(pointer, new PointerState {delta = new Vector2(32f, 64f)});
+        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(32f, 64f) });
         InputSystem.Update();
 
         // NOTE: Whereas the tests above access .delta.x.value and .delta.y.value, here we access
@@ -2450,7 +2450,7 @@ partial class CoreTests
     {
         var accelerometer = InputSystem.AddDevice<Accelerometer>();
         var value = new Vector3(0.123f, 0.456f, 0.789f);
-        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState {acceleration = value});
+        InputSystem.QueueStateEvent(accelerometer, new AccelerometerState { acceleration = value });
         InputSystem.Update();
 
         Assert.That(Accelerometer.current, Is.SameAs(accelerometer));
@@ -2464,7 +2464,7 @@ partial class CoreTests
     {
         var gyro = InputSystem.AddDevice<Gyroscope>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
-        InputSystem.QueueStateEvent(gyro, new GyroscopeState {angularVelocity = value});
+        InputSystem.QueueStateEvent(gyro, new GyroscopeState { angularVelocity = value });
         InputSystem.Update();
 
         Assert.That(Gyroscope.current, Is.SameAs(gyro));
@@ -2477,7 +2477,7 @@ partial class CoreTests
     {
         var sensor = InputSystem.AddDevice<Gravity>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
-        InputSystem.QueueStateEvent(sensor, new GravityState {gravity = value});
+        InputSystem.QueueStateEvent(sensor, new GravityState { gravity = value });
         InputSystem.Update();
 
         Assert.That(Gravity.current, Is.SameAs(sensor));
@@ -2490,7 +2490,7 @@ partial class CoreTests
     {
         var sensor = InputSystem.AddDevice<Attitude>();
         var value = Quaternion.Euler(10, 20, 30);
-        InputSystem.QueueStateEvent(sensor, new AttitudeState {attitude = value});
+        InputSystem.QueueStateEvent(sensor, new AttitudeState { attitude = value });
         InputSystem.Update();
 
         Assert.That(Attitude.current, Is.SameAs(sensor));
@@ -2503,7 +2503,7 @@ partial class CoreTests
     {
         var sensor = InputSystem.AddDevice<LinearAcceleration>();
         var value = new Vector3(0.987f, 0.654f, 0.321f);
-        InputSystem.QueueStateEvent(sensor, new LinearAccelerationState {acceleration = value});
+        InputSystem.QueueStateEvent(sensor, new LinearAccelerationState { acceleration = value });
         InputSystem.Update();
 
         Assert.That(LinearAcceleration.current, Is.SameAs(sensor));
@@ -2705,7 +2705,7 @@ partial class CoreTests
                 {
                     value = "value"
                 },
-                arrayCap = new[] {"first", "second"},
+                arrayCap = new[] { "first", "second" },
                 enumCap = TestDeviceCapabilities.EnumCaps.Second,
             }.ToJson()
         };
@@ -2783,6 +2783,42 @@ partial class CoreTests
         //state changes for virtual devices are accumulated as separate buffer of events that is flushed out in a post-step
         //performed as a loop so virtual devices can feed into other virtual devices
         //virtual devices are marked with flag
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_NoisyControlInLayoutAppliesToDevices()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_AllBasicControlTypesCanBeNoisy()
+    {
+        //This should be parametric
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_TaggingControlAsNoisyOnlyAffectsThatControl()
+    {
+
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_NonNoisyControlDoesUpdateCurrentDevice()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_NoisyControlDoesNotUpdateCurrentDevice()
+    {
         Assert.Fail();
     }
 }
