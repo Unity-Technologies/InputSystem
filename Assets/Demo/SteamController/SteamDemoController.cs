@@ -22,7 +22,7 @@ public class SteamDemoController : SteamController, IInputUpdateCallbackReceiver
 #if UNITY_EDITOR
     static SteamDemoController()
     {
-        InputSystem.RegisterControlLayout<SteamDemoController>(matches: deviceMatcher);
+        InputSystem.RegisterLayout<SteamDemoController>(matches: deviceMatcher);
     }
 
 #endif
@@ -34,7 +34,7 @@ public class SteamDemoController : SteamController, IInputUpdateCallbackReceiver
     [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void RuntimeInitializeOnLoad()
     {
-        InputSystem.RegisterControlLayout<SteamDemoController>(matches: deviceMatcher);
+        InputSystem.RegisterLayout<SteamDemoController>(matches: deviceMatcher);
     }
 
     public Vector2Control move { get; protected set; }

@@ -99,6 +99,9 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a188ed5d4d3a28b0d5cd4ad62785cd4cf"><td class="memItemLeft" align="right" valign="top">static string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#a188ed5d4d3a28b0d5cd4ad62785cd4cf">ToHumanReadableString</a> (string path)</td></tr>
+<tr class="memdesc:a188ed5d4d3a28b0d5cd4ad62785cd4cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a human readable string from the given control path.  <a href="#a188ed5d4d3a28b0d5cd4ad62785cd4cf">More...</a><br /></td></tr>
+<tr class="separator:a188ed5d4d3a28b0d5cd4ad62785cd4cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab39ab1047c8308cacf7e28ab78de7083"><td class="memItemLeft" align="right" valign="top">static string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputControlPath.html#ab39ab1047c8308cacf7e28ab78de7083">TryGetDeviceLayout</a> (string path)</td></tr>
 <tr class="separator:ab39ab1047c8308cacf7e28ab78de7083"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -107,6 +110,41 @@ Static Public Member Functions</h2></td></tr>
 <p>The thinking here is somewhat similar to System.IO.Path, i.e. have a range of static methods that perform various operations on paths.</p>
 <p>Has both methods that work just on paths themselves (like TryGetControlLayout) and methods that work on paths in combination with controls (like TryFindControls). </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a188ed5d4d3a28b0d5cd4ad62785cd4cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a188ed5d4d3a28b0d5cd4ad62785cd4cf">&#9670;&nbsp;</a></span>ToHumanReadableString()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static string ToHumanReadableString </td>
+          <td>(</td>
+          <td class="paramtype">string&#160;</td>
+          <td class="paramname"><em>path</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Create a human readable string from the given control path. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>A control path such as "&amp;lt;XRController&gt;{LeftHand}/position".</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A string such as "Gamepad leftStick/x".</dd></dl>
+
+</div>
+</div>
 <a id="ab39ab1047c8308cacf7e28ab78de7083"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab39ab1047c8308cacf7e28ab78de7083">&#9670;&nbsp;</a></span>TryGetDeviceLayout()</h2>
 

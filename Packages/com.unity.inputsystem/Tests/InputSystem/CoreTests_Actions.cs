@@ -2433,7 +2433,7 @@ partial class CoreTests
         ";
 
         // Create gamepad and put leftStick/x in non-default state.
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();

@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
         public static void Initialize()
         {
             // We use this as a base layout.
-            InputSystem.RegisterControlLayout<SteamController>();
+            InputSystem.RegisterLayout<SteamController>();
         }
     }
 }

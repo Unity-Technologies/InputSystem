@@ -105,7 +105,11 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Information about a memory region storing state. </p>
-<p>Input state is kept in raw memory blocks. All state is centrally managed by InputManager; controls cannot keep their own independent state. State can be used to store values received from external systems (input) or to accumulate values to send back to external systems (output). </p>
+<p>Input state is kept in raw memory blocks. All state is centrally managed by InputManager; controls cannot keep their own independent state.</p>
+<p>Each state block is tagged with a format code indicating the storage format used for the memory block. This can either be one out of a set of primitive formats (such as "INT") or a custom format code indicating a more complex format.</p>
+<p>Memory using primitive formats can be converted to and from primitive values directly by this struct.</p>
+<p>State memory is bit-addressable, meaning that it can be offset from a byte address in bits (bitOffset) and is sized in bits instead of bytes (sizeInBits). However, in practice, bit-addressing memory reads and writes are only supported on the <a class="el" href="">bitfield primitive format</a>.</p>
+<p>Input state memory is restricted to a maximum of 4GB in size. Offsets are recorded in 32 bits. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="ae6025eb961ab8d6939561ac01143e0e0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae6025eb961ab8d6939561ac01143e0e0">&#9670;&nbsp;</a></span>format</h2>

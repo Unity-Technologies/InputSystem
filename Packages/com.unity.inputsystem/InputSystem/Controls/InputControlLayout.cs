@@ -468,7 +468,7 @@ namespace UnityEngine.Experimental.Input
         /// Build a layout programmatically. Primarily for use by layout builders
         /// registered with the system.
         /// </summary>
-        /// <seealso cref="InputSystem.RegisterControlLayoutBuilder"/>
+        /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
         public struct Builder
         {
             public string name;

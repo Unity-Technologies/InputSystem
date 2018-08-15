@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         // If the system cannot find a more specific layout for a given HID, this method will try
         // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
-        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the system found a matching layout, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedLayout))
@@ -145,7 +145,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
             var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor};
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(),
+            InputSystem.RegisterLayoutBuilder(() => layout.Build(),
                 layoutName, baseLayout, InputDeviceMatcher.FromDeviceDescription(description));
 
             return layoutName;

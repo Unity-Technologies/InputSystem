@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['serial',['serial',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputDeviceDescription.html#ae613818201a03e813c4965c0e2d62dfc',1,'UnityEngine::Experimental::Input::InputDeviceDescription']]],
-  ['stateformat',['stateFormat',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html#a2d211a77faa58aad102d4a52582cdd89',1,'UnityEngine::Experimental::Input::LowLevel::StateEvent']]],
-  ['statetype',['stateType',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayoutAttribute.html#a12de9e2ff4bc14138f57bcf612474d67',1,'UnityEngine::Experimental::Input::InputControlLayoutAttribute']]]
+  ['reservedcharacters',['ReservedCharacters',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#a5bb089fb7f707cf7a39e6a1c04bf485d',1,'UnityEngine::Experimental::Input::InputControl']]],
+  ['rightstick',['rightStick',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html#a59bbfe770da7ff7f1fb9f7ba539cec37',1,'UnityEngine::Experimental::Input::LowLevel::GamepadState']]],
+  ['righttrigger',['rightTrigger',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1GamepadState.html#a65980f8c0860c5df49520009314b0426',1,'UnityEngine::Experimental::Input::LowLevel::GamepadState']]]
 ];

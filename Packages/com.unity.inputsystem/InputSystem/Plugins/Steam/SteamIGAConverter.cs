@@ -9,6 +9,8 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: ensure that no two actions have the same name even between maps
+
 ////TODO: also need to build a layout based on SteamController that has controls representing the current set of actions
 ////      (might need this in the runtime)
 
@@ -117,7 +119,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append(className);
             builder.Append("()\n");
             builder.Append("    {\n");
-            builder.Append("        InputSystem.RegisterControlLayout<");
+            builder.Append("        InputSystem.RegisterLayout<");
             builder.Append(className);
             builder.Append(">(matches: deviceMatcher);\n");
             builder.Append("    }\n");
@@ -134,7 +136,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("    [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]\n");
             builder.Append("    private static void RuntimeInitializeOnLoad()\n");
             builder.Append("    {\n");
-            builder.Append("        InputSystem.RegisterControlLayout<");
+            builder.Append("        InputSystem.RegisterLayout<");
             builder.Append(className);
             builder.Append(">(matches: deviceMatcher);\n");
             builder.Append("    }\n");

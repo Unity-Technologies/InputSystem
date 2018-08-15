@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['setlightbarcolor',['SetLightBarColor',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1IDualShockHaptics.html#a861b6d4afd25067920ca3528511c22f1',1,'UnityEngine::Experimental::Input::Plugins::DualShock::IDualShockHaptics']]],
-  ['setmotorspeeds',['SetMotorSpeeds',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IDualMotorRumble.html#a5f4e601804e0fbfb1037b5121e80b167',1,'UnityEngine::Experimental::Input::Haptics::IDualMotorRumble']]],
-  ['setup',['Setup',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputTestFixture.html#a969675a4b191e8c8de4cccfa9ca83ed4',1,'UnityEngine::Experimental::Input::InputTestFixture']]],
-  ['startsending',['StartSending',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputRemoting.html#a20235c8b33cf76b75d94f9fcd3e4ab22',1,'UnityEngine::Experimental::Input::InputRemoting']]]
+  ['parsereportdescriptor',['ParseReportDescriptor',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDParser.html#abd864c4f353cbeee3b68a2cc8d995dc0',1,'UnityEngine::Experimental::Input::Plugins::HID::HIDParser']]],
+  ['pausehaptics',['PauseHaptics',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IHaptics.html#a5e330b3d653e971277d18f60981b5d96',1,'UnityEngine.Experimental.Input.Haptics.IHaptics.PauseHaptics()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad7640ab8aeeaeb7c5c80a30a3f6c947b',1,'UnityEngine.Experimental.Input.InputSystem.PauseHaptics()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XR_1_1XRControllerWithRumble.html#a5e330b3d653e971277d18f60981b5d96',1,'UnityEngine.Experimental.Input.Plugins.XR.XRControllerWithRumble.PauseHaptics()']]],
+  ['process',['Process',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputControlProcessor.html#a563d680455bc57b65e4ff0101a4ea71b',1,'UnityEngine::Experimental::Input::IInputControlProcessor']]]
 ];

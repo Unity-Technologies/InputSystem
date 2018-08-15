@@ -184,7 +184,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(deviceJson);
+        InputSystem.RegisterLayout(deviceJson);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var newState = new GamepadState {leftTrigger = 0.123f};
@@ -335,7 +335,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = InputSystem.AddDevice("CustomGamepad");
 
         InputSystem.onEvent +=
@@ -675,8 +675,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<CustomDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<CustomDevice>();
+        InputSystem.RegisterLayout(json);
         var device = (CustomDevice)InputSystem.AddDevice("TestLayout");
 
         InputSystem.QueueStateEvent(device, new CustomDeviceState {axis = 0.5f});
@@ -703,7 +703,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CandSendLargerStateToDeviceWithSmallerState()
     {
-        InputSystem.RegisterControlLayout<CustomDevice>();
+        InputSystem.RegisterLayout<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
 
         var state = new ExtendedCustomDeviceState();
@@ -718,7 +718,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdateDeviceWithEventsFromUpdateCallback()
     {
-        InputSystem.RegisterControlLayout<CustomDeviceWithUpdate>();
+        InputSystem.RegisterLayout<CustomDeviceWithUpdate>();
         var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
 
         InputSystem.Update();

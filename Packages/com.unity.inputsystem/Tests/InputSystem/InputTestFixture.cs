@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterControlLayout<MyDevice>();
+    ///         InputSystem.RegisterLayout<MyDevice>();
     ///     }
     ///
     ///     [Test]
