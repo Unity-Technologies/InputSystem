@@ -1,12 +1,81 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Plugins.Steam;
 using UnityEngine.Experimental.Input.Plugins.Steam.Editor;
 
 public class SteamTests : InputTestFixture
 {
+    private TestSteamControllerAPI m_SteamAPI;
+
+    public override void Setup()
+    {
+        base.Setup();
+        m_SteamAPI = new TestSteamControllerAPI();
+        SteamSupport.api = m_SteamAPI;
+        InputSystem.RegisterLayout<TestController>(
+            matches: new InputDeviceMatcher()
+                .WithInterface(SteamController.kSteamInterface)
+                .WithProduct("TestController"));
+    }
+
+    public override void TearDown()
+    {
+        base.TearDown();
+        m_SteamAPI = null;
+
+        SteamSupport.s_API = null;
+        SteamSupport.s_InputDevices = null;
+        SteamSupport.s_ConnectedControllers = null;
+        SteamSupport.s_InputDeviceCount = 0;
+        SteamSupport.s_UpdateHookedIn = false;
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanDiscoverSteamControllers()
+    {
+        m_SteamAPI.controllers = new ulong[] {1};
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices,
+            Has.Exactly(1).TypeOf<TestController>().And.With.Property("steamControllerHandle").EqualTo(1));
+
+        m_SteamAPI.controllers = new ulong[] {1, 2};
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices,
+            Has.Exactly(1).TypeOf<TestController>().And.With.Property("steamControllerHandle").EqualTo(1));
+        Assert.That(InputSystem.devices,
+            Has.Exactly(1).TypeOf<TestController>().And.With.Property("steamControllerHandle").EqualTo(2));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanRemoveSteamControllers()
+    {
+        m_SteamAPI.controllers = new ulong[] {1, 2};
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Exactly(2).TypeOf<TestController>());
+
+        m_SteamAPI.controllers = new ulong[] {2};
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices,
+            Has.None.TypeOf<TestController>().And.With.Property("steamControllerHandle").EqualTo(1));
+        Assert.That(InputSystem.devices,
+            Has.Exactly(1).TypeOf<TestController>().And.With.Property("steamControllerHandle").EqualTo(2));
+    }
+
 #if UNITY_EDITOR
 
     [Test]
@@ -42,6 +111,22 @@ public class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("base.FinishSetup(builder);"));
         Assert.That(generatedCode, Contains.Substring("new InputDeviceMatcher"));
         Assert.That(generatedCode, Contains.Substring("WithInterface(\"Steam\")"));
+        Assert.That(generatedCode, Contains.Substring("public StickControl stickAction"));
+        Assert.That(generatedCode, Contains.Substring("public ButtonControl buttonAction"));
+        Assert.That(generatedCode, Contains.Substring("public AxisControl axisAction"));
+        Assert.That(generatedCode, Contains.Substring("public Vector2Control vector2Action"));
+        Assert.That(generatedCode, Contains.Substring("stickAction = builder.GetControl<StickControl>(\"stickAction\");"));
+        Assert.That(generatedCode, Contains.Substring("buttonAction = builder.GetControl<ButtonControl>(\"buttonAction\");"));
+        Assert.That(generatedCode, Contains.Substring("axisAction = builder.GetControl<AxisControl>(\"axisAction\");"));
+        Assert.That(generatedCode, Contains.Substring("vector2Action = builder.GetControl<Vector2Control>(\"vector2Action\");"));
+        /*
+        Assert.That(generatedCode, Contains.Substring("ulong m_SetHandle_map1"));
+        Assert.That(generatedCode, Contains.Substring("ulong m_SetHandle_map2"));
+        Assert.That(generatedCode, Contains.Substring("ulong m_ActionHandle_buttonAction"));
+        Assert.That(generatedCode, Contains.Substring("ulong m_ActionHandle_axisAction"));
+        Assert.That(generatedCode, Contains.Substring("ulong m_ActionHandle_stickAction"));
+        Assert.That(generatedCode, Contains.Substring("ulong m_ActionHandle_vector2Action"));
+        */
     }
 
     [Test]
@@ -99,8 +184,10 @@ public class SteamTests : InputTestFixture
         Assert.That(stickPadGyro1["stickAction"], Is.TypeOf<Dictionary<string, object>>());
         var stickAction = (Dictionary<string, object>)stickPadGyro1["stickAction"];
         Assert.That(stickAction, Contains.Key("title"));
+        Assert.That(stickAction, Contains.Key("input_mode"));
         Assert.That(stickAction.Count, Is.EqualTo(2));
         Assert.That(stickAction["title"], Is.EqualTo("#Action_map1_stickAction"));
+        Assert.That(stickAction["input_mode"], Is.EqualTo("joystick_move"));
 
         // One action inside "map2".
         var map2 = (Dictionary<string, object>)actions["map2"];
@@ -128,7 +215,44 @@ public class SteamTests : InputTestFixture
         Assert.That(english.Count, Is.EqualTo(6));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void TODO_Editor_ConvertingInputActionsToSteamIGA_ThrowsIfTwoActionsHaveTheSameName()
+    {
+        Assert.Fail();
+    }
+
 #endif
+
+    class TestController : SteamController
+    {
+        public ButtonControl fire { get; private set; }
+        public StickControl look { get; private set; }
+    }
+
+    class TestSteamControllerAPI : ISteamControllerAPI
+    {
+        public ulong[] controllers;
+
+        public int GetConnectedControllers(ulong[] outHandles)
+        {
+            Debug.Assert(outHandles.Length == 16);
+            if (controllers == null)
+                return 0;
+            Array.Copy(controllers, outHandles, controllers.Length);
+            return controllers.Length;
+        }
+
+        public int GetActionSetHandle(string actionSetName)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public int GetDigitalActionHandle(string actionName)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
 }
 
 #endif // (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT

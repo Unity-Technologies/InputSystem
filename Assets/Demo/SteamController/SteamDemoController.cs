@@ -37,13 +37,13 @@ public class SteamDemoController : SteamController, IInputUpdateCallbackReceiver
         InputSystem.RegisterLayout<SteamDemoController>(matches: deviceMatcher);
     }
 
-    public Vector2Control move { get; protected set; }
+    public StickControl move { get; protected set; }
     public Vector2Control look { get; protected set; }
     public ButtonControl fire { get; protected set; }
     protected override void FinishSetup(InputDeviceBuilder builder)
     {
         base.FinishSetup(builder);
-        move = builder.GetControl<Vector2Control>("move");
+        move = builder.GetControl<StickControl>("move");
         look = builder.GetControl<Vector2Control>("look");
         fire = builder.GetControl<ButtonControl>("fire");
     }
@@ -55,7 +55,7 @@ public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
         return new FourCC('S', 't', 'e', 'a');
     }
 
-    [InputControl(name = "move", layout = "Vector2")]
+    [InputControl(name = "move", layout = "Stick")]
     public Vector2 move;
     [InputControl(name = "look", layout = "Vector2")]
     public Vector2 look;

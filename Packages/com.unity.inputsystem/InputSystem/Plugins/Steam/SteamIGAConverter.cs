@@ -151,7 +151,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 foreach (var entry in stickPadGyros)
                 {
                     var entryProperties = (Dictionary<string, object>)entry.Value;
-                    var isStick = entryProperties.ContainsKey("input_mode") && entryProperties["input_mode"] == "joystick_move";
+                    var isStick = entryProperties.ContainsKey("input_mode") && (string)entryProperties["input_mode"] == "joystick_move";
                     builder.Append(string.Format("    public {0} {1} {{ get; protected set; }}\n", isStick ? "StickControl" : "Vector2Control",
                         CSharpCodeHelpers.MakeIdentifier(entry.Key)));
                 }
@@ -186,7 +186,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 foreach (var entry in stickPadGyros)
                 {
                     var entryProperties = (Dictionary<string, object>)entry.Value;
-                    var isStick = entryProperties.ContainsKey("input_mode") && entryProperties["input_mode"] == "joystick_move";
+                    var isStick = entryProperties.ContainsKey("input_mode") && (string)entryProperties["input_mode"] == "joystick_move";
                     builder.Append(string.Format("        {0} = builder.GetControl<{1}>(\"{2}\");\n",
                         CSharpCodeHelpers.MakeIdentifier(entry.Key),
                         isStick ? "StickControl" : "Vector2Control",
@@ -239,7 +239,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                 foreach (var entry in stickPadGyros)
                 {
                     var entryProperties = (Dictionary<string, object>)entry.Value;
-                    var isStick = entryProperties.ContainsKey("input_mode") && entryProperties["input_mode"] == "joystick_move";
+                    var isStick = entryProperties.ContainsKey("input_mode") && (string)entryProperties["input_mode"] == "joystick_move";
 
                     builder.Append(string.Format("    [InputControl(name = \"{0}\", layout = \"{1}\")]\n", entry.Key, isStick ? "Stick" : "Vector2"));
                     builder.Append(string.Format("    public Vector2 {0};\n", CSharpCodeHelpers.MakeIdentifier(entry.Key)));

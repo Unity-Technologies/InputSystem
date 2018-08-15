@@ -9,15 +9,19 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     public class SteamworksNETControllerAPI : ISteamControllerAPI
     {
-        private ControllerHandle_t[] m_ConnectedControllers;
-        private SteamController[] m_InputDevices;
-
-        public SteamworksNETControllerAPI()
+        public int GetConnectedControllers(ulong[] outHandles)
         {
+            throw new System.NotImplementedException();
         }
 
-        public void Update()
+        public int GetActionSetHandle(string actionSetName)
         {
+            throw new System.NotImplementedException();
+        }
+
+        public int GetDigitalActionHandle(string actionName)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

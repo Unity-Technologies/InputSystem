@@ -21,7 +21,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     {
         public const string kSteamInterface = "Steam";
 
-        protected ISteamControllerAPI m_API;
+        public ulong steamControllerHandle { get; internal set; }
     }
 }
 
