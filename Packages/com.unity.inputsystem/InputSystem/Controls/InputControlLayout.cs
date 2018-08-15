@@ -1847,6 +1847,17 @@ namespace UnityEngine.Experimental.Input
                 layoutTypes.TryGetValue(layoutName, out result);
                 return result;
             }
+
+            public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)
+            {
+                var layout = childLayout;
+                while (baseLayoutTable.TryGetValue(layout, out layout))
+                {
+                    if (layout == parentLayout)
+                        return true;
+                }
+                return false;
+            }
         }
 
         // This collection is owned and managed by InputManager.

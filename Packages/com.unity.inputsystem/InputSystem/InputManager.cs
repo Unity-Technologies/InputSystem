@@ -593,18 +593,38 @@ namespace UnityEngine.Experimental.Input
                 m_Layouts.layoutBuilders.ContainsKey(name);
         }
 
-        public int ListControlLayouts(List<string> layouts)
+        public int ListControlLayouts(List<string> layouts, string basedOn = null)
         {
             if (layouts == null)
                 throw new ArgumentNullException("layouts");
 
             var countBefore = layouts.Count;
 
-            ////FIXME: this may add a name twice; also allocates
+            ////FIXME: this may add a name twice
+            ////REVIEW: are we handling layout overrides correctly here? they shouldn't end up on the list
 
-            layouts.AddRange(m_Layouts.layoutTypes.Keys.Select(x => x.ToString()));
-            layouts.AddRange(m_Layouts.layoutStrings.Keys.Select(x => x.ToString()));
-            layouts.AddRange(m_Layouts.layoutBuilders.Keys.Select(x => x.ToString()));
+            if (!string.IsNullOrEmpty(basedOn))
+            {
+                var internedBasedOn = new InternedString(basedOn);
+                foreach (var entry in m_Layouts.layoutTypes)
+                    if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
+                        layouts.Add(entry.Key);
+                foreach (var entry in m_Layouts.layoutStrings)
+                    if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
+                        layouts.Add(entry.Key);
+                foreach (var entry in m_Layouts.layoutBuilders)
+                    if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
+                        layouts.Add(entry.Key);
+            }
+            else
+            {
+                foreach (var entry in m_Layouts.layoutTypes)
+                    layouts.Add(entry.Key.ToString());
+                foreach (var entry in m_Layouts.layoutStrings)
+                    layouts.Add(entry.Key.ToString());
+                foreach (var entry in m_Layouts.layoutBuilders)
+                    layouts.Add(entry.Key.ToString());
+            }
 
             return layouts.Count - countBefore;
         }

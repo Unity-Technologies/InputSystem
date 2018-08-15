@@ -336,12 +336,14 @@ namespace UnityEngine.Experimental.Input
 
         public static List<string> ListLayoutsBasedOn(string baseLayout)
         {
-            throw new NotImplementedException();
+            var result = new List<string>();
+            ListLayoutsBasedOn(baseLayout, result);
+            return result;
         }
 
-        public static int ListLayoutsBasedOn(List<string> list)
+        public static int ListLayoutsBasedOn(string baseLayout, List<string> list)
         {
-            throw new NotImplementedException();
+            return s_Manager.ListControlLayouts(list, basedOn: baseLayout);
         }
 
         /// <summary>

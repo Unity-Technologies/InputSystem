@@ -497,7 +497,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-    public void TODO_Layouts_CanFindAllLayoutsBasedOnGivenLayout()
+    public void Layouts_CanFindAllLayoutsBasedOnGivenLayout()
     {
         const string rootLayout = @"
             {
