@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.Experimental.Input.Editor.InputControlPicker;
 
 ////TODO: reordering support for interactions
 
@@ -51,7 +52,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
                 PopupWindow.Show(pickButtonRect,
-                    new InputControlPicker(pathProperty) {onPickCallback = OnBindingModified});
+                    new InputControlPickerPopup(pathProperty) {onPickCallback = OnBindingModified});
             }
 
             // Modify button.

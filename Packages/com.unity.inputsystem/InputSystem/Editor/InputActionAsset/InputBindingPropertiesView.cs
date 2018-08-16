@@ -2,6 +2,7 @@
 using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.Editor.InputControlPicker;
 using UnityEngine.Experimental.Input.Editor.Lists;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -190,7 +191,7 @@ namespace UnityEngine.Experimental.Input.Editor
         static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
-            var w = new InputControlPicker(pathProperty, pickerTreeViewState)
+            var w = new InputControlPickerPopup(pathProperty, pickerTreeViewState)
             {
                 onPickCallback = onPickCallback
             };
