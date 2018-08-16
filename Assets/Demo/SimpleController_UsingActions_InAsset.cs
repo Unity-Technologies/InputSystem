@@ -64,7 +64,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
         controls.gameplay.jump.performed += ctx =>
         {
             var jump = new Vector3(0.0f, jumpForce, 0.0f);
-            if(isGrounded)
+            if (isGrounded)
             {
                 m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
                 isGrounded = false;

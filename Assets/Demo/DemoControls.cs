@@ -14,6 +14,7 @@ public class DemoControls : UnityEngine.Experimental.Input.InputActionWrapper
         m_gameplay_jump = m_gameplay.GetAction("jump");
         m_Initialized = true;
     }
+
     // gameplay
     private UnityEngine.Experimental.Input.InputActionMap m_gameplay;
     private UnityEngine.Experimental.Input.InputAction m_gameplay_fire;

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -160,9 +161,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SaveChangesToAsset()
         {
+            ////TODO: has to be made to work with version control
             var asset = (InputActionAsset)m_ReferencedObject;
             var path = AssetDatabase.GetAssetPath(asset);
-            File.WriteAllText(path, asset.ToJson());
+            var json = asset.ToJson();
+            var prettyJson = StringHelpers.PrettyPrintJSON(json);
+            var existingJson = File.ReadAllText(path);
+            if (prettyJson != existingJson)
+            {
+                File.WriteAllText(path, prettyJson);
+                ////FIXME: this needs to trigger a refresh but that breaks the entire asset handling logic in here
+                //AssetDatabase.Refresh();
+            }
         }
 
         class AssetChangeWatch : AssetPostprocessor

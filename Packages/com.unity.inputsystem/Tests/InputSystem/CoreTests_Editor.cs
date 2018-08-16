@@ -4,14 +4,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
-using Object = System.Object;
 
 partial class CoreTests
 {
@@ -388,6 +389,46 @@ partial class CoreTests
         Assert.That(set1.actions[0].name, Is.EqualTo("newAction"));
         Assert.That(set1.actions[0].bindings, Has.Count.EqualTo(1));
         Assert.That(set1.actions[0].bindings[0].action, Is.EqualTo("newAction"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanPrettyPrintJSON()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("action", binding: "<Gamepad>/leftStick");
+        var json = InputActionMap.ToJson(new[] {map});
+
+        var prettyJson = StringHelpers.PrettyPrintJSON(json);
+
+        Assert.That(prettyJson, Does.StartWith(
+@"{
+    ""maps"" : [
+        {
+            ""name"" : ""map"",
+            ""actions"" : [
+                {
+                    ""name"" : ""action"",
+                    ""expectedControlLayout"" : """",
+                    ""bindings"" : [
+                    ]
+"));
+
+        // Doing it again should not result in a difference.
+        prettyJson = StringHelpers.PrettyPrintJSON(prettyJson);
+
+        Assert.That(prettyJson, Does.StartWith(
+@"{
+    ""maps"" : [
+        {
+            ""name"" : ""map"",
+            ""actions"" : [
+                {
+                    ""name"" : ""action"",
+                    ""expectedControlLayout"" : """",
+                    ""bindings"" : [
+                    ]
+"));
     }
 
     private class TestEditorWindow : EditorWindow
