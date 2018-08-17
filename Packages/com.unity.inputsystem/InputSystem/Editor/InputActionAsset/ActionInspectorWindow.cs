@@ -194,6 +194,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     inputWindow.InitializeObjectReferences();
                     inputWindow.InitializeTrees();
                     inputWindow.Repaint();
+                    ActiveEditorTracker.sharedTracker.ForceRebuild();
                 }
             }
         }
