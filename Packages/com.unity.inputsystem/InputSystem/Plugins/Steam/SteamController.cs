@@ -1,5 +1,7 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 
+////TODO: support configuring action layers directly on controller
+
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     /// <summary>

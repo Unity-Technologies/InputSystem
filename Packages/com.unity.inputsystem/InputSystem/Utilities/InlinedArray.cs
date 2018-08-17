@@ -179,6 +179,12 @@ namespace UnityEngine.Experimental.Input.Utilities
             ++length;
         }
 
+        public void Append(IEnumerable<TValue> values)
+        {
+            foreach (var value in values)
+                Append(value);
+        }
+
         public void Remove(TValue value)
         {
             if (length < 1)
@@ -297,6 +303,28 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             RemoveAtByMovingTailWithCapacity(index);
             return true;
+        }
+
+        public bool Contains(TValue value, IEqualityComparer<TValue> comparer)
+        {
+            for (var n = 0; n < length; ++n)
+                if (comparer.Equals(this[n], value))
+                    return true;
+            return false;
+        }
+
+        public void Merge(InlinedArray<TValue> other)
+        {
+            var comparer = EqualityComparer<TValue>.Default;
+            for (var i = 0; i < other.length; ++i)
+            {
+                var value = other[i];
+                if (Contains(value, comparer))
+                    continue;
+
+                ////FIXME: this is ugly as it repeatedly copies
+                Append(value);
+            }
         }
 
         public IEnumerator<TValue> GetEnumerator()

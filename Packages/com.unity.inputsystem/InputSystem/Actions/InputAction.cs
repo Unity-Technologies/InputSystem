@@ -2,6 +2,8 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: should the enable/disable API actually sit on InputSystem?
+
 ////REVIEW: might have to revisit when we fire actions in relation to Update/FixedUpdate
 
 ////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
@@ -130,7 +132,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////TODO: add support for turning binding array into displayable info
-        ////      (allow to constrain by sets of devics set on action set)
+        ////      (allow to constrain by sets of devices set on action set)
 
         /// <summary>
         /// The list of bindings associated with the action.
@@ -160,9 +162,16 @@ namespace UnityEngine.Experimental.Input
             {
                 var actionMap = GetOrCreateActionMap();
                 ////REVIEW: resolving as a side-effect is pretty heavy handed
-                ////FIXME: these don't get re-resolved if the control setup in the system changes
                 actionMap.ResolveBindingsIfNecessary();
                 return actionMap.GetControlsForSingleAction(this);
+            }
+        }
+
+        public ReadOnlyArray<InputDevice> devices
+        {
+            get
+            {
+                throw new NotImplementedException();
             }
         }
 

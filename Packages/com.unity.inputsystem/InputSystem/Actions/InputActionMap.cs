@@ -8,7 +8,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: add ability to query devices used by action
 
 ////TODO: add public InputActionManager that supports various device allocation strategies (one stack
-////      per device, multiple devices per stack, etc)
+////      per device, multiple devices per stack, etc.); should also resolve the problem of having
+////      two bindings stack on top of each other and making the one on top suppress the one below
 
 namespace UnityEngine.Experimental.Input
 {
@@ -74,6 +75,16 @@ namespace UnityEngine.Experimental.Input
         public ReadOnlyArray<InputBinding> bindings
         {
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
+        }
+
+        public ReadOnlyArray<InputControl> controls
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ReadOnlyArray<InputDevice> devices
+        {
+            get { throw new NotImplementedException(); }
         }
 
         /// <summary>

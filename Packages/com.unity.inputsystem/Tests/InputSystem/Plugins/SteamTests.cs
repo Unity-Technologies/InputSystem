@@ -95,8 +95,23 @@ public class SteamTests : InputTestFixture
         InputSystem.Update();
 
         var device = (TestController)InputSystem.devices.First(x => x is TestController);
+
         Assert.That(device.updateCount, Is.EqualTo(2));
         Assert.That(m_SteamAPI.runFrameCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanActivateActionSetOnSteamController()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_SteamControllersSendActionStateAsEvents()
+    {
+        Assert.Fail();
     }
 
 #if UNITY_EDITOR
@@ -134,7 +149,6 @@ public class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("base.FinishSetup(builder);"));
         Assert.That(generatedCode, Contains.Substring("new InputDeviceMatcher"));
         Assert.That(generatedCode, Contains.Substring("WithInterface(\"Steam\")"));
-        Assert.That(generatedCode, Contains.Substring("public override void Update(ISteamControllerAPI api)"));
         Assert.That(generatedCode, Contains.Substring("public StickControl stickAction"));
         Assert.That(generatedCode, Contains.Substring("public ButtonControl buttonAction"));
         Assert.That(generatedCode, Contains.Substring("public AxisControl axisAction"));
@@ -156,6 +170,7 @@ public class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("m_ActionHandle_axisAction = api.GetAnalogActionHandle(\"axisAction\");"));
         Assert.That(generatedCode, Contains.Substring("m_ActionHandle_stickAction = api.GetAnalogActionHandle(\"stickAction\");"));
         Assert.That(generatedCode, Contains.Substring("m_ActionHandle_vector2Action = api.GetAnalogActionHandle(\"vector2Action\");"));
+        Assert.That(generatedCode, Contains.Substring("public override void Update(ISteamControllerAPI api)"));
     }
 
     [Test]
@@ -287,8 +302,7 @@ public class SteamTests : InputTestFixture
         public Dictionary<string, ulong> digitalActions =
             new Dictionary<string, ulong>
         {
-            {"fire", 1},
-            {"look", 2}
+            {"fire", 1}
         };
 
         public Dictionary<string, ulong> analogActions =

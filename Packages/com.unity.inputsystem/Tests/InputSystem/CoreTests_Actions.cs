@@ -44,6 +44,115 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void TODO_Actions_CanQueryUsedDevicesFromAction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        InputSystem.AddDevice<Touchscreen>(); // Noise.
+
+        var action = new InputAction();
+        action.AppendBinding("<Gamepad>/buttonSouth");
+        action.AppendBinding("<Keyboard>/a");
+        action.AppendBinding("<Mouse>/doesNotExist");
+
+        Assert.That(action.devices, Has.Count.EqualTo(2));
+        Assert.That(action.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(action.devices, Has.Exactly(1).SameAs(keyboard));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanQueryUsedDevicesFromActionMaps()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        InputSystem.AddDevice<Touchscreen>(); // Noise.
+
+        var map = new InputActionMap();
+        map.AppendBinding("<Gamepad>/buttonSouth");
+        map.AppendBinding("<Keyboard>/a");
+        map.AppendBinding("<Mouse>/doesNotExist");
+
+        Assert.That(map.devices, Has.Count.EqualTo(2));
+        Assert.That(map.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(map.devices, Has.Exactly(1).SameAs(keyboard));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenEnabled_TriggerNotification()
+    {
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+        new InputActionMap("map2").AddAction("action3"); // Noise.
+
+        InputActionChange? receivedChange = null;
+        object receivedObject = null;
+        InputSystem.onActionChange +=
+            (obj, change) =>
+        {
+            Assert.That(receivedChange, Is.Null);
+            receivedChange = change;
+            receivedObject = obj;
+        };
+
+        // Enable map.
+        // Does to trigger a notification for each action in the map.
+        map.Enable();
+
+        Assert.That(receivedChange.HasValue);
+        Assert.That(receivedChange.Value, Is.EqualTo(InputActionChange.ActionMapEnabled));
+        Assert.That(receivedObject, Is.SameAs(map));
+
+        receivedChange = null;
+        receivedObject = null;
+
+        // Enabling action in map should not trigger notification.
+        action1.Enable();
+
+        Assert.That(receivedChange, Is.Null);
+
+        // Disable map.
+        map.Disable();
+
+        Assert.That(receivedChange.HasValue);
+        Assert.That(receivedChange.Value, Is.EqualTo(InputActionChange.ActionMapDisabled));
+        Assert.That(receivedObject, Is.SameAs(map));
+
+        receivedChange = null;
+        receivedObject = null;
+
+        // Enable single action.
+        action2.Enable();
+
+        Assert.That(receivedChange.HasValue);
+        Assert.That(receivedChange.Value, Is.EqualTo(InputActionChange.ActionEnabled));
+        Assert.That(receivedObject, Is.SameAs(action2));
+
+        receivedChange = null;
+        receivedObject = null;
+
+        // Disable single action.
+        action2.Disable();
+
+        Assert.That(receivedChange.HasValue);
+        Assert.That(receivedChange.Value, Is.EqualTo(InputActionChange.ActionDisabled));
+        Assert.That(receivedObject, Is.SameAs(action2));
+
+        receivedChange = null;
+        receivedObject = null;
+
+        // Disabling single action that isn't enabled should not trigger notification.
+        action2.Disable();
+
+        Assert.That(receivedChange, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenEnabled_GoesIntoWaitingPhase()
     {
         InputSystem.AddDevice("Gamepad");
@@ -994,6 +1103,30 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WhenControlsUpdateWhileEnabled_NotificationIsTriggered()
+    {
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        action.Enable();
+
+        InputActionChange? receivedChange = null;
+        object receivedObject = null;
+        InputSystem.onActionChange +=
+            (obj, change) =>
+        {
+            Assert.That(receivedChange, Is.Null);
+            receivedChange = change;
+            receivedObject = obj;
+        };
+
+        InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(receivedChange, Is.Not.Null);
+        Assert.That(receivedChange.Value, Is.EqualTo(InputActionChange.BoundControlsHaveChangedWhileEnabled));
+        Assert.That(receivedObject, Is.SameAs(action));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
         var action1 = new InputAction(name: "a");
@@ -1397,7 +1530,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanDisableAction()
+    public void Actions_CanEnableAndDisableAction()
     {
         InputSystem.AddDevice("Gamepad");
         var action = new InputAction(binding: "/gamepad/leftStick");
@@ -1413,6 +1546,20 @@ partial class CoreTests
         Assert.That(action.controls.Count, Is.EqualTo(1));
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Disabled));
         Assert.That(action.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanEnableActionThatHasNoControls()
+    {
+        var action1 = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var action2 = new InputActionMap().AddAction("test", binding: "<Keyboard>/a");
+
+        action1.Enable();
+        action2.Enable();
+
+        Assert.That(action1.enabled, Is.True);
+        Assert.That(action2.enabled, Is.True);
     }
 
     [Test]
@@ -2023,6 +2170,27 @@ partial class CoreTests
         Assert.That(action2.enabled);
 
         map.Disable();
+
+        Assert.That(map.enabled, Is.False);
+        Assert.That(action1.enabled, Is.False);
+        Assert.That(action2.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanEnableAndDisableSingleActionFromMap()
+    {
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.Enable();
+
+        Assert.That(map.enabled, Is.True); // Map is considered enabled when any of its actions are enabled.
+        Assert.That(action1.enabled, Is.True);
+        Assert.That(action2.enabled, Is.False);
+
+        action1.Disable();
 
         Assert.That(map.enabled, Is.False);
         Assert.That(action1.enabled, Is.False);

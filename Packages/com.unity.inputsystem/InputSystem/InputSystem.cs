@@ -22,6 +22,10 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: rename RegisterControlProcessor to just RegisterProcessor
+
+////REVIEW: make more APIs thread-safe? (like the various onXXX, for example)
+
 ////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
 
 ////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
@@ -1050,7 +1054,48 @@ namespace UnityEngine.Experimental.Input
 
         #region Actions
 
-        public static void RegisterInteraction(Type type, string name)
+        /// <summary>
+        /// Event that is signalled when the state of enabled actions in the system changes or
+        /// when actions are triggered.
+        /// </summary>
+        public static event Action<object, InputActionChange> onActionChange
+        {
+            add { InputActionMapState.s_OnActionChange.Append(value); }
+            remove { InputActionMapState.s_OnActionChange.Remove(value); }
+        }
+
+        /// <summary>
+        /// Register a new type of interaction with the system.
+        /// </summary>
+        /// <param name="type">Type that implements the interaction. Must support <see cref="IInputInteraction"/>.</param>
+        /// <param name="name">Name to register the interaction with. This is used in bindings to refer to the interaction
+        /// (e.g. an interactions called "Tap" can be added to a binding by listing it in its <see cref="InputBinding.interactions"/>
+        /// property). If no name is supplied, the short name of <paramref name="type"/> is used (with "Interaction" clipped off
+        /// the name if the type name ends in that).</param>
+        /// <example>
+        /// <code>
+        /// // Interaction that is performed when control resets to default state.
+        /// public class ResetInteraction : IInputInteraction
+        /// {
+        ///     public void Process(ref InputInteractionContext context)
+        ///     {
+        ///         if (context.isWaiting && !context.controlHasDefaultValue)
+        ///             context.Started();
+        ///         else if (context.isStarted && context.controlHasDefaultValue)
+        ///             context.Performed();
+        ///     }
+        /// }
+        ///
+        /// // Make interaction globally available on bindings.
+        /// // "Interaction" suffix in type name will get dropped automatically.
+        /// InputSystem.RegisterInteraction(typeof(ResetInteraction));
+        ///
+        /// // Set up action with binding that has the 'reset' interaction applied to it.
+        /// var action = new InputAction(binding: "/&lt;Gamepad>/buttonSouth", interactions: "reset");
+        /// </code>
+        /// </example>
+        /// <seealso cref="IInputInteraction"/>
+        public static void RegisterInteraction(Type type, string name = null)
         {
             if (string.IsNullOrEmpty(name))
             {
