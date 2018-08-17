@@ -110,17 +110,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 var btnRect = args.rowRect;
                 btnRect.x = btnRect.width - 20;
                 btnRect.width = 20;
-
-                if (!bindingItem.hasProperties)
-                    return;
-                
-                if (GUI.Button(btnRect, "..."))
-                {
-                    var screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(btnRect.x, btnRect.y));
-                    btnRect.x = screenPoint.x;
-                    btnRect.y = screenPoint.y;
-                    BindingPropertiesPopup.Show(btnRect, bindingItem, Reload);
-                }
             }
         }
 

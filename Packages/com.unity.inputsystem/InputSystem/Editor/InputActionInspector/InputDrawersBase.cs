@@ -5,8 +5,32 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     abstract class InputDrawersBase : PropertyDrawer
     {
-        const int kFoldoutHeight = 15;
-        const int kBindingIndent = 5;
+        static class Styles
+        {
+            public static GUIStyle actionTreeBackground = new GUIStyle("Label");
+            public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
+
+            static string ResourcesPath
+            {
+                get
+                {
+                    var path = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
+                    if (EditorGUIUtility.isProSkin)
+                        return path + "pro/";
+                    return path + "personal/";
+                }
+            }
+
+            static Styles()
+            {
+                actionTreeBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
+                actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
+
+                columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
+                columnHeaderLabel.fontStyle = FontStyle.Bold;
+                columnHeaderLabel.padding.left = 10;
+            }
+        }
 
         protected InputActionListTreeView m_TreeView;
         CopyPasteUtility m_CopyPasteUtility;
@@ -34,14 +58,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var height = (float)kFoldoutHeight;
-            if (property.isExpanded)
+            InitTreeIfNeeded(property);
+            if (m_TreeView.totalHeight == 0)
             {
-                InitTreeIfNeeded(property);
-                height += m_TreeView.totalHeight;
+                return Styles.columnHeaderLabel.fixedHeight + 10;
             }
-
-            return height;
+            return Styles.columnHeaderLabel.fixedHeight + EditorGUIUtility.standardVerticalSpacing + m_TreeView.totalHeight;
         }
 
         public override bool CanCacheInspectorGUI(SerializedProperty property)
@@ -52,52 +74,46 @@ namespace UnityEngine.Experimental.Input.Editor
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             EditorGUI.BeginProperty(position, label, property);
-   
-            // If the action has no name, infer it from the name of the action property.
+
             SetActionNameIfNotSet(property);
-            
-            var foldoutRect = position;
-            foldoutRect.height = kFoldoutHeight;
-            
-            var btnRect = foldoutRect;
-            btnRect.x = btnRect.width - 20;
-            btnRect.width = 20;
-            
-            foldoutRect.width -= 20;
 
-            property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, label);
+            var labelRect = position;
+            EditorGUI.LabelField(labelRect, GUIContent.none, Styles.actionTreeBackground);
+            var headerRect = new Rect(labelRect.x + 1, labelRect.y + 1, labelRect.width - 2, labelRect.height - 2);
+            EditorGUI.LabelField(headerRect, label, Styles.columnHeaderLabel);
 
-            if (property.isExpanded)
+            labelRect.x = labelRect.width - (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing);
+            labelRect.width = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            var plusIconContext = EditorGUIUtility.IconContent("Toolbar Plus");
+            if (GUI.Button(labelRect, plusIconContext, GUIStyle.none))
             {
-                position.y += kFoldoutHeight + 2;
-                position.x += kBindingIndent;
-                position.width -= kBindingIndent;
+                OpenAddMenu(property);
+            }
 
-                InitTreeIfNeeded(property);
+            InitTreeIfNeeded(property);
 
-                if (GUI.Button(btnRect, "+"))
+            position.y += Styles.columnHeaderLabel.fixedHeight;
+            var treeRect = new Rect(position.x + 1, position.y + 1, 
+                position.width - 2, position.height - Styles.columnHeaderLabel.fixedHeight - 2);
+            
+            m_TreeView.OnGUI(treeRect);
+            
+            if (m_TreeView.HasFocus())
+            {
+                if (Event.current.type == EventType.ValidateCommand)
                 {
-                    OpenAddMenu(property);
+                    if (m_CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                    {
+                        Event.current.Use();
+                    }
                 }
 
-                m_TreeView.OnGUI(position);
-                
-                if (m_TreeView.HasFocus())
+                if (Event.current.type == EventType.ExecuteCommand)
                 {
-                    if (Event.current.type == EventType.ValidateCommand)
-                    {
-                        if (m_CopyPasteUtility.IsValidCommand(Event.current.commandName))
-                        {
-                            Event.current.Use();
-                        }
-                    }
-
-                    if (Event.current.type == EventType.ExecuteCommand)
-                    {
-                        m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
-                    }
+                    m_CopyPasteUtility.HandleCommandEvent(Event.current.commandName);
                 }
             }
+            
             EditorGUI.EndProperty();
         }
 
