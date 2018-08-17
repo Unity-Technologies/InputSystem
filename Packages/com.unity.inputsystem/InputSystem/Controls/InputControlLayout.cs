@@ -434,6 +434,11 @@ namespace UnityEngine.Experimental.Input
             get { return m_DeviceMatcher; }
         }
 
+        public bool updateBeforeRender
+        {
+            get { return m_UpdateBeforeRender.HasValue ? m_UpdateBeforeRender.Value : false; }
+        }
+
         public bool isDeviceLayout
         {
             get { return typeof(InputDevice).IsAssignableFrom(m_Type); }
@@ -1184,11 +1189,17 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public void MergeLayout(InputControlLayout other)
         {
-            m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
             if (m_Variants.IsEmpty())
                 m_Variants = other.m_Variants;
+
+            // Determine type. Basically, if the other layout's type is more specific
+            // than our own, we switch to that one. Otherwise we stay on our own type.
+            if (m_Type == null)
+                m_Type = other.m_Type;
+            else if (m_Type.IsAssignableFrom(other.m_Type))
+                m_Type = other.m_Type;
 
             // If the layout has variants set on it, we want to merge away information coming
             // from 'other' than isn't relevant to those variants.
@@ -1204,6 +1215,9 @@ namespace UnityEngine.Experimental.Input
 
             // Combine common usages.
             m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
+
+            // Retain list of overrides.
+            m_AppliedOverrides.Merge(other.m_AppliedOverrides);
 
             // Merge controls.
             if (m_Controls == null)
@@ -1797,7 +1811,8 @@ namespace UnityEngine.Experimental.Input
                         {
                             var overrideName = overrides[i];
                             var overrideLayout = TryLoadLayout(overrideName, table);
-                            layout.MergeLayout(overrideLayout);
+                            overrideLayout.MergeLayout(layout);
+                            layout = overrideLayout;
                             layout.m_AppliedOverrides.Append(overrideName);
                         }
                     }

@@ -629,6 +629,28 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanOverrideCommonUsagesOnExistingLayout()
+    {
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Gamepad"",
+                ""commonUsages"" : [ ""A"", ""B"", ""C"" ]
+            }
+        ";
+
+        InputSystem.RegisterLayoutOverride(json);
+
+        var layout = InputSystem.TryLoadLayout("Gamepad");
+
+        Assert.That(layout.commonUsages.Count, Is.EqualTo(3));
+        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("A")));
+        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("B")));
+        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("C")));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_ApplyingOverrideToExistingLayout_UpdatesAllDevicesUsingTheLayout()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
