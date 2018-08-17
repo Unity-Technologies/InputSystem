@@ -1218,7 +1218,6 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Integer", typeof(IntegerControl));
             RegisterControlLayout("PointerPhase", typeof(PointerPhaseControl));
-            RegisterControlLayout("TouchFlags", typeof(TouchFlagsControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
             RegisterControlLayout("Magnitude2", typeof(Magnitude2Control));

@@ -28,7 +28,7 @@ namespace UnityEngine.Experimental.Input.Controls
         public Vector2Control radius { get; private set; }
         public PointerPhaseControl phase { get; private set; }
         public IntegerControl displayIndex { get; private set; }
-        public TouchFlagsControl touchFlags { get; private set; }
+        public ButtonControl indirectTouch { get; private set; }
 
         public TouchControl()
         {
@@ -46,7 +46,7 @@ namespace UnityEngine.Experimental.Input.Controls
             radius = builder.GetControl<Vector2Control>(this, "radius");
             phase = builder.GetControl<PointerPhaseControl>(this, "phase");
             displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
-            touchFlags = builder.GetControl<TouchFlagsControl>(this, "touchFlags");
+            indirectTouch = builder.GetControl<ButtonControl>(this, "indirectTouch");
             base.FinishSetup(builder);
         }
 
