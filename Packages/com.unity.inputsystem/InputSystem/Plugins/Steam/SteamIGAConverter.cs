@@ -9,6 +9,10 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.Utilities;
 
+////TODO: motion data support
+
+////TODO: haptics support
+
 ////TODO: ensure that no two actions have the same name even between maps
 
 ////TODO: also need to build a layout based on SteamController that has controls representing the current set of actions
@@ -103,7 +107,8 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             // Class declaration.
             builder.Append("public class ");
             builder.Append(className);
-            builder.Append(" : SteamController, IInputUpdateCallbackReceiver\n{\n");
+            builder.Append(" : SteamController\n");
+            builder.Append("{\n");
 
             // Device matcher.
             builder.Append("    private static InputDeviceMatcher deviceMatcher\n");
@@ -114,6 +119,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("    }\n");
 
             // Static constructor.
+            builder.Append('\n');
             builder.Append("#if UNITY_EDITOR\n");
             builder.Append("    static ");
             builder.Append(className);
@@ -125,14 +131,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("    }\n");
             builder.Append("#endif\n");
 
-            // Update method.
-            builder.Append("    public void OnUpdate(InputUpdateType updateType)\n");
-            builder.Append("    {\n");
-            builder.Append("        ////TODO\n");
-            builder.Append("    }\n");
-
             // RuntimeInitializeOnLoadMethod.
             // NOTE: Not relying on static ctor here. See il2cpp bug 1014293.
+            builder.Append('\n');
             builder.Append("    [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.BeforeSceneLoad)]\n");
             builder.Append("    private static void RuntimeInitializeOnLoad()\n");
             builder.Append("    {\n");
@@ -142,6 +143,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             builder.Append("    }\n");
 
             // Control properties.
+            builder.Append('\n');
             foreach (var setEntry in actions)
             {
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
@@ -174,6 +176,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             }
 
             // FinishSetup method.
+            builder.Append('\n');
             builder.Append("    protected override void FinishSetup(InputDeviceBuilder builder)\n");
             builder.Append("    {\n");
             builder.Append("        base.FinishSetup(builder);\n");
@@ -211,6 +214,90 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
                         entry.Key));
                 }
             }
+            builder.Append("    }\n");
+
+            // ResolveActions method.
+            builder.Append('\n');
+            builder.Append("    public override void ResolveActions(ISteamControllerAPI api)\n");
+            builder.Append("    {\n");
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // Set handle.
+                builder.Append(string.Format("        m_SetHandle_{0} = api.GetActionSetHandle(\"{1}\");\n",
+                    CSharpCodeHelpers.MakeIdentifier(setEntry.Key),
+                    setEntry.Key));
+
+                // StickPadGyros.
+                var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
+                foreach (var entry in stickPadGyros)
+                {
+                    builder.Append(string.Format("        m_ActionHandle_{0} = api.GetAnalogActionHandle(\"{1}\");\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
+                        entry.Key));
+                }
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                foreach (var entry in buttons)
+                {
+                    builder.Append(string.Format("        m_ActionHandle_{0} = api.GetDigitalActionHandle(\"{1}\");\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
+                        entry.Key));
+                }
+
+                // AnalogTriggers.
+                var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
+                foreach (var entry in analogTriggers)
+                {
+                    builder.Append(string.Format("        m_ActionHandle_{0} = api.GetAnalogActionHandle(\"{1}\");\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
+                        entry.Key));
+                }
+            }
+            builder.Append("    }\n");
+
+            // Handle cache fields.
+            builder.Append('\n');
+            foreach (var setEntry in actions)
+            {
+                var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
+
+                // Set handle.
+                builder.Append(string.Format("    private ulong m_SetHandle_{0};\n",
+                    CSharpCodeHelpers.MakeIdentifier(setEntry.Key)));
+
+                // StickPadGyros.
+                var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
+                foreach (var entry in stickPadGyros)
+                {
+                    builder.Append(string.Format("    private ulong m_ActionHandle_{0};\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+
+                // Buttons.
+                var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
+                foreach (var entry in buttons)
+                {
+                    builder.Append(string.Format("    private ulong m_ActionHandle_{0};\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+
+                // AnalogTriggers.
+                var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
+                foreach (var entry in analogTriggers)
+                {
+                    builder.Append(string.Format("    private ulong m_ActionHandle_{0};\n",
+                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                }
+            }
+
+            // Update method.
+            builder.Append('\n');
+            builder.Append("    public override void Update(ISteamControllerAPI api)\n");
+            builder.Append("    {\n");
+            builder.Append("        ////TODO\n");
             builder.Append("    }\n");
 
             builder.Append("}\n");
@@ -564,13 +651,13 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             }
         }
 
-        [MenuItem("Assets/Export to Steam In-Game Actions File...", true)]
+        [MenuItem("Assets/Steam/Export to Steam In-Game Actions File...", true)]
         private static bool IsExportContextMenuItemEnabled()
         {
             return Selection.activeObject is InputActionAsset;
         }
 
-        [MenuItem("Assets/Export to Steam In-Game Actions File...")]
+        [MenuItem("Assets/Steam/Export to Steam In-Game Actions File...")]
         private static void ExportContextMenuItem()
         {
             var selectedAsset = (InputActionAsset)Selection.activeObject;
@@ -595,7 +682,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
             }
         }
 
-        [MenuItem("Assets/Generate C# Input Device Class...", true)]
+        [MenuItem("Assets/Steam/Generate C# Input Device Class...", true)]
         private static bool IsGenerateContextMenuItemEnabled()
         {
             // VDF files have no associated importer and so come in as DefaultAssets.
@@ -610,7 +697,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam.Editor
         }
 
         ////TODO: support setting class and namespace name
-        [MenuItem("Assets/Generate C# Input Device Class...")]
+        [MenuItem("Assets/Steam/Generate C# Input Device Class...")]
         private static void GenerateContextMenuItem()
         {
             var selectedAsset = Selection.activeObject;

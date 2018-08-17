@@ -5,11 +5,14 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// <summary>
     /// This is a wrapper around the Steamworks SDK controller API.
     /// </summary>
+    /// <seealso href="https://partner.steamgames.com/doc/api/ISteamController"/>
     public interface ISteamControllerAPI
     {
+        void RunFrame();
         int GetConnectedControllers(ulong[] outHandles);
-        int GetActionSetHandle(string actionSetName);
-        int GetDigitalActionHandle(string actionName);
+        ulong GetActionSetHandle(string actionSetName);
+        ulong GetDigitalActionHandle(string actionName);
+        ulong GetAnalogActionHandle(string actionName);
     }
 }
 

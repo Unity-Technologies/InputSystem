@@ -5,6 +5,11 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: notifications when maps and actions are enabled/disabled
 
+////TODO: add ability to query devices used by action
+
+////TODO: add public InputActionManager that supports various device allocation strategies (one stack
+////      per device, multiple devices per stack, etc)
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

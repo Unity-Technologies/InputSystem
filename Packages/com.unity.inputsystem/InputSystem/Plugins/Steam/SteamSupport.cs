@@ -1,7 +1,7 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: support polling Steam controllers on an async polling thread adhering to InputSystem.pollingFrequency
+////TODO: in case we're running off of Steam input, we probably want to suppress any of the other gamepad input support we have
 
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
@@ -59,7 +59,10 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             if (api == null)
                 return;
 
-            // Check if we have any controllers have appeared or disappeared.
+            // Update controller state.
+            api.RunFrame();
+
+            // Check if we have any new controllers have appeared.
             if (s_ConnectedControllers == null)
                 s_ConnectedControllers = new ulong[STEAM_CONTROLLER_MAX_COUNT];
             var numConnectedControllers = api.GetConnectedControllers(s_ConnectedControllers);
@@ -107,33 +110,44 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                         continue;
                     }
 
+                    // Resolve the controller's actions.
+                    steamDevice.ResolveActions(api);
+
                     // Assign it the Steam controller handle.
                     steamDevice.steamControllerHandle = handle;
 
                     ArrayHelpers.AppendWithCapacity(ref s_InputDevices, ref s_InputDeviceCount, steamDevice);
                 }
             }
-            if (s_InputDevices != null)
-            {
-                // Remove anything no longer there.
-                for (var i = 0; i < s_InputDeviceCount; ++i)
-                {
-                    var device = s_InputDevices[i];
-                    var handle = device.steamControllerHandle;
-                    var stillExists = false;
-                    for (var n = 0; n < numConnectedControllers; ++n)
-                        if (s_ConnectedControllers[n] == handle)
-                        {
-                            stillExists = true;
-                            break;
-                        }
 
-                    if (!stillExists)
+            // Update all controllers we have.
+            for (var i = 0; i < s_InputDeviceCount; ++i)
+            {
+                var device = s_InputDevices[i];
+                var handle = device.steamControllerHandle;
+
+                // Check if the device still exists.
+                var stillExists = false;
+                for (var n = 0; n < numConnectedControllers; ++n)
+                    if (s_ConnectedControllers[n] == handle)
                     {
-                        ArrayHelpers.EraseAtByMovingTail(s_InputDevices, ref s_InputDeviceCount, i);
-                        InputSystem.RemoveDevice(device);
+                        stillExists = true;
+                        break;
                     }
+
+                // If not, remove it.
+                if (!stillExists)
+                {
+                    ArrayHelpers.EraseAtByMovingTail(s_InputDevices, ref s_InputDeviceCount, i);
+                    ////REVIEW: should this rather queue a device removal event?
+                    InputSystem.RemoveDevice(device);
+                    --i;
+                    continue;
                 }
+
+                ////TODO: support polling Steam controllers on an async polling thread adhering to InputSystem.pollingFrequency
+                // Otherwise, update it.
+                device.Update(s_API);
             }
         }
     }

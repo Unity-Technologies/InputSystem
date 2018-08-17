@@ -1,7 +1,5 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 
-////TODO: haptics support
-
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     /// <summary>
@@ -17,11 +15,15 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// the actual hardware device behind a SteamController instance may not be a
     /// Steam Controller.
     /// </remarks>
-    public class SteamController : InputDevice
+    public abstract class SteamController : InputDevice
     {
         public const string kSteamInterface = "Steam";
 
         public ulong steamControllerHandle { get; internal set; }
+
+        public abstract void ResolveActions(ISteamControllerAPI api);
+
+        public abstract void Update(ISteamControllerAPI api);
     }
 }
 

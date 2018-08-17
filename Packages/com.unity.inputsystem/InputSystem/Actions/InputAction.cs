@@ -19,6 +19,8 @@ using UnityEngine.Serialization;
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
 ////      a single start cycle
 
+////TODO: add ability to query devices used by action
+
 ////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
 
 // So, actions are set up to not have a contract. They just monitor state changes and then fire
@@ -296,7 +298,7 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string interactions = null)
+        public InputAction(string name = null, string binding = null, string interactions = null, string expectedControlLayout = null)
             : this(name)
         {
             if (binding == null && interactions != null)
@@ -308,6 +310,8 @@ namespace UnityEngine.Experimental.Input
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
+
+            this.expectedControlLayout = expectedControlLayout;
         }
 
         public override string ToString()
