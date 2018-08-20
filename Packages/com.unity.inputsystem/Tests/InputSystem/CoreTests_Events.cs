@@ -58,6 +58,34 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanIdentifyUniqueDevicesWithPartialStateUpdates()
+    {
+        InputSystem.AddDevice<Gamepad>();
+        var secondGamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Full state updates to make sure we won't be overwriting other
+        // controls with state. Also, make sure we actually carry over
+        // those values on buffer flips.
+        InputSystem.QueueStateEvent(secondGamepad,
+            new GamepadState
+            {
+                buttons = 0xffffffff,
+                rightStick = Vector2.one,
+                leftTrigger = 0.123f,
+                rightTrigger = 0.456f
+            });
+        InputSystem.Update();
+
+        // Update just left stick.
+        InputSystem.QueueDeltaStateEvent(secondGamepad.leftStick, new Vector2(0.5f, 0.5f));
+        InputSystem.Update();
+
+        Assert.That(secondGamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(secondGamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
     public unsafe void Events_CanInitializeStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();

@@ -2788,37 +2788,146 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_NoisyControlInLayoutAppliesToDevices()
+    public void Devices_NoisyControlInLayoutAppliesToDevices()
     {
-        Assert.Fail();
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""noisy"" : ""true"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+
+        var device = InputSystem.AddDevice("MyDevice");
+        Assert.IsTrue(device["first"].noisy);
+    }
+
+    [InputControlLayout]
+    public class NoisyInputDevice : InputDevice
+    {
+        public static NoisyInputDevice current { get; private set; }
+
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    private struct BasicEventState : IInputStateTypeInfo
+    {
+        public FourCC GetFormat()
+        {
+            return new FourCC('N', 'D', 'T', 'C');
+        }
+
+        [FieldOffset(0)] public ushort button1;
+        [FieldOffset(2)] public ushort button2;
     }
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_AllBasicControlTypesCanBeNoisy()
+    public void Devices_NoisyControlDoesNotUpdateCurrentDevice()
     {
-        //This should be parametric
-        Assert.Fail();
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""NoisyInputDevice"",
+                ""format"" : ""NDTC"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 0, ""noisy"" : ""true"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 2 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout<NoisyInputDevice>();
+        InputSystem.RegisterControlLayout(json);
+
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        Assert.That(NoisyInputDevice.current == device2);
+
+        InputSystem.QueueStateEvent(device1, new BasicEventState { button1 = ushort.MaxValue, button2 = 0 });
+        InputSystem.Update();
+
+        Assert.That(NoisyInputDevice.current == device2);
     }
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_TaggingControlAsNoisyOnlyAffectsThatControl()
+    public void Devices_NonNoisyControlDoesUpdateCurrentDevice()
     {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""NoisyInputDevice"",
+                ""format"" : ""NDTC"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 0, ""noisy"" : ""true"" },
+                    { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 2 }
+                ]
+            }
+        ";
 
+        InputSystem.RegisterControlLayout<NoisyInputDevice>();
+        InputSystem.RegisterControlLayout(json);
+
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        Assert.That(NoisyInputDevice.current == device2);
+
+        InputSystem.QueueStateEvent(device1, new BasicEventState { button1 = ushort.MaxValue, button2 = ushort.MaxValue });
+        InputSystem.Update();
+
+        Assert.That(NoisyInputDevice.current == device1);
     }
 
     [Test]
     [Category("Devices")]
-    public void TODO_Devices_NonNoisyControlDoesUpdateCurrentDevice()
+    public void Devices_NoisyControlsDetectedOnDeltaStateEvents()
     {
-        Assert.Fail();
-    }
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""NoisyInputDevice"",
+                ""format"" : ""NDTC"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT""},
+                    { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""noisy"" : ""true"" }
+                ]
+            }
+        ";
 
-    [Test]
-    [Category("Devices")]
-    public void TODO_Devices_NoisyControlDoesNotUpdateCurrentDevice()
-    {
-        Assert.Fail();
+        InputSystem.RegisterControlLayout<NoisyInputDevice>();
+        InputSystem.RegisterControlLayout(json);
+
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        Assert.That(NoisyInputDevice.current == device2);
+
+        InputSystem.QueueDeltaStateEvent<ushort>(device1["first"], ushort.MaxValue);
+        InputSystem.Update();
+
+        Assert.That(NoisyInputDevice.current == device1);
+
+        InputSystem.QueueDeltaStateEvent<ushort>(device2["second"], ushort.MaxValue);
+        InputSystem.Update();
+
+        Assert.That(NoisyInputDevice.current == device1);
     }
 }
