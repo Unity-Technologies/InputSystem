@@ -927,7 +927,7 @@ namespace UnityEngine.Experimental.Input
             {
                 baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.id, time),
                 stateFormat = device.stateBlock.format,
-                stateOffset = control.m_StateBlock.byteOffset
+                stateOffset = control.m_StateBlock.byteOffset - device.m_StateBlock.byteOffset
             };
 
             var ptr = eventBuffer.stateEvent.stateData;
