@@ -792,6 +792,7 @@ namespace UnityEngine.Experimental.Input
             // Update state buffers.
             ReallocateStateBuffers();
             InitializeDefaultState(device);
+            InitializeNoisyControlBuffer(device);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
@@ -1473,7 +1474,7 @@ namespace UnityEngine.Experimental.Input
 
         // Indices correspond with those in m_Devices.
         [NonSerialized] internal StateChangeMonitorsForDevice[] m_StateChangeMonitors;
-
+        
         /// <summary>
         /// Record for a timeout installed on a state change monitor.
         /// </summary>
@@ -1618,7 +1619,37 @@ namespace UnityEngine.Experimental.Input
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
-            #endif
+#endif            
+        }
+
+        /// <summary>
+        /// Initialize an active control bitmask for a given device.
+        /// </summary>
+        /// <param name="device">A newly added input device.</param>
+        /// <remarks>
+        /// For every device, we create a bitmask to identify noisy controls, or controls that are always sending slight change or signals.
+        /// This bitmask let's us check for significant device changes, as opposed to any device change.
+        ///
+        /// This buffer is initialized once when a device is added to the system and then
+        /// migrated by <see cref="InputStateBuffers"/> like other device states and removed when the device
+        /// is removed from the system.
+        /// </remarks>
+        private void InitializeNoisyControlBuffer(InputDevice device)
+        {
+            IntPtr noiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
+
+            BitmaskHelpers.Whitelist(m_StateBuffers.noiseFilterBuffer, device);
+           
+            var controls = device.allControls;
+            var controlCount = controls.Count;
+            for (var n = 0; n < controlCount; ++n)
+            {
+                var control = controls[n];
+                if (control.noisy)
+                {
+                    BitmaskHelpers.Blacklist(m_StateBuffers.noiseFilterBuffer, control);
+                }
+            }
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -2015,6 +2046,8 @@ namespace UnityEngine.Experimental.Input
                             stateCallbacks.OnBeforeWriteNewState(currentState, newState);
                         }
 
+                        var deviceBuffer = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
+
                         // Before we update state, let change monitors compare the old and the new state.
                         // We do this instead of first updating the front buffer and then comparing to the
                         // back buffer as that would require a buffer flip for each state change in order
@@ -2024,8 +2057,13 @@ namespace UnityEngine.Experimental.Input
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ProcessStateChangeMonitors(deviceIndex, ptrToReceivedState,
-                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlockOfDevice.byteOffset),
+                                new IntPtr(deviceBuffer.ToInt64() + stateBlockOfDevice.byteOffset),
                                 sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
+
+
+                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
+
+                        doNotMakeDeviceCurrent |= !BitmaskHelpers.CheckForMaskedValues(ptrToReceivedState, m_StateBuffers.noiseFilterBuffer, deviceStateOffset, sizeOfStateToCopy * 8);
 
                         // Buffer flip.
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
@@ -2043,8 +2081,6 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Now write the state.
-                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
-
 #if UNITY_EDITOR
                         if (!gameIsPlayingAndHasFocus)
                         {
@@ -2840,7 +2876,10 @@ namespace UnityEngine.Experimental.Input
             // Once we have support for migrating state across domain reloads, this will no
             // longer be necessary for devices that have not changed format.
             for (var i = 0; i < m_Devices.Length; ++i)
+            {
                 InitializeDefaultState(m_Devices[i]);
+                InitializeNoisyControlBuffer(m_Devices[i]);
+            }
         }
 
         [SerializeField] private SerializedState m_SerializedState;

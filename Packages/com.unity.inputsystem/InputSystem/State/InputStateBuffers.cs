@@ -79,6 +79,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         public IntPtr defaultStateBuffer;
 
+        /// <summary>
+        /// Buffer that contains bitflags for noisy and non-noisy controls, to identify significant device changes.
+        /// </summary>
+        public IntPtr noiseFilterBuffer;
+
         // Secretly we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
 #if UNITY_EDITOR
@@ -220,8 +225,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
             totalSize += mappingTableSizePerBuffer;
 #endif
 
-            // Plus one buffer for default state.
-            totalSize += sizePerBuffer;
+            // Plus 2 more buffers (1 for defaults state, and one for noise filters)
+            totalSize += sizePerBuffer * 2;
 
             // Allocate.
             m_AllBuffers = (IntPtr)UnsafeUtility.Malloc(totalSize, 4, Allocator.Persistent);
@@ -245,8 +250,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 SetUpDeviceToBufferMappings(devices, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
 #endif
 
-            // Default state buffer goes last.
+            // Default state and noise filter buffers go last
             defaultStateBuffer = ptr;
+            noiseFilterBuffer = new IntPtr(ptr.ToInt64() + sizePerBuffer);
 
             return newDeviceOffsets;
         }
@@ -307,17 +313,18 @@ namespace UnityEngine.Experimental.Input.LowLevel
             // and the new set of buffers.
             if (oldBuffers.totalSize > 0)
             {
-                MigrateSingle(m_DynamicUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_DynamicUpdateBuffers,
+                MigrateDoubleBuffer(m_DynamicUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_DynamicUpdateBuffers,
                     oldDeviceIndices);
-                MigrateSingle(m_FixedUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_FixedUpdateBuffers,
+                MigrateDoubleBuffer(m_FixedUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_FixedUpdateBuffers,
                     oldDeviceIndices);
 
 #if UNITY_EDITOR
-                MigrateSingle(m_EditorUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_EditorUpdateBuffers,
+                MigrateDoubleBuffer(m_EditorUpdateBuffers, devices, newStateBlockOffsets, oldBuffers.m_EditorUpdateBuffers,
                     oldDeviceIndices);
 #endif
 
-                MigrateDefaultStates(defaultStateBuffer, devices, newStateBlockOffsets, oldBuffers.defaultStateBuffer);
+                MigrateSingleBuffer(defaultStateBuffer, devices, newStateBlockOffsets, oldBuffers.defaultStateBuffer);
+                MigrateSingleBuffer(noiseFilterBuffer, devices, newStateBlockOffsets, oldBuffers.noiseFilterBuffer);
             }
 
             // Assign state blocks.
@@ -342,7 +349,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        private unsafe void MigrateSingle(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
+        private unsafe void MigrateDoubleBuffer(DoubleBuffers newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, DoubleBuffers oldBuffer, int[] oldDeviceIndices)
         {
             // Nothing to migrate if we no longer keep a buffer of the corresponding type.
             if (!newBuffer.valid)
@@ -386,7 +393,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        private unsafe void MigrateDefaultStates(IntPtr newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, IntPtr oldBuffer)
+        private unsafe void MigrateSingleBuffer(IntPtr newBuffer, InputDevice[] devices, uint[] newStateBlockOffsets, IntPtr oldBuffer)
         {
             // Migrate every device that has allocated state blocks.
             var newDeviceCount = devices.Length;
