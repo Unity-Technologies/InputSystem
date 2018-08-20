@@ -1638,7 +1638,7 @@ namespace UnityEngine.Experimental.Input
         {
             IntPtr noiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
 
-            BitmaskHelpers.Whitelist(m_StateBuffers.noiseFilterBuffer, device);
+            BitmaskHelpers.Whitelist(noiseFilterBuffer, device);
            
             var controls = device.allControls;
             var controlCount = controls.Count;
@@ -1647,7 +1647,7 @@ namespace UnityEngine.Experimental.Input
                 var control = controls[n];
                 if (control.noisy)
                 {
-                    BitmaskHelpers.Blacklist(m_StateBuffers.noiseFilterBuffer, control);
+                    BitmaskHelpers.Blacklist(noiseFilterBuffer, control);
                 }
             }
         }
@@ -2063,7 +2063,8 @@ namespace UnityEngine.Experimental.Input
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
 
-                        doNotMakeDeviceCurrent |= !BitmaskHelpers.CheckForMaskedValues(ptrToReceivedState, m_StateBuffers.noiseFilterBuffer, deviceStateOffset, sizeOfStateToCopy * 8);
+                        bool hasSignificantControlChanges = BitmaskHelpers.CheckForMaskedValues(ptrToReceivedState, m_StateBuffers.noiseFilterBuffer, deviceStateOffset, sizeOfStateToCopy * 8);
+                        doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
@@ -2147,7 +2148,7 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTime = currentEventTime;
+                        device.m_LastUpdateTime = hasSignificantControlChanges ? currentEventTime : device.m_LastUpdateTime;
 
                         // Notify listeners.
                         for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
