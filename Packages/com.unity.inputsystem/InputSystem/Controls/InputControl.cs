@@ -410,8 +410,14 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
 
             ////TODO: support delta events
+            uint stateOffset = 0;
             if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
+            {
+                var deltaEvent = DeltaStateEvent.From(eventPtr);
+
+                // If it's a delta event, we need to subtract the delta state offset if it's not set to the root of the device
+                stateOffset = deltaEvent->stateOffset;
+            }
 
             var stateEvent = StateEvent.From(eventPtr);
 
@@ -428,13 +434,13 @@ namespace UnityEngine.Experimental.Input
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
+            stateOffset += device.m_StateBlock.byteOffset;
 
             var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            if (m_StateBlock.byteOffset - stateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return IntPtr.Zero;
 
-            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+            return new IntPtr(stateEvent->state.ToInt64() - (int)stateOffset);
         }
 
         internal int ResolveDeviceIndex()
