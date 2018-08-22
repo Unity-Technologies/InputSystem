@@ -792,7 +792,6 @@ namespace UnityEngine.Experimental.Input
             // Update state buffers.
             ReallocateStateBuffers();
             InitializeDefaultState(device);
-            InitializeNoisyControlBuffer(device);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_Devices.Length, m_Metrics.maxNumDevices);
@@ -820,6 +819,8 @@ namespace UnityEngine.Experimental.Input
             // aren't already.
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
+
+            device.noiseFilter = NoiseFilter.CreateDefaultNoiseFilter(device);
 
             // Notify device.
             device.NotifyAdded();
@@ -1323,6 +1324,7 @@ namespace UnityEngine.Experimental.Input
 
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
+            InputStateBuffers.s_NoiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
         }
 
         [Serializable]
@@ -1560,6 +1562,7 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
+            InputStateBuffers.s_NoiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
 
             ////TODO: need to update state change monitors
         }
@@ -1620,36 +1623,6 @@ namespace UnityEngine.Experimental.Input
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
 #endif            
-        }
-
-        /// <summary>
-        /// Initialize an active control bitmask for a given device.
-        /// </summary>
-        /// <param name="device">A newly added input device.</param>
-        /// <remarks>
-        /// For every device, we create a bitmask to identify noisy controls, or controls that are always sending slight change or signals.
-        /// This bitmask let's us check for significant device changes, as opposed to any device change.
-        ///
-        /// This buffer is initialized once when a device is added to the system and then
-        /// migrated by <see cref="InputStateBuffers"/> like other device states and removed when the device
-        /// is removed from the system.
-        /// </remarks>
-        private void InitializeNoisyControlBuffer(InputDevice device)
-        {
-            IntPtr noiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
-
-            BitmaskHelpers.Whitelist(noiseFilterBuffer, device);
-           
-            var controls = device.allControls;
-            var controlCount = controls.Count;
-            for (var n = 0; n < controlCount; ++n)
-            {
-                var control = controls[n];
-                if (control.noisy)
-                {
-                    BitmaskHelpers.Blacklist(noiseFilterBuffer, control);
-                }
-            }
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -2063,7 +2036,9 @@ namespace UnityEngine.Experimental.Input
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
 
-                        bool hasSignificantControlChanges = BitmaskHelpers.CheckForMaskedValues(ptrToReceivedState, m_StateBuffers.noiseFilterBuffer, deviceStateOffset, sizeOfStateToCopy * 8);
+                        InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
+                        NoiseFilter filter = device.noiseFilter;
+                        bool hasSignificantControlChanges = filter != null ? filter.HasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy) : true;
                         doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
@@ -2879,7 +2854,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < m_Devices.Length; ++i)
             {
                 InitializeDefaultState(m_Devices[i]);
-                InitializeNoisyControlBuffer(m_Devices[i]);
+                m_Devices[i].noiseFilter = NoiseFilter.CreateDefaultNoiseFilter(m_Devices[i]);
             }
         }
 

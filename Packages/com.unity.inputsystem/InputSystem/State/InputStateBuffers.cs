@@ -172,6 +172,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         internal static IntPtr s_DefaultStateBuffer;
+        internal static IntPtr s_NoiseFilterBuffer;
         internal static DoubleBuffers s_CurrentBuffers;
 
         public static IntPtr GetFrontBufferForDevice(int deviceIndex)
@@ -296,7 +297,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             if (s_DefaultStateBuffer == defaultStateBuffer)
                 s_DefaultStateBuffer = IntPtr.Zero;
+
             defaultStateBuffer = IntPtr.Zero;
+
+            if (s_NoiseFilterBuffer == noiseFilterBuffer)
+                s_NoiseFilterBuffer = IntPtr.Zero;
+
+            noiseFilterBuffer = IntPtr.Zero;
 
             totalSize = 0;
             sizePerBuffer = 0;
