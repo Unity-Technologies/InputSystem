@@ -116,14 +116,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get
             {
-                #if UNITY_2018_3_OR_NEWER
                 return NativeInputSystem.currentTime;
-                #elif UNITY_EDITOR
-                return EditorApplication.timeSinceStartup;
-                #else
-                // This is wrong; NativeInputSystem.currentTime is in the process of getting backported to 2018.2.
-                return Time.realtimeSinceStartup;
-                #endif
             }
         }
 
@@ -131,13 +124,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             get
             {
-                #if UNITY_2018_3_OR_NEWER
                 return NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
-                #else
-                // This is wrong; NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup is in the process of getting
-                // backported to 2018.2.
-                return 0;
-                #endif
             }
         }
 
@@ -145,22 +132,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             set
             {
-                ////TODO: remove the detour through reflection once we have landed the native change in the 2018.2 beta
-                ////      the reflection detour here is only to keep it compiling and running without the native change
-                if (m_SetUpdateMaskMethod == null)
-                {
-                    var method = typeof(NativeInputSystem).GetMethod("SetUpdateMask");
-                    if (method != null)
-                        m_SetUpdateMaskMethod = mask => method.Invoke(null, new object[] {mask});
-                    else
-                        m_SetUpdateMaskMethod = mask => {};
-                }
-
-                m_SetUpdateMaskMethod((NativeInputUpdateType)value);
+                NativeInputSystem.SetUpdateMask((NativeInputUpdateType)value);
             }
         }
 
-        private Action<NativeInputUpdateType> m_SetUpdateMaskMethod;
         private Action m_ShutdownMethod;
 
         private void OnShutdown()
