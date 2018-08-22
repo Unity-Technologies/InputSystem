@@ -2182,6 +2182,33 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_TouchFlagsWorkCorrectly()
+    {
+        var device = InputSystem.AddDevice<Touchscreen>();
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+            {
+                phase = PointerPhase.Began,
+                touchId = 1,
+                flags = 1 << (int)TouchFlags.IndirectTouch
+            });
+
+        InputSystem.QueueStateEvent(device,
+            new TouchState
+            {
+                phase = PointerPhase.Began,
+                touchId = 2,
+                flags = 0
+            });
+        InputSystem.Update();
+
+        Assert.That(device.activeTouches[0].indirectTouch.ReadValue(), Is.EqualTo(1));
+        Assert.That(device.activeTouches[1].indirectTouch.ReadValue(), Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_TouchDeltasResetWhenTouchIsStationary()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
