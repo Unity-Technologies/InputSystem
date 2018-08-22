@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
@@ -429,6 +428,52 @@ partial class CoreTests
                     ""bindings"" : [
                     ]
 "));
+    }
+
+    // We don't want the game code's update mask affect editor code and vice versa.
+    [Test]
+    [Category("Editor")]
+    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
+
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode_ButPreservesBeforeRenderState()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+
+        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void TODO_Editor_AlwaysKeepsEditorUpdatesEnabled()
+    {
+        Assert.Fail();
     }
 
     private class TestEditorWindow : EditorWindow

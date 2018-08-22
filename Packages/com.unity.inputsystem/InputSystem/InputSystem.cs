@@ -1318,11 +1318,26 @@ namespace UnityEngine.Experimental.Input
                     Save();
                     break;
 
+                case PlayModeStateChange.EnteredPlayMode:
+                    ResetUpdateMask();
+                    break;
+
                 case PlayModeStateChange.EnteredEditMode:
                     Restore();
                     DisableAllEnabledActions();
+                    ResetUpdateMask();
                     break;
             }
+        }
+
+        private static void ResetUpdateMask()
+        {
+            // Preserve before-render status as that is enabled in accordance with whether we
+            // have devices that requested it.
+            if ((updateMask & InputUpdateType.BeforeRender) == InputUpdateType.BeforeRender)
+                updateMask = InputUpdateType.Default | InputUpdateType.BeforeRender;
+            else
+                updateMask = InputUpdateType.Default;
         }
 
 #else
