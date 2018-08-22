@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+////REVIEW: what about ignoring 'firstValue' entirely in case length > 1 and putting everything into an array in that case
+
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>
@@ -165,7 +167,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return index;
         }
 
-        public void AppendWithCapacity(TValue value)
+        public void AppendWithCapacity(TValue value, int capacityIncrement = 10)
         {
             if (length == 0)
             {
@@ -174,7 +176,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             else
             {
                 var numAdditionalValues = length - 1;
-                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value);
+                ArrayHelpers.AppendWithCapacity(ref additionalValues, ref numAdditionalValues, value, capacityIncrement: capacityIncrement);
             }
             ++length;
         }

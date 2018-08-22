@@ -286,7 +286,8 @@ namespace UnityEngine.Experimental.Input
             return new BindingSyntax(actionMap, action, bindingIndex);
         }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, string interactions = null, string groups = null)
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path,
+            string interactions = null, string groups = null, string action = null)
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("Binding path cannot be null or empty", "path");
@@ -296,7 +297,31 @@ namespace UnityEngine.Experimental.Input
                 path = path,
                 interactions = interactions,
                 groups = groups,
+                action = action
             });
+        }
+
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, InputAction action,
+            string interactions = null, string groups = null)
+        {
+            if (action != null && action.actionMap != actionMap)
+                throw new ArgumentException(
+                    string.Format("Action '{0}' is not part of action map '{1}'", action, actionMap), "action");
+
+            if (action == null)
+                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
+
+            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
+                action: action.id);
+        }
+
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, Guid action,
+            string interactions = null, string groups = null)
+        {
+            if (action == Guid.Empty)
+                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
+            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
+                action: string.Format("{{{0}}}", action));
         }
 
         public static BindingSyntax AppendBinding(this InputActionMap actionMap, InputBinding binding)

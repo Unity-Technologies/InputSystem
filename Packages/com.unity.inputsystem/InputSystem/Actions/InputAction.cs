@@ -105,6 +105,23 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// A stable, unique identifier for the action.
+        /// </summary>
+        /// <remarks>
+        /// This can be used instead of the name to refer to the action. Doing so allows referring to the
+        /// action such that renaming the action does not break references.
+        /// </remarks>
+        public Guid id
+        {
+            get
+            {
+                if (m_Id == Guid.Empty)
+                    m_Id = Guid.NewGuid();
+                return m_Id;
+            }
+        }
+
+        /// <summary>
         /// Name of control layout expected for controls bound to this action.
         /// </summary>
         /// <remarks>
@@ -378,6 +395,7 @@ namespace UnityEngine.Experimental.Input
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
         [SerializeField] internal string m_Name;
+        [SerializeField] internal Guid m_Id;
         [SerializeField] internal string m_ExpectedControlLayout;
 
         // For singleton actions, we serialize the bindings directly as part of the action.

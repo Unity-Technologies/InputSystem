@@ -1221,8 +1221,10 @@ namespace UnityEngine.Experimental.Input
 
             // Merge controls.
             if (m_Controls == null)
+            {
                 m_Controls = other.m_Controls;
-            else
+            }
+            else if (other.m_Controls != null)
             {
                 var baseControls = other.m_Controls;
 

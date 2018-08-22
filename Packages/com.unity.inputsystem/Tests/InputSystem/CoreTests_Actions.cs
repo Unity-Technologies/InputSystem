@@ -801,9 +801,12 @@ partial class CoreTests
 
         Assert.That(maps, Has.Length.EqualTo(1));
         Assert.That(maps[0], Has.Property("name").EqualTo("test"));
+        Assert.That(maps[0], Has.Property("id").EqualTo(map.id));
         Assert.That(maps[0].actions, Has.Count.EqualTo(2));
         Assert.That(maps[0].actions[0].name, Is.EqualTo("action1"));
         Assert.That(maps[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(maps[0].actions[0].id, Is.EqualTo(map["action1"].id));
+        Assert.That(maps[0].actions[1].id, Is.EqualTo(map["action2"].id));
         Assert.That(maps[0].actions[0].expectedControlLayout, Is.EqualTo("Button"));
         Assert.That(maps[0].actions[1].expectedControlLayout, Is.Null);
         Assert.That(maps[0].actions[0].bindings, Has.Count.EqualTo(2));
@@ -2633,12 +2636,47 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void TODO_Actions_HaveStableIDs()
+    public void Actions_HaveStableIDs()
     {
-        //var map = new InputActionMap();
-        //var action1 = map.AddAction("action1");
-        //var action2 = map.AddAction("action2");
+        var action1 = new InputAction();
+        var action2 = new InputAction();
 
-        Assert.Fail();
+        var action1Id = action1.id;
+        var action2Id = action2.id;
+
+        Assert.That(action1.id, Is.Not.EqualTo(new Guid()));
+        Assert.That(action2.id, Is.Not.EqualTo(new Guid()));
+        Assert.That(action1.id, Is.Not.EqualTo(action2.id));
+        Assert.That(action1.id, Is.EqualTo(action1Id)); // Should not change.
+        Assert.That(action2.id, Is.EqualTo(action2Id)); // Should not change.
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_MapsHaveStableIDs()
+    {
+        var map1 = new InputActionMap();
+        var map2 = new InputActionMap();
+
+        var map1Id = map1.id;
+        var map2Id = map2.id;
+
+        Assert.That(map1.id, Is.Not.EqualTo(new Guid()));
+        Assert.That(map2.id, Is.Not.EqualTo(new Guid()));
+        Assert.That(map1.id, Is.Not.EqualTo(map2.id));
+        Assert.That(map1.id, Is.EqualTo(map1Id)); // Should not change.
+        Assert.That(map2.id, Is.EqualTo(map2Id)); // Should not change.
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReferenceActionsByStableIDs()
+    {
+        var map = new InputActionMap();
+        var action = map.AddAction("action");
+        map.AppendBinding("<Gamepad>/leftStick", action: action.id);
+
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
     }
 }
