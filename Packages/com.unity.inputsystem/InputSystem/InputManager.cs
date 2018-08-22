@@ -87,6 +87,11 @@ namespace UnityEngine.Experimental.Input
                 if (m_UpdateMask == value)
                     return;
 
+                // In editor, we don't allow disabling editor updates.
+                #if UNITY_EDITOR
+                value |= InputUpdateType.Editor;
+                #endif
+
                 m_UpdateMask = value;
 
                 // Tell runtime.

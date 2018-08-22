@@ -471,9 +471,11 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void TODO_Editor_AlwaysKeepsEditorUpdatesEnabled()
+    public void Editor_AlwaysKeepsEditorUpdatesEnabled()
     {
-        Assert.Fail();
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
     }
 
     private class TestEditorWindow : EditorWindow
