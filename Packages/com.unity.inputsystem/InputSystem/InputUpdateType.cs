@@ -55,6 +55,8 @@ namespace UnityEngine.Experimental.Input
 
         ////TODO
         Manual = 1 << 4,
+
+        Default = Dynamic | Fixed | Editor,
     }
 
     internal static class InputUpdate
