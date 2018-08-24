@@ -2844,7 +2844,7 @@ partial class CoreTests
             {
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""NoisyInputDevice"",
-                ""format"" : ""NDTC"",
+                ""format"" : ""TEST"",
                 ""controls"" : [
                     { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 0, ""noisy"" : ""true"" },
                     { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 2 }
@@ -2876,7 +2876,7 @@ partial class CoreTests
             {
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""NoisyInputDevice"",
-                ""format"" : ""NDTC"",
+                ""format"" : ""TEST"",
                 ""controls"" : [
                     { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 0, ""noisy"" : ""true"" },
                     { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""offset"" : 2 }
@@ -2900,13 +2900,47 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_NoisyDeadzonesAffectCurrentDevice()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""leftStick"",
+                        ""processors"" : ""deadzone(min=0.5,max=0.9)""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout(json);
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        Assert.AreEqual(Gamepad.current, device2);
+
+        InputSystem.QueueStateEvent(device1, new GamepadState { leftStick = new Vector2(0.1f, 0.1f) });
+        InputSystem.Update();
+
+        Assert.AreEqual(Gamepad.current, device2);
+
+        InputSystem.QueueStateEvent(device1, new GamepadState { leftStick = new Vector2(1.0f, 1.0f) });
+        InputSystem.Update();
+
+        Assert.AreEqual(Gamepad.current, device1);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_NoisyControlsDetectedOnDeltaStateEvents()
     {
         const string json = @"
             {
                 ""name"" : ""MyDevice"",
                 ""extend"" : ""NoisyInputDevice"",
-                ""format"" : ""NDTC"",
+                ""format"" : ""TEST"",
                 ""controls"" : [
                     { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT""},
                     { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""noisy"" : ""true"" }
