@@ -8,7 +8,7 @@ namespace UnityEngine.Experimental.Input
 {
     public class NoiseFilter
     {
-        internal enum EElementType
+        public enum EElementType
         {
             TypeUnknown = 0,
             TypeFull,
@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input
             TypeVec2
         }
 
-        internal struct FilteredElement
+        public struct FilteredElement
         {
             public int controlIndex;
             public EElementType type;
@@ -75,7 +75,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        internal static unsafe NoiseFilter CreateDefaultNoiseFilter(InputDevice device)
+        public static unsafe NoiseFilter CreateDefaultNoiseFilter(InputDevice device)
         {
             NoiseFilter filter = new NoiseFilter();
             FilteredElement* elementsToAdd = stackalloc FilteredElement[device.allControls.Count];
@@ -136,7 +136,7 @@ namespace UnityEngine.Experimental.Input
             return filter;
         }
 
-        private FilteredElement[] elements;
+        public FilteredElement[] elements;
 
         internal void Apply(InputDevice device)
         {

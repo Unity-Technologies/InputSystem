@@ -2838,7 +2838,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_NoisyControlDoesNotUpdateCurrentDevice()
+    public void NoiseFilter_NoisyControlDoesNotUpdateCurrentDevice()
     {
         const string json = @"
             {
@@ -2870,7 +2870,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_NonNoisyControlDoesUpdateCurrentDevice()
+    public void NoiseFilter_NonNoisyControlDoesUpdateCurrentDevice()
     {
         const string json = @"
             {
@@ -2900,7 +2900,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_NoisyDeadzonesAffectCurrentDevice()
+    public void NoiseFilter_NoisyDeadzonesAffectCurrentDevice()
     {
         const string json = @"
             {
@@ -2934,7 +2934,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_NoisyControlsDetectedOnDeltaStateEvents()
+    public void NoiseFilter_NoisyControlsDetectedOnDeltaStateEvents()
     {
         const string json = @"
             {
@@ -2965,5 +2965,89 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void NoiseFilter_SettingNullFilterSkipsNoiseFiltering()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""NoisyInputDevice"",
+                ""format"" : ""TEST"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT""},
+                    { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT""}
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout<NoisyInputDevice>();
+        InputSystem.RegisterControlLayout(json);
+
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        device1.noiseFilter = null;
+
+        Assert.That(NoisyInputDevice.current == device2);
+
+        InputSystem.QueueDeltaStateEvent<ushort>(device1["first"], ushort.MaxValue);
+        InputSystem.Update();
+
+        Assert.AreEqual(NoisyInputDevice.current, device1);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void NoiseFilter_CanOverrideDefaultNoiseFilter()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""NoisyInputDevice"",
+                ""format"" : ""TEST"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT""},
+                    { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT""}
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout<NoisyInputDevice>();
+        InputSystem.RegisterControlLayout(json);
+
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        // Tag the entire device as noisy
+        device1.noiseFilter = new NoiseFilter
+        {
+            elements = new NoiseFilter.FilteredElement[]
+            {
+                new NoiseFilter.FilteredElement
+                {
+                    controlIndex = 0,
+                    type = NoiseFilter.EElementType.TypeFloat,
+                    offset = 0,
+                    size = 16
+                },
+                new NoiseFilter.FilteredElement
+                {
+                    controlIndex = 1,
+                    type = NoiseFilter.EElementType.TypeFloat,
+                    offset = 16,
+                    size = 32
+                },
+            }
+        };
+
+        Assert.That(NoisyInputDevice.current == device2);
+
+        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = ushort.MaxValue, button2 = ushort.MaxValue });
+        InputSystem.Update();
+
+        Assert.AreEqual(NoisyInputDevice.current, device2);
     }
 }
