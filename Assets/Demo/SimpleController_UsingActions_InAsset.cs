@@ -106,7 +106,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
         var clampAngle = 80.0f;
 
         m_Rotation.y += rotate.x * rotateSpeed * Time.deltaTime;
-        m_Rotation.x += rotate.y * rotateSpeed * Time.deltaTime;
+        m_Rotation.x -= rotate.y * rotateSpeed * Time.deltaTime;
 
         m_Rotation.x = Mathf.Clamp(m_Rotation.x, -clampAngle, clampAngle);
 
