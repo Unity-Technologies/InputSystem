@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.496413, b: 0.5748175, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657856, g: 0.49641234, b: 0.57481724, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -569,94 +569,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1065433050
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1065433052}
-  - component: {fileID: 1065433051}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1065433051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1065433050}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ab7c7a7ef9e44f4d8c56e49c8bfed8f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 0
-  rotateSpeed: 0
-  burstSpeed: 0
-  projectile: {fileID: 0}
-  moveAction:
-    m_Name: Move
-    m_SingletonActionBindings:
-    - name: Dpad
-      path: Dpad
-      interactions: 
-      processors: 
-      groups: 
-      action: Move
-      flags: 4
-    - name: up
-      path: 
-      interactions: 
-      processors: 
-      groups: 
-      action: Move
-      flags: 8
-    - name: down
-      path: 
-      interactions: 
-      processors: 
-      groups: 
-      action: Move
-      flags: 8
-    - name: left
-      path: 
-      interactions: 
-      processors: 
-      groups: 
-      action: Move
-      flags: 8
-    - name: right
-      path: 
-      interactions: 
-      processors: 
-      groups: 
-      action: Move
-      flags: 8
-  lookAction:
-    m_Name: Look
-    m_SingletonActionBindings: []
-  fireAction:
-    m_Name: Fire
-    m_SingletonActionBindings: []
---- !u!4 &1065433052
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1065433050}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.3679366, y: 1.6185491, z: 0.619545}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2034483153
 GameObject:
