@@ -68,6 +68,17 @@ partial class CoreTests
         Assert.That(device, Is.TypeOf<Gamepad>());
     }
 
+    ////TODO: add base score to matchers
+    // Sometimes we don't want a device to be picked up by the input system. Forcing
+    // it's layout to "None" tells the system that we don't want to instantiate a
+    // layout for the device.
+    [Test]
+    [Category("Devices")]
+    public void TODO_Devices_CanSuppressCreationOfDevice()
+    {
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_DeviceCreatedFromDeviceDescriptionStoresDescriptionOnDevice()
@@ -133,7 +144,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice("Gamepad");
 
-        Assert.That(() => new InputDeviceBuilder("Keyboard", device), Throws.InvalidOperationException);
+        Assert.That(() => new InputDeviceBuilder("Keyboard", existingDevice: device), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -2067,7 +2078,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void FIXME_Devices_TouchesWithSameIdDontGetStuck()
+    public void TODO_Devices_TouchesWithSameIdDontGetStuck_FIXME()
     {
         ////FIXME: Fails - touches stuck in Stationary phase
         /// While it's not recommended for two different touches to share an id, it shoudn't get stuck in Stationary phase
@@ -2110,7 +2121,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void FIXME_Devices_TouchesWithWrongTimestampCorrectlyRecognized()
+    public void TODO_Devices_TouchesWithWrongTimestampCorrectlyRecognized_FIXME()
     {
         ////FIXME: fails - events which have timestamp which is less than previous event are ignored implictly
         /// Can we add checks for Development build ?

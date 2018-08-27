@@ -527,6 +527,28 @@ partial class CoreTests
         Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanListDeviceMatchersForLayout()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout""
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        InputSystem.RegisterLayoutMatcher("TestLayout", new InputDeviceMatcher().WithProduct("A"));
+        InputSystem.RegisterLayoutMatcher("TestLayout", new InputDeviceMatcher().WithProduct("B"));
+
+        var matchers = EditorInputControlLayoutCache.GetDeviceMatchers("TestLayout").ToList();
+
+        Assert.That(matchers, Has.Count.EqualTo(2));
+        Assert.That(matchers[0], Is.EqualTo(new InputDeviceMatcher().WithProduct("A")));
+        Assert.That(matchers[1], Is.EqualTo(new InputDeviceMatcher().WithProduct("B")));
+    }
+
     private class TestEditorWindow : EditorWindow
     {
         public Vector2 mousePosition;

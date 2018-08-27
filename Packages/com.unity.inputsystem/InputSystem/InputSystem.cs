@@ -84,7 +84,10 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
 
-            s_Manager.RegisterControlLayout(name, type, matches);
+            s_Manager.RegisterControlLayout(name, type);
+
+            if (matches != null)
+                s_Manager.RegisterControlLayoutMatcher(name, matches.Value);
         }
 
         /// <summary>
@@ -137,7 +140,10 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public static void RegisterLayout(string json, string name = null, InputDeviceMatcher? matches = null)
         {
-            s_Manager.RegisterControlLayout(json, name, matcher: matches);
+            s_Manager.RegisterControlLayout(json, name);
+
+            if (matches != null)
+                s_Manager.RegisterControlLayoutMatcher(name, matches.Value);
         }
 
         /// <summary>
@@ -163,6 +169,16 @@ namespace UnityEngine.Experimental.Input
         public static void RegisterLayoutOverride(string json, string name = null)
         {
             s_Manager.RegisterControlLayout(json, name, isOverride: true);
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="layoutName"></param>
+        /// <param name="matcher"></param>
+        public static void RegisterLayoutMatcher(string layoutName, InputDeviceMatcher matcher)
+        {
+            s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
 
         /// <summary>
@@ -268,8 +284,9 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Register.
-            s_Manager.RegisterControlLayoutBuilder(method, instance, name, baseLayout: baseLayout,
-                deviceMatcher: matches);
+            s_Manager.RegisterControlLayoutBuilder(method, instance, name, baseLayout: baseLayout);
+            if (matches != null)
+                s_Manager.RegisterControlLayoutMatcher(name, matches.Value);
         }
 
         /// <summary>

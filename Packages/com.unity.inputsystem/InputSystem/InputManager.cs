@@ -161,7 +161,7 @@ namespace UnityEngine.Experimental.Input
         // Add a layout constructed from a type.
         // If a layout with the same name already exists, the new layout
         // takes its place.
-        public void RegisterControlLayout(string name, Type type, InputDeviceMatcher? deviceMatcher = null)
+        public void RegisterControlLayout(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name");
@@ -206,10 +206,10 @@ namespace UnityEngine.Experimental.Input
             }
 
             PerformLayoutPostRegistration(internedName, new InlinedArray<InternedString>(new InternedString(baseLayout)),
-                deviceMatcher, isReplacement, isKnownToBeDeviceLayout: isDeviceLayout);
+                isReplacement, isKnownToBeDeviceLayout: isDeviceLayout);
         }
 
-        public void RegisterControlLayout(string json, string name = null, InputDeviceMatcher? matcher = null, bool isOverride = false)
+        public void RegisterControlLayout(string json, string name = null, bool isOverride = false)
         {
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentException("json");
@@ -244,11 +244,6 @@ namespace UnityEngine.Experimental.Input
                     "json");
             }
 
-            // If we have explicitly been given a matcher, override the one
-            // from JSON (if it even has one).
-            if (matcher.HasValue)
-                deviceMatcher = matcher.Value;
-
             // Add it to our records.
             var isReplacement = DoesLayoutExist(internedLayoutName);
             m_Layouts.layoutStrings[internedLayoutName] = json;
@@ -264,12 +259,16 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
-            PerformLayoutPostRegistration(internedLayoutName, baseLayouts, deviceMatcher,
+            PerformLayoutPostRegistration(internedLayoutName, baseLayouts,
                 isReplacement: isReplacement, isOverride: isOverride);
+
+            // If the layout contained a device matcher, register it.
+            if (!deviceMatcher.empty)
+                RegisterControlLayoutMatcher(internedLayoutName, deviceMatcher);
         }
 
         public void RegisterControlLayoutBuilder(MethodInfo method, object instance, string name,
-            string baseLayout = null, InputDeviceMatcher? deviceMatcher = null)
+            string baseLayout = null)
         {
             if (method == null)
                 throw new ArgumentNullException("method");
@@ -305,11 +304,11 @@ namespace UnityEngine.Experimental.Input
             };
 
             PerformLayoutPostRegistration(internedLayoutName, new InlinedArray<InternedString>(internedBaseLayoutName),
-                deviceMatcher, isReplacement);
+                isReplacement);
         }
 
         private void PerformLayoutPostRegistration(InternedString layoutName, InlinedArray<InternedString> baseLayouts,
-            InputDeviceMatcher? deviceMatcher, bool isReplacement, bool isKnownToBeDeviceLayout = false, bool isOverride = false)
+            bool isReplacement, bool isKnownToBeDeviceLayout = false, bool isOverride = false)
         {
             ++m_LayoutRegistrationVersion;
 
@@ -384,6 +383,54 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        private bool IsControlOrChildUsingLayoutRecursive(InputControl control, InternedString layout)
+        {
+            // Check control itself.
+            if (IsControlUsingLayout(control, layout))
+                return true;
+
+            // Check children.
+            var children = control.children;
+            for (var i = 0; i < children.Count; ++i)
+                if (IsControlOrChildUsingLayoutRecursive(children[i], layout))
+                    return true;
+
+            return false;
+        }
+
+        private bool IsControlUsingLayout(InputControl control, InternedString layout)
+        {
+            // Check direct match.
+            if (control.layout == layout)
+                return true;
+
+            // Check base layout chain.
+            var baseLayout = control.m_Layout;
+            while (m_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout))
+                if (baseLayout == layout)
+                    return true;
+
+            return false;
+        }
+
+        public void RegisterControlLayoutMatcher(string layoutName, InputDeviceMatcher matcher)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentNullException("layoutName");
+            if (matcher.empty)
+                throw new ArgumentException("Matcher cannot be empty", "matcher");
+
+            // Add to table.
+            var internedLayoutName = new InternedString(layoutName);
+            m_Layouts.AddMatcher(internedLayoutName, matcher);
+
+            // Recreate any device that we match better than its current layout.
+            RecreateDevicesUsingLayoutWithInferiorMatch(matcher);
+
+            // See if we can make sense of any device we couldn't make sense of before.
+            AddAvailableDevicesMatchingDescription(matcher, internedLayoutName);
+        }
+
         private void RecreateDevicesUsingLayoutWithInferiorMatch(InputDeviceMatcher deviceMatcher)
         {
             if (m_Devices == null)
@@ -425,7 +472,8 @@ namespace UnityEngine.Experimental.Input
             RemoveDevice(device);
 
             // Re-setup device.
-            builder.Setup(newLayout, device, device.m_Variants);
+            builder.Setup(newLayout, device.m_Variants, deviceDescription: device.m_Description,
+                existingDevice: device);
             var newDevice = builder.Finish();
 
             // Re-add.
@@ -711,7 +759,7 @@ namespace UnityEngine.Experimental.Input
             var internedLayoutName = new InternedString(layout);
 
             var setup = new InputDeviceBuilder(m_Layouts);
-            setup.Setup(internedLayoutName, null, variants);
+            setup.Setup(internedLayoutName, variants);
             var device = setup.Finish();
 
             if (!string.IsNullOrEmpty(name))
@@ -723,21 +771,22 @@ namespace UnityEngine.Experimental.Input
         }
 
         // Add device with a forced ID. Used when creating devices reported to us by native.
-        private InputDevice AddDevice(string layout, int deviceId, InputDeviceDescription description, bool isNative)
+        private InputDevice AddDevice(InternedString layout, int deviceId,
+            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+            InputDevice.DeviceFlags deviceFlags = 0,
+            InternedString variants = default(InternedString))
         {
             var setup = new InputDeviceBuilder(m_Layouts);
-            setup.SetupWithDescription(new InternedString(layout), description, new InternedString());
+            setup.Setup(new InternedString(layout), deviceDescription: deviceDescription, variants: variants);
             var device = setup.Finish();
 
             device.m_Id = deviceId;
-            device.m_Description = description;
+            device.m_Description = deviceDescription;
+            device.m_DeviceFlags |= deviceFlags;
 
             // Default display name to product name.
-            if (!string.IsNullOrEmpty(description.product))
-                device.m_DisplayName = description.product;
-
-            if (isNative)
-                device.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
+            if (!string.IsNullOrEmpty(deviceDescription.product))
+                device.m_DisplayName = deviceDescription.product;
 
             AddDevice(device);
 
@@ -821,7 +870,8 @@ namespace UnityEngine.Experimental.Input
             return AddDevice(description, throwIfNoLayoutFound: true);
         }
 
-        public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound, int deviceId = InputDevice.kInvalidDeviceId, bool isNative = false)
+        public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
+            int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             // Look for matching layout.
             var layout = TryFindMatchingControlLayout(ref description, deviceId);
@@ -842,7 +892,7 @@ namespace UnityEngine.Experimental.Input
                 return null;
             }
 
-            var device = AddDevice(layout, deviceId, description, isNative);
+            var device = AddDevice(layout, deviceId, description, deviceFlags);
             device.m_Description = description;
 
             return device;
@@ -984,7 +1034,7 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException("descriptions");
 
             var numFound = 0;
-            for (var i = 0; i < m_AvailableDevices.Count; ++i)
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
                 if (TryGetDeviceById(m_AvailableDevices[i].deviceId) != null)
                     continue;
@@ -1183,7 +1233,6 @@ namespace UnityEngine.Experimental.Input
             m_Interactions.Initialize();
             m_Composites.Initialize();
             m_DevicesById = new Dictionary<int, InputDevice>();
-            m_AvailableDevices = new List<AvailableDevice>();
 
             // Determine our default set of enabled update types. By
             // default we enable both fixed and dynamic update because
@@ -1621,7 +1670,8 @@ namespace UnityEngine.Experimental.Input
             try
             {
                 // Try to turn it into a device instance.
-                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId, isNative: true);
+                AddDevice(description, throwIfNoLayoutFound: false, deviceId: deviceId,
+                    deviceFlags: InputDevice.DeviceFlags.Native);
             }
             // We're catching exceptions very aggressively here. The reason is that we don't want
             // exceptions thrown as a result of trying to create devices from device discoveries reported
