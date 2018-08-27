@@ -85,7 +85,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Refresh();
         }
 
-        private void OnEnabledActionsChanged()
+        private void OnActionChange(object actionOrMap, InputActionChange change)
         {
             Refresh();
         }
@@ -117,17 +117,17 @@ namespace UnityEngine.Experimental.Input.Editor
         private void InstallHooks()
         {
             InputSystem.onDeviceChange += OnDeviceChange;
-            InputSystem.onControlLayoutChange += OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice += OnFindLayout;
-            InputActionMapState.s_OnEnabledActionsChanged.AppendWithCapacity(OnEnabledActionsChanged);
+            InputSystem.onLayoutChange += OnLayoutChange;
+            InputSystem.onFindLayoutForDevice += OnFindLayout;
+            InputSystem.onActionChange += OnActionChange;
         }
 
         private void UninstallHooks()
         {
             InputSystem.onDeviceChange -= OnDeviceChange;
-            InputSystem.onControlLayoutChange -= OnLayoutChange;
-            InputSystem.onFindControlLayoutForDevice -= OnFindLayout;
-            InputActionMapState.s_OnEnabledActionsChanged.RemoveAtByMovingTailWithCapacity(OnEnabledActionsChanged);
+            InputSystem.onLayoutChange -= OnLayoutChange;
+            InputSystem.onFindLayoutForDevice -= OnFindLayout;
+            InputSystem.onActionChange -= OnActionChange;
         }
 
         private void Initialize()

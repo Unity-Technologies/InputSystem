@@ -645,7 +645,9 @@ PlayerSettings:
   webGLUseEmbeddedResources: 0
   webGLCompressionFormat: 1
   webGLLinkerTarget: 0
-  scriptingDefineSymbols: {}
+  webGLThreadsSupport: 0
+  scriptingDefineSymbols:
+    1: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
   platformArchitecture:
     iOS: 0
   scriptingBackend:
@@ -654,8 +656,9 @@ PlayerSettings:
     iOS: 1
   il2cppCompilerConfiguration:
     Android: 0
+  managedStrippingLevel: {}
   incrementalIl2cppBuild: {}
-  allowUnsafeCode: 0
+  allowUnsafeCode: 1
   additionalIl2CppArgs: 
   scriptingRuntimeVersion: 0
   apiCompatibilityLevelPerPlatform: {}

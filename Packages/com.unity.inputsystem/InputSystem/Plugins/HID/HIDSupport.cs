@@ -30,8 +30,8 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         /// </summary>
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<HID>();
-            InputSystem.onFindControlLayoutForDevice += HID.OnFindControlLayoutForDevice;
+            InputSystem.RegisterLayout<HID>();
+            InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
 
             // Add toolbar button to any devices using the "HID" interface. Opens
             // a windows to browse the HID descriptor of the device.

@@ -353,6 +353,17 @@ namespace UnityEngine.Experimental.Input.Utilities
             --count;
         }
 
+        public static TValue[] Copy<TValue>(TValue[] array)
+        {
+            if (array == null)
+                return null;
+
+            var length = array.Length;
+            var result = new TValue[length];
+            Array.Copy(array, result, length);
+            return result;
+        }
+
         public static TValue[] Clone<TValue>(TValue[] array)
             where TValue : ICloneable
         {

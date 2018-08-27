@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterControlLayout<MyDevice>();
+    ///         InputSystem.RegisterLayout<MyDevice>();
     ///     }
     ///
     ///     [Test]
@@ -105,6 +105,7 @@ namespace UnityEngine.Experimental.Input
             ////        actions and readding devices we refresh all enabled actions. That means that when
             ////        we restore, the action above will get refreshed and not find a 'test' interaction
             ////        registered in the system. Should we force-disable all actions on Restore()?
+            InputActionMapState.s_OnActionChange.Clear();
             InputSystem.DisableAllEnabledActions();
 
             if (testRuntime.m_DeviceCommandCallbacks != null)

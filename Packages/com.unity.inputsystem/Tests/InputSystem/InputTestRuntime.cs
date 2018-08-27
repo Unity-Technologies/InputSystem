@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEngine.Experimental.Input.LowLevel;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
@@ -69,6 +70,7 @@ namespace UnityEngine.Experimental.Input
         {
             var eventPtr = (InputEvent*)ptr;
             var eventSize = eventPtr->sizeInBytes;
+            var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
 
             lock (m_Lock)
             {
@@ -76,18 +78,18 @@ namespace UnityEngine.Experimental.Input
                 ++m_NextEventId;
 
                 // Enlarge buffer, if we have to.
-                if ((m_EventWritePosition + eventSize) > m_EventBuffer.Length)
+                if ((m_EventWritePosition + alignedEventSize) > m_EventBuffer.Length)
                 {
-                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)eventSize, 1024);
+                    var newBufferSize = m_EventBuffer.Length + Mathf.Max((int)alignedEventSize, 1024);
                     var newBuffer = new NativeArray<byte>(newBufferSize, Allocator.Persistent);
-                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventBuffer.Length);
+                    UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_EventBuffer.GetUnsafePtr(), m_EventWritePosition);
                     m_EventBuffer.Dispose();
                     m_EventBuffer = newBuffer;
                 }
 
                 // Copy event.
                 UnsafeUtility.MemCpy((byte*)m_EventBuffer.GetUnsafePtr() + m_EventWritePosition, ptr.ToPointer(), eventSize);
-                m_EventWritePosition += (int)eventSize;
+                m_EventWritePosition += (int)alignedEventSize;
                 ++m_EventCount;
             }
         }
@@ -195,6 +197,16 @@ namespace UnityEngine.Experimental.Input
             GC.SuppressFinalize(this);
         }
 
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            set
+            {
+                m_CurrentTimeOffsetToRealtimeSinceStartup = value;
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
+            }
+        }
+
         private int m_NextDeviceId = 1;
         private uint m_NextEventId = 1;
         private int m_EventCount;
@@ -205,6 +217,7 @@ namespace UnityEngine.Experimental.Input
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+        private double m_CurrentTimeOffsetToRealtimeSinceStartup;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

@@ -7,12 +7,12 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class CopyPasteUtility
+    class CopyPasteUtility
     {
-        const string kInputAssetMarker = "INPUTASSET\n";
+        const string k_InputAssetMarker = "INPUTASSET ";
         InputActionListTreeView m_TreeView;
-        ActionInspectorWindow m_Window;
         SerializedObject m_SerializedObject;
+        Action m_Apply;
 
         GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
         GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
@@ -20,9 +20,9 @@ namespace UnityEngine.Experimental.Input.Editor
         GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
         GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
 
-        public CopyPasteUtility(ActionInspectorWindow window, InputActionListTreeView tree, SerializedObject serializedObject)
+        public CopyPasteUtility(Action apply, InputActionListTreeView tree, SerializedObject serializedObject)
         {
-            m_Window = window;
+            m_Apply = apply;
             m_TreeView = tree;
             m_SerializedObject = serializedObject;
         }
@@ -47,49 +47,33 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
-            var copyList = new StringBuilder(kInputAssetMarker);
-            foreach (var selectedRow in selectedRows)
+            var copyList = new StringBuilder(k_InputAssetMarker);
+            foreach (var row in selectedRows)
             {
-                copyList.Append(selectedRow.GetType().Name);
-                copyList.Append(selectedRow.SerializeToString());
-                copyList.Append(kInputAssetMarker);
-
-                if (selectedRow is ActionTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
+                copyList.Append(row.GetType().Name + "\n");
+                copyList.Append(row.SerializeToString());
+                copyList.Append(k_InputAssetMarker);
+                if (row.hasChildren)
                 {
-                    var action = selectedRow as ActionTreeItem;
-
-                    foreach (var child in action.children)
-                    {
-                        copyList.Append(child.GetType().Name);
-                        copyList.Append((child as BindingTreeItem).SerializeToString());
-                        copyList.Append(kInputAssetMarker);
-                        // Copy composites
-                        if (child.hasChildren)
-                        {
-                            foreach (var innerChild in child.children)
-                            {
-                                copyList.Append(innerChild.GetType().Name);
-                                copyList.Append((innerChild as BindingTreeItem).SerializeToString());
-                                copyList.Append(kInputAssetMarker);
-                            }
-                        }
-                    }
-                }
-                if (selectedRow is CompositeGroupTreeItem && selectedRow.children != null && selectedRow.children.Count > 0)
-                {
-                    var composite = selectedRow as CompositeGroupTreeItem;
-
-                    foreach (var child in composite.children)
-                    {
-                        if (!(child is CompositeTreeItem))
-                            continue;
-                        copyList.Append(child.GetType().Name);
-                        copyList.Append((child as CompositeTreeItem).SerializeToString());
-                        copyList.Append(kInputAssetMarker);
-                    }
+                    CopyChildrenItems(row, copyList);
                 }
             }
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
+        }
+
+        void CopyChildrenItems(InputTreeViewLine parent, StringBuilder result)
+        {
+            foreach (var treeViewItem in parent.children)
+            {
+                var item = (InputTreeViewLine)treeViewItem;
+                result.Append(item.GetType().Name + "\n");
+                result.Append(item.SerializeToString());
+                result.Append(k_InputAssetMarker);
+                if (item.hasChildren)
+                {
+                    CopyChildrenItems(item, result);
+                }
+            }
         }
 
         bool CanCopySelection()
@@ -105,27 +89,28 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void HandlePasteEvent()
         {
-            var json = EditorGUIUtility.systemCopyBuffer;
-            var elements = json.Split(new[] { kInputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
-            if (!json.StartsWith(kInputAssetMarker))
+            var copyBufferString = EditorGUIUtility.systemCopyBuffer;
+            var elements = copyBufferString.Split(new[] { k_InputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
+            if (!copyBufferString.StartsWith(k_InputAssetMarker))
                 return;
+            var currentActionMapProperty = m_TreeView.GetSelectedActionMap().elementProperty;
             for (var i = 0; i < elements.Length; i++)
             {
                 var row = elements[i];
 
                 if (IsRowOfType<ActionMapTreeItem>(ref row))
                 {
-                    var map = JsonUtility.FromJson<InputActionMap>(row);
-                    InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, map);
-                    m_Window.Apply();
+                    if (m_SerializedObject == null)
+                        throw new InvalidOperationException("Pasting action map is not a valid operation");
+
+                    currentActionMapProperty = InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, GetParameterDictionary(row));
+                    m_Apply();
                     continue;
                 }
 
                 if (IsRowOfType<ActionTreeItem>(ref row))
                 {
-                    var action = JsonUtility.FromJson<InputAction>(row);
-                    var actionMap = m_TreeView.GetSelectedActionMap();
-                    var newActionProperty = actionMap.AddActionFromObject(action);
+                    var newActionProperty = InputActionSerializationHelpers.AddActionFromObject(GetParameterDictionary(row), currentActionMapProperty);
 
                     while (i + 1 < elements.Length)
                     {
@@ -148,8 +133,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             {
                                 break;
                             }
-                            var binding = JsonUtility.FromJson<InputBinding>(nextRow);
-                            InputActionSerializationHelpers.AppendBindingFromObject(binding, newActionProperty, actionMap.elementProperty);
+                            InputActionSerializationHelpers.AppendBindingFromObject(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
                             i++;
                         }
                         catch (ArgumentException e)
@@ -158,8 +142,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             break;
                         }
                     }
-                    m_Window.Apply();
-
+                    m_Apply();
                     continue;
                 }
 
@@ -167,7 +150,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     || IsRowOfType<CompositeGroupTreeItem>(ref row)
                     || IsRowOfType<CompositeTreeItem>(ref row))
                 {
-                    var binding = JsonUtility.FromJson<InputBinding>(row);
                     var selectedRow = m_TreeView.GetSelectedAction();
                     if (selectedRow == null)
                     {
@@ -175,14 +157,27 @@ namespace UnityEngine.Experimental.Input.Editor
                         continue;
                     }
 
-                    selectedRow.AppendBindingFromObject(binding);
-                    m_Window.Apply();
+                    selectedRow.AppendBindingFromObject(GetParameterDictionary(row));
+                    m_Apply();
                     continue;
                 }
             }
         }
 
-        bool IsRowOfType<T>(ref string row)
+        Dictionary<string, string> GetParameterDictionary(string data)
+        {
+            var result = new Dictionary<string, string>();
+            foreach (var row in data.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var idx = row.IndexOf('=');
+                var key = row.Substring(0, idx).Trim();
+                var value = row.Substring(idx + 1).Trim();
+                result.Add(key, value);
+            }
+            return result;
+        }
+
+        static bool IsRowOfType<T>(ref string row)
         {
             if (row.StartsWith(typeof(T).Name))
             {
@@ -260,13 +255,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 action.RemoveBinding(bindingRow.index);
             }
 
-
             // Remove actions
             foreach (var actionRow in FindRowsToDeleteOfType<ActionTreeItem>(rows))
             {
                 var action = actionRow;
                 var actionMap = actionRow.parent as ActionMapTreeItem;
-                for (var i = actionRow.bindingsCount - 1; i >= 0; i--)
+
+                var bindingsCount = InputActionSerializationHelpers.GetBindingCount(actionMap.bindingsProperty, action.actionName);
+                for (var i = bindingsCount - 1; i >= 0; i--)
                 {
                     action.RemoveBinding(i);
                 }
@@ -276,11 +272,13 @@ namespace UnityEngine.Experimental.Input.Editor
             //Remove action maps
             foreach (var mapRow in FindRowsToDeleteOfType<ActionMapTreeItem>(rows))
             {
+                if (m_SerializedObject == null)
+                    throw new InvalidOperationException("Deleting action map is not a valid operation");
                 InputActionSerializationHelpers.DeleteActionMap(m_SerializedObject, mapRow.index);
             }
 
-            m_Window.Apply();
-            m_Window.OnSelectionChanged();
+            m_TreeView.SetSelection(new List<int>());
+            m_Apply();
         }
 
         IEnumerable<T> FindRowsToDeleteOfType<T>(InputTreeViewLine[] rows)

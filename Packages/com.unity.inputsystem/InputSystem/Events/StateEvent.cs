@@ -77,6 +77,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// </summary>
         /// <param name="device">Device to grab the state from. Must be a device that has been added to the system.</param>
         /// <param name="eventPtr">Receives a pointer to the newly created state event.</param>
+        /// <param name="allocator">Which native allocator to allocate memory for the event from. By default, the buffer is
+        /// allocated as temporary memory (<see cref="Allocator.Temp"/>. Note that this means the buffer will not be valid
+        /// past the current frame. Use <see cref="Allocator.Persistent"/> if the buffer for the state event is meant to
+        /// persist for longer.</param>
         /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
         /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>

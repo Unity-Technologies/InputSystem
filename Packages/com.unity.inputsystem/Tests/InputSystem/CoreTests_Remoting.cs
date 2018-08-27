@@ -60,7 +60,7 @@ partial class CoreTests
     {
         using (var remote = new FakeRemote())
         {
-            InputSystem.RegisterControlLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
+            InputSystem.RegisterLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
             InputSystem.AddDevice("MyGamepad");
 
             var layouts = new List<string>();

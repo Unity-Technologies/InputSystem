@@ -146,7 +146,7 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public double lastUpdateTime
         {
-            get { return m_LastUpdateTime; }
+            get { return m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
         }
 
         public bool wasUpdatedThisFrame
@@ -322,7 +322,7 @@ namespace UnityEngine.Experimental.Input
         internal InputDeviceDescription m_Description;
 
         // Time of last event we received.
-        internal double m_LastUpdateTime;
+        internal double m_LastUpdateTimeInternal;
 
         // The dynamic and fixed update count corresponding to the current
         // front buffers that are active on the device. We use this to know

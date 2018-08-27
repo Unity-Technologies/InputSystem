@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -53,6 +54,60 @@ partial class CoreTests
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(gamepad.rightStick.x.ReadValue(), Is.EqualTo(1).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_UseCurrentTimeByDefault()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        testRuntime.currentTime = 1234;
+        testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1123;
+
+        double? receivedTime = null;
+        double? receivedInternalTime = null;
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            receivedTime = eventPtr.time;
+            receivedInternalTime = eventPtr.internalTime;
+        };
+
+        InputSystem.QueueStateEvent(device, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(receivedTime.HasValue);
+        Assert.That(receivedTime.Value, Is.EqualTo(111).Within(0.00001));
+        Assert.That(receivedInternalTime.Value, Is.EqualTo(1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2);
+        InputSystem.Update();
+
+        Assert.That(gamepad.lastUpdateTime, Is.Not.EqualTo(2).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void TODO_Events_AreTimeslicedAcrossFixedUpdates()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 2);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3);
+
+        //testRuntime.
+        //InputSystem.Update(InputUpdateType.Fixed);
+
+        Assert.Fail();
     }
 
     [Test]
@@ -129,7 +184,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(deviceJson);
+        InputSystem.RegisterLayout(deviceJson);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var newState = new GamepadState {leftTrigger = 0.123f};
@@ -280,7 +335,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device = InputSystem.AddDevice("CustomGamepad");
 
         InputSystem.onEvent +=
@@ -332,6 +387,55 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
+    }
+
+    [StructLayout(LayoutKind.Explicit, Size = 2)]
+    struct StateWith2Bytes : IInputStateTypeInfo
+    {
+        [InputControl(layout = "Axis")]
+        [FieldOffset(0)] public ushort value;
+        public FourCC GetFormat()
+        {
+            return new FourCC('T', 'E', 'S', 'T');
+        }
+    }
+
+    [InputControlLayout(stateType = typeof(StateWith2Bytes))]
+    class DeviceWith2ByteState : InputDevice
+    {
+    }
+
+    // This test pertains mostly to how the input runtime handles events so it's of limited
+    // use in our current test setup with InputTestRuntime. There's an equivalent native test
+    // in the Unity runtime to ensure the constraint.
+    //
+    // Previously we used to actually modify event size to always be 4 byte aligned and thus potentially
+    // added padding to events. This is a bad idea. The C# system can't tell between padding added to an
+    // event and valid input data that's part of the state. This can cause the padding to actually overwrite
+    // state of controls that happen to start at the end of an event. On top, we didn't clear out the
+    // memory we added to an event and thus ended up with random garbage being written to unrelated controls.
+    //
+    // What we do now is to simply align event pointers to 4 byte boundaries as we read and write events.
+    [Test]
+    [Category("Events")]
+    public void Events_CanHandleStateNotAlignedTo4ByteBoundary()
+    {
+        Debug.Assert(UnsafeUtility.SizeOf<StateWith2Bytes>() == 2);
+
+        var device = InputSystem.AddDevice<DeviceWith2ByteState>();
+
+        InputSystem.QueueStateEvent(device, new StateWith2Bytes());
+        InputSystem.QueueStateEvent(device, new StateWith2Bytes());
+
+        InputSystem.onEvent +=
+            eventPtr =>
+        {
+            // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
+            Assert.That(eventPtr.data.ToInt64() % 4, Is.EqualTo(0));
+            Assert.That(eventPtr.sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<StateWith2Bytes>()));
+        };
+
+        InputSystem.Update();
     }
 
     [Test]
@@ -571,8 +675,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<CustomDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<CustomDevice>();
+        InputSystem.RegisterLayout(json);
         var device = (CustomDevice)InputSystem.AddDevice("TestLayout");
 
         InputSystem.QueueStateEvent(device, new CustomDeviceState {axis = 0.5f});
@@ -599,7 +703,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CandSendLargerStateToDeviceWithSmallerState()
     {
-        InputSystem.RegisterControlLayout<CustomDevice>();
+        InputSystem.RegisterLayout<CustomDevice>();
         var device = (CustomDevice)InputSystem.AddDevice("CustomDevice");
 
         var state = new ExtendedCustomDeviceState();
@@ -614,7 +718,7 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanUpdateDeviceWithEventsFromUpdateCallback()
     {
-        InputSystem.RegisterControlLayout<CustomDeviceWithUpdate>();
+        InputSystem.RegisterLayout<CustomDeviceWithUpdate>();
         var device = (CustomDeviceWithUpdate)InputSystem.AddDevice("CustomDeviceWithUpdate");
 
         InputSystem.Update();

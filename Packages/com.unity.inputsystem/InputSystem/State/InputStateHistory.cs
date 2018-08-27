@@ -12,6 +12,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////        capturing history including procesors and composites and everything (and multiple
 ////        controls at the same time)
 
+////TODO: allow correlating history to frames/updates
+
 namespace UnityEngine.Experimental.Input
 {
     public class InputStateHistory

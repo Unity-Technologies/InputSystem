@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: should this really implement IInputEventTypeInfo? it's essentially an "abstract" struct
+////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </summary>
     // NOTE: This has to be layout compatible with native events.
     [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
-    public struct InputEvent : IInputEventTypeInfo
+    public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
         private const uint kIdMask = 0x7FFFFFFF;
@@ -74,18 +74,41 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// ID of the device that the event is for.
         /// </summary>
+        /// <remarks>
+        /// Device IDs are allocated by the <see cref="IInputRuntime">runtime</see>. No two devices
+        /// will receive the same ID over an application lifecycle regardless of whether the devices
+        /// existed at the same time or not.
+        /// </remarks>
         /// <seealso cref="InputDevice.id"/>
+        /// <seealso cref="InputSystem.TryGetDeviceById"/>
         public int deviceId
         {
             get { return m_DeviceId; }
             set { m_DeviceId = (ushort)value; }
         }
 
-        ////TODO: clarify timeline that this sits on
         /// <summary>
-        /// Time that the event was generated.
+        /// Time that the event was generated at.
         /// </summary>
+        /// <remarks>
+        /// Times are in seconds and progress linearly in real-time. The timeline is the
+        /// same as for <see cref="Time.realtimeSinceStartup"/>.
+        /// </remarks>
         public double time
+        {
+            get { return m_Time - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
+            set { m_Time = value + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup; }
+        }
+
+        /// <summary>
+        /// This is the raw input timestamp without the offset to <see cref="Time.realtimeSinceStartup"/>.
+        /// </summary>
+        /// <remarks>
+        /// Internally, we always store all timestamps in "input time" which is relative to the native
+        /// function GetTimeSinceStartup(). <see cref="IInputRuntime.currentTime"/> yields the current
+        /// time on this timeline.
+        /// </remarks>
+        internal double internalTime
         {
             get { return m_Time; }
             set { m_Time = value; }
@@ -98,11 +121,6 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_DeviceId = (ushort)deviceId;
             m_Time = time;
             m_EventId = kInvalidId;
-        }
-
-        public FourCC GetTypeStatic()
-        {
-            return new FourCC(); // No valid type code; InputEvent is considered abstract.
         }
 
         // We internally use bits inside m_EventId as flags. IDs are linearly counted up by the
@@ -124,7 +142,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* current)
         {
-            return (InputEvent*)((byte*)current + current->sizeInBytes);
+            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(current->sizeInBytes, 4);
+            return (InputEvent*)((byte*)current + alignedSizeInBytes);
         }
     }
 }
