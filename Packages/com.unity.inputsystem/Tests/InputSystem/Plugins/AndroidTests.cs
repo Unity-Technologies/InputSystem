@@ -54,10 +54,20 @@ class AndroidTests : InputTestFixture
         Assert.That(device, Is.TypeOf<AndroidGamepad>());
         var controller = (AndroidGamepad)device;
 
+        // Note: Regarding triggers, android sends different events depending to which device the controller is connected.
+        //       For ex., when NVIDIA shield controller when connected to Shield Console, triggers generate events:
+        //            Left Trigger -> AndroidAxis.Brake, AndroidAxis.LtTrigger
+        //            Right Trigger -> AndroidAxis.Gas, AndroidAxis.RtTrigger
+        //       BUT
+        //           when NVIDIA shield controller when connected to Samsung phone, triggers generate events:
+        //            Left Trigger -> AndroidAxis.Brake
+        //            Right Trigger -> AndroidAxis.Gas
+        //
+        //       This is why we're only reading and validating that events are correctly processed from AndroidAxis.Brake & AndroidAxis.Gas
         InputSystem.QueueStateEvent(controller,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Ltrigger, 0.123f)
-                .WithAxis(AndroidAxis.Rtrigger, 0.456f)
+                .WithAxis(AndroidAxis.Brake, 0.123f)
+                .WithAxis(AndroidAxis.Gas, 0.456f)
                 .WithAxis(AndroidAxis.X, 0.789f)
                 .WithAxis(AndroidAxis.Y, 0.987f)
                 .WithAxis(AndroidAxis.Z, 0.654f)
