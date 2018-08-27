@@ -255,7 +255,7 @@ partial class CoreTests
             receivedDeviceChange = c;
         };
 
-        InputSystem.SetUsage(device, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
         Assert.That(receivedDevice, Is.SameAs(device));
         Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.UsageChanged));
@@ -268,7 +268,7 @@ partial class CoreTests
         InputSystem.AddDevice<Gamepad>();
         var device = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.SetUsage(device, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
         var controls = InputSystem.GetControls("/{LeftHand}");
 
@@ -281,10 +281,10 @@ partial class CoreTests
     public void Devices_CanFindDeviceByUsageAndLayout()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        InputSystem.SetUsage(keyboard, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(keyboard, CommonUsages.LeftHand);
 
         var controls = InputSystem.GetControls("/<Keyboard>{LeftHand}");
 

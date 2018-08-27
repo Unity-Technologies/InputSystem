@@ -725,23 +725,23 @@ namespace UnityEngine.Experimental.Input
             s_Manager.SetLayoutVariant(control, variant);
         }
 
-        public static void SetUsage(InputDevice device, string usage)
+        public static void SetDeviceUsage(InputDevice device, string usage)
         {
-            SetUsage(device, new InternedString(usage));
+            SetDeviceUsage(device, new InternedString(usage));
         }
 
         // May generate garbage.
-        public static void SetUsage(InputDevice device, InternedString usage)
+        public static void SetDeviceUsage(InputDevice device, InternedString usage)
         {
             s_Manager.SetUsage(device, usage);
         }
 
-        public static void AddUsage(InputDevice device, InternedString usage)
+        public static void AddDeviceUsage(InputDevice device, InternedString usage)
         {
             throw new NotImplementedException();
         }
 
-        public static void RemoveUsage(InputDevice device, InternedString usage)
+        public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
         {
             throw new NotImplementedException();
         }

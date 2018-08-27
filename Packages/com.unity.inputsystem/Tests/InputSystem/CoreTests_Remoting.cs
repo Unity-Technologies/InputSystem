@@ -98,7 +98,7 @@ partial class CoreTests
             var remoteGamepad = (Gamepad)remote.manager.devices[0];
             Assert.That(remoteGamepad.usages, Has.Count.Zero);
 
-            InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
+            InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
 
             Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
         }

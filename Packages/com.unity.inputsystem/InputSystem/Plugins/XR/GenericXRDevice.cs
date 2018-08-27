@@ -59,11 +59,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             {
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
                 {
-                    InputSystem.SetUsage(this, CommonUsages.LeftHand);
+                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 }
                 else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                 {
-                    InputSystem.SetUsage(this, CommonUsages.RightHand);
+                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
                 }
             }
         }
