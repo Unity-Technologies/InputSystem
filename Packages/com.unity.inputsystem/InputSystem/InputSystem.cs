@@ -1513,7 +1513,6 @@ namespace UnityEngine.Experimental.Input
 
             InputActionMapState.ResetGlobals();
             s_Manager.Destroy();
-            Debug.Log("Destroy!!!!!! " + s_RemoteConnection);
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
             #if UNITY_EDITOR
