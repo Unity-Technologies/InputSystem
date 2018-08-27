@@ -87,6 +87,7 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
 
 <div class="header">
   <div class="summary">
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -99,6 +100,12 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
 
 <p>Inherits IInputEventTypeInfo.</p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a1608906cc40b743de7e78445ab5e9ccd"><td class="memItemLeft" align="right" valign="top">static NativeArray&lt; byte &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html#a1608906cc40b743de7e78445ab5e9ccd">From</a> (<a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html">InputDevice</a> device, out <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEventPtr.html">InputEventPtr</a> eventPtr, Allocator allocator=Allocator.Temp)</td></tr>
+<tr class="memdesc:a1608906cc40b743de7e78445ab5e9ccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the current state of <em>device</em>  and create a state event from it.  <a href="#a1608906cc40b743de7e78445ab5e9ccd">More...</a><br /></td></tr>
+<tr class="separator:a1608906cc40b743de7e78445ab5e9ccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a2d211a77faa58aad102d4a52582cdd89"><td class="memItemLeft" align="right" valign="top">FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1StateEvent.html#a2d211a77faa58aad102d4a52582cdd89">stateFormat</a></td></tr>
@@ -108,7 +115,68 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A complete state snapshot for an entire input device. </p>
 <p>This is a variable-sized event. </p>
-</div><h2 class="groupheader">Member Data Documentation</h2>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a1608906cc40b743de7e78445ab5e9ccd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1608906cc40b743de7e78445ab5e9ccd">&#9670;&nbsp;</a></span>From()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static NativeArray&lt;byte&gt; From </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html">InputDevice</a>&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">out <a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEventPtr.html">InputEventPtr</a>&#160;</td>
+          <td class="paramname"><em>eventPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Allocator&#160;</td>
+          <td class="paramname"><em>allocator</em> = <code>Allocator.Temp</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Read the current state of <em>device</em>  and create a state event from it. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">device</td><td>Device to grab the state from. Must be a device that has been added to the system.</td></tr>
+    <tr><td class="paramname">eventPtr</td><td>Receives a pointer to the newly created state event.</td></tr>
+    <tr><td class="paramname">allocator</td><td>Which native allocator to allocate memory for the event from. By default, the buffer is allocated as temporary memory (Allocator.Temp. Note that this means the buffer will not be valid past the current frame. Use Allocator.Persistent if the buffer for the state event is meant to persist for longer.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Buffer of unmanaged memory allocated for the event.</dd></dl>
+<dl class="exception"><dt>Exceptions</dt><dd>
+  <table class="exception">
+    <tr><td class="paramname">ArgumentException</td><td><em>device</em>  has not been added to the system.</td></tr>
+    <tr><td class="paramname">ArgumentNullException</td><td><em>device</em>  is <code>null</code>.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Data Documentation</h2>
 <a id="a2d211a77faa58aad102d4a52582cdd89"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2d211a77faa58aad102d4a52582cdd89">&#9670;&nbsp;</a></span>stateFormat</h2>
 

@@ -2,6 +2,7 @@ var searchData=
 [
   ['deadzonemin',['DeadzoneMin',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputConfiguration.html#a73c3b5907426acf0a49a6225b7d2cc59',1,'UnityEngine::Experimental::Input::InputConfiguration']]],
   ['deadzoneprocessor',['DeadzoneProcessor',['../classUnityEngine_1_1Experimental_1_1Input_1_1Processors_1_1DeadzoneProcessor.html',1,'UnityEngine::Experimental::Input::Processors']]],
+  ['defaultstate',['defaultState',['../structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#ad211342aa0984e0adc63d2dff25b7e0a',1,'UnityEngine::Experimental::Input::InputControlLayout::ControlItem']]],
   ['deltastateevent',['DeltaStateEvent',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeltaStateEvent.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['description',['description',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html#a4cd2f444322d6b1c8b8917dae96a673c',1,'UnityEngine::Experimental::Input::InputDevice']]],
   ['device',['device',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#a5b08244bc12fbc4e3842373841f0bd4c',1,'UnityEngine::Experimental::Input::InputControl']]],
@@ -10,12 +11,16 @@ var searchData=
   ['deviceconfigurationevent',['DeviceConfigurationEvent',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceConfigurationEvent.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['deviceid',['deviceId',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#ae33571d7242e04fb46496c9852fad407',1,'UnityEngine::Experimental::Input::LowLevel::InputEvent']]],
   ['deviceremoveevent',['DeviceRemoveEvent',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DeviceRemoveEvent.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
+  ['devicerole',['DeviceRole',['../namespaceUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XR.html#a3d813330f0583305ce929d3d05140d05',1,'UnityEngine::Experimental::Input::Plugins::XR']]],
   ['devices',['devices',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#aefeaf6416fc2a54725e0fb273ebe8409',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['disable',['Disable',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputActionMap.html#a0b0a8402327309e2554c218967e472fe',1,'UnityEngine::Experimental::Input::InputActionMap']]],
   ['disableallenabledactions',['DisableAllEnabledActions',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab218bcd4cf75952fce10b6d4aab1bbf0',1,'UnityEngine::Experimental::Input::InputSystem']]],
+  ['disabled',['Disabled',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#afd8cb399b99107b966cffb98199572f4ab9f5c797ebbf55adccdd8539a65a0241',1,'UnityEngine::Experimental::Input']]],
   ['disabledevicecommand',['DisableDeviceCommand',['../structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1DisableDeviceCommand.html',1,'UnityEngine::Experimental::Input::LowLevel']]],
   ['discretebuttoncontrol',['DiscreteButtonControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DiscreteButtonControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
   ['displayname',['displayName',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputControl.html#aa782ccbdf1d5af49aae11b97a526d56a',1,'UnityEngine.Experimental.Input.InputControl.displayName()'],['../structUnityEngine_1_1Experimental_1_1Input_1_1InputControlLayout_1_1ControlItem.html#aa782ccbdf1d5af49aae11b97a526d56a',1,'UnityEngine.Experimental.Input.InputControlLayout.ControlItem.displayName()']]],
   ['down',['down',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DpadControl.html#ad8bbb858cb4c7f7e21f57e2f2275b40c',1,'UnityEngine::Experimental::Input::Controls::DpadControl']]],
+  ['dpadcomposite',['DpadComposite',['../classUnityEngine_1_1Experimental_1_1Input_1_1Composites_1_1DpadComposite.html',1,'UnityEngine::Experimental::Input::Composites']]],
   ['dpadcontrol',['DpadControl',['../classUnityEngine_1_1Experimental_1_1Input_1_1Controls_1_1DpadControl.html',1,'UnityEngine::Experimental::Input::Controls']]],
   ['dualmotorrumble',['DualMotorRumble',['../structUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1DualMotorRumble.html',1,'UnityEngine::Experimental::Input::Haptics']]],
   ['dualshockgamepad',['DualShockGamepad',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockGamepad.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock']]],
@@ -23,5 +28,6 @@ var searchData=
   ['dualshockhidinputreport',['DualShockHIDInputReport',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1DualShockHIDInputReport.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock::LowLevel']]],
   ['dualshockhidoutputreport',['DualShockHIDOutputReport',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1DualShockHIDOutputReport.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock::LowLevel']]],
   ['dualshockps4ouputcommand',['DualShockPS4OuputCommand',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1LowLevel_1_1DualShockPS4OuputCommand.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock::LowLevel']]],
-  ['dualshocksupport',['DualShockSupport',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockSupport.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock']]]
+  ['dualshocksupport',['DualShockSupport',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1DualShock_1_1DualShockSupport.html',1,'UnityEngine::Experimental::Input::Plugins::DualShock']]],
+  ['dynamic',['Dynamic',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5a971fd8cc345d8bd9f92e9f7d88fdf20c',1,'UnityEngine::Experimental::Input']]]
 ];

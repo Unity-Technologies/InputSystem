@@ -1,3 +1,5 @@
+////REVIEW: rename to IInputStateChangeMonitor
+
 namespace UnityEngine.Experimental.Input.LowLevel
 {
     public interface IInputStateChangeMonitor

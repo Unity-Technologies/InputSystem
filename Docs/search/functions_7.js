@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['parsereportdescriptor',['ParseReportDescriptor',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1HID_1_1HIDParser.html#abd864c4f353cbeee3b68a2cc8d995dc0',1,'UnityEngine::Experimental::Input::Plugins::HID::HIDParser']]],
-  ['pausehaptics',['PauseHaptics',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1Haptics_1_1IHaptics.html#a5e330b3d653e971277d18f60981b5d96',1,'UnityEngine.Experimental.Input.Haptics.IHaptics.PauseHaptics()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ad7640ab8aeeaeb7c5c80a30a3f6c947b',1,'UnityEngine.Experimental.Input.InputSystem.PauseHaptics()']]],
-  ['process',['Process',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1IInputProcessor.html#a563d680455bc57b65e4ff0101a4ea71b',1,'UnityEngine::Experimental::Input::IInputProcessor']]]
+  ['listenabledactions',['ListEnabledActions',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a9584e2791c0f11ab32cd0f7560c08a82',1,'UnityEngine.Experimental.Input.InputSystem.ListEnabledActions()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a72337635911ca77f6b78a55edb7aa1e7',1,'UnityEngine.Experimental.Input.InputSystem.ListEnabledActions(List&lt; InputAction &gt; actions)']]],
+  ['listlayouts',['ListLayouts',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#a7f1fe23f5c5f6650d7faf2058bf76216',1,'UnityEngine.Experimental.Input.InputSystem.ListLayouts()'],['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#aca6ceab0adbdfb4273519b81cf189bda',1,'UnityEngine.Experimental.Input.InputSystem.ListLayouts(List&lt; string &gt; list)']]]
 ];

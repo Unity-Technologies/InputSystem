@@ -280,16 +280,15 @@ namespace UnityEngine.Experimental.Input
 
         protected internal InputStateBlock m_StateBlock;
 
+        ////REVIEW: shouldn't these sit on the device?
         protected internal IntPtr currentStatePtr
         {
             get { return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex()); }
         }
-
         protected internal IntPtr previousStatePtr
         {
             get { return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex()); }
         }
-
         protected internal IntPtr defaultStatePtr
         {
             get { return InputStateBuffers.s_DefaultStateBuffer; }
@@ -516,6 +515,8 @@ namespace UnityEngine.Experimental.Input
             WriteRawValueInto(buffer, (TValue)value);
         }
 
+        ////REVIEW: this should return a bool and pass the value as an out parameter; bool should indicate
+        ////        whether value is actually coming from the event or just a default value
         // Read a control value directly from a state event.
         //
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of

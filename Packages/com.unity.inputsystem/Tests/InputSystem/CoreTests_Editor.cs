@@ -10,6 +10,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
 partial class CoreTests
@@ -25,7 +26,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         InputSystem.AddDevice("MyDevice");
         testRuntime.ReportNewInputDevice(new InputDeviceDescription
         {
@@ -101,7 +102,7 @@ partial class CoreTests
     public void Editor_RestoringStateWillRestoreObjectsOfLayoutBuilder()
     {
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
-        InputSystem.RegisterControlLayoutBuilder(() => builder.DoIt(), "TestLayout");
+        InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
         InputSystem.Save();
         InputSystem.Reset();
@@ -173,15 +174,16 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var obj = new SerializedObject(asset);
 
+        var parameters = new Dictionary<string, string>();
+        parameters.Add("m_Name", "set");
+
         Assert.That(asset.actionMaps, Has.Count.EqualTo(0));
 
-        InputActionSerializationHelpers.AddActionMapFromObject(obj, map);
+        InputActionSerializationHelpers.AddActionMapFromObject(obj, parameters);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
         Assert.That(asset.actionMaps[0].name, Is.EqualTo("set"));
-        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action"));
-        Assert.That(asset.actionMaps[0].actions[0].bindings[0].path, Is.EqualTo("some path"));
     }
 
     [Test]
@@ -266,16 +268,22 @@ partial class CoreTests
         var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
 
         var pathName = "/gamepad/leftStick";
+        var name = "some name";
+        var interactionsName = "someinteractions";
         var sourceActionName = "some action";
         var groupName = "group";
         var flags = 10;
-        var inputBinding = new InputBinding()
-        {
-            path = pathName,
-            action = sourceActionName,
-            groups = groupName
-        };
-        InputActionSerializationHelpers.AppendBindingFromObject(inputBinding, action1Property, mapProperty);
+
+        var parameters = new Dictionary<string, string>();
+        parameters.Add("path", pathName);
+        parameters.Add("name", name);
+        parameters.Add("groups", groupName);
+        parameters.Add("interactions", interactionsName);
+        parameters.Add("flags", "" + flags);
+        parameters.Add("action", sourceActionName);
+
+        InputActionSerializationHelpers.AppendBindingFromObject(parameters, action1Property, mapProperty);
+
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         var action1 = asset.actionMaps[0].TryGetAction("action1");
@@ -283,6 +291,8 @@ partial class CoreTests
         Assert.That(action1.bindings[0].path, Is.EqualTo(pathName));
         Assert.That(action1.bindings[0].action, Is.EqualTo("action1"));
         Assert.That(action1.bindings[0].groups, Is.EqualTo(groupName));
+        Assert.That(action1.bindings[0].interactions, Is.EqualTo(interactionsName));
+        Assert.That(action1.bindings[0].name, Is.EqualTo(name));
     }
 
     [Test]
@@ -378,6 +388,94 @@ partial class CoreTests
         Assert.That(set1.actions[0].name, Is.EqualTo("newAction"));
         Assert.That(set1.actions[0].bindings, Has.Count.EqualTo(1));
         Assert.That(set1.actions[0].bindings[0].action, Is.EqualTo("newAction"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanPrettyPrintJSON()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("action", binding: "<Gamepad>/leftStick");
+        var json = InputActionMap.ToJson(new[] {map});
+
+        var prettyJson = StringHelpers.PrettyPrintJSON(json);
+
+        Assert.That(prettyJson, Does.StartWith(
+@"{
+    ""maps"" : [
+        {
+            ""name"" : ""map"",
+            ""actions"" : [
+                {
+                    ""name"" : ""action"",
+                    ""expectedControlLayout"" : """",
+                    ""bindings"" : [
+                    ]
+"));
+
+        // Doing it again should not result in a difference.
+        prettyJson = StringHelpers.PrettyPrintJSON(prettyJson);
+
+        Assert.That(prettyJson, Does.StartWith(
+@"{
+    ""maps"" : [
+        {
+            ""name"" : ""map"",
+            ""actions"" : [
+                {
+                    ""name"" : ""action"",
+                    ""expectedControlLayout"" : """",
+                    ""bindings"" : [
+                    ]
+"));
+    }
+
+    // We don't want the game code's update mask affect editor code and vice versa.
+    [Test]
+    [Category("Editor")]
+    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
+
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_UpdateMaskResetsWhenEnteringAndExitingPlayMode_ButPreservesBeforeRenderState()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+
+        InputSystem.updateMask = InputUpdateType.Dynamic | InputUpdateType.BeforeRender;
+
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputSystem.updateMask, Is.EqualTo(InputUpdateType.Default | InputUpdateType.BeforeRender));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_AlwaysKeepsEditorUpdatesEnabled()
+    {
+        InputSystem.updateMask = InputUpdateType.Dynamic;
+
+        Assert.That(InputSystem.updateMask & InputUpdateType.Editor, Is.EqualTo(InputUpdateType.Editor));
     }
 
     private class TestEditorWindow : EditorWindow

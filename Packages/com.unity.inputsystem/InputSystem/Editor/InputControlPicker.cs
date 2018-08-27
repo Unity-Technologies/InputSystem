@@ -264,8 +264,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 var id = 1;
                 var usages = BuildTreeForUsages(ref id);
-                var devices = AddChild(root, "Devices", ref id);
-                var products = AddChild(root, "Products", ref id);
+                var devices = AddChild(root, "Abstract Devices", ref id);
+                var products = AddChild(root, "Specific Devices", ref id);
 
                 foreach (var layout in EditorInputControlLayoutCache.allDeviceLayouts)
                 {

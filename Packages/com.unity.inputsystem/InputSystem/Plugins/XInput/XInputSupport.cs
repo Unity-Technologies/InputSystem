@@ -10,10 +10,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
         public static void Initialize()
         {
             // Base layout for Xbox-style gamepad.
-            InputSystem.RegisterControlLayout<XInputController>();
+            InputSystem.RegisterLayout<XInputController>();
 
 #if UNITY_EDITOR || UNITY_XBOXONE
-            InputSystem.RegisterControlLayout<XboxOneGamepad>(
+            InputSystem.RegisterLayout<XboxOneGamepad>(
                 matches: new InputDeviceMatcher()
                     .WithDeviceClass("XboxOneGamepad")
                     .WithInterface("Xbox"));
@@ -23,7 +23,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             // XInput controllers on Windows.
             // State layout is XINPUT_GAMEPAD.
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx
-            InputSystem.RegisterControlLayout(@"{
+            InputSystem.RegisterLayout(@"{
 ""name"" : ""XInputControllerWindows"",
 ""extend"" : ""XInputController"",
 ""format"" : ""XINP"",
@@ -86,7 +86,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             ////TODO: come up with a way that allows us to snip that data out of the state we store and the
             ////      state we compare
             ////TODO: rumble and LED output
-            InputSystem.RegisterControlLayout(@"{
+            InputSystem.RegisterLayout(@"{
 ""name"" : ""XInputControllerOSX"",
 ""extend"" : ""XInputController"",
 ""format"" : ""HID"",

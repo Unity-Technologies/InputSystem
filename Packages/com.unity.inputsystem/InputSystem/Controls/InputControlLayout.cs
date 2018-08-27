@@ -434,6 +434,11 @@ namespace UnityEngine.Experimental.Input
             get { return m_DeviceMatcher; }
         }
 
+        public bool updateBeforeRender
+        {
+            get { return m_UpdateBeforeRender.HasValue ? m_UpdateBeforeRender.Value : false; }
+        }
+
         public bool isDeviceLayout
         {
             get { return typeof(InputDevice).IsAssignableFrom(m_Type); }
@@ -468,7 +473,7 @@ namespace UnityEngine.Experimental.Input
         /// Build a layout programmatically. Primarily for use by layout builders
         /// registered with the system.
         /// </summary>
-        /// <seealso cref="InputSystem.RegisterControlLayoutBuilder"/>
+        /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
         public struct Builder
         {
             public string name;
@@ -1184,11 +1189,17 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public void MergeLayout(InputControlLayout other)
         {
-            m_Type = m_Type ?? other.m_Type;
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
             if (m_Variants.IsEmpty())
                 m_Variants = other.m_Variants;
+
+            // Determine type. Basically, if the other layout's type is more specific
+            // than our own, we switch to that one. Otherwise we stay on our own type.
+            if (m_Type == null)
+                m_Type = other.m_Type;
+            else if (m_Type.IsAssignableFrom(other.m_Type))
+                m_Type = other.m_Type;
 
             // If the layout has variants set on it, we want to merge away information coming
             // from 'other' than isn't relevant to those variants.
@@ -1205,10 +1216,15 @@ namespace UnityEngine.Experimental.Input
             // Combine common usages.
             m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
 
+            // Retain list of overrides.
+            m_AppliedOverrides.Merge(other.m_AppliedOverrides);
+
             // Merge controls.
             if (m_Controls == null)
+            {
                 m_Controls = other.m_Controls;
-            else
+            }
+            else if (other.m_Controls != null)
             {
                 var baseControls = other.m_Controls;
 
@@ -1728,16 +1744,6 @@ namespace UnityEngine.Experimental.Input
 
             private InputControlLayout TryLoadLayoutInternal(InternedString name)
             {
-                // Check builders.
-                BuilderInfo builder;
-                if (layoutBuilders.TryGetValue(name, out builder))
-                {
-                    var layout = (InputControlLayout)builder.method.Invoke(builder.instance, null);
-                    if (layout == null)
-                        throw new Exception(string.Format("Layout builder '{0}' returned null when invoked", name));
-                    return layout;
-                }
-
                 // See if we have a string layout for it. These
                 // always take precedence over ones from type so that we can
                 // override what's in the code using data.
@@ -1749,6 +1755,22 @@ namespace UnityEngine.Experimental.Input
                 Type type;
                 if (layoutTypes.TryGetValue(name, out type))
                     return FromType(name, type);
+
+                // Finally, check builders. Always the last ones to get a shot at
+                // providing layouts.
+                BuilderInfo builder;
+                if (layoutBuilders.TryGetValue(name, out builder))
+                {
+                    var layoutObject = builder.method.Invoke(builder.instance, null);
+                    if (layoutObject == null)
+                        throw new Exception(string.Format("Layout builder '{0}' returned null when invoked", name));
+                    var layout = layoutObject as InputControlLayout;
+                    if (layout == null)
+                        throw new Exception(string.Format(
+                            "Layout builder '{0}' returned '{1}' which is not an InputControlLayout", name,
+                            layoutObject));
+                    return layout;
+                }
 
                 return null;
             }
@@ -1791,7 +1813,8 @@ namespace UnityEngine.Experimental.Input
                         {
                             var overrideName = overrides[i];
                             var overrideLayout = TryLoadLayout(overrideName, table);
-                            layout.MergeLayout(overrideLayout);
+                            overrideLayout.MergeLayout(layout);
+                            layout = overrideLayout;
                             layout.m_AppliedOverrides.Append(overrideName);
                         }
                     }
@@ -1840,6 +1863,17 @@ namespace UnityEngine.Experimental.Input
                 Type result;
                 layoutTypes.TryGetValue(layoutName, out result);
                 return result;
+            }
+
+            public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)
+            {
+                var layout = childLayout;
+                while (baseLayoutTable.TryGetValue(layout, out layout))
+                {
+                    if (layout == parentLayout)
+                        return true;
+                }
+                return false;
             }
         }
 

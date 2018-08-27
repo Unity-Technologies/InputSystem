@@ -2,10 +2,11 @@
 using System;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.Editor.Lists;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    internal class InputBindingPropertiesView
+    class InputBindingPropertiesView
     {
         static class Styles
         {
@@ -33,9 +34,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         SerializedProperty m_InteractionsProperty;
-        InteractionsList m_InteractionsList;
+        InteractionsReorderableReorderableList m_InteractionsReorderableReorderableList;
 
-        ProcessorsList m_ProcessorsListView;
+        ProcessorsReorderableReorderableList m_ProcessorsReorderableReorderableListView;
         SerializedProperty m_ProcessorsProperty;
 
         SerializedProperty m_BindingProperty;
@@ -61,15 +62,15 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ReloadTree = reloadTree;
             m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
             m_ProcessorsProperty = bindingProperty.FindPropertyRelative("processors");
-            m_InteractionsList = new InteractionsList(bindingProperty.FindPropertyRelative("interactions"), ApplyModifiers);
-            m_ProcessorsListView = new ProcessorsList(bindingProperty.FindPropertyRelative("processors"), ApplyModifiers);
+            m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(bindingProperty.FindPropertyRelative("interactions"), ApplyModifiers);
+            m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(bindingProperty.FindPropertyRelative("processors"), ApplyModifiers);
         }
 
         void ApplyModifiers()
         {
-            m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
+            m_InteractionsProperty.stringValue = m_InteractionsReorderableReorderableList.ToSerializableString();
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
-            m_ProcessorsProperty.stringValue = m_ProcessorsListView.ToSerializableString();
+            m_ProcessorsProperty.stringValue = m_ProcessorsReorderableReorderableListView.ToSerializableString();
             m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_ReloadTree();
         }
@@ -80,7 +81,41 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             EditorGUILayout.BeginVertical();
+            DrawPathPicker();
+            EditorGUILayout.Space();
+            DrawInteractionsPicker();
+            EditorGUILayout.Space();
+            DrawProcessorsPicker();
+            GUILayout.FlexibleSpace();
+            EditorGUILayout.EndVertical();
+        }
 
+        protected virtual void DrawProcessorsPicker()
+        {
+            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
+
+            if (m_ProcessorsFoldout)
+            {
+                EditorGUI.indentLevel++;
+                m_ProcessorsReorderableReorderableListView.OnGUI();
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        protected virtual void DrawInteractionsPicker()
+        {
+            m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
+
+            if (m_InteractionsFoldout)
+            {
+                EditorGUI.indentLevel++;
+                m_InteractionsReorderableReorderableList.OnGUI();
+                EditorGUI.indentLevel--;
+            }
+        }
+
+        protected virtual void DrawPathPicker()
+        {
             m_GeneralFoldout = DrawFoldout(s_GeneralContent, m_GeneralFoldout);
 
             if (m_GeneralFoldout)
@@ -97,30 +132,6 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 EditorGUI.indentLevel--;
             }
-
-            EditorGUILayout.Space();
-            m_InteractionsFoldout = DrawFoldout(s_InteractionsContent, m_InteractionsFoldout);
-
-            if (m_InteractionsFoldout)
-            {
-                EditorGUI.indentLevel++;
-                m_InteractionsList.OnGUI();
-                EditorGUI.indentLevel--;
-            }
-
-            EditorGUILayout.Space();
-            m_ProcessorsFoldout = DrawFoldout(s_ProcessorsContent, m_ProcessorsFoldout);
-
-            if (m_ProcessorsFoldout)
-            {
-                EditorGUI.indentLevel++;
-                m_ProcessorsListView.OnGUI();
-                EditorGUI.indentLevel--;
-            }
-
-            GUILayout.FlexibleSpace();
-
-            EditorGUILayout.EndVertical();
         }
 
         ////REVIEW: refactor this out of here; this should be a public API that allows anyone to have an inspector field to select a control binding
@@ -146,7 +157,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ////TODO: this should be cached; generates needless GC churn
             var displayName = InputControlPath.ToHumanReadableString(path);
 
-            if (manualPathEditMode || string.IsNullOrEmpty(displayName))
+            if (manualPathEditMode || (!string.IsNullOrEmpty(path) && string.IsNullOrEmpty(displayName)))
             {
                 EditorGUI.BeginChangeCheck();
                 path = EditorGUI.DelayedTextField(btnRect, path);
@@ -176,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
             var w = new InputControlPicker(pathProperty, pickerTreeViewState)
@@ -187,19 +198,31 @@ namespace UnityEngine.Experimental.Input.Editor
             PopupWindow.Show(rect, w);
         }
 
-        private static bool DrawFoldout(GUIContent content, bool folded)
+        static bool DrawFoldout(GUIContent content, bool folded)
         {
             var bgRect = GUILayoutUtility.GetRect(s_ProcessorsContent, Styles.foldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
             return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
         }
 
-        private void OnBindingModified(SerializedProperty obj)
+        void OnBindingModified(SerializedProperty obj)
         {
             var importerEditor = InputActionImporterEditor.FindFor(m_BindingProperty.serializedObject);
             if (importerEditor != null)
                 importerEditor.OnAssetModified();
             m_ReloadTree();
+        }
+    }
+
+    class CompositeGroupPropertiesView : InputBindingPropertiesView
+    {
+        public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state)
+            : base(property, apply, state)
+        {
+        }
+
+        protected override void DrawPathPicker()
+        {
         }
     }
 }

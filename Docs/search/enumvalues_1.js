@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['configurationchanged',['ConfigurationChanged',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#ad26a042de52e46164d033ecb2730d8dba31e4c3ad63d178cb96c2a70ea23cbaf5',1,'UnityEngine::Experimental::Input']]]
+  ['beforerender',['BeforeRender',['../namespaceUnityEngine_1_1Experimental_1_1Input.html#a7c2aad974df190e811f76bf33796b5b5adc18627d8298782478d7588b8223702e',1,'UnityEngine::Experimental::Input']]]
 ];
