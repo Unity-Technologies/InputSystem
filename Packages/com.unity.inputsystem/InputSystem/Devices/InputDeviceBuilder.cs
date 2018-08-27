@@ -44,13 +44,17 @@ namespace UnityEngine.Experimental.Input
             m_LayoutCache.layouts = layouts;
         }
 
-        public InputDeviceBuilder(string layout, InputDevice existingDevice = null, string variants = null)
+        public InputDeviceBuilder(string layout, string variants = null,
+                                  InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+                                  InputDevice existingDevice = null)
         {
             m_LayoutCache.layouts = InputControlLayout.s_Layouts;
-            Setup(new InternedString(layout), existingDevice, new InternedString(variants));
+            Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
         }
 
-        internal void Setup(InternedString layout, InputDevice existingDevice, InternedString variants)
+        internal void Setup(InternedString layout, InternedString variants,
+            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
+            InputDevice existingDevice = null)
         {
             if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
                 throw new InvalidOperationException(
@@ -59,17 +63,8 @@ namespace UnityEngine.Experimental.Input
 
             InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
             FinalizeControlHierarchy();
-            m_Device.CallFinishSetupRecursive(this);
-        }
 
-        internal void SetupWithDescription(InternedString layout, InputDeviceDescription deviceDescription, InternedString variants)
-        {
-            InstantiateLayout(layout, variants, new InternedString(), null, null);
-            FinalizeControlHierarchy();
-
-            if (!deviceDescription.empty)
-                m_Device.m_Description = deviceDescription;
-
+            m_Device.m_Description = deviceDescription;
             m_Device.CallFinishSetupRecursive(this);
         }
 

@@ -49,7 +49,8 @@ namespace UnityEngine.Experimental.Input
             // Collect unrecognized devices.
             deviceList.Clear();
             var availableDevices = manager.m_AvailableDevices;
-            for (var i = 0; i < availableDevices.Count; ++i)
+            var availableDeviceCount = manager.m_AvailableDeviceCount;
+            for (var i = 0; i < availableDeviceCount; ++i)
             {
                 var deviceId = availableDevices[i].deviceId;
                 if (manager.TryGetDeviceById(deviceId) != null)

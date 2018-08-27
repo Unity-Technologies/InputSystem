@@ -10,6 +10,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
 
@@ -36,8 +37,7 @@ partial class CoreTests
         }.ToJson());
         InputSystem.Update();
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
 
@@ -55,31 +55,88 @@ partial class CoreTests
         Assert.That(unsupportedDevices[0].interfaceName, Is.EqualTo("Test"));
     }
 
+    // onFindLayoutForDevice allows dynamically injecting new layouts into the system that
+    // are custom-tailored at runtime for the discovered device. Make sure that our domain
+    // reload can restore these.
     [Test]
     [Category("Editor")]
-    public void Editor_RestoringDeviceFromSave_RestoresRelevantDynamicConfiguration()
+    public void Editor_DomainReload_CanRestoreDevicesBuiltWithDynamicallyGeneratedLayouts()
     {
-        var device = InputSystem.AddDevice("Gamepad");
-        InputSystem.SetUsage(device, CommonUsages.LeftHand);
-        ////TODO: set variants
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.MultiAxisController,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 4,
+            elements = new[]
+            {
+                new HID.HIDElementDescriptor { usage = (int)HID.GenericDesktop.X, usagePage = HID.UsagePage.GenericDesktop, reportType = HID.HIDReportType.Input, reportId = 1, reportSizeInBits = 32 },
+            }
+        };
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        testRuntime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            }.ToJson());
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
+
+        InputSystem.SaveAndReset();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        var state = InputSystem.GetSavedState();
+        var manager = InputSystem.s_Manager;
+
+        manager.m_SavedAvailableDevices = state.managerState.availableDevices;
+        manager.m_SavedDeviceStates = state.managerState.devices;
+
+        manager.RestoreDevicesAfterDomainReload();
+
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
+
+        InputSystem.Restore();
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_PreservesUsagesOnDevices()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
+
+        InputSystem.SaveAndReset();
         InputSystem.Restore();
 
         var newDevice = InputSystem.devices.First(x => x is Gamepad);
 
-        Assert.That(newDevice.layout, Is.EqualTo("Gamepad"));
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-        Assert.That(Gamepad.current, Is.SameAs(newDevice));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void TODO_Editor_DomainReload_PreservesCurrentDevices()
+    {
+        Assert.Fail();
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_RestoringStateWillCleanUpEventHooks()
     {
-        InputSystem.Save();
+        InputSystem.SaveAndReset();
 
         var receivedOnEvent = 0;
         var receivedOnDeviceChange = 0;
@@ -104,8 +161,7 @@ partial class CoreTests
         var builder = new TestLayoutBuilder {layoutToLoad = "Gamepad"};
         InputSystem.RegisterLayoutBuilder(() => builder.DoIt(), "TestLayout");
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
         InputSystem.Restore();
 
         var device = InputSystem.AddDevice("TestLayout");
@@ -395,39 +451,32 @@ partial class CoreTests
     public void Editor_CanPrettyPrintJSON()
     {
         var map = new InputActionMap("map");
-        map.AddAction("action", binding: "<Gamepad>/leftStick");
+        var action = map.AddAction("action", binding: "<Gamepad>/leftStick");
         var json = InputActionMap.ToJson(new[] {map});
 
         var prettyJson = StringHelpers.PrettyPrintJSON(json);
 
-        Assert.That(prettyJson, Does.StartWith(
-@"{
+        var expected = string.Format(
+@"{{
     ""maps"" : [
-        {
+        {{
             ""name"" : ""map"",
+            ""id"" : ""{0}"",
             ""actions"" : [
-                {
+                {{
                     ""name"" : ""action"",
+                    ""id"" : ""{1}"",
                     ""expectedControlLayout"" : """",
                     ""bindings"" : [
                     ]
-"));
+", map.id, action.id);
+
+        Assert.That(prettyJson, Does.StartWith(expected));
 
         // Doing it again should not result in a difference.
         prettyJson = StringHelpers.PrettyPrintJSON(prettyJson);
 
-        Assert.That(prettyJson, Does.StartWith(
-@"{
-    ""maps"" : [
-        {
-            ""name"" : ""map"",
-            ""actions"" : [
-                {
-                    ""name"" : ""action"",
-                    ""expectedControlLayout"" : """",
-                    ""bindings"" : [
-                    ]
-"));
+        Assert.That(prettyJson, Does.StartWith(expected));
     }
 
     // We don't want the game code's update mask affect editor code and vice versa.

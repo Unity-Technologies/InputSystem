@@ -11,6 +11,8 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////TODO: text input events
 
+////TODO: remove remoting of layout information
+
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player
 

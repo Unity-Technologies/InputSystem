@@ -348,7 +348,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 array[index] = array[count - 1];
 
             // Destroy current tail.
-            if (count > 1)
+            if (count >= 1)
                 array[count - 1] = default(TValue);
             --count;
         }

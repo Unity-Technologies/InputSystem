@@ -129,6 +129,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Come up with a unique template name. HIDs are required to have product and vendor IDs.
             // We go with the string versions if we have them and with the numeric versions if we don't.
             string layoutName;
+            var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
             if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = string.Format("{0}::{1} {2}", kHIDNamespace, description.manufacturer, description.product);
@@ -140,13 +141,16 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     return null;
                 layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
                     hidDeviceDescriptor.productId);
+
+                deviceMatcher.WithCapability("productId", hidDeviceDescriptor.productId);
+                deviceMatcher.WithCapability("vendorId", hidDeviceDescriptor.vendorId);
             }
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
             var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor};
             InputSystem.RegisterLayoutBuilder(() => layout.Build(),
-                layoutName, baseLayout, InputDeviceMatcher.FromDeviceDescription(description));
+                layoutName, baseLayout, deviceMatcher);
 
             return layoutName;
         }
