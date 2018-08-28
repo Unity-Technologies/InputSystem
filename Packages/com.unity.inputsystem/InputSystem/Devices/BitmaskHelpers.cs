@@ -20,6 +20,9 @@ namespace UnityEngine.Experimental.Input
 
         static public void MarkInBuffer(IntPtr filterBuffer, uint byteOffset, uint sizeInBits, bool state)
         {
+            if (filterBuffer == IntPtr.Zero)
+                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "filterBuffer");
+
             uint sizeRemaining = sizeInBits;
 
             uint* filterIter = (uint*)((filterBuffer.ToInt64() + (Int64)byteOffset));
@@ -43,6 +46,9 @@ namespace UnityEngine.Experimental.Input
 
         static public bool CheckForMaskedValues(IntPtr eventBuffer , IntPtr maskPtr, uint offsetBytes, uint sizeInBits)
         {
+            if (eventBuffer == IntPtr.Zero || maskPtr == IntPtr.Zero)
+                return false;
+
             uint sizeRemaining = sizeInBits;
 
             uint* eventIter = (uint*)eventBuffer.ToPointer();
