@@ -2832,8 +2832,8 @@ partial class CoreTests
             return new FourCC('T', 'E', 'S', 'T');
         }
 
-        [FieldOffset(0)] public ushort button1;
-        [FieldOffset(2)] public ushort button2;
+        [FieldOffset(0)] public short button1;
+        [FieldOffset(2)] public short button2;
     }
 
     [Test]
@@ -2861,7 +2861,7 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = ushort.MaxValue, button2 = 0 });
+        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = short.MaxValue, button2 = 0 });
         InputSystem.Update();
 
         Assert.AreEqual(lastUpdateTime, device1.lastUpdateTime);
@@ -2892,7 +2892,7 @@ partial class CoreTests
 
         Assert.AreEqual(NoisyInputDevice.current, device2);
 
-        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = ushort.MaxValue, button2 = ushort.MaxValue });
+        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = short.MaxValue, button2 = short.MaxValue });
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -2956,12 +2956,12 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<ushort>(device1["first"], ushort.MaxValue);
+        InputSystem.QueueDeltaStateEvent<short>(device1["first"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
 
-        InputSystem.QueueDeltaStateEvent<ushort>(device2["second"], ushort.MaxValue);
+        InputSystem.QueueDeltaStateEvent<short>(device2["second"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -2993,7 +2993,7 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<ushort>(device1["first"], ushort.MaxValue);
+        InputSystem.QueueDeltaStateEvent<short>(device1["first"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -3029,25 +3029,56 @@ partial class CoreTests
                 new NoiseFilter.FilteredElement
                 {
                     controlIndex = 0,
-                    type = NoiseFilter.EElementType.TypeFloat,
-                    offset = 0,
-                    size = 16
+                    type = NoiseFilter.EElementType.TypeFull
                 },
                 new NoiseFilter.FilteredElement
                 {
                     controlIndex = 1,
-                    type = NoiseFilter.EElementType.TypeFloat,
-                    offset = 16,
-                    size = 32
+                    type = NoiseFilter.EElementType.TypeFull
                 },
             }
         };
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = ushort.MaxValue, button2 = ushort.MaxValue });
+        InputSystem.QueueStateEvent(device1, new NoisyInputEventState { button1 = short.MaxValue, button2 = short.MaxValue });
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device2);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void NoiseFilter_CanHandleMultipleProcessors()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""NoisyInputDevice"",
+                ""format"" : ""TEST"",
+                ""controls"" : [
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""FLT"", ""processors"" : ""Invert(),Clamp(min=0.0,max=0.9)""},
+                    { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""FLT"", ""processors"" : ""Clamp(min=0.0,max=0.9),Invert()""}
+                ]
+            }
+        ";
+
+        InputSystem.RegisterControlLayout<NoisyInputDevice>();
+        InputSystem.RegisterControlLayout(json);
+
+        var device1 = InputSystem.AddDevice("MyDevice");
+        var device2 = InputSystem.AddDevice("MyDevice");
+
+        Assert.That(NoisyInputDevice.current == device2);
+
+        InputSystem.QueueDeltaStateEvent<float>(device1["first"], 1.0f);
+        InputSystem.Update();
+
+        Assert.AreEqual(NoisyInputDevice.current, device2);
+
+        InputSystem.QueueDeltaStateEvent<float>(device1["second"], 1.0f);
+        InputSystem.Update();
+
+        Assert.AreEqual(NoisyInputDevice.current, device1);
     }
 }

@@ -254,7 +254,9 @@ partial class CoreTests
             eventPtr =>
         {
             ++receivedCalls;
-            Assert.That(gamepad.leftTrigger.ReadValueFrom(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
+            float value;
+            Assert.IsTrue(gamepad.leftTrigger.ReadValueFrom(eventPtr, out value));
+            Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
@@ -292,7 +294,9 @@ partial class CoreTests
             eventPtr =>
         {
             Assert.That(value, Is.Null);
-            value = ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr);
+            float eventValue;
+            ((AxisControl)device["extraControl"]).ReadValueFrom(eventPtr, out eventValue);
+            value = eventValue;
         };
 
         InputSystem.QueueStateEvent(device, new GamepadState());

@@ -96,8 +96,13 @@ partial class CoreTests
         InputEventPtr eventPtr;
         using (var buffer = StateEvent.From(mouse, out eventPtr))
         {
-            Assert.That(mouse.delta.x.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
-            Assert.That(mouse.delta.y.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
+            float xVal;
+            float yVal;
+            Assert.IsTrue(mouse.delta.x.ReadValueFrom(eventPtr, out xVal));
+            Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
+
+            Assert.IsTrue(mouse.delta.y.ReadValueFrom(eventPtr, out yVal));
+            Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
@@ -108,22 +113,6 @@ partial class CoreTests
             Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));
             Assert.That(stateEventPtr->stateFormat, Is.EqualTo(mouse.stateBlock.format));
         }
-    }
-
-    [Test]
-    [Category("Events")]
-    public void Events_SendingStateEventToDevice_MakesItCurrent()
-    {
-        var gamepad = InputSystem.AddDevice("Gamepad");
-
-        // Adding a device makes it current so add another one so that .current
-        // is not already set to the gamepad we just created.
-        InputSystem.AddDevice("Gamepad");
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
-
-        Assert.That(Gamepad.current, Is.SameAs(gamepad));
     }
 
     [Test]
