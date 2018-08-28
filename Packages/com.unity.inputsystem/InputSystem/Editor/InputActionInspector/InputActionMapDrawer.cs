@@ -5,7 +5,7 @@ using UnityEditor;
 namespace UnityEngine.Experimental.Input.Editor
 {
     [CustomPropertyDrawer(typeof(InputActionMap))]
-    class InputActionMapDrawer : InputDrawersBase
+    internal class InputActionMapDrawer : InputDrawersBase
     {
         protected override void OpenAddMenu(SerializedProperty property)
         {
