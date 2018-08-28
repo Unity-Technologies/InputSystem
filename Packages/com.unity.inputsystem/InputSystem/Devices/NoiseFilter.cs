@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input
                                     InputControl<float> castedControl = control as InputControl<float>;
                                     if (castedControl != null)
                                     {
-                                        float value = castedControl.ReadValueFrom(inputEvent, true);
+                                        float value = castedControl.ReadValueFrom(inputEvent);
                                         if (value > float.Epsilon)
                                             return true;
                                     }
@@ -60,7 +60,7 @@ namespace UnityEngine.Experimental.Input
                                     InputControl<Vector2> castedControl = control as InputControl<Vector2>;
                                     if (castedControl != null)
                                     {
-                                        Vector2 value = castedControl.ReadValueFrom(inputEvent, true);
+                                        Vector2 value = castedControl.ReadValueFrom(inputEvent);
                                         if (Vector2.SqrMagnitude(value) > float.Epsilon)
                                             return true;
 

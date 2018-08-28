@@ -528,17 +528,22 @@ namespace UnityEngine.Experimental.Input
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
         //       but also profits from the fact that remapping is already established in a control hierarchy
         //       and reading from the right offsets is taken care of.
-        public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        public TValue ReadValueFrom(InputEventPtr inputEvent)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == IntPtr.Zero)
                 return ReadDefaultValue();
 
-            var value = ReadRawValueFrom(statePtr);
-            if (process)
-                value = Process(value);
+            return Process(ReadRawValueFrom(statePtr));
+        }
 
-            return value;
+        public TValue ReadRawValueFrom(InputEventPtr inputEvent)
+        {
+            var statePtr = GetStatePtrFromStateEvent(inputEvent);
+            if (statePtr == IntPtr.Zero)
+                return ReadDefaultValue();
+
+            return ReadRawValueFrom(statePtr);
         }
 
         public TValue ReadValueFrom(IntPtr statePtr)
