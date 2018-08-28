@@ -24,8 +24,11 @@ public class SimpleController_UsingEvents : MonoBehaviour
 
             if (eventPtr.IsA<StateEvent>())
             {
-                var leftStick = gamepad.leftStick.ReadValueFrom(eventPtr);
-                var rightStick = gamepad.rightStick.ReadValueFrom(eventPtr);
+                Vector2 leftStick;
+                gamepad.leftStick.ReadValueFrom(eventPtr, out leftStick);
+
+                Vector2 rightStick;
+                gamepad.rightStick.ReadValueFrom(eventPtr, out rightStick);
 
                 m_Move = leftStick;
                 m_Look = rightStick;

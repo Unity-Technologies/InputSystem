@@ -536,29 +536,33 @@ namespace UnityEngine.Experimental.Input
             WriteRawValueInto(buffer, (TValue)value);
         }
 
-        ////REVIEW: this should return a bool and pass the value as an out parameter; bool should indicate
-        ////        whether value is actually coming from the event or just a default value
-        // Read a control value directly from a state event.
-        //
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
         //       but also profits from the fact that remapping is already established in a control hierarchy
         //       and reading from the right offsets is taken care of.
-        public TValue ReadValueFrom(InputEventPtr inputEvent)
+        public bool ReadValueFrom(InputEventPtr inputEvent, out TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == IntPtr.Zero)
-                return ReadDefaultValue();
+            {
+                value = ReadDefaultValue();
+                return false;
+            }
 
-            return Process(ReadRawValueFrom(statePtr));
+            value = ReadValueFrom(statePtr);
+            return true;
         }
 
-        public TValue ReadRawValueFrom(InputEventPtr inputEvent)
+        public bool ReadRawValueFrom(InputEventPtr inputEvent, out TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == IntPtr.Zero)
-                return ReadDefaultValue();
-
-            return ReadRawValueFrom(statePtr);
+            {
+                value = ReadDefaultValue();
+                return false;
+            }
+                
+            value = ReadRawValueFrom(statePtr);
+            return true;
         }
 
         public TValue ReadValueFrom(IntPtr statePtr)
