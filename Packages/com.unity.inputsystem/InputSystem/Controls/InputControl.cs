@@ -409,24 +409,40 @@ namespace UnityEngine.Experimental.Input
             if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                 throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
 
-            ////TODO: support delta events
-            uint stateOffset = 0;
+            uint stateOffset;
+            FourCC stateFormat;
+            uint stateSizeInBytes;
+            IntPtr statePtr;
             if (eventPtr.IsA<DeltaStateEvent>())
             {
                 var deltaEvent = DeltaStateEvent.From(eventPtr);
 
                 // If it's a delta event, we need to subtract the delta state offset if it's not set to the root of the device
                 stateOffset = deltaEvent->stateOffset;
+                stateFormat = deltaEvent->stateFormat;
+                stateSizeInBytes = deltaEvent->deltaStateSizeInBytes;
+                statePtr = deltaEvent->deltaState;
             }
+            else if(eventPtr.IsA<StateEvent>())
+            {
+                var stateEvent = StateEvent.From(eventPtr);
 
-            var stateEvent = StateEvent.From(eventPtr);
+                stateOffset = 0;
+                stateFormat = stateEvent->stateFormat;
+                stateSizeInBytes = stateEvent->stateSizeInBytes;
+                statePtr = stateEvent->state;
+            }
+            else
+            {
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+            }
+            
 
             // Make sure we have a state event compatible with our device. The event doesn't
             // have to be specifically for our device (we don't require device IDs to match) but
             // the formats have to match and the size must be within range of what we're trying
             // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
+            if (stateFormat != device.m_StateBlock.format)
                 throw new InvalidOperationException(
                     string.Format(
                         "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
@@ -436,11 +452,10 @@ namespace UnityEngine.Experimental.Input
             // We need to unsubtract those offsets here.
             stateOffset += device.m_StateBlock.byteOffset;
 
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
             if (m_StateBlock.byteOffset - stateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return IntPtr.Zero;
 
-            return new IntPtr(stateEvent->state.ToInt64() - (int)stateOffset);
+            return new IntPtr(statePtr.ToInt64() - (int)stateOffset);
         }
 
         internal int ResolveDeviceIndex()
