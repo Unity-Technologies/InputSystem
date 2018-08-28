@@ -190,7 +190,7 @@ namespace UnityEngine.Experimental.Input.Editor
         static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
-            var w = new InputControlPicker(pathProperty, pickerTreeViewState)
+            var w = new InputControlPickerPopup(pathProperty, pickerTreeViewState)
             {
                 onPickCallback = onPickCallback
             };

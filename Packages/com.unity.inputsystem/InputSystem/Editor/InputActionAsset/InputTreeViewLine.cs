@@ -55,7 +55,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         public bool renaming;
-        protected SerializedProperty m_SetProperty;
+        protected SerializedProperty m_ElementProperty;
         protected int m_Index;
 
         public virtual bool isDraggable
@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public virtual SerializedProperty elementProperty
         {
-            get { return m_SetProperty.GetArrayElementAtIndex(index); }
+            get { return m_ElementProperty; }
         }
 
         public int index
@@ -83,9 +83,9 @@ namespace UnityEngine.Experimental.Input.Editor
             get { return false; }
         }
 
-        public InputTreeViewLine(SerializedProperty setProperty, int index)
+        public InputTreeViewLine(SerializedProperty elementProperty, int index)
         {
-            m_SetProperty = setProperty;
+            m_ElementProperty = elementProperty;
             m_Index = index;
             depth = 0;
         }
@@ -131,7 +131,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class ActionMapTreeItem : InputTreeViewLine
     {
-        public ActionMapTreeItem(SerializedProperty actionMapProperty, int index) : base(actionMapProperty, index)
+        public ActionMapTreeItem(SerializedProperty actionMapProperty, int index)
+            : base(actionMapProperty, index)
         {
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
             id = displayName.GetHashCode();
@@ -194,15 +195,25 @@ namespace UnityEngine.Experimental.Input.Editor
         public int bindingsCount { get; private set; }
         public string actionName { get; private set; }
 
-        public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty setProperty, int index)
-            : base(setProperty, index)
+        public ActionTreeItem(SerializedProperty actionMapProperty, SerializedProperty actionProperty, int index)
+            : base(actionProperty, index)
         {
             m_ActionMapProperty = actionMapProperty;
             actionName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-            bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
-            bindingsCount = InputActionSerializationHelpers.GetBindingCount(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+            if (m_ActionMapProperty != null)
+            {
+                bindingsStartIndex = InputActionSerializationHelpers.GetBindingsStartIndex(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+                bindingsCount = InputActionSerializationHelpers.GetBindingCount(m_ActionMapProperty.FindPropertyRelative("m_Bindings"), actionName);
+            }
+            else
+            {
+                bindingsStartIndex = 0;
+                bindingsCount = InputActionSerializationHelpers.GetBindingCount(elementProperty.FindPropertyRelative("m_SingletonActionBindings"), actionName);
+            }
             displayName = actionName;
-            var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
+            var actionMapName = "";
+            if (m_ActionMapProperty != null)
+                actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
             id = (actionMapName + "/" + displayName).GetHashCode();
         }
 
@@ -297,11 +308,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
     class BindingTreeItem : InputTreeViewLine
     {
-        SerializedProperty m_BindingProperty;
-
-        public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index) : base(bindingProperty, index)
+        public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
+            : base(bindingProperty, index)
         {
-            m_BindingProperty = bindingProperty;
             path = elementProperty.FindPropertyRelative("path").stringValue;
             groups = elementProperty.FindPropertyRelative("groups").stringValue;
             action = elementProperty.FindPropertyRelative("action").stringValue;
@@ -329,11 +338,6 @@ namespace UnityEngine.Experimental.Input.Editor
         public override bool isDraggable
         {
             get { return true; }
-        }
-
-        public override SerializedProperty elementProperty
-        {
-            get { return m_BindingProperty; }
         }
 
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)

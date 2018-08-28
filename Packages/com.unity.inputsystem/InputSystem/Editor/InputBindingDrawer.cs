@@ -51,7 +51,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (EditorGUI.DropdownButton(pickButtonRect, Contents.pick, FocusType.Keyboard))
             {
                 PopupWindow.Show(pickButtonRect,
-                    new InputControlPicker(pathProperty) {onPickCallback = OnBindingModified});
+                    new InputControlPickerPopup(pathProperty) {onPickCallback = OnBindingModified});
             }
 
             // Modify button.

@@ -9,6 +9,8 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: "properties" seems wrong; these seems to revert to "parameters" specifically
 
+////TODO: nuke "ReorderableReorderable"
+
 namespace UnityEngine.Experimental.Input.Editor.Lists
 {
     class InteractionsReorderableReorderableList : PropertiesReorderableList

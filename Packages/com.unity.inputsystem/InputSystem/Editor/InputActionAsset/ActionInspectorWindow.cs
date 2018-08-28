@@ -49,7 +49,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 var obj = EditorUtility.InstanceIDToObject(instanceId);
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
-                var window = inputManagers.FirstOrDefault(w => w.m_ReferencedObject.Equals(obj));
+                var window = inputManagers.FirstOrDefault(w => w.m_AssetObjectOriginal.Equals(obj));
                 if (window != null)
                 {
                     window.Show();
@@ -66,7 +66,11 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         [SerializeField]
-        Object m_ReferencedObject;
+        Object m_AssetObjectOriginal;
+        [SerializeField]
+        Object m_AssetObjectCopy;
+        [SerializeField]
+        string m_AssetObjectPath;
         [SerializeField]
         TreeViewState m_TreeViewState;
         [SerializeField]
@@ -91,9 +95,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedoCallback;
-            if (m_ReferencedObject == null)
+            if (m_AssetObjectOriginal == null)
                 return;
-            m_SerializedObject = new SerializedObject(m_ReferencedObject);
+
+            // Initialize after assembly reload
+            InitializeObjectReferences();
             InitializeTrees();
         }
 
@@ -104,9 +110,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void SetReferencedObject(Object referencedObject)
         {
-            m_ReferencedObject = referencedObject;
-            m_SerializedObject = new SerializedObject(referencedObject);
+            m_AssetObjectOriginal = referencedObject;
+            InitializeObjectReferences();
             InitializeTrees();
+        }
+
+        void InitializeObjectReferences()
+        {
+            // Check if the asset was modified externally
+            if (m_AssetObjectOriginal == null && !string.IsNullOrEmpty(m_AssetObjectPath))
+            {
+                m_AssetObjectOriginal = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetObjectPath);
+                DestroyImmediate(m_AssetObjectCopy);
+            }
+            m_AssetObjectCopy = Instantiate(m_AssetObjectOriginal);
+            m_AssetObjectCopy.name = m_AssetObjectOriginal.name;
+            m_AssetObjectPath = AssetDatabase.GetAssetPath(m_AssetObjectOriginal);
+            m_SerializedObject = new SerializedObject(m_AssetObjectCopy);
         }
 
         void OnUndoRedoCallback()
@@ -139,17 +159,14 @@ namespace UnityEngine.Experimental.Input.Editor
 
         void InitializeTrees()
         {
-            if (m_SerializedObject != null)
-            {
-                m_SearchField = new SearchField();
-                m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
-                m_TreeView.OnSelectionChanged = OnSelectionChanged;
-                m_TreeView.OnContextClick = OnContextClick;
-                m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
-                if (m_PickerTreeViewState == null)
-                    m_PickerTreeViewState = new TreeViewState();
-                LoadPropertiesForSelection();
-            }
+            m_SearchField = new SearchField();
+            m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
+            m_TreeView.OnSelectionChanged = OnSelectionChanged;
+            m_TreeView.OnContextClick = OnContextClick;
+            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
+            if (m_PickerTreeViewState == null)
+                m_PickerTreeViewState = new TreeViewState();
+            LoadPropertiesForSelection();
         }
 
         internal void Apply()
@@ -162,7 +179,8 @@ namespace UnityEngine.Experimental.Input.Editor
         void SaveChangesToAsset()
         {
             ////TODO: has to be made to work with version control
-            var asset = (InputActionAsset)m_ReferencedObject;
+            Debug.Assert(!string.IsNullOrEmpty(m_AssetObjectPath));
+            var asset = (InputActionAsset)m_AssetObjectCopy;
             var path = AssetDatabase.GetAssetPath(asset);
             var json = asset.ToJson();
             var prettyJson = StringHelpers.PrettyPrintJSON(json);
@@ -184,16 +202,16 @@ namespace UnityEngine.Experimental.Input.Editor
                 var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
                 foreach (var inputWindow in inputManagers)
                 {
+                    inputWindow.InitializeObjectReferences();
+                    inputWindow.InitializeTrees();
                     inputWindow.Repaint();
+                    ActiveEditorTracker.sharedTracker.ForceRebuild();
                 }
             }
         }
 
         void OnGUI()
         {
-            if (m_SerializedObject == null)
-                return;
-
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();

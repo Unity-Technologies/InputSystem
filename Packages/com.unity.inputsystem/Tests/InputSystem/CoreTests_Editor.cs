@@ -13,6 +13,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
+using Object = System.Object;
 
 partial class CoreTests
 {
