@@ -53,5 +53,4 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             };
         }
     }
-
 }

@@ -1662,7 +1662,7 @@ namespace UnityEngine.Experimental.Input
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
-#endif            
+#endif
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)

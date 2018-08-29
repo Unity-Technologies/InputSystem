@@ -40,9 +40,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
             };
 
             //TODO TOMB: There must be a more effective, bulk copy operation for fixed buffers than this.
-            //Replace if found.  
+            //Replace if found.
             SendBufferedHapticCommand* commandPtr = &newCommand;
-            fixed (byte* src = rumbleBuffer)
+            fixed(byte* src = rumbleBuffer)
             {
                 for (int cpyIndex = 0; cpyIndex < rumbleBufferSize; cpyIndex++)
                     commandPtr->buffer[cpyIndex] = src[cpyIndex];

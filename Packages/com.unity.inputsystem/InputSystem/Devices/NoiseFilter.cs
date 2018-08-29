@@ -72,27 +72,27 @@ namespace UnityEngine.Experimental.Input
                     switch (type)
                     {
                         case EElementType.TypeFloat:
+                        {
+                            InputControl<float> castedControl = control as InputControl<float>;
+                            if (castedControl != null)
                             {
-                                InputControl<float> castedControl = control as InputControl<float>;
-                                if (castedControl != null)
-                                {
-                                    float value;
-                                    if (castedControl.ReadValueFrom(inputEvent, out value) && Mathf.Abs(value) > float.Epsilon)
-                                        return true;
-                                }
+                                float value;
+                                if (castedControl.ReadValueFrom(inputEvent, out value) && Mathf.Abs(value) > float.Epsilon)
+                                    return true;
                             }
-                            break;
+                        }
+                        break;
                         case EElementType.TypeVec2:
+                        {
+                            InputControl<Vector2> castedControl = control as InputControl<Vector2>;
+                            if (castedControl != null)
                             {
-                                InputControl<Vector2> castedControl = control as InputControl<Vector2>;
-                                if (castedControl != null)
-                                {
-                                    Vector2 value;
-                                    if (castedControl.ReadValueFrom(inputEvent, out value) && Vector2.SqrMagnitude(value) > float.Epsilon)
-                                        return true;
-                                }
+                                Vector2 value;
+                                if (castedControl.ReadValueFrom(inputEvent, out value) && Vector2.SqrMagnitude(value) > float.Epsilon)
+                                    return true;
                             }
-                            break;
+                        }
+                        break;
                     }
                 }
 
@@ -109,10 +109,10 @@ namespace UnityEngine.Experimental.Input
             FilteredElement* elementsToAdd = stackalloc FilteredElement[device.allControls.Count];
             int elementCount = 0;
             ReadOnlyArray<InputControl> controls = device.allControls;
-            for(int i = 0; i < controls.Count; i++)
+            for (int i = 0; i < controls.Count; i++)
             {
                 InputControl control = controls[i];
-                if(control.noisy)
+                if (control.noisy)
                 {
                     FilteredElement newElement;
                     newElement.controlIndex = i;
@@ -123,16 +123,16 @@ namespace UnityEngine.Experimental.Input
                 else
                 {
                     InputControl<float> controlAsFloat = control as InputControl<float>;
-                    if(controlAsFloat != null && controlAsFloat.processors != null)
+                    if (controlAsFloat != null && controlAsFloat.processors != null)
                     {
-                        if(controlAsFloat.processors != null)
+                        if (controlAsFloat.processors != null)
                         {
                             FilteredElement newElement;
                             newElement.controlIndex = i;
                             newElement.type = EElementType.TypeFloat;
                             InputStateBlock stateblock = control.stateBlock;
                             elementsToAdd[elementCount++] = newElement;
-                        }  
+                        }
                     }
                     else
                     {
@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input
                             newElement.controlIndex = i;
                             newElement.type = EElementType.TypeVec2;
                             InputStateBlock stateblock = control.stateBlock;
-                            elementsToAdd[elementCount++] = newElement;                    
+                            elementsToAdd[elementCount++] = newElement;
                         }
                     }
                 }
@@ -197,7 +197,6 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-
         /// <summary>
         /// Checks an Input Event for any significant changes that would be considered user activity.
         /// </summary>
@@ -220,7 +219,7 @@ namespace UnityEngine.Experimental.Input
             if (noiseFilterPtr != IntPtr.Zero)
             {
                 IntPtr ptrToEventState = IntPtr.Zero;
-                if(inputEvent.IsA<StateEvent>())
+                if (inputEvent.IsA<StateEvent>())
                 {
                     StateEvent* stateEvent = StateEvent.From(inputEvent);
                     ptrToEventState = stateEvent->state;
@@ -231,7 +230,7 @@ namespace UnityEngine.Experimental.Input
                     ptrToEventState = stateEvent->deltaState;
                 }
 
-                if(ptrToEventState != IntPtr.Zero)
+                if (ptrToEventState != IntPtr.Zero)
                 {
                     result = BitmaskHelpers.CheckForMaskedValues(ptrToEventState, noiseFilterPtr, offset, sizeInbytes * 8);
                     for (int i = 0; i < elements.Length && !result; i++)
@@ -240,7 +239,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
             }
-                
+
             return result;
         }
     }

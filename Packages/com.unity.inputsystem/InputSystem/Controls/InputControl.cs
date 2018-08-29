@@ -423,7 +423,7 @@ namespace UnityEngine.Experimental.Input
                 stateSizeInBytes = deltaEvent->deltaStateSizeInBytes;
                 statePtr = deltaEvent->deltaState;
             }
-            else if(eventPtr.IsA<StateEvent>())
+            else if (eventPtr.IsA<StateEvent>())
             {
                 var stateEvent = StateEvent.From(eventPtr);
 
@@ -436,7 +436,7 @@ namespace UnityEngine.Experimental.Input
             {
                 throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
             }
-            
+
 
             // Make sure we have a state event compatible with our device. The event doesn't
             // have to be specifically for our device (we don't require device IDs to match) but
@@ -560,7 +560,7 @@ namespace UnityEngine.Experimental.Input
                 value = ReadDefaultValue();
                 return false;
             }
-                
+
             value = ReadRawValueFrom(statePtr);
             return true;
         }

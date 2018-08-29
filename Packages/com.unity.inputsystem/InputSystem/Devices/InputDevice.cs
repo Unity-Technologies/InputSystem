@@ -195,7 +195,7 @@ namespace UnityEngine.Experimental.Input
             }
             set
             {
-                if(value != m_NoiseFilter)
+                if (value != m_NoiseFilter)
                 {
                     if (value == null)
                         m_NoiseFilter.Reset(this);
@@ -203,7 +203,7 @@ namespace UnityEngine.Experimental.Input
                         value.Apply(this);
 
                     m_NoiseFilter = value;
-                }               
+                }
             }
         }
 

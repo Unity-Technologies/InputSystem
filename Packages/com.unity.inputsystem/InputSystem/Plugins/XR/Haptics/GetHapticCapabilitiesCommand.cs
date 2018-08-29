@@ -42,7 +42,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + (sizeof(uint) * 2))]
         public uint maxBufferSize;
 
-        public HapticCapabilities capabilities 
+        public HapticCapabilities capabilities
         {
             get
             {

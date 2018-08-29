@@ -844,7 +844,7 @@ partial class CoreTests
 
         unsafe
         {
-            fixed (byte* bufferPtr = buffer)
+            fixed(byte* bufferPtr = buffer)
             {
                 var statePtr = (GamepadState*)bufferPtr;
                 Assert.That(statePtr->leftStick.x, Is.EqualTo(0.123).Within(0.00001));
