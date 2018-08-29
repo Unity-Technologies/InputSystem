@@ -1,13 +1,18 @@
 #if UNITY_EDITOR
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    // Imports an InputActionAsset from JSON.
-    // Can generate code wrappers for the contained action sets as a convenience.
-    // Will not overwrite existing wrappers except if the generated code actually differs.
+    /// <summary>
+    /// Imports an <see cref="InputActionAsset"/> from JSON.
+    /// </summary>
+    /// <remarks>
+    /// Can generate code wrappers for the contained action sets as a convenience.
+    /// Will not overwrite existing wrappers except if the generated code actually differs.
+    /// </remarks>
     [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
@@ -20,23 +25,45 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            ////REVIEW: need to check with version control here?
+            // Read file.
+            string text;
+            try
+            {
+                text = File.ReadAllText(ctx.assetPath);
+            }
+            catch (Exception exception)
+            {
+                ctx.LogImportError(string.Format("Could read file '{0}' ({1})",
+                    ctx.assetPath, exception));
+                return;
+            }
+
             // Parse JSON.
-            var text = File.ReadAllText(ctx.assetPath);
-            var sets = InputActionMap.FromJson(text);
-            ////TODO: catch errors
+            InputActionMap[] maps;
+            try
+            {
+                maps = InputActionMap.FromJson(text);
+            }
+            catch (Exception exception)
+            {
+                ctx.LogImportError(string.Format("Could not parse input actions in JSON format from '{0}' ({1})",
+                    ctx.assetPath, exception));
+                return;
+            }
 
             ////TODO: make sure action names are unique
 
             // Create asset.
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.m_ActionMaps = sets;
+            asset.m_ActionMaps = maps;
             ctx.AddObjectToAsset("<root>", asset);
             ctx.SetMainObject(asset);
 
             // Create subasset for each action.
-            for (var i = 0; i < sets.Length; ++i)
+            for (var i = 0; i < maps.Length; ++i)
             {
-                var set = sets[i];
+                var set = maps[i];
                 var haveSetName = !string.IsNullOrEmpty(set.name);
 
                 foreach (var action in set.actions)
@@ -75,12 +102,15 @@ namespace UnityEngine.Experimental.Input.Editor
                     className = m_WrapperClassName
                 };
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, sets, options))
+                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, options))
                 {
                     // Inform database that we modified a source asset *during* import.
                     AssetDatabase.ImportAsset(wrapperFilePath);
                 }
             }
+
+            // Refresh editors.
+            ActionInspectorWindow.RefreshAll();
         }
 
         ////REVIEW: actually pre-populate with some stuff?

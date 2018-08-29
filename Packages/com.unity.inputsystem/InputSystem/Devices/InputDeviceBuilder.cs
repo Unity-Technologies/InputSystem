@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input
     /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
-    /// <c>new</c>'d directlty.
+    /// <c>new</c>'d directly.
     ///
     /// Also computes a final state layout when setup is finished.
     ///

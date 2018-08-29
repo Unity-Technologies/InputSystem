@@ -7,7 +7,7 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    abstract class InputTreeViewLine : TreeViewItem
+    internal abstract class InputTreeViewLine : TreeViewItem
     {
         protected static class Styles
         {
@@ -21,36 +21,41 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle blueRect = new GUIStyle("Label");
             public static GUIStyle pinkRect = new GUIStyle("Label");
 
-            static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
-            static string ResourcesPath
-            {
-                get
-                {
-                    if (EditorGUIUtility.isProSkin)
-                        return SharedResourcesPath + "pro/";
-                    return SharedResourcesPath + "personal/";
-                }
-            }
-
             static Styles()
             {
-                backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
+                backgroundStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
 
-                actionItemRowStyle.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "row.png");
+                actionItemRowStyle.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(ActionInspectorWindow.Styles.ResourcesPath + "row.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onFocused.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "rowSelected.png");
+                actionItemRowStyle.onFocused.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.ResourcesPath + "rowSelected.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
-                actionItemRowStyle.onNormal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "rowSelected.png");
+                actionItemRowStyle.onNormal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.ResourcesPath + "rowSelected.png");
                 actionItemRowStyle.border = new RectOffset(3, 3, 3, 3);
 
                 actionSetItemStyle.alignment = TextAnchor.MiddleLeft;
                 actionItemLabelStyle.alignment = TextAnchor.MiddleLeft;
 
-                yellowRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "yellow.png");
-                orangeRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "orange.png");
-                greenRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "green.png");
-                blueRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "blue.png");
-                pinkRect.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(SharedResourcesPath + "pink.png");
+                yellowRect.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + "yellow.png");
+                orangeRect.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + "orange.png");
+                greenRect.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + "green.png");
+                blueRect.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + "blue.png");
+                pinkRect.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.SharedResourcesPath + "pink.png");
             }
         }
 
@@ -129,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class ActionMapTreeItem : InputTreeViewLine
+    internal class ActionMapTreeItem : InputTreeViewLine
     {
         public ActionMapTreeItem(SerializedProperty actionMapProperty, int index)
             : base(actionMapProperty, index)
@@ -181,15 +186,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override string SerializeToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
             return builder.ToString();
         }
     }
 
-    class ActionTreeItem : InputTreeViewLine
+    internal class ActionTreeItem : InputTreeViewLine
     {
-        SerializedProperty m_ActionMapProperty;
+        private SerializedProperty m_ActionMapProperty;
 
         public int bindingsStartIndex { get; private set; }
         public int bindingsCount { get; private set; }
@@ -256,7 +261,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class CompositeGroupTreeItem : BindingTreeItem
+    internal class CompositeGroupTreeItem : BindingTreeItem
     {
         public CompositeGroupTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
@@ -286,7 +291,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class CompositeTreeItem : BindingTreeItem
+    internal class CompositeTreeItem : BindingTreeItem
     {
         public CompositeTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(actionMapName, bindingProperty, index)
@@ -306,7 +311,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class BindingTreeItem : InputTreeViewLine
+    internal class BindingTreeItem : InputTreeViewLine
     {
         public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(bindingProperty, index)

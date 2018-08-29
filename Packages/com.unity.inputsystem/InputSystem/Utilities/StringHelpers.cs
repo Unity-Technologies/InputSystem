@@ -297,6 +297,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return text;
         }
 
+        ////TODO: give option to remove empty/default-valued fields
         /// <summary>
         /// Take a string in JSON format and return a pretty-printed version of it.
         /// </summary>

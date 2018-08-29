@@ -1387,6 +1387,7 @@ namespace UnityEngine.Experimental.Input
                     ResetUpdateMask();
                     break;
 
+                ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
                 case PlayModeStateChange.EnteredEditMode:
                     ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                     ////        InputDevices that have been created with AddDevice<> during play mode?

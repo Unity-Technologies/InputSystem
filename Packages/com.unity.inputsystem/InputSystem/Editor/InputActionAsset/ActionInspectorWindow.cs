@@ -8,22 +8,23 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class ActionInspectorWindow : EditorWindow
+    internal class ActionInspectorWindow : EditorWindow
     {
-        static class Styles
+        public static class Styles
         {
             public static GUIStyle actionTreeBackground = new GUIStyle("Label");
             public static GUIStyle propertiesBackground = new GUIStyle("Label");
             public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
 
-            static string ResourcesPath
+            ////TODO: move to a better place
+            public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
+            public static string ResourcesPath
             {
                 get
                 {
-                    var path = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
                     if (EditorGUIUtility.isProSkin)
-                        return path + "pro/";
-                    return path + "personal/";
+                        return SharedResourcesPath + "pro/";
+                    return SharedResourcesPath + "personal/";
                 }
             }
 
@@ -45,52 +46,78 @@ namespace UnityEngine.Experimental.Input.Editor
         public static bool OnOpenAsset(int instanceId, int line)
         {
             var path = AssetDatabase.GetAssetPath(instanceId);
-            if (path.EndsWith(k_FileExtension))
+            if (!path.EndsWith(k_FileExtension))
+                return false;
+
+            var obj = EditorUtility.InstanceIDToObject(instanceId) as InputActionAsset;
+            if (obj == null)
+                return false;
+
+            // See if we have an existing editor window that has the asset open.
+            var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
+            var window = inputManagers.FirstOrDefault(w => w.m_AssetObjectOriginal.Equals(obj));
+            if (window != null)
             {
-                var obj = EditorUtility.InstanceIDToObject(instanceId);
-                var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
-                var window = inputManagers.FirstOrDefault(w => w.m_AssetObjectOriginal.Equals(obj));
-                if (window != null)
-                {
-                    window.Show();
-                    window.Focus();
-                    return true;
-                }
-                window = CreateInstance<ActionInspectorWindow>();
-                window.titleContent = new GUIContent(obj.name + " (Input Manager)");
-                window.SetReferencedObject(obj);
                 window.Show();
+                window.Focus();
                 return true;
             }
-            return false;
+
+            // No, so create a new window.
+            window = CreateInstance<ActionInspectorWindow>();
+            window.titleContent = new GUIContent(obj.name + " (Input Manager)");
+            window.SetAsset(obj);
+            window.Show();
+
+            return true;
         }
 
-        [SerializeField]
-        Object m_AssetObjectOriginal;
-        [SerializeField]
-        Object m_AssetObjectCopy;
-        [SerializeField]
-        string m_AssetObjectPath;
-        [SerializeField]
-        TreeViewState m_TreeViewState;
-        [SerializeField]
-        TreeViewState m_PickerTreeViewState;
+        public static void RefreshAll()
+        {
+            if (s_RefreshPending)
+                return;
 
-        InputActionListTreeView m_TreeView;
-        SerializedObject m_SerializedObject;
-        InputBindingPropertiesView m_PropertyView;
-        CopyPasteUtility m_CopyPasteUtility;
-        SearchField m_SearchField;
-        string m_SearchText;
-        const string k_FileExtension = ".inputactions";
+            // We don't want to refresh right away but rather wait for the next editor update
+            // to then do one pass of refreshing action editor windows.
+            EditorApplication.delayCall += RefreshAllInternal;
+            s_RefreshPending = true;
+        }
 
-        GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
-        GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
-        GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
-        GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
+        private static void RefreshAllInternal()
+        {
+            var windows = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
+            foreach (var window in windows)
+                window.Refresh();
 
+            ////REVIEW: why do we need to do this? comment!
+            ActiveEditorTracker.sharedTracker.ForceRebuild();
+            s_RefreshPending = false;
+        }
+
+        private static bool s_RefreshPending;
+
+        [SerializeField] private InputActionAsset m_AssetObjectOriginal;
+        [SerializeField] private InputActionAsset m_AssetObjectCopy;
+        [SerializeField] private string m_AssetPath;
+        [SerializeField] private string m_AssetJson;
+        [SerializeField] private TreeViewState m_TreeViewState;
+        [SerializeField] private TreeViewState m_PickerTreeViewState;
+
+        private InputActionListTreeView m_TreeView;
+        private SerializedObject m_SerializedObject;
+        private InputBindingPropertiesView m_PropertyView;
+        private CopyPasteUtility m_CopyPasteUtility;
+        private SearchField m_SearchField;
+        private string m_SearchText;
+
+        private const string k_FileExtension = ".inputactions";
+
+        private GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        private GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
+        private GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
+        private GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
+        private GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
+        private GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
 
         public void OnEnable()
         {
@@ -108,28 +135,42 @@ namespace UnityEngine.Experimental.Input.Editor
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
         }
 
-        void SetReferencedObject(Object referencedObject)
+        private void SetAsset(InputActionAsset referencedObject)
         {
             m_AssetObjectOriginal = referencedObject;
             InitializeObjectReferences();
             InitializeTrees();
         }
 
-        void InitializeObjectReferences()
+        private void InitializeObjectReferences()
         {
             // Check if the asset was modified externally
-            if (m_AssetObjectOriginal == null && !string.IsNullOrEmpty(m_AssetObjectPath))
+            if (m_AssetObjectOriginal == null && !string.IsNullOrEmpty(m_AssetPath))
             {
-                m_AssetObjectOriginal = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetObjectPath);
+                m_AssetObjectOriginal = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
                 DestroyImmediate(m_AssetObjectCopy);
             }
+
             m_AssetObjectCopy = Instantiate(m_AssetObjectOriginal);
             m_AssetObjectCopy.name = m_AssetObjectOriginal.name;
-            m_AssetObjectPath = AssetDatabase.GetAssetPath(m_AssetObjectOriginal);
+            m_AssetPath = AssetDatabase.GetAssetPath(m_AssetObjectOriginal);
+            m_AssetJson = null;
             m_SerializedObject = new SerializedObject(m_AssetObjectCopy);
         }
 
-        void OnUndoRedoCallback()
+        private void InitializeTrees()
+        {
+            m_SearchField = new SearchField();
+            m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
+            m_TreeView.OnSelectionChanged = OnSelectionChanged;
+            m_TreeView.OnContextClick = OnContextClick;
+            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
+            if (m_PickerTreeViewState == null)
+                m_PickerTreeViewState = new TreeViewState();
+            LoadPropertiesForSelection();
+        }
+
+        private void OnUndoRedoCallback()
         {
             if (m_TreeView == null)
                 return;
@@ -138,12 +179,12 @@ namespace UnityEngine.Experimental.Input.Editor
             SaveChangesToAsset();
         }
 
-        internal void OnSelectionChanged()
+        private void OnSelectionChanged()
         {
             LoadPropertiesForSelection();
         }
 
-        void LoadPropertiesForSelection()
+        private void LoadPropertiesForSelection()
         {
             m_PropertyView = null;
             if (m_TreeView.GetSelectedProperty() == null)
@@ -157,58 +198,48 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void InitializeTrees()
-        {
-            m_SearchField = new SearchField();
-            m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
-            m_TreeView.OnSelectionChanged = OnSelectionChanged;
-            m_TreeView.OnContextClick = OnContextClick;
-            m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
-            if (m_PickerTreeViewState == null)
-                m_PickerTreeViewState = new TreeViewState();
-            LoadPropertiesForSelection();
-        }
-
-        internal void Apply()
+        private void Apply()
         {
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
             SaveChangesToAsset();
         }
 
-        void SaveChangesToAsset()
+        private void Refresh()
+        {
+            // See if the data has actually changed.
+            var newJson = StringHelpers.PrettyPrintJSON(m_AssetObjectCopy.ToJson());
+            if (newJson == m_AssetJson)
+                return;
+
+            InitializeObjectReferences();
+            InitializeTrees();
+            Repaint();
+
+            m_AssetJson = newJson;
+        }
+
+        ////FIXME: dirties the scene
+        private void SaveChangesToAsset()
         {
             ////TODO: has to be made to work with version control
-            Debug.Assert(!string.IsNullOrEmpty(m_AssetObjectPath));
-            var asset = (InputActionAsset)m_AssetObjectCopy;
+            Debug.Assert(!string.IsNullOrEmpty(m_AssetPath));
+
+            // Update JSON.
+            var asset = m_AssetObjectCopy;
             var json = asset.ToJson();
-            var prettyJson = StringHelpers.PrettyPrintJSON(json);
-            var existingJson = File.ReadAllText(m_AssetObjectPath);
-            if (prettyJson != existingJson)
+            m_AssetJson = StringHelpers.PrettyPrintJSON(json);
+
+            // Write out, if changed.
+            var existingJson = File.ReadAllText(m_AssetPath);
+            if (m_AssetJson != existingJson)
             {
-                File.WriteAllText(m_AssetObjectPath, prettyJson);
-                AssetDatabase.Refresh();
+                File.WriteAllText(m_AssetPath, m_AssetJson);
+                AssetDatabase.ImportAsset(m_AssetPath);
             }
         }
 
-        class AssetChangeWatch : AssetPostprocessor
-        {
-            static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
-            {
-                if (!importedAssets.Any(s => s.EndsWith(k_FileExtension)))
-                    return;
-                var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
-                foreach (var inputWindow in inputManagers)
-                {
-                    inputWindow.InitializeObjectReferences();
-                    inputWindow.InitializeTrees();
-                    inputWindow.Repaint();
-                    ActiveEditorTracker.sharedTracker.ForceRebuild();
-                }
-            }
-        }
-
-        void OnGUI()
+        public void OnGUI()
         {
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
@@ -235,7 +266,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             if (Event.current.type == EventType.ValidateCommand)
             {
-                if (m_CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
                 {
                     Event.current.Use();
                 }
@@ -246,7 +277,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void DrawMainTree()
+        private void DrawMainTree()
         {
             EditorGUILayout.BeginVertical(Styles.actionTreeBackground);
             GUILayout.FlexibleSpace();
@@ -281,14 +312,14 @@ namespace UnityEngine.Experimental.Input.Editor
             m_TreeView.OnGUI(treeViewRect);
         }
 
-        void ShowAddMenu()
+        private void ShowAddMenu()
         {
             var menu = new GenericMenu();
             AddAddOptionsToMenu(menu, false);
             menu.ShowAsContext();
         }
 
-        void AddAddOptionsToMenu(GenericMenu menu, bool isContextMenu)
+        private void AddAddOptionsToMenu(GenericMenu menu, bool isContextMenu)
         {
             var hasSelection = m_TreeView.HasSelection();
             var canAddBinding = false;
@@ -335,7 +366,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void OnContextClick(SerializedProperty property)
+        private void OnContextClick(SerializedProperty property)
         {
             var menu = new GenericMenu();
             AddAddOptionsToMenu(menu, true);
@@ -343,34 +374,34 @@ namespace UnityEngine.Experimental.Input.Editor
             menu.ShowAsContext();
         }
 
-        void OnAddCompositeBinding(object compositeName)
+        private void OnAddCompositeBinding(object compositeName)
         {
             var actionLine = GetSelectedActionLine();
             actionLine.AppendCompositeBinding((string)compositeName);
             Apply();
         }
 
-        void OnAddBinding()
+        private void OnAddBinding()
         {
             var actionLine = GetSelectedActionLine();
             actionLine.AppendBinding();
             Apply();
         }
 
-        void OnAddAction()
+        private void OnAddAction()
         {
             var actionMapLine = GetSelectedActionMapLine();
             actionMapLine.AddAction();
             Apply();
         }
 
-        void OnAddActionMap()
+        private void OnAddActionMap()
         {
             InputActionSerializationHelpers.AddActionMap(m_SerializedObject);
             Apply();
         }
 
-        ActionTreeItem GetSelectedActionLine()
+        private ActionTreeItem GetSelectedActionLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
@@ -384,7 +415,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return null;
         }
 
-        ActionMapTreeItem GetSelectedActionMapLine()
+        private ActionMapTreeItem GetSelectedActionMapLine()
         {
             TreeViewItem selectedRow = m_TreeView.GetSelectedRow();
             do
@@ -398,7 +429,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return null;
         }
 
-        void DrawProperties()
+        private void DrawProperties()
         {
             EditorGUILayout.BeginVertical(Styles.propertiesBackground, GUILayout.Width(position.width / 2));
 

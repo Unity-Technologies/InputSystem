@@ -1,5 +1,8 @@
 using UnityEngine.Experimental.Input.Utilities;
 
+////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
+////        not just be about composing multiple bindings?
+
 ////TODO: rename to "IInputCompoundBinding"
 
 ////REVIEW: should composites be able to nest?
