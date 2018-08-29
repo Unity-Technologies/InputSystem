@@ -51,7 +51,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var device = InputSystem.AddDevice("MyDevice");
         Assert.IsTrue(device["first"].noisy);
@@ -73,8 +73,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<NoisyInputDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<NoisyInputDevice>();
+        InputSystem.RegisterLayout(json);
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
@@ -105,8 +105,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<NoisyInputDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<NoisyInputDevice>();
+        InputSystem.RegisterLayout(json);
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
@@ -136,7 +136,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
 
@@ -169,8 +169,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<NoisyInputDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<NoisyInputDevice>();
+        InputSystem.RegisterLayout(json);
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
@@ -204,8 +204,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<NoisyInputDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<NoisyInputDevice>();
+        InputSystem.RegisterLayout(json);
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
@@ -236,8 +236,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<NoisyInputDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<NoisyInputDevice>();
+        InputSystem.RegisterLayout(json);
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
@@ -284,8 +284,8 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout<NoisyInputDevice>();
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout<NoisyInputDevice>();
+        InputSystem.RegisterLayout(json);
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
