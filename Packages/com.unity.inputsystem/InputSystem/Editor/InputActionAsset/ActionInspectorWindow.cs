@@ -181,15 +181,13 @@ namespace UnityEngine.Experimental.Input.Editor
             ////TODO: has to be made to work with version control
             Debug.Assert(!string.IsNullOrEmpty(m_AssetObjectPath));
             var asset = (InputActionAsset)m_AssetObjectCopy;
-            var path = AssetDatabase.GetAssetPath(asset);
             var json = asset.ToJson();
             var prettyJson = StringHelpers.PrettyPrintJSON(json);
-            var existingJson = File.ReadAllText(path);
+            var existingJson = File.ReadAllText(m_AssetObjectPath);
             if (prettyJson != existingJson)
             {
-                File.WriteAllText(path, prettyJson);
-                ////FIXME: this needs to trigger a refresh but that breaks the entire asset handling logic in here
-                //AssetDatabase.Refresh();
+                File.WriteAllText(m_AssetObjectPath, prettyJson);
+                AssetDatabase.Refresh();
             }
         }
 

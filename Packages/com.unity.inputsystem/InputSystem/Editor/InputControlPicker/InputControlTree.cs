@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow restricting to certain types of controls
 
@@ -16,8 +17,8 @@ namespace UnityEngine.Experimental.Input.Editor
 {
     internal class InputControlTree : TreeView
     {
-        InputControlPickerPopup m_ParentWindow;
-        Action<string> m_OnSelected;
+        private InputControlPickerPopup m_ParentWindow;
+        private Action<string> m_OnSelected;
 
         public InputControlTree(TreeViewState state, InputControlPickerPopup parentWindow, Action<string> onSelected)
             : base(state)
@@ -29,10 +30,22 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override bool DoesItemMatchSearch(TreeViewItem treeViewItem, string search)
         {
-            if (treeViewItem.hasChildren)
+            ////REVIEW: why are we not ending up with the searchable tree view items when TreeView calls us here?
+            var item = treeViewItem as InputControlTreeViewItem;
+            if (item == null || !item.selectable)
                 return false;
-            search = search.ToLower();
-            if (treeViewItem.displayName.ToLower().Contains(search))
+
+            var searchableItem = item.GetSearchableItem();
+
+            // Break up search into multiple tokens if there's whitespace.
+            var hasWhitespace = search.Any(char.IsWhiteSpace);
+            if (hasWhitespace)
+            {
+                var searchElements = search.Split(char.IsWhiteSpace);
+                return searchElements.All(element => searchableItem.displayName.ToLower().Contains(element.ToLower()));
+            }
+
+            if (searchableItem.displayName.ToLower().Contains(search.ToLower()))
                 return true;
             return false;
         }
@@ -42,7 +55,12 @@ namespace UnityEngine.Experimental.Input.Editor
             if (hasSearch)
             {
                 var rows = base.BuildRows(root);
-                return rows.Cast<InputControlTreeViewItem>().Select(item => item.GetSearchableItem()).OrderBy(a => a.displayName).ToList();
+                ////TODO: order such that each device appears as a single block with all matches controls
+                var result = rows.Cast<InputControlTreeViewItem>().Where(x => x.selectable)
+                    .Select(x => x.GetSearchableItem())
+                    .OrderBy(a => a.displayName).ToList();
+
+                return result;
             }
             return base.BuildRows(root);
         }
@@ -128,22 +146,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 id = "Abstract Devices".GetHashCode()
             };
             foreach (var deviceLayout in EditorInputControlLayoutCache.allDeviceLayouts.OrderBy(a => a.name))
-            {
-                // Skip layouts that don't have any controls (like the "HID" layout).
-                if (deviceLayout.controls.Count == 0)
-                    continue;
-
-                var deviceGroup = new DeviceGroupTreeViewItem(deviceLayout);
-                mainGroup.AddChild(deviceGroup);
-                ParseDeviceLayout(deviceLayout, deviceGroup, "", deviceLayout.name, null);
-
-                foreach (var commonUsage in deviceLayout.commonUsages)
-                {
-                    var commonUsageGroup = new DeviceGroupTreeViewItem(deviceLayout, commonUsage);
-                    mainGroup.AddChild(commonUsageGroup);
-                    ParseDeviceLayout(deviceLayout, commonUsageGroup, "", deviceLayout.name, commonUsage);
-                }
-            }
+                AddDeviceTreeItem(deviceLayout, mainGroup);
             return mainGroup;
         }
 
@@ -157,57 +160,71 @@ namespace UnityEngine.Experimental.Input.Editor
             };
             foreach (var layout in EditorInputControlLayoutCache.allProductLayouts.OrderBy(a => a.name))
             {
-                var rootBaseLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
-                if (string.IsNullOrEmpty(rootBaseLayoutName))
-                    rootBaseLayoutName = "Other";
+                var rootLayoutName = InputControlLayout.s_Layouts.GetRootLayoutName(layout.name).ToString();
+                if (string.IsNullOrEmpty(rootLayoutName))
+                    rootLayoutName = "Other";
                 else
-                    rootBaseLayoutName += "s";
+                    rootLayoutName = rootLayoutName.GetPlural();
 
-                var rootBaseGroup = mainGroup.hasChildren
-                    ? mainGroup.children.FirstOrDefault(x => x.displayName == rootBaseLayoutName)
+                var rootLayoutGroup = mainGroup.hasChildren
+                    ? mainGroup.children.FirstOrDefault(x => x.displayName == rootLayoutName)
                     : null;
-                if (rootBaseGroup == null)
+                if (rootLayoutGroup == null)
                 {
-                    rootBaseGroup = new TreeViewItem
+                    rootLayoutGroup = new TreeViewItem
                     {
                         depth = mainGroup.depth + 1,
-                        displayName = rootBaseLayoutName,
-                        id = rootBaseLayoutName.GetHashCode()
+                        displayName = rootLayoutName,
+                        id = rootLayoutName.GetHashCode(),
                     };
-                    mainGroup.AddChild(rootBaseGroup);
+                    mainGroup.AddChild(rootLayoutGroup);
                 }
 
-                var deviceGroup = new DeviceGroupTreeViewItem(layout)
-                {
-                    depth = rootBaseGroup.depth + 1
-                };
-                rootBaseGroup.AddChild(deviceGroup);
-
-                ParseDeviceLayout(layout, deviceGroup, "", layout.name, null);
-
-                foreach (var commonUsage in layout.commonUsages)
-                {
-                    var commonUsageGroup = new DeviceGroupTreeViewItem(layout, commonUsage)
-                    {
-                        depth = rootBaseGroup.depth + 1
-                    };
-                    rootBaseGroup.AddChild(commonUsageGroup);
-                    ParseDeviceLayout(layout, commonUsageGroup, "", layout.name, commonUsage);
-                }
+                AddDeviceTreeItem(layout, rootLayoutGroup);
             }
             return mainGroup;
         }
 
-        void ParseDeviceLayout(InputControlLayout layout, TreeViewItem parent, string prefix, string deviceControlId, string commonUsage)
+        private static void AddDeviceTreeItem(InputControlLayout layout, TreeViewItem parent)
+        {
+            // Ignore devices that have no controls. We're looking at fully merged layouts here so
+            // we're also taking inherited controls into account.
+            if (layout.controls.Count == 0)
+                return;
+
+            var deviceItem = new DeviceTreeViewItem(layout)
+            {
+                depth = parent.depth + 1
+            };
+
+            AddControlTreeItemsRecursive(layout, deviceItem, "", layout.name, null);
+
+            parent.AddChild(deviceItem);
+
+            foreach (var commonUsage in layout.commonUsages)
+            {
+                var commonUsageGroup = new DeviceTreeViewItem(layout, commonUsage)
+                {
+                    depth = parent.depth + 1
+                };
+                parent.AddChild(commonUsageGroup);
+                AddControlTreeItemsRecursive(layout, commonUsageGroup, "", layout.name, commonUsage);
+            }
+        }
+
+        private static void AddControlTreeItemsRecursive(InputControlLayout layout, TreeViewItem parent, string prefix, string deviceControlId, string commonUsage)
         {
             foreach (var control in layout.controls.OrderBy(a => a.name))
             {
                 if (control.isModifyingChildControlByPath)
                     continue;
 
-                // Skip variants.
-                if (!string.IsNullOrEmpty(control.variants) && control.variants.ToLower() != "default")
+                // Skip variants except the default variant and variants dictated by the layout itself.
+                if (!control.variants.IsEmpty() && control.variants != InputControlLayout.DefaultVariant
+                    && (layout.variants.IsEmpty() || !InputControlLayout.VariantsMatch(layout.variants, control.variants)))
+                {
                     continue;
+                }
 
                 var child = new ControlTreeViewItem(control, prefix, deviceControlId, commonUsage)
                 {
@@ -218,7 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 var childLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
                 if (childLayout != null)
                 {
-                    ParseDeviceLayout(childLayout, parent, child.controlPath, deviceControlId, commonUsage);
+                    AddControlTreeItemsRecursive(childLayout, parent, child.controlPath, deviceControlId, commonUsage);
                 }
             }
         }

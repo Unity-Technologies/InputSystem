@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -7,6 +9,19 @@ namespace UnityEngine.Experimental.Input.Utilities
 {
     internal static class StringHelpers
     {
+        public static string GetPlural(this string str)
+        {
+            switch (str)
+            {
+                case "Mouse": return "Mice";
+                case "mouse": return "mice";
+                case "Axis": return "Axes";
+                case "axis": return "axis";
+            }
+
+            return str + 's';
+        }
+
         public static int CountOccurrences(this string str, char ch)
         {
             if (str == null)
@@ -27,6 +42,40 @@ namespace UnityEngine.Experimental.Input.Utilities
             }
 
             return count;
+        }
+
+        public static IEnumerable<string> Split(this string str, Func<char, bool> predicate)
+        {
+            if (string.IsNullOrEmpty(str))
+                yield break;
+
+            var length = str.Length;
+            var position = 0;
+
+            while (position < length)
+            {
+                // Skip separator.
+                var ch = str[position];
+                if (predicate(ch))
+                {
+                    ++position;
+                    continue;
+                }
+
+                // Skip to next separator.
+                var startPosition = position;
+                ++position;
+                while (position < length)
+                {
+                    ch = str[position];
+                    if (predicate(ch))
+                        break;
+                    ++position;
+                }
+                var endPosition = position;
+
+                yield return str.Substring(startPosition, endPosition - startPosition);
+            }
         }
 
         public static string Join<TValue>(IEnumerable<TValue> values, string separator)

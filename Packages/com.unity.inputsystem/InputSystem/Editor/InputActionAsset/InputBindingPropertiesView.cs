@@ -6,9 +6,9 @@ using UnityEngine.Experimental.Input.Editor.Lists;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class InputBindingPropertiesView
+    internal class InputBindingPropertiesView
     {
-        static class Styles
+        private static class Styles
         {
             public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
             public static GUIStyle foldoutStyle = new GUIStyle("foldout");
@@ -205,6 +205,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return EditorGUI.Foldout(bgRect, folded, content, Styles.foldoutStyle);
         }
 
+        ////FIXME: seems to nuke the property view on the right side every time a path is selected
         void OnBindingModified(SerializedProperty obj)
         {
             var importerEditor = InputActionImporterEditor.FindFor(m_BindingProperty.serializedObject);

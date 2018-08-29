@@ -18,10 +18,10 @@ namespace UnityEngine.Experimental.Input.Editor
         public float width;
         internal SearchField m_SearchField;
 
-        SerializedProperty m_PathProperty;
-        InputControlTree m_PathTree;
-        TreeViewState m_PathTreeState;
-        bool m_FirstRenderCompleted;
+        private SerializedProperty m_PathProperty;
+        private InputControlTree m_PathTree;
+        private TreeViewState m_PathTreeState;
+        private bool m_FirstRenderCompleted;
 
         public InputControlPickerPopup(SerializedProperty pathProperty, TreeViewState treeViewState = null)
         {
@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_SearchField.downOrUpArrowKeyPressed += OnDownOrUpArrowKeyPressed;
         }
 
-        void OnDownOrUpArrowKeyPressed()
+        private void OnDownOrUpArrowKeyPressed()
         {
             m_PathTree.SetFocusAndEnsureSelectedItem();
         }
@@ -64,7 +64,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_FirstRenderCompleted = true;
         }
 
-        void OnSelected(string path)
+        private void OnSelected(string path)
         {
             if (path != null)
             {
@@ -77,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
             editorWindow.Close();
         }
 
-        void DrawToolbar()
+        private void DrawToolbar()
         {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Controls", GUILayout.MinWidth(75), GUILayout.ExpandWidth(false));
@@ -87,7 +87,7 @@ namespace UnityEngine.Experimental.Input.Editor
             GUILayout.EndHorizontal();
         }
 
-        static class Styles
+        private static class Styles
         {
             public static GUIStyle toolbarSearchField = new GUIStyle("ToolbarSeachTextField");
         }

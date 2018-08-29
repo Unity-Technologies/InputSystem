@@ -8,9 +8,9 @@ namespace UnityEngine.Experimental.Input.Editor
     {
         protected string m_ControlPath;
         protected string m_Device;
-        protected string m_CommonUsage;
+        protected string m_Usage;
 
-        InputControlTreeViewItem searchableElement = null;
+        private InputControlTreeViewItem m_SearchableElement;
 
         public string controlPath
         {
@@ -19,7 +19,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public virtual string controlPathWithDevice
         {
-            get { return string.Format("<{0}>{1}/{2}", m_Device, m_CommonUsage, m_ControlPath); }
+            get
+            {
+                if (!string.IsNullOrEmpty(m_Usage))
+                    return string.Format("<{0}>{{{1}}}/{2}", m_Device, m_Usage, m_ControlPath);
+                return string.Format("<{0}>/{1}", m_Device,  m_ControlPath);
+            }
         }
 
         public virtual bool selectable
@@ -29,22 +34,23 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public TreeViewItem GetSearchableItem()
         {
-            if (searchableElement == null)
+            if (m_SearchableElement == null)
             {
-                searchableElement = new InputControlTreeViewItem();
-                searchableElement.m_ControlPath = m_ControlPath;
-                searchableElement.m_Device = m_Device;
-                if (string.IsNullOrEmpty(m_CommonUsage))
-                    searchableElement.displayName = string.Format("{0} ({1})", m_ControlPath, m_Device);
+                m_SearchableElement = new InputControlTreeViewItem();
+                m_SearchableElement.m_ControlPath = m_ControlPath;
+                m_SearchableElement.m_Device = m_Device;
+                if (string.IsNullOrEmpty(m_Usage))
+                    m_SearchableElement.displayName = string.Format("{0} ({1})", m_ControlPath, m_Device);
                 else
-                    searchableElement.displayName = string.Format("{0} ({1} {2})", m_ControlPath, m_Device, m_CommonUsage);
+                    m_SearchableElement.displayName = string.Format("{0} ({1} {2})", m_ControlPath, m_Device, m_Usage);
+                m_SearchableElement.id = id;
             }
 
-            return searchableElement;
+            return m_SearchableElement;
         }
     }
 
-    class UsageTreeViewItem : InputControlTreeViewItem
+    internal class UsageTreeViewItem : InputControlTreeViewItem
     {
         public override string controlPathWithDevice
         {
@@ -66,9 +72,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class DeviceGroupTreeViewItem : InputControlTreeViewItem
+    internal class DeviceTreeViewItem : InputControlTreeViewItem
     {
-        public DeviceGroupTreeViewItem(InputControlLayout layout, string commonUsage)
+        public DeviceTreeViewItem(InputControlLayout layout, string commonUsage)
         {
             displayName = layout.name;
             if (commonUsage != null)
@@ -77,17 +83,18 @@ namespace UnityEngine.Experimental.Input.Editor
             depth = 1;
         }
 
-        public DeviceGroupTreeViewItem(InputControlLayout layout) : this(layout, null)
+        public DeviceTreeViewItem(InputControlLayout layout)
+            : this(layout, null)
         {
         }
     }
 
-    class ControlTreeViewItem : InputControlTreeViewItem
+    internal class ControlTreeViewItem : InputControlTreeViewItem
     {
-        public ControlTreeViewItem(InputControlLayout.ControlItem control, string prefix, string deviceId, string commonUsage)
+        public ControlTreeViewItem(InputControlLayout.ControlItem control, string prefix, string deviceId, string usage)
         {
             m_Device = deviceId;
-            m_CommonUsage = commonUsage;
+            m_Usage = usage;
             if (!string.IsNullOrEmpty(prefix))
             {
                 m_ControlPath = prefix + "/";
