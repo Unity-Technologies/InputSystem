@@ -51,7 +51,12 @@ namespace UnityEngine.Experimental.Input
         /// <remarks>
         /// This update only occurs in the editor.
         /// </remarks>
-        Editor = 1 << 3
+        Editor = 1 << 3,
+
+        ////TODO
+        Manual = 1 << 4,
+
+        Default = Dynamic | Fixed | Editor,
     }
 
     internal static class InputUpdate

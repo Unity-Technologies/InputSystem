@@ -30,7 +30,7 @@ namespace UnityEngine.Experimental.Input
     ///     {
     ///         base.Setup();
     ///
-    ///         InputSystem.RegisterControlLayout<MyDevice>();
+    ///         InputSystem.RegisterLayout<MyDevice>();
     ///     }
     ///
     ///     [Test]
@@ -62,17 +62,10 @@ namespace UnityEngine.Experimental.Input
             InputDebuggerWindow.Disable();
             #endif
 
-            // Push current input system state on stack.
-            InputSystem.Save();
-
-            // Put system in a blank state where it has all the layouts but has
-            // none of the native devices.
-            InputSystem.Reset();
-
-            // Replace native input runtime with test runtime.
             testRuntime = new InputTestRuntime();
-            InputSystem.s_Manager.InstallRuntime(testRuntime);
-            InputSystem.s_Manager.InstallGlobals();
+
+            // Push current input system state on stack.
+            InputSystem.SaveAndReset(enableRemoting: false, runtime: testRuntime);
 
             #if UNITY_EDITOR
             // Make sure we're not affected by the user giving focus away from the
@@ -101,18 +94,8 @@ namespace UnityEngine.Experimental.Input
                 Object.DestroyImmediate(go);
             }
 
-            ////REVIEW: What's the right thing to do here? ATM InputSystem.Restore() will not disable
-            ////        actions and readding devices we refresh all enabled actions. That means that when
-            ////        we restore, the action above will get refreshed and not find a 'test' interaction
-            ////        registered in the system. Should we force-disable all actions on Restore()?
-            InputSystem.DisableAllEnabledActions();
-
-            if (testRuntime.m_DeviceCommandCallbacks != null)
-                testRuntime.m_DeviceCommandCallbacks.Clear();
-
-            testRuntime.Dispose();
-
             InputSystem.Restore();
+            testRuntime.Dispose();
 
             // Re-enable input debugger.
             #if UNITY_EDITOR

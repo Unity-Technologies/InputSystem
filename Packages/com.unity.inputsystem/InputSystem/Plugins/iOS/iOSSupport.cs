@@ -5,7 +5,7 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS
     {
         public static void Initialize()
         {
-            InputSystem.RegisterControlLayout<iOSGameController>("iOSGameController",
+            InputSystem.RegisterLayout<iOSGameController>("iOSGameController",
                 matches: new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("iOSGameController"));

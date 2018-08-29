@@ -160,7 +160,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
                     controlPath, m_Control.GetType().Name, typeof(TValue).Name));
             }
 
-            m_InputEventPtr.time = InputRuntime.s_Instance.currentTime;
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueInto(m_InputEventPtr, value);
             InputSystem.QueueEvent(m_InputEventPtr);
         }

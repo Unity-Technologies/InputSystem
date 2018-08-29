@@ -348,6 +348,9 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
         {
             base.OnRemoved();
 
+            if (m_SlotId == -1)
+                return;
+
             var index = slotIndex;
             if (index >= 0 && index < s_Devices.Length && s_Devices[index] == this)
                 s_Devices[index] = null;

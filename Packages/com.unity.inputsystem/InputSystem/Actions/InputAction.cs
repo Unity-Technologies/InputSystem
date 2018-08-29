@@ -2,6 +2,8 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: should the enable/disable API actually sit on InputSystem?
+
 ////REVIEW: might have to revisit when we fire actions in relation to Update/FixedUpdate
 
 ////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
@@ -18,6 +20,8 @@ using UnityEngine.Serialization;
 
 ////TODO: do not hardcode the transition from performed->waiting; allow an action to be performed over and over again inside
 ////      a single start cycle
+
+////TODO: add ability to query devices used by action
 
 ////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
 
@@ -101,6 +105,39 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// A stable, unique identifier for the action.
+        /// </summary>
+        /// <remarks>
+        /// This can be used instead of the name to refer to the action. Doing so allows referring to the
+        /// action such that renaming the action does not break references.
+        /// </remarks>
+        public Guid id
+        {
+            get
+            {
+                if (m_Id == Guid.Empty)
+                    m_Id = Guid.NewGuid();
+                return m_Id;
+            }
+        }
+
+        /// <summary>
+        /// Name of control layout expected for controls bound to this action.
+        /// </summary>
+        /// <remarks>
+        /// This is optional and is null by default.
+        ///
+        /// Constraining an action to a particular control layout allows determine the value
+        /// type and expected input behavior of an action without being reliant on any particular
+        /// binding.
+        /// </remarks>
+        public string expectedControlLayout
+        {
+            get { return m_ExpectedControlLayout; }
+            set { m_ExpectedControlLayout = value; }
+        }
+
+        /// <summary>
         /// The map the action belongs to.
         /// </summary>
         /// <remarks>
@@ -112,7 +149,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////TODO: add support for turning binding array into displayable info
-        ////      (allow to constrain by sets of devics set on action set)
+        ////      (allow to constrain by sets of devices set on action set)
 
         /// <summary>
         /// The list of bindings associated with the action.
@@ -142,9 +179,16 @@ namespace UnityEngine.Experimental.Input
             {
                 var actionMap = GetOrCreateActionMap();
                 ////REVIEW: resolving as a side-effect is pretty heavy handed
-                ////FIXME: these don't get re-resolved if the control setup in the system changes
                 actionMap.ResolveBindingsIfNecessary();
                 return actionMap.GetControlsForSingleAction(this);
+            }
+        }
+
+        public ReadOnlyArray<InputDevice> devices
+        {
+            get
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -280,7 +324,7 @@ namespace UnityEngine.Experimental.Input
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string interactions = null)
+        public InputAction(string name = null, string binding = null, string interactions = null, string expectedControlLayout = null)
             : this(name)
         {
             if (binding == null && interactions != null)
@@ -292,6 +336,8 @@ namespace UnityEngine.Experimental.Input
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
+
+            this.expectedControlLayout = expectedControlLayout;
         }
 
         public override string ToString()
@@ -347,8 +393,10 @@ namespace UnityEngine.Experimental.Input
             return Clone();
         }
 
-        ////REVIEW: for binding resolution, it would be best if this was an InternedString; however, for serialization, it has to be a string
+        ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
         [SerializeField] internal string m_Name;
+        [SerializeField] internal Guid m_Id;
+        [SerializeField] internal string m_ExpectedControlLayout;
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.

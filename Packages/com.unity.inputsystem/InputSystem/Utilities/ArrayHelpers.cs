@@ -348,9 +348,20 @@ namespace UnityEngine.Experimental.Input.Utilities
                 array[index] = array[count - 1];
 
             // Destroy current tail.
-            if (count > 1)
+            if (count >= 1)
                 array[count - 1] = default(TValue);
             --count;
+        }
+
+        public static TValue[] Copy<TValue>(TValue[] array)
+        {
+            if (array == null)
+                return null;
+
+            var length = array.Length;
+            var result = new TValue[length];
+            Array.Copy(array, result, length);
+            return result;
         }
 
         public static TValue[] Clone<TValue>(TValue[] array)

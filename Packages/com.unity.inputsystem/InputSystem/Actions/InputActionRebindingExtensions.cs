@@ -279,8 +279,13 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
+        ////REVIEW: how does this system work in combination with actual user overrides
+        ////        (answer: we rebind based on the base path not the override path; thus user overrides are unaffected;
+        ////        and hopefully operate on more than just the path; probably action+path or something)
+        ////TODO: add option to suppress any non-matching binding by setting its override to an empty path
+        ////TODO: need ability to do this with a list of controls
         // For all bindings in the given action, if a binding matches a control in the given control
-        // hiearchy, set an override on the binding to refer specifically to that control.
+        // hierarchy, set an override on the binding to refer specifically to that control.
         //
         // Returns the number of overrides that have been applied.
         //

@@ -46,18 +46,12 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl][FieldOffset(24)] public Vector2 radius;
         [InputControl(name = "phase", layout = "PointerPhase", format = "USHT")][FieldOffset(32)] public ushort phaseId;
         [InputControl(layout = "Digital", format = "SBYT")][FieldOffset(34)] public sbyte displayIndex; ////TODO: kill this
-        [InputControl(name = "touchType", layout = "TouchType", format = "SBYT")][FieldOffset(35)] public sbyte touchTypeId;
+        [InputControl(name = "indirectTouch", layout = "Button", bit = (int)TouchFlags.IndirectTouch)][FieldOffset(35)] public sbyte flags;
 
         public PointerPhase phase
         {
             get { return (PointerPhase)phaseId; }
             set { phaseId = (ushort)value; }
-        }
-
-        public TouchType type
-        {
-            get { return (TouchType)touchTypeId; }
-            set { touchTypeId = (sbyte)value; }
         }
 
         public FourCC GetFormat()
@@ -150,11 +144,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
 namespace UnityEngine.Experimental.Input
 {
-    public enum TouchType
+    [Flags]
+    public enum TouchFlags
     {
-        Direct,
-        Indirect,
-        Stylus
+        IndirectTouch
     }
 
     ////REVIEW: where should be put handset vibration support? should that sit on the touchscreen class? be its own separate device?

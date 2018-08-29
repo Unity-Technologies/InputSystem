@@ -99,7 +99,7 @@ $(document).ready(function(){initNavTree('classUnityEngine_1_1Experimental_1_1In
 <div class="textblock"><p>Turns a device layout into an actual <a class="el" href="classUnityEngine_1_1Experimental_1_1Input_1_1InputDevice.html" title="The root of a control hierarchy. ">InputDevice</a> instance. </p>
 <p>Ultimately produces a device but can also be used to query the control setup described by a layout.</p>
 <p>Can be used both to create control hierarchies from scratch as well as to re-create or change existing hierarchies.</p>
-<p>InputDeviceBuilder is the only way to create control hierarchies.</p>
+<p>InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be <code>new</code>'d directlty.</p>
 <p>Also computes a final state layout when setup is finished.</p>
 <p>Note that InputDeviceBuilders generate garbage. They are meant to be used for initialization only. Don't use them during normal gameplay.</p>
 <p>Running an *existing* device through another control build is a *destructive* operation. Existing controls may be reused while at the same time the hierarchy and even the device instance itself may change. </p>

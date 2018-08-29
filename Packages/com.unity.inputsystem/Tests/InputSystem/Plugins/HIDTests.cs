@@ -566,8 +566,7 @@ class HIDTests : InputTestFixture
             }.ToJson());
         InputSystem.Update();
 
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
         InputSystem.Restore();
 
         var hid = (HID)InputSystem.devices.First(x => x is HID);

@@ -96,8 +96,6 @@ $(document).ready(function(){initNavTree('structUnityEngine_1_1Experimental_1_1I
 
 <p>A chunk of memory signaling a data transfer in the input system.  
  <a href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#details">More...</a></p>
-
-<p>Inherits IInputEventTypeInfo.</p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="properties"></a>
 Properties</h2></td></tr>
@@ -111,7 +109,7 @@ Properties</h2></td></tr>
 <tr class="memdesc:a0a6475044f1fd1fc6afb27bd06603b33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total size of the event in bytes.  <a href="#a0a6475044f1fd1fc6afb27bd06603b33">More...</a><br /></td></tr>
 <tr class="separator:a0a6475044f1fd1fc6afb27bd06603b33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab2d5aa7fce1a14d8bddfb2c333ea9679"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#ab2d5aa7fce1a14d8bddfb2c333ea9679">time</a><code> [get, set]</code></td></tr>
-<tr class="memdesc:ab2d5aa7fce1a14d8bddfb2c333ea9679"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time that the event was generated.  <a href="#ab2d5aa7fce1a14d8bddfb2c333ea9679">More...</a><br /></td></tr>
+<tr class="memdesc:ab2d5aa7fce1a14d8bddfb2c333ea9679"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time that the event was generated at.  <a href="#ab2d5aa7fce1a14d8bddfb2c333ea9679">More...</a><br /></td></tr>
 <tr class="separator:ab2d5aa7fce1a14d8bddfb2c333ea9679"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa63ac9f60188d89ffbb6e778d4c9372b"><td class="memItemLeft" align="right" valign="top">FourCC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1InputEvent.html#aa63ac9f60188d89ffbb6e778d4c9372b">type</a><code> [get]</code></td></tr>
 <tr class="memdesc:aa63ac9f60188d89ffbb6e778d4c9372b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type code for the event.  <a href="#aa63ac9f60188d89ffbb6e778d4c9372b">More...</a><br /></td></tr>
@@ -141,7 +139,8 @@ Properties</h2></td></tr>
 </div><div class="memdoc">
 
 <p>ID of the device that the event is for. </p>
-<dl class="section see"><dt>See also</dt><dd>InputDevice.id</dd></dl>
+<p>Device IDs are allocated by the <a class="el" href="interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html">runtime</a>. No two devices will receive the same ID over an application lifecycle regardless of whether the devices existed at the same time or not. </p>
+<dl class="section see"><dt>See also</dt><dd>InputDevice.id, InputSystem.TryGetDeviceById</dd></dl>
 
 </div>
 </div>
@@ -215,8 +214,8 @@ Properties</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Time that the event was generated. </p>
-<p>TODO: clarify timeline that this sits on </p>
+<p>Time that the event was generated at. </p>
+<p>Times are in seconds and progress linearly in real-time. The timeline is the same as for Time.realtimeSinceStartup. </p>
 
 </div>
 </div>

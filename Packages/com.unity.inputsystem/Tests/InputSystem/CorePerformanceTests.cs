@@ -10,8 +10,7 @@ public class CorePerformanceTests
     [SetUp]
     public void Setup()
     {
-        InputSystem.Save();
-        InputSystem.Reset();
+        InputSystem.SaveAndReset();
     }
 
     [TearDown]

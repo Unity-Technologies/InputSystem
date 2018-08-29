@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input
     /// Each matcher is basically a set of key/value pairs where each value may either be
     /// a regular expression or a plain value object.
     /// </remarks>
-    public struct InputDeviceMatcher
+    public struct InputDeviceMatcher : IEquatable<InputDeviceMatcher>
     {
         private KeyValuePair<InternedString, object>[] m_Patterns;
 
@@ -237,6 +237,62 @@ namespace UnityEngine.Experimental.Input
             }
 
             return result;
+        }
+
+        public bool Equals(InputDeviceMatcher other)
+        {
+            if (m_Patterns == other.m_Patterns)
+                return true;
+
+            if (m_Patterns == null || other.m_Patterns == null)
+                return false;
+
+            if (m_Patterns.Length != other.m_Patterns.Length)
+                return false;
+
+            // Pattern count matches. Compare pattern by pattern. Order of patterns doesn't matter.
+            for (var i = 0; i < m_Patterns.Length; ++i)
+            {
+                var thisPattern = m_Patterns[i];
+                var foundPattern = false;
+                for (var n = 0; n < m_Patterns.Length; ++n)
+                {
+                    var otherPattern = other.m_Patterns[n];
+                    if (thisPattern.Key != otherPattern.Key)
+                        continue;
+                    if (!thisPattern.Value.Equals(otherPattern.Value))
+                        return false;
+                    foundPattern = true;
+                    break;
+                }
+
+                if (!foundPattern)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            return obj is InputDeviceMatcher && Equals((InputDeviceMatcher)obj);
+        }
+
+        public static bool operator==(InputDeviceMatcher left, InputDeviceMatcher right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator!=(InputDeviceMatcher left, InputDeviceMatcher right)
+        {
+            return !(left == right);
+        }
+
+        public override int GetHashCode()
+        {
+            return (m_Patterns != null ? m_Patterns.GetHashCode() : 0);
         }
 
         public static InternedString InterfaceKey

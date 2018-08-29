@@ -60,7 +60,7 @@ partial class CoreTests
     {
         using (var remote = new FakeRemote())
         {
-            InputSystem.RegisterControlLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
+            InputSystem.RegisterLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
             InputSystem.AddDevice("MyGamepad");
 
             var layouts = new List<string>();
@@ -98,7 +98,7 @@ partial class CoreTests
             var remoteGamepad = (Gamepad)remote.manager.devices[0];
             Assert.That(remoteGamepad.usages, Has.Count.Zero);
 
-            InputSystem.SetUsage(gamepad, CommonUsages.LeftHand);
+            InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
 
             Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
         }

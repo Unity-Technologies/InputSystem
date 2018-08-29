@@ -21,8 +21,6 @@ namespace UnityEngine.Experimental.Input
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
-        public const double kTimeIncrementPerUpdate = 0.1;
-
         ~InputTestRuntime()
         {
             Dispose();
@@ -40,9 +38,6 @@ namespace UnityEngine.Experimental.Input
         {
             lock (m_Lock)
             {
-                // Advance time on every update. We choose an arbitrary amount here.
-                currentTime += kTimeIncrementPerUpdate;
-
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)
@@ -197,6 +192,16 @@ namespace UnityEngine.Experimental.Input
             GC.SuppressFinalize(this);
         }
 
+        public double currentTimeOffsetToRealtimeSinceStartup
+        {
+            get { return m_CurrentTimeOffsetToRealtimeSinceStartup; }
+            set
+            {
+                m_CurrentTimeOffsetToRealtimeSinceStartup = value;
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = value;
+            }
+        }
+
         private int m_NextDeviceId = 1;
         private uint m_NextEventId = 1;
         private int m_EventCount;
@@ -207,6 +212,7 @@ namespace UnityEngine.Experimental.Input
         private object m_Lock = new object();
         private ScreenOrientation m_ScreenOrientation = ScreenOrientation.Portrait;
         private Vector2 m_ScreenSize = new Vector2(Screen.width, Screen.height);
+        private double m_CurrentTimeOffsetToRealtimeSinceStartup;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

@@ -6,14 +6,11 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Profiling;
 
-// The current form of this is a half-way step. It successfully pulls execution state together. But it still also
-// pulls in response code. We need to separate binding processing from action response.
-
-////TODO: separate resolution from enabling such that it is possible to query controls yet not have actions/maps enabled
-
 ////TODO: add a serialized form of this and take it across domain reloads
 
 ////TODO: remove direct references to InputManager
+
+////TODO: make sure controls in per-action and per-map control arrays are unique (the internal arrays are probably okay to have duplicates)
 
 ////REVIEW: can we pack all the state that is blittable into a single chunk of unmanaged memory instead of into several managed arrays?
 ////        (this also means we can update more data with direct pointers)
@@ -26,7 +23,7 @@ using UnityEngine.Profiling;
 
 ////REVIEW: rename to just InputActionState?
 
-//allow setup where state monitor is enabled but action is disabled?
+////REVIEW: allow setup where state monitor is enabled but action is disabled?
 
 namespace UnityEngine.Experimental.Input
 {
@@ -224,7 +221,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < actionCount; ++i)
                 actionStates[actionStartIndex + i].phase = InputActionPhase.Waiting;
 
-            NotifyListenersThatEnabledActionsChanged();
+            NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
         }
 
         public void EnableSingleAction(InputAction action)
@@ -259,9 +256,9 @@ namespace UnityEngine.Experimental.Input
 
             // Put action into waiting state.
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            actionStates[actionStartIndex].phase = InputActionPhase.Waiting;
+            actionStates[actionStartIndex + actionIndex].phase = InputActionPhase.Waiting;
 
-            NotifyListenersThatEnabledActionsChanged();
+            NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
         }
 
         ////TODO: need to cancel actions if they are in started state
@@ -288,7 +285,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < actionCount; ++i)
                 actionStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
 
-            NotifyListenersThatEnabledActionsChanged();
+            NotifyListenersOfActionChange(InputActionChange.ActionMapDisabled, map);
         }
 
         public void DisableSingleAction(InputAction action)
@@ -323,9 +320,9 @@ namespace UnityEngine.Experimental.Input
 
             // Put action into disabled state.
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            actionStates[actionStartIndex].phase = InputActionPhase.Disabled;
+            actionStates[actionStartIndex + actionIndex].phase = InputActionPhase.Disabled;
 
-            NotifyListenersThatEnabledActionsChanged();
+            NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
         }
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
@@ -1244,6 +1241,9 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             public double time;
 
+            /// <summary>
+            /// The time when the binding moved into <see cref="InputActionPhase.Started"/>.
+            /// </summary>
             public double startTime;
 
             public int mapIndex
@@ -1298,10 +1298,7 @@ namespace UnityEngine.Experimental.Input
         /// Both of these needs are served by this global list.
         /// </remarks>
         private static InlinedArray<GCHandle> s_GlobalList;
-
-        #if UNITY_EDITOR
-        internal static InlinedArray<Action> s_OnEnabledActionsChanged;
-        #endif
+        internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
 
         private void AddToGlobaList()
         {
@@ -1345,12 +1342,10 @@ namespace UnityEngine.Experimental.Input
             s_GlobalList.length = head;
         }
 
-        internal static void NotifyListenersThatEnabledActionsChanged()
+        internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMap)
         {
-            #if UNITY_EDITOR
-            for (var i = 0; i < s_OnEnabledActionsChanged.length; ++i)
-                s_OnEnabledActionsChanged[i]();
-            #endif
+            for (var i = 0; i < s_OnActionChange.length; ++i)
+                s_OnActionChange[i](actionOrMap, change);
         }
 
         /// <summary>
@@ -1361,6 +1356,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < s_GlobalList.length; ++i)
                 s_GlobalList[i].Free();
             s_GlobalList.length = 0;
+            s_OnActionChange.Clear();
         }
 
         // Walk all maps with enabled actions and add all enabled actions to the given list.
@@ -1470,6 +1466,7 @@ namespace UnityEngine.Experimental.Input
 
                 // Restore enabled actions.
                 var newActionStates = state.actionStates;
+                Debug.Assert((oldActionStates == null && newActionStates == null) || newActionStates.Length == oldActionStates.Length);
                 for (var n = 0; n < state.totalActionCount; ++n)
                 {
                     ////TODO: we want to preserve as much state as we can here, not just lose all current execution state of the maps
@@ -1478,26 +1475,49 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Restore state change monitors.
-                for (var n = 0; n < state.totalControlCount; ++n)
+                for (var n = 0; n < state.totalBindingCount; ++n)
                 {
-                    var bindingIndex = state.controlIndexToBindingIndex[n];
-                    var actionIndex = state.bindingStates[bindingIndex].actionIndex;
+                    // Skip if binding does not resolve to controls.
+                    var controlCount = state.bindingStates[n].controlCount;
+                    if (controlCount == 0)
+                        continue;
+
+                    // Skip if binding does not target action.
+                    var actionIndex = state.bindingStates[n].actionIndex;
                     if (actionIndex == kInvalidIndex)
                         continue;
 
-                    if (oldActionStates[actionIndex].phase != InputActionPhase.Disabled)
-                        state.EnableControls(oldActionStates[actionIndex].mapIndex,
-                            state.bindingStates[bindingIndex].controlStartIndex,
-                            state.bindingStates[bindingIndex].controlCount);
+                    // Skip if action targeted by binding is not enabled.
+                    if (newActionStates[actionIndex].phase == InputActionPhase.Disabled)
+                        continue;
+
+                    // Reenable.
+                    state.EnableControls(newActionStates[actionIndex].mapIndex,
+                        state.bindingStates[n].controlStartIndex,
+                        controlCount);
+                }
+
+                ////REVIEW: ideally, we should know which actions have *actually* changed their set of bound controls
+                // Fire change monitors.
+                for (var n = 0; n < mapCount; ++n)
+                {
+                    var map = state.maps[n];
+                    if (map.m_EnabledActionsCount == 0)
+                        continue;
+                    var actionCount = map.m_Actions.Length;
+                    for (var k = 0; k < actionCount; ++k)
+                    {
+                        var action = map.m_Actions[k];
+                        if (action.enabled)
+                            NotifyListenersOfActionChange(InputActionChange.BoundControlsHaveChangedWhileEnabled, action);
+                    }
                 }
             }
-
-            NotifyListenersThatEnabledActionsChanged();
         }
 
         private bool DataMatches(InputBindingResolver resolver)
         {
-            if (totalMapCount == resolver.totalMapCount
+            if (totalMapCount != resolver.totalMapCount
                 || totalActionCount != resolver.totalActionCount
                 || totalBindingCount != resolver.totalBindingCount
                 || totalCompositeCount != resolver.totalCompositeCount
@@ -1525,10 +1545,11 @@ namespace UnityEngine.Experimental.Input
                 var mapCount = state.totalMapCount;
                 var maps = state.maps;
                 for (var n = 0; n < mapCount; ++n)
+                {
                     maps[n].Disable();
+                    Debug.Assert(!maps[n].enabled);
+                }
             }
-
-            NotifyListenersThatEnabledActionsChanged();
         }
 
         #endregion

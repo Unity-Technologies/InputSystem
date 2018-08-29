@@ -2,7 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Serialization;
+
+////TODO: notifications when maps and actions are enabled/disabled
+
+////TODO: add ability to query devices used by action
+
+////TODO: add public InputActionManager that supports various device allocation strategies (one stack
+////      per device, multiple devices per stack, etc.); should also resolve the problem of having
+////      two bindings stack on top of each other and making the one on top suppress the one below
 
 namespace UnityEngine.Experimental.Input
 {
@@ -31,6 +38,23 @@ namespace UnityEngine.Experimental.Input
         public string name
         {
             get { return m_Name; }
+        }
+
+        /// <summary>
+        /// A stable, unique identifier for the map.
+        /// </summary>
+        /// <remarks>
+        /// This can be used instead of the name to refer to the action map. Doing so allows referring to the
+        /// map such that renaming it does not break references.
+        /// </remarks>
+        public Guid id
+        {
+            get
+            {
+                if (m_Id == Guid.Empty)
+                    m_Id = Guid.NewGuid();
+                return m_Id;
+            }
         }
 
         /// <summary>
@@ -70,6 +94,31 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputBinding>(m_Bindings); }
         }
 
+        public ReadOnlyArray<InputControl> controls
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ReadOnlyArray<InputDevice> devices
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        ////REVIEW: should this operate by binding path or by action name?
+        public InputAction this[string actionNameOrId]
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(actionNameOrId))
+                    throw new ArgumentNullException("actionNameOrId");
+                var action = TryGetAction(actionNameOrId);
+                if (action == null)
+                    throw new KeyNotFoundException(string.Format("No action with name or ID '{0}' in map '{1}'",
+                        actionNameOrId, this));
+                return action;
+            }
+        }
+
         /// <summary>
         /// Add or remove a callback that is triggered when an action in the map changes its <see cref="InputActionPhase">
         /// phase</see>.
@@ -100,24 +149,42 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public InputActionMap(string name = null)
+        public InputActionMap(string name = null, InputActionMap extend = null)
         {
             m_Name = name;
+
+            if (extend != null)
+                throw new NotImplementedException();
         }
 
-        internal int TryGetActionIndex(string name)
+        internal int TryGetActionIndex(string nameOrId)
         {
             ////REVIEW: have transient lookup table? worth optimizing this?
             ////   Ideally, this should at least be an InternedString comparison but due to serialization,
             ////   that's quite tricky.
 
+            if (string.IsNullOrEmpty(nameOrId))
+                throw new ArgumentNullException("nameOrId");
+
             if (m_Actions == null)
                 return InputActionMapState.kInvalidIndex;
-
             var actionCount = m_Actions.Length;
-            for (var i = 0; i < actionCount; ++i)
-                if (string.Compare(m_Actions[i].m_Name, name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                    return i;
+
+            var isReferenceById = nameOrId[0] == '{';
+            if (isReferenceById)
+            {
+                var id = new Guid(nameOrId);
+                for (var i = 0; i < actionCount; ++i)
+                    if (m_Actions[i].m_Id == id) // Don't trigger generation of IDs here.
+                        return i;
+            }
+            else
+            {
+                for (var i = 0; i < actionCount; ++i)
+                    if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        return i;
+            }
+
 
             return InputActionMapState.kInvalidIndex;
         }
@@ -232,6 +299,7 @@ namespace UnityEngine.Experimental.Input
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
         [SerializeField] private string m_Name;
+        [SerializeField] private Guid m_Id;
 
         /// <summary>
         /// List of actions in this map.
@@ -638,6 +706,8 @@ namespace UnityEngine.Experimental.Input
         private struct ActionJson
         {
             public string name;
+            public string id;
+            public string expectedControlLayout;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -646,7 +716,12 @@ namespace UnityEngine.Experimental.Input
             public static ActionJson FromAction(InputAction action)
             {
                 // Bindings don't go on the actions when we write them.
-                return new ActionJson {name = action.m_Name};
+                return new ActionJson
+                {
+                    name = action.m_Name,
+                    id = action.id.ToString(),
+                    expectedControlLayout = action.m_ExpectedControlLayout,
+                };
             }
         }
 
@@ -654,6 +729,7 @@ namespace UnityEngine.Experimental.Input
         private struct MapJson
         {
             public string name;
+            public string id;
             public ActionJson[] actions;
             public BindingJson[] bindings;
 
@@ -685,6 +761,7 @@ namespace UnityEngine.Experimental.Input
                 return new MapJson
                 {
                     name = map.name,
+                    id = map.id.ToString(),
                     actions = jsonActions,
                     bindings = jsonBindings,
                 };
@@ -778,6 +855,7 @@ namespace UnityEngine.Experimental.Input
                     // Create new map if it's the first action in the map.
                     if (map == null)
                     {
+                        // NOTE: No map IDs supported on this path.
                         map = new InputActionMap(mapName);
                         mapIndex = mapList.Count;
                         mapList.Add(map);
@@ -787,6 +865,10 @@ namespace UnityEngine.Experimental.Input
 
                     // Create action.
                     var action = new InputAction(actionName);
+                    action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? Guid.Empty : new Guid(jsonAction.id);
+                    action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                        ? jsonAction.expectedControlLayout
+                        : null;
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -829,6 +911,7 @@ namespace UnityEngine.Experimental.Input
                     if (map == null)
                     {
                         map = new InputActionMap(mapName);
+                        map.m_Id = string.IsNullOrEmpty(jsonMap.id) ? Guid.Empty : new Guid(jsonMap.id);
                         mapIndex = mapList.Count;
                         mapList.Add(map);
                         actionLists.Add(new List<InputAction>());
@@ -846,6 +929,10 @@ namespace UnityEngine.Experimental.Input
 
                         // Create action.
                         var action = new InputAction(jsonAction.name);
+                        action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? Guid.Empty : new Guid(jsonAction.id);
+                        action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
+                            ? jsonAction.expectedControlLayout
+                            : null;
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.

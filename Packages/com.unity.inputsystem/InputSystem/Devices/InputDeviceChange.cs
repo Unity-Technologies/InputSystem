@@ -4,7 +4,7 @@ using UnityEngine.Experimental.Input.Utilities;
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// Indicates what type of change related to an input device occurred.
+    /// Indicates what type of change related to an <see cref="InputDevice">input device</see> occurred.
     /// </summary>
     /// <seealso cref="InputSystem.onDeviceChange"/>
     public enum InputDeviceChange
@@ -12,7 +12,8 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// A new device was added to the system.
         /// </summary>
-        /// <seealso cref="InputSystem.AddDevice(string,string)"/>
+        /// <seealso cref="InputSystem.AddDevice(string,string,string)"/>
+        /// <seealso cref="InputSystem.AddDevice{TDevice}(string)"/>
         Added,
 
         /// <summary>
@@ -38,7 +39,7 @@ namespace UnityEngine.Experimental.Input
         /// This may signal, for example, that what was the right hand XR controller before
         /// is now the left hand controller.
         /// </remarks>
-        /// <seealso cref="InputSystem.SetUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="InputSystem.SetDeviceUsage(UnityEngine.Experimental.Input.InputDevice,UnityEngine.Experimental.Input.Utilities.InternedString)"/>
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 

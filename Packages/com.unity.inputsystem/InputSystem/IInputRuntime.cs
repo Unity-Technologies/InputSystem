@@ -109,7 +109,24 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// The current time on the same timeline that input events are delivered on.
         /// </summary>
+        /// <remarks>
+        /// This is used to timestamp events that are not explicitly supplied with timestamps.
+        ///
+        /// Time in the input system progresses linearly and in real-time and relates to when Unity was started.
+        /// In the editor, this always corresponds to <see cref="EditorApplication.timeSinceStartup"/>.
+        ///
+        /// Input time, however, is offset in relation to <see cref="Time.realtimeSinceStartup"/>. This is because
+        /// in the player, <see cref="Time.realtimeSinceStartup"/> is reset to 0 upon loading the first scene and
+        /// in the editor, <see cref="Time.realtimeSinceStartup"/> is reset to 0 whenever the editor enters play
+        /// mode. As the resetting runs counter to the need of linearly progressing time for input, the input
+        /// system will not reset time along with <see cref="Time.realtimeSinceStartup"/>.
+        /// </remarks>
         double currentTime { get; }
+
+        /// <summary>
+        /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
+        /// </summary>
+        double currentTimeOffsetToRealtimeSinceStartup { get; }
 
         /// <summary>
         /// Mask that determines which input updates are executed by the runtime.
@@ -135,6 +152,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     internal static class InputRuntime
     {
         public static IInputRuntime s_Instance;
+        public static double s_CurrentTimeOffsetToRealtimeSinceStartup;
     }
 
     public static class InputRuntimeExtensions

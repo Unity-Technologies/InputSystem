@@ -28,7 +28,7 @@ partial class CoreTests
     [Category("State")]
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
-        InputSystem.RegisterControlLayout<CustomDevice>();
+        InputSystem.RegisterLayout<CustomDevice>();
         var setup = new InputDeviceBuilder("CustomDevice");
         var axis2 = setup.GetControl("axis2");
         setup.Finish();
@@ -219,7 +219,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(jsonLayout);
+        InputSystem.RegisterLayout(jsonLayout);
 
         var setup = new InputDeviceBuilder("CustomGamepad");
         Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
@@ -245,7 +245,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(jsonLayout);
+        InputSystem.RegisterLayout(jsonLayout);
 
         var device1 = InputSystem.AddDevice("TestDevice");
         var device2 = InputSystem.AddDevice("TestDevice");
@@ -280,7 +280,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(jsonLayout);
+        InputSystem.RegisterLayout(jsonLayout);
 
         var setup = new InputDeviceBuilder("CustomGamepad");
         var device = (Gamepad)setup.Finish();
@@ -310,7 +310,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
         var setup = new InputDeviceBuilder("MyDevice");
 
         Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
@@ -425,7 +425,7 @@ partial class CoreTests
             }
         ";
 
-        InputSystem.RegisterControlLayout(json);
+        InputSystem.RegisterLayout(json);
 
         var gamepad = (Gamepad)InputSystem.AddDevice("CustomGamepad");
         var state = new GamepadState {leftStick = new Vector2(0.5f, 0.0f)};
@@ -474,6 +474,8 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
     }
 
+    ////REVIEW: if we do this, we have to have something like InputUpdateType.Manual that allows using the system
+    ////        in a way where all updates are controlled manually by the user through InputSystem.Update
     [Test]
     [Category("State")]
     public void TODO_State_DisablingAllUpdatesDisablesEventCollection()

@@ -39,6 +39,9 @@ class DualShockTests : InputTestFixture
         Assert.That(device, Is.AssignableTo<DualShockGamepad>());
         var gamepad = (DualShockGamepad)device;
 
+        // Dpad has default state value so make sure that one is coming through.
+        Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.zero).Using(vector2Comparer));
+
         InputSystem.QueueStateEvent(gamepad,
             new DualShockHIDInputReport
             {

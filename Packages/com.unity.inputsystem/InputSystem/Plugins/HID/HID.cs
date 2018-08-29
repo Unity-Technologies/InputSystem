@@ -74,7 +74,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         // If the system cannot find a more specific layout for a given HID, this method will try
         // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
-        internal static string OnFindControlLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the system found a matching layout, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedLayout))
@@ -129,6 +129,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
             // Come up with a unique template name. HIDs are required to have product and vendor IDs.
             // We go with the string versions if we have them and with the numeric versions if we don't.
             string layoutName;
+            var deviceMatcher = InputDeviceMatcher.FromDeviceDescription(description);
             if (!string.IsNullOrEmpty(description.product) && !string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = string.Format("{0}::{1} {2}", kHIDNamespace, description.manufacturer, description.product);
@@ -140,13 +141,16 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
                     return null;
                 layoutName = string.Format("{0}::{1:X}-{2:X}", kHIDNamespace, hidDeviceDescriptor.vendorId,
                     hidDeviceDescriptor.productId);
+
+                deviceMatcher.WithCapability("productId", hidDeviceDescriptor.productId);
+                deviceMatcher.WithCapability("vendorId", hidDeviceDescriptor.vendorId);
             }
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
             var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor};
-            InputSystem.RegisterControlLayoutBuilder(() => layout.Build(),
-                layoutName, baseLayout, InputDeviceMatcher.FromDeviceDescription(description));
+            InputSystem.RegisterLayoutBuilder(() => layout.Build(),
+                layoutName, baseLayout, deviceMatcher);
 
             return layoutName;
         }
