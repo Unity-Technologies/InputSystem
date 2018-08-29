@@ -15,11 +15,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
 #if UNITY_EDITOR || UNITY_XBOXONE
             InputSystem.RegisterControlLayout<XboxOneGamepad>(
                 matches: new InputDeviceMatcher()
-                .WithDeviceClass("XboxOneGamepad")
-                .WithInterface("Xbox"));
+                    .WithDeviceClass("XboxOneGamepad")
+                    .WithInterface("Xbox"));
 #endif
 
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             // XInput controllers on Windows.
             // State layout is XINPUT_GAMEPAD.
             // See https://msdn.microsoft.com/en-us/library/windows/desktop/microsoft.directx_sdk.reference.xinput_gamepad(v=vs.85).aspx
@@ -46,14 +46,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
     { ""name"" : ""buttonNorth"", ""offset"" : 0, ""bit"" : 15 },
     { ""name"" : ""leftTrigger"", ""offset"" : 2, ""format"" : ""BYTE"" },
     { ""name"" : ""rightTrigger"", ""offset"" : 3, ""format"" : ""BYTE"" },
-    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"" },
+    { ""name"" : ""leftStick"", ""offset"" : 4, ""format"" : ""VC2S"", ""processors"" : ""deadzone(min=0.150,max=0.925)"" },
     { ""name"" : ""leftStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""leftStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/y"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""leftStick/up"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""leftStick/down"", ""offset"" : 2, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
-    { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"" },
+    { ""name"" : ""rightStick"", ""offset"" : 8, ""format"" : ""VC2S"", ""processors"" : ""deadzone(min=0.150,max=0.925)"" },
     { ""name"" : ""rightStick/x"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""clamp=false,invert=false,normalize=false"" },
     { ""name"" : ""rightStick/left"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },
     { ""name"" : ""rightStick/right"", ""offset"" : 0, ""format"" : ""SHRT"", ""parameters"" : ""invert=false,normalize=false"" },

@@ -7,6 +7,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Composites;
 using UnityEngine.Experimental.Input.Editor;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.TestTools;
@@ -59,7 +60,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice("Gamepad");
         InputSystem.SetUsage(device, CommonUsages.LeftHand);
-        ////TODO: set variant
+        ////TODO: set variants
 
         InputSystem.Save();
         InputSystem.Reset();
@@ -120,7 +121,7 @@ partial class CoreTests
     {
         InputConfiguration.LockInputToGame = true;
 
-        var gamepad = (Gamepad)InputSystem.AddDevice("Gamepad");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
         InputSystem.Update(InputUpdateType.Dynamic);
@@ -157,6 +158,30 @@ partial class CoreTests
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
         Assert.That(asset.actionMaps[0].name, Is.EqualTo(actionMap2Name));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanAddActionMapFromObject()
+    {
+        var map = new InputActionMap("set");
+        var binding = new InputBinding();
+        binding.path = "some path";
+        var action = map.AddAction("action");
+        action.AppendBinding(binding);
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var obj = new SerializedObject(asset);
+
+        Assert.That(asset.actionMaps, Has.Count.EqualTo(0));
+
+        InputActionSerializationHelpers.AddActionMapFromObject(obj, map);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
+        Assert.That(asset.actionMaps[0].name, Is.EqualTo("set"));
+        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action"));
+        Assert.That(asset.actionMaps[0].actions[0].bindings[0].path, Is.EqualTo("some path"));
     }
 
     [Test]
@@ -229,6 +254,68 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_InputAsset_CanAddBindingFromObject()
+    {
+        var map = new InputActionMap("set");
+        map.AddAction(name: "action1");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        var pathName = "/gamepad/leftStick";
+        var sourceActionName = "some action";
+        var groupName = "group";
+        var flags = 10;
+        var inputBinding = new InputBinding()
+        {
+            path = pathName,
+            action = sourceActionName,
+            groups = groupName
+        };
+        InputActionSerializationHelpers.AppendBindingFromObject(inputBinding, action1Property, mapProperty);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        var action1 = asset.actionMaps[0].TryGetAction("action1");
+        Assert.That(action1.bindings, Has.Count.EqualTo(1));
+        Assert.That(action1.bindings[0].path, Is.EqualTo(pathName));
+        Assert.That(action1.bindings[0].action, Is.EqualTo("action1"));
+        Assert.That(action1.bindings[0].groups, Is.EqualTo(groupName));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanAppendCompositeBinding()
+    {
+        var map = new InputActionMap("set");
+        map.AddAction(name: "action1");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.AppendCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        var action1 = asset.actionMaps[0].TryGetAction("action1");
+        Assert.That(action1.bindings, Has.Count.EqualTo(3));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "positive"));
+        Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) => x.name == "negative"));
+        Assert.That(action1.bindings[0].isComposite, Is.True);
+        Assert.That(action1.bindings[0].isPartOfComposite, Is.False);
+        Assert.That(action1.bindings[1].isComposite, Is.False);
+        Assert.That(action1.bindings[1].isPartOfComposite, Is.True);
+        Assert.That(action1.bindings[2].isComposite, Is.False);
+        Assert.That(action1.bindings[2].isPartOfComposite, Is.True);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_CanGenerateCodeWrapperForInputAsset()
     {
         var set1 = new InputActionMap("set1");
@@ -242,7 +329,7 @@ partial class CoreTests
         asset.name = "MyControls";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
+            new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
 
         // Our version of Mono doesn't implement the CodeDom stuff so all we can do here
         // is just perform some textual verification. Once we have the newest Mono, this should
@@ -265,11 +352,32 @@ partial class CoreTests
         asset.name = "New Controls (4)";
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-                new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
+            new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
         Assert.That(code, Contains.Substring("class NewControls_4_"));
         Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @action__"));
         Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @_1thing"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanRenameAction()
+    {
+        var set1 = new InputActionMap("set1");
+        set1.AddAction(name: "action", binding: "/gamepad/leftStick");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(set1);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameAction(action1Property, mapProperty, "newAction");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(set1.actions[0].name, Is.EqualTo("newAction"));
+        Assert.That(set1.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(set1.actions[0].bindings[0].action, Is.EqualTo("newAction"));
     }
 
     private class TestEditorWindow : EditorWindow

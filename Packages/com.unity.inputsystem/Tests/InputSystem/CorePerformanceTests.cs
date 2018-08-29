@@ -20,6 +20,7 @@ public class CorePerformanceTests
         InputSystem.Restore();
     }
 
+    ////TODO: same test but with several actions listening on each gamepad
     // Performing a full state update on 10 devices should take less than 0.01 ms.
     [Test]
     [Category("Performance")]
@@ -29,7 +30,7 @@ public class CorePerformanceTests
 
         var gamepads = new Gamepad[kNumGamepads];
         for (var i = 0; i < kNumGamepads; ++i)
-            gamepads[i] = (Gamepad)InputSystem.AddDevice("Gamepad");
+            gamepads[i] = InputSystem.AddDevice<Gamepad>();
 
         var startTime = Time.realtimeSinceStartup;
 
@@ -47,6 +48,14 @@ public class CorePerformanceTests
         Debug.Log(string.Format("{0}: {1}ms", MethodBase.GetCurrentMethod().Name, totalTime * 1000));
     }
 
-    ////TODO: same test but with several actions listening on each gamepad
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Performance")]
+    public void TODO_CanSaveAndRestoreSystemInLessThan10Milliseconds() // Currently it's >200ms!
+    {
+        Assert.Fail();
+    }
+
+    #endif
 }
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD

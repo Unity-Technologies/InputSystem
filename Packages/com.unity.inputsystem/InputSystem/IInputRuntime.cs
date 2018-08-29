@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
     /// </summary>
     /// <remarks>
     /// The runtime owns the input event queue, reports device discoveries, and runs
-    /// periodic updates that out events from the queue. Updates can also be manually
+    /// periodic updates that flushes out events from the queue. Updates can also be manually
     /// triggered by calling <see cref="Update"/>.
     /// </remarks>
     public unsafe interface IInputRuntime
@@ -93,8 +93,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
         Action<int, string> onDeviceDiscovered { set; }
 
         /// <summary>
+        /// Set delegate to invoke when system is shutting down.
+        /// </summary>
+        Action onShutdown { set; }
+
+        /// <summary>
         /// Set the background polling frequency for devices that have to be polled.
         /// </summary>
+        /// <remarks>
+        /// The frequency is in Hz. A value of 60 means that polled devices get sampled
+        /// 60 times a second.
+        /// </remarks>
         float pollingFrequency { set; }
 
         /// <summary>
@@ -113,6 +122,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         ScreenOrientation screenOrientation { get; }
         Vector2 screenSize { get; }
+        int frameCount { get; }
+
+        // If analytics are enabled, the runtime receives analytics events from the input manager.
+        // See InputAnalytics.
+        #if UNITY_ANALYTICS || UNITY_EDITOR
+        void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent);
+        void SendAnalyticsEvent(string name, object data);
+        #endif
     }
 
     internal static class InputRuntime

@@ -135,7 +135,7 @@ namespace UnityEngine.Experimental.Input
             var action = TryGetAction(name);
             if (action == null)
                 throw new KeyNotFoundException(string.Format("Could not find action '{0}' in set '{1}'", name,
-                        this.name));
+                    this.name));
             return action;
         }
 
@@ -590,6 +590,7 @@ namespace UnityEngine.Experimental.Input
             public string name;
             public string path;
             public string interactions;
+            public string processors;
             public string groups;
             public string action;
             public bool chainWithPrevious;
@@ -608,6 +609,7 @@ namespace UnityEngine.Experimental.Input
                     path = string.IsNullOrEmpty(path) ? null : path,
                     action = string.IsNullOrEmpty(action) ? null : action,
                     interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
+                    processors = string.IsNullOrEmpty(processors) ? null : processors,
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
                     chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
@@ -623,6 +625,7 @@ namespace UnityEngine.Experimental.Input
                     path = binding.path,
                     action = binding.action,
                     interactions = binding.interactions,
+                    processors = binding.processors,
                     groups = binding.groups,
                     chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,
@@ -757,7 +760,7 @@ namespace UnityEngine.Experimental.Input
 
                         if (string.IsNullOrEmpty(actionName))
                             throw new Exception(string.Format(
-                                    "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
+                                "Invalid action name '{0}' (missing action name after '/')", jsonAction.name));
                     }
 
                     // Try to find existing map.

@@ -22,11 +22,21 @@ using UnityEngine.Networking.PlayerConnection;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
+
+////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
+////        (and allow text input events that have no associated target device? this way we don't need a keyboard to get text input)
+
 ////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
 
-////TODO: release native alloations when exiting
+////TODO: release native allocations when exiting
 
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
+
+// Keep this in sync with "Packages/com.unity.inputsystem/package.json".
+// NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
+//       "-preview" suffixes here.
+[assembly: AssemblyVersion("0.0.3")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -89,40 +99,65 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout(typeof(T), name, matches);
         }
 
-        ///  <summary>
-        ///  Register a layout in JSON format.
-        ///  </summary>
-        ///  <param name="json">Layout in JSON format.</param>
-        ///  <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
-        ///  property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
-        ///  is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        /// <summary>
+        /// Register a layout in JSON format.
+        /// </summary>
+        /// <param name="json">Layout in JSON format.</param>
+        /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
+        /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
+        /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
         /// <param name="matches"></param>
         /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
-        ///  or the "name" JSON property.</exception>
-        ///  <remarks>
-        ///  Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
-        ///  being created from a layout). The JSON data will, however, be parsed once on registration to check for a
-        ///  device description in the layout. JSON format errors will thus be detected during registration.
-        ///  </remarks>
-        ///  <example>
-        ///  <code>
-        ///  InputSystem.RegisterControlLayout(@"
-        ///     {
-        ///         ""name"" : ""MyDevice"",
-        ///         ""controls"" : [
-        ///             {
-        ///                 ""name"" : ""myThing"",
-        ///                 ""layout"" : ""MyControl"",
-        ///                 ""usage"" : ""LeftStick""
-        ///             }
-        ///         ]
-        ///     }
-        /// ");
-        ///  </code>
-        ///  </example>
+        /// or the "name" JSON property.</exception>
+        /// <remarks>
+        /// Note that most errors in layouts will only be detected when instantiated (i.e. when a device or control is
+        /// being created from a layout). The JSON data will, however, be parsed once on registration to check for a
+        /// device description in the layout. JSON format errors will thus be detected during registration.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterControlLayout(@"
+        ///    {
+        ///        ""name"" : ""MyDevice"",
+        ///        ""controls"" : [
+        ///            {
+        ///                ""name"" : ""myThing"",
+        ///                ""layout"" : ""MyControl"",
+        ///                ""usage"" : ""LeftStick""
+        ///            }
+        ///        ]
+        ///    }
+        /// );
+        /// </code>
+        /// </example>
         public static void RegisterControlLayout(string json, string name = null, InputDeviceMatcher? matches = null)
         {
             s_Manager.RegisterControlLayout(json, name, matcher: matches);
+        }
+
+        /// <summary>
+        /// Register a layout that applies overrides to one or more other layouts.
+        /// </summary>
+        /// <param name="json">Layout in JSON format.</param>
+        /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
+        /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
+        /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
+        /// <remarks>
+        /// Layout overrides are layout pieces that are applied on top of existing layouts.
+        /// This can be used to modify any layout in the system non-destructively. The process works the
+        /// same as extending an existing layout except that instead of creating a new layout
+        /// by merging the derived layout and the base layout, the overrides are merged
+        /// directly into the base layout.
+        ///
+        /// Layouts used as overrides look the same as normal layouts and have the same format.
+        /// The only difference is that they are explicitly registered as overrides.
+        ///
+        /// Note that unlike "normal" layouts, layout overrides have the ability to extend
+        /// multiple base layouts.
+        /// </remarks>
+        public static void RegisterControlLayoutOverride(string json, string name = null)
+        {
+            s_Manager.RegisterControlLayout(json, name, isOverride: true);
         }
 
         /// <summary>
@@ -221,9 +256,9 @@ namespace UnityEngine.Experimental.Input
 
                     default:
                         throw new ArgumentException(
-                        string.Format(
-                            "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
-                            methodCall.Object.NodeType), "builderExpression");
+                            string.Format(
+                                "Expression nodes of type {0} are not supported as the target of the method call in a builder expression",
+                                methodCall.Object.NodeType), "builderExpression");
                 }
             }
 
@@ -271,7 +306,7 @@ namespace UnityEngine.Experimental.Input
         /// </example>
         public static string TryFindMatchingControlLayout(InputDeviceDescription deviceDescription)
         {
-            return s_Manager.TryFindMatchingControlLayout(deviceDescription);
+            return s_Manager.TryFindMatchingControlLayout(ref deviceDescription);
         }
 
         /// <summary>
@@ -437,6 +472,42 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
+        /// Frequency at which devices that need polling are being queried in the background.
+        /// </summary>
+        /// <remarks>
+        /// Input data is gathered from platform APIs either as events or polled periodically.
+        ///
+        /// In the former case, where we get input as events, the platform is responsible for monitoring
+        /// input devices and accumulating their state changes which the input runtime then periodically
+        /// queries and sends off as <see cref="InputEvent">input events</see>.
+        ///
+        /// In the latter case, where input has to be explicitly polled from the system, the input runtime
+        /// will periodically sample the state of input devices and send it off as input events. Wherever
+        /// possible, this happens in the background at a fixed frequency. The <see cref="pollingFrequency"/>
+        /// property controls the rate at which the sampling happens.
+        ///
+        /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
+        /// per second.
+        ///
+        /// The default polling frequency is 60 Hz.
+        ///
+        /// For devices that are polled, the frequency setting will directly translate to changes in the
+        /// <see cref="InputEvent.time">timestamp</see> patterns. At 60 Hz, for example, timestamps for
+        /// a specific, polled device will be spaced at roughly 1/60th of a second apart.
+        ///
+        /// Note that it depends on the platform which devices are polled (if any). On Win32, for example,
+        /// only XInput gamepads are polled.
+        ///
+        /// Also note that the polling frequency applies to all devices that are polled. It is not possible
+        /// to set polling frequency on a per-device basis.
+        /// </remarks>
+        public static float pollingFrequency
+        {
+            get { return s_Manager.pollingFrequency; }
+            set { s_Manager.pollingFrequency = value; }
+        }
+
+        /// <summary>
         /// Add a new device by instantiating the given device layout.
         /// </summary>
         /// <param name="layout">Name of the layout to instantiate. Must be a device layout. Note that
@@ -444,6 +515,7 @@ namespace UnityEngine.Experimental.Input
         /// <param name="name">Name to assign to the device. If null, the layout name is used instead. Note that
         /// device names are made unique automatically by the system by appending numbers to them (e.g. "gamepad",
         /// "gamepad1", "gamepad2", etc.).</param>
+        /// <param name="variants">Semicolon-separated list of layout variants to use for the device.</param>
         /// <returns>The newly created input device.</returns>
         /// <remarks>
         /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
@@ -453,9 +525,9 @@ namespace UnityEngine.Experimental.Input
         /// InputSystem.AddDevice("Gamepad");
         /// </code>
         /// </example>
-        public static InputDevice AddDevice(string layout, string name = null)
+        public static InputDevice AddDevice(string layout, string name = null, string variants = null)
         {
-            return s_Manager.AddDevice(layout, name);
+            return s_Manager.AddDevice(layout, name, new InternedString(variants));
         }
 
         public static TDevice AddDevice<TDevice>(string name = null)
@@ -464,7 +536,7 @@ namespace UnityEngine.Experimental.Input
             var device = s_Manager.AddDevice(typeof(TDevice), name) as TDevice;
             if (device == null)
                 throw new Exception(string.Format("Layout registered for type '{0}' did not produce a device of that type; layout probably has been overridden",
-                        typeof(TDevice).Name));
+                    typeof(TDevice).Name));
             return device;
         }
 
@@ -511,6 +583,13 @@ namespace UnityEngine.Experimental.Input
         public static void DisableDevice(InputDevice device)
         {
             s_Manager.EnableOrDisableDevice(device, false);
+        }
+
+        ////REVIEW: should this be a device-level reset along with sending the reset IOCTL
+        ////        or a control-level reset on just the memory state?
+        public static void ResetDevice(InputDevice device)
+        {
+            throw new NotImplementedException();
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -970,6 +1049,11 @@ namespace UnityEngine.Experimental.Input
             return s_Manager.interactions.names;
         }
 
+        public static IEnumerable<string> ListProcessors()
+        {
+            return s_Manager.processors.names;
+        }
+
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -1061,6 +1145,21 @@ namespace UnityEngine.Experimental.Input
 
         #endregion
 
+        /// <summary>
+        /// The current version of the input system package.
+        /// </summary>
+        public static Version version
+        {
+            get { return Assembly.GetExecutingAssembly().GetName().Version; }
+        }
+
+        ////TODO: put metrics gathering behind #if
+
+        public static InputMetrics GetMetrics()
+        {
+            return s_Manager.metrics;
+        }
+
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
 
@@ -1116,6 +1215,20 @@ namespace UnityEngine.Experimental.Input
             }
 
             EditorApplication.playModeStateChanged += OnPlayModeChange;
+
+            // If native backends for new input system aren't enabled, ask user whether we should
+            // enable them (requires restart). We only ask once per session.
+            if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
+                !EditorPlayerSettings.newSystemBackendsEnabled)
+            {
+                const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings." +
+                    "This means that no input from native devices will come through." +
+                    "\n\nDo you want to enable the backends. Doing so requires a restart of the editor.";
+
+                if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
+                    EditorPlayerSettings.newSystemBackendsEnabled = true;
+            }
+            s_SystemObject.newInputBackendsCheckedAsEnabled = true;
         }
 
         // We don't want play mode modifications to layouts and controls to seep
@@ -1178,11 +1291,11 @@ namespace UnityEngine.Experimental.Input
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         internal static void PerformDefaultPluginInitialization()
         {
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE || UNITY_WSA
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA
             DualShockSupport.Initialize();
             #endif
 

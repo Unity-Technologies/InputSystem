@@ -2,8 +2,10 @@
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
+using UnityEngine.Experimental.Input.Processors;
 
 public class SwitchTests : InputTestFixture
 {
@@ -12,26 +14,46 @@ public class SwitchTests : InputTestFixture
     public void Devices_SupportsSwitchNpad()
     {
         var device = InputSystem.AddDevice(
-                new InputDeviceDescription
-        {
-            interfaceName = "NPad",
-            manufacturer = "Nintendo",
-            product = "Wireless Controller",
-        });
+            new InputDeviceDescription
+            {
+                interfaceName = "Switch",
+                manufacturer = "Nintendo",
+                product = "Wireless Controller",
+            });
 
         Assert.That(device, Is.TypeOf<NPad>());
         var controller = (NPad)device;
 
         InputSystem.QueueStateEvent(controller,
-            new NPadInputState()
-            .WithLeftStick(new Vector2(0.123f, 0.456f))
-            .WithRightStick(new Vector2(0.789f, 0.987f)));
+            new NPadInputState
+            {
+                leftStick = new Vector2(0.123f, 0.456f),
+                rightStick = new Vector2(0.789f, 0.987f),
+                acceleration = new Vector3(0.987f, 0.654f, 0.321f),
+                attitude = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
+                angularVelocity = new Vector3(0.444f, 0.555f, 0.666f),
+            });
         InputSystem.Update();
 
         Assert.That(controller.leftStick.x.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
         Assert.That(controller.leftStick.y.ReadValue(), Is.EqualTo(0.456).Within(0.00001));
         Assert.That(controller.rightStick.x.ReadValue(), Is.EqualTo(0.789).Within(0.00001));
         Assert.That(controller.rightStick.y.ReadValue(), Is.EqualTo(0.987).Within(0.00001));
+
+        Assert.That(controller.acceleration.x.ReadValue(), Is.EqualTo(0.987).Within(0.00001));
+        Assert.That(controller.acceleration.y.ReadValue(), Is.EqualTo(0.654).Within(0.00001));
+        Assert.That(controller.acceleration.z.ReadValue(), Is.EqualTo(0.321).Within(0.00001));
+
+        Quaternion attitude = controller.attitude.ReadValue();
+
+        Assert.That(attitude.x, Is.EqualTo(0.111).Within(0.00001));
+        Assert.That(attitude.y, Is.EqualTo(0.222).Within(0.00001));
+        Assert.That(attitude.z, Is.EqualTo(0.333).Within(0.00001));
+        Assert.That(attitude.w, Is.EqualTo(0.444).Within(0.00001));
+
+        Assert.That(controller.angularVelocity.x.ReadValue(), Is.EqualTo(0.444).Within(0.00001));
+        Assert.That(controller.angularVelocity.y.ReadValue(), Is.EqualTo(0.555).Within(0.00001));
+        Assert.That(controller.angularVelocity.z.ReadValue(), Is.EqualTo(0.666).Within(0.00001));
 
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.A), controller.buttonEast);
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.B), controller.buttonSouth);
@@ -49,16 +71,133 @@ public class SwitchTests : InputTestFixture
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.LSR), controller.leftSR);
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.RSL), controller.rightSL);
         AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.RSR), controller.rightSR);
+    }
 
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_LUp), controller.leftVK.up);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_LDown), controller.leftVK.down);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_LLeft), controller.leftVK.left);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_LRight), controller.leftVK.right);
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanUpdateStatus()
+    {
+        var controller = InputSystem.AddDevice<NPad>();
 
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_RUp), controller.rightVK.up);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_RDown), controller.rightVK.down);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_RLeft), controller.rightVK.left);
-        AssertButtonPress(controller, new NPadInputState().WithButton(NPadInputState.Button.VKey_RRight), controller.rightVK.right);
+        NPadStatusReport? receivedCommand = null;
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(controller.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == NPadStatusReport.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((NPadStatusReport*)commandPtr);
+                        ((NPadStatusReport*)commandPtr)->npadId = NPad.NpadId.Handheld;
+                        ((NPadStatusReport*)commandPtr)->orientation = NPad.Orientation.Vertical;
+                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyle.Handheld;
+                        return 1;
+                    }
+                    else if (commandPtr->type == QueryUserIdCommand.Type)
+                    {
+                        // Sending this command happens before refreshing NPad status
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command, " + commandPtr->type);
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+        Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
+        Assert.That(controller.orientation, Is.EqualTo(NPad.Orientation.Vertical));
+        Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyle.Handheld));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanSetControllerOrientation()
+    {
+        var controller = InputSystem.AddDevice<NPad>();
+
+        NpadDeviceIOCTLSetOrientation? receivedCommand = null;
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(controller.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == NpadDeviceIOCTLSetOrientation.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((NpadDeviceIOCTLSetOrientation*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+        controller.SetOrientationToSingleJoyCon(NPad.Orientation.Horizontal);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPad.Orientation.Horizontal));
+
+        receivedCommand = null;
+        controller.SetOrientationToSingleJoyCon(NPad.Orientation.Vertical);
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+        Assert.That(receivedCommand.Value.orientation, Is.EqualTo(NPad.Orientation.Vertical));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanStartSixAxisSensors()
+    {
+        var controller = InputSystem.AddDevice<NPad>();
+
+        NpadDeviceIOCTLStartSixAxisSensor? receivedCommand = null;
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(controller.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == NpadDeviceIOCTLStartSixAxisSensor.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((NpadDeviceIOCTLStartSixAxisSensor*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+        controller.StartSixAxisSensor();
+
+        Assert.That(receivedCommand.HasValue, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanStopSixAxisSensors()
+    {
+        var controller = InputSystem.AddDevice<NPad>();
+
+        NpadDeviceIOCTLStopSixAxisSensor? receivedCommand = null;
+        unsafe
+        {
+            testRuntime.SetDeviceCommandCallback(controller.id,
+                (id, commandPtr) =>
+                {
+                    if (commandPtr->type == NpadDeviceIOCTLStopSixAxisSensor.Type)
+                    {
+                        Assert.That(receivedCommand.HasValue, Is.False);
+                        receivedCommand = *((NpadDeviceIOCTLStopSixAxisSensor*)commandPtr);
+                        return 1;
+                    }
+
+                    Assert.Fail("Received wrong type of command");
+                    return InputDeviceCommand.kGenericFailure;
+                });
+        }
+        controller.StopSixAxisSensor();
+
+        Assert.That(receivedCommand.HasValue, Is.True);
     }
 }
 #endif

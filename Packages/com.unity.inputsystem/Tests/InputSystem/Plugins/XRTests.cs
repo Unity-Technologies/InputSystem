@@ -33,9 +33,9 @@ class XRTests : InputTestFixture
         Assert.That(createdDevice, Is.TypeOf(expectedType));
 
         var generatedLayout = InputSystem.TryLoadLayout(string.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
-                    deviceDescription.manufacturer, deviceDescription.product));
+            deviceDescription.manufacturer, deviceDescription.product));
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.extendsLayout, Is.EqualTo(baseLayoutName));
+        Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
 
     [Test]
@@ -119,7 +119,7 @@ class XRTests : InputTestFixture
         var createdDevice = InputSystem.devices[0];
 
         var expectedLayoutName = string.Format("{0}::{1}::{2}", XRUtilities.kXRInterfaceCurrent,
-                deviceDescription.manufacturer, deviceDescription.product);
+            deviceDescription.manufacturer, deviceDescription.product);
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
 
