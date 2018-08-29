@@ -1,9 +1,11 @@
 #if UNITY_EDITOR
+using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
+using UnityEditor.VersionControl;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
@@ -55,7 +57,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // See if we have an existing editor window that has the asset open.
             var inputManagers = Resources.FindObjectsOfTypeAll<ActionInspectorWindow>();
-            var window = inputManagers.FirstOrDefault(w => w.m_AssetObjectOriginal.Equals(obj));
+            var window = inputManagers.FirstOrDefault(w => w.m_ImportedAssetObject.Equals(obj));
             if (window != null)
             {
                 window.Show();
@@ -96,10 +98,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static bool s_RefreshPending;
 
-        [SerializeField] private InputActionAsset m_AssetObjectOriginal;
-        [SerializeField] private InputActionAsset m_AssetObjectCopy;
+        [SerializeField] private bool m_IsDirty;
+        [SerializeField] private string m_AssetGUID;
         [SerializeField] private string m_AssetPath;
         [SerializeField] private string m_AssetJson;
+        [SerializeField] private InputActionAsset m_ImportedAssetObject;
+        [SerializeField] private InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private TreeViewState m_TreeViewState;
         [SerializeField] private TreeViewState m_PickerTreeViewState;
 
@@ -112,17 +116,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private const string k_FileExtension = ".inputactions";
 
-        private GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
-        private GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
-        private GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
-        private GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
-        private GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
-        private GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
+        private readonly GUIContent m_SaveAssetGUI = EditorGUIUtility.TrTextContent("Save");
+        private readonly GUIContent m_AddBindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        private readonly GUIContent m_AddBindingContextGUI = EditorGUIUtility.TrTextContent("Add binding");
+        private readonly GUIContent m_AddActionGUI = EditorGUIUtility.TrTextContent("Action");
+        private readonly GUIContent m_AddActionContextGUI = EditorGUIUtility.TrTextContent("Add action");
+        private readonly GUIContent m_AddActionMapGUI = EditorGUIUtility.TrTextContent("Action map");
+        private readonly GUIContent m_AddActionMapContextGUI = EditorGUIUtility.TrTextContent("Add action map");
 
         public void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedoCallback;
-            if (m_AssetObjectOriginal == null)
+            if (m_ImportedAssetObject == null)
                 return;
 
             // Initialize after assembly reload
@@ -137,37 +142,62 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void SetAsset(InputActionAsset referencedObject)
         {
-            m_AssetObjectOriginal = referencedObject;
+            m_ImportedAssetObject = referencedObject;
             InitializeObjectReferences();
             InitializeTrees();
         }
 
         private void InitializeObjectReferences()
         {
-            // Check if the asset was modified externally
-            if (m_AssetObjectOriginal == null && !string.IsNullOrEmpty(m_AssetPath))
+            // If we have an asset object, grab its path and GUID.
+            if (m_ImportedAssetObject != null)
             {
-                m_AssetObjectOriginal = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
-                DestroyImmediate(m_AssetObjectCopy);
+                m_AssetPath = AssetDatabase.GetAssetPath(m_ImportedAssetObject);
+                m_AssetGUID = AssetDatabase.AssetPathToGUID(m_AssetPath);
+            }
+            else
+            {
+                // Otherwise look it up from its GUID. We're not relying on just
+                // the path here as the asset may have been moved.
+                InitializeReferenceToImportedAssetObject();
             }
 
-            m_AssetObjectCopy = Instantiate(m_AssetObjectOriginal);
-            m_AssetObjectCopy.hideFlags = HideFlags.HideAndDontSave;
-            m_AssetObjectCopy.name = m_AssetObjectOriginal.name;
-            m_AssetPath = AssetDatabase.GetAssetPath(m_AssetObjectOriginal);
+            m_AssetObjectForEditing = Instantiate(m_ImportedAssetObject);
+            m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
+            m_AssetObjectForEditing.name = m_ImportedAssetObject.name;
             m_AssetJson = null;
-            m_SerializedObject = new SerializedObject(m_AssetObjectCopy);
+            m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
+        }
+
+        private void InitializeReferenceToImportedAssetObject()
+        {
+            Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID));
+
+            m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            if (string.IsNullOrEmpty(m_AssetPath))
+                throw new Exception("Could not determine asset path for " + m_AssetGUID);
+
+            m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
+            if (m_AssetObjectForEditing != null)
+            {
+                DestroyImmediate(m_AssetObjectForEditing);
+                m_AssetObjectForEditing = null;
+            }
         }
 
         private void InitializeTrees()
         {
-            m_SearchField = new SearchField();
+            if (m_SearchField == null)
+                m_SearchField = new SearchField();
+
             m_TreeView = InputActionListTreeView.CreateFromSerializedObject(Apply, m_SerializedObject, ref m_TreeViewState);
             m_TreeView.OnSelectionChanged = OnSelectionChanged;
             m_TreeView.OnContextClick = OnContextClick;
+
             m_CopyPasteUtility = new CopyPasteUtility(Apply, m_TreeView, m_SerializedObject);
             if (m_PickerTreeViewState == null)
                 m_PickerTreeViewState = new TreeViewState();
+
             LoadPropertiesForSelection();
         }
 
@@ -201,18 +231,25 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void Apply()
         {
+            m_IsDirty = true;
             m_SerializedObject.ApplyModifiedProperties();
             m_TreeView.Reload();
-            SaveChangesToAsset();
         }
 
         private void Refresh()
         {
             // See if the data has actually changed.
-            var newJson = StringHelpers.PrettyPrintJSON(m_AssetObjectCopy.ToJson());
+            var newJson = StringHelpers.PrettyPrintJSON(m_AssetObjectForEditing.ToJson());
             if (newJson == m_AssetJson)
-                return;
+            {
+                // Still need to refresh reference to imported object in case we had a re-import.
+                if (m_ImportedAssetObject == null)
+                    InitializeReferenceToImportedAssetObject();
 
+                return;
+            }
+
+            // Perform a full refresh.
             InitializeObjectReferences();
             InitializeTrees();
             Repaint();
@@ -226,7 +263,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Debug.Assert(!string.IsNullOrEmpty(m_AssetPath));
 
             // Update JSON.
-            var asset = m_AssetObjectCopy;
+            var asset = m_AssetObjectForEditing;
             var json = asset.ToJson();
             m_AssetJson = StringHelpers.PrettyPrintJSON(json);
 
@@ -237,14 +274,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 File.WriteAllText(m_AssetPath, m_AssetJson);
                 AssetDatabase.ImportAsset(m_AssetPath);
             }
+
+            m_IsDirty = false;
         }
 
         public void OnGUI()
         {
             EditorGUILayout.BeginVertical();
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginHorizontal();
 
+            // Toolbar.
+            EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+            EditorGUI.BeginDisabledGroup(!m_IsDirty);
+            if (GUILayout.Button(m_SaveAssetGUI, EditorStyles.toolbarButton))
+                SaveChangesToAsset();
+            EditorGUI.EndDisabledGroup();
             GUILayout.FlexibleSpace();
             EditorGUI.BeginChangeCheck();
             m_SearchText = m_SearchField.OnToolbarGUI(m_SearchText, GUILayout.MaxWidth(250));

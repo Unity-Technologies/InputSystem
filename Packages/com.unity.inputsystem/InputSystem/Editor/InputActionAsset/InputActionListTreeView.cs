@@ -7,12 +7,12 @@ using UnityEditor.IMGUI.Controls;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class InputActionListTreeView : TreeView
+    internal class InputActionListTreeView : TreeView
     {
-        SerializedObject m_SerializedObject;
-        string m_GroupFilter;
-        string m_NameFilter;
-        Action m_ApplyAction;
+        private SerializedObject m_SerializedObject;
+        private string m_GroupFilter;
+        private string m_NameFilter;
+        private Action m_ApplyAction;
 
         public Action OnSelectionChanged;
         public Action<SerializedProperty> OnContextClick;
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return root;
         }
 
-        void BuildFromSerializedObject(TreeViewItem root)
+        private void BuildFromSerializedObject(TreeViewItem root)
         {
             m_SerializedObject.Update();
             var actionMapArrauProperty = m_SerializedObject.FindProperty("m_ActionMaps");
@@ -101,7 +101,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index, int depth)
+        private void ParseAction(TreeViewItem parentTreeItem, SerializedProperty actionMapProperty, SerializedProperty actionsArrayProperty, int index, int depth)
         {
             var bindingsArrayProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             var actionMapName = actionMapProperty.FindPropertyRelative("m_Name").stringValue;
@@ -126,7 +126,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
         {
-            bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
+            var actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
             var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
             CompositeGroupTreeItem compositeGroupTreeItem = null;
             for (var j = 0; j < bindingsCount; j++)
