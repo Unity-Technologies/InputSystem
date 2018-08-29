@@ -152,6 +152,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             m_AssetObjectCopy = Instantiate(m_AssetObjectOriginal);
+            m_AssetObjectCopy.hideFlags = HideFlags.HideAndDontSave;
             m_AssetObjectCopy.name = m_AssetObjectOriginal.name;
             m_AssetPath = AssetDatabase.GetAssetPath(m_AssetObjectOriginal);
             m_AssetJson = null;
@@ -219,7 +220,6 @@ namespace UnityEngine.Experimental.Input.Editor
             m_AssetJson = newJson;
         }
 
-        ////FIXME: dirties the scene
         private void SaveChangesToAsset()
         {
             ////TODO: has to be made to work with version control
