@@ -251,7 +251,6 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item is BindingTreeItem && !(item is CompositeGroupTreeItem))
                 return;
             BeginRename(item);
-            ((ActionTreeViewItem)item).renaming = true;
         }
 
         protected override void RenameEnded(RenameEndedArgs args)
@@ -260,8 +259,6 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionItem = item as ActionTreeViewItem;
             if (actionItem == null)
                 return;
-
-            actionItem.renaming = false;
 
             if (!args.acceptedRename)
                 return;
@@ -292,11 +289,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            var indent = (args.item.depth + 2) * 6 + 10;
-
             var item = args.item as ActionTreeViewItem;
             if (item != null)
-                item.OnGUI(args.rowRect, args.selected, args.focused, indent);
+                item.OnGUI(args.rowRect, args.selected, args.focused);
         }
 
         protected override bool CanStartDrag(CanStartDragArgs args)
