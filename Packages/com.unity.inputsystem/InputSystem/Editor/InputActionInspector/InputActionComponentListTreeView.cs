@@ -99,9 +99,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            if (args.item is InputTreeViewLine)
+            if (args.item is ActionTreeViewItem)
             {
-                var bindingItem = (args.item as InputTreeViewLine);
+                var bindingItem = (args.item as ActionTreeViewItem);
 
                 // We try to predict the indentation
                 var indent = (args.item.depth + 2) * 6 + 10;
@@ -115,7 +115,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void DoubleClickedItem(int id)
         {
-            var element = (InputTreeViewLine)FindItem(id, rootItem);
+            var element = (ActionTreeViewItem)FindItem(id, rootItem);
             var rect = new Rect(GUIUtility.GUIToScreenPoint(Event.current.mousePosition), Vector2.zero);
             BindingPropertiesPopup.Show(rect, element, Reload);
         }

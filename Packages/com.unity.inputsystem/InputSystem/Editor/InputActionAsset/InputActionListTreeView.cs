@@ -177,17 +177,17 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        public InputTreeViewLine GetSelectedRow()
+        public ActionTreeViewItem GetSelectedRow()
         {
             if (!HasSelection())
                 return null;
 
-            return (InputTreeViewLine)FindItem(GetSelection().First(), rootItem);
+            return (ActionTreeViewItem)FindItem(GetSelection().First(), rootItem);
         }
 
-        public IEnumerable<InputTreeViewLine> GetSelectedRows()
+        public IEnumerable<ActionTreeViewItem> GetSelectedRows()
         {
-            return FindRows(GetSelection()).Cast<InputTreeViewLine>();
+            return FindRows(GetSelection()).Cast<ActionTreeViewItem>();
         }
 
         public ActionTreeItem GetSelectedAction()
@@ -230,7 +230,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item == null)
                 return null;
 
-            return (item as InputTreeViewLine).elementProperty;
+            return (item as ActionTreeViewItem).elementProperty;
         }
 
         protected override float GetCustomRowHeight(int row, TreeViewItem item)
@@ -240,7 +240,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override bool CanRename(TreeViewItem item)
         {
-            return item is CompositeGroupTreeItem || item is InputTreeViewLine && !(item is BindingTreeItem);
+            return item is CompositeGroupTreeItem || item is ActionTreeViewItem && !(item is BindingTreeItem);
         }
 
         protected override void DoubleClickedItem(int id)
@@ -251,39 +251,37 @@ namespace UnityEngine.Experimental.Input.Editor
             if (item is BindingTreeItem && !(item is CompositeGroupTreeItem))
                 return;
             BeginRename(item);
-            (item as InputTreeViewLine).renaming = true;
+            ((ActionTreeViewItem)item).renaming = true;
         }
 
         protected override void RenameEnded(RenameEndedArgs args)
         {
             var item = FindItem(args.itemID, rootItem);
-            if (item == null)
+            var actionItem = item as ActionTreeViewItem;
+            if (actionItem == null)
                 return;
 
-            (item as InputTreeViewLine).renaming = false;
+            actionItem.renaming = false;
 
             if (!args.acceptedRename)
                 return;
 
-            var actionItem = item as InputTreeViewLine;
-            if (actionItem == null)
-                return;
-
             if (actionItem is ActionTreeItem)
             {
-                (actionItem as ActionTreeItem).Rename(args.newName);
+                ((ActionTreeItem)actionItem).Rename(args.newName);
             }
             else if (actionItem is ActionMapTreeItem)
             {
-                (actionItem as ActionMapTreeItem).Rename(args.newName);
+                ((ActionMapTreeItem)actionItem).Rename(args.newName);
             }
             else if (actionItem is CompositeGroupTreeItem)
             {
-                (actionItem as CompositeGroupTreeItem).Rename(args.newName);
+                ((CompositeGroupTreeItem)actionItem).Rename(args.newName);
             }
             else
             {
-                throw new NotImplementedException("Can't rename this row");
+                Debug.Assert(false, "Cannot rename: " + actionItem);
+                return;
             }
 
             m_ApplyAction();
@@ -294,19 +292,18 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void RowGUI(RowGUIArgs args)
         {
-            // We try to predict the indentation
             var indent = (args.item.depth + 2) * 6 + 10;
-            if (args.item is InputTreeViewLine)
-            {
-                (args.item as InputTreeViewLine).OnGUI(args.rowRect, args.selected, args.focused, indent);
-            }
+
+            var item = args.item as ActionTreeViewItem;
+            if (item != null)
+                item.OnGUI(args.rowRect, args.selected, args.focused, indent);
         }
 
         protected override bool CanStartDrag(CanStartDragArgs args)
         {
             if (args.draggedItemIDs.Count > 1)
                 return false;
-            var item = FindItem(args.draggedItemIDs[0], rootItem) as InputTreeViewLine;
+            var item = FindItem(args.draggedItemIDs[0], rootItem) as ActionTreeViewItem;
             return item.isDraggable;
         }
 
@@ -325,7 +322,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             var id = Int32.Parse(DragAndDrop.paths.First());
             var item = FindItem(id, rootItem);
-            var row = (InputTreeViewLine)item;
+            var row = (ActionTreeViewItem)item;
 
             if (!row.isDraggable || args.parentItem != row.parent)
             {
