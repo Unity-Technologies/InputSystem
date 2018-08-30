@@ -768,6 +768,7 @@ class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_SupportsHIDDpads()
     {
         Assert.Fail();
@@ -775,6 +776,7 @@ class HIDTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_GenericHIDJoystickIsTurnedIntoJoystick()
     {
         Assert.Fail();
@@ -789,6 +791,7 @@ class HIDTests : InputTestFixture
     // all but rather turn them into joysticks instead.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_GenericHIDGamepadIsTurnedIntoJoystick()
     {
         Assert.Fail();

@@ -37,6 +37,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_WhenSeveralBindingsResolveToSameControl_ThenWhatDoWeDoXXX()
     {
         Assert.Fail();
@@ -44,6 +45,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanQueryUsedDevicesFromAction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -63,6 +65,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanQueryUsedDevicesFromActionMaps()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -360,6 +363,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanGetCompositeBindingValuesFromActionEvents()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1273,6 +1277,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanSetUpBindingsOnActionMap()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -1326,6 +1331,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanQueryBindingsTriggeringAction()
     {
         var map = new InputActionMap();
@@ -1347,6 +1353,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanChainBindings()
     {
         // Set up an action that requires the left trigger to be held when pressing the A button.
@@ -1376,6 +1383,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_ChainedBindingsTriggerIfControlsActivateAtSameTime()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -1396,6 +1404,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_ChainedBindingsDoNotTriggerIfControlsActivateInWrongOrder()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -1422,6 +1431,7 @@ partial class CoreTests
     // the gesture.
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanChainBindingsWithInteractions()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -1447,6 +1457,7 @@ partial class CoreTests
     ////REVIEW: don't think this one makes sense to have
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanPerformContinuousAction()
     {
         var gamepad = InputSystem.AddDevice("Gamepad");
@@ -1597,6 +1608,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_ButtonTriggersActionOnlyAfterCrossingPressThreshold()
     {
         // Axis controls trigger for every value change whereas buttons only trigger
@@ -1641,6 +1653,7 @@ partial class CoreTests
     // shouldn't matter until the gamepad's A button comes back up.
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_StartingOfActionCapturesControl()
     {
         Assert.Fail();
@@ -1916,6 +1929,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanSetGravityOnDpadComposites()
     {
         Assert.Fail();
@@ -1923,6 +1937,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_WhenPartOfCompositeResolvesToMultipleControls_WhatHappensXXX()
     {
         Assert.Fail();
@@ -2292,6 +2307,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanRebindFromUserInput()
     {
         var action = new InputAction(binding: "/gamepad/leftStick");
@@ -2324,6 +2340,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanRenameAction_WithoutBreakingActionReferences()
     {
         Assert.Fail();

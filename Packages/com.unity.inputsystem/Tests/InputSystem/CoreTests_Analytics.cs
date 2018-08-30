@@ -213,6 +213,7 @@ partial class CoreTests
     ////TODO: for this one to make sense, we first need noise filtering to be able to tell real user interaction from garbage data
     [Test]
     [Category("Analytics")]
+    [Ignore("TODO")]
     public void TODO_Analytics_ReceivesEventOnFirstUserInteraction()
     {
         Assert.Fail();

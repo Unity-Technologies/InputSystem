@@ -127,6 +127,7 @@ public class SteamTests : InputTestFixture
     // Option 2: Have action sets on SteamControllers activate automatically in sync with InputActionMaps.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanAutomaticallyActivateActionSetsOnSteamControllers()
     {
         Assert.Fail();
@@ -134,6 +135,7 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void Devices_CanActivateActionSetOnSteamController()
     {
         var map = new InputActionMap("gameplay");
@@ -172,6 +174,7 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_SteamControllersSendActionStateAsEvents()
     {
         Assert.Fail();
@@ -324,6 +327,7 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
+    [Ignore("TODO")]
     public void TODO_Editor_ConvertingInputActionsToSteamIGA_ThrowsIfTwoActionsHaveTheSameName()
     {
         Assert.Fail();
