@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
@@ -56,22 +57,31 @@ namespace UnityEngine.Experimental.Input
         [SetUp]
         public virtual void Setup()
         {
-            // Disable input debugger so we don't waste time responding to all the
-            // input system activity from the tests.
-            #if UNITY_EDITOR
-            InputDebuggerWindow.Disable();
-            #endif
+            try
+            {
+                // Disable input debugger so we don't waste time responding to all the
+                // input system activity from the tests.
+                #if UNITY_EDITOR
+                InputDebuggerWindow.Disable();
+                #endif
 
-            testRuntime = new InputTestRuntime();
+                testRuntime = new InputTestRuntime();
 
-            // Push current input system state on stack.
-            InputSystem.SaveAndReset(enableRemoting: false, runtime: testRuntime);
+                // Push current input system state on stack.
+                InputSystem.SaveAndReset(enableRemoting: false, runtime: testRuntime);
 
-            #if UNITY_EDITOR
-            // Make sure we're not affected by the user giving focus away from the
-            // game view.
-            InputConfiguration.LockInputToGame = true;
-            #endif
+                #if UNITY_EDITOR
+                // Make sure we're not affected by the user giving focus away from the
+                // game view.
+                InputConfiguration.LockInputToGame = true;
+                #endif
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("Failed to set up input system for test " + TestContext.CurrentContext.Test.Name);
+                Debug.LogException(exception);
+                throw exception;
+            }
 
             if (InputSystem.devices.Count > 0)
                 Assert.Fail("Input system should not have devices after reset");
@@ -83,24 +93,33 @@ namespace UnityEngine.Experimental.Input
         [TearDown]
         public virtual void TearDown()
         {
-            // Destroy any GameObject in the current scene that isn't hidden and isn't the
-            // test runner object. Do this first so that any cleanup finds the system in the
-            // state it expects.
-            var scene = SceneManager.GetActiveScene();
-            foreach (var go in scene.GetRootGameObjects())
+            try
             {
-                if (go.hideFlags != 0 || go.name.Contains("tests runner"))
-                    continue;
-                Object.DestroyImmediate(go);
+                // Destroy any GameObject in the current scene that isn't hidden and isn't the
+                // test runner object. Do this first so that any cleanup finds the system in the
+                // state it expects.
+                var scene = SceneManager.GetActiveScene();
+                foreach (var go in scene.GetRootGameObjects())
+                {
+                    if (go.hideFlags != 0 || go.name.Contains("tests runner"))
+                        continue;
+                    Object.DestroyImmediate(go);
+                }
+
+                InputSystem.Restore();
+                testRuntime.Dispose();
+
+                // Re-enable input debugger.
+                #if UNITY_EDITOR
+                InputDebuggerWindow.Enable();
+                #endif
             }
-
-            InputSystem.Restore();
-            testRuntime.Dispose();
-
-            // Re-enable input debugger.
-            #if UNITY_EDITOR
-            InputDebuggerWindow.Enable();
-            #endif
+            catch (Exception exception)
+            {
+                Debug.LogError("Failed to shut down and restore input system after test " + TestContext.CurrentContext.Test.Name);
+                Debug.LogException(exception);
+                throw exception;
+            }
         }
 
         public void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
