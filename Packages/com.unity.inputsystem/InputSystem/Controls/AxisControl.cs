@@ -50,18 +50,26 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeFloat;
         }
 
+        public override bool HasSignificantChange(InputEventPtr eventPtr)
+        {
+            float value;
+            if (ReadValueFrom(eventPtr, out value))
+                return Mathf.Abs(value - ReadDefaultValue()) > float.Epsilon;
+            return false;
+        }
+
         // Read a floating-point value from the given state. Automatically checks
         // the state format of the control and performs conversions.
         // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
         //       or bitfield type.
-        public override float ReadRawValueFrom(IntPtr statePtr)
+        public override float ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             var value = stateBlock.ReadFloat(statePtr);
             ////REVIEW: this isn't very raw
             return Preprocess(value);
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, float value)
+        protected override void WriteUnprocessedValueInto(IntPtr statePtr, float value)
         {
             stateBlock.WriteFloat(statePtr, value);
         }

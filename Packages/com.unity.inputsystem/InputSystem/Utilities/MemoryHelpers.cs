@@ -245,5 +245,72 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             throw new NotImplementedException("Writing int straddling int boundary");
         }
+
+        public static void SetBitsInBuffer(IntPtr filterBuffer, InputControl control, bool value)
+        {
+            SetBitsInBuffer(filterBuffer, control.stateBlock.byteOffset, control.stateBlock.sizeInBits, value);
+        }
+
+        public static void SetBitsInBuffer(IntPtr filterBuffer, uint byteOffset, uint sizeInBits, bool value)
+        {
+            if (filterBuffer == IntPtr.Zero)
+                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "filterBuffer");
+
+            var sizeRemaining = sizeInBits;
+
+            var filterIter = (uint*)((filterBuffer.ToInt64() + (Int64)byteOffset));
+            while (sizeRemaining >= 32)
+            {
+                *filterIter = value ? 0xFFFFFFFF : 0;
+                filterIter++;
+                sizeRemaining -= 32;
+            }
+
+            uint mask = (uint)((1 << (int)sizeRemaining) - 1);
+            if (value)
+            {
+                *filterIter |= mask;
+            }
+            else
+            {
+                *filterIter &= ~mask;
+            }
+        }
+
+        public static bool HasAnyNonZeroBitsAfterMaskingWithBuffer(IntPtr eventBuffer, IntPtr maskPtr, uint offsetBytes, uint sizeInBits)
+        {
+            if (eventBuffer == IntPtr.Zero || maskPtr == IntPtr.Zero)
+                return false;
+
+            var sizeRemaining = sizeInBits;
+
+            var eventIter = (uint*)eventBuffer.ToPointer();
+
+            var maskIter = (uint*)(new IntPtr(maskPtr.ToInt64() + (Int64)offsetBytes).ToPointer());
+
+            while (sizeRemaining >= 32)
+            {
+                if ((*eventIter & *maskIter) != 0)
+                    return true;
+
+                eventIter++;
+                maskIter++;
+
+                sizeRemaining -= 32;
+            }
+
+            //Find the remaining bytes to check
+            // Mask it in the state iterator and noise
+            var remainingState = *eventIter;
+            var remainingMask = *maskIter;
+
+            var mask = ((1 >> (int)sizeRemaining) - 1);
+
+
+            if ((remainingState & (remainingMask & mask)) != 0)
+                return true;
+
+            return false;
+        }
     }
 }

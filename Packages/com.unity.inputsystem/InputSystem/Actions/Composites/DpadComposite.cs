@@ -28,7 +28,7 @@ namespace UnityEngine.Experimental.Input.Composites
 
         public Vector2 ReadValue(ref InputBindingCompositeContext context)
         {
-            ////TODO: unify code path with DpadControl.ReadRawValueFrom()
+            ////TODO: unify code path with DpadControl.ReadUnprocessedValueFrom()
             var upIsPressed = up.isPressed;
             var downIsPressed = down.isPressed;
             var leftIsPressed = left.isPressed;

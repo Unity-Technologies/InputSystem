@@ -7,7 +7,7 @@ namespace UnityEngine.Experimental.Input.Controls
 {
     public class AudioControl : InputControl<AudioBuffer>
     {
-        public override AudioBuffer ReadRawValueFrom(IntPtr statePtr)
+        public override AudioBuffer ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             throw new NotImplementedException();
         }

@@ -187,22 +187,22 @@ namespace UnityEngine.Experimental.Input
             get { return typeof(byte[]); }
         }
 
-        public NoiseFilter noiseFilter
+        public NoiseFilter userInteractionFilter
         {
             get
             {
-                return m_NoiseFilter;
+                return m_UserInteractionFilter;
             }
             set
             {
-                if (value != m_NoiseFilter)
+                if (value != m_UserInteractionFilter)
                 {
                     if (value == null)
-                        m_NoiseFilter.Reset(this);
+                        m_UserInteractionFilter.Reset(this);
                     else
                         value.Apply(this);
 
-                    m_NoiseFilter = value;
+                    m_UserInteractionFilter = value;
                 }
             }
         }
@@ -367,7 +367,7 @@ namespace UnityEngine.Experimental.Input
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
 
-        internal NoiseFilter m_NoiseFilter;
+        internal NoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

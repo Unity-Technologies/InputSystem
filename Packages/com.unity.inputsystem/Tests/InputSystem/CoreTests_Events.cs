@@ -112,7 +112,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
+    public void Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

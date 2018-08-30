@@ -121,7 +121,6 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             m_BufferedRumble = new BufferedRumble(this);
             HapticCapabilities capabilities = m_BufferedRumble.capabilities;
-            Debug.Log(string.Format("XR Device Found with Haptic Capabilites: NumChannels:[{0}] FrequencyHz:[{1}] MaxBufferSize:[{2}]", capabilities.numChannels, capabilities.frequencyHz, capabilities.maxBufferSize));
         }
 
         /// <summary>

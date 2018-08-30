@@ -854,7 +854,7 @@ namespace UnityEngine.Experimental.Input
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
 
-            device.noiseFilter = NoiseFilter.CreateDefaultNoiseFilter(device);
+            device.userInteractionFilter = NoiseFilter.CreateDefaultNoiseFilter(device);
 
             // Notify device.
             device.NotifyAdded();
@@ -2091,8 +2091,12 @@ namespace UnityEngine.Experimental.Input
 
                         var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
 
+                        // Use a filter to see if any significant changes are occuring on the device.
+                        // Significant changes are non-noisy control changes, and changes that create a value
+                        // change after processors are applied.  These are used to detect actual user interaction
+                        // with a device instead of simply sensor noise.
                         InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
-                        NoiseFilter filter = device.noiseFilter;
+                        NoiseFilter filter = device.userInteractionFilter;
                         bool hasSignificantControlChanges = filter != null ? filter.HasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy) : true;
                         doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 

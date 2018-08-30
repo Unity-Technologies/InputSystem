@@ -248,6 +248,11 @@ namespace UnityEngine.Experimental.Input
             WriteValueFromObjectInto(statePtr, bufferSize, value);
         }
 
+        public virtual bool HasSignificantChange(InputEventPtr eventPtr)
+        {
+            return (GetStatePtrFromStateEvent(eventPtr) != IntPtr.Zero);
+        }
+
         // Constructor for devices which are assigned names once plugged
         // into the system.
         protected InputControl()
@@ -406,8 +411,6 @@ namespace UnityEngine.Experimental.Input
         {
             if (!eventPtr.valid)
                 throw new ArgumentNullException("eventPtr");
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
 
             uint stateOffset;
             FourCC stateFormat;
@@ -445,8 +448,8 @@ namespace UnityEngine.Experimental.Input
             if (stateFormat != device.m_StateBlock.format)
                 throw new InvalidOperationException(
                     string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
+                        "Cannot read control '{0}' from {1} with format {2}; device '{3}' expects format {4}",
+                        path, eventPtr.type, stateFormat, device, device.m_StateBlock.format));
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
@@ -533,7 +536,7 @@ namespace UnityEngine.Experimental.Input
             if (!(value is TValue))
                 value = Convert.ChangeType(value, typeof(TValue));
 
-            WriteRawValueInto(buffer, (TValue)value);
+            WriteUnprocessedValueInto(buffer, (TValue)value);
         }
 
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
@@ -552,7 +555,7 @@ namespace UnityEngine.Experimental.Input
             return true;
         }
 
-        public bool ReadRawValueFrom(InputEventPtr inputEvent, out TValue value)
+        public bool ReadUnprocessedValueFrom(InputEventPtr inputEvent, out TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == IntPtr.Zero)
@@ -561,23 +564,23 @@ namespace UnityEngine.Experimental.Input
                 return false;
             }
 
-            value = ReadRawValueFrom(statePtr);
+            value = ReadUnprocessedValueFrom(statePtr);
             return true;
         }
 
         public TValue ReadValueFrom(IntPtr statePtr)
         {
-            return Process(ReadRawValueFrom(statePtr));
+            return Process(ReadUnprocessedValueFrom(statePtr));
         }
 
-        public TValue ReadRawValue()
+        public TValue ReadUnprocessedValue()
         {
-            return ReadRawValueFrom(currentStatePtr);
+            return ReadUnprocessedValueFrom(currentStatePtr);
         }
 
-        public abstract TValue ReadRawValueFrom(IntPtr statePtr);
+        public abstract TValue ReadUnprocessedValueFrom(IntPtr statePtr);
 
-        protected virtual void WriteRawValueInto(IntPtr statePtr, TValue value)
+        protected virtual void WriteUnprocessedValueInto(IntPtr statePtr, TValue value)
         {
             ////TODO: indicate propertly that this control does not support writing
             throw new NotSupportedException();
@@ -605,7 +608,7 @@ namespace UnityEngine.Experimental.Input
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
         {
-            WriteRawValueInto(statePtr, value);
+            WriteUnprocessedValueInto(statePtr, value);
         }
 
         /// <summary>

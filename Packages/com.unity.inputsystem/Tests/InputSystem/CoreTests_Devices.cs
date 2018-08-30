@@ -2799,7 +2799,8 @@ partial class CoreTests
         testRuntime.currentTime = 1234;
         testRuntime.currentTimeOffsetToRealtimeSinceStartup = 1123;
 
-        InputSystem.QueueStateEvent(device, new GamepadState());
+        // This can be anything above and beyond the simple default gamepad state.
+        InputSystem.QueueStateEvent(device, new GamepadState { leftStick = Vector2.one });
         InputSystem.Update();
 
         // Externally visible time must be offset according to currentTimeOffsetToRealtimeSinceStartup.

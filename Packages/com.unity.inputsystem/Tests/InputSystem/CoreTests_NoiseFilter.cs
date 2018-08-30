@@ -210,7 +210,7 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
 
-        device1.noiseFilter = null;
+        device1.userInteractionFilter = null;
 
         Assert.That(NoisyInputDevice.current == device2);
 
@@ -243,19 +243,19 @@ partial class CoreTests
         var device2 = InputSystem.AddDevice("MyDevice");
 
         // Tag the entire device as noisy
-        device1.noiseFilter = new NoiseFilter
+        device1.userInteractionFilter = new NoiseFilter
         {
-            elements = new NoiseFilter.FilteredElement[]
+            elements = new NoiseFilter.FilterElement[]
             {
-                new NoiseFilter.FilteredElement
+                new NoiseFilter.FilterElement
                 {
                     controlIndex = 0,
-                    type = NoiseFilter.EElementType.TypeFull
+                    type = NoiseFilter.ElementType.EntireControl
                 },
-                new NoiseFilter.FilteredElement
+                new NoiseFilter.FilterElement
                 {
                     controlIndex = 1,
-                    type = NoiseFilter.EElementType.TypeFull
+                    type = NoiseFilter.ElementType.EntireControl
                 },
             }
         };
