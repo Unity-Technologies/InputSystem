@@ -256,24 +256,38 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public static void RenameAction(SerializedProperty actionProperty, SerializedProperty actionMapProperty, string newName)
         {
+            // Make sure name is unique.
+            var actionsArrayProperty = actionMapProperty.FindPropertyRelative("m_Actions");
+            var uniqueName = FindUniqueName(actionsArrayProperty, newName);
+
+            // Update all bindings that refer to the action.
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");
+            var oldName = nameProperty.stringValue;
             var bindingsProperty = actionMapProperty.FindPropertyRelative("m_Bindings");
             for (var i = 0; i < bindingsProperty.arraySize; i++)
             {
                 var element = bindingsProperty.GetArrayElementAtIndex(i);
                 var actionNameProperty = element.FindPropertyRelative("action");
-                if (actionNameProperty.stringValue == nameProperty.stringValue)
+                if (actionNameProperty.stringValue == oldName)
                 {
-                    actionNameProperty.stringValue = newName;
+                    actionNameProperty.stringValue = uniqueName;
                 }
             }
-            nameProperty.stringValue = newName;
+
+            // Update name.
+            nameProperty.stringValue = uniqueName;
         }
 
         public static void RenameActionMap(SerializedProperty actionMapProperty, string newName)
         {
+            // Make sure name is unique in InputActionAsset.
+            var assetObject = actionMapProperty.serializedObject;
+            var mapsArrayProperty = assetObject.FindProperty("m_ActionMaps");
+            var uniqueName = FindUniqueName(mapsArrayProperty, newName);
+
+            // Assign to map.
             var nameProperty = actionMapProperty.FindPropertyRelative("m_Name");
-            nameProperty.stringValue = newName;
+            nameProperty.stringValue = uniqueName;
         }
 
         public static void RenameComposite(SerializedProperty compositeGroupProperty, string newName)

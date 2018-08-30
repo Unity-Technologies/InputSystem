@@ -13,7 +13,6 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.HID;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.TestTools;
-using Object = System.Object;
 
 partial class CoreTests
 {
@@ -430,10 +429,10 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_CanRenameAction()
     {
-        var set1 = new InputActionMap("set1");
-        set1.AddAction(name: "action", binding: "/gamepad/leftStick");
+        var map = new InputActionMap("set1");
+        map.AddAction(name: "action", binding: "<Gamepad>/leftStick");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(set1);
+        asset.AddActionMap(map);
 
         var obj = new SerializedObject(asset);
         var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
@@ -442,9 +441,69 @@ partial class CoreTests
         InputActionSerializationHelpers.RenameAction(action1Property, mapProperty, "newAction");
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        Assert.That(set1.actions[0].name, Is.EqualTo("newAction"));
-        Assert.That(set1.actions[0].bindings, Has.Count.EqualTo(1));
-        Assert.That(set1.actions[0].bindings[0].action, Is.EqualTo("newAction"));
+        Assert.That(map.actions[0].name, Is.EqualTo("newAction"));
+        Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(map.actions[0].bindings[0].action, Is.EqualTo("newAction"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RenamingAction_WillAutomaticallyEnsureUniqueNames()
+    {
+        var map = new InputActionMap("set1");
+        map.AddAction("actionA", binding: "<Gamepad>/leftStick");
+        map.AddAction("actionB");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+        var action1Property = mapProperty.FindPropertyRelative("m_Actions").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameAction(action1Property, mapProperty, "actionB");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.actions[1].name, Is.EqualTo("actionB"));
+        Assert.That(map.actions[0].name, Is.EqualTo("actionB1"));
+        Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(map.actions[0].bindings[0].action, Is.EqualTo("actionB1"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanRenameActionMap()
+    {
+        var map = new InputActionMap("oldName");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        var mapProperty = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameActionMap(mapProperty, "newName");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.name, Is.EqualTo("newName"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_RenamingActionMap_WillAutomaticallyEnsureUniqueNames()
+    {
+        var map1 = new InputActionMap("mapA");
+        var map2 = new InputActionMap("mapB");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var obj = new SerializedObject(asset);
+        var map1Property = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(0);
+
+        InputActionSerializationHelpers.RenameActionMap(map1Property, "mapB");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map1.name, Is.EqualTo("mapB1"));
+        Assert.That(map2.name, Is.EqualTo("mapB"));
     }
 
     [Test]

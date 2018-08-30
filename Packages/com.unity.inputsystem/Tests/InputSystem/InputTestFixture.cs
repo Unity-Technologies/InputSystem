@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Controls;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
@@ -37,7 +36,7 @@ namespace UnityEngine.Experimental.Input
     ///     [Test]
     ///     public void CanCreateMyDevice()
     ///     {
-    ///         InputSystem.AddDevice("MyDevice");
+    ///         InputSystem.AddDevice<MyDevice>();
     ///         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<MyDevice>());
     ///     }
     /// }
