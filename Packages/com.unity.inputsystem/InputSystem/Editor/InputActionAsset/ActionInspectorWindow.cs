@@ -205,9 +205,10 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             if (m_TreeView == null)
                 return;
+
+            m_IsDirty = true;
             m_TreeView.Reload();
             OnSelectionChanged();
-            SaveChangesToAsset();
         }
 
         private void OnSelectionChanged()
