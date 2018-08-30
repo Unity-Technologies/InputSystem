@@ -854,7 +854,9 @@ namespace UnityEngine.Experimental.Input
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
 
-            device.userInteractionFilter = NoiseFilter.CreateDefaultNoiseFilter(device);
+            NoiseFilter interactionFilter = device.userInteractionFilter;
+            if (interactionFilter != null)
+                interactionFilter.Apply(device);
 
             // Notify device.
             device.NotifyAdded();
