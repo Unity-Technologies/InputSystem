@@ -135,7 +135,6 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
     public void Devices_CanActivateActionSetOnSteamController()
     {
         var map = new InputActionMap("gameplay");
