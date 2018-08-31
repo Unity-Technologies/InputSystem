@@ -1896,6 +1896,26 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanUseMouseAsPointer()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.QueueStateEvent(device,
+            new MouseState
+            {
+                position = new Vector2(0.123f, 0.456f),
+            });
+        InputSystem.Update();
+
+        Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
+        Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
+        ////TODO: mouse phase should be driven by Mouse device automatically
+        Assert.That(device.phase.ReadValue(), Is.EqualTo(PointerPhase.None));
+        ////TODO: pointer ID etc.
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanDetectIfPenInRange()
     {
         var pen = InputSystem.AddDevice<Pen>();
@@ -1908,9 +1928,10 @@ partial class CoreTests
         Assert.That(pen.inRange.ReadValue(), Is.EqualTo(1).Within(0.00001));
     }
 
+    ////FIXME: this needs to be overhauled; functioning of Touchscreen as Pointer is currently broken
     [Test]
     [Category("Devices")]
-    public void Devices_TouchscreenCanFunctionAsPointer()
+    public void Devices_CanUseTouchscreenAsPointer()
     {
         var device = InputSystem.AddDevice<Touchscreen>();
 

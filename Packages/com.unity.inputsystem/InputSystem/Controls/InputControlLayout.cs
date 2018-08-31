@@ -913,6 +913,8 @@ namespace UnityEngine.Experimental.Input
                 format = new FourCC(attribute.format);
             else if (!isModifyingChildControlByPath && bit == InputStateBlock.kInvalidOffset)
             {
+                ////REVIEW: this logic makes it hard to inherit settings from the base layout; if we do this stuff,
+                ////        we should probably do it in InputDeviceBuilder and not directly on the layout
                 var valueType = TypeHelpers.GetValueType(member);
                 format = InputStateBlock.GetPrimitiveFormatFromType(valueType);
             }
