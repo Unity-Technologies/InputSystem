@@ -103,6 +103,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
+        internal double internalTime
+        {
+            get { return valid ? m_EventPtr->internalTime : 0.0; }
+            set
+            {
+                if (!valid)
+                    throw new NullReferenceException();
+                m_EventPtr->internalTime = value;
+            }
+        }
+
         public IntPtr data
         {
             get { return new IntPtr(m_EventPtr); }

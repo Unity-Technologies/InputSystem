@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['devicecommand',['DeviceCommand',['../interfaceUnityEngine_1_1Experimental_1_1Input_1_1LowLevel_1_1IInputRuntime.html#a395257f9356b0d8d262cbd3e352dc8b0',1,'UnityEngine::Experimental::Input::LowLevel::IInputRuntime']]],
-  ['disableallenabledactions',['DisableAllEnabledActions',['../classUnityEngine_1_1Experimental_1_1Input_1_1InputSystem.html#ab218bcd4cf75952fce10b6d4aab1bbf0',1,'UnityEngine::Experimental::Input::InputSystem']]]
+  ['convertinputactionstosteamiga',['ConvertInputActionsToSteamIGA',['../classUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1Steam_1_1Editor_1_1SteamIGAConverter.html#a139c6584de6e89a254d7e7f38fcd8566',1,'UnityEngine::Experimental::Input::Plugins::Steam::Editor::SteamIGAConverter']]],
+  ['create',['Create',['../structUnityEngine_1_1Experimental_1_1Input_1_1Plugins_1_1XR_1_1Haptics_1_1SimpleXRRumbleCommand.html#ac77057d4f7dffb9bf30cbd72a3777fd3',1,'UnityEngine::Experimental::Input::Plugins::XR::Haptics::SimpleXRRumbleCommand']]]
 ];

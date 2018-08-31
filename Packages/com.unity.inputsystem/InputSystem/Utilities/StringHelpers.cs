@@ -247,5 +247,113 @@ namespace UnityEngine.Experimental.Input.Utilities
             offset = (uint)endOffset;
             return text;
         }
+
+        /// <summary>
+        /// Take a string in JSON format and return a pretty-printed version of it.
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="indent"></param>
+        /// <returns></returns>
+        public static string PrettyPrintJSON(string json, int indent = 4)
+        {
+            if (string.IsNullOrEmpty(json))
+                return string.Empty;
+
+            var builder = new StringBuilder();
+            var length = json.Length;
+            var position = 0;
+            var indentLevel = 0;
+            var newline = false;
+            var inString = false;
+            var isAfterColon = false;
+            var isNewLine = true;
+
+            while (position < length)
+            {
+                var ch = json[position];
+                ++position;
+
+                if (!inString && char.IsWhiteSpace(ch))
+                    continue;
+
+                if (ch == '\\' && position < length)
+                {
+                    ch = json[position];
+                    ++position;
+                }
+                else if (ch == '"')
+                    inString = !inString;
+                else if (!inString && (ch == '}' || ch == ']'))
+                    --indentLevel;
+
+                if (newline)
+                {
+                    for (var n = 0; n < indentLevel; ++n)
+                        for (var i = 0; i < indent; ++i)
+                            builder.Append(' ');
+                    newline = false;
+                    isNewLine = true;
+                }
+
+                if (!inString && (ch == '{' || ch == '['))
+                {
+                    if (!isNewLine && !isAfterColon)
+                        builder.Append(' ');
+
+                    builder.Append(ch);
+                    builder.Append('\n');
+                    newline = true;
+                    isAfterColon = false;
+                    ++indentLevel;
+                }
+                else if (!inString && (ch == '}' || ch == ']'))
+                {
+                    if (!isNewLine)
+                    {
+                        builder.Append('\n');
+                        for (var n = 0; n < indentLevel; ++n)
+                            for (var i = 0; i < indent; ++i)
+                                builder.Append(' ');
+                    }
+                    builder.Append(ch);
+                    ////FIXME: should take whitespace into account
+                    if (position < length && json[position] == ',')
+                    {
+                        ++position;
+                        builder.Append(',');
+                    }
+                    builder.Append('\n');
+                    newline = true;
+                    isAfterColon = false;
+                }
+                else if (!inString && ch == ':')
+                {
+                    builder.Append(" : ");
+                    isAfterColon = true;
+                    isNewLine = false;
+                }
+                else if (!inString && ch == ',')
+                {
+                    builder.Append(",\n");
+                    newline = true;
+                    isAfterColon = false;
+                    isNewLine = false;
+                }
+                else if (!inString && !char.IsWhiteSpace(ch))
+                {
+                    builder.Append(ch);
+                    isAfterColon = false;
+                    isNewLine = false;
+                }
+                else if (inString)
+                {
+                    builder.Append(ch);
+                    isAfterColon = false;
+                    isNewLine = false;
+                }
+            }
+
+            return builder.ToString();
+        }
     }
 }

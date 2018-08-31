@@ -1,3 +1,7 @@
+#if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+
+////TODO: support configuring action layers directly on controller
+
 namespace UnityEngine.Experimental.Input.Plugins.Steam
 {
     /// <summary>
@@ -5,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// </summary>
     /// <remarks>
     /// Unlike other controllers, the Steam controller is somewhat of an amorphic input
-    /// device which gains specfic shape only in combination with VDF files. These files
+    /// device which gains specific shape only in combination with VDF files. These files
     /// specify the actions that are supported by the application and are internally bound
     /// to specific controls on a controller inside the Steam runtime.
     ///
@@ -13,9 +17,16 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
     /// the actual hardware device behind a SteamController instance may not be a
     /// Steam Controller.
     /// </remarks>
-    public class SteamController : InputDevice
+    public abstract class SteamController : InputDevice
     {
-    }
+        public const string kSteamInterface = "Steam";
 
-    //add support for constructing InputControlLayouts from Steam VDF files
+        public ulong steamControllerHandle { get; internal set; }
+
+        public abstract void ResolveActions(ISteamControllerAPI api);
+
+        public abstract void Update(ISteamControllerAPI api);
+    }
 }
+
+#endif // (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT

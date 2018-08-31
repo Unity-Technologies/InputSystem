@@ -287,11 +287,12 @@ class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void FIXME_Devices_TriggerHasCorrectDefaultValue()
+    public void Devices_DualshockTriggersHaveCorrectDefaultValues()
     {
         // Trigger on Dualshock has -1.0 value when in rest mode (not touched by user)
         // But when input system reads data from state struct, it reads 0.0, after normalization this becomes 0.5
         // This is incorrect... We need somekind of attribute which would allow us to specify default value in state struct
+        // Update: using defaultState attribute now to have value as -1.0 by default
         var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "Android",
@@ -315,6 +316,7 @@ class AndroidTests : InputTestFixture
         });
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
+        Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
     }
 
     [Test]

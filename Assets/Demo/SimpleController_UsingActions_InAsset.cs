@@ -8,15 +8,29 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     public float moveSpeed;
     public float rotateSpeed;
     public float burstSpeed;
+    public float jumpForce = 2.0f;
     public GameObject projectile;
 
     public DemoControls controls;
 
     private Vector2 m_Move;
     private Vector2 m_Look;
+    private bool isGrounded;
     private bool m_Charging;
 
     private Vector2 m_Rotation;
+
+    Rigidbody m_Rigidbody;
+
+    private void Start()
+    {
+        m_Rigidbody = GetComponent<Rigidbody>();
+    }
+
+    void OnCollisionStay()
+    {
+        isGrounded = true;
+    }
 
     public void Awake()
     {
@@ -46,6 +60,15 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
             ctx =>
         {
             m_Charging = false;
+        };
+        controls.gameplay.jump.performed += ctx =>
+        {
+            var jump = new Vector3(0.0f, jumpForce, 0.0f);
+            if (isGrounded)
+            {
+                m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
+                isGrounded = false;
+            }
         };
     }
 
@@ -80,10 +103,15 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     private void Look(Vector2 rotate)
     {
-        var scaledRoateSpeed = rotateSpeed * Time.deltaTime;
-        m_Rotation.y += rotate.x * scaledRoateSpeed;
-        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRoateSpeed, -89, 89);
-        transform.localEulerAngles = m_Rotation;
+        var clampAngle = 80.0f;
+
+        m_Rotation.y += rotate.x * rotateSpeed * Time.deltaTime;
+        m_Rotation.x += rotate.y * rotateSpeed * Time.deltaTime;
+
+        m_Rotation.x = Mathf.Clamp(m_Rotation.x, -clampAngle, clampAngle);
+
+        var localRotation = Quaternion.Euler(m_Rotation.x, m_Rotation.y, 0.0f);
+        transform.rotation = localRotation;
     }
 
     private IEnumerator BurstFire(int burstAmount)

@@ -7,15 +7,13 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.Experimental.Input.Utilities;
 
-////REVIEW: give these better names or move them somewhere inside; for example, there should not be a
-////        toplevel class called just "InteractionsList" anywhere in the input system; any toplevel
-////        class should have a clear name indicating what the class is responsible for
+////REVIEW: "properties" seems wrong; these seems to revert to "parameters" specifically
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.Experimental.Input.Editor.Lists
 {
-    class InteractionsList : PropertiesListBase
+    class InteractionsReorderableReorderableList : PropertiesReorderableList
     {
-        public InteractionsList(SerializedProperty property, Action applyAction) : base(property, applyAction)
+        public InteractionsReorderableReorderableList(SerializedProperty property, Action applyAction) : base(property, applyAction)
         {
         }
 
@@ -40,9 +38,9 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    class ProcessorsList : PropertiesListBase
+    class ProcessorsReorderableReorderableList : PropertiesReorderableList
     {
-        public ProcessorsList(SerializedProperty property, Action applyAction) : base(property, applyAction)
+        public ProcessorsReorderableReorderableList(SerializedProperty property, Action applyAction) : base(property, applyAction)
         {
         }
 
@@ -68,7 +66,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
     }
 
-    abstract class PropertiesListBase
+    abstract class PropertiesReorderableList
     {
         protected ReorderableList m_ListView;
         SerializedProperty m_Property;
@@ -79,7 +77,7 @@ namespace UnityEngine.Experimental.Input.Editor
         InputControlLayout.ParameterValue[] m_SelectedParameterList;
         protected Action m_Apply;
 
-        public PropertiesListBase(SerializedProperty property, Action applyAction)
+        public PropertiesReorderableList(SerializedProperty property, Action applyAction)
         {
             m_Property = property;
             m_Apply = applyAction;
