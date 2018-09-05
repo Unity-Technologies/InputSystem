@@ -20,12 +20,6 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public class InputActionReference : ScriptableObject
     {
-        [SerializeField] internal InputActionAsset m_Asset;
-        [SerializeField] internal Guid m_ActionMapId;
-        [SerializeField] internal Guid m_ActionId;
-
-        [NonSerialized] private InputAction m_Action;
-
         /// <summary>
         /// The asset that the referenced action is part of.
         /// </summary>
@@ -49,8 +43,8 @@ namespace UnityEngine.Experimental.Input
                     if (m_Asset == null)
                         return null;
 
-                    var map = m_Asset.GetActionMap(m_ActionMapId);
-                    m_Action = map.GetAction(m_ActionId);
+                    var map = m_Asset.GetActionMap(new Guid(m_ActionMapId));
+                    m_Action = map.GetAction(new Guid(m_ActionId));
                 }
 
                 return m_Action;
@@ -68,8 +62,8 @@ namespace UnityEngine.Experimental.Input
                     string.Format("Action '{0}' is not contained in asset '{1}'", action, asset));
 
             m_Asset = asset;
-            m_ActionMapId = actionMap.id;
-            m_ActionId = action.id;
+            m_ActionMapId = actionMap.id.ToString();
+            m_ActionId = action.id.ToString();
 
             ////REVIEW: should this dirty the asset if IDs had not been generated yet?
         }
@@ -104,5 +98,16 @@ namespace UnityEngine.Experimental.Input
 
             return base.ToString();
         }
+
+        [SerializeField] internal InputActionAsset m_Asset;
+        // Can't serialize System.Guid and Unity's GUID is editor only so these
+        // go out as strings.
+        [SerializeField] internal string m_ActionMapId;
+        [SerializeField] internal string m_ActionId;
+
+        /// <summary>
+        /// The resolved, cached input action.
+        /// </summary>
+        [NonSerialized] private InputAction m_Action;
     }
 }

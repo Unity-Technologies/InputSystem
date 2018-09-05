@@ -2257,6 +2257,7 @@ partial class CoreTests
 
         Assert.That(clone, Is.Not.SameAs(action));
         Assert.That(clone.name, Is.EqualTo(action.name));
+        Assert.That(clone.id, Is.Not.EqualTo(action.id));
         Assert.That(clone.bindings, Has.Count.EqualTo(action.bindings.Count));
         Assert.That(clone.bindings[0].path, Is.EqualTo(action.bindings[0].path));
         Assert.That(clone.bindings[0].interactions, Is.EqualTo(action.bindings[0].interactions));
@@ -2300,11 +2301,14 @@ partial class CoreTests
 
         Assert.That(clone, Is.Not.SameAs(map));
         Assert.That(clone.name, Is.EqualTo(map.name));
+        Assert.That(clone.id, Is.Not.EqualTo(map.id));
         Assert.That(clone.actions, Has.Count.EqualTo(map.actions.Count));
         Assert.That(clone.actions, Has.None.SameAs(action1));
         Assert.That(clone.actions, Has.None.SameAs(action2));
         Assert.That(clone.actions[0].name, Is.EqualTo(map.actions[0].name));
         Assert.That(clone.actions[1].name, Is.EqualTo(map.actions[1].name));
+        Assert.That(clone.actions[0].id, Is.Not.EqualTo(map.actions[0].id));
+        Assert.That(clone.actions[1].id, Is.Not.EqualTo(map.actions[1].id));
         Assert.That(clone.actions[0].actionMap, Is.SameAs(clone));
         Assert.That(clone.actions[1].actionMap, Is.SameAs(clone));
         Assert.That(clone.actions[0].bindings.Count, Is.EqualTo(1));
@@ -2703,8 +2707,8 @@ partial class CoreTests
         var action1Id = action1.id;
         var action2Id = action2.id;
 
-        Assert.That(action1.id, Is.Not.EqualTo(new Guid()));
-        Assert.That(action2.id, Is.Not.EqualTo(new Guid()));
+        Assert.That(action1.id, Is.Not.EqualTo(Guid.Empty));
+        Assert.That(action2.id, Is.Not.EqualTo(Guid.Empty));
         Assert.That(action1.id, Is.Not.EqualTo(action2.id));
         Assert.That(action1.id, Is.EqualTo(action1Id)); // Should not change.
         Assert.That(action2.id, Is.EqualTo(action2Id)); // Should not change.
@@ -2720,8 +2724,8 @@ partial class CoreTests
         var map1Id = map1.id;
         var map2Id = map2.id;
 
-        Assert.That(map1.id, Is.Not.EqualTo(new Guid()));
-        Assert.That(map2.id, Is.Not.EqualTo(new Guid()));
+        Assert.That(map1.id, Is.Not.EqualTo(Guid.Empty));
+        Assert.That(map2.id, Is.Not.EqualTo(Guid.Empty));
         Assert.That(map1.id, Is.Not.EqualTo(map2.id));
         Assert.That(map1.id, Is.EqualTo(map1Id)); // Should not change.
         Assert.That(map2.id, Is.EqualTo(map2Id)); // Should not change.

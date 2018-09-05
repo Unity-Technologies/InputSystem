@@ -115,9 +115,29 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_Id == Guid.Empty)
-                    m_Id = Guid.NewGuid();
-                return m_Id;
+                if (m_Guid == Guid.Empty)
+                {
+                    if (m_Id == null)
+                    {
+                        m_Guid = Guid.NewGuid();
+                        m_Id = m_Guid.ToString();
+                    }
+                    else
+                    {
+                        m_Guid = new Guid(m_Id);
+                    }
+                }
+                return m_Guid;
+            }
+        }
+
+        internal Guid idDontGenerate
+        {
+            get
+            {
+                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
+                    m_Guid = new Guid(m_Id);
+                return m_Guid;
             }
         }
 
@@ -395,8 +415,8 @@ namespace UnityEngine.Experimental.Input
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
         [SerializeField] internal string m_Name;
-        [SerializeField] internal Guid m_Id;
         [SerializeField] internal string m_ExpectedControlLayout;
+        [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
 
         // For singleton actions, we serialize the bindings directly as part of the action.
         // For any other type of action, this is null.
@@ -407,6 +427,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
         [NonSerialized] internal int m_ControlCount;
+        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// Index of the action in the <see cref="InputActionMapState"/> associated with the

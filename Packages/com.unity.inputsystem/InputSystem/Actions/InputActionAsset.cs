@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < m_ActionMaps.Length; ++i)
             {
                 var map = m_ActionMaps[i];
-                if (map.id == id)
+                if (map.idDontGenerate == id)
                     return map;
             }
 
@@ -139,10 +139,17 @@ namespace UnityEngine.Experimental.Input
             return map;
         }
 
+        /// <summary>
+        /// Duplicate the asset.
+        /// </summary>
+        /// <returns>A new asset that contains a duplicate of all action maps and actions in the asset.</returns>
+        /// <remarks>
+        /// Unlike calling <see cref="UnityEngine.Object.Instantiate(UnityEngine.Object)"/>, cloning an asset will not
+        /// duplicate data such as unique <see cref="InputActionMap.id">map IDs</see> and <see cref="InputAction.id">action
+        /// IDs</see>.
+        /// </remarks>
         public InputActionAsset Clone()
         {
-            // Can't MemberwiseClone() ScriptableObject. Unfortunatly, Unity doesn't
-            // prevent the call. Result will be a duplicate wrapper object, though.
             var clone = (InputActionAsset)CreateInstance(GetType());
             clone.m_ActionMaps = ArrayHelpers.Clone(m_ActionMaps);
             return clone;

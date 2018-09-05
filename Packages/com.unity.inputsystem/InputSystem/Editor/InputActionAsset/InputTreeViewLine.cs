@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public SerializedProperty AddActionFromObject(Dictionary<string, string> parameters)
         {
-            return InputActionSerializationHelpers.AddActionFromObject(parameters, elementProperty);
+            return InputActionSerializationHelpers.AddActionFromSavedProperties(parameters, elementProperty);
         }
 
         public void DeleteAction(int actionRowIndex)
@@ -248,7 +248,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void AppendBindingFromObject(Dictionary<string, string> values)
         {
-            InputActionSerializationHelpers.AppendBindingFromObject(values, elementProperty, m_ActionMapProperty);
+            InputActionSerializationHelpers.AppendBindingFromSavedProperties(values, elementProperty, m_ActionMapProperty);
         }
 
         public void RemoveBinding(int compositeIndex)

@@ -51,9 +51,29 @@ namespace UnityEngine.Experimental.Input
         {
             get
             {
-                if (m_Id == Guid.Empty)
-                    m_Id = Guid.NewGuid();
-                return m_Id;
+                if (m_Guid == Guid.Empty)
+                {
+                    if (m_Id == null)
+                    {
+                        m_Guid = Guid.NewGuid();
+                        m_Id = m_Guid.ToString();
+                    }
+                    else
+                    {
+                        m_Guid = new Guid(m_Id);
+                    }
+                }
+                return m_Guid;
+            }
+        }
+
+        internal Guid idDontGenerate
+        {
+            get
+            {
+                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
+                    m_Guid = new Guid(m_Id);
+                return m_Guid;
             }
         }
 
@@ -171,7 +191,7 @@ namespace UnityEngine.Experimental.Input
             {
                 var id = new Guid(nameOrId);
                 for (var i = 0; i < actionCount; ++i)
-                    if (m_Actions[i].m_Id == id) // Don't trigger generation of IDs here.
+                    if (m_Actions[i].idDontGenerate == id)
                         return i;
             }
             else
@@ -190,7 +210,7 @@ namespace UnityEngine.Experimental.Input
                 return InputActionMapState.kInvalidIndex;
             var actionCount = m_Actions.Length;
             for (var i = 0; i < actionCount; ++i)
-                if (m_Actions[i].id == id)
+                if (m_Actions[i].idDontGenerate == id)
                     return i;
 
             return InputActionMapState.kInvalidIndex;
@@ -322,8 +342,8 @@ namespace UnityEngine.Experimental.Input
         // The state we persist is pretty much just a name, a flat list of actions, and a flat
         // list of bindings. The rest is state we keep at runtime when a map is in use.
 
-        [SerializeField] private string m_Name;
-        [SerializeField] private Guid m_Id;
+        [SerializeField] internal string m_Name;
+        [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
 
         /// <summary>
         /// List of actions in this map.
@@ -350,6 +370,7 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal InputAction[] m_ActionForEachBinding;
 
         [NonSerialized] internal int m_EnabledActionsCount;
+        [NonSerialized] internal Guid m_Guid;
 
         // Action sets that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
@@ -889,7 +910,7 @@ namespace UnityEngine.Experimental.Input
 
                     // Create action.
                     var action = new InputAction(actionName);
-                    action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? Guid.Empty : new Guid(jsonAction.id);
+                    action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id;
                     action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
                         ? jsonAction.expectedControlLayout
                         : null;
@@ -935,7 +956,7 @@ namespace UnityEngine.Experimental.Input
                     if (map == null)
                     {
                         map = new InputActionMap(mapName);
-                        map.m_Id = string.IsNullOrEmpty(jsonMap.id) ? Guid.Empty : new Guid(jsonMap.id);
+                        map.m_Id = string.IsNullOrEmpty(jsonMap.id) ? null : jsonMap.id;
                         mapIndex = mapList.Count;
                         mapList.Add(map);
                         actionLists.Add(new List<InputAction>());
@@ -953,7 +974,7 @@ namespace UnityEngine.Experimental.Input
 
                         // Create action.
                         var action = new InputAction(jsonAction.name);
-                        action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? Guid.Empty : new Guid(jsonAction.id);
+                        action.m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id;
                         action.m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
                             ? jsonAction.expectedControlLayout
                             : null;

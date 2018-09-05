@@ -209,6 +209,8 @@ partial class CoreTests
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps[0].name, Is.Not.Null.Or.Empty);
         Assert.That(asset.actionMaps[1].name, Is.Not.Null.Or.Empty);
+        Assert.That(asset.actionMaps[0].m_Id, Is.Not.Empty);
+        Assert.That(asset.actionMaps[1].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].name, Is.Not.EqualTo(asset.actionMaps[1].name));
 
         var actionMap2Name = asset.actionMaps[1].name;
@@ -222,7 +224,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAddActionMapFromObject()
+    public void Editor_InputAsset_CanAddActionMapFromSavedProperties()
     {
         var map = new InputActionMap("set");
         var binding = new InputBinding();
@@ -238,7 +240,7 @@ partial class CoreTests
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(0));
 
-        InputActionSerializationHelpers.AddActionMapFromObject(obj, parameters);
+        InputActionSerializationHelpers.AddActionMapFromSavedProperties(obj, parameters);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
         Assert.That(asset.actionMaps, Has.Count.EqualTo(1));
@@ -263,6 +265,7 @@ partial class CoreTests
 
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(3));
         Assert.That(asset.actionMaps[0].actions[2].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[0].actions[2].m_Id, Is.Not.Empty);
         Assert.That(asset.actionMaps[0].actions[2].bindings, Has.Count.Zero);
 
         InputActionSerializationHelpers.DeleteAction(mapProperty, 2);
@@ -315,7 +318,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputAsset_CanAddBindingFromObject()
+    public void Editor_InputAsset_CanAddBindingFromSavedProperties()
     {
         var map = new InputActionMap("set");
         map.AddAction(name: "action1");
@@ -341,7 +344,7 @@ partial class CoreTests
         parameters.Add("flags", "" + flags);
         parameters.Add("action", sourceActionName);
 
-        InputActionSerializationHelpers.AppendBindingFromObject(parameters, action1Property, mapProperty);
+        InputActionSerializationHelpers.AppendBindingFromSavedProperties(parameters, action1Property, mapProperty);
 
         obj.ApplyModifiedPropertiesWithoutUndo();
 

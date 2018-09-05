@@ -79,11 +79,12 @@ namespace UnityEngine.Experimental.Input.Editor
             var mapProperty = mapArrayProperty.GetArrayElementAtIndex(index);
 
             mapProperty.FindPropertyRelative("m_Name").stringValue = name;
+            mapProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
             mapProperty.FindPropertyRelative("m_Actions").ClearArray();
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
         }
 
-        public static SerializedProperty AddActionMapFromObject(SerializedObject asset, Dictionary<string, string> parameters)
+        public static SerializedProperty AddActionMapFromSavedProperties(SerializedObject asset, Dictionary<string, string> parameters)
         {
             var mapArrayProperty = asset.FindProperty("m_ActionMaps");
             var mapCount = mapArrayProperty.arraySize;
@@ -95,6 +96,7 @@ namespace UnityEngine.Experimental.Input.Editor
             mapProperty.FindPropertyRelative("m_Actions").ClearArray();
             mapProperty.FindPropertyRelative("m_Bindings").ClearArray();
             mapProperty.FindPropertyRelative("m_Name").stringValue = name;
+            mapProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
 
             return mapProperty;
         }
@@ -117,10 +119,12 @@ namespace UnityEngine.Experimental.Input.Editor
             actionsArrayProperty.InsertArrayElementAtIndex(actionIndex);
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(actionIndex);
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
+
             return actionProperty;
         }
 
-        public static SerializedProperty AddActionFromObject(Dictionary<string, string> parameters, SerializedProperty actionMap)
+        public static SerializedProperty AddActionFromSavedProperties(Dictionary<string, string> parameters, SerializedProperty actionMap)
         {
             var actionsArrayProperty = actionMap.FindPropertyRelative("m_Actions");
             var actionsCount = actionsArrayProperty.arraySize;
@@ -181,7 +185,7 @@ namespace UnityEngine.Experimental.Input.Editor
             ////FIXME: this likely leaves m_Bindings in the map for singleton actions unsync'd in some cases
         }
 
-        public static void AppendBindingFromObject(Dictionary<string, string> values, SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
+        public static void AppendBindingFromSavedProperties(Dictionary<string, string> values, SerializedProperty actionProperty, SerializedProperty actionMapProperty = null)
         {
             var newBindingProperty = AppendBinding(actionProperty, actionMapProperty);
             newBindingProperty.FindPropertyRelative("path").stringValue = values["path"];

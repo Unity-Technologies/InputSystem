@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -22,6 +23,19 @@ namespace UnityEngine.Experimental.Input.Editor
         [SerializeField] internal string m_WrapperCodePath;
         [SerializeField] internal string m_WrapperClassName;
         [SerializeField] internal string m_WrapperCodeNamespace;
+
+        // Actions and maps coming in from JSON may not have IDs assigned to them. However,
+        // once imported, we want them to have stable IDs. So we do the same thing that Unity's
+        // model importer does and remember the GUID<->name correlations used in the file.
+        [SerializeField] internal RememberedGuid[] m_ActionGuids;
+        [SerializeField] internal RememberedGuid[] m_ActionMapGuids;
+
+        [Serializable]
+        internal struct RememberedGuid
+        {
+            public string name;
+            public string guid;
+        }
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
@@ -59,6 +73,70 @@ namespace UnityEngine.Experimental.Input.Editor
             asset.m_ActionMaps = maps;
             ctx.AddObjectToAsset("<root>", asset);
             ctx.SetMainObject(asset);
+
+            // Make sure every map and every action has a stable ID assigned to it.
+            foreach (var map in asset.m_ActionMaps)
+            {
+                if (map.idDontGenerate == Guid.Empty)
+                {
+                    // Generate and remember GUID.
+                    var id = map.id;
+                    ArrayHelpers.Append(ref m_ActionMapGuids, new RememberedGuid
+                    {
+                        guid = id.ToString(),
+                        name = map.name,
+                    });
+                }
+                else
+                {
+                    // Retrieve remembered GUIDs.
+                    if (m_ActionMapGuids != null)
+                    {
+                        for (var i = 0; i < m_ActionMapGuids.Length; ++i)
+                        {
+                            if (string.Compare(m_ActionMapGuids[i].name, map.name,
+                                StringComparison.InvariantCultureIgnoreCase) == 0)
+                            {
+                                map.m_Guid = Guid.Empty;
+                                map.m_Id = m_ActionMapGuids[i].guid;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                foreach (var action in map.actions)
+                {
+                    var actionName = string.Format("{0}/{1}", map.name, action.name);
+                    if (action.idDontGenerate == Guid.Empty)
+                    {
+                        // Generate and remember GUID.
+                        var id = action.id;
+                        ArrayHelpers.Append(ref m_ActionGuids, new RememberedGuid
+                        {
+                            guid = id.ToString(),
+                            name = actionName,
+                        });
+                    }
+                    else
+                    {
+                        // Retrieve remembered GUIDs.
+                        if (m_ActionGuids != null)
+                        {
+                            for (var i = 0; i < m_ActionGuids.Length; ++i)
+                            {
+                                if (string.Compare(m_ActionGuids[i].name, actionName,
+                                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                                {
+                                    action.m_Guid = Guid.Empty;
+                                    action.m_Id = m_ActionGuids[i].guid;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // Create subasset for each action.
             for (var i = 0; i < maps.Length; ++i)

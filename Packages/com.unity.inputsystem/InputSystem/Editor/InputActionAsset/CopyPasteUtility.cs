@@ -113,14 +113,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (m_SerializedObject == null)
                         throw new InvalidOperationException("Pasting action map is not a valid operation");
 
-                    currentActionMapProperty = InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, GetParameterDictionary(row));
+                    currentActionMapProperty = InputActionSerializationHelpers.AddActionMapFromSavedProperties(m_SerializedObject, GetParameterDictionary(row));
                     m_Apply();
                     continue;
                 }
 
                 if (IsRowOfType<ActionTreeItem>(ref row))
                 {
-                    var newActionProperty = InputActionSerializationHelpers.AddActionFromObject(GetParameterDictionary(row), currentActionMapProperty);
+                    var newActionProperty = InputActionSerializationHelpers.AddActionFromSavedProperties(GetParameterDictionary(row), currentActionMapProperty);
 
                     while (i + 1 < elements.Length)
                     {
@@ -143,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             {
                                 break;
                             }
-                            InputActionSerializationHelpers.AppendBindingFromObject(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
+                            InputActionSerializationHelpers.AppendBindingFromSavedProperties(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
                             i++;
                         }
                         catch (ArgumentException e)
