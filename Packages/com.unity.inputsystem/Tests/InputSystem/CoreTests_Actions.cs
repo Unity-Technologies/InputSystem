@@ -2371,9 +2371,21 @@ partial class CoreTests
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
-    public void TODO_Actions_CanRenameAction_WithoutBreakingActionReferences()
+    public void Actions_CanResolveActionReference_EvenAfterActionHasBeenRenamed()
     {
-        Assert.Fail();
+        var map = new InputActionMap("map");
+        var action = map.AddAction("oldName");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        reference.Set(asset, "map", "oldName");
+
+        action.Rename("newName");
+
+        var referencedAction = reference.action;
+
+        Assert.That(referencedAction, Is.SameAs(action));
     }
 
     [Test]

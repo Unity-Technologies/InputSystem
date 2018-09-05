@@ -111,11 +111,7 @@ namespace UnityEngine.Experimental.Input
             {
                 if (string.IsNullOrEmpty(actionNameOrId))
                     throw new ArgumentNullException("actionNameOrId");
-                var action = TryGetAction(actionNameOrId);
-                if (action == null)
-                    throw new KeyNotFoundException(string.Format("No action with name or ID '{0}' in map '{1}'",
-                        actionNameOrId, this));
-                return action;
+                return GetAction(actionNameOrId);
             }
         }
 
@@ -185,6 +181,17 @@ namespace UnityEngine.Experimental.Input
                         return i;
             }
 
+            return InputActionMapState.kInvalidIndex;
+        }
+
+        internal int TryGetActionIndex(Guid id)
+        {
+            if (m_Actions == null)
+                return InputActionMapState.kInvalidIndex;
+            var actionCount = m_Actions.Length;
+            for (var i = 0; i < actionCount; ++i)
+                if (m_Actions[i].id == id)
+                    return i;
 
             return InputActionMapState.kInvalidIndex;
         }
@@ -197,12 +204,29 @@ namespace UnityEngine.Experimental.Input
             return m_Actions[index];
         }
 
+        public InputAction TryGetAction(Guid id)
+        {
+            var index = TryGetActionIndex(id);
+            if (index == -1)
+                return null;
+            return m_Actions[index];
+        }
+
         public InputAction GetAction(string name)
         {
             var action = TryGetAction(name);
             if (action == null)
-                throw new KeyNotFoundException(string.Format("Could not find action '{0}' in set '{1}'", name,
+                throw new KeyNotFoundException(string.Format("Could not find action '{0}' in map '{1}'", name,
                     this.name));
+            return action;
+        }
+
+        public InputAction GetAction(Guid id)
+        {
+            var action = TryGetAction(id);
+            if (action == null)
+                throw new KeyNotFoundException(string.Format("Could not find action with ID '{0}' in map '{1}'", id,
+                    name));
             return action;
         }
 

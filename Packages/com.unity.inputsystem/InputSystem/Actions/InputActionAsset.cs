@@ -2,30 +2,32 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: add hierarchical set of binding overrides to asset
-
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
 ////        "I expect a 'look' and a 'move' action in here"
 
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
-    /// An asset containing one or more action maps.
+    /// An asset containing action maps and control schemes.
     /// </summary>
     /// <remarks>
-    /// Usually imported from JSON using InputActionImporter.
-    /// Names of each action set in the asset ust be unique.
+    /// Usually imported from JSON using <see cref="Editor.InputActionImporter"/>.
+    ///
+    /// Names of each action map in the asset must be unique.
     /// Allows applying overrides in bulk to all sets in the asset.
     ///
-    /// NOTE: You don't have to use action sets this way. InputActionAsset
+    /// NOTE: You don't have to use action maps this way. InputActionAsset
     ///       is a ready-made way to use Unity's default serialization and
-    ///       have action sets go into the asset database. However, you can
-    ///       just as well have action sets directly as JSON in your game.
+    ///       have action maps go into the asset database. However, you can
+    ///       just as well have action maps directly as JSON in your game.
     /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable
     {
         public const string kExtension = "inputactions";
 
+        /// <summary>
+        /// List of action maps defined in the asset.
+        /// </summary>
         public ReadOnlyArray<InputActionMap> actionMaps
         {
             get { return new ReadOnlyArray<InputActionMap>(m_ActionMaps); }
@@ -37,13 +39,23 @@ namespace UnityEngine.Experimental.Input
             return InputActionMap.ToJson(m_ActionMaps);
         }
 
-        // Replace the contents of the asset with the action sets in the
-        // given JSON string.
+        /// <summary>
+        /// Replace the contents of the asset with the action sets in the
+        /// given JSON string.
+        /// </summary>
+        /// <param name="json"></param>
         public void LoadFromJson(string json)
         {
             m_ActionMaps = InputActionMap.FromJson(json);
         }
 
+        /// <summary>
+        /// Add an action map to the asset.
+        /// </summary>
+        /// <param name="map">A named action map.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="map"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> has no name or asset already contains a
+        /// map with the same name.</exception>
         public void AddActionMap(InputActionMap map)
         {
             if (map == null)
@@ -86,9 +98,24 @@ namespace UnityEngine.Experimental.Input
 
             for (var i = 0; i < m_ActionMaps.Length; ++i)
             {
-                var set = m_ActionMaps[i];
-                if (string.Compare(name, set.name, StringComparison.InvariantCultureIgnoreCase) == 0)
-                    return set;
+                var map = m_ActionMaps[i];
+                if (string.Compare(name, map.name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return map;
+            }
+
+            return null;
+        }
+
+        public InputActionMap TryGetActionMap(Guid id)
+        {
+            if (m_ActionMaps == null)
+                return null;
+
+            for (var i = 0; i < m_ActionMaps.Length; ++i)
+            {
+                var map = m_ActionMaps[i];
+                if (map.id == id)
+                    return map;
             }
 
             return null;
@@ -96,11 +123,20 @@ namespace UnityEngine.Experimental.Input
 
         public InputActionMap GetActionMap(string name)
         {
-            var set = TryGetActionMap(name);
-            if (set == null)
+            var map = TryGetActionMap(name);
+            if (map == null)
                 throw new KeyNotFoundException(string.Format("Could not find an action map called '{0}' in asset '{1}'",
                     name, this));
-            return set;
+            return map;
+        }
+
+        public InputActionMap GetActionMap(Guid id)
+        {
+            var map = TryGetActionMap(id);
+            if (map == null)
+                throw new KeyNotFoundException(string.Format("Could not find an action map with ID '{0}' in asset '{1}'",
+                    id, this));
+            return map;
         }
 
         public InputActionAsset Clone()

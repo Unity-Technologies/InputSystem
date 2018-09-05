@@ -16,7 +16,7 @@ namespace UnityEngine.Experimental.Input.Editor
     [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 2;
+        private const int kVersion = 3;
 
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
@@ -68,18 +68,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 foreach (var action in set.actions)
                 {
-                    var actionObject = ScriptableObject.CreateInstance<InputActionReference>();
-
-                    actionObject.m_Asset = asset;
-                    actionObject.m_MapName = set.name;
-                    actionObject.m_ActionName = action.name;
+                    var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
+                    actionReference.Set(asset, action);
 
                     var objectName = action.name;
                     if (haveSetName)
                         objectName = string.Format("{0}/{1}", set.name, action.name);
 
-                    actionObject.name = objectName;
-                    ctx.AddObjectToAsset(objectName, actionObject);
+                    actionReference.name = objectName;
+                    ctx.AddObjectToAsset(objectName, actionReference);
                 }
             }
 
