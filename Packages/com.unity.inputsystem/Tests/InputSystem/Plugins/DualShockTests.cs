@@ -5,6 +5,7 @@ using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_WSA
 using UnityEngine.Experimental.Input.Plugins.HID;

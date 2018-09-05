@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -35,6 +36,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #endif
         public Vector2 position;
 
+        ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
         [InputControl(layout = "Vector2", usage = "Secondary2DMotion", processors = "Sensitivity")]
         public Vector2 delta;
 

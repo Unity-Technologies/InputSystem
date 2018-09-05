@@ -1,4 +1,6 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+using UnityEngine.Experimental.Input.Layouts;
+
 namespace UnityEngine.Experimental.Input.Plugins.iOS
 {
     public static class iOSSupport

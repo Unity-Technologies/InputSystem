@@ -34,7 +34,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////        then we can just kill off the entire namespacing. This also makes it much easier to tweak layouts in the
 ////        editor.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// A control layout specifies the composition of an input control.

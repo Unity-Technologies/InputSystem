@@ -2,7 +2,7 @@ using System;
 
 ////REVIEW: add a 'devicePath' field for a platform-dependent device path?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Metadata for an input device.

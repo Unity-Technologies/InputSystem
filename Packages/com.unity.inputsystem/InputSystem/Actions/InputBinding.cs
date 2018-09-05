@@ -1,6 +1,9 @@
 using System;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
+
+////REVIEW: should bindings have unique IDs, too? maybe instead of "name"?
 
 namespace UnityEngine.Experimental.Input
 {

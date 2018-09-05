@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: reordering support for interactions
 

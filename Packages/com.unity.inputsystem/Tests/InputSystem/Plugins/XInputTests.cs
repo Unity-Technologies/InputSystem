@@ -2,7 +2,7 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Plugins.XInput;
 using NUnit.Framework;
 using UnityEngine;
-
+using UnityEngine.Experimental.Input.Layouts;
 #if UNITY_EDITOR || UNITY_XBOXONE
 using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
 #endif

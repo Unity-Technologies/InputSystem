@@ -1,6 +1,7 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using NUnit.Framework;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.iOS;
 using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
 

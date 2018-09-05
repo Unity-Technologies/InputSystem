@@ -1,5 +1,7 @@
 using System;
 
+////TODO: move this out of view; shouldn't appear as part of the toplevel API
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

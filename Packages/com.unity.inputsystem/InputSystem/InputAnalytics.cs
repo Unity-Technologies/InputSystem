@@ -1,6 +1,7 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using UnityEngine.Experimental.Input.Layouts;
 #if UNITY_EDITOR
 using UnityEngine.Experimental.Input.Editor;
 #endif

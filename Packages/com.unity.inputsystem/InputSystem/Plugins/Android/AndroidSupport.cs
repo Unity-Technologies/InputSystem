@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System.Linq;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Android.LowLevel;
 
