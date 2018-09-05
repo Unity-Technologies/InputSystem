@@ -734,6 +734,35 @@ partial class CoreTests
         Assert.That(map.actions[1], Has.Property("name").EqualTo("action2"));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRenameActionInMap()
+    {
+        var map = new InputActionMap();
+
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+
+        action1.Rename("newName");
+
+        Assert.That(action1.name, Is.EqualTo("newName"));
+        Assert.That(map["newName"], Is.SameAs(action1));
+        Assert.That(map.TryGetAction("action1"), Is.Null);
+
+        Assert.That(() => action1.Rename("action2"), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRenameAction()
+    {
+        var action = new InputAction("oldName");
+
+        action.Rename("newName");
+
+        Assert.That(action.name, Is.EqualTo("newName"));
+    }
+
     ////TODO: add test to ensure that if adding an action after controls have been resolved, does the right thing
 
     [Test]

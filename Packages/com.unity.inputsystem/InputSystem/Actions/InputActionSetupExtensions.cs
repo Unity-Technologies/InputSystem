@@ -11,6 +11,203 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     public static class InputActionSetupExtensions
     {
+        public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
+            string interactions = null, string groups = null, string expectedControlLayout = null)
+        {
+            if (map == null)
+                throw new ArgumentNullException("map");
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("Action must have name", "name");
+            if (map.enabled)
+                throw new InvalidOperationException(
+                    string.Format("Cannot add action '{0}' to map '{1}' while it the map is enabled", name, map));
+            if (map.TryGetAction(name) != null)
+                throw new InvalidOperationException(
+                    string.Format("Cannot add action with duplicate name '{0}' to set '{1}'", name, map.name));
+
+            // Append action to array.
+            var action = new InputAction(name);
+            action.expectedControlLayout = expectedControlLayout;
+            ArrayHelpers.Append(ref map.m_Actions, action);
+            action.m_ActionMap = map;
+
+            ////TODO: make sure we blast out existing action map state
+
+            // Add binding, if supplied.
+            if (!string.IsNullOrEmpty(binding))
+                action.AppendBinding(binding, interactions: interactions, groups: groups);
+
+            return action;
+        }
+
+        public static BindingSyntax AppendBinding(this InputAction action, string path, string interactions = null, string groups = null)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("Binding path cannot be null or empty", "path");
+
+            return AppendBinding(action, new InputBinding
+            {
+                path = path,
+                interactions = interactions,
+                groups = groups
+            });
+        }
+
+        /// <summary>
+        /// Add a new binding to the action.
+        /// </summary>
+        /// <param name="action">A disabled action to add the binding to.</param>
+        /// <param name="binding"></param>
+        /// <returns>
+        /// Returns a fluent-style syntax structure that allows performing additional modifications
+        /// based on the new binding.
+        /// </returns>
+        /// <remarks>
+        /// This works both with actions that are part of an action set as well as with actions that aren't.
+        ///
+        /// Note that actions must be disabled while altering their binding sets. Also, if the action belongs
+        /// to a set, all actions in the set must be disabled.
+        /// </remarks>
+        public static BindingSyntax AppendBinding(this InputAction action, InputBinding binding)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
+            if (string.IsNullOrEmpty(binding.path))
+                throw new ArgumentException("Binding path cannot be null or empty", "binding");
+            action.ThrowIfModifyingBindingsIsNotAllowed();
+
+            Debug.Assert(action.m_Name != null || action.isSingletonAction);
+            binding.action = action.m_Name;
+
+            var actionMap = action.GetOrCreateActionMap();
+            var bindingIndex = AppendBindingInternal(actionMap, binding);
+            return new BindingSyntax(actionMap, action, bindingIndex);
+        }
+
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path,
+            string interactions = null, string groups = null, string action = null)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("Binding path cannot be null or empty", "path");
+
+            return AppendBinding(actionMap, new InputBinding
+            {
+                path = path,
+                interactions = interactions,
+                groups = groups,
+                action = action
+            });
+        }
+
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, InputAction action,
+            string interactions = null, string groups = null)
+        {
+            if (action != null && action.actionMap != actionMap)
+                throw new ArgumentException(
+                    string.Format("Action '{0}' is not part of action map '{1}'", action, actionMap), "action");
+
+            if (action == null)
+                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
+
+            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
+                action: action.id);
+        }
+
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, Guid action,
+            string interactions = null, string groups = null)
+        {
+            if (action == Guid.Empty)
+                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
+            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
+                action: string.Format("{{{0}}}", action));
+        }
+
+        public static BindingSyntax AppendBinding(this InputActionMap actionMap, InputBinding binding)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException("actionMap");
+            if (string.IsNullOrEmpty(binding.path))
+                throw new ArgumentException("Binding path cannot be null or empty", "binding");
+            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
+
+            var bindingIndex = AppendBindingInternal(actionMap, binding);
+            return new BindingSyntax(actionMap, null, bindingIndex);
+        }
+
+        public static CompositeSyntax AppendCompositeBinding(this InputAction action, string composite, string interactions = null)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
+            if (string.IsNullOrEmpty(composite))
+                throw new ArgumentException("Composite name cannot be null or empty", "composite");
+
+            var actionMap = action.GetOrCreateActionMap();
+            ////REVIEW: use 'name' instead of 'path' field here?
+            var binding = new InputBinding {path = composite, interactions = interactions, flags = InputBinding.Flags.Composite, action = action.name};
+            var bindingIndex = AppendBindingInternal(actionMap, binding);
+            return new CompositeSyntax(actionMap, action, bindingIndex);
+        }
+
+        private static int AppendBindingInternal(InputActionMap map, InputBinding binding)
+        {
+            Debug.Assert(map != null);
+
+            // Append to bindings in set.
+            var bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
+
+            // Invalidate per-action binding sets so that this gets refreshed if
+            // anyone queries it.
+            map.ClearPerActionCachedBindingData();
+
+            // If we're looking at a singleton action, make sure m_Bindings is up to date just
+            // in case the action gets serialized.
+            if (map.m_SingletonAction != null)
+                map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
+
+            return bindingIndex;
+        }
+
+        ////REVIEW: should we allow renaming singleton actions to empty/null names?
+        /// <summary>
+        /// Rename an existing action.
+        /// </summary>
+        /// <param name="action">Action to assign a new name to. Can be singleton action or action that
+        /// is part of a map.</param>
+        /// <param name="newName">New name to assign to action. Cannot be empty.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null or <paramref name="newName"/> is
+        /// null or empty.</exception>
+        /// <exception cref="InvalidOperationException"><see cref="InputAction.actionMap"/> of <paramref name="action"/>
+        /// already contains an action called <paramref name="newName"/>.</exception>
+        public static void Rename(this InputAction action, string newName)
+        {
+            if (action == null)
+                throw new ArgumentNullException("action");
+            if (string.IsNullOrEmpty(newName))
+                throw new ArgumentNullException("newName");
+
+            if (action.name == newName)
+                return;
+
+            // Make sure name isn't already taken in map.
+            var actionMap = action.actionMap;
+            if (actionMap != null && actionMap.TryGetAction(newName) != null)
+                throw new InvalidOperationException(string.Format(
+                    "Cannot rename '{0}' to '{1}' in map '{2}' as the map already contains an action with that name",
+                    action, newName, actionMap));
+
+            action.m_Name = newName;
+        }
+
+        public static void Rename(this InputActionAsset asset, InputActionMap map)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Syntax to configure a binding added to an <see cref="InputAction"/> or an
         /// <see cref="InputActionMap"/>.
@@ -213,160 +410,22 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
-            string interactions = null, string groups = null, string expectedControlLayout = null)
+        public struct ControlSchemeSyntax
         {
-            if (map == null)
-                throw new ArgumentNullException("map");
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Action must have name", "name");
-            if (map.enabled)
-                throw new InvalidOperationException(
-                    string.Format("Cannot add action '{0}' to map '{1}' while it the map is enabled", name, map));
-            if (map.TryGetAction(name) != null)
-                throw new InvalidOperationException(
-                    string.Format("Cannot add action with duplicate name '{0}' to set '{1}'", name, map.name));
-
-            // Append action to array.
-            var action = new InputAction(name);
-            action.expectedControlLayout = expectedControlLayout;
-            ArrayHelpers.Append(ref map.m_Actions, action);
-            action.m_ActionMap = map;
-
-            ////TODO: make sure we blast out existing action map state
-
-            // Add binding, if supplied.
-            if (!string.IsNullOrEmpty(binding))
-                action.AppendBinding(binding, interactions: interactions, groups: groups);
-
-            return action;
-        }
-
-        public static BindingSyntax AppendBinding(this InputAction action, string path, string interactions = null, string groups = null)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", "path");
-
-            return AppendBinding(action, new InputBinding
+            public ControlSchemeSyntax BasedOn(string baseControlScheme)
             {
-                path = path,
-                interactions = interactions,
-                groups = groups
-            });
-        }
+                throw new NotImplementedException();
+            }
 
-        /// <summary>
-        /// Add a new binding to the action.
-        /// </summary>
-        /// <param name="action">A disabled action to add the binding to.</param>
-        /// <param name="binding"></param>
-        /// <returns>
-        /// Returns a fluent-style syntax structure that allows performing additional modifications
-        /// based on the new binding.
-        /// </returns>
-        /// <remarks>
-        /// This works both with actions that are part of an action set as well as with actions that aren't.
-        ///
-        /// Note that actions must be disabled while altering their binding sets. Also, if the action belongs
-        /// to a set, all actions in the set must be disabled.
-        /// </remarks>
-        public static BindingSyntax AppendBinding(this InputAction action, InputBinding binding)
-        {
-            if (action == null)
-                throw new ArgumentNullException("action");
-            if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", "binding");
-            action.ThrowIfModifyingBindingsIsNotAllowed();
-
-            Debug.Assert(action.m_Name != null || action.isSingletonAction);
-            binding.action = action.m_Name;
-
-            var actionMap = action.GetOrCreateActionMap();
-            var bindingIndex = AppendBindingInternal(actionMap, binding);
-            return new BindingSyntax(actionMap, action, bindingIndex);
-        }
-
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path,
-            string interactions = null, string groups = null, string action = null)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", "path");
-
-            return AppendBinding(actionMap, new InputBinding
+            public ControlSchemeSyntax WithRequiredDevice(string path)
             {
-                path = path,
-                interactions = interactions,
-                groups = groups,
-                action = action
-            });
-        }
+                throw new NotImplementedException();
+            }
 
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, InputAction action,
-            string interactions = null, string groups = null)
-        {
-            if (action != null && action.actionMap != actionMap)
-                throw new ArgumentException(
-                    string.Format("Action '{0}' is not part of action map '{1}'", action, actionMap), "action");
-
-            if (action == null)
-                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
-
-            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
-                action: action.id);
-        }
-
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, string path, Guid action,
-            string interactions = null, string groups = null)
-        {
-            if (action == Guid.Empty)
-                return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups);
-            return AppendBinding(actionMap, path: path, interactions: interactions, groups: groups,
-                action: string.Format("{{{0}}}", action));
-        }
-
-        public static BindingSyntax AppendBinding(this InputActionMap actionMap, InputBinding binding)
-        {
-            if (actionMap == null)
-                throw new ArgumentNullException("actionMap");
-            if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", "binding");
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
-
-            var bindingIndex = AppendBindingInternal(actionMap, binding);
-            return new BindingSyntax(actionMap, null, bindingIndex);
-        }
-
-        public static CompositeSyntax AppendCompositeBinding(this InputAction action, string composite, string interactions = null)
-        {
-            if (action == null)
-                throw new ArgumentNullException("action");
-            if (string.IsNullOrEmpty(composite))
-                throw new ArgumentException("Composite name cannot be null or empty", "composite");
-
-            var actionMap = action.GetOrCreateActionMap();
-            ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, flags = InputBinding.Flags.Composite, action = action.name};
-            var bindingIndex = AppendBindingInternal(actionMap, binding);
-            return new CompositeSyntax(actionMap, action, bindingIndex);
-        }
-
-        private static int AppendBindingInternal(InputActionMap map, InputBinding binding)
-        {
-            Debug.Assert(map != null);
-
-            // Append to bindings in set.
-            var bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
-
-            // Invalidate per-action binding sets so that this gets refreshed if
-            // anyone queries it.
-            map.ClearPerActionCachedBindingData();
-
-            // If we're looking at a singleton action, make sure m_Bindings is up to date just
-            // in case the action gets serialized.
-            if (map.m_SingletonAction != null)
-                map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
-
-            return bindingIndex;
+            public ControlSchemeSyntax WithOptionalDevice(string path)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }
