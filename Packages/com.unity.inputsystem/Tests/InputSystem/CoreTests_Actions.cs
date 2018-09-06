@@ -46,8 +46,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanQueryUsedDevicesFromAction()
+    public void Actions_CanQueryUsedDevicesFromAction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -62,6 +61,53 @@ partial class CoreTests
         Assert.That(action.devices, Has.Count.EqualTo(2));
         Assert.That(action.devices, Has.Exactly(1).SameAs(gamepad));
         Assert.That(action.devices, Has.Exactly(1).SameAs(keyboard));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryUsedDevicesFromAction_WhenActionsInMapShareSameDevices()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        InputSystem.AddDevice<Touchscreen>(); // Noise.
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        action1.AppendBinding("<Gamepad>/buttonSouth");
+        action1.AppendBinding("<Keyboard>/a");
+        var action2 = map.AddAction("action2");
+        action2.AppendBinding("<Gamepad>/buttonNorth");
+        action2.AppendBinding("<Keyboard>/b");
+
+        Assert.That(action1.devices, Has.Count.EqualTo(2));
+        Assert.That(action1.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(action1.devices, Has.Exactly(1).SameAs(keyboard));
+        Assert.That(action2.devices, Has.Count.EqualTo(2));
+        Assert.That(action2.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(action2.devices, Has.Exactly(1).SameAs(keyboard));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanQueryUsedDevicesFromAction_WhenActionsInMapDoNotShareSameDevices()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>(); // Noise.
+        InputSystem.AddDevice<Touchscreen>(); // Noise.
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        action1.AppendBinding("<Gamepad>/buttonSouth");
+        var action2 = map.AddAction("action2");
+        action2.AppendBinding("<Keyboard>/b");
+
+        Assert.That(action1.devices, Has.Count.EqualTo(1));
+        Assert.That(action1.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(action2.devices, Has.Count.EqualTo(1));
+        Assert.That(action2.devices, Has.Exactly(1).SameAs(keyboard));
     }
 
     [Test]
@@ -89,6 +135,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanDefineControlSchemesUsingGroups()
     {
         Assert.Fail();
@@ -103,6 +150,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanLayerMapsOnTopOfEachOther()
     {
         // Make up a layered control scheme three levels deep.
@@ -138,6 +186,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_MapsCanBeBasedOnOtherMaps()
     {
         var baseMap = new InputActionMap("Base");
@@ -178,6 +227,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_MapsCanBeBasedOnOtherMaps_AndPickUpChangesMadeToTheirBaseMaps()
     {
         Assert.Fail();
@@ -185,6 +235,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_MapsCanBeBasedOnOtherMaps_AndAddBindingsToActionsDefinedInBaseMaps()
     {
         var baseMap = new InputActionMap("Base");
@@ -1879,6 +1930,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanAddControlSchemeToAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1891,6 +1943,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanBaseOneControlSchemeOnAnother()
     {
         Assert.Fail();
@@ -1898,6 +1951,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanRequireSpecificDevicesForControlScheme()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1920,6 +1974,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanEnableSpecificControlScheme()
     {
         Assert.Fail();
@@ -2108,6 +2163,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanUseGyroWithVector2Actions()
     {
         Assert.Fail();
@@ -2367,6 +2423,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanOverrideBindingsWithControlsFromSpecificDevices_AndSuppressBindingsToOtherDevices()
     {
         Assert.Fail();
@@ -2562,7 +2619,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
     public void Actions_CanResolveActionReference_EvenAfterActionHasBeenRenamed()
     {
         var map = new InputActionMap("map");

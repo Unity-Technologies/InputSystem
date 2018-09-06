@@ -12,6 +12,8 @@ using UnityEngine.Serialization;
 
 ////REVIEW: the entire 'lastXXX' API section is shit and needs a pass
 
+////REVIEW: resolving as a side-effect of 'controls' and 'devices' seems pretty heavy handed
+
 ////TODO: give every action in the system a stable unique ID; use this also to reference actions in InputActionReferences
 
 ////TODO: explore UnityEvents as an option to hook up action responses right in the inspector
@@ -194,26 +196,38 @@ namespace UnityEngine.Experimental.Input
         /// The set of controls to which the action's bindings resolve.
         /// </summary>
         /// <remarks>
-        /// May allocate memory on first and also whenever the control setup in the system has changed
-        /// (e.g. when devices are added or removed).
+        /// May allocate memory each time the control setup changes on the action.
         /// </remarks>
         public ReadOnlyArray<InputControl> controls
         {
             get
             {
-                var actionMap = GetOrCreateActionMap();
-                ////REVIEW: resolving as a side-effect is pretty heavy handed
-                actionMap.ResolveBindingsIfNecessary();
-                return actionMap.GetControlsForSingleAction(this);
+                var map = GetOrCreateActionMap();
+                map.ResolveBindingsIfNecessary();
+                return map.GetControlsForSingleAction(this);
             }
         }
 
+        /// <summary>
+        /// The set of devices used by the action.
+        /// </summary>
+        /// <remarks>
+        /// May allocate memory each time the control setup changes on the action.
+        /// </remarks>
         public ReadOnlyArray<InputDevice> devices
         {
             get
             {
-                throw new NotImplementedException();
+                var map = GetOrCreateActionMap();
+                map.ResolveBindingsIfNecessary();
+                return map.GetDevicesForSingleAction(this);
             }
+        }
+
+        public bool required
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
         /// <summary>
@@ -327,7 +341,7 @@ namespace UnityEngine.Experimental.Input
 
         // Listeners that are called when the action has been fully performed.
         // Passes along the control that triggered the state change and the action
-        // object iself as well.
+        // object itself as well.
         public event InputActionListener performed
         {
             add { m_OnPerformed.Append(value); }
@@ -431,6 +445,8 @@ namespace UnityEngine.Experimental.Input
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
         [NonSerialized] internal int m_ControlCount;
+        [NonSerialized] internal int m_DeviceStartIndex;
+        [NonSerialized] internal int m_DeviceCount;
         [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
