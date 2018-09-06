@@ -2,6 +2,8 @@ using System;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Serialization;
 
+////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls', 'devices', and 'bindings')
+
 ////REVIEW: should the enable/disable API actually sit on InputSystem?
 
 ////REVIEW: might have to revisit when we fire actions in relation to Update/FixedUpdate

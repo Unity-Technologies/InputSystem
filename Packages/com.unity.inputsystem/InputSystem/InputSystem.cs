@@ -26,7 +26,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////TODO: rename RegisterControlProcessor to just RegisterProcessor
 
-////REVIEW: make more APIs thread-safe? (like the various onXXX, for example)
+////REVIEW: make more APIs thread-safe?
 
 ////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
 

@@ -15,7 +15,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
-class HIDTests : InputTestFixture
+public class HIDTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]

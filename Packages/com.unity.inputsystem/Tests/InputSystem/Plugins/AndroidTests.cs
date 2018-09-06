@@ -9,7 +9,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
-class AndroidTests : InputTestFixture
+public class AndroidTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]

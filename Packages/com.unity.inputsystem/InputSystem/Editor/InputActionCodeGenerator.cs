@@ -10,13 +10,9 @@ using UnityEditor;
 
 ////TODO: only generate @something if @ is really needed
 
-////TODO: turn wrappers into structs, if possible (not sure how to make the property drawer stuff work with that)
-
-////TODO: generate Clone() methods (both on toplevel wrapper and on action set wrappers)
-
 ////TODO: allow having an unnamed or default-named action set which spills actions directly into the toplevel wrapper
 
-////TODO: optionally, generate API that avoids having to do the delegate dance
+////TODO: add cleanup for ActionEvents
 
 ////TODO: nuke Clone()
 
@@ -241,10 +237,12 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static void WriteActionEventGetter(string setName, string actionName, InputActionPhase phase, Writer writer)
         {
-            if (char.IsLower(actionName[0]))
-                actionName = char.ToUpper(actionName[0]) + actionName.Substring(1);
-            writer.WriteLine(string.Format("public ActionEvent {1}{2} {{ get {{ return m_Wrapper.m_{0}{1}Action{2}; }} }}",
-                setName, actionName, phase));
+            var actionNameCased = actionName;
+            if (char.IsLower(actionNameCased[0]))
+                actionNameCased = char.ToUpper(actionNameCased[0]) + actionNameCased.Substring(1);
+            
+            writer.WriteLine(string.Format("public ActionEvent {1}{2} {{ get {{ return m_Wrapper.m_{0}{3}Action{2}; }} }}",
+                setName, actionName, phase, actionNameCased));
         }
 
         private static void WriteActionEventInitializer(string setName, string actionName, InputActionPhase phase, Writer writer)

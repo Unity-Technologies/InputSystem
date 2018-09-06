@@ -5,7 +5,7 @@ using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.iOS;
 using UnityEngine.Experimental.Input.Plugins.iOS.LowLevel;
 
-class iOSTests : InputTestFixture
+public class iOSTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
