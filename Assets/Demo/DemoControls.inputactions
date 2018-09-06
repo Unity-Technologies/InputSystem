@@ -6,7 +6,7 @@
             "actions" : [
                 {
                     "name" : "fire",
-                    "id" : "88f521f0-294c-4490-a9aa-60ed02148edc",
+                    "id" : "1077f913-a9f9-41b1-acb3-b9ee0adbc744",
                     "expectedControlLayout" : "Button",
                     "bindings" : [
                     ]
@@ -28,6 +28,13 @@
                 {
                     "name" : "jump",
                     "id" : "6890847e-f99c-43ac-a79d-0787d911a0a1",
+                    "expectedControlLayout" : "Button",
+                    "bindings" : [
+                    ]
+                },
+                {
+                    "name" : "escape",
+                    "id" : "4ad24240-1211-418c-9678-760c0f5e2f0f",
                     "expectedControlLayout" : "Button",
                     "bindings" : [
                     ]
@@ -201,7 +208,56 @@
                     "isComposite" : false,
                     "isPartOfComposite" : false,
                     "modifiers" : ""
+                },
+                {
+                    "name" : "",
+                    "path" : "<Keyboard>/escape",
+                    "interactions" : "",
+                    "processors" : "",
+                    "groups" : "",
+                    "action" : "escape",
+                    "chainWithPrevious" : false,
+                    "isComposite" : false,
+                    "isPartOfComposite" : false,
+                    "modifiers" : ""
                 }
+            ]
+        },
+        {
+            "name" : "menu",
+            "id" : "612b11fd-99c4-4a58-9c10-1d1b04fb8b30",
+            "actions" : [
+                {
+                    "name" : "navigate",
+                    "id" : "21e4672f-7da8-41ac-8a80-59e98f44610f",
+                    "expectedControlLayout" : "",
+                    "bindings" : [
+                    ]
+                },
+                {
+                    "name" : "click",
+                    "id" : "09cec56e-d919-461b-b769-b5f9040ab3d2",
+                    "expectedControlLayout" : "",
+                    "bindings" : [
+                    ]
+                }
+            ],
+            "bindings" : [
+            ]
+        },
+        {
+            "name" : "general",
+            "id" : "ab650481-8ad0-4d70-a479-42999174f650",
+            "actions" : [
+                {
+                    "name" : "join",
+                    "id" : "3d64ed14-86d4-443f-8dba-10b69965f9ac",
+                    "expectedControlLayout" : "",
+                    "bindings" : [
+                    ]
+                }
+            ],
+            "bindings" : [
             ]
         }
     ]

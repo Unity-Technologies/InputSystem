@@ -84,6 +84,128 @@ partial class CoreTests
         Assert.That(map.devices, Has.Exactly(1).SameAs(keyboard));
     }
 
+    //if the editor automatically adds groups based on bindings (e.g. "<Keyboard>/a" binding -> "Keyboard" group is added),
+    //we can use that to represent control schemes (e.g. "Keyboard;Mouse").
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanDefineControlSchemesUsingGroups()
+    {
+        Assert.Fail();
+    }
+
+    // What is an action? It is an *endpoint* that can optionally expect a certain kind of input connecting to it.
+    // What is a binding? It is a connection (with associated behavior) leading from inputs *to* an endpoint.
+    // What is an action map? A bundling of actions and bindings. Either set may be empty.
+    // What is an action asset? A bundling of action maps.
+
+    // What is a control scheme?
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanLayerMapsOnTopOfEachOther()
+    {
+        // Make up a layered control scheme three levels deep.
+        var fpsControls = new InputActionMap("fpsControls");
+        var moveAction = fpsControls.AddAction("move");
+        var shootAction = fpsControls.AddAction("shoot");
+        var lookAction = fpsControls.AddAction("look");
+        var sniperControls = new InputActionMap("sniper", extend: fpsControls);
+        var scopeAction = sniperControls.AddAction("scope");
+        var swapScopeControls = new InputActionMap("swapScope", extend: sniperControls);
+        /*
+        swapScopeControls.AppendBinding();
+
+        // Information from 'baseMap' coming through on 'derivedMap'.
+        Assert.That(sniperControls.actions, Has.Count.EqualTo(1));
+        Assert.That(sniperControls["action"], Is.TypeOf<InputAction>());
+        Assert.That(sniperControls["action"], Is.Not.SameAs(baseAction));
+        Assert.That(sniperControls["action"].actionMap, Is.SameAs(derivedMap));
+        Assert.That(sniperControls["action"].bindings, Has.Count.EqualTo(1));
+        Assert.That(sniperControls["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+
+        // Information from 'baseMap' coming through on 'derivedFromDerivedMap'.
+        Assert.That(derivedFromDerivedMap.actions, Has.Count.EqualTo(1));
+        Assert.That(derivedFromDerivedMap["action"], Is.TypeOf<InputAction>());
+        Assert.That(derivedFromDerivedMap["action"], Is.Not.SameAs(baseAction));
+        Assert.That(derivedFromDerivedMap["action"].actionMap, Is.SameAs(derivedFromDerivedMap));
+        Assert.That(derivedFromDerivedMap["action"].bindings, Has.Count.EqualTo(1));
+        Assert.That(derivedFromDerivedMap["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        */
+
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_MapsCanBeBasedOnOtherMaps()
+    {
+        var baseMap = new InputActionMap("Base");
+        var baseAction = baseMap.AddAction("action", binding: "<Gamepad>/buttonSouth");
+        var derivedMap = new InputActionMap("Derived", extend: baseMap);
+        var derivedFromDerivedMap = new InputActionMap("DerivedFromDerived", extend: derivedMap);
+
+        //NO! We want to set up bindings on the *existing* action
+        // But how can we have the same action answer with different bindings depending on context?
+        // Should we remove the per-action control and device arrays? How do singleton actions deal with that then?
+        // Alternatively, we can change how you connect to endpoints such that you don't go to an individual action
+        // to connect to it.
+        // It may really make sense to completely divorce delivery from InputAction and make that a pure configuration object.
+
+        // Or... we simply don't list actions from the base in the derived map... I.e. a map will only list the
+        // information *directly* defined in the map. Explicit lookups could still take bases into account.
+        // But then, how do you query the bindings for an action in a derived map?
+
+        // Or... we actually *do* replicate the information from the base in the derived map but triggering actions in
+        // a derived map also triggers actions in the base map
+
+        // Information from 'baseMap' coming through on 'derivedMap'.
+        Assert.That(derivedMap.actions, Has.Count.EqualTo(1));
+        Assert.That(derivedMap["action"], Is.TypeOf<InputAction>());
+        Assert.That(derivedMap["action"], Is.Not.SameAs(baseAction));
+        Assert.That(derivedMap["action"].actionMap, Is.SameAs(derivedMap));
+        Assert.That(derivedMap["action"].bindings, Has.Count.EqualTo(1));
+        Assert.That(derivedMap["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+
+        // Information from 'baseMap' coming through on 'derivedFromDerivedMap'.
+        Assert.That(derivedFromDerivedMap.actions, Has.Count.EqualTo(1));
+        Assert.That(derivedFromDerivedMap["action"], Is.TypeOf<InputAction>());
+        Assert.That(derivedFromDerivedMap["action"], Is.Not.SameAs(baseAction));
+        Assert.That(derivedFromDerivedMap["action"].actionMap, Is.SameAs(derivedFromDerivedMap));
+        Assert.That(derivedFromDerivedMap["action"].bindings, Has.Count.EqualTo(1));
+        Assert.That(derivedFromDerivedMap["action"].bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_MapsCanBeBasedOnOtherMaps_AndPickUpChangesMadeToTheirBaseMaps()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_MapsCanBeBasedOnOtherMaps_AndAddBindingsToActionsDefinedInBaseMaps()
+    {
+        var baseMap = new InputActionMap("Base");
+        var action = baseMap.AddAction("action", binding: "<Gamepad>/buttonSouth");
+
+        var derivedMap = new InputActionMap("Derived", extend: baseMap);
+        derivedMap.AppendBinding("<Gamepad>/buttonNorth", action: "action");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var actionWasPerformed = false;
+        action.performed += _ => actionWasPerformed = true;
+
+        derivedMap.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.North));
+        InputSystem.Update();
+
+        Assert.That(actionWasPerformed);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenEnabled_TriggerNotification()
@@ -822,6 +944,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanConvertActionMapToAndFromJson()
     {
+        //By default, serialize as if there's no base map
+        //Solve baseMap correlation on the InputActionAsset level
+        //Give action maps stable internal names (just like actions)
         var map = new InputActionMap("test");
 
         map.AddAction(name: "action1", expectedControlLayout: "Button", binding: "/gamepad/leftStick")
@@ -1745,10 +1870,59 @@ partial class CoreTests
     public void Actions_CanRemoveActionMapFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         asset.AddActionMap(new InputActionMap("test"));
         asset.RemoveActionMap("test");
 
         Assert.That(asset.actionMaps, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanAddControlSchemeToAsset()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        asset.AddControlScheme("scheme1");
+
+        Assert.That(asset.controlSchemes, Has.Count.EqualTo(1));
+        Assert.That(asset.controlSchemes, Has.Exactly(1).With.Property("name").EqualTo("scheme1"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanBaseOneControlSchemeOnAnother()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanRequireSpecificDevicesForControlScheme()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        asset.AddControlScheme("scheme")
+            .WithRequiredDevice("<XRController>{LeftHand}")
+            .WithRequiredDevice("<XRController>{RightHand}")
+            .WithOptionalDevice("<Gamepad>");
+
+        Assert.That(asset.GetControlScheme("scheme").devices, Has.Count.EqualTo(3));
+        Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<XRController>{LeftHand}"));
+        Assert.That(asset.GetControlScheme("scheme").devices[0].optional, Is.False);
+        Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<XRController>{RightHand}"));
+        Assert.That(asset.GetControlScheme("scheme").devices[0].optional, Is.False);
+        Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<Gamepad>"));
+        Assert.That(asset.GetControlScheme("scheme").devices[0].optional, Is.True);
+    }
+
+    //auto-switch should be painless
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanEnableSpecificControlScheme()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -1930,6 +2104,13 @@ partial class CoreTests
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
         Assert.That(value.Value.y, Is.EqualTo((Vector2.right + Vector2.up).normalized.y).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanUseGyroWithVector2Actions()
+    {
+        Assert.Fail();
     }
 
     [Test]
@@ -2182,6 +2363,13 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls[0], Is.SameAs(gamepad2.leftStick));
         Assert.That(action.bindings[0].overridePath, Is.EqualTo(gamepad2.leftStick.path));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_CanOverrideBindingsWithControlsFromSpecificDevices_AndSuppressBindingsToOtherDevices()
+    {
+        Assert.Fail();
     }
 
     // The following functionality is meant in a way where you have a base action set that

@@ -409,7 +409,7 @@ partial class CoreTests
 
         Assert.That(code, Contains.Substring("namespace MyNamespace"));
         Assert.That(code, Contains.Substring("public class MyControls"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputActionMap Clone()"));
+        Assert.That(code, Contains.Substring("public InputActionMap Clone()"));
     }
 
     [Test]
@@ -427,8 +427,8 @@ partial class CoreTests
             new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
         Assert.That(code, Contains.Substring("class NewControls_4_"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @action__"));
-        Assert.That(code, Contains.Substring("public UnityEngine.Experimental.Input.InputAction @_1thing"));
+        Assert.That(code, Contains.Substring("public InputAction @action__"));
+        Assert.That(code, Contains.Substring("public InputAction @_1thing"));
     }
 
     [Test]
