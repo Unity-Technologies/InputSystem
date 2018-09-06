@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Experimental.Input.Utilities;
 
-////TODO: notifications when maps and actions are enabled/disabled
-
-////TODO: add ability to query devices used by action
-
 ////TODO: add public InputActionManager that supports various device allocation strategies (one stack
 ////      per device, multiple devices per stack, etc.); should also resolve the problem of having
 ////      two bindings stack on top of each other and making the one on top suppress the one below
+
+////REVIEW: have an optional reference to an InputActionMap?
+
+////TODO: nuke Clone()
 
 namespace UnityEngine.Experimental.Input
 {

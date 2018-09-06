@@ -35,6 +35,16 @@ namespace UnityEngine.Experimental.Input
             get { return new ReadOnlyArray<InputActionMap>(m_ActionMaps); }
         }
 
+        /// <summary>
+        /// List of control schemes defined in the asset.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        public ReadOnlyArray<InputControlScheme> controlSchemes
+        {
+            get { return new ReadOnlyArray<InputControlScheme>(m_ControlSchemes); }
+        }
+
         // Return a JSON representation of the asset.
         public string ToJson()
         {
@@ -141,6 +151,22 @@ namespace UnityEngine.Experimental.Input
             return map;
         }
 
+        public void AddControlScheme(InputControlScheme controlScheme)
+        {
+            throw new NotImplementedException();
+        }
+
+        public InputControlScheme? TryGetControlScheme(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public InputControlScheme GetControlScheme(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        ////REVIEW: does it make sense to retain the cloning ability or should we rely exclusively on Instantiate() instead?
         /// <summary>
         /// Duplicate the asset.
         /// </summary>
@@ -165,6 +191,7 @@ namespace UnityEngine.Experimental.Input
         ////TODO: ApplyBindingOverrides, RemoveBindingOverrides, RemoveAllBindingOverrides
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
+        [SerializeField] internal InputControlScheme[] m_ControlSchemes;
 
         ////TODO: make this one happen and also persist it across domain reloads
         /// <summary>
