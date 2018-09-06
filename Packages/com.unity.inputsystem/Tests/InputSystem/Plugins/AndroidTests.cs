@@ -54,10 +54,20 @@ class AndroidTests : InputTestFixture
         Assert.That(device, Is.TypeOf<AndroidGamepad>());
         var controller = (AndroidGamepad)device;
 
+        // Note: Regarding triggers, android sends different events depending to which device the controller is connected.
+        //       For ex., when NVIDIA shield controller when connected to Shield Console, triggers generate events:
+        //            Left Trigger -> AndroidAxis.Brake, AndroidAxis.LtTrigger
+        //            Right Trigger -> AndroidAxis.Gas, AndroidAxis.RtTrigger
+        //       BUT
+        //           when NVIDIA shield controller when connected to Samsung phone, triggers generate events:
+        //            Left Trigger -> AndroidAxis.Brake
+        //            Right Trigger -> AndroidAxis.Gas
+        //
+        //       This is why we're only reading and validating that events are correctly processed from AndroidAxis.Brake & AndroidAxis.Gas
         InputSystem.QueueStateEvent(controller,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Ltrigger, 0.123f)
-                .WithAxis(AndroidAxis.Rtrigger, 0.456f)
+                .WithAxis(AndroidAxis.Brake, 0.123f)
+                .WithAxis(AndroidAxis.Gas, 0.456f)
                 .WithAxis(AndroidAxis.X, 0.789f)
                 .WithAxis(AndroidAxis.Y, 0.987f)
                 .WithAxis(AndroidAxis.Z, 0.654f)
@@ -410,6 +420,37 @@ class AndroidTests : InputTestFixture
             Assert.That(control.x.ReadValue(), Is.EqualTo(0.1f).Within(0.000001));
             Assert.That(control.y.ReadValue(), Is.EqualTo(0.2f).Within(0.000001));
             Assert.That(control.z.ReadValue(), Is.EqualTo(0.3f).Within(0.000001));
+        }
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase("AndroidRotationVector", "attitude")]
+    public void Devices_SupportSensorsWithQuaternionControl(string layoutName, string controlName)
+    {
+        var device = InputSystem.AddDevice(layoutName);
+        var control = (QuaternionControl)device[controlName];
+
+        InputEventPtr stateEventPtr;
+        using (StateEvent.From(device, out stateEventPtr))
+        {
+            var rotation = new Vector3(5.0f, 12.0f, 16.0f);
+            var q = Quaternion.Euler(rotation);
+
+            // The 4th value is ignored and is calculated from other three
+            control.WriteValueInto(stateEventPtr, new Quaternion(q.x, q.y, q.z, 1234567.0f));
+
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.QueueEvent(stateEventPtr);
+            InputSystem.Update();
+
+            testRuntime.screenOrientation = ScreenOrientation.LandscapeLeft;
+            InputConfiguration.CompensateSensorsForScreenOrientation = false;
+            Assert.That(control.ReadValue(), Is.EqualTo(q).Within(0.01));
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(rotation).Using(vector3Comparer));
+
+            InputConfiguration.CompensateSensorsForScreenOrientation = true;
+            Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(vector3Comparer));
         }
     }
 }
