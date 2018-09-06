@@ -123,9 +123,6 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("m_Initialized = true;");
             writer.EndBlock();
 
-            // Duplicate method.
-            ////TODO
-
             // Action set accessors.
             foreach (var set in sets)
             {
@@ -240,7 +237,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionNameCased = actionName;
             if (char.IsLower(actionNameCased[0]))
                 actionNameCased = char.ToUpper(actionNameCased[0]) + actionNameCased.Substring(1);
-            
+
             writer.WriteLine(string.Format("public ActionEvent {1}{2} {{ get {{ return m_Wrapper.m_{0}{3}Action{2}; }} }}",
                 setName, actionName, phase, actionNameCased));
         }
