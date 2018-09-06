@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 m_InteractionListView = new ReorderableList(m_Interactions, typeof(InputControlLayout.NameAndParameters));
 
                 m_InteractionListView.drawHeaderCallback =
-                    (rect) => EditorGUI.LabelField(rect, Contents.interactions);
+                    rect => EditorGUI.LabelField(rect, Contents.interactions);
 
                 m_InteractionListView.drawElementCallback =
                     (rect, index, isActive, isFocused) =>

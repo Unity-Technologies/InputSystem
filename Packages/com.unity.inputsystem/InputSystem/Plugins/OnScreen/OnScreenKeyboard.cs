@@ -8,6 +8,7 @@ namespace UnityEngine.Experimental.Input.Plugins.OnScreen
         {
         }
 
+        ////REVIEW: Type is a bad name due to ambiguity with System.Type
         public enum Type
         {
         }

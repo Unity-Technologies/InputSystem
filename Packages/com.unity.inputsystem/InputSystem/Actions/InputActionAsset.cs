@@ -5,6 +5,8 @@ using UnityEngine.Experimental.Input.Utilities;
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
 ////        "I expect a 'look' and a 'move' action in here"
 
+////TODO: nuke Clone()
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>

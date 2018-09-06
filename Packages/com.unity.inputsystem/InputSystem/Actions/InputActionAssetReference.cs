@@ -1,6 +1,8 @@
 using System;
 
-////TODO: move this out of view; shouldn't appear as part of the toplevel API
+////REVIEW: this (and the generated C# wrappers) really should be a struct but we can't inherit :/
+
+////TODO: nuke Clone()
 
 namespace UnityEngine.Experimental.Input
 {
@@ -12,11 +14,23 @@ namespace UnityEngine.Experimental.Input
     /// wrapper property.
     /// </remarks>
     [Serializable]
-    public class InputActionWrapper : ICloneable
+    public class InputActionAssetReference : ICloneable
     {
+        /// <summary>
+        /// The asset being referenced.
+        /// </summary>
         public InputActionAsset asset
         {
             get { return m_Asset; }
+        }
+
+        public InputActionAssetReference()
+        {
+        }
+
+        public InputActionAssetReference(InputActionAsset asset)
+        {
+            m_Asset = asset;
         }
 
         public void Enable()
@@ -33,9 +47,9 @@ namespace UnityEngine.Experimental.Input
                 sets[i].Disable();
         }
 
-        public InputActionWrapper Clone()
+        public InputActionAssetReference Clone()
         {
-            var clone = (InputActionWrapper)MemberwiseClone();
+            var clone = (InputActionAssetReference)MemberwiseClone();
             return clone;
         }
 

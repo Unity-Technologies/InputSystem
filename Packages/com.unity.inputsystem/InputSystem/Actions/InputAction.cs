@@ -25,6 +25,8 @@ using UnityEngine.Serialization;
 
 ////REVIEW: instead of only having the callbacks on each single action, also have them on the map as a whole?
 
+////TODO: nuke Clone()
+
 // So, actions are set up to not have a contract. They just monitor state changes and then fire
 // in response to those.
 //
