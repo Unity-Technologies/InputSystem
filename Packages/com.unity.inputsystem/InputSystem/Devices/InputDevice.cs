@@ -269,6 +269,10 @@ namespace UnityEngine.Experimental.Input
         {
         }
 
+        public virtual void OnIMEStringEvent(IMECompositionStringEvent imeEvent)
+        {
+        }
+        
         /// <summary>
         /// Called by the system when the configuration of the device has changed.
         /// </summary>

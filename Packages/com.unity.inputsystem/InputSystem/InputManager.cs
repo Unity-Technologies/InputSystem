@@ -1274,6 +1274,7 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
             RegisterControlLayout("Keyboard", typeof(Keyboard));
+            RegisterControlLayout("IMEDevice", typeof(IMEDevice));
             RegisterControlLayout("Pointer", typeof(Pointer));
             RegisterControlLayout("Mouse", typeof(Mouse));
             RegisterControlLayout("Pen", typeof(Pen));
@@ -2204,6 +2205,12 @@ namespace UnityEngine.Experimental.Input
                         device.OnTextInput((char)textEventPtr->character);
                         break;
 
+                    case IMECompositionStringEvent.Type:
+                        var imeEventPtr = (IMECompositionStringEvent*)currentEventPtr;
+                        ////TODO: handle UTF-32 to UTF-16 conversion properly
+                        device.OnIMEStringEvent(*imeEventPtr);
+                        break;
+                    
                     case DeviceRemoveEvent.Type:
                         RemoveDevice(device);
                         doNotMakeDeviceCurrent = true;
