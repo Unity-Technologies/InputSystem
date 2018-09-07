@@ -14,14 +14,6 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     /// <remarks>
     /// Usually imported from JSON using <see cref="Editor.InputActionImporter"/>.
-    ///
-    /// Names of each action map in the asset must be unique.
-    /// Allows applying overrides in bulk to all sets in the asset.
-    ///
-    /// NOTE: You don't have to use action maps this way. InputActionAsset
-    ///       is a ready-made way to use Unity's default serialization and
-    ///       have action maps go into the asset database. However, you can
-    ///       just as well have action maps directly as JSON in your game.
     /// </remarks>
     public class InputActionAsset : ScriptableObject, ICloneable
     {
@@ -38,27 +30,46 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// List of control schemes defined in the asset.
         /// </summary>
-        /// <remarks>
-        /// </remarks>
         public ReadOnlyArray<InputControlScheme> controlSchemes
         {
             get { return new ReadOnlyArray<InputControlScheme>(m_ControlSchemes); }
         }
 
-        // Return a JSON representation of the asset.
+        /// <summary>
+        /// Return a JSON representation of the asset.
+        /// </summary>
+        /// <returns>A string in JSON format that represents the static/configuration data present
+        /// in the asset.</returns>
+        /// <remarks>
+        /// This will not save dynamic execution state such as callbacks installed on
+        /// <see cref="InputAction">actions</see> or enabled/disabled states of individual
+        /// maps and actions.
+        ///
+        /// Use <see cref="LoadFromJson"/> to deserialize the JSON data back into an InputActionAsset.
+        /// </remarks>
         public string ToJson()
         {
-            return InputActionMap.ToJson(m_ActionMaps);
+            var fileJson = new FileJson
+            {
+                name = name,
+                maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
+                controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
+            };
+
+            return JsonUtility.ToJson(fileJson, true);
         }
 
         /// <summary>
-        /// Replace the contents of the asset with the action sets in the
-        /// given JSON string.
+        /// Replace the contents of the asset with the data in the given JSON string.
         /// </summary>
         /// <param name="json"></param>
         public void LoadFromJson(string json)
         {
-            m_ActionMaps = InputActionMap.FromJson(json);
+            if (string.IsNullOrEmpty(json))
+                throw new ArgumentNullException("json");
+
+            var parsedJson = JsonUtility.FromJson<FileJson>(json);
+            parsedJson.ToAsset(this);
         }
 
         /// <summary>
@@ -153,20 +164,42 @@ namespace UnityEngine.Experimental.Input
 
         public void AddControlScheme(InputControlScheme controlScheme)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(controlScheme.name))
+                throw new ArgumentException("Cannot add control scheme without name to asset " + name);
+            if (TryGetControlScheme(controlScheme.name) != null)
+                throw new InvalidOperationException(string.Format("Asset '{0}' already contains a control scheme called '{1}'",
+                    name, controlScheme.name));
+
+            ArrayHelpers.Append(ref m_ControlSchemes, controlScheme);
         }
 
         public InputControlScheme? TryGetControlScheme(string name)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            if (m_ControlSchemes == null)
+                return null;
+
+            for (var i = 0; i < m_ControlSchemes.Length; ++i)
+                if (string.Compare(name, m_ControlSchemes[i].name, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return m_ControlSchemes[i];
+
+            return null;
         }
 
         public InputControlScheme GetControlScheme(string name)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            var scheme = TryGetControlScheme(name);
+            if (!scheme.HasValue)
+                throw new Exception(string.Format("No control scheme called '{0}' in '{1}'", name, this.name));
+
+            return scheme.Value;
         }
 
-        ////REVIEW: does it make sense to retain the cloning ability or should we rely exclusively on Instantiate() instead?
         /// <summary>
         /// Duplicate the asset.
         /// </summary>
@@ -198,5 +231,20 @@ namespace UnityEngine.Experimental.Input
         /// Shared state for all action maps in the asset.
         /// </summary>
         [NonSerialized] internal InputActionMapState m_ActionMapState;
+
+        [Serializable]
+        internal struct FileJson
+        {
+            public string name;
+            public InputActionMap.MapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+
+            public void ToAsset(InputActionAsset asset)
+            {
+                asset.name = name;
+                asset.m_ActionMaps = new InputActionMap.ReadFileJson {maps = maps}.ToMaps();
+                asset.m_ControlSchemes = InputControlScheme.SchemeJson.ToSchemes(controlSchemes);
+            }
+        }
     }
 }

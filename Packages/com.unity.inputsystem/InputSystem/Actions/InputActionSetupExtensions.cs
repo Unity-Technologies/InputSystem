@@ -1,7 +1,10 @@
 using System;
+using System.Net.NetworkInformation;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: support for removing bindings
+
+////TODO: rename AppendBinding to just AddBinding
 
 namespace UnityEngine.Experimental.Input
 {
@@ -11,6 +14,18 @@ namespace UnityEngine.Experimental.Input
     /// </summary>
     public static class InputActionSetupExtensions
     {
+        public static InputActionMap AddActionMap(this InputActionAsset asset, string name)
+        {
+            if (asset == null)
+                throw new ArgumentNullException("asset");
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            var map = new InputActionMap(name);
+            asset.AddActionMap(map);
+            return map;
+        }
+
         public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
             string interactions = null, string groups = null, string expectedControlLayout = null)
         {
@@ -51,6 +66,13 @@ namespace UnityEngine.Experimental.Input
                 interactions = interactions,
                 groups = groups
             });
+        }
+
+        public static BindingSyntax AppendBinding(this InputAction action, InputControl control)
+        {
+            //sets the path itself based on just the layout of the control's device
+            //sets an overridePath pointing to the actual device as it exists at runtime
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -203,9 +225,27 @@ namespace UnityEngine.Experimental.Input
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Add a new control scheme to the given <paramref name="asset"/>.
+        /// </summary>
+        /// <param name="asset">Asset to add the control scheme to.</param>
+        /// <param name="name">Name to give to the control scheme. Must be unique within the control schemes of the
+        /// asset. Also used as default name of <see cref="InputControlScheme.bindingGroup">binding group</see> associated
+        /// with the control scheme.</param>
+        /// <returns>Syntax to allow providing additional configuration for the newly added control scheme.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is null or <paramref name="name"/>
+        /// is null or empty.</exception>
         public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
         {
-            throw new NotImplementedException();
+            if (asset == null)
+                throw new ArgumentNullException("asset");
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            var index = asset.controlSchemes.Count;
+            asset.AddControlScheme(new InputControlScheme(name));
+
+            return new ControlSchemeSyntax(asset, index);
         }
 
         /// <summary>
@@ -412,19 +452,58 @@ namespace UnityEngine.Experimental.Input
 
         public struct ControlSchemeSyntax
         {
+            private InputActionAsset m_Asset;
+            private int m_ControlSchemeIndex;
+
+            internal ControlSchemeSyntax(InputActionAsset asset, int index)
+            {
+                m_Asset = asset;
+                m_ControlSchemeIndex = index;
+            }
+
             public ControlSchemeSyntax BasedOn(string baseControlScheme)
             {
-                throw new NotImplementedException();
+                if (string.IsNullOrEmpty(baseControlScheme))
+                    throw new ArgumentNullException("baseControlScheme");
+
+                m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
+                return this;
             }
 
-            public ControlSchemeSyntax WithRequiredDevice(string path)
+            public ControlSchemeSyntax WithBindingGroup(string bindingGroup)
             {
-                throw new NotImplementedException();
+                if (string.IsNullOrEmpty(bindingGroup))
+                    throw new ArgumentNullException("bindingGroup");
+
+                m_Asset.m_ControlSchemes[m_ControlSchemeIndex].bindingGroup = bindingGroup;
+                return this;
             }
 
-            public ControlSchemeSyntax WithOptionalDevice(string path)
+            public ControlSchemeSyntax WithRequiredDevice(string devicePath)
             {
-                throw new NotImplementedException();
+                AddDeviceEntry(devicePath, false);
+                return this;
+            }
+
+            public ControlSchemeSyntax WithOptionalDevice(string devicePath)
+            {
+                AddDeviceEntry(devicePath, true);
+                return this;
+            }
+
+            private void AddDeviceEntry(string devicePath, bool isOptional)
+            {
+                if (string.IsNullOrEmpty(devicePath))
+                    throw new ArgumentNullException("devicePath");
+
+                var scheme = m_Asset.m_ControlSchemes[m_ControlSchemeIndex];
+                ArrayHelpers.Append(ref scheme.m_Devices,
+                    new InputControlScheme.DeviceEntry
+                    {
+                        devicePath = devicePath,
+                        isOptional = isOptional,
+                    });
+                m_Asset.m_ControlSchemes[m_ControlSchemeIndex] = scheme;
             }
         }
     }

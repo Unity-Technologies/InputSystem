@@ -853,7 +853,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        private struct ActionJson
+        internal struct ActionJson
         {
             public string name;
             public string id;
@@ -876,7 +876,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         [Serializable]
-        private struct MapJson
+        internal struct MapJson
         {
             public string name;
             public string id;
@@ -923,7 +923,7 @@ namespace UnityEngine.Experimental.Input
         // the action name and containing their own bindings directly. JSON files we write
         // go map by map and separate bindings and actions.
         [Serializable]
-        private struct WriteFileJson
+        internal struct WriteFileJson
         {
             public MapJson[] maps;
 
@@ -950,11 +950,11 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        // A JSON represention of one or more sets of actions.
+        // A JSON representation of one or more sets of actions.
         // Contains a list of actions. Each action may specify the set it belongs to
         // as part of its name ("set/action").
         [Serializable]
-        private struct ReadFileJson
+        internal struct ReadFileJson
         {
             public ActionJson[] actions;
             public MapJson[] maps;
@@ -1142,13 +1142,13 @@ namespace UnityEngine.Experimental.Input
         public static string ToJson(IEnumerable<InputActionMap> sets)
         {
             var fileJson = WriteFileJson.FromMaps(sets);
-            return JsonUtility.ToJson(fileJson);
+            return JsonUtility.ToJson(fileJson, true);
         }
 
         public string ToJson()
         {
             var fileJson = WriteFileJson.FromMap(this);
-            return JsonUtility.ToJson(fileJson);
+            return JsonUtility.ToJson(fileJson, true);
         }
 
         public void OnBeforeSerialize()

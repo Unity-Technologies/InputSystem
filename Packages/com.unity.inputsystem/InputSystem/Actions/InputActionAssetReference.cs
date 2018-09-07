@@ -22,6 +22,7 @@ namespace UnityEngine.Experimental.Input
         public InputActionAsset asset
         {
             get { return m_Asset; }
+            protected set { m_Asset = value; }
         }
 
         public InputActionAssetReference()

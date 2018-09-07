@@ -36,6 +36,13 @@ namespace UnityEngine.Experimental.Input
             m_Reference = null;
         }
 
+        public void Enable()
+        {
+            var resolvedAction = action;
+            if (resolvedAction != null)
+                resolvedAction.Enable();
+        }
+
         [SerializeField] private bool m_UseReference;
         [SerializeField] private InputAction m_Action;
         [SerializeField] private InputActionReference m_Reference;
