@@ -142,7 +142,7 @@ namespace UnityEngine.Experimental.Input.Layouts
                 version = version,
                 capabilities = capabilities
             };
-            return JsonUtility.ToJson(data);
+            return JsonUtility.ToJson(data, true);
         }
 
         public static InputDeviceDescription FromJson(string json)

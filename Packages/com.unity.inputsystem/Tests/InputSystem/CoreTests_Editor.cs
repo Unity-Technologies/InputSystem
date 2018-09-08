@@ -512,39 +512,6 @@ partial class CoreTests
         Assert.That(map2.name, Is.EqualTo("mapB"));
     }
 
-    [Test]
-    [Category("Editor")]
-    public void Editor_CanPrettyPrintJSON()
-    {
-        var map = new InputActionMap("map");
-        var action = map.AddAction("action", binding: "<Gamepad>/leftStick");
-        var json = InputActionMap.ToJson(new[] {map});
-
-        var prettyJson = StringHelpers.PrettyPrintJSON(json);
-
-        var expected = string.Format(
-@"{{
-    ""maps"" : [
-        {{
-            ""name"" : ""map"",
-            ""id"" : ""{0}"",
-            ""actions"" : [
-                {{
-                    ""name"" : ""action"",
-                    ""id"" : ""{1}"",
-                    ""expectedControlLayout"" : """",
-                    ""bindings"" : [
-                    ]
-", map.id, action.id);
-
-        Assert.That(prettyJson, Does.StartWith(expected));
-
-        // Doing it again should not result in a difference.
-        prettyJson = StringHelpers.PrettyPrintJSON(prettyJson);
-
-        Assert.That(prettyJson, Does.StartWith(expected));
-    }
-
     // We don't want the game code's update mask affect editor code and vice versa.
     [Test]
     [Category("Editor")]

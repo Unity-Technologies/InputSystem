@@ -729,7 +729,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         public string ToJson()
         {
             var layout = LayoutJson.FromLayout(this);
-            return JsonUtility.ToJson(layout);
+            return JsonUtility.ToJson(layout, true);
         }
 
         // Constructs a layout from the given JSON source.

@@ -1131,6 +1131,67 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanConvertAssetToAndFromJson()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.name = "TestAsset";
+
+        var map1 = asset.AddActionMap("map1");
+        var map2 = asset.AddActionMap("map2");
+
+        map1.AddAction("action1", binding: "<Gamepad>/leftStick");
+        map1.AddAction("action2", binding: "<Gamepad>/rightStick");
+        map2.AddAction("action3", binding: "<Gamepad>/leftTrigger");
+
+        asset.AddControlScheme("scheme1").WithBindingGroup("group1").WithRequiredDevice("<Gamepad>");
+        asset.AddControlScheme("scheme2").BasedOn("scheme1").WithBindingGroup("group2")
+            .WithOptionalDevice("<Keyboard>").WithRequiredDevice("<Mouse>");
+
+        var json = asset.ToJson();
+
+        // Re-create asset from JSON.
+        UnityEngine.Object.DestroyImmediate(asset);
+        asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.LoadFromJson(json);
+
+        Assert.That(asset.name, Is.EqualTo("TestAsset"));
+
+        Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
+        Assert.That(asset.actionMaps[0].name, Is.EqualTo("map1"));
+        Assert.That(asset.actionMaps[1].name, Is.EqualTo("map2"));
+        Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(2));
+        Assert.That(asset.actionMaps[1].actions, Has.Count.EqualTo(1));
+        Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
+        Assert.That(asset.actionMaps[0].actions[1].name, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[1].actions[0].name, Is.EqualTo("action3"));
+        Assert.That(asset.actionMaps[0].bindings, Has.Count.EqualTo(2));
+        Assert.That(asset.actionMaps[1].bindings, Has.Count.EqualTo(1));
+        Assert.That(asset.actionMaps[0].bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(asset.actionMaps[0].bindings[0].action, Is.EqualTo("action1"));
+        Assert.That(asset.actionMaps[0].bindings[1].path, Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(asset.actionMaps[0].bindings[1].action, Is.EqualTo("action2"));
+        Assert.That(asset.actionMaps[1].bindings[0].path, Is.EqualTo("<Gamepad>/leftTrigger"));
+        Assert.That(asset.actionMaps[1].bindings[0].action, Is.EqualTo("action3"));
+
+        Assert.That(asset.controlSchemes, Has.Count.EqualTo(2));
+        Assert.That(asset.controlSchemes[0].name, Is.EqualTo("scheme1"));
+        Assert.That(asset.controlSchemes[1].name, Is.EqualTo("scheme2"));
+        Assert.That(asset.controlSchemes[0].bindingGroup, Is.EqualTo("group1"));
+        Assert.That(asset.controlSchemes[1].bindingGroup, Is.EqualTo("group2"));
+        Assert.That(asset.controlSchemes[0].baseScheme, Is.Null);
+        Assert.That(asset.controlSchemes[1].baseScheme, Is.EqualTo("scheme1"));
+        Assert.That(asset.controlSchemes[0].devices, Has.Count.EqualTo(1));
+        Assert.That(asset.controlSchemes[1].devices, Has.Count.EqualTo(2));
+        Assert.That(asset.controlSchemes[0].devices,
+            Has.Exactly(1).With.Property("devicePath").EqualTo("<Gamepad>").And.Property("isOptional").False);
+        Assert.That(asset.controlSchemes[1].devices,
+            Has.Exactly(1).With.Property("devicePath").EqualTo("<Keyboard>").And.Property("isOptional").True);
+        Assert.That(asset.controlSchemes[1].devices,
+            Has.Exactly(1).With.Property("devicePath").EqualTo("<Mouse>").And.Property("isOptional").False);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanQueryAllEnabledActions()
     {
         var action = new InputAction(binding: "/gamepad/leftStick");
@@ -1930,15 +1991,57 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanAddControlSchemeToAsset()
+    public void Actions_CanAddControlSchemeToAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-
         asset.AddControlScheme("scheme1");
 
         Assert.That(asset.controlSchemes, Has.Count.EqualTo(1));
         Assert.That(asset.controlSchemes, Has.Exactly(1).With.Property("name").EqualTo("scheme1"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotAddControlSchemeWithoutName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        Assert.That(() => asset.AddControlScheme(string.Empty), Throws.ArgumentNullException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotAddControlSchemeWithDuplicateNameToAsset()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddControlScheme("scheme");
+
+        // Case is ignored.
+        Assert.That(() => asset.AddControlScheme("SCHEME"), Throws.InvalidOperationException);
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanRemoveControlSchemeFromAsset()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_CanRenameControlSchemeInAsset()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ControlSchemeGroupDefaultsToNameOfScheme()
+    {
+        var scheme = new InputControlScheme("test");
+        Assert.That(scheme.bindingGroup, Is.EqualTo("test"));
     }
 
     [Test]
@@ -1951,8 +2054,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanRequireSpecificDevicesForControlScheme()
+    public void Actions_CanRequireSpecificDevicesForControlScheme()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
@@ -1963,19 +2065,24 @@ partial class CoreTests
 
         Assert.That(asset.GetControlScheme("scheme").devices, Has.Count.EqualTo(3));
         Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<XRController>{LeftHand}"));
-        Assert.That(asset.GetControlScheme("scheme").devices[0].optional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<XRController>{RightHand}"));
-        Assert.That(asset.GetControlScheme("scheme").devices[0].optional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").devices[0].devicePath, Is.EqualTo("<Gamepad>"));
-        Assert.That(asset.GetControlScheme("scheme").devices[0].optional, Is.True);
+        Assert.That(asset.GetControlScheme("scheme").devices[0].isOptional, Is.False);
+        Assert.That(asset.GetControlScheme("scheme").devices[1].devicePath, Is.EqualTo("<XRController>{RightHand}"));
+        Assert.That(asset.GetControlScheme("scheme").devices[1].isOptional, Is.False);
+        Assert.That(asset.GetControlScheme("scheme").devices[2].devicePath, Is.EqualTo("<Gamepad>"));
+        Assert.That(asset.GetControlScheme("scheme").devices[2].isOptional, Is.True);
     }
-
-    //auto-switch should be painless
 
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_CanEnableSpecificControlScheme()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void TODO_Actions_AllMapsInAssetShareSingleState()
     {
         Assert.Fail();
     }

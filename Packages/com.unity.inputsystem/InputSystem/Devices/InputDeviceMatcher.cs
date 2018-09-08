@@ -196,7 +196,7 @@ namespace UnityEngine.Experimental.Input.Layouts
         public string ToJson()
         {
             var value = MatcherJson.FromMatcher(this);
-            return JsonUtility.ToJson(value);
+            return JsonUtility.ToJson(value, true);
         }
 
         public static InputDeviceMatcher FromJson(string json)

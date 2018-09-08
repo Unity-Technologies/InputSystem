@@ -241,7 +241,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private void Refresh()
         {
             // See if the data has actually changed.
-            var newJson = StringHelpers.PrettyPrintJSON(m_AssetObjectForEditing.ToJson());
+            var newJson = m_AssetObjectForEditing.ToJson();
             if (newJson == m_AssetJson)
             {
                 // Still need to refresh reference to imported object in case we had a re-import.
@@ -266,8 +266,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
             // Update JSON.
             var asset = m_AssetObjectForEditing;
-            var json = asset.ToJson();
-            m_AssetJson = StringHelpers.PrettyPrintJSON(json);
+            m_AssetJson = asset.ToJson();
 
             // Write out, if changed.
             var existingJson = File.ReadAllText(m_AssetPath);

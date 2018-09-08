@@ -814,7 +814,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             public string ToJson()
             {
-                return JsonUtility.ToJson(this);
+                return JsonUtility.ToJson(this, true);
             }
 
             public static HIDDeviceDescriptor FromJson(string json)
