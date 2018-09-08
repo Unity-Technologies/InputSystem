@@ -10,7 +10,6 @@ ScriptedImporter:
     11400010: menu/navigate
     11400012: menu/click
     11400014: gameplay/escape
-    11400018: general/join
   externalObjects: {}
   userData: 
   assetBundleName: 

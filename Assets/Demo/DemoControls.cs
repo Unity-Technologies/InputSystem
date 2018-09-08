@@ -74,16 +74,75 @@ public class DemoControls : InputActionAssetReference
             m_menu_click.performed += m_menuClickActionPerformed.Invoke;
         if (m_menuClickActionCancelled != null)
             m_menu_click.cancelled += m_menuClickActionCancelled.Invoke;
-        // general
-        m_general = asset.GetActionMap("general");
-        m_general_join = m_general.GetAction("join");
-        if (m_generalJoinActionStarted != null)
-            m_general_join.started += m_generalJoinActionStarted.Invoke;
-        if (m_generalJoinActionPerformed != null)
-            m_general_join.performed += m_generalJoinActionPerformed.Invoke;
-        if (m_generalJoinActionCancelled != null)
-            m_general_join.cancelled += m_generalJoinActionCancelled.Invoke;
         m_Initialized = true;
+    }
+
+    private void Uninitialize()
+    {
+        m_gameplay = null;
+        m_gameplay_fire = null;
+        if (m_gameplayFireActionStarted != null)
+            m_gameplay_fire.started -= m_gameplayFireActionStarted.Invoke;
+        if (m_gameplayFireActionPerformed != null)
+            m_gameplay_fire.performed -= m_gameplayFireActionPerformed.Invoke;
+        if (m_gameplayFireActionCancelled != null)
+            m_gameplay_fire.cancelled -= m_gameplayFireActionCancelled.Invoke;
+        m_gameplay_move = null;
+        if (m_gameplayMoveActionStarted != null)
+            m_gameplay_move.started -= m_gameplayMoveActionStarted.Invoke;
+        if (m_gameplayMoveActionPerformed != null)
+            m_gameplay_move.performed -= m_gameplayMoveActionPerformed.Invoke;
+        if (m_gameplayMoveActionCancelled != null)
+            m_gameplay_move.cancelled -= m_gameplayMoveActionCancelled.Invoke;
+        m_gameplay_look = null;
+        if (m_gameplayLookActionStarted != null)
+            m_gameplay_look.started -= m_gameplayLookActionStarted.Invoke;
+        if (m_gameplayLookActionPerformed != null)
+            m_gameplay_look.performed -= m_gameplayLookActionPerformed.Invoke;
+        if (m_gameplayLookActionCancelled != null)
+            m_gameplay_look.cancelled -= m_gameplayLookActionCancelled.Invoke;
+        m_gameplay_jump = null;
+        if (m_gameplayJumpActionStarted != null)
+            m_gameplay_jump.started -= m_gameplayJumpActionStarted.Invoke;
+        if (m_gameplayJumpActionPerformed != null)
+            m_gameplay_jump.performed -= m_gameplayJumpActionPerformed.Invoke;
+        if (m_gameplayJumpActionCancelled != null)
+            m_gameplay_jump.cancelled -= m_gameplayJumpActionCancelled.Invoke;
+        m_gameplay_escape = null;
+        if (m_gameplayEscapeActionStarted != null)
+            m_gameplay_escape.started -= m_gameplayEscapeActionStarted.Invoke;
+        if (m_gameplayEscapeActionPerformed != null)
+            m_gameplay_escape.performed -= m_gameplayEscapeActionPerformed.Invoke;
+        if (m_gameplayEscapeActionCancelled != null)
+            m_gameplay_escape.cancelled -= m_gameplayEscapeActionCancelled.Invoke;
+        m_menu = null;
+        m_menu_navigate = null;
+        if (m_menuNavigateActionStarted != null)
+            m_menu_navigate.started -= m_menuNavigateActionStarted.Invoke;
+        if (m_menuNavigateActionPerformed != null)
+            m_menu_navigate.performed -= m_menuNavigateActionPerformed.Invoke;
+        if (m_menuNavigateActionCancelled != null)
+            m_menu_navigate.cancelled -= m_menuNavigateActionCancelled.Invoke;
+        m_menu_click = null;
+        if (m_menuClickActionStarted != null)
+            m_menu_click.started -= m_menuClickActionStarted.Invoke;
+        if (m_menuClickActionPerformed != null)
+            m_menu_click.performed -= m_menuClickActionPerformed.Invoke;
+        if (m_menuClickActionCancelled != null)
+            m_menu_click.cancelled -= m_menuClickActionCancelled.Invoke;
+        m_Initialized = false;
+    }
+
+    public void SwitchAsset(InputActionAsset newAsset)
+    {
+        if (newAsset == asset) return;
+        if (m_Initialized) Uninitialize();
+        asset = newAsset;
+    }
+
+    public void DuplicateAndSwitchAsset()
+    {
+        SwitchAsset(ScriptableObject.Instantiate(asset));
     }
 
     // gameplay
@@ -113,25 +172,25 @@ public class DemoControls : InputActionAssetReference
         private DemoControls m_Wrapper;
         public GameplayActions(DemoControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
-        public ActionEvent FireStarted { get { return m_Wrapper.m_gameplayFireActionStarted; } }
-        public ActionEvent FirePerformed { get { return m_Wrapper.m_gameplayFireActionPerformed; } }
-        public ActionEvent FireCancelled { get { return m_Wrapper.m_gameplayFireActionCancelled; } }
+        public ActionEvent fireStarted { get { return m_Wrapper.m_gameplayFireActionStarted; } }
+        public ActionEvent firePerformed { get { return m_Wrapper.m_gameplayFireActionPerformed; } }
+        public ActionEvent fireCancelled { get { return m_Wrapper.m_gameplayFireActionCancelled; } }
         public InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
-        public ActionEvent MoveStarted { get { return m_Wrapper.m_gameplayMoveActionStarted; } }
-        public ActionEvent MovePerformed { get { return m_Wrapper.m_gameplayMoveActionPerformed; } }
-        public ActionEvent MoveCancelled { get { return m_Wrapper.m_gameplayMoveActionCancelled; } }
+        public ActionEvent moveStarted { get { return m_Wrapper.m_gameplayMoveActionStarted; } }
+        public ActionEvent movePerformed { get { return m_Wrapper.m_gameplayMoveActionPerformed; } }
+        public ActionEvent moveCancelled { get { return m_Wrapper.m_gameplayMoveActionCancelled; } }
         public InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
-        public ActionEvent LookStarted { get { return m_Wrapper.m_gameplayLookActionStarted; } }
-        public ActionEvent LookPerformed { get { return m_Wrapper.m_gameplayLookActionPerformed; } }
-        public ActionEvent LookCancelled { get { return m_Wrapper.m_gameplayLookActionCancelled; } }
+        public ActionEvent lookStarted { get { return m_Wrapper.m_gameplayLookActionStarted; } }
+        public ActionEvent lookPerformed { get { return m_Wrapper.m_gameplayLookActionPerformed; } }
+        public ActionEvent lookCancelled { get { return m_Wrapper.m_gameplayLookActionCancelled; } }
         public InputAction @jump { get { return m_Wrapper.m_gameplay_jump; } }
-        public ActionEvent JumpStarted { get { return m_Wrapper.m_gameplayJumpActionStarted; } }
-        public ActionEvent JumpPerformed { get { return m_Wrapper.m_gameplayJumpActionPerformed; } }
-        public ActionEvent JumpCancelled { get { return m_Wrapper.m_gameplayJumpActionCancelled; } }
+        public ActionEvent jumpStarted { get { return m_Wrapper.m_gameplayJumpActionStarted; } }
+        public ActionEvent jumpPerformed { get { return m_Wrapper.m_gameplayJumpActionPerformed; } }
+        public ActionEvent jumpCancelled { get { return m_Wrapper.m_gameplayJumpActionCancelled; } }
         public InputAction @escape { get { return m_Wrapper.m_gameplay_escape; } }
-        public ActionEvent EscapeStarted { get { return m_Wrapper.m_gameplayEscapeActionStarted; } }
-        public ActionEvent EscapePerformed { get { return m_Wrapper.m_gameplayEscapeActionPerformed; } }
-        public ActionEvent EscapeCancelled { get { return m_Wrapper.m_gameplayEscapeActionCancelled; } }
+        public ActionEvent escapeStarted { get { return m_Wrapper.m_gameplayEscapeActionStarted; } }
+        public ActionEvent escapePerformed { get { return m_Wrapper.m_gameplayEscapeActionPerformed; } }
+        public ActionEvent escapeCancelled { get { return m_Wrapper.m_gameplayEscapeActionCancelled; } }
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -161,13 +220,13 @@ public class DemoControls : InputActionAssetReference
         private DemoControls m_Wrapper;
         public MenuActions(DemoControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @navigate { get { return m_Wrapper.m_menu_navigate; } }
-        public ActionEvent NavigateStarted { get { return m_Wrapper.m_menuNavigateActionStarted; } }
-        public ActionEvent NavigatePerformed { get { return m_Wrapper.m_menuNavigateActionPerformed; } }
-        public ActionEvent NavigateCancelled { get { return m_Wrapper.m_menuNavigateActionCancelled; } }
+        public ActionEvent navigateStarted { get { return m_Wrapper.m_menuNavigateActionStarted; } }
+        public ActionEvent navigatePerformed { get { return m_Wrapper.m_menuNavigateActionPerformed; } }
+        public ActionEvent navigateCancelled { get { return m_Wrapper.m_menuNavigateActionCancelled; } }
         public InputAction @click { get { return m_Wrapper.m_menu_click; } }
-        public ActionEvent ClickStarted { get { return m_Wrapper.m_menuClickActionStarted; } }
-        public ActionEvent ClickPerformed { get { return m_Wrapper.m_menuClickActionPerformed; } }
-        public ActionEvent ClickCancelled { get { return m_Wrapper.m_menuClickActionCancelled; } }
+        public ActionEvent clickStarted { get { return m_Wrapper.m_menuClickActionStarted; } }
+        public ActionEvent clickPerformed { get { return m_Wrapper.m_menuClickActionPerformed; } }
+        public ActionEvent clickCancelled { get { return m_Wrapper.m_menuClickActionCancelled; } }
         public InputActionMap Get() { return m_Wrapper.m_menu; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -180,34 +239,6 @@ public class DemoControls : InputActionAssetReference
         {
             if (!m_Initialized) Initialize();
             return new MenuActions(this);
-        }
-    }
-    // general
-    private InputActionMap m_general;
-    private InputAction m_general_join;
-    [SerializeField] private ActionEvent m_generalJoinActionStarted;
-    [SerializeField] private ActionEvent m_generalJoinActionPerformed;
-    [SerializeField] private ActionEvent m_generalJoinActionCancelled;
-    public struct GeneralActions
-    {
-        private DemoControls m_Wrapper;
-        public GeneralActions(DemoControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @join { get { return m_Wrapper.m_general_join; } }
-        public ActionEvent JoinStarted { get { return m_Wrapper.m_generalJoinActionStarted; } }
-        public ActionEvent JoinPerformed { get { return m_Wrapper.m_generalJoinActionPerformed; } }
-        public ActionEvent JoinCancelled { get { return m_Wrapper.m_generalJoinActionCancelled; } }
-        public InputActionMap Get() { return m_Wrapper.m_general; }
-        public void Enable() { Get().Enable(); }
-        public void Disable() { Get().Disable(); }
-        public InputActionMap Clone() { return Get().Clone(); }
-        public static implicit operator InputActionMap(GeneralActions set) { return set.Get(); }
-    }
-    public GeneralActions @general
-    {
-        get
-        {
-            if (!m_Initialized) Initialize();
-            return new GeneralActions(this);
         }
     }
     [Serializable]

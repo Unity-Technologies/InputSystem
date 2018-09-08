@@ -1,13 +1,18 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Plugins.UI;
 using UnityEngine.Experimental.Input.Plugins.Users;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 /// <summary>
 /// Controller for a single player in the game.
 /// </summary>
+/// <remarks>
+/// </remarks>
 public class DemoPlayerController : MonoBehaviour
 {
     public float moveSpeed;
@@ -15,7 +20,16 @@ public class DemoPlayerController : MonoBehaviour
     public float burstSpeed;
     public float jumpForce = 2.0f;
 
+    /// <summary>
+    /// Prefab to spawn for projectiles fired by the player.
+    /// </summary>
     public GameObject projectilePrefab;
+
+    /// <summary>
+    /// Controls used by this player.
+    /// </summary>
+    /// <remarks>
+    /// </remarks>
     public DemoControls controls;
 
     /// <summary>
@@ -27,6 +41,25 @@ public class DemoPlayerController : MonoBehaviour
     /// </remarks>
     public Canvas ui;
 
+    /// <summary>
+    /// GameObject hierarchy inside <see cref="ui"/> that represents the menu UI.
+    /// </summary>
+    public GameObject menuUI;
+
+    /// <summary>
+    /// GameObject hierarchy inside <see cref="ui"/> that represents the in-game UI.
+    /// </summary>
+    public GameObject inGameUI;
+
+    public Text fireHintsUI;
+    public Text moveHintsUI;
+    public Text lookHintsUI;
+    public GameObject chargingUI;
+
+    public Action<DemoPlayerController> onLeaveGame;
+
+    private int m_Score;
+    private bool m_ShowHints;
     private Vector2 m_Move;
     private Vector2 m_Look;
     private bool m_IsGrounded;
@@ -36,9 +69,12 @@ public class DemoPlayerController : MonoBehaviour
 
     private Rigidbody m_Rigidbody;
 
-    private int m_Score;
+    public InputUser user
+    {
+        get { return m_User; }
+    }
 
-    private void Start()
+    public void Start()
     {
         Debug.Assert(ui != null);
         Debug.Assert(projectilePrefab != null);
@@ -47,19 +83,27 @@ public class DemoPlayerController : MonoBehaviour
         m_Rigidbody = GetComponent<Rigidbody>();
     }
 
+    /// <summary>
+    /// One-time initialization for a player controller.
+    /// </summary>
+    /// <param name="user">Input user instance to correlate with the player.</param>
     public void Initialize(InputUser user)
     {
-        // Set up input.
         m_User = user;
-        if (user.index != 0)
-        {
-            ////REVIEW: may want to put this code into a helper method in the auto-generated file
-            // We're not the first player so give us our own private duplicate of the controls.
-            controls = new DemoControls(Instantiate(controls.asset));//this only needs to set asset; can keep DemoControls
-        }
-        m_User.actions = controls.gameplay;
 
-        // Wire up UI actions.
+        // Each player gets a separate action setup. The first player simply uses
+        // the actions as is but for any additional player, we need to duplicate
+        // the original actions.
+        if (user != InputUser.first)
+            controls.DuplicateAndSwitchAsset();
+
+        // By default, player starts out with gameplay actions active.
+        m_User.SwitchActions(controls.gameplay);
+
+        // Wire our input actions into the UI. Doing this manually here instead of setting it up
+        // in the inspector ensure that when we duplicate DemoControls.inputactions above, we
+        // end up with the UI using the right actions.
+        //
         // NOTE: Our bindings will be effective on the devices assigned to the user which in turn
         //       means that the UI will react only to input from that same user.
         var uiInput = ui.GetComponent<UIActionInputModule>();
@@ -68,21 +112,44 @@ public class DemoPlayerController : MonoBehaviour
         uiInput.leftClickAction.Set(controls.menu.click);
     }
 
+    /// <summary>
+    /// Return the control scheme that makes a good default.
+    /// </summary>
+    /// <returns>Control scheme from <see cref="controls"/> to use by default.</returns>
+    /// <remarks>
+    /// In a single-player setup, the player can freely switch between control schemes according to
+    /// whatever devices are available. However, we have to start the player out on *some* control
+    /// scheme in order to be able to display UI hints. We don't want to wait until the user has actually
+    /// used any device so that we'd know what actual devices to use.
+    ///
+    /// So, based on what platform we are on and what devices we have available locally, we select
+    /// one of the control schemes to start out with.
+    /// </remarks>
+    public InputControlScheme InferDefaultControlScheme()
+    {
+        //if we have VR devices, go with them by default regardless of platform
+
+        #if UNITY_STANDALONE
+        #elif UNITY_ANDROID || UNITY_IOS
+        #endif
+
+        throw new NotImplementedException();
+    }
+
+    public InputControlScheme SelectControlSchemeBasedOnDevice(InputDevice device)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void ConnectInput()
+    {
+    }
+
     public void Reset()
     {
         m_Score = 0;
         m_Move = Vector2.zero;
         m_Look = Vector2.zero;
-    }
-
-    public void OnEnable()
-    {
-        controls.Enable();
-    }
-
-    public void OnDisable()
-    {
-        controls.Disable();
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -105,20 +172,28 @@ public class DemoPlayerController : MonoBehaviour
     {
         if (context.interaction is SlowTapInteraction)
         {
-            StartCoroutine(BurstFire((int)(context.duration * burstSpeed)));
+            StartCoroutine(ExecuteChargedFire((int)(context.duration * burstSpeed)));
         }
         else
         {
-            Fire();
+            FireProjectile();
         }
         m_Charging = false;
     }
 
+    /// <summary>
+    /// Called when the "gameplay/fire" action is cancelled.
+    /// </summary>
+    /// <param name="context"></param>
     public void OnFireCancelled(InputAction.CallbackContext context)
     {
         m_Charging = false;
     }
 
+    /// <summary>
+    /// Called when the "gameplay/jump" action is performed.
+    /// </summary>
+    /// <param name="context"></param>
     public void OnJumpPerformed(InputAction.CallbackContext context)
     {
         var jump = new Vector3(0.0f, jumpForce, 0.0f);
@@ -129,10 +204,21 @@ public class DemoPlayerController : MonoBehaviour
         }
     }
 
-    public void OnGUI()
+    /// <summary>
+    /// Called when the user switches to a different control scheme.
+    /// </summary>
+    /// <remarks>
+    /// Updates UI help texts with information based on the bindings in the currently
+    /// active control scheme. This makes sure we display relevant information in the UI
+    /// (e.g. gamepad hints instead of keyboard hints when the user is playing with a
+    /// gamepad).
+    /// </remarks>
+    public void OnControlSchemeChanged()
     {
-        if (m_Charging)
-            GUI.Label(new Rect(100, 100, 200, 100), "Charging...");
+    }
+
+    public void OnDevicesChanged()
+    {
     }
 
     public void OnCollisionStay()
@@ -172,16 +258,22 @@ public class DemoPlayerController : MonoBehaviour
         transform.rotation = localRotation;
     }
 
-    private IEnumerator BurstFire(int burstAmount)
+    /// <summary>
+    /// Fire <paramref name="projectileCount"/> projectiles over time.
+    /// </summary>
+    /// <param name="projectileCount"></param>
+    /// <param name="delayBetweenProjectiles"></param>
+    /// <returns></returns>
+    private IEnumerator ExecuteChargedFire(int projectileCount, float delayBetweenProjectiles = 0.1f)
     {
-        for (var i = 0; i < burstAmount; ++i)
+        for (var i = 0; i < projectileCount; ++i)
         {
-            Fire();
-            yield return new WaitForSeconds(0.1f);
+            FireProjectile();
+            yield return new WaitForSeconds(delayBetweenProjectiles);
         }
     }
 
-    private void Fire()
+    private void FireProjectile()
     {
         var transform = this.transform;
         var newProjectile = Instantiate(projectilePrefab);
@@ -195,7 +287,27 @@ public class DemoPlayerController : MonoBehaviour
             new Color(Random.value, Random.value, Random.value, 1.0f);
     }
 
-    private void Menu()
+    private void OnGotoMenu()
     {
+        // Pause haptics effects while we are in the menu.
+        user.PauseHaptics();
+
+        // Switch from gameplay actions to menu actions.
+        user.SwitchActions(controls.menu);
+
+        // Activate the UI.
+        ui.gameObject.SetActive(true);
+    }
+
+    private void OnResumeGame()
+    {
+        // Deactivate the UI.
+        ui.gameObject.SetActive(false);
+
+        // Resume playback of haptics effects.
+        user.ResumeHaptics();
+
+        // Switch back to gameplay controls.
+        user.SwitchActions(controls.gameplay);
     }
 }

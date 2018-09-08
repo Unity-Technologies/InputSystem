@@ -15,4 +15,8 @@ public class DemoFishController : MonoBehaviour
         Feeding,
         Disappearing,
     }
+
+    public void Reset()
+    {
+    }
 }
