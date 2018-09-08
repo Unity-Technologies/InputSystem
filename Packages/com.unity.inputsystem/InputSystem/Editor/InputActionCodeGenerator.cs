@@ -123,6 +123,45 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("m_Initialized = true;");
             writer.EndBlock();
 
+            // Uninitialize method.
+            writer.WriteLine("private void Uninitialize()");
+            writer.BeginBlock();
+            foreach (var set in sets)
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                writer.WriteLine(string.Format("m_{0} = null;", setName));
+
+                foreach (var action in set.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    writer.WriteLine(string.Format("m_{0}_{1} = null;", setName, actionName));
+
+                    if (options.generateEvents)
+                    {
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Started, writer, removeCallback: true);
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Performed, writer, removeCallback: true);
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Cancelled, writer, removeCallback: true);
+                    }
+                }
+            }
+            writer.WriteLine("m_Initialized = false;");
+            writer.EndBlock();
+
+            // SwitchAsset method.
+            writer.WriteLine("public void SwitchAsset(InputActionAsset newAsset)");
+            writer.BeginBlock();
+            writer.WriteLine("if (newAsset == asset) return;");
+            writer.WriteLine("if (m_Initialized) Uninitialize();");
+            writer.WriteLine("asset = newAsset;");
+            writer.EndBlock();
+
+            ////REVIEW: DuplicateActionsAndBindings?
+            // DuplicateAndSwitchAsset method.
+            writer.WriteLine("public void DuplicateAndSwitchAsset()");
+            writer.BeginBlock();
+            writer.WriteLine("SwitchAsset(ScriptableObject.Instantiate(asset));");
+            writer.EndBlock();
+
             // Action set accessors.
             foreach (var set in sets)
             {
@@ -242,7 +281,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 setName, actionName, phase, actionNameCased));
         }
 
-        private static void WriteActionEventInitializer(string setName, string actionName, InputActionPhase phase, Writer writer)
+        private static void WriteActionEventInitializer(string setName, string actionName, InputActionPhase phase, Writer writer, bool removeCallback = false)
         {
             var actionNameCased = actionName;
             if (char.IsLower(actionNameCased[0]))
@@ -260,8 +299,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
             writer.WriteLine(string.Format("if (m_{0}{1}Action{2} != null)", setName, actionNameCased, phase));
             ++writer.indentLevel;
-            writer.WriteLine(string.Format("m_{0}_{4}.{3} += m_{0}{1}Action{2}.Invoke;",
-                setName, actionNameCased, phase, callbackName, CSharpCodeHelpers.MakeIdentifier(actionName)));
+            writer.WriteLine(string.Format("m_{0}_{4}.{3} {5}= m_{0}{1}Action{2}.Invoke;",
+                setName, actionNameCased, phase, callbackName, CSharpCodeHelpers.MakeIdentifier(actionName),
+                removeCallback ? "-" : "+"));
             --writer.indentLevel;
         }
 
