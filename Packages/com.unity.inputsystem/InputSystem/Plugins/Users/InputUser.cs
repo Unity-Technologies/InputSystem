@@ -8,8 +8,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////      comes back online, we connect the user to the same device; also, some platforms have APIs to help
 ////      dealing with this situation and we want to make use of that; probably want to only disable input devices
 ////      on those platforms instead of removing them
-
-////TODO: ideally, we'd have a way to also scope UIs to users
+////      (add something that allows remembering devices as best as we can)
 
 namespace UnityEngine.Experimental.Input.Plugins.Users
 {
@@ -22,8 +21,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     {
         public const ulong kInvalidId = 0;
 
-        public const int kInvalidIndex = -1;
-
         /// <summary>
         /// Unique numeric ID of the user.
         /// </summary>
@@ -33,7 +30,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// </remarks>
         public ulong id
         {
-            get { throw new NotImplementedException(); }
+            get { return m_Id; }
         }
 
         /// <summary>
@@ -48,10 +45,9 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// </remarks>
         public int index
         {
-            get { throw new NotImplementedException(); }
+            get { return m_Index; }
         }
 
-        ////REVIEW: allow multiple?
         /// <summary>
         /// If the user is defined by an external API, this is a handle to the external definition.
         /// </summary>
@@ -69,10 +65,21 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <summary>
         /// Human-readable name of the user.
         /// </summary>
+        /// <remarks>
+        /// The system places no constraints on the contents of this string. In particular, it does
+        /// not ensure that no two users have the same name or that a user even has a name assigned to it.
+        /// </remarks>
         public string userName
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return m_UserName; }
+            set
+            {
+                if (string.Compare(m_UserName, value) == 0)
+                    return;
+
+                m_UserName = value;
+                Notify(InputUserChange.NameChanged);
+            }
         }
 
         /// <summary>
@@ -86,12 +93,11 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// </remarks>
         public ReadOnlyArray<InputDevice> devices
         {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
+            get { return new ReadOnlyArray<InputDevice>(s_AllDevices, m_DeviceStartIndex, m_DeviceCount);}
         }
 
-        ////REVIEW: how does this handle assets and the need for cloning?
         ////REVIEW: the way action maps are designed, does it make sense to constrain this to a single map?
+        ////REVIEW: should this be a stack and automatically handle conflicting bindings?
         /// <summary>
         /// Action map currently associated with the user.
         /// </summary>
@@ -99,20 +105,28 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// This is optional and may be <c>null</c>. User management can be used without
         /// also using action maps.
         /// </remarks>
-        public InputActionMap actions
+        public InputActionMap activeActions
         {
             get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
         }
 
         ////REVIEW: allow multiple schemes?
         /// <summary>
         /// Control scheme currently employed by the user.
         /// </summary>
-        public InputControlScheme? controlScheme
+        /// <remarks>
+        ///
+        /// Note that if bindings are enabled that are not part of the active control scheme,
+        /// this property will automatically change value according to what bindings are being
+        /// used.
+        ///
+        /// Any time the value of this property change (whether by <see cref="SwitchControlScheme"/>
+        /// or by automatic switching), a notification is sent on <see cref="onChange"/> with
+        /// <see cref="InputUserChange.ControlSchemeChanged"/>.
+        /// </remarks>
+        public InputControlScheme? activeControlScheme
         {
             get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
         }
 
         ////REVIEW: are control schemes affecting this?
@@ -122,10 +136,88 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
             set { throw new NotImplementedException(); }
         }
 
-        public void AssignDevices<TDevices>(TDevices devices)
-            where TDevices : IEnumerable<InputDevice>
+        public void SwitchActions(InputActionMap actions)
         {
             throw new NotImplementedException();
+        }
+
+        public void SwitchControlScheme(InputControlScheme controlScheme)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AssignDevice(InputDevice device)
+        {
+            if (AssignDeviceInternal(device))
+                Notify(InputUserChange.DevicesChanged);
+        }
+
+        public void AssignDevices<TDevices>(TDevices devices)
+            where TDevices : IEnumerable<InputDevice> // Parameter so that compiler can know enumerable type instead of having to go through the interface.
+        {
+            if (devices == null)
+                throw new ArgumentNullException("devices");
+
+            var wasAdded = false;
+            foreach (var device in devices)
+                wasAdded |= AssignDeviceInternal(device);
+
+            if (wasAdded)
+                Notify(InputUserChange.DevicesChanged);
+        }
+
+        private bool AssignDeviceInternal(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
+            // Ignore if already assigned to user.
+            for (var i = 0; i < m_DeviceCount; ++i)
+                if (s_AllDevices[m_DeviceStartIndex + i] == device)
+                    return false;
+
+            // Move our devices to end of array.
+            if (m_DeviceCount > 0)
+            {
+                ArrayHelpers.MoveSlice(s_AllDevices, m_DeviceStartIndex, s_AllDeviceCount - m_DeviceCount,
+                    m_DeviceCount);
+
+                // Adjust user that have been impacted by the change.
+                for (var i = 0; i < s_AllUserCount; ++i)
+                {
+                    var user = s_AllUsers[i];
+                    if (user == this || user.m_DeviceStartIndex <= m_DeviceStartIndex)
+                        continue;
+
+                    user.m_DeviceStartIndex -= m_DeviceCount;
+                }
+
+                m_DeviceStartIndex = s_AllDeviceCount - m_DeviceCount;
+            }
+
+            // Append to array.
+            if (m_DeviceCount == 0)
+                m_DeviceStartIndex = s_AllDeviceCount;
+            ArrayHelpers.AppendWithCapacity(ref s_AllDevices, ref s_AllDeviceCount, device);
+            ++m_DeviceCount;
+
+            return true;
+        }
+
+        public void EnableControls()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisableControls()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Notify(InputUserChange change)
+        {
+            for (var i = 0; i < s_OnChange.length; ++i)
+                s_OnChange[i](this, change);
         }
 
         /// <summary>
@@ -134,38 +226,118 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// </summary>
         public static event Action<InputUser, InputUserChange> onChange
         {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add { s_OnChange.Append(value); }
+            remove { s_OnChange.Remove(value); }
         }
 
+        /// <summary>
+        /// List of all current users.
+        /// </summary>
         public static ReadOnlyArray<InputUser> all
         {
-            get { return new ReadOnlyArray<InputUser>(s_AllUsers, 0, s_UserCount); }
+            get { return new ReadOnlyArray<InputUser>(s_AllUsers, 0, s_AllUserCount); }
         }
 
-        public static InputUser first
+        ////REVIEW: should this be some generic join hook? needs to be explored more; involve console team
+        /// <summary>
+        /// If true, on platforms that have built-in support for user management (e.g. Xbox and PS4),
+        /// automatically create users and assign them devices to reflect
+        /// </summary>
+        public static bool autoAddPlatformUsers
         {
             get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
         }
 
-        public static InputUser Add(ulong userId = InputUser.kInvalidId, string userName = null)
+        /// <summary>
+        /// Add a new user.
+        /// </summary>
+        /// <param name="userName">Optional <see cref="userName"/> to assign to the newly created user.</param>
+        /// <returns>A newly created user.</returns>
+        /// <remarks>
+        /// Adding a user sends a notification with <see cref="InputUserChange.Added"/> through <see cref="onChange"/>.
+        ///
+        /// The user will start out with no devices or actions assigned.
+        ///
+        /// The user is added to <see cref="all"/>.
+        /// </remarks>
+        public static InputUser Add(string userName = null)
         {
-            throw new NotImplementedException();
+            var user = new InputUser
+            {
+                m_UserName = userName,
+                m_Id = ++s_LastUserId,
+            };
+
+            // Add to list.
+            var index = ArrayHelpers.AppendWithCapacity(ref s_AllUsers, ref s_AllUserCount, user);
+            user.m_Index = index;
+
+            // Send notification.
+            user.Notify(InputUserChange.Added);
+
+            return user;
         }
 
         public static void Remove(InputUser user)
         {
+            if (user == null)
+                throw new ArgumentNullException("user");
+
+            // Check index.
+            var index = user.m_Index;
+            if (index < 0 || index >= s_AllUserCount || s_AllUsers[index] != user)
+                return;
+
+            // Remove.
+            ArrayHelpers.EraseAt(ref s_AllUsers, index);
+            --s_AllUserCount;
+
+            // Adjust indices of remaining users.
+            for (var i = index; i < s_AllUserCount; ++i)
+                s_AllUsers[i].m_Index = i;
+
+            // Remove devices.
+            if (user.m_DeviceCount > 0)
+            {
+                ArrayHelpers.EraseSliceWithCapacity(ref s_AllDevices, ref s_AllDeviceCount, user.m_DeviceStartIndex,
+                    user.m_DeviceCount);
+                user.m_DeviceCount = 0;
+                user.m_DeviceStartIndex = 0;
+            }
+
+            // Send notification.
+            user.Notify(InputUserChange.Removed);
+        }
+
+        /// <summary>
+        /// Find the user (if any) that is currently assigned the given <paramref name="device"/>.
+        /// </summary>
+        /// <param name="device">An input device that has been added to the system.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <returns>The user that has <paramref name="device"/> among its <see cref="devices"/> or null if
+        /// no user is currently assigned the given device.</returns>
+        public static InputUser FindUserForDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException("device");
+
             throw new NotImplementedException();
         }
 
         private ulong m_Id;
         private int m_Index;
         private string m_UserName;
-        private ReadOnlyArray<InputDevice> m_Devices;
+        private int m_DeviceCount;
+        private int m_DeviceStartIndex;
         private InputActionMap m_ActionMap;
 
-        private static int s_UserCount;
-        private static InputUser[] s_AllUsers;
+        internal static uint s_LastUserId;
+        internal static int s_AllUserCount;
+        internal static int s_AllDeviceCount;
+        internal static InputUser[] s_AllUsers;
+        internal static InputDevice[] s_AllDevices; // We keep a single array that we slice out to each user.
+        internal static InlinedArray<Action<InputUser, InputUserChange>> s_OnChange;
 
         public void PauseHaptics()
         {

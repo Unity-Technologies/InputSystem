@@ -63,10 +63,6 @@ public class DemoGame : MonoBehaviour
     /// </remarks>
     public void Start()
     {
-        // We want to use the user management feature of the input system which
-        // is not initialized by default. Tell the system we want it.
-        InputUserSupport.Initialize();
-
         // Start out with main menu active. No unskippable 5 minute sequence of
         // company logos.
         ShowMainMenu();
@@ -235,12 +231,11 @@ public class DemoGame : MonoBehaviour
         else
         {
             // Create a new player object.
-            var user = playerIndex == 0 ? InputUser.first : InputUser.Add();
             var playerObject = Instantiate(playerPrefab);
             playerComponent = playerObject.GetComponent<DemoPlayerController>();
             if (playerComponent == null)
                 throw new Exception("Missing DemoPlayerController component on " + playerObject);
-            playerComponent.Initialize(user);
+            playerComponent.Initialize();
             playerComponent.onLeaveGame = OnPlayerLeavesGame;
 
             // Add to list.

@@ -86,15 +86,14 @@ public class DemoPlayerController : MonoBehaviour
     /// <summary>
     /// One-time initialization for a player controller.
     /// </summary>
-    /// <param name="user">Input user instance to correlate with the player.</param>
-    public void Initialize(InputUser user)
+    public void Initialize()
     {
-        m_User = user;
+        m_User = InputUser.Add();
 
         // Each player gets a separate action setup. The first player simply uses
         // the actions as is but for any additional player, we need to duplicate
         // the original actions.
-        if (user != InputUser.first)
+        if (m_User.index != 0)
             controls.DuplicateAndSwitchAsset();
 
         // By default, player starts out with gameplay actions active.

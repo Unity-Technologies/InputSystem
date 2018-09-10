@@ -3,7 +3,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputUser">input user</see> occurred.
     /// </summary>
-    /// <seealso cref="InputSystem.onUserChange"/>
+    /// <seealso cref="InputUser.onChange"/>
     public enum InputUserChange
     {
         /// <summary>
@@ -19,6 +19,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// <summary>
         /// An existing user changed the set of devices assigned to the user.
         /// </summary>
+        /// <seealso cref="InputUser.devices"/>
         DevicesChanged,
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// The changing of actions usually happens when a player changes context. For example,
         /// when going from gameplay to the menu.
         /// </remarks>
-        /// <seealso cref="InputUser.actionMap"/>
+        /// <seealso cref="InputUser.activeActions"/>
         ActionsChanged,
 
         ControlSchemeChanged,

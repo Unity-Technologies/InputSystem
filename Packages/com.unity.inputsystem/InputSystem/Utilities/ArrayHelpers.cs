@@ -392,5 +392,92 @@ namespace UnityEngine.Experimental.Input.Utilities
 
             return result;
         }
+
+        private static void Swap<TValue>(ref TValue first, ref TValue second)
+        {
+            var temp = first;
+            first = second;
+            second = temp;
+        }
+
+        /// <summary>
+        /// Swap the contents of two potentially overlapping slices within the array.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="sourceIndex"></param>
+        /// <param name="destinationIndex"></param>
+        /// <param name="count"></param>
+        /// <typeparam name="TValue"></typeparam>
+        public static void SwapSlice<TValue>(TValue[] array, int sourceIndex, int destinationIndex, int count)
+        {
+            if (sourceIndex < destinationIndex)
+            {
+                for (var i = 0; i < count; ++i)
+                    Swap(ref array[sourceIndex + count - i - 1], ref array[destinationIndex + count - i - 1]);
+            }
+            else
+            {
+                for (var i = 0; i < count; ++i)
+                    Swap(ref array[sourceIndex + i], ref array[destinationIndex + i]);
+            }
+        }
+
+        /// <summary>
+        /// Move a slice in the array to a different place without allocating a temporary array.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <param name="sourceIndex"></param>
+        /// <param name="destinationIndex"></param>
+        /// <param name="count"></param>
+        /// <typeparam name="TValue"></typeparam>
+        /// <remarks>
+        /// The slice is moved by repeatedly swapping slices until all the slices are where they
+        /// are supposed to go. This is not super efficient but avoids having to allocate a temporary
+        /// array on the heap.
+        /// </remarks>
+        public static void MoveSlice<TValue>(TValue[] array, int sourceIndex, int destinationIndex, int count)
+        {
+            if (count <= 0 || sourceIndex == destinationIndex)
+                return;
+
+            // Make sure we're moving from lower part of array to higher part so we only
+            // have to deal with that scenario.
+            if (sourceIndex > destinationIndex)
+                Swap(ref sourceIndex, ref destinationIndex);
+
+            var length = array.Length;
+
+            while (destinationIndex != sourceIndex)
+            {
+                // Swap source and destination slice. Afterwards, the source slice is the right, final
+                // place but the destination slice may not be.
+                SwapSlice(array, sourceIndex, destinationIndex, count);
+
+                // Slide destination window down.
+                if (destinationIndex - sourceIndex >= count * 2)
+                {
+                    // Slide down one whole window of count elements.
+                    destinationIndex -= count;
+                }
+                else
+                {
+                    ////TODO: this can be improved by using halving instead and only doing the final step as a single element slide
+                    // Slide down by one element.
+                    --destinationIndex;
+                }
+            }
+        }
+
+        public static void EraseSliceWithCapacity<TValue>(ref TValue[] array, ref int length, int index, int count)
+        {
+            if (count < length)
+            {
+                Array.Copy(array, index + count, array, index, length - index - count);
+                for (var i = 0; i < count; ++i)
+                    array[length - i - 1] = default(TValue);
+            }
+
+            length -= count;
+        }
     }
 }
