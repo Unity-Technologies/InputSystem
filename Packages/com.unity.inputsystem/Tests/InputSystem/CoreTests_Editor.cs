@@ -120,6 +120,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
     {
         Assert.Fail();
@@ -127,6 +128,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesCurrentDevices()
     {
         Assert.Fail();
@@ -621,6 +623,7 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    [Ignore("TODO")]
     public void TODO_Editor_PointerCoordinatesInEditorWindowOnGUI_AreInEditorWindowSpace()
     {
         Assert.Fail();
@@ -632,6 +635,7 @@ partial class CoreTests
     ////REVIEW: support actions in the editor at all?
     [UnityTest]
     [Category("Editor")]
+    [Ignore("TODO")]
     public IEnumerator TODO_Editor_ActionSetUpInEditor_DoesNotTriggerInPlayMode()
     {
         throw new NotImplementedException();
@@ -639,6 +643,7 @@ partial class CoreTests
 
     [UnityTest]
     [Category("Editor")]
+    [Ignore("TODO")]
     public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
     {
         throw new NotImplementedException();

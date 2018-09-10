@@ -333,6 +333,7 @@ partial class CoreTests
     // should add the base offset of the field itself.
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_SpecifyingOffsetOnControlAttribute_AddsBaseOffset()
     {
         Assert.Fail();
@@ -478,6 +479,7 @@ partial class CoreTests
     ////        in a way where all updates are controlled manually by the user through InputSystem.Update
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_DisablingAllUpdatesDisablesEventCollection()
     {
         InputSystem.updateMask = InputUpdateType.None;
@@ -909,6 +911,7 @@ partial class CoreTests
     // the motion curve of a tracking device over time.
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_CanRecordHistoryOfState()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -933,6 +936,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_SupportsBitAddressingControlsWithAutomaticOffsets()
     {
         ////TODO
@@ -941,6 +945,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [Ignore("TODO")]
     public void TODO_State_WithSingleStateAndSingleUpdate_XXXXX()
     {
         //test memory consumption

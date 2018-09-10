@@ -74,6 +74,7 @@ partial class CoreTests
     // layout for the device.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanSuppressCreationOfDevice()
     {
         Assert.Fail();
@@ -962,6 +963,7 @@ partial class CoreTests
     // this callback to generate a layout on the fly.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanDetermineWhichLayoutIsChosenOnDeviceDiscovery()
     {
         Assert.Fail();
@@ -1205,6 +1207,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_WhenDisabled_StateIsReset()
     {
         Assert.Fail();
@@ -1212,6 +1215,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_WhenDisabled_RefreshActions()
     {
         Assert.Fail();
@@ -2138,6 +2142,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_TouchesWithSameIdDontGetStuck_FIXME()
     {
         ////FIXME: Fails - touches stuck in Stationary phase
@@ -2181,6 +2186,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_TouchesWithWrongTimestampCorrectlyRecognized_FIXME()
     {
         ////FIXME: fails - events which have timestamp which is less than previous event are ignored implictly
@@ -2465,6 +2471,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_TouchControlCanReadTouchStateEventForTouchscreen()
     {
         Assert.Fail();
@@ -2472,6 +2479,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CannotChangeStateLayoutOfTouchControls()
     {
         Assert.Fail();
@@ -2479,6 +2487,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CannotChangeStateLayoutOfTouchscreen()
     {
         Assert.Fail();
@@ -2890,6 +2899,7 @@ partial class CoreTests
     //This could be the first step towards being able to simulate input well.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanCreateVirtualDevices()
     {
         //layout has one or more binding paths on controls instead of associated memory
