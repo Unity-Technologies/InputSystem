@@ -156,6 +156,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (EditorGUI.EndChangeCheck())
                 {
                     pathProperty.stringValue = path;
+                    pathProperty.serializedObject.ApplyModifiedProperties();
                     onModified(pathProperty);
                 }
                 if (GUI.Button(editBtn, "˅"))
