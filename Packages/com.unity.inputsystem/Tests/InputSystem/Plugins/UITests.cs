@@ -5,15 +5,15 @@ public class UITests : InputTestFixture
 {
     [Test]
     [Category("Actions")]
+    [Ignore("TODO")]
     public void TODO_Actions_CanDriveUINavigation()
     {
-        var map = new InputActionMap();
-
         Assert.Fail();
     }
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanDriveUINavigationFromGamepads()
     {
         Assert.Fail();
@@ -21,6 +21,7 @@ public class UITests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanDriveUINavigationFromJoysticks()
     {
         Assert.Fail();
@@ -28,6 +29,7 @@ public class UITests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanDriveUINavigationFromTouches()
     {
         Assert.Fail();
@@ -35,6 +37,7 @@ public class UITests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanDriveUINavigationFromMouseAndKeyboard()
     {
         Assert.Fail();

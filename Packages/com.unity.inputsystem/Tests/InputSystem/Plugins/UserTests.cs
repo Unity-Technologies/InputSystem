@@ -44,6 +44,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    [Ignore("TODO")]
     public void TODO_Users_CanDiscoverUsersFromDevicesReportedByRuntime()
     {
         Assert.Fail();
@@ -229,6 +230,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    [Ignore("TODO")]
     public void TODO_Users_CanAssignActionMapsToUsers()
     {
         Assert.Fail();
@@ -236,6 +238,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    [Ignore("TODO")]
     public void TODO_Users_WhenDeviceIsAssigned_TriggersNotification()
     {
         Assert.Fail();
@@ -243,6 +246,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    [Ignore("TODO")]
     public void TODO_Users_WhenActionMapIsAssigned_TriggersNotification()
     {
         Assert.Fail();
@@ -250,6 +254,7 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    [Ignore("TODO")]
     public void TODO_Users_CanDetectSwitchesInControlScheme()
     {
         Assert.Fail();
