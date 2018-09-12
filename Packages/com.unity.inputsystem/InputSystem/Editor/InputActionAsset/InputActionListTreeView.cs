@@ -277,7 +277,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (actionItem == null)
                 return;
 
-            if (!args.acceptedRename)
+            if (!args.acceptedRename || args.originalName == args.newName)
                 return;
 
             if (actionItem is ActionTreeItem)
