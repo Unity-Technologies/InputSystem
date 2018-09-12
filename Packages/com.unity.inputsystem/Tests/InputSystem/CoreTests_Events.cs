@@ -174,14 +174,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
