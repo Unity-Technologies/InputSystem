@@ -1,4 +1,5 @@
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {

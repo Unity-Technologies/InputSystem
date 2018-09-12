@@ -6,27 +6,31 @@ using System.Text;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEditor;
 
+////TODO: look up actions and maps by ID rather than by name
+
 ////TODO: only generate @something if @ is really needed
-
-////TODO: turn wrappers into structs, if possible (not sure how to make the property drawer stuff work with that)
-
-////TODO: generate Clone() methods (both on toplevel wrapper and on action set wrappers)
 
 ////TODO: allow having an unnamed or default-named action set which spills actions directly into the toplevel wrapper
 
+////TODO: add cleanup for ActionEvents
+
+////TODO: nuke Clone()
+
 namespace UnityEngine.Experimental.Input.Editor
 {
-    // Utility to generate code that makes it easier to work with action sets.
+    /// <summary>
+    /// Utility to generate code that makes it easier to work with action sets.
+    /// </summary>
     public static class InputActionCodeGenerator
     {
         private const int kSpacesPerIndentLevel = 4;
 
-        [Serializable]
         public struct Options
         {
-            public string className;
-            public string namespaceName;
-            public string sourceAssetPath;
+            public string className { get; set; }
+            public string namespaceName { get; set; }
+            public string sourceAssetPath { get; set; }
+            public bool generateEvents { get; set; }
         }
 
         public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
@@ -58,6 +62,14 @@ namespace UnityEngine.Experimental.Input.Editor
             // Header.
             writer.WriteLine(string.Format("// GENERATED AUTOMATICALLY FROM '{0}'\n", options.sourceAssetPath));
 
+            // Usings.
+            writer.WriteLine("using System;");
+            writer.WriteLine("using UnityEngine;");
+            if (options.generateEvents)
+                writer.WriteLine("using UnityEngine.Events;");
+            writer.WriteLine("using UnityEngine.Experimental.Input;");
+            writer.WriteLine("\n");
+
             // Begin namespace.
             var haveNamespace = !string.IsNullOrEmpty(options.namespaceName);
             if (haveNamespace)
@@ -67,9 +79,22 @@ namespace UnityEngine.Experimental.Input.Editor
             }
 
             // Begin class.
-            writer.WriteLine("[System.Serializable]");
-            writer.WriteLine(string.Format("public class {0} : UnityEngine.Experimental.Input.InputActionWrapper", options.className));
+            writer.WriteLine("[Serializable]");
+            writer.WriteLine(string.Format("public class {0} : InputActionAssetReference", options.className));
             writer.BeginBlock();
+
+            // Default constructor.
+            writer.WriteLine(string.Format("public {0}()", options.className));
+            writer.BeginBlock();
+            writer.EndBlock();
+
+            // Explicit constructor.
+            writer.WriteLine(string.Format("public {0}(InputActionAsset asset)", options.className));
+            ++writer.indentLevel;
+            writer.WriteLine(": base(asset)");
+            --writer.indentLevel;
+            writer.BeginBlock();
+            writer.EndBlock();
 
             // Initialize method.
             writer.WriteLine("private bool m_Initialized;");
@@ -80,11 +105,61 @@ namespace UnityEngine.Experimental.Input.Editor
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine(string.Format("// {0}", set.name));
                 writer.WriteLine(string.Format("m_{0} = asset.GetActionMap(\"{1}\");", setName, set.name));
+
                 foreach (var action in set.actions)
-                    writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", setName, CSharpCodeHelpers.MakeIdentifier(action.name),
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    writer.WriteLine(string.Format("m_{0}_{1} = m_{2}.GetAction(\"{3}\");", setName, actionName,
                         setName, action.name));
+
+                    if (options.generateEvents)
+                    {
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Started, writer);
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Performed, writer);
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Cancelled, writer);
+                    }
+                }
             }
             writer.WriteLine("m_Initialized = true;");
+            writer.EndBlock();
+
+            // Uninitialize method.
+            writer.WriteLine("private void Uninitialize()");
+            writer.BeginBlock();
+            foreach (var set in sets)
+            {
+                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                writer.WriteLine(string.Format("m_{0} = null;", setName));
+
+                foreach (var action in set.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    writer.WriteLine(string.Format("m_{0}_{1} = null;", setName, actionName));
+
+                    if (options.generateEvents)
+                    {
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Started, writer, removeCallback: true);
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Performed, writer, removeCallback: true);
+                        WriteActionEventInitializer(setName, actionName, InputActionPhase.Cancelled, writer, removeCallback: true);
+                    }
+                }
+            }
+            writer.WriteLine("m_Initialized = false;");
+            writer.EndBlock();
+
+            // SwitchAsset method.
+            writer.WriteLine("public void SwitchAsset(InputActionAsset newAsset)");
+            writer.BeginBlock();
+            writer.WriteLine("if (newAsset == asset) return;");
+            writer.WriteLine("if (m_Initialized) Uninitialize();");
+            writer.WriteLine("asset = newAsset;");
+            writer.EndBlock();
+
+            ////REVIEW: DuplicateActionsAndBindings?
+            // DuplicateAndSwitchAsset method.
+            writer.WriteLine("public void DuplicateAndSwitchAsset()");
+            writer.BeginBlock();
+            writer.WriteLine("SwitchAsset(ScriptableObject.Instantiate(asset));");
             writer.EndBlock();
 
             // Action set accessors.
@@ -96,11 +171,21 @@ namespace UnityEngine.Experimental.Input.Editor
                 var setStructName = CSharpCodeHelpers.MakeTypeName(setName, "Actions");
 
                 // Caching field for action set.
-                writer.WriteLine(string.Format("private UnityEngine.Experimental.Input.InputActionMap m_{0};", setName));
+                writer.WriteLine(string.Format("private InputActionMap m_{0};", setName));
 
                 // Caching fields for all actions.
                 foreach (var action in set.actions)
-                    writer.WriteLine(string.Format("private UnityEngine.Experimental.Input.InputAction m_{0}_{1};", setName, CSharpCodeHelpers.MakeIdentifier(action.name)));
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    writer.WriteLine(string.Format("private InputAction m_{0}_{1};", setName, actionName));
+
+                    if (options.generateEvents)
+                    {
+                        WriteActionEventField(setName, actionName, InputActionPhase.Started, writer);
+                        WriteActionEventField(setName, actionName, InputActionPhase.Performed, writer);
+                        WriteActionEventField(setName, actionName, InputActionPhase.Cancelled, writer);
+                    }
+                }
 
                 // Struct wrapping access to action set.
                 writer.WriteLine(string.Format("public struct {0}", setStructName));
@@ -116,12 +201,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(string.Format(
-                        "public UnityEngine.Experimental.Input.InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", actionName,
+                        "public InputAction @{0} {{ get {{ return m_Wrapper.m_{1}_{2}; }} }}", actionName,
                         setName, actionName));
+
+                    // Action event getters.
+                    if (options.generateEvents)
+                    {
+                        WriteActionEventGetter(setName, actionName, InputActionPhase.Started, writer);
+                        WriteActionEventGetter(setName, actionName, InputActionPhase.Performed, writer);
+                        WriteActionEventGetter(setName, actionName, InputActionPhase.Cancelled, writer);
+                    }
                 }
 
                 // Action set getter.
-                writer.WriteLine(string.Format("public UnityEngine.Experimental.Input.InputActionMap Get() {{ return m_Wrapper.m_{0}; }}",
+                writer.WriteLine(string.Format("public InputActionMap Get() {{ return m_Wrapper.m_{0}; }}",
                     setName));
 
                 // Enable/disable methods.
@@ -129,11 +222,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.WriteLine("public void Disable() { Get().Disable(); }");
 
                 // Clone method.
-                writer.WriteLine("public UnityEngine.Experimental.Input.InputActionMap Clone() { return Get().Clone(); }");
+                writer.WriteLine("public InputActionMap Clone() { return Get().Clone(); }");
 
                 // Implicit conversion operator.
                 writer.WriteLine(string.Format(
-                    "public static implicit operator UnityEngine.Experimental.Input.InputActionMap({0} set) {{ return set.Get(); }}",
+                    "public static implicit operator InputActionMap({0} set) {{ return set.Get(); }}",
                     setStructName));
 
                 writer.EndBlock();
@@ -151,6 +244,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.EndBlock();
             }
 
+            // Action event class.
+            if (options.generateEvents)
+            {
+                writer.WriteLine("[Serializable]");
+                writer.WriteLine("public class ActionEvent : UnityEvent<InputAction.CallbackContext>");
+                writer.BeginBlock();
+                writer.EndBlock();
+            }
+
             // End class.
             writer.EndBlock();
 
@@ -159,6 +261,48 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.EndBlock();
 
             return writer.buffer.ToString();
+        }
+
+        private static void WriteActionEventField(string setName, string actionName, InputActionPhase phase, Writer writer)
+        {
+            if (char.IsLower(actionName[0]))
+                actionName = char.ToUpper(actionName[0]) + actionName.Substring(1);
+            writer.WriteLine(string.Format("[SerializeField] private ActionEvent m_{0}{1}Action{2};",
+                setName, actionName, phase));
+        }
+
+        private static void WriteActionEventGetter(string setName, string actionName, InputActionPhase phase, Writer writer)
+        {
+            var actionNameCased = actionName;
+            if (char.IsLower(actionNameCased[0]))
+                actionNameCased = char.ToUpper(actionNameCased[0]) + actionNameCased.Substring(1);
+
+            writer.WriteLine(string.Format("public ActionEvent {1}{2} {{ get {{ return m_Wrapper.m_{0}{3}Action{2}; }} }}",
+                setName, actionName, phase, actionNameCased));
+        }
+
+        private static void WriteActionEventInitializer(string setName, string actionName, InputActionPhase phase, Writer writer, bool removeCallback = false)
+        {
+            var actionNameCased = actionName;
+            if (char.IsLower(actionNameCased[0]))
+                actionNameCased = char.ToUpper(actionNameCased[0]) + actionNameCased.Substring(1);
+
+            string callbackName;
+            switch (phase)
+            {
+                case InputActionPhase.Started: callbackName = "started"; break;
+                case InputActionPhase.Performed: callbackName = "performed"; break;
+                case InputActionPhase.Cancelled: callbackName = "cancelled"; break;
+                default:
+                    throw new Exception("Internal error: No known callback for " + phase);
+            }
+
+            writer.WriteLine(string.Format("if (m_{0}{1}Action{2} != null)", setName, actionNameCased, phase));
+            ++writer.indentLevel;
+            writer.WriteLine(string.Format("m_{0}_{4}.{3} {5}= m_{0}{1}Action{2}.Invoke;",
+                setName, actionNameCased, phase, callbackName, CSharpCodeHelpers.MakeIdentifier(actionName),
+                removeCallback ? "-" : "+"));
+            --writer.indentLevel;
         }
 
         private struct Writer

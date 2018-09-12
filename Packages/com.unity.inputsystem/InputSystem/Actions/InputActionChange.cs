@@ -30,6 +30,7 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputActionMap.Disable"/>
         ActionMapDisabled,
 
+        ////TODO
         ActionTriggered,
 
         ////REVIEW: should this just be a general notification we fire whenever we bind controls on an action?

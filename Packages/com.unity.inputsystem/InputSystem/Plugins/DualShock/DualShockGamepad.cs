@@ -1,4 +1,5 @@
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: set displayNames of the controls according to PlayStation controller standards
 

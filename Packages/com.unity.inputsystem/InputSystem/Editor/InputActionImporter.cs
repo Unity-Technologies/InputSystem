@@ -1,58 +1,161 @@
 #if UNITY_EDITOR
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
+using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    // Imports an InputActionAsset from JSON.
-    // Can generate code wrappers for the contained action sets as a convenience.
-    // Will not overwrite existing wrappers except if the generated code actually differs.
+    /// <summary>
+    /// Imports an <see cref="InputActionAsset"/> from JSON.
+    /// </summary>
+    /// <remarks>
+    /// Can generate code wrappers for the contained action sets as a convenience.
+    /// Will not overwrite existing wrappers except if the generated code actually differs.
+    /// </remarks>
     [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
     public class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 2;
+        private const int kVersion = 3;
 
         [SerializeField] internal bool m_GenerateWrapperCode;
         [SerializeField] internal string m_WrapperCodePath;
         [SerializeField] internal string m_WrapperClassName;
         [SerializeField] internal string m_WrapperCodeNamespace;
+        [SerializeField] internal bool m_GenerateActionEvents;
+
+        // Actions and maps coming in from JSON may not have IDs assigned to them. However,
+        // once imported, we want them to have stable IDs. So we do the same thing that Unity's
+        // model importer does and remember the GUID<->name correlations used in the file.
+        [SerializeField] internal RememberedGuid[] m_ActionGuids;
+        [SerializeField] internal RememberedGuid[] m_ActionMapGuids;
+
+        [Serializable]
+        internal struct RememberedGuid
+        {
+            public string name;
+            public string guid;
+        }
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            ////REVIEW: need to check with version control here?
+            // Read file.
+            string text;
+            try
+            {
+                text = File.ReadAllText(ctx.assetPath);
+            }
+            catch (Exception exception)
+            {
+                ctx.LogImportError(string.Format("Could read file '{0}' ({1})",
+                    ctx.assetPath, exception));
+                return;
+            }
+
             // Parse JSON.
-            var text = File.ReadAllText(ctx.assetPath);
-            var sets = InputActionMap.FromJson(text);
-            ////TODO: catch errors
+            InputActionMap[] maps;
+            try
+            {
+                maps = InputActionMap.FromJson(text);
+            }
+            catch (Exception exception)
+            {
+                ctx.LogImportError(string.Format("Could not parse input actions in JSON format from '{0}' ({1})",
+                    ctx.assetPath, exception));
+                return;
+            }
 
             ////TODO: make sure action names are unique
 
             // Create asset.
             var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            asset.m_ActionMaps = sets;
+            asset.m_ActionMaps = maps;
             ctx.AddObjectToAsset("<root>", asset);
             ctx.SetMainObject(asset);
 
-            // Create subasset for each action.
-            for (var i = 0; i < sets.Length; ++i)
+            // Make sure every map and every action has a stable ID assigned to it.
+            foreach (var map in asset.m_ActionMaps)
             {
-                var set = sets[i];
+                if (map.idDontGenerate == Guid.Empty)
+                {
+                    // Generate and remember GUID.
+                    var id = map.id;
+                    ArrayHelpers.Append(ref m_ActionMapGuids, new RememberedGuid
+                    {
+                        guid = id.ToString(),
+                        name = map.name,
+                    });
+                }
+                else
+                {
+                    // Retrieve remembered GUIDs.
+                    if (m_ActionMapGuids != null)
+                    {
+                        for (var i = 0; i < m_ActionMapGuids.Length; ++i)
+                        {
+                            if (string.Compare(m_ActionMapGuids[i].name, map.name,
+                                StringComparison.InvariantCultureIgnoreCase) == 0)
+                            {
+                                map.m_Guid = Guid.Empty;
+                                map.m_Id = m_ActionMapGuids[i].guid;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                foreach (var action in map.actions)
+                {
+                    var actionName = string.Format("{0}/{1}", map.name, action.name);
+                    if (action.idDontGenerate == Guid.Empty)
+                    {
+                        // Generate and remember GUID.
+                        var id = action.id;
+                        ArrayHelpers.Append(ref m_ActionGuids, new RememberedGuid
+                        {
+                            guid = id.ToString(),
+                            name = actionName,
+                        });
+                    }
+                    else
+                    {
+                        // Retrieve remembered GUIDs.
+                        if (m_ActionGuids != null)
+                        {
+                            for (var i = 0; i < m_ActionGuids.Length; ++i)
+                            {
+                                if (string.Compare(m_ActionGuids[i].name, actionName,
+                                    StringComparison.InvariantCultureIgnoreCase) == 0)
+                                {
+                                    action.m_Guid = Guid.Empty;
+                                    action.m_Id = m_ActionGuids[i].guid;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Create subasset for each action.
+            for (var i = 0; i < maps.Length; ++i)
+            {
+                var set = maps[i];
                 var haveSetName = !string.IsNullOrEmpty(set.name);
 
                 foreach (var action in set.actions)
                 {
-                    var actionObject = ScriptableObject.CreateInstance<InputActionReference>();
-
-                    actionObject.m_Asset = asset;
-                    actionObject.m_MapName = set.name;
-                    actionObject.m_ActionName = action.name;
+                    var actionReference = ScriptableObject.CreateInstance<InputActionReference>();
+                    actionReference.Set(asset, action);
 
                     var objectName = action.name;
                     if (haveSetName)
                         objectName = string.Format("{0}/{1}", set.name, action.name);
 
-                    actionObject.name = objectName;
-                    ctx.AddObjectToAsset(objectName, actionObject);
+                    actionReference.name = objectName;
+                    ctx.AddObjectToAsset(objectName, actionReference);
                 }
             }
 
@@ -72,15 +175,19 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     sourceAssetPath = ctx.assetPath,
                     namespaceName = m_WrapperCodeNamespace,
-                    className = m_WrapperClassName
+                    className = m_WrapperClassName,
+                    generateEvents = m_GenerateActionEvents,
                 };
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, sets, options))
+                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, maps, options))
                 {
                     // Inform database that we modified a source asset *during* import.
                     AssetDatabase.ImportAsset(wrapperFilePath);
                 }
             }
+
+            // Refresh editors.
+            ActionInspectorWindow.RefreshAll();
         }
 
         ////REVIEW: actually pre-populate with some stuff?

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: what should we do if none of the actions referenced by bindings could be found?
@@ -27,12 +28,14 @@ namespace UnityEngine.Experimental.Input
         public int totalActionCount;
         public int totalBindingCount;
         public int totalControlCount;
+        public int totalDeviceCount;
         public int totalInteractionCount;
         public int totalProcessorCount;
         public int totalCompositeCount;
 
         public InputActionMap[] maps;
         public InputControl[] controls;
+        public InlinedArray<InputDevice> devices;
         public InputActionMapState.InteractionState[] interactionStates;
         public InputActionMapState.BindingState[] bindingStates;
         public InputActionMapState.TriggerState[] actionStates;
@@ -54,6 +57,7 @@ namespace UnityEngine.Experimental.Input
             totalProcessorCount = state.totalProcessorCount;
             totalCompositeCount = state.totalCompositeCount;
             totalControlCount = state.totalControlCount;
+            totalDeviceCount = state.totalDeviceCount;
 
             maps = state.maps;
             mapIndices = state.mapIndices;
@@ -64,6 +68,7 @@ namespace UnityEngine.Experimental.Input
             processors = state.processors;
             composites = state.composites;
             controls = state.controls;
+            devices = state.devices;
             controlIndexToBindingIndex = state.controlIndexToBindingIndex;
         }
 
@@ -188,6 +193,25 @@ namespace UnityEngine.Experimental.Input
                 var numControls = InputSystem.GetControls(path, ref resolvedControls);
                 controls = resolvedControls.array;
                 totalControlCount = resolvedControls.count;
+
+                // Add unique devices.
+                for (var i = 0; i < numControls; ++i)
+                {
+                    var control = controls[firstControlIndex + i];
+                    var device = control.device;
+                    var deviceIndex = 0;
+                    for (; deviceIndex < totalDeviceCount; ++deviceIndex)
+                    {
+                        if (devices[deviceIndex] == device)
+                            break;
+                    }
+
+                    if (deviceIndex == totalDeviceCount)
+                    {
+                        devices.AppendWithCapacity(device, 4);
+                        ++totalDeviceCount;
+                    }
+                }
 
                 // Add entry for resolved binding.
                 bindingStates[bindingIndex] = new InputActionMapState.BindingState

@@ -12,7 +12,7 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Turns a device layout into an actual <see cref="InputDevice"/> instance.
@@ -25,7 +25,7 @@ namespace UnityEngine.Experimental.Input
     /// change existing hierarchies.
     ///
     /// InputDeviceBuilder is the only way to create control hierarchies. InputControls cannot be
-    /// <c>new</c>'d directlty.
+    /// <c>new</c>'d directly.
     ///
     /// Also computes a final state layout when setup is finished.
     ///

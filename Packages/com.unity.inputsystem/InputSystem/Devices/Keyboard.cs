@@ -4,6 +4,7 @@ using UnityEngine.Experimental.Input.Controls;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
 ////TODO: IME support
 

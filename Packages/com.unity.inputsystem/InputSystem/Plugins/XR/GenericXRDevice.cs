@@ -1,6 +1,7 @@
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using UnityEngine.Experimental.Input.Haptics;
+using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {

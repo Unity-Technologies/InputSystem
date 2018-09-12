@@ -34,7 +34,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 ////        then we can just kill off the entire namespacing. This also makes it much easier to tweak layouts in the
 ////        editor.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// A control layout specifies the composition of an input control.
@@ -729,7 +729,7 @@ namespace UnityEngine.Experimental.Input
         public string ToJson()
         {
             var layout = LayoutJson.FromLayout(this);
-            return JsonUtility.ToJson(layout);
+            return JsonUtility.ToJson(layout, true);
         }
 
         // Constructs a layout from the given JSON source.
@@ -913,6 +913,8 @@ namespace UnityEngine.Experimental.Input
                 format = new FourCC(attribute.format);
             else if (!isModifyingChildControlByPath && bit == InputStateBlock.kInvalidOffset)
             {
+                ////REVIEW: this logic makes it hard to inherit settings from the base layout; if we do this stuff,
+                ////        we should probably do it in InputDeviceBuilder and not directly on the layout
                 var valueType = TypeHelpers.GetValueType(member);
                 format = InputStateBlock.GetPrimitiveFormatFromType(valueType);
             }

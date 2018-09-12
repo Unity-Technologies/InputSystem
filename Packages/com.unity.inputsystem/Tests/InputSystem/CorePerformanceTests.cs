@@ -23,6 +23,7 @@ public class CorePerformanceTests
     // Performing a full state update on 10 devices should take less than 0.01 ms.
     [Test]
     [Category("Performance")]
+    [Ignore("TODO")]
     public void TODO_CanUpdate10GamepadsInLessThanPointZeroOneMilliseconds()
     {
         const int kNumGamepads = 10;
@@ -50,6 +51,7 @@ public class CorePerformanceTests
     #if UNITY_EDITOR
     [Test]
     [Category("Performance")]
+    [Ignore("TODO")]
     public void TODO_CanSaveAndRestoreSystemInLessThan10Milliseconds() // Currently it's >200ms!
     {
         Assert.Fail();

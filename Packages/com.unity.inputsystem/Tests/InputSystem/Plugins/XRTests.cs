@@ -8,8 +8,9 @@ using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.XR;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 
-class XRTests : InputTestFixture
+public class XRTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]

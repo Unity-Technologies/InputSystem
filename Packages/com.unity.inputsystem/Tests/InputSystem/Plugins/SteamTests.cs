@@ -6,6 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.Steam;
 using UnityEngine.Experimental.Input.Plugins.Steam.Editor;
 
@@ -127,6 +128,7 @@ public class SteamTests : InputTestFixture
     // Option 2: Have action sets on SteamControllers activate automatically in sync with InputActionMaps.
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_CanAutomaticallyActivateActionSetsOnSteamControllers()
     {
         Assert.Fail();
@@ -172,6 +174,7 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    [Ignore("TODO")]
     public void TODO_Devices_SteamControllersSendActionStateAsEvents()
     {
         Assert.Fail();
@@ -324,6 +327,7 @@ public class SteamTests : InputTestFixture
 
     [Test]
     [Category("Editor")]
+    [Ignore("TODO")]
     public void TODO_Editor_ConvertingInputActionsToSteamIGA_ThrowsIfTwoActionsHaveTheSameName()
     {
         Assert.Fail();

@@ -2,10 +2,10 @@
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.Switch;
 using UnityEngine.Experimental.Input.Plugins.Switch.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
 
 public class SwitchTests : InputTestFixture
 {

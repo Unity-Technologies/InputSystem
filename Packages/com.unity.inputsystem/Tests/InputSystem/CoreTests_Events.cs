@@ -6,6 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -112,7 +113,8 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
+    [Ignore("TODO")]
+    public void TODO_Events_SendingEventWithNoChanges_DoesNotUpdateDevice()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -124,6 +126,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
     public void TODO_Events_AreTimeslicedAcrossFixedUpdates()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -171,6 +174,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
     public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
     {
         Assert.Fail();
@@ -238,6 +242,7 @@ partial class CoreTests
     // controls by comparing it to a device's current state.
     [Test]
     [Category("Events")]
+    [Ignore("TODO")]
     public void TODO_Events_CanFindActiveControlsFromStateEvent()
     {
         Assert.Fail();

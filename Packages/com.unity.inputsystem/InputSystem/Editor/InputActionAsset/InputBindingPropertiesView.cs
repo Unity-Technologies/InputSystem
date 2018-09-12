@@ -13,47 +13,39 @@ namespace UnityEngine.Experimental.Input.Editor
             public static GUIStyle foldoutBackgroundStyle = new GUIStyle("Label");
             public static GUIStyle foldoutStyle = new GUIStyle("foldout");
 
-            static string ResourcesPath
-            {
-                get
-                {
-                    var path = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
-                    if (EditorGUIUtility.isProSkin)
-                        return path + "pro/";
-                    return path + "personal/";
-                }
-            }
-
             static Styles()
             {
-                var darkGreyBackgroundWithBorderTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "foldoutBackground.png");
+                var darkGreyBackgroundWithBorderTexture =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.ResourcesPath + "foldoutBackground.png");
                 foldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
                 foldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
                 foldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
             }
         }
 
-        SerializedProperty m_InteractionsProperty;
-        InteractionsReorderableReorderableList m_InteractionsReorderableReorderableList;
+        private SerializedProperty m_InteractionsProperty;
+        private InteractionsReorderableReorderableList m_InteractionsReorderableReorderableList;
 
-        ProcessorsReorderableReorderableList m_ProcessorsReorderableReorderableListView;
-        SerializedProperty m_ProcessorsProperty;
+        private ProcessorsReorderableReorderableList m_ProcessorsReorderableReorderableListView;
+        private SerializedProperty m_ProcessorsProperty;
 
-        SerializedProperty m_BindingProperty;
-        Action m_ReloadTree;
+        private SerializedProperty m_BindingProperty;
+
+        private Action m_ReloadTree;
         ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
         ////        selected by the path property
-        TreeViewState m_ControlPickerTreeViewState;
-        bool m_GeneralFoldout = true;
-        bool m_InteractionsFoldout = true;
-        bool m_ProcessorsFoldout = true;
+        private TreeViewState m_ControlPickerTreeViewState;
+        private bool m_GeneralFoldout = true;
+        private bool m_InteractionsFoldout = true;
+        private bool m_ProcessorsFoldout = true;
 
-        static GUIContent s_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
-        static GUIContent s_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
-        static GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
-        static GUIContent s_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
+        private static readonly GUIContent s_ProcessorsContent = EditorGUIUtility.TrTextContent("Processors");
+        private static readonly GUIContent s_InteractionsContent = EditorGUIUtility.TrTextContent("Interactions");
+        private static readonly GUIContent s_GeneralContent = EditorGUIUtility.TrTextContent("General");
+        private static readonly GUIContent s_BindingGui = EditorGUIUtility.TrTextContent("Binding");
 
-        bool m_ManualPathEditMode;
+        private bool m_ManualPathEditMode;
 
         public InputBindingPropertiesView(SerializedProperty bindingProperty, Action reloadTree, TreeViewState controlPickerTreeViewState)
         {
@@ -66,7 +58,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(bindingProperty.FindPropertyRelative("processors"), ApplyModifiers);
         }
 
-        void ApplyModifiers()
+        private void ApplyModifiers()
         {
             m_InteractionsProperty.stringValue = m_InteractionsReorderableReorderableList.ToSerializableString();
             m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
@@ -142,7 +134,7 @@ namespace UnityEngine.Experimental.Input.Editor
             var lineRect = GUILayoutUtility.GetRect(0, EditorGUIUtility.singleLineHeight);
             var labelRect = lineRect;
             labelRect.width = 60;
-            EditorGUI.LabelField(labelRect, s_BindingGUI);
+            EditorGUI.LabelField(labelRect, s_BindingGui);
             lineRect.x += 65;
             lineRect.width -= 65;
 
@@ -187,18 +179,18 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-        static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
+        private static void ShowInputControlPicker(Rect rect, SerializedProperty pathProperty, TreeViewState pickerTreeViewState,
             Action<SerializedProperty> onPickCallback)
         {
             var w = new InputControlPickerPopup(pathProperty, pickerTreeViewState)
             {
-                onPickCallback = onPickCallback
+                onPickCallback = onPickCallback,
+                width = rect.width,
             };
-            w.width = rect.width;
             PopupWindow.Show(rect, w);
         }
 
-        static bool DrawFoldout(GUIContent content, bool folded)
+        private static bool DrawFoldout(GUIContent content, bool folded)
         {
             var bgRect = GUILayoutUtility.GetRect(s_ProcessorsContent, Styles.foldoutBackgroundStyle);
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.foldoutBackgroundStyle);
@@ -206,16 +198,13 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         ////FIXME: seems to nuke the property view on the right side every time a path is selected
-        void OnBindingModified(SerializedProperty obj)
+        private void OnBindingModified(SerializedProperty obj)
         {
-            var importerEditor = InputActionImporterEditor.FindFor(m_BindingProperty.serializedObject);
-            if (importerEditor != null)
-                importerEditor.OnAssetModified();
             m_ReloadTree();
         }
     }
 
-    class CompositeGroupPropertiesView : InputBindingPropertiesView
+    internal class CompositeGroupPropertiesView : InputBindingPropertiesView
     {
         public CompositeGroupPropertiesView(SerializedProperty property, Action apply, TreeViewState state)
             : base(property, apply, state)

@@ -6,6 +6,7 @@ using UnityEngine.Experimental.Input.LowLevel;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: append " (Disabled) to disabled devices and grey them out
@@ -236,6 +237,7 @@ namespace UnityEngine.Experimental.Input.Editor
             public TreeViewItem devicesItem { get; private set; }
             public TreeViewItem layoutsItem { get; private set; }
             public TreeViewItem configurationItem { get; private set; }
+            public TreeViewItem usersItem { get; private set; }
 
             public InputSystemTreeView(TreeViewState state)
                 : base(state)
@@ -279,6 +281,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     actionsItem = AddChild(root, string.Format("Actions ({0})", m_EnabledActions.Count), ref id);
                     AddEnabledActions(actionsItem, ref id);
                 }
+
+                // Users.
+                ////TODO
 
                 // Devices.
                 var devices = InputSystem.devices;

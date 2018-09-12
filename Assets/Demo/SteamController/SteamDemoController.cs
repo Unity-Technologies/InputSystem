@@ -3,6 +3,7 @@
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Plugins.Steam;
 #if UNITY_EDITOR

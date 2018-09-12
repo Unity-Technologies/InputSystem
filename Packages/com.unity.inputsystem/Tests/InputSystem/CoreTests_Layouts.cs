@@ -6,6 +6,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
@@ -588,6 +589,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RegisteringMatcherForLayout_OverridesExistingMatchers()
     {
         const string jsonA = @"
@@ -763,6 +765,7 @@ partial class CoreTests
     // can narrow focus on just what's interesting to the current project.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanSpecifyPlatformsThatLayoutAppliesTo()
     {
         Assert.Fail();
@@ -773,6 +776,7 @@ partial class CoreTests
     // by product.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanHaveLayoutFallbackForInterface()
     {
         const string fallbackJson = @"
@@ -802,6 +806,7 @@ partial class CoreTests
     ////REVIEW: if this behavior is guaranteed, we also have to make sure we preserve it across domain reloads
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_WhenTwoLayoutsConflict_LastOneRegisteredWins()
     {
         const string firstLayout = @"
@@ -1001,6 +1006,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RegisteringLayoutBuilder_MarksResultingLayoutAsGenerated()
     {
         Assert.Fail();
@@ -1186,6 +1192,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
     {
         const string baseJson = @"
@@ -1568,6 +1575,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_RemovingLayouts_RemovesAllLayoutsBasedOnIt()
     {
         Assert.Fail();
@@ -1575,6 +1583,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanQueryResourceNameFromControl()
     {
         var json = @"
@@ -1733,6 +1742,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CurrentPlatformIsImplicitLayoutVariant()
     {
         var json = @"
@@ -1799,6 +1809,7 @@ partial class CoreTests
     ////      isn't.
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_CanMoveProcessorFromBaseLayoutInProcessorStack()
     {
         // The base gamepad layout is adding deadzone processors to sticks. However, a
@@ -1830,6 +1841,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layout_CustomizedStateLayoutWillNotUseFormatCodeFromBaseLayout()
     {
         //make sure that if you customize a gamepad layout, you don't end up with the "GPAD" format on the device
@@ -1870,6 +1882,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    [Ignore("TODO")]
     public void TODO_Layouts_InputStateInDerivedClassMergesWithControlsOfInputStateFromBaseClass()
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)

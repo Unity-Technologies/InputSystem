@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -813,7 +814,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
 
             public string ToJson()
             {
-                return JsonUtility.ToJson(this);
+                return JsonUtility.ToJson(this, true);
             }
 
             public static HIDDeviceDescriptor FromJson(string json)

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 
@@ -42,8 +43,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kInvalidOffset)]
         [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kInvalidOffset)]
-        [InputControl(name = "pointerId", layout = "Digital", offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kInvalidOffset)] // Will stay at 0.
+        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kInvalidOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
         [InputControl(layout = "Digital")]

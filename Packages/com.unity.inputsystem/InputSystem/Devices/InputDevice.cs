@@ -2,6 +2,7 @@ using System;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
@@ -47,8 +48,7 @@ namespace UnityEngine.Experimental.Input
             get { return m_Description; }
         }
 
-        ////REVIEW: turn this into an object of some kind?
-        ////REVIEW: on Xbox, a device can have multiple player IDs assigned to it
+        ////TODO: kill this and leave this entirely to user management
         /// <summary>
         /// The user currently associated with the input device or null if no user is.
         /// </summary>
