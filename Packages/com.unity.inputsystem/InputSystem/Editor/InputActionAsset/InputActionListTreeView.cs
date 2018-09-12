@@ -298,6 +298,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            var newId = actionItem.GetIdForName(args.newName);
+            SetSelection(new[]{newId});
+            SetExpanded(newId, IsExpanded(actionItem.id));
             m_ApplyAction();
 
             item.displayName = args.newName;

@@ -140,6 +140,8 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             return new InputBindingPropertiesView(elementProperty, apply, state);
         }
+
+        public abstract int GetIdForName(string argsNewName);
     }
 
     internal class ActionMapTreeItem : ActionTreeViewItem
@@ -148,7 +150,7 @@ namespace UnityEngine.Experimental.Input.Editor
             : base(actionMapProperty, index)
         {
             displayName = elementProperty.FindPropertyRelative("m_Name").stringValue;
-            id = displayName.GetHashCode();
+            id = GetIdForName(displayName);
         }
 
         protected override GUIStyle style
@@ -198,6 +200,11 @@ namespace UnityEngine.Experimental.Input.Editor
             builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
             return builder.ToString();
         }
+
+        public override int GetIdForName(string name)
+        {
+            return name.GetHashCode();
+        }
     }
 
     internal class ActionTreeItem : ActionTreeViewItem
@@ -224,10 +231,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 bindingsCount = InputActionSerializationHelpers.GetBindingCount(elementProperty.FindPropertyRelative("m_SingletonActionBindings"), actionName);
             }
             displayName = actionName;
-            var actionMapName = "";
-            if (m_ActionMapProperty != null)
-                actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
-            id = (actionMapName + "/" + displayName).GetHashCode();
+            id = GetIdForName(displayName);
         }
 
         protected override GUIStyle style
@@ -263,9 +267,15 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override string SerializeToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.AppendFormat("{0}={1}\n", "m_Name", elementProperty.FindPropertyRelative("m_Name").stringValue);
             return builder.ToString();
+        }
+        
+        public override int GetIdForName(string name)
+        {
+            var actionMapName = m_ActionMapProperty.FindPropertyRelative("m_Name").stringValue;
+            return (actionMapName + "/" + name).GetHashCode();
         }
     }
 
@@ -321,6 +331,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
     internal class BindingTreeItem : ActionTreeViewItem
     {
+
         public BindingTreeItem(string actionMapName, SerializedProperty bindingProperty, int index)
             : base(bindingProperty, index)
         {
@@ -338,9 +349,12 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 displayName = "<empty>";
             }
-            id = GetId(actionMapName, index, action, path, name);
+
+            m_ActionMapName = actionMapName;
+            id = GetIdForName(name);
         }
 
+        private string m_ActionMapName;
         public bool isComposite { get; private set; }
         public bool isPartOfComposite { get; private set; }
         public string path { get; private set; }
@@ -355,7 +369,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected virtual int GetId(string actionMapName, int index, string action, string path, string name)
         {
-            return (actionMapName + " " + action + " " + path + " " + index).GetHashCode();
+            return (actionMapName + " " + action + " " + index).GetHashCode();
         }
 
         protected override GUIStyle style
@@ -378,6 +392,11 @@ namespace UnityEngine.Experimental.Input.Editor
             builder.AppendFormat("{0}={1}\n", "flags", elementProperty.FindPropertyRelative("flags").intValue);
             builder.AppendFormat("{0}={1}\n", "action", elementProperty.FindPropertyRelative("action").stringValue);
             return builder.ToString();
+        }
+        
+        public override int GetIdForName(string name)
+        {
+            return GetId(m_ActionMapName, index, action, path, name);
         }
     }
 }
