@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
@@ -161,11 +160,15 @@ namespace UnityEngine.Experimental.Input.Editor
                 InitializeReferenceToImportedAssetObject();
             }
 
-            // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
-            // GUIDs.
-            m_AssetObjectForEditing = Instantiate(m_ImportedAssetObject);
-            m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
-            m_AssetObjectForEditing.name = m_ImportedAssetObject.name;
+            if (m_AssetObjectForEditing == null)
+            {
+                // Duplicate the asset along 1:1. Unlike calling Clone(), this will also preserve
+                // GUIDs.
+                m_AssetObjectForEditing = Instantiate(m_ImportedAssetObject);
+                m_AssetObjectForEditing.hideFlags = HideFlags.HideAndDontSave;
+                m_AssetObjectForEditing.name = m_ImportedAssetObject.name;
+            }
+
             m_AssetJson = null;
             m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
         }
