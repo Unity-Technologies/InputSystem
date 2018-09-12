@@ -7,18 +7,19 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    class CopyPasteUtility
+    internal class CopyPasteUtility
     {
-        const string k_InputAssetMarker = "INPUTASSET ";
-        InputActionListTreeView m_TreeView;
-        SerializedObject m_SerializedObject;
-        Action m_Apply;
+        private const string k_InputAssetMarker = "INPUTASSET ";
 
-        GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
-        GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
-        GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
-        GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
-        GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
+        private InputActionListTreeView m_TreeView;
+        private SerializedObject m_SerializedObject;
+        private Action m_Apply;
+
+        private readonly GUIContent m_CutGUI = EditorGUIUtility.TrTextContent("Cut");
+        private readonly GUIContent m_CopyGUI = EditorGUIUtility.TrTextContent("Copy");
+        private readonly GUIContent m_PasteGUI = EditorGUIUtility.TrTextContent("Paste");
+        private readonly GUIContent m_DeleteGUI = EditorGUIUtility.TrTextContent("Delete");
+        private readonly GUIContent m_Duplicate = EditorGUIUtility.TrTextContent("Duplicate");
 
         public CopyPasteUtility(Action apply, InputActionListTreeView tree, SerializedObject serializedObject)
         {
@@ -33,7 +34,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Apply = () => { m_TreeView.Reload();};
         }
 
-        void HandleCopyEvent()
+        private void HandleCopyEvent()
         {
             if (!CanCopySelection())
             {
@@ -67,11 +68,11 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUIUtility.systemCopyBuffer = copyList.ToString();
         }
 
-        void CopyChildrenItems(InputTreeViewLine parent, StringBuilder result)
+        private static void CopyChildrenItems(ActionTreeViewItem parent, StringBuilder result)
         {
             foreach (var treeViewItem in parent.children)
             {
-                var item = (InputTreeViewLine)treeViewItem;
+                var item = (ActionTreeViewItem)treeViewItem;
                 result.Append(item.GetType().Name + "\n");
                 result.Append(item.SerializeToString());
                 result.Append(k_InputAssetMarker);
@@ -82,7 +83,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        bool CanCopySelection()
+        private bool CanCopySelection()
         {
             var selectedRows = m_TreeView.GetSelectedRows();
             var rowTypes = selectedRows.Select(r => r.GetType()).Distinct().ToList();
@@ -93,7 +94,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return true;
         }
 
-        void HandlePasteEvent()
+        private void HandlePasteEvent()
         {
             var copyBufferString = EditorGUIUtility.systemCopyBuffer;
             var elements = copyBufferString.Split(new[] { k_InputAssetMarker }, StringSplitOptions.RemoveEmptyEntries);
@@ -112,14 +113,14 @@ namespace UnityEngine.Experimental.Input.Editor
                     if (m_SerializedObject == null)
                         throw new InvalidOperationException("Pasting action map is not a valid operation");
 
-                    currentActionMapProperty = InputActionSerializationHelpers.AddActionMapFromObject(m_SerializedObject, GetParameterDictionary(row));
+                    currentActionMapProperty = InputActionSerializationHelpers.AddActionMapFromSavedProperties(m_SerializedObject, GetParameterDictionary(row));
                     m_Apply();
                     continue;
                 }
 
                 if (IsRowOfType<ActionTreeItem>(ref row))
                 {
-                    var newActionProperty = InputActionSerializationHelpers.AddActionFromObject(GetParameterDictionary(row), currentActionMapProperty);
+                    var newActionProperty = InputActionSerializationHelpers.AddActionFromSavedProperties(GetParameterDictionary(row), currentActionMapProperty);
 
                     while (i + 1 < elements.Length)
                     {
@@ -142,7 +143,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             {
                                 break;
                             }
-                            InputActionSerializationHelpers.AppendBindingFromObject(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
+                            InputActionSerializationHelpers.AppendBindingFromSavedProperties(GetParameterDictionary(nextRow), newActionProperty, currentActionMapProperty);
                             i++;
                         }
                         catch (ArgumentException e)
@@ -173,7 +174,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        Dictionary<string, string> GetParameterDictionary(string data)
+        static Dictionary<string, string> GetParameterDictionary(string data)
         {
             var result = new Dictionary<string, string>();
             foreach (var row in data.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries))
@@ -186,7 +187,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return result;
         }
 
-        static bool IsRowOfType<T>(ref string row)
+        private static bool IsRowOfType<T>(ref string row)
         {
             if (row.StartsWith(typeof(T).Name))
             {
@@ -196,7 +197,7 @@ namespace UnityEngine.Experimental.Input.Editor
             return false;
         }
 
-        public bool IsValidCommand(string currentCommandName)
+        public static bool IsValidCommand(string currentCommandName)
         {
             return Event.current.commandName == "Copy"
                 || Event.current.commandName == "Paste"
@@ -234,7 +235,7 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void DeleteSelectedRows()
+        private void DeleteSelectedRows()
         {
             var rows = m_TreeView.GetSelectedRows().ToArray();
             var rowTypes = rows.Select(r => r.GetType()).Distinct().ToList();
@@ -290,7 +291,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Apply();
         }
 
-        IEnumerable<T> FindRowsToDeleteOfType<T>(InputTreeViewLine[] rows)
+        static IEnumerable<T> FindRowsToDeleteOfType<T>(ActionTreeViewItem[] rows)
         {
             return rows.Where(r => r.GetType() == typeof(T)).OrderByDescending(r => r.index).Cast<T>();
         }

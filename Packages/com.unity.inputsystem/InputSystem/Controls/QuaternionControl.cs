@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 
 ////REVEW: expose euler angle subcontrols?

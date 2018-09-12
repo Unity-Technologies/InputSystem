@@ -5,12 +5,13 @@ using UnityEngine.Experimental.Input.Plugins.DualShock.LowLevel;
 using UnityEngine.Experimental.Input.Processors;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Experimental.Input.Layouts;
 
 #if UNITY_WSA
 using UnityEngine.Experimental.Input.Plugins.HID;
 #endif
 
-class DualShockTests : InputTestFixture
+public class DualShockTests : InputTestFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     [Test]

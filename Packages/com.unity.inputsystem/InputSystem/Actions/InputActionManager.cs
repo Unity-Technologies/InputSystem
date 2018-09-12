@@ -10,6 +10,8 @@ using UnityEngine.Experimental.Input.Utilities;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////TODO: nuke this shit and come up with a better solution
+
 ////REVIEW: the single state approach makes adding and removing maps costly; may not be flexible enough
 
 ////REVIEW: can we have a stable, global identification mechanism for actions that comes down to strings?

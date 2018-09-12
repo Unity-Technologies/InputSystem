@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif
 
+////REVIEW: switch to something that doesn't require the backing store to be an actual array?
+
 namespace UnityEngine.Experimental.Input.Utilities
 {
     /// <summary>

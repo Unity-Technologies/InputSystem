@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.Experimental.Input.LowLevel;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Mark a data member in a state struct as being an input control.

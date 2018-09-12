@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine.Experimental.Input.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.Experimental.Input.Layouts
 {
     /// <summary>
     /// Specification that can be matched against an <see cref="InputDeviceDescription"/>.
@@ -196,7 +196,7 @@ namespace UnityEngine.Experimental.Input
         public string ToJson()
         {
             var value = MatcherJson.FromMatcher(this);
-            return JsonUtility.ToJson(value);
+            return JsonUtility.ToJson(value, true);
         }
 
         public static InputDeviceMatcher FromJson(string json)

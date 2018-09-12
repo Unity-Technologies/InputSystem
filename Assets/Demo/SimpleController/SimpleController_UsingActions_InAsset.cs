@@ -17,10 +17,8 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     private Vector2 m_Look;
     private bool isGrounded;
     private bool m_Charging;
-
     private Vector2 m_Rotation;
-
-    Rigidbody m_Rigidbody;
+    private Rigidbody m_Rigidbody;
 
     private void Start()
     {
@@ -103,12 +101,12 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     private void Look(Vector2 rotate)
     {
-        var clampAngle = 80.0f;
+        const float kClampAngle = 80.0f;
 
         m_Rotation.y += rotate.x * rotateSpeed * Time.deltaTime;
         m_Rotation.x -= rotate.y * rotateSpeed * Time.deltaTime;
 
-        m_Rotation.x = Mathf.Clamp(m_Rotation.x, -clampAngle, clampAngle);
+        m_Rotation.x = Mathf.Clamp(m_Rotation.x, -kClampAngle, kClampAngle);
 
         var localRotation = Quaternion.Euler(m_Rotation.x, m_Rotation.y, 0.0f);
         transform.rotation = localRotation;

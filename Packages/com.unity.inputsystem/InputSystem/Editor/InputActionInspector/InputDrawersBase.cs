@@ -3,27 +3,18 @@ using UnityEditor;
 
 namespace UnityEngine.Experimental.Input.Editor
 {
-    abstract class InputDrawersBase : PropertyDrawer
+    internal abstract class InputDrawersBase : PropertyDrawer
     {
-        static class Styles
+        private static class Styles
         {
             public static GUIStyle actionTreeBackground = new GUIStyle("Label");
             public static GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
 
-            static string ResourcesPath
-            {
-                get
-                {
-                    var path = "Packages/com.unity.inputsystem/InputSystem/Editor/InputActionAsset/Resources/";
-                    if (EditorGUIUtility.isProSkin)
-                        return path + "pro/";
-                    return path + "personal/";
-                }
-            }
-
             static Styles()
             {
-                actionTreeBackground.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
+                actionTreeBackground.normal.background =
+                    AssetDatabase.LoadAssetAtPath<Texture2D>(
+                        ActionInspectorWindow.Styles.ResourcesPath + "actionTreeBackground.png");
                 actionTreeBackground.border = new RectOffset(3, 3, 3, 3);
 
                 columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
@@ -33,7 +24,7 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         protected InputActionListTreeView m_TreeView;
-        CopyPasteUtility m_CopyPasteUtility;
+        private CopyPasteUtility m_CopyPasteUtility;
 
         protected GUIContent m_BindingGUI = EditorGUIUtility.TrTextContent("Binding");
         protected GUIContent m_ActionGUI = EditorGUIUtility.TrTextContent("Action");
@@ -44,7 +35,7 @@ namespace UnityEngine.Experimental.Input.Editor
             Undo.undoRedoPerformed += OnUndoRedoCallback;
         }
 
-        void OnUndoRedoCallback()
+        private void OnUndoRedoCallback()
         {
             if (m_TreeView == null)
             {
@@ -102,7 +93,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 if (Event.current.type == EventType.ValidateCommand)
                 {
-                    if (m_CopyPasteUtility.IsValidCommand(Event.current.commandName))
+                    if (CopyPasteUtility.IsValidCommand(Event.current.commandName))
                     {
                         Event.current.Use();
                     }
@@ -117,7 +108,7 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUI.EndProperty();
         }
 
-        void InitTreeIfNeeded(SerializedProperty property)
+        private void InitTreeIfNeeded(SerializedProperty property)
         {
             if (m_TreeView == null)
             {
@@ -127,14 +118,14 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
-        void OnContextClick(SerializedProperty serializedProperty)
+        private void OnContextClick(SerializedProperty serializedProperty)
         {
             var menu = new GenericMenu();
             m_CopyPasteUtility.AddOptionsToMenu(menu);
             menu.ShowAsContext();
         }
 
-        void SetActionNameIfNotSet(SerializedProperty actionProperty)
+        private void SetActionNameIfNotSet(SerializedProperty actionProperty)
         {
             var nameProperty = actionProperty.FindPropertyRelative("m_Name");
             if (!string.IsNullOrEmpty(nameProperty.stringValue))

@@ -11,6 +11,7 @@ using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Interactions;
 using UnityEngine.Experimental.Input.Utilities;
 using Unity.Collections;
+using UnityEngine.Experimental.Input.Layouts;
 #if !(NET_4_0 || NET_4_6 || NET_STANDARD_2_0)
 using UnityEngine.Experimental.Input.Net35Compatibility;
 #endif

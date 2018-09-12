@@ -61,6 +61,11 @@ namespace UnityEngine.Experimental.Input
         public InputControl[] controls;
 
         /// <summary>
+        /// List of all unique devices shared by the <see cref="controls">resolved controls</see>.
+        /// </summary>
+        public InlinedArray<InputDevice> devices;
+
+        /// <summary>
         /// Array of instantiated interaction objects.
         /// </summary>
         /// <remarks>
@@ -88,6 +93,8 @@ namespace UnityEngine.Experimental.Input
         /// added to the state.
         /// </summary>
         public int totalControlCount;
+
+        public int totalDeviceCount;
 
         public int totalInteractionCount;
 
@@ -149,6 +156,7 @@ namespace UnityEngine.Experimental.Input
             totalProcessorCount = resolver.totalProcessorCount;
             totalCompositeCount = resolver.totalCompositeCount;
             totalControlCount = resolver.totalControlCount;
+            totalDeviceCount = resolver.totalDeviceCount;
 
             maps = resolver.maps;
             mapIndices = resolver.mapIndices;
@@ -160,6 +168,7 @@ namespace UnityEngine.Experimental.Input
             composites = resolver.composites;
             controls = resolver.controls;
             controlIndexToBindingIndex = resolver.controlIndexToBindingIndex;
+            devices = resolver.devices;
         }
 
         public void Destroy()

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine.Experimental.Input.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Plugins.DualShock;
 using UnityEngine.Experimental.Input.Plugins.HID;
@@ -25,7 +26,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 
 ////TODO: rename RegisterControlProcessor to just RegisterProcessor
 
-////REVIEW: make more APIs thread-safe? (like the various onXXX, for example)
+////REVIEW: make more APIs thread-safe?
 
 ////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
 
@@ -41,7 +42,7 @@ using UnityEngine.Experimental.Input.Net35Compatibility;
 // Keep this in sync with "Packages/com.unity.inputsystem/package.json".
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
-[assembly: AssemblyVersion("0.0.6")]
+[assembly: AssemblyVersion("0.0.7")]
 
 namespace UnityEngine.Experimental.Input
 {
@@ -1387,6 +1388,7 @@ namespace UnityEngine.Experimental.Input
                     ResetUpdateMask();
                     break;
 
+                ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
                 case PlayModeStateChange.EnteredEditMode:
                     ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                     ////        InputDevices that have been created with AddDevice<> during play mode?

@@ -202,7 +202,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 {
                     if (EqualityComparer<TValue>.Default.Equals(additionalValues[i], value))
                     {
-                        RemoveAt(i);
+                        RemoveAt(i + 1);
                         break;
                     }
                 }
@@ -242,7 +242,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                     // Remove only entry in array.
                     additionalValues = null;
                 }
-                else if (index == numAdditionalValues - 1)
+                else if (index == length - 1)
                 {
                     // Remove entry at end.
                     Array.Resize(ref additionalValues, numAdditionalValues - 1);
@@ -252,17 +252,16 @@ namespace UnityEngine.Experimental.Input.Utilities
                     // Remove entry at beginning or in middle by pasting together
                     // into a new array.
                     var newAdditionalProcessors = new TValue[numAdditionalValues - 1];
-                    if (index > 0)
+                    if (index >= 2)
                     {
-                        // Copy element before entry.
-                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index);
+                        // Copy elements before entry.
+                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index - 1);
                     }
-                    if (index != numAdditionalValues - 1)
-                    {
-                        // Copy elements after entry.
-                        Array.Copy(additionalValues, index + 1, newAdditionalProcessors, index,
-                            numAdditionalValues - index - 1);
-                    }
+
+                    // Copy elements after entry. We already know that we're not removing
+                    // the last entry so there have to be entries.
+                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalProcessors, index - 1,
+                        length - index - 1);
                 }
             }
 
