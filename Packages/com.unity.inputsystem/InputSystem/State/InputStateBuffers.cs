@@ -82,7 +82,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         /// <summary>
         /// Buffer that contains bitflags for noisy and non-noisy controls, to identify significant device changes.
         /// </summary>
-        public IntPtr noiseFilterBuffer;
+        public IntPtr noiseBitmaskBuffer;
 
         // Secretly we perform only a single allocation.
         // This allocation also contains the device-to-state mappings.
@@ -172,7 +172,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
 
         internal static IntPtr s_DefaultStateBuffer;
-        internal static IntPtr s_NoiseFilterBuffer;
+        internal static IntPtr s_NoiseBitmaskBuffer;
         internal static DoubleBuffers s_CurrentBuffers;
 
         public static IntPtr GetFrontBufferForDevice(int deviceIndex)
@@ -253,7 +253,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             // Default state and noise filter buffers go last
             defaultStateBuffer = ptr;
-            noiseFilterBuffer = new IntPtr(ptr.ToInt64() + sizePerBuffer);
+            noiseBitmaskBuffer = new IntPtr(ptr.ToInt64() + sizePerBuffer);
 
             return newDeviceOffsets;
         }
@@ -300,10 +300,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
             defaultStateBuffer = IntPtr.Zero;
 
-            if (s_NoiseFilterBuffer == noiseFilterBuffer)
-                s_NoiseFilterBuffer = IntPtr.Zero;
+            if (s_NoiseBitmaskBuffer == noiseBitmaskBuffer)
+                s_NoiseBitmaskBuffer = IntPtr.Zero;
 
-            noiseFilterBuffer = IntPtr.Zero;
+            noiseBitmaskBuffer = IntPtr.Zero;
 
             totalSize = 0;
             sizePerBuffer = 0;
@@ -331,7 +331,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
 #endif
 
                 MigrateSingleBuffer(defaultStateBuffer, devices, newStateBlockOffsets, oldBuffers.defaultStateBuffer);
-                MigrateSingleBuffer(noiseFilterBuffer, devices, newStateBlockOffsets, oldBuffers.noiseFilterBuffer);
+                MigrateSingleBuffer(noiseBitmaskBuffer, devices, newStateBlockOffsets, oldBuffers.noiseBitmaskBuffer);
             }
 
             // Assign state blocks.

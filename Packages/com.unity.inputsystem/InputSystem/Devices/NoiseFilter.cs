@@ -48,7 +48,7 @@ namespace UnityEngine.Experimental.Input
                 if (controlIndex >= device.allControls.Count)
                     throw new IndexOutOfRangeException("NoiseFilter has array index beyond total size of device's controls");
 
-                InputControl control = device.allControls[controlIndex];
+                var control = device.allControls[controlIndex];
                 MemoryHelpers.SetBitsInBuffer(noiseFilterBuffer, control, false);
             }
 
@@ -63,7 +63,7 @@ namespace UnityEngine.Experimental.Input
                 if (type == ElementType.EntireControl)
                     return false;
 
-                InputControl control = device.allControls[controlIndex];
+                var control = device.allControls[controlIndex];
                 if (control == null)
                     return false;
 
@@ -82,18 +82,17 @@ namespace UnityEngine.Experimental.Input
             var controls = device.allControls;
             for (int i = 0; i < controls.Count; i++)
             {
-                InputControl control = controls[i];
+                var control = controls[i];
                 if (control.noisy)
                 {
                     FilterElement newElement;
                     newElement.controlIndex = i;
                     newElement.type = ElementType.EntireControl;
-                    InputStateBlock stateblock = control.stateBlock;
                     elementsToAdd[elementCount++] = newElement;
                 }
                 else
                 {
-                    InputControl<float> controlAsFloat = control as InputControl<float>;
+                    var controlAsFloat = control as InputControl<float>;
                     if (controlAsFloat != null && controlAsFloat.processors != null)
                     {
                         if (controlAsFloat.processors != null)
@@ -101,13 +100,12 @@ namespace UnityEngine.Experimental.Input
                             FilterElement newElement;
                             newElement.controlIndex = i;
                             newElement.type = ElementType.FloatBelowEpsilon;
-                            InputStateBlock stateblock = control.stateBlock;
                             elementsToAdd[elementCount++] = newElement;
                         }
                     }
                     else
                     {
-                        InputControl<Vector2> controlAsVec2 = control as InputControl<Vector2>;
+                        var controlAsVec2 = control as InputControl<Vector2>;
                         if (controlAsVec2 != null && controlAsVec2.processors != null)
                         {
                             FilterElement newElement;
@@ -143,29 +141,29 @@ namespace UnityEngine.Experimental.Input
             if (device == null)
                 throw new ArgumentException("No device supplied to apply NoiseFilter to.", "device");
 
-            var noiseFilterPtr = InputStateBuffers.s_NoiseFilterBuffer;
-            if (noiseFilterPtr == IntPtr.Zero)
+            var noiseBitmaskPtr = InputStateBuffers.s_NoiseBitmaskBuffer;
+            if (noiseBitmaskPtr == IntPtr.Zero)
                 return;
 
-            MemoryHelpers.SetBitsInBuffer(noiseFilterPtr, device, true);
+            MemoryHelpers.SetBitsInBuffer(noiseBitmaskPtr, device, true);
 
             for (int i = 0; i < elements.Length; i++)
             {
-                elements[i].Apply(noiseFilterPtr, device);
+                elements[i].Apply(noiseBitmaskPtr, device);
             }
         }
 
         /// <summary>
-        /// Resets a device to unfiltered
+        /// Called when removing a NoiseFilter from a device.  This resets any stateful data the NoiseFilter sets on the device or in any InputStateBuffers
         /// </summary>
         /// <param name="device">The device you want reset</param>
         internal void Reset(InputDevice device)
         {
-            var noiseFilterPtr = InputStateBuffers.s_NoiseFilterBuffer;
-            if (noiseFilterPtr == IntPtr.Zero)
+            var noiseBitmaskPtr = InputStateBuffers.s_NoiseBitmaskBuffer;
+            if (noiseBitmaskPtr == IntPtr.Zero)
                 return;
 
-            MemoryHelpers.SetBitsInBuffer(noiseFilterPtr, device, true);
+            MemoryHelpers.SetBitsInBuffer(noiseBitmaskPtr, device, true);
         }
 
         /// <summary>
@@ -190,9 +188,9 @@ namespace UnityEngine.Experimental.Input
             if ((offset + sizeInbytes) * 8 > device.stateBlock.sizeInBits)
                 return false;
 
-            bool result = false;
+            var result = false;
 
-            var noiseFilterPtr = InputStateBuffers.s_NoiseFilterBuffer;
+            var noiseFilterPtr = InputStateBuffers.s_NoiseBitmaskBuffer;
             if (noiseFilterPtr == IntPtr.Zero)
                 throw new Exception("Noise Filter Buffer is uninitialized while trying to check state events for data.");
 

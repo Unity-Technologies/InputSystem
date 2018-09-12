@@ -1364,7 +1364,7 @@ namespace UnityEngine.Experimental.Input
 
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
-            InputStateBuffers.s_NoiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
+            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseBitmaskBuffer;
         }
 
         [Serializable]
@@ -1605,7 +1605,7 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
-            InputStateBuffers.s_NoiseFilterBuffer = m_StateBuffers.noiseFilterBuffer;
+            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseBitmaskBuffer;
 
             ////TODO: need to update state change monitors
         }
