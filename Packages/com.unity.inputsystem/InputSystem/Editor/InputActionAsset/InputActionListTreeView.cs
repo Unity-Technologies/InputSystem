@@ -29,11 +29,11 @@ namespace UnityEngine.Experimental.Input.Editor
             return treeView;
         }
 
-        static bool OnFoldoutDraw(Rect position, bool expandedstate, GUIStyle style)
+        static bool OnFoldoutDraw(Rect position, bool expandedState, GUIStyle style)
         {
             var indent = (int)(position.x / 15);
             position.x = 6 * indent + 8;
-            return EditorGUI.Foldout(position, expandedstate, GUIContent.none, style);
+            return EditorGUI.Foldout(position, expandedState, GUIContent.none, style);
         }
 
         protected InputActionListTreeView(Action applyAction, TreeViewState state)
@@ -55,15 +55,10 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public void SetNameFilter(string filter)
         {
-            m_NameFilter = filter;
+            m_NameFilter = filter.ToLower();
             Reload();
         }
-
-        public bool IsSearching()
-        {
-            return !string.IsNullOrEmpty(m_NameFilter);
-        }
-
+        
         protected override TreeViewItem BuildRoot()
         {
             var root = new TreeViewItem
@@ -75,17 +70,53 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_SerializedObject != null)
             {
                 BuildFromSerializedObject(root);
+                // is searching
+                if (!string.IsNullOrEmpty(m_NameFilter))
+                {
+                    FilterResults(root);
+                }
             }
             return root;
+        }
+
+        // Return true is the child node should be removed from the parent
+        private bool FilterResults(TreeViewItem root)
+        {
+            if (root.hasChildren)
+            {
+                var listToRemove = new List<TreeViewItem>();
+                foreach (var child in root.children)
+                {
+                    if (root.displayName != null && root.displayName.ToLower().Contains(m_NameFilter))
+                    {
+                        continue;
+                    }
+
+                    if (FilterResults(child))
+                    {
+                        listToRemove.Add(child);
+                    }
+                }
+                foreach (var item in listToRemove)
+                {
+                    root.children.Remove(item);
+                }
+
+                return !root.hasChildren;
+            }
+
+            if (root.displayName == null)
+                return false;
+            return !root.displayName.ToLower().Contains(m_NameFilter);
         }
 
         private void BuildFromSerializedObject(TreeViewItem root)
         {
             m_SerializedObject.Update();
-            var actionMapArrauProperty = m_SerializedObject.FindProperty("m_ActionMaps");
-            for (var i = 0; i < actionMapArrauProperty.arraySize; i++)
+            var actionMapArrayProperty = m_SerializedObject.FindProperty("m_ActionMaps");
+            for (var i = 0; i < actionMapArrayProperty.arraySize; i++)
             {
-                var actionMapProperty = actionMapArrauProperty.GetArrayElementAtIndex(i);
+                var actionMapProperty = actionMapArrayProperty.GetArrayElementAtIndex(i);
                 var actionMapItem = new ActionMapTreeItem(actionMapProperty, i);
                 ParseActionMap(actionMapItem, actionMapProperty, 1);
                 root.AddChild(actionMapItem);
@@ -112,21 +143,11 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionName = actionItem.actionName;
 
             ParseBindings(actionItem, actionMapName, actionName, bindingsArrayProperty, depth + 1);
-
-            bool actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
-            if (actionSearchMatched || IsSearching() && actionItem.children != null && actionItem.children.Any())
-            {
-                parentTreeItem.AddChild(actionItem);
-            }
-            else if (!IsSearching())
-            {
-                parentTreeItem.AddChild(actionItem);
-            }
+            parentTreeItem.AddChild(actionItem);            
         }
 
         protected void ParseBindings(TreeViewItem parent, string actionMapName, string actionName, SerializedProperty bindingsArrayProperty, int depth)
         {
-            var actionSearchMatched = IsSearching() && actionName.ToLower().Contains(m_NameFilter.ToLower());
             var bindingsCount = InputActionSerializationHelpers.GetBindingCount(bindingsArrayProperty, actionName);
             CompositeGroupTreeItem compositeGroupTreeItem = null;
             for (var j = 0; j < bindingsCount; j++)
@@ -154,10 +175,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     continue;
                 }
                 compositeGroupTreeItem = null;
-                if (!actionSearchMatched && IsSearching() && !bindingsItem.path.ToLower().Contains(m_NameFilter.ToLower()))
-                {
-                    continue;
-                }
                 parent.AddChild(bindingsItem);
             }
         }

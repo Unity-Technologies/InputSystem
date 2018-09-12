@@ -89,8 +89,12 @@ namespace UnityEngine.Experimental.Input.Editor
             foreach (var window in windows)
                 window.Refresh();
 
-            ////REVIEW: why do we need to do this? comment!
+            // When the asset is modified outside of the editor
+            // and the importer settings are visible in the inspector
+            // the asset references in the importer inspector need to be force rebuild 
+            // (otherwise we gets lots of exceptions)
             ActiveEditorTracker.sharedTracker.ForceRebuild();
+            
             s_RefreshPending = false;
         }
 
