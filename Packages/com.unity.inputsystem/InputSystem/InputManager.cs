@@ -2489,6 +2489,12 @@ namespace UnityEngine.Experimental.Input
             return flipped;
         }
 
+        internal struct NoiseFilterElementState
+        {
+            public int index;
+            public NoiseFilter.ElementType type;
+        }
+
         // Domain reload survival logic. Also used for pushing and popping input system
         // state for testing.
 
@@ -2509,6 +2515,7 @@ namespace UnityEngine.Experimental.Input
             public string layout;
             public string variants;
             public string[] usages;
+            public NoiseFilterElementState[] noisyElements;
             public int deviceId;
             public uint stateOffset;
             public InputDevice.DeviceFlags flags;
@@ -2519,9 +2526,18 @@ namespace UnityEngine.Experimental.Input
                 if (usages == null || usages.Length == 0)
                     return;
                 var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
-                device.m_UsagesReadOnly =
-                    new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
+                device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
                 device.UpdateUsageArraysOnControls();
+            }
+
+            public void RestoreUserInteractionFilter(InputDevice device)
+            {
+                if (noisyElements == null || noisyElements.Length == 0)
+                    return;
+
+                NoiseFilter newUserInteractionFilter = new NoiseFilter();
+                var index = ArrayHelpers.Append(ref newUserInteractionFilter.elements, noisyElements.Select(filterElement => new NoiseFilter.FilterElement { controlIndex = filterElement.index, type = filterElement.type}));
+                device.userInteractionFilter = newUserInteractionFilter;
             }
         }
 
@@ -2560,13 +2576,22 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
+                string[] usages = null;
+                if(device.usages.Count > 0)
+                    usages = device.usages.Select(x => x.ToString()).ToArray();
+
+                NoiseFilterElementState[] elements = null;
+                if (device.m_UserInteractionFilter != null || device.m_UserInteractionFilter.elements != null && device.m_UserInteractionFilter.elements.Length > 0)
+                    elements = device.m_UserInteractionFilter.elements.Select(filterElement => new NoiseFilterElementState { index = filterElement.controlIndex, type = filterElement.type }).ToArray();
+
                 var deviceState = new DeviceState
                 {
                     name = device.name,
                     layout = device.layout,
                     variants = device.variants,
                     deviceId = device.id,
-                    usages = device.usages.Select(x => x.ToString()).ToArray(),
+                    usages = usages,
+                    noisyElements = elements,
                     stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
@@ -2685,8 +2710,9 @@ namespace UnityEngine.Experimental.Input
                         continue;
                     }
 
-                    // Usages can be set on an API level so manually restore them.
+                    // Usages and the user interaction filter can be set on an API level so manually restore them.
                     deviceState.RestoreUsagesOnDevice(device);
+                    deviceState.RestoreUserInteractionFilter(device);
                 }
 
                 // See if we can make sense of an available device now that we couldn't make sense of
