@@ -34,13 +34,13 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Quaternion ReadRawValueFrom(IntPtr statePtr)
+        public override Quaternion ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             return new Quaternion(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr), z.ReadValueFrom(statePtr),
-                w.ReadRawValueFrom(statePtr));
+                w.ReadUnprocessedValueFrom(statePtr));
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, Quaternion value)
+        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Quaternion value)
         {
             x.WriteValueInto(statePtr, value.x);
             y.WriteValueInto(statePtr, value.y);

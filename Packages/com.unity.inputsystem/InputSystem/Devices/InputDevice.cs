@@ -187,6 +187,20 @@ namespace UnityEngine.Experimental.Input
             get { return typeof(byte[]); }
         }
 
+        public NoiseFilter userInteractionFilter
+        {
+            get
+            {
+                return m_UserInteractionFilter;
+            }
+            set
+            {
+                m_UserInteractionFilter.Reset(this);        
+                m_UserInteractionFilter = value;
+                m_UserInteractionFilter.Apply(this);
+            }
+        }
+
         /// <summary>
         /// Return the current state of the device as byte array.
         /// </summary>
@@ -346,6 +360,8 @@ namespace UnityEngine.Experimental.Input
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        internal NoiseFilter m_UserInteractionFilter;
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

@@ -9,7 +9,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
     /// </summary>
     /// <remarks>This is directly used by the SimpleXRRumble class.  For clearer details of using this command, see that class.</remarks>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct SimpleXRRumbleCommand : IInputDeviceCommandInfo
+    public struct SendSimpleRumbleCommand : IInputDeviceCommandInfo
     {
         static FourCC Type { get { return new FourCC('X', 'R', 'R', '0'); } }
 
@@ -31,9 +31,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         /// </summary>
         /// <param name="motorIntensity">The desired motor intensity that should be within a [0-1] range.</param>
         /// <returns>The command that should be sent to the device via InputDevice.ExecuteCommand(InputDeviceCommand).  See SimpleXRRumble for more details.</returns>
-        public static SimpleXRRumbleCommand Create(float motorIntensity)
+        public static SendSimpleRumbleCommand Create(float motorIntensity)
         {
-            return new SimpleXRRumbleCommand
+            return new SendSimpleRumbleCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
                 intensity = motorIntensity

@@ -35,6 +35,14 @@ namespace UnityEngine.Experimental.Input.Controls
             m_StateBlock.format = InputStateBlock.kTypeVector2;
         }
 
+        public override bool HasSignificantChange(InputEventPtr eventPtr)
+        {
+            Vector2 value;
+            if (ReadValueFrom(eventPtr, out value))
+                return Vector2.SqrMagnitude(value - ReadDefaultValue()) > float.Epsilon;
+            return false;
+        }
+
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             x = builder.GetControl<AxisControl>(this, "x");
@@ -42,12 +50,12 @@ namespace UnityEngine.Experimental.Input.Controls
             base.FinishSetup(builder);
         }
 
-        public override Vector2 ReadRawValueFrom(IntPtr statePtr)
+        public override Vector2 ReadUnprocessedValueFrom(IntPtr statePtr)
         {
             return new Vector2(x.ReadValueFrom(statePtr), y.ReadValueFrom(statePtr));
         }
 
-        protected override void WriteRawValueInto(IntPtr statePtr, Vector2 value)
+        protected override void WriteUnprocessedValueInto(IntPtr statePtr, Vector2 value)
         {
             x.WriteValueInto(statePtr, value.x);
             y.WriteValueInto(statePtr, value.y);

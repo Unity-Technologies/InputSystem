@@ -855,6 +855,9 @@ namespace UnityEngine.Experimental.Input
             if (device.updateBeforeRender)
                 updateMask |= InputUpdateType.BeforeRender;
 
+            NoiseFilter interactionFilter = device.userInteractionFilter;
+            interactionFilter.Apply(device);
+
             // Notify device.
             device.NotifyAdded();
 
@@ -1360,6 +1363,7 @@ namespace UnityEngine.Experimental.Input
 
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
+            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseBitmaskBuffer;
         }
 
         [Serializable]
@@ -1600,6 +1604,7 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers,
                 InputUpdate.lastUpdateType != 0 ? InputUpdate.lastUpdateType : InputUpdateType.Dynamic);
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
+            InputStateBuffers.s_NoiseBitmaskBuffer = m_StateBuffers.noiseBitmaskBuffer;
 
             ////TODO: need to update state change monitors
         }
@@ -1659,7 +1664,7 @@ namespace UnityEngine.Experimental.Input
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
-            #endif
+#endif
         }
 
         private void OnDeviceDiscovered(int deviceId, string deviceDescriptor)
@@ -2071,6 +2076,8 @@ namespace UnityEngine.Experimental.Input
                             stateCallbacks.OnBeforeWriteNewState(currentState, newState);
                         }
 
+                        var deviceBuffer = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
+
                         // Before we update state, let change monitors compare the old and the new state.
                         // We do this instead of first updating the front buffer and then comparing to the
                         // back buffer as that would require a buffer flip for each state change in order
@@ -2080,8 +2087,20 @@ namespace UnityEngine.Experimental.Input
                         var haveSignalledMonitors =
                             gameIsPlayingAndHasFocus && ////REVIEW: for now making actions exclusive to player
                             ProcessStateChangeMonitors(deviceIndex, ptrToReceivedState,
-                                new IntPtr(InputStateBuffers.GetFrontBufferForDevice(deviceIndex).ToInt64() + stateBlockOfDevice.byteOffset),
+                                new IntPtr(deviceBuffer.ToInt64() + stateBlockOfDevice.byteOffset),
                                 sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
+
+
+                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
+
+                        // Use a filter to see if any significant changes are occuring on the device.
+                        // Significant changes are non-noisy control changes, and changes that create a value
+                        // change after processors are applied.  These are used to detect actual user interaction
+                        // with a device instead of simply sensor noise.
+                        InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
+                        NoiseFilter filter = device.userInteractionFilter;
+                        bool hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
+                        doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
                         if (FlipBuffersForDeviceIfNecessary(device, updateType, gameIsPlayingAndHasFocus))
@@ -2099,8 +2118,6 @@ namespace UnityEngine.Experimental.Input
                         }
 
                         // Now write the state.
-                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
-
 #if UNITY_EDITOR
                         if (!gameIsPlayingAndHasFocus)
                         {
@@ -2167,7 +2184,7 @@ namespace UnityEngine.Experimental.Input
                             }
                         }
 
-                        device.m_LastUpdateTimeInternal = currentEventTimeInternal;
+                        device.m_LastUpdateTimeInternal = hasSignificantControlChanges ? currentEventTimeInternal : device.m_LastUpdateTimeInternal;
 
                         // Notify listeners.
                         for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2471,6 +2488,12 @@ namespace UnityEngine.Experimental.Input
             return flipped;
         }
 
+        internal struct NoiseFilterElementState
+        {
+            public int index;
+            public NoiseFilter.ElementType type;
+        }
+
         // Domain reload survival logic. Also used for pushing and popping input system
         // state for testing.
 
@@ -2491,6 +2514,7 @@ namespace UnityEngine.Experimental.Input
             public string layout;
             public string variants;
             public string[] usages;
+            public NoiseFilterElementState[] noisyElements;
             public int deviceId;
             public uint stateOffset;
             public InputDevice.DeviceFlags flags;
@@ -2501,9 +2525,18 @@ namespace UnityEngine.Experimental.Input
                 if (usages == null || usages.Length == 0)
                     return;
                 var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
-                device.m_UsagesReadOnly =
-                    new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
+                device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
                 device.UpdateUsageArraysOnControls();
+            }
+
+            public void RestoreUserInteractionFilter(InputDevice device)
+            {
+                if (noisyElements == null || noisyElements.Length == 0)
+                    return;
+
+                NoiseFilter newUserInteractionFilter = new NoiseFilter();
+                var index = ArrayHelpers.Append(ref newUserInteractionFilter.elements, noisyElements.Select(filterElement => new NoiseFilter.FilterElement { controlIndex = filterElement.index, type = filterElement.type}));
+                device.userInteractionFilter = newUserInteractionFilter;
             }
         }
 
@@ -2542,13 +2575,22 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
+                string[] usages = null;
+                if(device.usages.Count > 0)
+                    usages = device.usages.Select(x => x.ToString()).ToArray();
+
+                NoiseFilterElementState[] elements = null;
+                if (!device.m_UserInteractionFilter.IsEmpty())
+                    elements = device.m_UserInteractionFilter.elements.Select(filterElement => new NoiseFilterElementState { index = filterElement.controlIndex, type = filterElement.type }).ToArray();
+
                 var deviceState = new DeviceState
                 {
                     name = device.name,
                     layout = device.layout,
                     variants = device.variants,
                     deviceId = device.id,
-                    usages = device.usages.Select(x => x.ToString()).ToArray(),
+                    usages = usages,
+                    noisyElements = elements,
                     stateOffset = device.m_StateBlock.byteOffset,
                     description = device.m_Description,
                     flags = device.m_DeviceFlags
@@ -2667,8 +2709,9 @@ namespace UnityEngine.Experimental.Input
                         continue;
                     }
 
-                    // Usages can be set on an API level so manually restore them.
+                    // Usages and the user interaction filter can be set on an API level so manually restore them.
                     deviceState.RestoreUsagesOnDevice(device);
+                    deviceState.RestoreUserInteractionFilter(device);
                 }
 
                 // See if we can make sense of an available device now that we couldn't make sense of

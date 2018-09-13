@@ -249,6 +249,11 @@ namespace UnityEngine.Experimental.Input
             WriteValueFromObjectInto(statePtr, bufferSize, value);
         }
 
+        public virtual bool HasSignificantChange(InputEventPtr eventPtr)
+        {
+            return (GetStatePtrFromStateEvent(eventPtr) != IntPtr.Zero);
+        }
+
         // Constructor for devices which are assigned names once plugged
         // into the system.
         protected InputControl()
@@ -407,35 +412,54 @@ namespace UnityEngine.Experimental.Input
         {
             if (!eventPtr.valid)
                 throw new ArgumentNullException("eventPtr");
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
 
-            ////TODO: support delta events
+            uint stateOffset;
+            FourCC stateFormat;
+            uint stateSizeInBytes;
+            IntPtr statePtr;
             if (eventPtr.IsA<DeltaStateEvent>())
-                throw new NotImplementedException("Read control value from delta state events");
+            {
+                var deltaEvent = DeltaStateEvent.From(eventPtr);
 
-            var stateEvent = StateEvent.From(eventPtr);
+                // If it's a delta event, we need to subtract the delta state offset if it's not set to the root of the device
+                stateOffset = deltaEvent->stateOffset;
+                stateFormat = deltaEvent->stateFormat;
+                stateSizeInBytes = deltaEvent->deltaStateSizeInBytes;
+                statePtr = deltaEvent->deltaState;
+            }
+            else if (eventPtr.IsA<StateEvent>())
+            {
+                var stateEvent = StateEvent.From(eventPtr);
+
+                stateOffset = 0;
+                stateFormat = stateEvent->stateFormat;
+                stateSizeInBytes = stateEvent->stateSizeInBytes;
+                statePtr = stateEvent->state;
+            }
+            else
+            {
+                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+            }
+
 
             // Make sure we have a state event compatible with our device. The event doesn't
             // have to be specifically for our device (we don't require device IDs to match) but
             // the formats have to match and the size must be within range of what we're trying
             // to read.
-            var stateFormat = stateEvent->stateFormat;
-            if (stateEvent->stateFormat != device.m_StateBlock.format)
+            if (stateFormat != device.m_StateBlock.format)
                 throw new InvalidOperationException(
                     string.Format(
-                        "Cannot read control '{0}' from StateEvent with format {1}; device '{2}' expects format {3}",
-                        path, stateFormat, device, device.m_StateBlock.format));
+                        "Cannot read control '{0}' from {1} with format {2}; device '{3}' expects format {4}",
+                        path, eventPtr.type, stateFormat, device, device.m_StateBlock.format));
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
-            var deviceStateOffset = device.m_StateBlock.byteOffset;
+            stateOffset += device.m_StateBlock.byteOffset;
 
-            var stateSizeInBytes = stateEvent->stateSizeInBytes;
-            if (m_StateBlock.byteOffset - deviceStateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            if (m_StateBlock.byteOffset - stateOffset + m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return IntPtr.Zero;
 
-            return new IntPtr(stateEvent->state.ToInt64() - (int)deviceStateOffset);
+            return new IntPtr(statePtr.ToInt64() - (int)stateOffset);
         }
 
         internal int ResolveDeviceIndex()
@@ -513,42 +537,51 @@ namespace UnityEngine.Experimental.Input
             if (!(value is TValue))
                 value = Convert.ChangeType(value, typeof(TValue));
 
-            WriteRawValueInto(buffer, (TValue)value);
+            WriteUnprocessedValueInto(buffer, (TValue)value);
         }
 
-        ////REVIEW: this should return a bool and pass the value as an out parameter; bool should indicate
-        ////        whether value is actually coming from the event or just a default value
-        // Read a control value directly from a state event.
-        //
         // NOTE: Using this method not only ensures that format conversion is automatically taken care of
         //       but also profits from the fact that remapping is already established in a control hierarchy
         //       and reading from the right offsets is taken care of.
-        public TValue ReadValueFrom(InputEventPtr inputEvent, bool process = true)
+        public bool ReadValueFrom(InputEventPtr inputEvent, out TValue value)
         {
             var statePtr = GetStatePtrFromStateEvent(inputEvent);
             if (statePtr == IntPtr.Zero)
-                return ReadDefaultValue();
+            {
+                value = ReadDefaultValue();
+                return false;
+            }
 
-            var value = ReadRawValueFrom(statePtr);
-            if (process)
-                value = Process(value);
+            value = ReadValueFrom(statePtr);
+            return true;
+        }
 
-            return value;
+        public bool ReadUnprocessedValueFrom(InputEventPtr inputEvent, out TValue value)
+        {
+            var statePtr = GetStatePtrFromStateEvent(inputEvent);
+            if (statePtr == IntPtr.Zero)
+            {
+                value = ReadDefaultValue();
+                return false;
+            }
+
+            value = ReadUnprocessedValueFrom(statePtr);
+            return true;
         }
 
         public TValue ReadValueFrom(IntPtr statePtr)
         {
-            return Process(ReadRawValueFrom(statePtr));
+            return Process(ReadUnprocessedValueFrom(statePtr));
         }
 
-        public TValue ReadRawValue()
+        public TValue ReadUnprocessedValue()
         {
-            return ReadRawValueFrom(currentStatePtr);
+            return ReadUnprocessedValueFrom(currentStatePtr);
         }
 
-        public abstract TValue ReadRawValueFrom(IntPtr statePtr);
+        public abstract TValue ReadUnprocessedValueFrom(IntPtr statePtr);
 
-        protected virtual void WriteRawValueInto(IntPtr statePtr, TValue value)
+        protected virtual void WriteUnprocessedValueInto(IntPtr statePtr, TValue value)
         {
             ////TODO: indicate propertly that this control does not support writing
             throw new NotSupportedException();
@@ -576,7 +609,7 @@ namespace UnityEngine.Experimental.Input
 
         public void WriteValueInto(IntPtr statePtr, TValue value)
         {
-            WriteRawValueInto(statePtr, value);
+            WriteUnprocessedValueInto(statePtr, value);
         }
 
         /// <summary>

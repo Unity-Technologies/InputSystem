@@ -107,12 +107,21 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     /// </summary>
     public class XRControllerWithRumble : XRController, IHaptics
     {
-        SimpleXRRumble m_Rumble;
+        SimpleRumble m_Rumble;
+        BufferedRumble m_BufferedRumble;
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
             base.FinishSetup(builder);
-            m_Rumble = new SimpleXRRumble(this);
+            m_Rumble = new SimpleRumble(this);
+        }
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            m_BufferedRumble = new BufferedRumble(this);
+            HapticCapabilities capabilities = m_BufferedRumble.capabilities;
         }
 
         /// <summary>

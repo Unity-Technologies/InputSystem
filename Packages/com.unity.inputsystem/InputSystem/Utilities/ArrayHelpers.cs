@@ -246,7 +246,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 array[index++] = value;
 
             if (values != null)
-                Array.Copy(values, 0, array, index, length);
+                Array.Copy(values, 0, array, index, values.Length);
 
             return array;
         }

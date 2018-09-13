@@ -59,6 +59,34 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_TakeDeviceOffsetsIntoAccount()
+    {
+        InputSystem.AddDevice<Gamepad>();
+        var secondGamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Full state updates to make sure we won't be overwriting other
+        // controls with state. Also, make sure we actually carry over
+        // those values on buffer flips.
+        InputSystem.QueueStateEvent(secondGamepad,
+            new GamepadState
+            {
+                buttons = 0xffffffff,
+                rightStick = Vector2.one,
+                leftTrigger = 0.123f,
+                rightTrigger = 0.456f
+            });
+        InputSystem.Update();
+
+        // Update just left stick.
+        InputSystem.QueueDeltaStateEvent(secondGamepad.leftStick, new Vector2(0.5f, 0.5f));
+        InputSystem.Update();
+
+        Assert.That(secondGamepad.leftStick.x.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(secondGamepad.leftStick.y.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_UseCurrentTimeByDefault()
     {
         var device = InputSystem.AddDevice<Gamepad>();
@@ -125,8 +153,13 @@ partial class CoreTests
         InputEventPtr eventPtr;
         using (var buffer = StateEvent.From(mouse, out eventPtr))
         {
-            Assert.That(mouse.delta.x.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
-            Assert.That(mouse.delta.y.ReadValueFrom(eventPtr), Is.EqualTo(1).Within(0.00001));
+            float xVal;
+            float yVal;
+            Assert.IsTrue(mouse.delta.x.ReadValueFrom(eventPtr, out xVal));
+            Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
+
+            Assert.IsTrue(mouse.delta.y.ReadValueFrom(eventPtr, out yVal));
+            Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
@@ -137,30 +170,6 @@ partial class CoreTests
             Assert.That(stateEventPtr->stateSizeInBytes, Is.EqualTo(mouse.stateBlock.alignedSizeInBytes));
             Assert.That(stateEventPtr->stateFormat, Is.EqualTo(mouse.stateBlock.format));
         }
-    }
-
-    [Test]
-    [Category("Events")]
-    public void Events_SendingStateEventToDevice_MakesItCurrent()
-    {
-        var gamepad = InputSystem.AddDevice("Gamepad");
-
-        // Adding a device makes it current so add another one so that .current
-        // is not already set to the gamepad we just created.
-        InputSystem.AddDevice("Gamepad");
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
-
-        Assert.That(Gamepad.current, Is.SameAs(gamepad));
-    }
-
-    [Test]
-    [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_SendingStateEvent_WithOnlyNoise_DoesNotMakeDeviceCurrent()
-    {
-        Assert.Fail();
     }
 
     [Test]

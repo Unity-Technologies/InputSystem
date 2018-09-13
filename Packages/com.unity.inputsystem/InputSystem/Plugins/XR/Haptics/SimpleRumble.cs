@@ -3,7 +3,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
     /// <summary>
     /// This class controls the intensity and state of a rumble motor on a single XR device.
     /// </summary>
-    public struct SimpleXRRumble
+    public struct SimpleRumble
     {
         InputDevice device { get; set; }
 
@@ -69,10 +69,10 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         }
 
         /// <summary>
-        /// Simple constructor that links this SimpleXRRumble class to a specific device.
+        /// Simple constructor that links this SimpleRumble class to a specific device.
         /// </summary>
         /// <param name="device">The XR device containing the rumble motor you want to link to.</param>
-        public SimpleXRRumble(InputDevice device)
+        public SimpleRumble(InputDevice device)
         {
             this.device = device;
 
@@ -83,7 +83,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR.Haptics
         private void UpdateMotorSpeed()
         {
             float intensity = m_IsPaused ? 0f : m_Intensity;
-            var command = SimpleXRRumbleCommand.Create(intensity);
+            var command = SendSimpleRumbleCommand.Create(intensity);
             device.ExecuteCommand(ref command);
         }
     }
