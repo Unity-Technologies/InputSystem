@@ -10,7 +10,7 @@ namespace UnityEngine.Experimental.Input
     /// A filter for individual devices to check if events or device states contain significant, relevant changes.
     /// Irrelevant changes are any updates controls that are tagged as 'noisy', and any state change that turns into a no-operation change once processors are applied (e.g. in deadzone joystick movements).
     /// </summary>
-    public class NoiseFilter
+    public struct NoiseFilter
     {
         /// <summary>
         /// Simple cached value identifying how to filter this element (Bitmask, or individual type filtered).
@@ -58,7 +58,7 @@ namespace UnityEngine.Experimental.Input
             /// <param name="inputEvent">The input event being checked for changes</param>
             /// <param name="device">The input device being checked against </param>
             /// <returns>True if any changes exist in the event once the device has been filtered through for noise and non-significant changes.  False otherwise.</returns>
-            public bool HasValidData(InputEventPtr inputEvent, InputDevice device)
+            public bool EventHasValidData(InputEventPtr inputEvent, InputDevice device)
             {
                 if (type == ElementType.EntireControl)
                     return false;
@@ -127,6 +127,11 @@ namespace UnityEngine.Experimental.Input
             return filter;
         }
 
+        public bool IsEmpty()
+        {
+            return elements == null || elements.Length == 0;
+        }
+
         /// <summary>
         /// The list of elements to be checked for.  Each element represents a single InputControl.
         /// </summary>
@@ -140,6 +145,9 @@ namespace UnityEngine.Experimental.Input
         {
             if (device == null)
                 throw new ArgumentException("No device supplied to apply NoiseFilter to.", "device");
+
+            if (IsEmpty())
+                return;
 
             var noiseBitmaskPtr = InputStateBuffers.s_NoiseBitmaskBuffer;
             if (noiseBitmaskPtr == IntPtr.Zero)
@@ -159,6 +167,12 @@ namespace UnityEngine.Experimental.Input
         /// <param name="device">The device you want reset</param>
         internal void Reset(InputDevice device)
         {
+            if (device == null)
+                throw new ArgumentException("No device supplied to reset noise filter on.", "device");
+
+            if (IsEmpty())
+                return;
+
             var noiseBitmaskPtr = InputStateBuffers.s_NoiseBitmaskBuffer;
             if (noiseBitmaskPtr == IntPtr.Zero)
                 return;
@@ -174,7 +188,7 @@ namespace UnityEngine.Experimental.Input
         /// <param name="offset">The offset into the device that the event is placed</param>
         /// <param name="sizeInBytes">The size of the event in bytes</param>
         /// <returns>True if any changes exist in the event once the device has been filtered through for noise and non-significant changes.  False otherwise.</returns>
-        public unsafe bool HasValidData(InputDevice device, InputEventPtr inputEvent, uint offset, uint sizeInbytes)
+        public unsafe bool EventHasValidData(InputDevice device, InputEventPtr inputEvent, uint offset, uint sizeInbytes)
         {
             if (!inputEvent.valid)
                 throw new ArgumentException("Invalid or unset event being checked.", "inputEvent");
@@ -182,7 +196,7 @@ namespace UnityEngine.Experimental.Input
             if (device == null)
                 throw new ArgumentException("No device passed in to check if inputEvent has valid data", "device");
 
-            if (elements.Length == 0)
+            if (IsEmpty())
                 return true;
 
             if ((offset + sizeInbytes) * 8 > device.stateBlock.sizeInBits)
@@ -215,7 +229,7 @@ namespace UnityEngine.Experimental.Input
 
             for (int i = 0; i < elements.Length && !result; i++)
             {
-                result = elements[i].HasValidData(inputEvent, device);
+                result = elements[i].EventHasValidData(inputEvent, device);
             }
 
             return result;

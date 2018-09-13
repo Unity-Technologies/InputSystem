@@ -3099,7 +3099,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_SettingNullFilterSkipsNoiseFiltering()
+    public void Devices_SettingBlankFilterSkipsNoiseFiltering()
     {
         const string json = @"
             {
@@ -3107,7 +3107,7 @@ partial class CoreTests
                 ""extend"" : ""NoisyInputDevice"",
                 ""format"" : ""TEST"",
                 ""controls"" : [
-                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT""},
+                    { ""name"" : ""first"", ""layout"" : ""Button"", ""format"" : ""SHRT"", ""noisy"" : ""true""},
                     { ""name"" : ""second"", ""layout"" : ""Button"", ""format"" : ""SHRT""}
                 ]
             }
@@ -3119,7 +3119,7 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
 
-        device1.userInteractionFilter = null;
+        device1.userInteractionFilter = new NoiseFilter();
 
         Assert.That(NoisyInputDevice.current == device2);
 

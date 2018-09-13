@@ -856,8 +856,7 @@ namespace UnityEngine.Experimental.Input
                 updateMask |= InputUpdateType.BeforeRender;
 
             NoiseFilter interactionFilter = device.userInteractionFilter;
-            if (interactionFilter != null)
-                interactionFilter.Apply(device);
+            interactionFilter.Apply(device);
 
             // Notify device.
             device.NotifyAdded();
@@ -2100,7 +2099,7 @@ namespace UnityEngine.Experimental.Input
                         // with a device instead of simply sensor noise.
                         InputEventPtr eventPtr = new InputEventPtr(currentEventPtr);
                         NoiseFilter filter = device.userInteractionFilter;
-                        bool hasSignificantControlChanges = filter != null ? filter.HasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy) : true;
+                        bool hasSignificantControlChanges = filter.EventHasValidData(device, eventPtr, deviceStateOffset, sizeOfStateToCopy);
                         doNotMakeDeviceCurrent |= !hasSignificantControlChanges;
 
                         // Buffer flip.
@@ -2581,7 +2580,7 @@ namespace UnityEngine.Experimental.Input
                     usages = device.usages.Select(x => x.ToString()).ToArray();
 
                 NoiseFilterElementState[] elements = null;
-                if (device.m_UserInteractionFilter != null || device.m_UserInteractionFilter.elements != null && device.m_UserInteractionFilter.elements.Length > 0)
+                if (!device.m_UserInteractionFilter.IsEmpty())
                     elements = device.m_UserInteractionFilter.elements.Select(filterElement => new NoiseFilterElementState { index = filterElement.controlIndex, type = filterElement.type }).ToArray();
 
                 var deviceState = new DeviceState
