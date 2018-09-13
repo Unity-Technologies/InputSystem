@@ -141,6 +141,28 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             Undo.undoRedoPerformed -= OnUndoRedoCallback;
         }
+        
+        void OnDestroy()
+        {
+            if (m_IsDirty)
+            {
+                var result = EditorUtility.DisplayDialogComplex("Unsaved changes", "Do you want to save the changes you made before quitting?", "Save", "Cancel", "Don't Save");
+                switch (result) 
+                {
+                    case 0:
+                        // Save 
+                        SaveChangesToAsset();
+                        break;
+                    case 1:
+                        // Cancel
+                        Instantiate(this).Show();
+                        break;
+                    case 2:
+                        // Don't save
+                        break;
+                }
+            }
+        }
 
         private void SetAsset(InputActionAsset referencedObject)
         {
@@ -214,7 +236,7 @@ namespace UnityEngine.Experimental.Input.Editor
             if (m_TreeView == null)
                 return;
 
-            m_IsDirty = true;
+            m_IsDirty = m_AssetObjectForEditing.ToJson() != m_ImportedAssetObject.ToJson();
             m_TreeView.Reload();
             OnSelectionChanged();
         }
