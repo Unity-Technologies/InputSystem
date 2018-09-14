@@ -2656,6 +2656,22 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ApplyingOverride_UpdatesControls()
+    {
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftTrigger));
+
+        action.ApplyBindingOverride("<Gamepad>/rightTrigger");
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightTrigger));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenActionIsEnabled_CannotRemoveOverrides()
     {
         var action = new InputAction(name: "foo");
