@@ -241,6 +241,15 @@ public class DemoControls : InputActionAssetReference
             return new MenuActions(this);
         }
     }
+    private int m_KeyboardMouseSchemeIndex = -1;
+    public InputControlScheme KeyboardMouseScheme
+    {
+        get
+        {
+            if (m_KeyboardMouseSchemeIndex == -1) m_KeyboardMouseSchemeIndex = asset.GetControlSchemeIndex("Keyboard&Mouse");
+            return asset.controlSchemes[m_KeyboardMouseSchemeIndex];
+        }
+    }
     [Serializable]
     public class ActionEvent : UnityEvent<InputAction.CallbackContext>
     {

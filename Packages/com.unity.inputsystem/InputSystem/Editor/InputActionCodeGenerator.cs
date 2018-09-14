@@ -16,6 +16,10 @@ using UnityEditor;
 
 ////TODO: nuke Clone()
 
+////TODO: protect generated wrapper against modifications made to asset
+
+////TODO: make capitalization consistent in the generated code
+
 namespace UnityEngine.Experimental.Input.Editor
 {
     /// <summary>
@@ -40,12 +44,12 @@ namespace UnityEngine.Experimental.Input.Editor
             if (string.IsNullOrEmpty(options.className) && !string.IsNullOrEmpty(asset.name))
                 options.className =
                     CSharpCodeHelpers.MakeTypeName(asset.name);
-            return GenerateWrapperCode(asset.actionMaps, options);
+            return GenerateWrapperCode(asset.actionMaps, asset.controlSchemes, options);
         }
 
         // Generate a string containing C# code that simplifies working with the given
         // action sets in code.
-        public static string GenerateWrapperCode(IEnumerable<InputActionMap> sets, Options options)
+        public static string GenerateWrapperCode(IEnumerable<InputActionMap> maps, IEnumerable<InputControlScheme> schemes, Options options)
         {
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 throw new ArgumentException("options.sourceAssetPath");
@@ -100,7 +104,7 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("private bool m_Initialized;");
             writer.WriteLine("private void Initialize()");
             writer.BeginBlock();
-            foreach (var set in sets)
+            foreach (var set in maps)
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine(string.Format("// {0}", set.name));
@@ -126,7 +130,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // Uninitialize method.
             writer.WriteLine("private void Uninitialize()");
             writer.BeginBlock();
-            foreach (var set in sets)
+            foreach (var set in maps)
             {
                 var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
                 writer.WriteLine(string.Format("m_{0} = null;", setName));
@@ -162,19 +166,19 @@ namespace UnityEngine.Experimental.Input.Editor
             writer.WriteLine("SwitchAsset(ScriptableObject.Instantiate(asset));");
             writer.EndBlock();
 
-            // Action set accessors.
-            foreach (var set in sets)
+            // Action map accessors.
+            foreach (var map in maps)
             {
-                writer.WriteLine(string.Format("// {0}", set.name));
+                writer.WriteLine(string.Format("// {0}", map.name));
 
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
+                var setName = CSharpCodeHelpers.MakeIdentifier(map.name);
                 var setStructName = CSharpCodeHelpers.MakeTypeName(setName, "Actions");
 
                 // Caching field for action set.
                 writer.WriteLine(string.Format("private InputActionMap m_{0};", setName));
 
                 // Caching fields for all actions.
-                foreach (var action in set.actions)
+                foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(string.Format("private InputAction m_{0}_{1};", setName, actionName));
@@ -197,7 +201,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     options.className));
 
                 // Getter for each action.
-                foreach (var action in set.actions)
+                foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(string.Format(
@@ -241,6 +245,24 @@ namespace UnityEngine.Experimental.Input.Editor
                 writer.WriteLine(string.Format("return new {0}(this);", setStructName));
                 writer.EndBlock();
 
+                writer.EndBlock();
+            }
+
+            // Control scheme accessors.
+            foreach (var scheme in schemes)
+            {
+                var identifier = CSharpCodeHelpers.MakeIdentifier(scheme.name);
+
+                writer.WriteLine(string.Format("private int m_{0}SchemeIndex = -1;", identifier));
+                writer.WriteLine(string.Format("public InputControlScheme {0}Scheme", identifier));
+                writer.BeginBlock();
+                writer.WriteLine("get\n");
+                writer.BeginBlock();
+                writer.WriteLine(string.Format(
+                    "if (m_{0}SchemeIndex == -1) m_{0}SchemeIndex = asset.GetControlSchemeIndex(\"{1}\");", identifier,
+                    scheme.name));
+                writer.WriteLine(string.Format("return asset.controlSchemes[m_{0}SchemeIndex];", identifier));
+                writer.EndBlock();
                 writer.EndBlock();
             }
 
@@ -344,10 +366,10 @@ namespace UnityEngine.Experimental.Input.Editor
         // Updates the given file with wrapper code generated for the given action sets.
         // If the generated code is unchanged, does not touch the file.
         // Returns true if the file was touched, false otherwise.
-        public static bool GenerateWrapperCode(string filePath, IEnumerable<InputActionMap> sets, Options options)
+        public static bool GenerateWrapperCode(string filePath, IEnumerable<InputActionMap> maps, IEnumerable<InputControlScheme> schemes, Options options)
         {
             // Generate code.
-            var code = GenerateWrapperCode(sets, options);
+            var code = GenerateWrapperCode(maps, schemes, options);
 
             // Check if the code changed. Don't write if it hasn't.
             if (File.Exists(filePath))

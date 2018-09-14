@@ -29,7 +29,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Users
         /// The changing of actions usually happens when a player changes context. For example,
         /// when going from gameplay to the menu.
         /// </remarks>
-        /// <seealso cref="InputUser.activeActions"/>
+        /// <seealso cref="InputUser.actions"/>
         ActionsChanged,
 
         ControlSchemeChanged,

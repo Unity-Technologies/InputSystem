@@ -192,7 +192,7 @@ public class DemoGame : MonoBehaviour
         }
 
         // Enable just the bindings that are part of the control scheme.
-        // NOTE: This also means that the player's `activeControlScheme` will not change automatically
+        // NOTE: This also means that the player's `controlScheme` will not change automatically
         //       as no bindings are active outside the given control scheme.
         player.controls.Enable(controlScheme);
 

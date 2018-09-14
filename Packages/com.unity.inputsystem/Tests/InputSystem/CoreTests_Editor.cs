@@ -456,8 +456,8 @@ partial class CoreTests
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
             new InputActionCodeGenerator.Options {sourceAssetPath = "test"});
 
-        Assert.That(code, Contains.Substring("class NewControls_4_"));
-        Assert.That(code, Contains.Substring("public InputAction @action__"));
+        Assert.That(code, Contains.Substring("class NewControls4"));
+        Assert.That(code, Contains.Substring("public InputAction @action"));
         Assert.That(code, Contains.Substring("public InputAction @_1thing"));
     }
 

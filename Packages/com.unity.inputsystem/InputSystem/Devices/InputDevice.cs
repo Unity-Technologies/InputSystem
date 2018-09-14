@@ -5,6 +5,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Experimental.Input.Layouts;
 using UnityEngine.Experimental.Input.Plugins.XR;
 
+////REVIEW: nuke MakeCurrent() and replace with (optional) device tracking on InputPlayer?
+
 ////REVIEW: can we construct the control tree of devices on demand so that the user never has to pay for
 ////        the heap objects of devices he doesn't use?
 
