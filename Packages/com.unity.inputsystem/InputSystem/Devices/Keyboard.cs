@@ -338,19 +338,25 @@ namespace UnityEngine.Experimental.Input
             remove { m_TextInputListeners.Remove(value); }
         }
 
+        /// <summary>
+        /// An event that is fired to get IME composition strings.  Fired once for every change, sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
+        /// </summary>
         public event Action<string> onIMECompositionChange
         {
             add { m_ImeCompositionStringListeners.Append(value); }
             remove { m_ImeCompositionStringListeners.Remove(value); }
         }
 
+        /// <summary>
+        /// Activates/deactivates IME composition while typing.  This decides whether or not to use the OS supplied IME system.
+        /// </summary>
         public bool imeEnabled
         {
             set
             {
                 if (m_imeEnabled != value)
                 {
-                    SetIMECompositionModeCommand command = SetIMECompositionModeCommand.Create(value);
+                    EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
                     if (ExecuteCommand(ref command) >= 0)
                         m_imeEnabled = value;
                 }
@@ -358,6 +364,9 @@ namespace UnityEngine.Experimental.Input
             get { return m_imeEnabled; }
         }
 
+        /// <summary>
+        /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
+        /// </summary>
         public Vector2 imeCursorPosition
         {
             set
@@ -556,6 +565,9 @@ namespace UnityEngine.Experimental.Input
         public KeyControl oem4Key { get; private set; }
         public KeyControl oem5Key { get; private set; }
 
+        /// <summary>
+        /// True when IME composition is enabled.  Requires imeEnabled to be set to true, and the user to enable it at hte OS level.
+        /// </summary>
         public ButtonControl isIMESelected { get; private set; }
 
         public static Keyboard current { get; internal set; }

@@ -4,6 +4,9 @@ using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input.LowLevel
 {
+    /// <summary>
+    /// Sets the position for IME dialogs.  This is in pixels, from the upper left corner going down and to the right.
+    /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + (sizeof(float) * 2))]
     public unsafe struct SetIMECursorPositionCommand : IInputDeviceCommandInfo
     {
