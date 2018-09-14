@@ -65,7 +65,7 @@ namespace UnityEngine.Experimental.Input.Layouts
             FinalizeControlHierarchy();
 
             m_Device.m_Description = deviceDescription;
-            m_Device.m_UserInteractionFilter = NoiseFilter.CreateDefaultNoiseFilter(m_Device);
+            m_Device.m_UserInteractionFilter = InputNoiseFilter.CreateDefaultNoiseFilter(m_Device);
             m_Device.CallFinishSetupRecursive(this);
         }
 

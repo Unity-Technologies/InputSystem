@@ -123,14 +123,14 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_DomainReload_PreservesUserInteractionFiltersOnDevice()
     {
-        NoiseFilter filter = new NoiseFilter
+        InputNoiseFilter filter = new InputNoiseFilter
         {
-            elements = new NoiseFilter.FilterElement[]
+            elements = new InputNoiseFilter.FilterElement[]
             {
-                new NoiseFilter.FilterElement
+                new InputNoiseFilter.FilterElement
                 {
                     controlIndex = 0,
-                    type = NoiseFilter.ElementType.EntireControl
+                    type = InputNoiseFilter.ElementType.EntireControl
                 }
             }
         };
@@ -146,7 +146,7 @@ partial class CoreTests
         Assert.That(newDevice.userInteractionFilter, Is.Not.Null);
         Assert.That(newDevice.userInteractionFilter.elements, Has.Length.EqualTo(1));
         Assert.That(newDevice.userInteractionFilter.elements[0].controlIndex, Is.EqualTo(0));
-        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(NoiseFilter.ElementType.EntireControl));
+        Assert.That(newDevice.userInteractionFilter.elements[0].type, Is.EqualTo(InputNoiseFilter.ElementType.EntireControl));
     }
 
     [Test]

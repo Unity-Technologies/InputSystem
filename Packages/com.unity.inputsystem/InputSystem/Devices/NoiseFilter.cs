@@ -1,23 +1,24 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
 using UnityEngine.Experimental.Input.Utilities;
 
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
     /// A filter for individual devices to check if events or device states contain significant, relevant changes.
-    /// Irrelevant changes are any updates controls that are tagged as 'noisy', and any state change that turns into a no-operation change once processors are applied (e.g. in deadzone joystick movements).
     /// </summary>
-    public struct NoiseFilter
+    /// <remarks>
+    /// Irrelevant changes are any updates controls that are tagged as 'noisy', and any state change that turns into
+    /// a no-operation change once processors are applied (e.g. in deadzone joystick movements).
+    /// </remarks>
+    public struct InputNoiseFilter
     {
         /// <summary>
         /// Simple cached value identifying how to filter this element (Bitmask, or individual type filtered).
         /// </summary>
         public enum ElementType
         {
-            TypeUnknown = 0,
+            Unknown = 0,
             EntireControl,
             FloatBelowEpsilon,
             Vector2MagnitudeBelowEpsilon
@@ -39,14 +40,14 @@ namespace UnityEngine.Experimental.Input
             public ElementType type;
 
             /// <summary>
-            /// Called when the NoiseFilter gets applied to a device, marks out any controls that can be wholly bitmasked.
+            /// Called when the InputNoiseFilter gets applied to a device, marks out any controls that can be wholly bitmasked.
             /// </summary>
-            /// <param name="noiseFilterBuffer">The Noisefilter buffer for doing whole control filtering.</param>
+            /// <param name="noiseFilterBuffer">The noise filter buffer for doing whole control filtering.</param>
             /// <param name="device">The device you want to apply filtering to.</param>
             public void Apply(IntPtr noiseFilterBuffer, InputDevice device)
             {
                 if (controlIndex >= device.allControls.Count)
-                    throw new IndexOutOfRangeException("NoiseFilter has array index beyond total size of device's controls");
+                    throw new IndexOutOfRangeException("InputNoiseFilter has array index beyond total size of device's controls");
 
                 var control = device.allControls[controlIndex];
                 MemoryHelpers.SetBitsInBuffer(noiseFilterBuffer, control, false);
@@ -57,7 +58,8 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             /// <param name="inputEvent">The input event being checked for changes</param>
             /// <param name="device">The input device being checked against </param>
-            /// <returns>True if any changes exist in the event once the device has been filtered through for noise and non-significant changes.  False otherwise.</returns>
+            /// <returns>True if any changes exist in the event once the device has been filtered through for noise and non-significant
+            /// changes.  False otherwise.</returns>
             public bool EventHasValidData(InputEventPtr inputEvent, InputDevice device)
             {
                 if (type == ElementType.EntireControl)
@@ -71,16 +73,16 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public static unsafe NoiseFilter CreateDefaultNoiseFilter(InputDevice device)
+        public static unsafe InputNoiseFilter CreateDefaultNoiseFilter(InputDevice device)
         {
             if (device == null)
                 throw new ArgumentException("No device supplied to create default noise filter for", "device");
 
-            var filter = new NoiseFilter();
+            var filter = new InputNoiseFilter();
             var elementsToAdd = stackalloc FilterElement[device.allControls.Count];
             var elementCount = 0;
             var controls = device.allControls;
-            for (int i = 0; i < controls.Count; i++)
+            for (var i = 0; i < controls.Count; i++)
             {
                 var control = controls[i];
                 if (control.noisy)
@@ -111,7 +113,6 @@ namespace UnityEngine.Experimental.Input
                             FilterElement newElement;
                             newElement.controlIndex = i;
                             newElement.type = ElementType.Vector2MagnitudeBelowEpsilon;
-                            InputStateBlock stateblock = control.stateBlock;
                             elementsToAdd[elementCount++] = newElement;
                         }
                     }
@@ -119,7 +120,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             filter.elements = new FilterElement[elementCount];
-            for (int j = 0; j < elementCount; j++)
+            for (var j = 0; j < elementCount; j++)
             {
                 filter.elements[j] = elementsToAdd[j];
             }
@@ -138,13 +139,13 @@ namespace UnityEngine.Experimental.Input
         public FilterElement[] elements;
 
         /// <summary>
-        /// Called when the NoiseFilter gets applied to a device, calls down to any individual FilteredElements that need to do any work.
+        /// Called when the InputNoiseFilter gets applied to a device, calls down to any individual FilteredElements that need to do any work.
         /// </summary>
         /// <param name="device">The device you want to apply filtering to.</param>
         internal void Apply(InputDevice device)
         {
             if (device == null)
-                throw new ArgumentException("No device supplied to apply NoiseFilter to.", "device");
+                throw new ArgumentException("No device supplied to apply InputNoiseFilter to.", "device");
 
             if (IsEmpty())
                 return;
@@ -162,7 +163,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// Called when removing a NoiseFilter from a device.  This resets any stateful data the NoiseFilter sets on the device or in any InputStateBuffers
+        /// Called when removing a InputNoiseFilter from a device.  This resets any stateful data the InputNoiseFilter sets on the device or in any InputStateBuffers
         /// </summary>
         /// <param name="device">The device you want reset</param>
         internal void Reset(InputDevice device)
@@ -188,21 +189,19 @@ namespace UnityEngine.Experimental.Input
         /// <param name="offset">The offset into the device that the event is placed</param>
         /// <param name="sizeInBytes">The size of the event in bytes</param>
         /// <returns>True if any changes exist in the event once the device has been filtered through for noise and non-significant changes.  False otherwise.</returns>
-        public unsafe bool EventHasValidData(InputDevice device, InputEventPtr inputEvent, uint offset, uint sizeInbytes)
+        public unsafe bool EventHasValidData(InputDevice device, InputEventPtr inputEvent, uint offset, uint sizeInBytes)
         {
             if (!inputEvent.valid)
                 throw new ArgumentException("Invalid or unset event being checked.", "inputEvent");
 
             if (device == null)
-                throw new ArgumentException("No device passed in to check if inputEvent has valid data", "device");
+                throw new ArgumentNullException("device");
 
             if (IsEmpty())
                 return true;
 
-            if ((offset + sizeInbytes) * 8 > device.stateBlock.sizeInBits)
+            if ((offset + sizeInBytes) * 8 > device.stateBlock.sizeInBits)
                 return false;
-
-            var result = false;
 
             var noiseFilterPtr = InputStateBuffers.s_NoiseBitmaskBuffer;
             if (noiseFilterPtr == IntPtr.Zero)
@@ -221,18 +220,22 @@ namespace UnityEngine.Experimental.Input
             }
             else
             {
-                throw new ArgumentException("Invalid event type, we can only check for valid data on StateEvents and DeltaStateEvents.", "inputEvent");
+                throw new ArgumentException(string.Format(
+                    "Invalid event type '{0}', we can only check for valid data on StateEvents and DeltaStateEvents.",
+                    inputEvent.type),
+                    "inputEvent");
             }
 
-            if (MemoryHelpers.HasAnyNonZeroBitsAfterMaskingWithBuffer(ptrToEventState, noiseFilterPtr, offset, sizeInbytes * 8))
+            if (MemoryHelpers.HasAnyNonZeroBitsAfterMaskingWithBuffer(ptrToEventState, noiseFilterPtr, offset, sizeInBytes * 8))
                 return true;
 
-            for (int i = 0; i < elements.Length && !result; i++)
+            for (var i = 0; i < elements.Length; i++)
             {
-                result = elements[i].EventHasValidData(inputEvent, device);
+                if (elements[i].EventHasValidData(inputEvent, device))
+                    return true;
             }
 
-            return result;
+            return false;
         }
     }
 }

@@ -3010,7 +3010,7 @@ partial class CoreTests
 
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
-        double lastUpdateTime = device1.lastUpdateTime;
+        var lastUpdateTime = device1.lastUpdateTime;
 
         Assert.That(NoisyInputDevice.current == device2);
 
@@ -3109,12 +3109,12 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<short>(device1["first"], short.MaxValue);
+        InputSystem.QueueDeltaStateEvent(device1["first"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
 
-        InputSystem.QueueDeltaStateEvent<short>(device2["second"], short.MaxValue);
+        InputSystem.QueueDeltaStateEvent(device2["second"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -3142,11 +3142,11 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("MyDevice");
         var device2 = InputSystem.AddDevice("MyDevice");
 
-        device1.userInteractionFilter = new NoiseFilter();
+        device1.userInteractionFilter = new InputNoiseFilter();
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<short>(device1["first"], short.MaxValue);
+        InputSystem.QueueDeltaStateEvent(device1["first"], short.MaxValue);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
@@ -3175,19 +3175,19 @@ partial class CoreTests
         var device2 = InputSystem.AddDevice("MyDevice");
 
         // Tag the entire device as noisy
-        device1.userInteractionFilter = new NoiseFilter
+        device1.userInteractionFilter = new InputNoiseFilter
         {
-            elements = new NoiseFilter.FilterElement[]
+            elements = new[]
             {
-                new NoiseFilter.FilterElement
+                new InputNoiseFilter.FilterElement
                 {
                     controlIndex = 0,
-                    type = NoiseFilter.ElementType.EntireControl
+                    type = InputNoiseFilter.ElementType.EntireControl
                 },
-                new NoiseFilter.FilterElement
+                new InputNoiseFilter.FilterElement
                 {
                     controlIndex = 1,
-                    type = NoiseFilter.ElementType.EntireControl
+                    type = InputNoiseFilter.ElementType.EntireControl
                 },
             }
         };
@@ -3224,12 +3224,12 @@ partial class CoreTests
 
         Assert.That(NoisyInputDevice.current == device2);
 
-        InputSystem.QueueDeltaStateEvent<float>(device1["first"], 1.0f);
+        InputSystem.QueueDeltaStateEvent(device1["first"], 1.0f);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device2);
 
-        InputSystem.QueueDeltaStateEvent<float>(device1["second"], 1.0f);
+        InputSystem.QueueDeltaStateEvent(device1["second"], 1.0f);
         InputSystem.Update();
 
         Assert.AreEqual(NoisyInputDevice.current, device1);
