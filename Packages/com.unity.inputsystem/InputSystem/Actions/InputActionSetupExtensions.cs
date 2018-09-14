@@ -165,7 +165,7 @@ namespace UnityEngine.Experimental.Input
 
             var actionMap = action.GetOrCreateActionMap();
             ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, flags = InputBinding.Flags.Composite, action = action.name};
+            var binding = new InputBinding {path = composite, interactions = interactions, isComposite = true, action = action.name};
             var bindingIndex = AppendBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }
@@ -189,6 +189,7 @@ namespace UnityEngine.Experimental.Input
             return bindingIndex;
         }
 
+        ////TODO: update binding mask if necessary
         ////REVIEW: should we allow renaming singleton actions to empty/null names?
         /// <summary>
         /// Rename an existing action.

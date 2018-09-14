@@ -28,9 +28,9 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             EditorGUI.BeginProperty(rect, label, property);
 
-            var pathProperty = property.FindPropertyRelative("path");
-            var interactionsProperty = property.FindPropertyRelative("interactions");
-            var flagsProperty = property.FindPropertyRelative("flags");
+            var pathProperty = property.FindPropertyRelative("m_Path");
+            var interactionsProperty = property.FindPropertyRelative("m_Interactions");
+            var flagsProperty = property.FindPropertyRelative("m_Flags");
 
             var path = pathProperty.stringValue;
             var interactions = interactionsProperty.stringValue;
@@ -157,8 +157,8 @@ namespace UnityEngine.Experimental.Input.Editor
 
             public ModifyPopupWindow(SerializedProperty bindingProperty)
             {
-                m_FlagsProperty = bindingProperty.FindPropertyRelative("flags");
-                m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
+                m_FlagsProperty = bindingProperty.FindPropertyRelative("m_Flags");
+                m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
                 m_Flags = (InputBinding.Flags)m_FlagsProperty.intValue;
 
                 var interactions = InputSystem.ListInteractions().ToList();

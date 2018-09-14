@@ -92,6 +92,14 @@ public class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_UserNameIsNullByDefault()
+    {
+        var user = InputUser.Add();
+        Assert.That(user.userName, Is.Null);
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CanMonitorForChanges()
     {
         InputUser receivedUser = null;

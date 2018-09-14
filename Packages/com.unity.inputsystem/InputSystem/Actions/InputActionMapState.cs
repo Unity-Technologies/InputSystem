@@ -17,10 +17,6 @@ using UnityEngine.Profiling;
 
 ////REVIEW: can we have a global array of InputControls?
 
-////REVIEW: XmlDoc syntax is totally stupid in its verbosity; is there a more compact, alternative syntax we can use?
-
-////REVIEW: can we move this from being per-actionmap to being per-action asset? I.e. work for a list of maps?
-
 ////REVIEW: rename to just InputActionState?
 
 ////REVIEW: allow setup where state monitor is enabled but action is disabled?
@@ -103,6 +99,20 @@ namespace UnityEngine.Experimental.Input
         public int totalCompositeCount;
 
         /// <summary>
+        /// Set of masks that decide which bindings to enable in the maps and
+        /// which to ignore.
+        /// </summary>
+        /// <remarks>
+        /// Any binding in any of the maps that <see cref="InputBinding.Matches">matches</see>
+        /// one of the masks in this list will not get resolved to controls.
+        ///
+        /// To change the set of masks, the maps in the state have to be re-resolved.
+        ///
+        /// Masks can apply either to specific maps or ...
+        /// </remarks>
+        public InlinedArray<InputBinding> bindingMasks;
+
+        /// <summary>
         /// State of all bindings in the action map.
         /// </summary>
         /// <remarks>
@@ -133,7 +143,7 @@ namespace UnityEngine.Experimental.Input
         ///
         /// This array should not require GC scanning.
         /// </remarks>
-        public TriggerState[] actionStates;
+        public TriggerState[] triggerStates;
 
         public int[] controlIndexToBindingIndex;
 
@@ -147,7 +157,7 @@ namespace UnityEngine.Experimental.Input
             AddToGlobaList();
         }
 
-        private void ClaimDataFrom(InputBindingResolver resolver)
+        internal void ClaimDataFrom(InputBindingResolver resolver)
         {
             totalMapCount = resolver.totalMapCount;
             totalActionCount = resolver.totalActionCount;
@@ -160,7 +170,7 @@ namespace UnityEngine.Experimental.Input
 
             maps = resolver.maps;
             mapIndices = resolver.mapIndices;
-            actionStates = resolver.actionStates;
+            triggerStates = resolver.actionStates;
             bindingStates = resolver.bindingStates;
             interactionStates = resolver.interactionStates;
             interactions = resolver.interactions;
@@ -178,7 +188,7 @@ namespace UnityEngine.Experimental.Input
                 var map = maps[i];
                 Debug.Assert(!map.enabled);
                 map.m_State = null;
-                map.m_MapIndex = kInvalidIndex;
+                map.m_MapIndexInState = kInvalidIndex;
 
                 var actions = map.m_Actions;
                 if (actions != null)
@@ -191,22 +201,23 @@ namespace UnityEngine.Experimental.Input
             RemoveMapFromGlobalList();
         }
 
-        public TriggerState FetchActionState(InputAction action)
+        ////TODO: switch to ref returns once we're on C#7
+        public TriggerState FetchTriggerState(InputAction action)
         {
             Debug.Assert(action != null);
             Debug.Assert(action.m_ActionMap != null);
-            Debug.Assert(action.m_ActionMap.m_MapIndex != kInvalidIndex);
+            Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex);
             Debug.Assert(maps.Contains(action.m_ActionMap));
             Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount);
 
-            return actionStates[action.m_ActionIndex];
+            return triggerStates[action.m_ActionIndex];
         }
 
         public ActionMapIndices FetchMapIndices(InputActionMap map)
         {
             Debug.Assert(map != null);
             Debug.Assert(maps.Contains(map));
-            return mapIndices[map.m_MapIndex];
+            return mapIndices[map.m_MapIndexInState];
         }
 
         public void EnableAllActions(InputActionMap map)
@@ -215,7 +226,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(map.m_Actions != null);
             Debug.Assert(maps.Contains(map));
 
-            var mapIndex = map.m_MapIndex;
+            var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Install state monitors for all controls.
@@ -228,7 +239,7 @@ namespace UnityEngine.Experimental.Input
             var actionCount = mapIndices[mapIndex].actionCount;
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
-                actionStates[actionStartIndex + i].phase = InputActionPhase.Waiting;
+                triggerStates[actionStartIndex + i].phase = InputActionPhase.Waiting;
 
             NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
         }
@@ -243,7 +254,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
 
             var map = action.m_ActionMap;
-            var mapIndex = map.m_MapIndex;
+            var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Go through all bindings in the map and for all that belong to the given action,
@@ -265,7 +276,7 @@ namespace UnityEngine.Experimental.Input
 
             // Put action into waiting state.
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            actionStates[actionStartIndex + actionIndex].phase = InputActionPhase.Waiting;
+            triggerStates[actionStartIndex + actionIndex].phase = InputActionPhase.Waiting;
 
             NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
         }
@@ -279,7 +290,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(map.m_Actions != null);
             Debug.Assert(maps.Contains(map));
 
-            var mapIndex = map.m_MapIndex;
+            var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Remove state monitors from all controls.
@@ -292,7 +303,7 @@ namespace UnityEngine.Experimental.Input
             var actionCount = mapIndices[mapIndex].actionCount;
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
-                actionStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
+                triggerStates[actionStartIndex + i].phase = InputActionPhase.Disabled;
 
             NotifyListenersOfActionChange(InputActionChange.ActionMapDisabled, map);
         }
@@ -307,7 +318,7 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount);
 
             var map = action.m_ActionMap;
-            var mapIndex = map.m_MapIndex;
+            var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
 
             // Go through all bindings in the map and for all that belong to the given action,
@@ -329,7 +340,7 @@ namespace UnityEngine.Experimental.Input
 
             // Put action into disabled state.
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
-            actionStates[actionStartIndex + actionIndex].phase = InputActionPhase.Disabled;
+            triggerStates[actionStartIndex + actionIndex].phase = InputActionPhase.Disabled;
 
             NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
         }
@@ -632,12 +643,12 @@ namespace UnityEngine.Experimental.Input
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlValueChange.
             if (actionIndex != -1)
             {
-                if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
+                if (triggerStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
                     // We're the first interaction to go to the start phase.
                     ChangePhaseOfAction(newPhase, ref trigger);
                 }
-                else if (newPhase == InputActionPhase.Cancelled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
+                else if (newPhase == InputActionPhase.Cancelled && triggerStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
                     // We're cancelling but maybe there's another interaction ready
                     // to go into start phase.
@@ -665,7 +676,7 @@ namespace UnityEngine.Experimental.Input
                         }
                     }
                 }
-                else if (actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
+                else if (triggerStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
                     var phaseAfterPerformedOrCancelled = InputActionPhase.Waiting;
                     if (newPhase == InputActionPhase.Performed && remainStartedAfterPerformed)
@@ -719,12 +730,12 @@ namespace UnityEngine.Experimental.Input
                 return; // No action associated with binding.
 
             // Make sure phase progression is valid.
-            var currentPhase = actionStates[actionIndex].phase;
+            var currentPhase = triggerStates[actionIndex].phase;
             ThrowIfPhaseTransitionIsInvalid(currentPhase, newPhase, ref trigger);
 
             // Update action state.
-            actionStates[actionIndex] = trigger;
-            actionStates[actionIndex].phase = newPhase;
+            triggerStates[actionIndex] = trigger;
+            triggerStates[actionIndex].phase = newPhase;
 
             // Let listeners know.
             var map = maps[trigger.mapIndex];
@@ -737,12 +748,12 @@ namespace UnityEngine.Experimental.Input
 
                 case InputActionPhase.Performed:
                     CallActionListeners(map, ref action.m_OnPerformed, ref trigger);
-                    actionStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
+                    triggerStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
                     break;
 
                 case InputActionPhase.Cancelled:
                     CallActionListeners(map, ref action.m_OnCancelled, ref trigger);
-                    actionStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
+                    triggerStates[actionIndex].phase = phaseAfterPerformedOrCancelled;
                     break;
             }
         }
@@ -909,7 +920,6 @@ namespace UnityEngine.Experimental.Input
 
         internal TValue ReadValue<TValue>(int bindingIndex, int controlIndex)
         {
-            ////TODO: instead of straight casting, perform 'as' casts and throw better exceptions than just InvalidCastException
             ////TODO: this needs to be shared with InputActionManager
 
             var value = default(TValue);
@@ -924,14 +934,31 @@ namespace UnityEngine.Experimental.Input
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
                 var compositeObject = composites[compositeIndex];
-                var compositeOfType = (IInputBindingComposite<TValue>)compositeObject;
+                Debug.Assert(compositeObject != null);
+
+                var compositeOfType = compositeObject as IInputBindingComposite<TValue>;
+                if (compositeOfType == null)
+                    throw new InvalidOperationException(string.Format(
+                        "Cannot read value of type '{0}' from composite '{1}' bound to action '{2}' (composite is a '{3}' with value type '{4}')",
+                        typeof(TValue).Name, compositeObject, GetActionOrNull(bindingIndex),
+                        compositeIndex.GetType().Name,
+                        TypeHelpers.GetNiceTypeName(compositeObject.GetType().GetGenericArguments()[0])));
+
                 var context = new InputBindingCompositeContext();
                 value = compositeOfType.ReadValue(ref context);
             }
             else
             {
                 var control = controls[controlIndex];
-                controlOfType = (InputControl<TValue>)control;
+                Debug.Assert(control != null);
+
+                controlOfType = control as InputControl<TValue>;
+                if (controlOfType == null)
+                    throw new InvalidOperationException(string.Format(
+                        "Cannot read value of type '{0}' from control '{1}' bound to action '{2}' (control is a '{3}' with value type '{4}')",
+                        typeof(TValue).Name, control.path, GetActionOrNull(bindingIndex), control.GetType().Name,
+                        TypeHelpers.GetNiceTypeName(control.valueType)));
+
                 value = controlOfType.ReadValue();
             }
 
@@ -1396,10 +1423,10 @@ namespace UnityEngine.Experimental.Input
                     }
                     else
                     {
-                        var actionStartIndex = state.mapIndices[map.m_MapIndex].actionStartIndex;
+                        var actionStartIndex = state.mapIndices[map.m_MapIndexInState].actionStartIndex;
                         for (var k = 0; k < actionCount; ++k)
                         {
-                            if (state.actionStates[actionStartIndex + k].phase != InputActionPhase.Disabled)
+                            if (state.triggerStates[actionStartIndex + k].phase != InputActionPhase.Disabled)
                             {
                                 result.Add(actions[k]);
                                 ++numFound;
@@ -1411,6 +1438,8 @@ namespace UnityEngine.Experimental.Input
 
             return numFound;
         }
+
+        ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them
 
         // The following things cannot change and be handled by this method:
         // - Set of maps in the state cannot change (neither order nor amount)
@@ -1431,12 +1460,16 @@ namespace UnityEngine.Experimental.Input
                 var maps = state.maps;
                 var mapCount = state.totalMapCount;
 
+                ////FIXME: we can't have a bunch of garbage get created every time someone plugs in a device;
+                ////       the logic here has to become smart such that if there is no change to any action map,
+                ////       there is no garbage being created
+
                 // Re-resolve all maps in the state.
                 var resolver = new InputBindingResolver();
                 for (var n = 0; n < mapCount; ++n)
                 {
                     var map = maps[n];
-                    map.m_MapIndex = kInvalidIndex;
+                    map.m_MapIndexInState = kInvalidIndex;
                     resolver.AddActionMap(map);
                 }
 
@@ -1451,7 +1484,7 @@ namespace UnityEngine.Experimental.Input
                 var mapIndices = state.mapIndices;
                 for (var n = 0; n < mapCount; ++n)
                 {
-                    Debug.Assert(maps[n].m_MapIndex == n);
+                    Debug.Assert(maps[n].m_MapIndexInState == n);
                     if (!maps[n].enabled)
                         continue;
 
@@ -1460,7 +1493,7 @@ namespace UnityEngine.Experimental.Input
                         state.DisableControls(n, mapIndices[n].controlStartIndex, controlCount);
                 }
 
-                var oldActionStates = state.actionStates;
+                var oldActionStates = state.triggerStates;
 
                 // Re-initialize the state.
                 state.ClaimDataFrom(resolver);
@@ -1474,7 +1507,7 @@ namespace UnityEngine.Experimental.Input
                 }
 
                 // Restore enabled actions.
-                var newActionStates = state.actionStates;
+                var newActionStates = state.triggerStates;
                 Debug.Assert((oldActionStates == null && newActionStates == null) || newActionStates.Length == oldActionStates.Length);
                 for (var n = 0; n < state.totalActionCount; ++n)
                 {
@@ -1524,7 +1557,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        private bool DataMatches(InputBindingResolver resolver)
+        internal bool DataMatches(InputBindingResolver resolver)
         {
             if (totalMapCount != resolver.totalMapCount
                 || totalActionCount != resolver.totalActionCount

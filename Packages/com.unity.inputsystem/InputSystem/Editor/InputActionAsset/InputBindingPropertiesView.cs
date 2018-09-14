@@ -52,10 +52,10 @@ namespace UnityEngine.Experimental.Input.Editor
             m_ControlPickerTreeViewState = controlPickerTreeViewState;
             m_BindingProperty = bindingProperty;
             m_ReloadTree = reloadTree;
-            m_InteractionsProperty = bindingProperty.FindPropertyRelative("interactions");
-            m_ProcessorsProperty = bindingProperty.FindPropertyRelative("processors");
-            m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(bindingProperty.FindPropertyRelative("interactions"), ApplyModifiers);
-            m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(bindingProperty.FindPropertyRelative("processors"), ApplyModifiers);
+            m_InteractionsProperty = bindingProperty.FindPropertyRelative("m_Interactions");
+            m_ProcessorsProperty = bindingProperty.FindPropertyRelative("m_Processors");
+            m_InteractionsReorderableReorderableList = new InteractionsReorderableReorderableList(m_InteractionsProperty, ApplyModifiers);
+            m_ProcessorsReorderableReorderableListView = new ProcessorsReorderableReorderableList(m_ProcessorsProperty, ApplyModifiers);
         }
 
         private void ApplyModifiers()
@@ -114,7 +114,7 @@ namespace UnityEngine.Experimental.Input.Editor
             {
                 EditorGUI.indentLevel++;
 
-                var pathProperty = m_BindingProperty.FindPropertyRelative("path");
+                var pathProperty = m_BindingProperty.FindPropertyRelative("m_Path");
                 DrawBindingGUI(pathProperty, ref m_ManualPathEditMode, m_ControlPickerTreeViewState,
                     s =>
                     {

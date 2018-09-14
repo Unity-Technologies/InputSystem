@@ -1033,6 +1033,29 @@ partial class CoreTests
         Assert.That(gamepad1WasRemoved, Is.True);
     }
 
+    //Keep weak ref to device when getting disconnect event
+    [Test]
+    [Category("Devices")]
+    [Ignore("TODO")]
+    public void TODO_Devices_WhenRemovedThroughEvent_AreReusedWhenReconnectedAndNotReclaimedYet()
+    {
+        testRuntime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad"
+        }.ToJson());
+        InputSystem.Update();
+
+        var gamepad = (Gamepad)InputSystem.devices[0];
+
+        var inputEvent = DeviceRemoveEvent.Create(gamepad.id, testRuntime.currentTime);
+        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.Zero);
+
+        Assert.Fail();
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()

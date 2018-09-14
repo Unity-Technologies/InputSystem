@@ -7,6 +7,8 @@ using System.Collections.Generic;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
+////FIXME: properly work with composites
+
 namespace UnityEngine.Experimental.Input
 {
     /// <summary>
@@ -23,12 +25,12 @@ namespace UnityEngine.Experimental.Input
     /// </remarks>
     public static class InputActionRebindingExtensions
     {
-        public static void ApplyBindingOverride(this InputAction action, string newBinding, string group = null, string path = null)
+        public static void ApplyBindingOverride(this InputAction action, string newPath, string group = null, string path = null)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
 
-            ApplyBindingOverride(action, new InputBinding {overridePath = newBinding, groups = group, path = path});
+            ApplyBindingOverride(action, new InputBinding {overridePath = newPath, groups = group, path = path});
         }
 
         // Apply the given override to the action.

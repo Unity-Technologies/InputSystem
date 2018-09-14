@@ -18,7 +18,7 @@ partial class CoreTests
     public void Actions_CanTargetSingleControl()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/leftStick");
+        var action = new InputAction(binding: "<Gamepad>/leftStick");
 
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -29,7 +29,7 @@ partial class CoreTests
     public void Actions_CanTargetMultipleControls()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/*stick");
+        var action = new InputAction(binding: "<Gamepad>/*stick");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
@@ -129,24 +129,6 @@ partial class CoreTests
         Assert.That(map.devices, Has.Exactly(1).SameAs(gamepad));
         Assert.That(map.devices, Has.Exactly(1).SameAs(keyboard));
     }
-
-    //if the editor automatically adds groups based on bindings (e.g. "<Keyboard>/a" binding -> "Keyboard" group is added),
-    //we can use that to represent control schemes (e.g. "Keyboard;Mouse").
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanDefineControlSchemesUsingGroups()
-    {
-        Assert.Fail();
-    }
-
-    // What is an action? It is an *endpoint* that can optionally expect a certain kind of input connecting to it.
-    // What is a binding? It is a connection (with associated behavior) leading from inputs *to* an endpoint.
-    // What is an action map? A bundling of actions and bindings. Either set may be empty.
-    // What is an action asset? A bundling of action maps.
-
-    // What is a control scheme?
 
     [Test]
     [Category("Actions")]
@@ -338,6 +320,55 @@ partial class CoreTests
         action.Enable();
 
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReadValueFromAction()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        float? receivedValue = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValue<float>();
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
+
+        Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ReadingValueOfIncorrectType_ThrowsHelpfulException()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        var receivedCall = false;
+        action.performed +=
+            ctx =>
+        {
+            receivedCall = true;
+            Assert.That(() => ctx.ReadValue<Vector2>(),
+                Throws.InvalidOperationException.With.Message.Contains("buttonSouth")
+                    .And.With.Message.Contains("float")
+                    .And.With.Message.Contains("Vector2"));
+        };
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadState.Button.South));
+        InputSystem.Update();
+
+        Assert.That(receivedCall, Is.True);
     }
 
     [Test]
@@ -1159,6 +1190,8 @@ partial class CoreTests
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps[0].name, Is.EqualTo("map1"));
         Assert.That(asset.actionMaps[1].name, Is.EqualTo("map2"));
+        Assert.That(asset.actionMaps[0].asset, Is.SameAs(asset));
+        Assert.That(asset.actionMaps[1].asset, Is.SameAs(asset));
         Assert.That(asset.actionMaps[0].actions, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps[1].actions, Has.Count.EqualTo(1));
         Assert.That(asset.actionMaps[0].actions[0].name, Is.EqualTo("action1"));
@@ -1932,8 +1965,8 @@ partial class CoreTests
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        var map1 = new InputActionMap("set1");
-        var map2 = new InputActionMap("set2");
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
 
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
@@ -1941,6 +1974,21 @@ partial class CoreTests
         Assert.That(asset.actionMaps, Has.Count.EqualTo(2));
         Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(map1));
         Assert.That(asset.actionMaps, Has.Exactly(1).SameAs(map2));
+        Assert.That(map1.asset, Is.SameAs(asset));
+        Assert.That(map2.asset, Is.SameAs(asset));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotAddSameMapToTwoDifferentAssets()
+    {
+        var asset1 = ScriptableObject.CreateInstance<InputActionAsset>();
+        var asset2 = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+
+        asset1.AddActionMap(map);
+
+        Assert.That(() => asset2.AddActionMap(map), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -2022,6 +2070,19 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanFindControlSchemeInAssetByName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+
+        Assert.That(asset.GetControlScheme("SCHEme1").name, Is.EqualTo("scheme1"));
+        Assert.That(asset.GetControlScheme("scheme2").name, Is.EqualTo("scheme2"));
+        Assert.That(asset.TryGetControlScheme("doesNotExist"), Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_CanRemoveControlSchemeFromAsset()
     {
@@ -2072,20 +2133,140 @@ partial class CoreTests
         Assert.That(asset.GetControlScheme("scheme").devices[2].isOptional, Is.True);
     }
 
+    ////REVIEW: should enabling actions be a process separate from enabling bindings?
+
+    // The bindings targeting an action can be masked out such that only specific
+    // bindings take effect and others are ignored.
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanEnableSpecificControlScheme()
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnAction()
     {
-        Assert.Fail();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction();
+
+        action.AppendBinding("<Gamepad>/buttonSouth").WithGroup("gamepad");
+        action.AppendBinding("<Keyboard>/a").WithGroup("keyboard");
+        action.AppendBinding("<Mouse>/leftButton");
+
+        Assert.That(action.controls, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+
+        action.SetBindingMask("gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.bindingMask, Is.EqualTo(new InputBinding {groups = "gamepad"}));
+
+        action.ClearBindingMask();
+
+        Assert.That(action.controls, Has.Count.EqualTo(3));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanMaskOutBindingsByBindingGroup_OnActionMap()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AppendBinding("<Gamepad>/buttonSouth").WithGroup("gamepad");
+        action1.AppendBinding("<Keyboard>/a").WithGroup("keyboard");
+        action2.AppendBinding("<Mouse>/leftButton");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(2));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+
+        map.SetBindingMask("gamepad");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Count.Zero);
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
     }
 
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
-    public void TODO_Actions_AllMapsInAssetShareSingleState()
+    public void TODO_Actions_CanSwitchControlScheme()
     {
-        Assert.Fail();
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AppendBinding("<Gamepad>/leftStick").WithGroup("gamepad");
+        action2.AppendBinding("<Gamepad>/rightStick").WithGroup("gamepad");
+        action1.AppendBinding("<Keyboard>/a").WithGroup("keyboard");
+        action2.AppendBinding("<Keyboard>/b").WithGroup("keyboard)");
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        asset.AddControlScheme("gamepad")
+            .WithRequiredDevice("<Gamepad>")
+            .WithBindingGroup("gamepad");
+        asset.AddControlScheme("keyboard")
+            .WithRequiredDevice("<Keyboard>")
+            .WithBindingGroup("keyboard");
+
+        asset.SwitchControlScheme("gamepad");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(1));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
+
+        asset.SwitchControlScheme("keyboard");
+
+        Assert.That(action1.controls, Has.Count.EqualTo(1));
+        Assert.That(action1.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
+    }
+
+    // When we have an .inputactions asset, at runtime we should end up with a single array of resolved
+    // controls, single array of trigger states, and so on. The expectation is that users won't generally
+    // go and configure each map in an asset in a wildly different way. Rather, the maps will usually perform
+    // different actions based against the same set of devices. So combining all state into one will give
+    // us the most efficient representation.
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_AllMapsInAssetShareSingleExecutionState()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+
+        map1.AddAction("action1");
+        map2.AddAction("action2");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map1.Enable();
+        map2.Enable();
+
+        Assert.That(map1.m_State, Is.SameAs(map2.m_State));
     }
 
     [Test]
