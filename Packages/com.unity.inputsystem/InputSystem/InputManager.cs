@@ -2210,7 +2210,7 @@ namespace UnityEngine.Experimental.Input
                         ////TODO: handle UTF-32 to UTF-16 conversion properly
                         device.OnIMEStringEvent(*imeEventPtr);
                         break;
-                    
+
                     case DeviceRemoveEvent.Type:
                         RemoveDevice(device);
                         doNotMakeDeviceCurrent = true;

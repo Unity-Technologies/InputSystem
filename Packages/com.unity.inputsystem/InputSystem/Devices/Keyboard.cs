@@ -404,7 +404,6 @@ namespace UnityEngine.Experimental.Input
         }
 
 
-
         /// <summary>
         /// A synthetic button control that is considered pressed if any key on the keyboard is pressed.
         /// </summary>

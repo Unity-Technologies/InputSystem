@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Input;
@@ -14,9 +14,9 @@ public class IMETest : MonoBehaviour
     private bool m_AddedTextListeners = false;
 
     // Use this for initialization
-    void OnEnable ()
+    void OnEnable()
     {
-        if(!m_AddedTextListeners)
+        if (!m_AddedTextListeners)
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
@@ -26,11 +26,11 @@ public class IMETest : MonoBehaviour
                 m_AddedTextListeners = true;
             }
         }
-	}
+    }
 
     void OnDisable()
     {
-        if(m_AddedTextListeners)
+        if (m_AddedTextListeners)
         {
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null)
@@ -68,5 +68,5 @@ public class IMETest : MonoBehaviour
             keyboard.imeEnabled = enableIME;
             keyboard.imeCursorPosition = cursorPosition;
         }
-	}
+    }
 }

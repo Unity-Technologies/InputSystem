@@ -34,7 +34,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                 return "";
 
             string result;
-            fixed (char* b = buffer)
+            fixed(char* b = buffer)
             {
                 result = new string(b, 0, size);
             }

@@ -195,14 +195,14 @@ namespace UnityEngine.Experimental.Input
             }
             set
             {
-                if(added)
+                if (added)
                 {
                     if (m_UserInteractionFilter != null)
                         m_UserInteractionFilter.Reset(this);
 
                     if (value != null)
                         value.Apply(this);
-                }           
+                }
 
                 m_UserInteractionFilter = value;
             }
@@ -272,7 +272,7 @@ namespace UnityEngine.Experimental.Input
         public virtual void OnIMEStringEvent(IMECompositionStringEvent imeEvent)
         {
         }
-        
+
         /// <summary>
         /// Called by the system when the configuration of the device has changed.
         /// </summary>
